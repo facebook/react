@@ -15,7 +15,6 @@ var ChildUpdates;
 var MorphingComponent;
 var React;
 var ReactCurrentOwner;
-var ReactDoNotBindDeprecated;
 var ReactMount;
 var ReactPropTypes;
 var ReactServerRendering;
@@ -33,7 +32,6 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
-    ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
     ReactMount = require('ReactMount');
@@ -170,9 +168,6 @@ describe('ReactCompositeComponent', function() {
       methodAutoBound: function() {
         return this;
       },
-      methodExplicitlyNotBound: ReactDoNotBindDeprecated.doNotBind(function() {
-        return this;
-      }),
       render: function() {
         return <div></div>;
       }
@@ -189,9 +184,6 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       mountedInstance.methodAutoBound();
     }).not.toThrow();
-    expect(function() {
-      mountedInstance.methodExplicitlyNotBound();
-    }).not.toThrow();
 
     expect(console.error.argsForCall.length).toBe(1);
     var explicitlyBound = mountedInstance.methodToBeExplicitlyBound.bind(
@@ -199,17 +191,13 @@ describe('ReactCompositeComponent', function() {
     );
     expect(console.error.argsForCall.length).toBe(2);
     var autoBound = mountedInstance.methodAutoBound;
-    var explicitlyNotBound = mountedInstance.methodExplicitlyNotBound;
 
     var context = {};
     expect(explicitlyBound.call(context)).toBe(mountedInstance);
     expect(autoBound.call(context)).toBe(mountedInstance);
-    expect(explicitlyNotBound.call(context)).toBe(context);
 
     expect(explicitlyBound.call(mountedInstance)).toBe(mountedInstance);
     expect(autoBound.call(mountedInstance)).toBe(mountedInstance);
-    // This one is the weird one
-    expect(explicitlyNotBound.call(mountedInstance)).toBe(mountedInstance);
 
   });
 

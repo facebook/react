@@ -485,13 +485,11 @@ function mixSpecIntoComponent(Constructor, spec) {
       var isReactClassMethod =
         ReactClassInterface.hasOwnProperty(name);
       var isAlreadyDefined = proto.hasOwnProperty(name);
-      var markedDontBind = property && property.__reactDontBind;
       var isFunction = typeof property === 'function';
       var shouldAutoBind =
         isFunction &&
         !isReactClassMethod &&
-        !isAlreadyDefined &&
-        !markedDontBind;
+        !isAlreadyDefined;
 
       if (shouldAutoBind) {
         if (!proto.__reactAutoBindMap) {
