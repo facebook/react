@@ -46,6 +46,11 @@ var activeElementID = null;
 var lastSelection = null;
 var mouseDown = false;
 
+// Track whether a listener exists for this plugin. If none exist, we do
+// not extract events.
+var hasListener = false;
+var ON_SELECT_KEY = keyOf({onSelect: null});
+
 /**
  * Get an object which is a unique representation of the current selection.
  *
@@ -116,6 +121,8 @@ function constructSelectEvent(nativeEvent) {
 
     return syntheticEvent;
   }
+
+  return null;
 }
 
 /**
@@ -149,6 +156,10 @@ var SelectEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
+
+    if (!hasListener) {
+      return null;
+    }
 
     switch (topLevelType) {
       // Track the input node that has focus.
@@ -186,6 +197,14 @@ var SelectEventPlugin = {
       case topLevelTypes.topKeyDown:
       case topLevelTypes.topKeyUp:
         return constructSelectEvent(nativeEvent);
+    }
+
+    return null;
+  },
+
+  didPutListener: function(id, registrationName, listener) {
+    if (registrationName === ON_SELECT_KEY) {
+      hasListener = true;
     }
   }
 };
