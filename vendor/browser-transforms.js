@@ -316,7 +316,7 @@ function runScripts() {
 
   }
 
-  function processDeferredScripts(documentScope) {
+  function processDeferredScripts() {
 
     if (this.import) {
       processScripts(this.import);
