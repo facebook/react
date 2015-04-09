@@ -346,6 +346,19 @@ function runScripts() {
 
 }
 
+// Listen for load event if we're in a browser and then kick off finding and
+// running of scripts.
+if (typeof window !== 'undefined' && window !== null) {
+  headEl = document.getElementsByTagName('head')[0];
+  dummyAnchor = document.createElement('a');
+
+  if (window.addEventListener) {
+    window.addEventListener('DOMContentLoaded', runScripts, false);
+  } else {
+    window.attachEvent('onload', runScripts);
+  }
+}
+
 module.exports = {
   transform: transformReact,
   exec: exec
