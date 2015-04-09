@@ -71,12 +71,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    // Ignore the first warning which is fired by using withContext at all.
-    // That way we don't have to reset and assert it on every subsequent test.
-    // This will be killed soon anyway.
     console.error = mocks.getMockFunction();
-    React.withContext({}, function() { });
-
     spyOn(console, 'error');
   });
 
@@ -609,178 +604,6 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
   });
 
-  it('warn if context keys differ', function() {
-    var Component = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string.isRequired
-      },
-
-      render: function() {
-        return <div />;
-      }
-    });
-
-    React.withContext({foo: 'bar'}, function() {
-      ReactTestUtils.renderIntoDocument(<Component />);
-    });
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ ' +
-      '(values: `bar` vs `undefined`) for key (foo) ' +
-      'while mounting Component (see: http://fb.me/react-context-by-parent)'
-    );
-
-  });
-
-  it('warn if context values differ', function() {
-    var Parent = React.createClass({
-      childContextTypes: {
-        foo: ReactPropTypes.string
-      },
-
-      getChildContext: function() {
-        return {
-          foo: "bar"
-        };
-      },
-
-      render: function() {
-        return <div>{this.props.children}</div>;
-      }
-    });
-    var Component = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string.isRequired
-      },
-
-      render: function() {
-        return <div />;
-      }
-    });
-
-    var component = React.withContext({foo: 'noise'}, function() {
-      return <Component />;
-    });
-
-    ReactTestUtils.renderIntoDocument(<Parent>{component}</Parent>);
-
-    // Two warnings, one for the component and one for the div
-    // We may want to make this expect one warning in the future
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ ' +
-      '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
-      '(see: http://fb.me/react-context-by-parent)'
-    );
-
-  });
-
-  it('should warn if context values differ on update using withContext', function() {
-    var Parent = React.createClass({
-      childContextTypes: {
-        foo: ReactPropTypes.string
-      },
-
-      getChildContext: function() {
-        return {
-          foo: "bar"
-        };
-      },
-
-      render: function() {
-        return <div>{this.props.children}</div>;
-      }
-    });
-
-    var Component = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string.isRequired
-      },
-
-      render: function() {
-        return <div />;
-      }
-    });
-
-    var div = document.createElement('div');
-
-    var componentWithSameContext = React.withContext({foo: 'bar'}, function() {
-      return <Component />;
-    });
-    React.render(<Parent>{componentWithSameContext}</Parent>, div);
-
-    expect(console.error.argsForCall.length).toBe(0);
-
-    var componentWithDifferentContext = React.withContext({foo: 'noise'}, function() {
-      return <Component />;
-    });
-    React.render(<Parent>{componentWithDifferentContext}</Parent>, div);
-
-    // Two warnings, one for the component and one for the div
-    // We may want to make this expect one warning in the future
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ ' +
-      '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
-      '(see: http://fb.me/react-context-by-parent)'
-    );
-  });
-
-  it('should warn if context values differ on update using wrapper', function() {
-    var Parent = React.createClass({
-      childContextTypes: {
-        foo: ReactPropTypes.string
-      },
-
-      getChildContext: function() {
-        return {
-          foo: "bar"
-        };
-      },
-
-      render: function() {
-        return <div>{this.props.children}</div>;
-      }
-    });
-
-    var Component = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string.isRequired
-      },
-
-      render: function() {
-        return <div />;
-      }
-    });
-
-    var Wrapper = React.createClass({
-      childContextTypes: {
-        foo: ReactPropTypes.string
-      },
-
-      getChildContext: function() {
-        return {foo: this.props.foo};
-      },
-
-      render: function() { return <Parent><Component /></Parent>; }
-
-    });
-
-    var div = document.createElement('div');
-    React.render(<Wrapper foo='bar' />, div);
-    React.render(<Wrapper foo='noise' />, div);
-
-    // Two warnings, one for the component and one for the div
-    // We may want to make this expect one warning in the future
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ ' +
-      '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
-      '(see: http://fb.me/react-context-by-parent)'
-    );
-  });
-
   it('unmasked context propagates through updates', function() {
 
     var Leaf = React.createClass({
@@ -982,6 +805,39 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls[0].args[0]).toContain(
       'NotAComponent(...): No `render` method found'
     );
+  });
+
+  it('context should be passed down from the parent', function() {
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return {
+          foo: "bar"
+        };
+      },
+
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var div = document.createElement('div');
+    React.render(<Parent><Component /></Parent>, div);
+
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
 });

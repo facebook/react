@@ -99,10 +99,6 @@ var ReactElement = function(type, key, ref, owner, context, props) {
   // Record the component responsible for creating this element.
   this._owner = owner;
 
-  // TODO: Deprecate withContext, and then the context becomes accessible
-  // through the owner.
-  this._context = context;
-
   if (__DEV__) {
     // The validation flag and props are currently mutative. We put them on
     // an external backing store so that we can freeze the whole object.

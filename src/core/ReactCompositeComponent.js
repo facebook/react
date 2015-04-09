@@ -125,7 +125,7 @@ var ReactCompositeComponentMixin = {
     this._rootNodeID = rootID;
 
     var publicProps = this._processProps(this._currentElement.props);
-    var publicContext = this._processContext(this._currentElement._context);
+    var publicContext = this._processContext(context);
 
     var Component = ReactNativeComponent.getComponentClassForElement(
       this._currentElement
@@ -157,10 +157,6 @@ var ReactCompositeComponentMixin = {
 
     // Store a reference from the instance back to the internal representation
     ReactInstanceMap.set(inst, this);
-
-    if (__DEV__) {
-      this._warnIfContextsDiffer(this._currentElement._context, context);
-    }
 
     if (__DEV__) {
       // Since plain JS classes are defined without any special initialization
@@ -530,30 +526,6 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Compare two contexts, warning if they are different
-   * TODO: Remove this check when owner-context is removed
-   */
-   _warnIfContextsDiffer: function(ownerBasedContext, parentBasedContext) {
-    ownerBasedContext = this._maskContext(ownerBasedContext);
-    parentBasedContext = this._maskContext(parentBasedContext);
-    var parentKeys = Object.keys(parentBasedContext).sort();
-    var displayName = this.getName() || 'ReactCompositeComponent';
-    for (var i = 0; i < parentKeys.length; i++) {
-      var key = parentKeys[i];
-      warning(
-        ownerBasedContext[key] === parentBasedContext[key],
-        'owner-based and parent-based contexts differ '  +
-        '(values: `%s` vs `%s`) for key (%s) while mounting %s ' +
-        '(see: http://fb.me/react-context-by-parent)',
-        ownerBasedContext[key],
-        parentBasedContext[key],
-        key,
-        displayName
-      );
-    }
-  },
-
-  /**
    * Perform an update to a mounted component. The componentWillReceiveProps and
    * shouldComponentUpdate methods are called, then (assuming the update isn't
    * skipped) the remaining update lifecycle methods are called and the DOM
@@ -582,17 +554,8 @@ var ReactCompositeComponentMixin = {
 
     // Distinguish between a props update versus a simple state update
     if (prevParentElement !== nextParentElement) {
-      nextContext = this._processContext(nextParentElement._context);
+      nextContext = this._processContext(nextUnmaskedContext);
       nextProps = this._processProps(nextParentElement.props);
-
-      if (__DEV__) {
-        if (nextUnmaskedContext != null) {
-          this._warnIfContextsDiffer(
-            nextParentElement._context,
-            nextUnmaskedContext
-          );
-        }
-      }
 
       // An update here will schedule an update but immediately set
       // _pendingStateQueue which will ensure that any state updates gets
