@@ -13,6 +13,7 @@ var npmReactToolsTasks = require('./grunt/tasks/npm-react-tools');
 var versionCheckTask = require('./grunt/tasks/version-check');
 var gemReactSourceTasks = require('./grunt/tasks/gem-react-source');
 var eslintTask = require('./grunt/tasks/eslint');
+var jestTask = require('./grunt/tasks/jest');
 
 module.exports = function(grunt) {
 
@@ -53,6 +54,8 @@ module.exports = function(grunt) {
   grunt.registerTask('eslint', eslintTask);
 
   grunt.registerTask('lint', ['eslint']);
+
+  grunt.registerTask('jest', jestTask);
 
   grunt.registerTask(
     'download-previous-version',
