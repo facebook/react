@@ -293,40 +293,57 @@ function loadScripts(scripts) {
  * @internal
  */
 function runScripts() {
-  var scripts = document.getElementsByTagName('script');
 
-  // Array.prototype.slice cannot be used on NodeList on IE8
-  var jsxScripts = [];
-  for (var i = 0; i < scripts.length; i++) {
-    if (/^text\/jsx(;|$)/.test(scripts.item(i).type)) {
-      jsxScripts.push(scripts.item(i));
+  processScripts(document);
+
+  var imports = document.getElementsByTagName('link');
+
+  if (imports.length) {
+
+    for (var i = 0; i < imports.length; i++) {
+
+      if (imports[i].getAttribute('rel').toLowerCase() !== 'import') {
+        continue
+      }
+
+      if (imports[i].import) {
+        processScripts(imports[i].import);
+      } else {
+        imports[i].addEventListener('load', function() {
+          processScripts(this.import);
+        }.bind(imports[i]));
+      }
+
     }
+
   }
 
-  if (jsxScripts.length < 1) {
-    return;
+  function processScripts(documentScope) {
+
+    var scripts = documentScope.getElementsByTagName('script');
+
+    // Array.prototype.slice cannot be used on NodeList on IE8
+    var jsxScripts = [];
+    for (var i = 0; i < scripts.length; i++) {
+      if (/^text\/jsx(;|$)/.test(scripts.item(i).type)) {
+        jsxScripts.push(scripts.item(i));
+      }
+    }
+
+    if (jsxScripts.length < 1) {
+      return;
+    }
+
+    console.warn(
+      'You are using the in-browser JSX transformer. Be sure to precompile ' +
+      'your JSX for production - ' +
+      'http://facebook.github.io/react/docs/tooling-integration.html#jsx'
+    );
+
+    loadScripts(jsxScripts);
+
   }
 
-  console.warn(
-    'You are using the in-browser JSX transformer. Be sure to precompile ' +
-    'your JSX for production - ' +
-    'http://facebook.github.io/react/docs/tooling-integration.html#jsx'
-  );
-
-  loadScripts(jsxScripts);
-}
-
-// Listen for load event if we're in a browser and then kick off finding and
-// running of scripts.
-if (typeof window !== 'undefined' && window !== null) {
-  headEl = document.getElementsByTagName('head')[0];
-  dummyAnchor = document.createElement('a');
-
-  if (window.addEventListener) {
-    window.addEventListener('DOMContentLoaded', runScripts, false);
-  } else {
-    window.attachEvent('onload', runScripts);
-  }
 }
 
 module.exports = {
