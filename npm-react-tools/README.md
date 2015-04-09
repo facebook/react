@@ -32,6 +32,7 @@ By default JSX files with a `.js` extension are transformed. Use the `-x` option
       --strip-types                            Strips out type annotations
       --es6module                              Parses the file as a valid ES6 module
       --non-strict-es6module                   Parses the file as an ES6 module, except disables implicit strict-mode (i.e. CommonJS modules et al are allowed)
+      --target <version>                       Target version of ECMAScript. Valid values are "es3" and "es5". Use "es3" for legacy browsers like IE8.
 
 ## API
 
@@ -45,6 +46,7 @@ option | values | default
 `stripTypes` | `true`: strips out type annotations | `false`
 `es6module` | `true`: parses the file as an ES6 module | `false`
 `nonStrictEs6module` | `true`: parses the file as an ES6 module, except disables implicit strict-mode (i.e. CommonJS modules et al are allowed) | `false`
+`target` | `"es3"`: ECMAScript 3<br>`"es5"`: ECMAScript 5| `"es5"`
 
 ```js
 var reactTools = require('react-tools');
