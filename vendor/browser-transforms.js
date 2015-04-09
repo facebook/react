@@ -310,7 +310,9 @@ function runScripts() {
         processScripts(imports[i].import);
       } else {
         imports[i].addEventListener('load', function() {
-          processScripts(this.import);
+          if (this.import) {
+            processScripts(this.import);
+          }
         }.bind(imports[i]));
       }
 
