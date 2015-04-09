@@ -309,7 +309,7 @@ function runScripts() {
       if (imports[i].import) {
         processScripts(imports[i].import);
       } else {
-        imports[i].addEventListener('load', processDeferredScripts.bind(null, imports[i]));
+        imports[i].addEventListener('load', processDeferredScripts);
       }
 
     }
@@ -318,8 +318,8 @@ function runScripts() {
 
   function processDeferredScripts(documentScope) {
 
-    if (documentScope.import) {
-      processScripts(documentScope.import);
+    if (this.import) {
+      processScripts(this.import);
     }
 
   }
