@@ -303,19 +303,23 @@ function runScripts() {
     for (var i = 0; i < imports.length; i++) {
 
       if (imports[i].getAttribute('rel').toLowerCase() !== 'import') {
-        continue
+        continue;
       }
 
       if (imports[i].import) {
         processScripts(imports[i].import);
       } else {
-        imports[i].addEventListener('load', function() {
-          if (this.import) {
-            processScripts(this.import);
-          }
-        }.bind(imports[i]));
+        imports[i].addEventListener('load', processDeferredScripts.bind(null, imports[i]));
       }
 
+    }
+
+  }
+
+  function processDeferredScripts(documentScope) {
+
+    if (documentScope.import) {
+      processScripts(documentScope.import);
     }
 
   }
@@ -326,9 +330,9 @@ function runScripts() {
 
     // Array.prototype.slice cannot be used on NodeList on IE8
     var jsxScripts = [];
-    for (var i = 0; i < scripts.length; i++) {
-      if (/^text\/jsx(;|$)/.test(scripts.item(i).type)) {
-        jsxScripts.push(scripts.item(i));
+    for (var j = 0; j < scripts.length; j++) {
+      if (/^text\/jsx(;|$)/.test(scripts.item(j).type)) {
+        jsxScripts.push(scripts.item(j));
       }
     }
 
