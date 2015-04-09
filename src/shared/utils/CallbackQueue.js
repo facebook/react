@@ -72,6 +72,17 @@ assign(CallbackQueue.prototype, {
     }
   },
 
+  checkpoint: function() {
+    return this._callbacks ? this._callbacks.length : 0;
+  },
+
+  rollback: function(len) {
+    if (this._callbacks) {
+      this._callbacks.length = len;
+      this._contexts.length = len;
+    }
+  },
+
   /**
    * Resets the internal queue.
    *
