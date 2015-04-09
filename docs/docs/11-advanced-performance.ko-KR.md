@@ -11,7 +11,7 @@ React를 도입하려 할 때 많은 사람이 묻는 첫 번째 질문은 React
 
 React는 브라우저에서 렌더된 DOM 하위 트리의 서술자 개념인 *가상의 DOM*을 사용합니다. 이 병렬적인 서술체는 React가 DOM 노드를 생성하거나 이미 존재하는 DOM 노드에 접근하는 것(JavaScript 객체를 조작하는 것보다 느리죠)을 피하게 해 줍니다. 컴포넌트의 props나 state가 변경되면 React는 새로운 가상의 DOM을 구성해 이전의 것과 비교해서 실제 DOM 업데이트가 필요한지 결정합니다. 가능한 적게 변화를 적용하기 위해, React는 둘이 다를 경우에만 DOM을 [조정](/react/docs/reconciliation-ko-KR.html)할 것입니다.
 
-이에 더해, React는 컴포넌트 생명주기 함수인 `shouldComponentUpdate`를 제공합니다. 이는 다시 렌더링하는 프로세스가 일어나기 직전에 일어나며 개발자가 프로세스를 중단할 수 있게 합니다. 이 함수의 기본구현은 `true`를 반환해 React가 업데이트를 수행하도록 합니다.
+이에 더해, React는 컴포넌트 생명주기 함수인 `shouldComponentUpdate`를 제공합니다. 이는 다시 렌더링하는 프로세스(가상 DOM 비교와 어쩌면 일어날 DOM 조정)가 일어나기 직전에 일어나며 개발자가 프로세스를 중단할 수 있게 합니다. 이 함수의 기본구현은 `true`를 반환해 React가 업데이트를 수행하도록 합니다.
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {

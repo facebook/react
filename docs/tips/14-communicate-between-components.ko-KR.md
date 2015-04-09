@@ -32,10 +32,10 @@ var GroceryList = React.createClass({
 });
 
 React.render(
-  <GroceryList items={['사과', '바나나', '크랜베리']} />, mountNode );
+  <GroceryList items={['사과', '바나나', '크랜베리']} />, mountNode
+);
 ```
 
 `bind(this, arg1, arg2, ...)`의 사용을 확인하세요: 간단히 `handleClick`에 인자를 더 넘겼습니다. 이는 React의 새로운 컨셉이 아닙니다; 그냥 JavaScript죠.
 
-부모-자식 관계가 없는 두 컴포넌트간의 통신을 위해, 별도로 전역(global) 이벤트 시스템을 사용할 수 있습니다.
-`componentDidMount()`에서 이벤트를 구독하고, `componentWillUnmount()`에서 해제합니다. 이벤트를 받으면 `setState()`를 호출합니다.
+부모-자식 관계가 없는 두 컴포넌트간의 통신을 위해, 별도로 전역(global) 이벤트 시스템을 사용할 수 있습니다. `componentDidMount()`에서 이벤트를 구독하고, `componentWillUnmount()`에서 해제합니다. 이벤트를 받으면 `setState()`를 호출합니다. [Flux](https://facebook.github.io/flux/) 패턴은 이를 정리하는 방법 중 하나입니다.

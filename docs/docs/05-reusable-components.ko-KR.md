@@ -98,7 +98,7 @@ var ComponentWithDefaultProps = React.createClass({
 
 ## Prop 전달하기: 단축
 
-React 컴포넌트의 흔히 그냥 기본 HTML을 확장해서 씁니다. 타이핑을 아끼기 위해 기저의 HTML 엘리먼트에 HTML 속성들을 단순히 복사하는 컴포넌트가 필요할 수도 있습니다. JSX의 _spread_ 문법을 사용하면 이렇게 할 수 있습니다.
+React 컴포넌트의 흔히 그냥 기본 HTML 엘리먼트를 확장해서 씁니다. 타이핑을 아끼기 위해 기저의 HTML 엘리먼트에 HTML 속성들을 단순히 복사하는 컴포넌트가 필요할 수도 있습니다. JSX의 _spread_ 문법을 사용하면 이렇게 할 수 있습니다.
 
 ```javascript
 var CheckLink = React.createClass({

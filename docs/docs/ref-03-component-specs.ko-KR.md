@@ -14,12 +14,12 @@ next: tags-and-attributes-ko-KR.html
 ### render
 
 ```javascript
-ReactComponent render()
+ReactElement render()
 ```
 
 `render()` 메소드는 필수 항목입니다.
 
-호출되면 `this.props`와 `this.state`를 토대로 하나의 자식 컴포넌트를 리턴합니다. 이 자식 컴포넌트는 네이티브 DOM 컴포넌트의 가상 표현 (`<div />`나 `React.DOM.div()` 등) 또는 직접 정의한 조합(composite) 컴포넌트가 될 수 있습니다.
+호출되면 `this.props`와 `this.state`를 토대로 하나의 자식 엘리먼트를 리턴합니다. 이 자식 엘리먼트는 네이티브 DOM 컴포넌트의 가상 표현 (`<div />`나 `React.DOM.div()` 등) 또는 직접 정의한 조합(composite) 컴포넌트가 될 수 있습니다.
 
 아무 것도 렌더링되지 않도록 하려면 `null`이나 `false`를 리턴합니다. React는 지금의 차이 비교 알고리즘이 작동할 수 있도록 내부적으로는 `<noscript>` 태그를 렌더링합니다. `null`이나 `false`를 리턴한 경우, `React.findDOMNode(this)`는 `null`을 리턴합니다.
 
