@@ -21,11 +21,11 @@ rules:
   # Make this a warning for now. We do this in a few places so we might need to
   # disable
   no-unused-expressions: 2
-  block-scoped-var: 2
+  block-scoped-var: 1
   eol-last: 2
   dot-notation: 2
   consistent-return: 2
-  no-unused-vars: [2, args: none]
+  no-unused-vars: [1, args: none]
   quotes: [2, 'single']
 
   # WARNINGS

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactStateSetters = {
+class ReactStateSetters {
   /**
    * Returns a function that calls the provided function, and uses the result
    * of that to set the component's state.
@@ -22,14 +22,14 @@ var ReactStateSetters = {
    * @return {function} callback that when invoked uses funcReturningState to
    *                    determined the object literal to setState.
    */
-  createStateSetter: function(component, funcReturningState) {
+  static createStateSetter(component, funcReturningState) {
     return function(a, b, c, d, e, f) {
       var partialState = funcReturningState.call(component, a, b, c, d, e, f);
       if (partialState) {
         component.setState(partialState);
       }
     };
-  },
+  }
 
   /**
    * Returns a single-argument callback that can be used to update a single
@@ -42,12 +42,12 @@ var ReactStateSetters = {
    * @return {function} callback of 1 argument which calls setState() with
    *                    the provided keyName and callback argument.
    */
-  createStateKeySetter: function(component, key) {
+  static createStateKeySetter(component, key) {
     // Memoize the setters.
     var cache = component.__keySetters || (component.__keySetters = {});
     return cache[key] || (cache[key] = createStateKeySetter(component, key));
   }
-};
+}
 
 function createStateKeySetter(component, key) {
   // Partial state is allocated outside of the function closure so it can be
@@ -60,7 +60,8 @@ function createStateKeySetter(component, key) {
   };
 }
 
-ReactStateSetters.Mixin = {
+class ReactStateSettersMixin
+{
   /**
    * Returns a function that calls the provided function, and uses the result
    * of that to set the component's state.
@@ -77,9 +78,9 @@ ReactStateSetters.Mixin = {
    * @return {function} callback that when invoked uses funcReturningState to
    *                    determined the object literal to setState.
    */
-  createStateSetter: function(funcReturningState) {
+  static createStateSetter(funcReturningState) {
     return ReactStateSetters.createStateSetter(this, funcReturningState);
-  },
+  }
 
   /**
    * Returns a single-argument callback that can be used to update a single
@@ -96,9 +97,11 @@ ReactStateSetters.Mixin = {
    * @return {function} callback of 1 argument which calls setState() with
    *                    the provided keyName and callback argument.
    */
-  createStateKeySetter: function(key) {
+  static createStateKeySetter(key) {
     return ReactStateSetters.createStateKeySetter(this, key);
   }
-};
+}
+
+ReactStateSetters.Mixin = ReactStateSettersMixin;
 
 module.exports = ReactStateSetters;

@@ -443,7 +443,7 @@ function mixSpecIntoComponent(Constructor, spec) {
   }
 
   invariant(
-    typeof spec !== 'function',
+    typeof spec !== 'function' || typeof spec.prototype.render === 'undefined',
     'ReactClass: You\'re attempting to ' +
     'use a component class as a mixin. Instead, just use a regular object.'
   );
@@ -462,14 +462,22 @@ function mixSpecIntoComponent(Constructor, spec) {
     RESERVED_SPEC_KEYS.mixins(Constructor, spec.mixins);
   }
 
-  for (var name in spec) {
+  Object.getOwnPropertyNames(spec).forEach(function(name) {
+
+    // These are defined on ES6 classes and are forbidden
+    if (typeof spec === 'function' &&
+        (name === 'caller' || name === 'callee' || name === 'arguments')
+      ) {
+      return;
+    }
+
     if (!spec.hasOwnProperty(name)) {
-      continue;
+      return;
     }
 
     if (name === MIXINS_KEY) {
       // We have already handled mixins in a special case above
-      continue;
+      return;
     }
 
     var property = spec[name];
@@ -532,7 +540,7 @@ function mixSpecIntoComponent(Constructor, spec) {
         }
       }
     }
-  }
+  });
 }
 
 function mixStaticSpecIntoComponent(Constructor, statics) {
