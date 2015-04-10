@@ -181,9 +181,7 @@ var HTMLDOMPropertyConfig = {
     // property is supported for OpenGraph in meta tags.
     property: null,
     // IE-only attribute that controls focus behavior
-    unselectable: MUST_USE_ATTRIBUTE,
-    webkitdirectory: null,
-    nwdirectory: null
+    unselectable: MUST_USE_ATTRIBUTE
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',
