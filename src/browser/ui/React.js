@@ -13,30 +13,6 @@
 
 'use strict';
 
-var REACT_VERSION = '0.14.0-alpha';
-
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var warning = require('warning');
-
-if (__DEV__) {
-  // before performing any initialization of React, check that
-  // only one instance is in use on the current page.
-  //
-  // Using multiple instances cause a variety of problems if elements
-  // from different versions are mixed on the same page.
-  //
-  // See issue #2402
-  if (ExecutionEnvironment.canUseDOM) {
-    warning(
-      typeof window.__REACT_VERSION__ === 'undefined',
-      'Multiple instances of React have been initialized on the same page. ' +
-      'Currently initializing React v' + REACT_VERSION + ' but another instance of React v' +
-      window.__REACT_VERSION__ + ' was already initialized'
-    );
-    window.__REACT_VERSION__ = REACT_VERSION;
-  }
-}
-
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
 var ReactClass = require('ReactClass');
@@ -57,6 +33,7 @@ var ReactServerRendering = require('ReactServerRendering');
 var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
 var onlyChild = require('onlyChild');
+var warning = require('warning');
 
 ReactDefaultInjection.inject();
 
@@ -73,7 +50,6 @@ if (__DEV__) {
 var render = ReactPerf.measure('React', 'render', ReactMount.render);
 
 var React = {
-  version: REACT_VERSION,
   Children: {
     map: ReactChildren.map,
     forEach: ReactChildren.forEach,
@@ -120,6 +96,7 @@ if (
 }
 
 if (__DEV__) {
+  var ExecutionEnvironment = require('ExecutionEnvironment');
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
     // If we're in Chrome, look for the devtools marker and provide a download
@@ -174,5 +151,7 @@ if (__DEV__) {
     }
   }
 }
+
+React.version = '0.14.0-alpha';
 
 module.exports = React;

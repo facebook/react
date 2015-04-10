@@ -6,7 +6,7 @@ var grunt = require('grunt');
 // Check that the version we're exporting is the same one we expect in the
 // package. This is not an ideal way to do this, but makes sure that we keep
 // them in sync.
-var reactVersionExp = /\bREACT_VERSION\s*=\s*['"]([^'"]+)['"];/;
+var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
 
 module.exports = function() {
   var reactVersion = reactVersionExp.exec(
