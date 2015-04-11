@@ -40,8 +40,7 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       simpleKid,
-      '.$simple',
-      0
+      '.$simple'
     );
     expect(traverseContext.length).toEqual(1);
   });
@@ -59,8 +58,7 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       simpleKid,
-      '.0',
-      0
+      '.0'
     );
     expect(traverseContext.length).toEqual(1);
   });
@@ -78,8 +76,7 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       simpleKid,
-      '.0',
-      0
+      '.0'
     );
     expect(traverseContext.length).toEqual(1);
   });
@@ -111,22 +108,19 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       zero,
-      '.$keyZero',
-      0
+      '.$keyZero'
     );
-    expect(traverseFn).toHaveBeenCalledWith(traverseContext, one, '.1', 1);
+    expect(traverseFn).toHaveBeenCalledWith(traverseContext, one, '.1');
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       two,
-      '.$keyTwo',
-      2
+      '.$keyTwo'
     );
-    expect(traverseFn).toHaveBeenCalledWith(traverseContext, three, '.3', 3);
+    expect(traverseFn).toHaveBeenCalledWith(traverseContext, three, '.3');
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       four,
-      '.$keyFour',
-      4
+      '.$keyFour'
     );
   });
 
@@ -161,31 +155,31 @@ describe('traverseAllChildren', function() {
     expect(traverseContext.length).toEqual(9);
 
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, div, '.$divNode', 0
+      traverseContext, div, '.$divNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, span, '.1:0:$span:$spanNode', 1
+      traverseContext, span, '.1:0:$span:$spanNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, a, '.2:$a:$aNode', 2
+      traverseContext, a, '.2:$a:$aNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, 'string', '.3', 3
+      traverseContext, 'string', '.3'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, 1234, '.4', 4
+      traverseContext, 1234, '.4'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, null, '.5', 5
+      traverseContext, null, '.5'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, null, '.6', 6
+      traverseContext, null, '.6'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, null, '.7', 7
+      traverseContext, null, '.7'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, null, '.8', 8
+      traverseContext, null, '.8'
     );
   });
 
@@ -225,39 +219,34 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       zero,
-      '.0:$firstHalfKey:0:$keyZero',
-      0
+      '.0:$firstHalfKey:0:$keyZero'
     );
 
     expect(traverseFn)
-      .toHaveBeenCalledWith(traverseContext, one, '.0:$firstHalfKey:0:1', 1);
+      .toHaveBeenCalledWith(traverseContext, one, '.0:$firstHalfKey:0:1');
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       two,
-      '.0:$firstHalfKey:0:$keyTwo',
-      2
+      '.0:$firstHalfKey:0:$keyTwo'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       three,
-      '.0:$secondHalfKey:0:0',
-      3
+      '.0:$secondHalfKey:0:0'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       four,
-      '.0:$secondHalfKey:0:$keyFour',
-      4
+      '.0:$secondHalfKey:0:$keyFour'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       five,
-      '.0:$keyFive:$keyFiveInner',
-      5
+      '.0:$keyFive:$keyFiveInner'
     );
   });
 
@@ -282,14 +271,12 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       zeroForceKey,
-      '.$keyZero',
-      0
+      '.$keyZero'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       oneForceKey,
-      '.$keyOne',
-      1
+      '.$keyOne'
     );
   });
 
@@ -327,20 +314,17 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[0],
-      '.0',
-      0
+      '.0'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[1],
-      '.1',
-      1
+      '.1'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[2],
-      '.2',
-      2
+      '.2'
     );
   });
 
@@ -378,20 +362,17 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[0],
-      '.$#1',
-      0
+      '.$#1'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[1],
-      '.$#2',
-      1
+      '.$#2'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[2],
-      '.$#3',
-      2
+      '.$#3'
     );
   });
 
@@ -432,20 +413,17 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[0],
-      '.$#1:0',
-      0
+      '.$#1:0'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[1],
-      '.$#2:0',
-      1
+      '.$#2:0'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       traverseContext[2],
-      '.$#3:0',
-      2
+      '.$#3:0'
     );
 
     expect(console.error.argsForCall.length).toBe(1);
