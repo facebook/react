@@ -458,4 +458,42 @@ describe('ReactChildren', function() {
     expect(console.error.calls[1].args[0]).toContain('is an immutable opaque');
   });
 
+  it('should flatten children to an array', function() {
+    expect(ReactChildren.toArray(undefined)).toEqual([]);
+    expect(ReactChildren.toArray(null)).toEqual([]);
+
+    expect(ReactChildren.toArray(<div />).length).toBe(1);
+    expect(ReactChildren.toArray([<div />]).length).toBe(1);
+    expect(
+      ReactChildren.toArray(<div />)[0].key
+    ).toBe(
+      ReactChildren.toArray([<div />])[0].key
+    );
+
+    var flattened = ReactChildren.toArray([
+      [<div key="apple" />, <div key="banana" />, <div key="camel" />],
+      [<div key="banana" />, <div key="camel" />, <div key="deli" />],
+    ]);
+    expect(flattened.length).toBe(6);
+    expect(flattened[1].key).toContain('banana');
+    expect(flattened[3].key).toContain('banana');
+    expect(flattened[1].key).not.toBe(flattened[3].key);
+
+    var reversed = ReactChildren.toArray([
+      [<div key="camel" />, <div key="banana" />, <div key="apple" />],
+      [<div key="deli" />, <div key="camel" />, <div key="banana" />],
+    ]);
+    expect(flattened[0].key).toBe(reversed[2].key);
+    expect(flattened[1].key).toBe(reversed[1].key);
+    expect(flattened[2].key).toBe(reversed[0].key);
+    expect(flattened[3].key).toBe(reversed[5].key);
+    expect(flattened[4].key).toBe(reversed[4].key);
+    expect(flattened[5].key).toBe(reversed[3].key);
+
+    // null/undefined/bool are all omitted
+    expect(ReactChildren.toArray([1, 'two', null, undefined, true])).toEqual(
+      [1, 'two']
+    );
+  });
+
 });
