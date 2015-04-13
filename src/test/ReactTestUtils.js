@@ -411,17 +411,25 @@ function makeSimulator(eventType) {
       node = domComponentOrNode;
     }
 
+    var dispatchConfig =
+      ReactBrowserEventEmitter.eventNameDispatchConfigs[eventType];
+
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
     var event = new SyntheticEvent(
-      ReactBrowserEventEmitter.eventNameDispatchConfigs[eventType],
+      dispatchConfig,
       ReactMount.getID(node),
       fakeNativeEvent
     );
     assign(event, eventData);
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+
+    if (dispatchConfig.phasedRegistrationNames) {
+      EventPropagators.accumulateTwoPhaseDispatches(event);
+    } else {
+      EventPropagators.accumulateDirectDispatches(event);
+    }
 
     ReactUpdates.batchedUpdates(function() {
       EventPluginHub.enqueueEvents(event);
