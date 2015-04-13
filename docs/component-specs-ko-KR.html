@@ -407,11 +407,11 @@
 
     <h2><a class="anchor" name="-"></a>컴포넌트 명세 <a class="hash-link" href="#-">#</a></h2>
 <p><code>React.createClass()</code>를 호출하여 컴포넌트 클래스를 생성할 때, <code>render</code> 메소드를 포함한 명세 객체를 제공해야 합니다. 또한 필요한 경우 여기에서 설명하는 다른 생명주기 메소드를 명세 객체에 추가로 제공할 수 있습니다.</p>
-<h3><a class="anchor" name="render"></a>render <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">()</span>
+<h3><a class="anchor" name="render"></a>render <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactElement</span> <span class="nx">render</span><span class="p">()</span>
 </code></pre></div>
 <p><code>render()</code> 메소드는 필수 항목입니다.</p>
 
-<p>호출되면 <code>this.props</code>와 <code>this.state</code>를 토대로 하나의 자식 컴포넌트를 리턴합니다. 이 자식 컴포넌트는 네이티브 DOM 컴포넌트의 가상 표현 (<code>&lt;div /&gt;</code>나 <code>React.DOM.div()</code> 등) 또는 직접 정의한 조합(composite) 컴포넌트가 될 수 있습니다.</p>
+<p>호출되면 <code>this.props</code>와 <code>this.state</code>를 토대로 하나의 자식 엘리먼트를 리턴합니다. 이 자식 엘리먼트는 네이티브 DOM 컴포넌트의 가상 표현 (<code>&lt;div /&gt;</code>나 <code>React.DOM.div()</code> 등) 또는 직접 정의한 조합(composite) 컴포넌트가 될 수 있습니다.</p>
 
 <p>아무 것도 렌더링되지 않도록 하려면 <code>null</code>이나 <code>false</code>를 리턴합니다. React는 지금의 차이 비교 알고리즘이 작동할 수 있도록 내부적으로는 <code>&lt;noscript&gt;</code> 태그를 렌더링합니다. <code>null</code>이나 <code>false</code>를 리턴한 경우, <code>React.findDOMNode(this)</code>는 <code>null</code>을 리턴합니다.</p>
 

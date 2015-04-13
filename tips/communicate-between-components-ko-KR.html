@@ -424,12 +424,12 @@
 <span class="p">});</span>
 
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">GroceryList</span> <span class="nx">items</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;사과&#39;</span><span class="p">,</span> <span class="s1">&#39;바나나&#39;</span><span class="p">,</span> <span class="s1">&#39;크랜베리&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span> <span class="p">);</span>
+  <span class="o">&lt;</span><span class="nx">GroceryList</span> <span class="nx">items</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;사과&#39;</span><span class="p">,</span> <span class="s1">&#39;바나나&#39;</span><span class="p">,</span> <span class="s1">&#39;크랜베리&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span>
+<span class="p">);</span>
 </code></pre></div>
 <p><code>bind(this, arg1, arg2, ...)</code>의 사용을 확인하세요: 간단히 <code>handleClick</code>에 인자를 더 넘겼습니다. 이는 React의 새로운 컨셉이 아닙니다; 그냥 JavaScript죠.</p>
 
-<p>부모-자식 관계가 없는 두 컴포넌트간의 통신을 위해, 별도로 전역(global) 이벤트 시스템을 사용할 수 있습니다.
-<code>componentDidMount()</code>에서 이벤트를 구독하고, <code>componentWillUnmount()</code>에서 해제합니다. 이벤트를 받으면 <code>setState()</code>를 호출합니다.</p>
+<p>부모-자식 관계가 없는 두 컴포넌트간의 통신을 위해, 별도로 전역(global) 이벤트 시스템을 사용할 수 있습니다. <code>componentDidMount()</code>에서 이벤트를 구독하고, <code>componentWillUnmount()</code>에서 해제합니다. 이벤트를 받으면 <code>setState()</code>를 호출합니다. <a href="https://facebook.github.io/flux/">Flux</a> 패턴은 이를 정리하는 방법 중 하나입니다.</p>
 
 
     <div class="docs-prevnext">

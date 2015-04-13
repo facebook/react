@@ -430,6 +430,8 @@
 </code></pre></div><h2><a class="anchor" name="--synthetic-"></a>이벤트 핸들링과 통합적인(Synthetic) 이벤트 <a class="hash-link" href="#--synthetic-">#</a></h2>
 <p>React에서의 이벤트 핸들러는 HTML에서 그러던 것처럼 간단히 카멜케이스 프로퍼티(camelCased prop)로 넘기면 됩니다. React의 모든 이벤트는 통합적인 이벤트 시스템의 구현으로 IE8 이상에서는 같은 행동이 보장됩니다. 즉, React는 사양에 따라 어떻게 이벤트를 일으키고(bubble) 잡는지 알고 있고, 당신이 사용하는 브라우저와 관계없이 이벤트 핸들러에 전달되는 이벤트는 <a href="http://www.w3.org/TR/DOM-Level-3-Events/">W3C 사양</a>과 같도록 보장됩니다.</p>
 <h2><a class="anchor" name="----"></a>기본 구현: 오토바인딩과 이벤트 델리게이션 <a class="hash-link" href="#----">#</a></h2>
+<p><a name="under-the-hood-autobinding-and-event-delegation"></a></p>
+
 <p>코드를 고성능으로 유지하고 이해하기 쉽게 하기 위해, React는 보이지 않는 곳에서 몇 가지 일을 수행합니다.</p>
 
 <p><strong>오토바인딩:</strong> JavaScript에서 콜백을 만들 때, 보통은 <code>this</code>의 값이 정확하도록 명시적으로 메소드를 인스턴스에 바인드해야 합니다. React에서는 모든 메소드가 자동으로 React의 컴포넌트 인스턴스에 바인드됩니다. React가 바인드 메소드를 캐시하기 때문에 매우 CPU와 메모리에 효율적입니다. 타이핑해야 할 것도 줄어들죠!</p>

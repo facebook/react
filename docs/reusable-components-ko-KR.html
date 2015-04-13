@@ -483,7 +483,7 @@
 </code></pre></div>
 <p><code>getDefaultProps()</code>의 결과값은 캐시가 되며, 부모 컴포넌트에서 명시되지 않았을 때 <code>this.props.value</code>가 값을 가질 수 있도록 해주는데 사용됩니다.<code>getDefaultProps()</code>를 사용하면 반복적이고 깨지기 쉬운 코드를 짤 필요없이 그냥 안전하게 prop을 사용할 수 있습니다.</p>
 <h2><a class="anchor" name="prop--"></a>Prop 전달하기: 단축 <a class="hash-link" href="#prop--">#</a></h2>
-<p>React 컴포넌트의 흔히 그냥 기본 HTML을 확장해서 씁니다. 타이핑을 아끼기 위해 기저의 HTML 엘리먼트에 HTML 속성들을 단순히 복사하는 컴포넌트가 필요할 수도 있습니다. JSX의 <em>spread</em> 문법을 사용하면 이렇게 할 수 있습니다.</p>
+<p>React 컴포넌트의 흔히 그냥 기본 HTML 엘리먼트를 확장해서 씁니다. 타이핑을 아끼기 위해 기저의 HTML 엘리먼트에 HTML 속성들을 단순히 복사하는 컴포넌트가 필요할 수도 있습니다. JSX의 <em>spread</em> 문법을 사용하면 이렇게 할 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// 모든 prop을 받아서 CheckLink에 넘기고 &lt;a&gt;에 복사합니다.</span>
