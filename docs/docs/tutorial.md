@@ -212,7 +212,7 @@ Note that we have passed some data from the parent `CommentList` component to th
 
 Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.
 
-First, add the third-party **Showdown** library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):
+First, add the third-party library **marked** to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):
 
 ```html{7}
 <!-- index.html -->
@@ -221,15 +221,14 @@ First, add the third-party **Showdown** library to your application. This is a J
   <script src="https://fb.me/react-{{site.react_version}}.js"></script>
   <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
   <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
 
 Next, let's convert the comment text to Markdown and output it:
 
-```javascript{2,10}
+```javascript{9}
 // tutorial6.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
     return (
@@ -237,25 +236,24 @@ var Comment = React.createClass({
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {converter.makeHtml(this.props.children.toString())}
+        {marked(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-All we're doing here is calling the Showdown library. We need to convert `this.props.children` from React's wrapped text to a raw string that Showdown will understand so we explicitly call `toString()`.
+All we're doing here is calling the marked library. We need to convert `this.props.children` from React's wrapped text to a raw string that marked will understand so we explicitly call `toString()`.
 
 But there's a problem! Our rendered comments look like this in the browser: "`<p>`This is `<em>`another`</em>` comment`</p>`". We want those tags to actually render as HTML.
 
 That's React protecting you from an XSS attack. There's a way to get around it but the framework warns you not to use it:
 
-```javascript{5,11}
+```javascript{4,10}
 // tutorial7.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
-    var rawMarkup = converter.makeHtml(this.props.children.toString());
+    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
     return (
       <div className="comment">
         <h2 className="commentAuthor">
@@ -268,9 +266,9 @@ var Comment = React.createClass({
 });
 ```
 
-This is a special API that intentionally makes it difficult to insert raw HTML, but for Showdown we'll take advantage of this backdoor.
+This is a special API that intentionally makes it difficult to insert raw HTML, but for marked we'll take advantage of this backdoor.
 
-**Remember:** by using this feature you're relying on Showdown to be secure.
+**Remember:** by using this feature you're relying on marked to be secure. In this case, we pass `sanitize: true` which tells marked to escape any HTML markup in the source instead of passing it through unchanged.
 
 ### Hook up the data model
 
