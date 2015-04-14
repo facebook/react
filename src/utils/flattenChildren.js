@@ -22,7 +22,7 @@ var warning = require('warning');
 function flattenSingleChildIntoContext(traverseContext, child, name) {
   // We found a component instance.
   var result = traverseContext;
-  var keyUnique = ('undefined' === typeof result[name]);
+  var keyUnique = (result[name] === undefined);
   if (__DEV__) {
     warning(
       keyUnique,

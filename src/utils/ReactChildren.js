@@ -81,7 +81,7 @@ function mapSingleChildIntoContext(traverseContext, child, name, i) {
   var mapBookKeeping = traverseContext;
   var mapResult = mapBookKeeping.mapResult;
 
-  var keyUnique = ('undefined' === typeof mapResult[name]);
+  var keyUnique = (mapResult[name] === undefined);
   if (__DEV__) {
     warning(
       keyUnique,
