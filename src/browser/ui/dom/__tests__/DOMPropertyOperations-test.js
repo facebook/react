@@ -93,7 +93,7 @@ describe('DOMPropertyOperations', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'scoped',
         true
-      )).toBe('scoped=""');
+      )).toBe('scoped');
     });
 
     it('should create markup for booleanish properties', function() {
