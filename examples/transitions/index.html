@@ -54,10 +54,10 @@
           var children = [];
           var pos = 0;
           var colors = ['red', 'gray', 'blue'];
-          for (var i = this.state.current; i < this.state.current + 3; i++) {
+          for (var i = this.state.current; i < this.state.current + colors.length; i++) {
             var style = {
               left: pos * 128,
-              background: colors[i % 3]
+              background: colors[i % colors.length]
             };
             pos++;
             children.push(<div key={i} className="animateItem" style={style}>{i}</div>);
