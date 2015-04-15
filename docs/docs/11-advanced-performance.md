@@ -49,7 +49,7 @@ So, how should we implement `shouldComponentUpdate`? Say that you have a compone
 
 ```javascript
 React.createClass({
-  propsTypes: {
+  propTypes: {
     value: React.PropTypes.string.isRequired
   },
 
@@ -73,7 +73,7 @@ But what if your components' props or state are mutable data structures?. Say th
 
 ```javascript
 React.createClass({
-  propsTypes: {
+  propTypes: {
     value: React.PropTypes.object.isRequired
   },
 
