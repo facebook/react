@@ -266,6 +266,7 @@ describe 'ReactCoffeeScriptClass', ->
       but does not invoke them.', ->
     spyOn console, 'error'
     getInitialStateWasCalled = false
+    getDefaultPropsWasCalled = false
     class Foo extends React.Component
       constructor: ->
         @contextTypes = {}
@@ -275,20 +276,28 @@ describe 'ReactCoffeeScriptClass', ->
         getInitialStateWasCalled = true
         {}
 
+      getDefaultProps: ->
+        getDefaultPropsWasCalled = true
+        {}
+
       render: ->
         span
           className: 'foo'
 
     test React.createElement(Foo), 'SPAN', 'foo'
     expect(getInitialStateWasCalled).toBe false
-    expect(console.error.calls.length).toBe 3
+    expect(getDefaultPropsWasCalled).toBe false
+    expect(console.error.calls.length).toBe 4
     expect(console.error.calls[0].args[0]).toContain(
       'getInitialState was defined on Foo, a plain JavaScript class.'
     )
     expect(console.error.calls[1].args[0]).toContain(
-      'propTypes was defined as an instance property on Foo.'
+      'getDefaultProps was defined on Foo, a plain JavaScript class.'
     )
     expect(console.error.calls[2].args[0]).toContain(
+      'propTypes was defined as an instance property on Foo.'
+    )
+    expect(console.error.calls[3].args[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     )
 

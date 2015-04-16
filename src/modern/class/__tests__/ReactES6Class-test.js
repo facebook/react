@@ -297,6 +297,7 @@ describe('ReactES6Class', function() {
   it('warns when classic properties are defined on the instance, ' +
      'but does not invoke them.', function() {
     spyOn(console, 'error');
+    var getDefaultPropsWasCalled = false;
     var getInitialStateWasCalled = false;
     class Foo extends React.Component {
       constructor() {
@@ -307,20 +308,28 @@ describe('ReactES6Class', function() {
         getInitialStateWasCalled = true;
         return {};
       }
+      getDefaultProps() {
+        getDefaultPropsWasCalled = true;
+        return {};
+      }
       render() {
         return <span className="foo" />;
       }
     }
     test(<Foo />, 'SPAN', 'foo');
     expect(getInitialStateWasCalled).toBe(false);
-    expect(console.error.calls.length).toBe(3);
+    expect(getDefaultPropsWasCalled).toBe(false);
+    expect(console.error.calls.length).toBe(4);
     expect(console.error.calls[0].args[0]).toContain(
       'getInitialState was defined on Foo, a plain JavaScript class.'
     );
     expect(console.error.calls[1].args[0]).toContain(
-      'propTypes was defined as an instance property on Foo.'
+      'getDefaultProps was defined on Foo, a plain JavaScript class.'
     );
     expect(console.error.calls[2].args[0]).toContain(
+      'propTypes was defined as an instance property on Foo.'
+    );
+    expect(console.error.calls[3].args[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     );
   });
