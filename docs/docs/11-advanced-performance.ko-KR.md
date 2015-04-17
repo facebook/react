@@ -47,7 +47,7 @@ React가 C6에만 DOM 변경을 수행한 것을 확인하세요. 이는 필연�
 
 ```javascript
 React.createClass({
-  propsTypes: {
+  propTypes: {
     value: React.PropTypes.string.isRequired
   },
 
@@ -71,7 +71,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 
 ```javascript
 React.createClass({
-  propsTypes: {
+  propTypes: {
     value: React.PropTypes.object.isRequired
   },
 
