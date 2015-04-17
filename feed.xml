@@ -7,6 +7,31 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React Native v0.4</title>
+				<description>&lt;p&gt;It&amp;#39;s been three weeks since we open sourced React Native and there&amp;#39;s been some insane amount of activity already: over 12.5k stars, 1000 commits, 500 issues, 380 pull requests, and 100 contributors, plus &lt;a href=&quot;http://react.parts/native-ios&quot;&gt;35 plugins&lt;/a&gt; and &lt;a href=&quot;http://herman.asia/building-a-flashcard-app-with-react-native&quot;&gt;1 app in the app store&lt;/a&gt;! We were expecting some buzz around the project but this is way beyond anything we imagined. Thank you!&lt;/p&gt;
+
+&lt;p&gt;I&amp;#39;d especially like to thank community members Brent Vatne and James Ide who have both already contributed meaningfully to the project and have been extremely helpful on IRC and with issues and pull requests&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The main focus of the past few weeks has been to make React Native the best possible experience for people outside of Facebook. Here&amp;#39;s a high level summary of what&amp;#39;s happened since we open sourced:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Error messages and documentation&lt;/strong&gt;: We want React Native to be the absolute best developer experience for building mobile apps. We&amp;#39;ve added a lot of warnings, improved the documentation, and fixed many bugs. If you encounter anything, and I really mean anything, that is not expected or clear, please create an issue - we want to hear about it and fix it.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;NPM modules compatibility&lt;/strong&gt;: There are a lot of libraries on NPM that do not depend on node/browser internals that would be really useful in React Native, such as superagent, underscore, parse, and many others.  The packager is now a lot more faithful to node/browserify/webpack dependency resolution. If your favorite library doesn&amp;#39;t work out of the box, please open up an issue.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Infrastructure&lt;/strong&gt;: We are refactoring the internals of React Native to make it easier to plug in to existing iOS codebases, as well as improve performance by removing redundant views and shadow views, supporting multiple root views and manually registering classes to reduce startup time.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Components&lt;/strong&gt;: The API for a lot of UI components and APIs, especially the ones we&amp;#39;re not using heavily inside of Facebook, has dramatically improved thanks to many of your pull requests.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Tests&lt;/strong&gt;: We ported JavaScript tests, iOS Snapshot tests, and End to End tests to Travis CI. We have broken GitHub master a couple of times (whoops!) when syncing and we hope that with this growing suite of tests it&amp;#39;s going to become harder and harder to do so.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Patent Grant&lt;/strong&gt;: Many of you had concerns and questions around the PATENTS file. We pushed &lt;a href=&quot;https://code.facebook.com/posts/1639473982937255/updating-our-open-source-patent-grant/&quot;&gt;a new version of the grant&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Per commit history&lt;/strong&gt;: In order to synchronize from Facebook to GitHub, we used to do one giant commit every few days. We improved our tooling and now have per commit history that maintains author information (both internal and external from pull requests), and we retroactively applied this to historical diffs to provide proper attribution.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;where-are-we-going&quot;&gt;&lt;/a&gt;Where are we going? &lt;a class=&quot;hash-link&quot; href=&quot;#where-are-we-going&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In addition to supporting pull requests, issues, and general improvements, we&amp;#39;re also working hard on our internal React Native integrations and on React Native for Android.&lt;/p&gt;
+</description>
+				<pubDate>2015-04-17T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/04/17/react-native-v0.4.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/04/17/react-native-v0.4.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #26</title>
 				<description>&lt;p&gt;We open sourced React Native last week and the community reception blew away all our expectations! So many of you tried it, made cool stuff with it, raised many issues and even submitted pull requests to fix them! The entire team wants to say thank you!&lt;/p&gt;
 
@@ -748,62 +773,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2015-02-24T11:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html</guid>
-			</item>
-		
-			<item>
-				<title>Introducing Relay and GraphQL</title>
-				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;data-fetching-for-react-applications&quot;&gt;&lt;/a&gt;Data fetching for React applications &lt;a class=&quot;hash-link&quot; href=&quot;#data-fetching-for-react-applications&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;There&amp;#39;s more to building an application than creating a user interface. Data fetching is still a tricky problem, especially as applications become more complicated. At &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;React.js Conf&lt;/a&gt; we announced two projects we&amp;#39;ve created at Facebook to make data fetching simple for developers, even as a product grows to include dozens of contributors and the application becomes as complex as Facebook itself.&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/9sc8Pyc51uU&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;The two projects &amp;mdash; Relay and GraphQL &amp;mdash; have been in use in production at Facebook for some time, and we&amp;#39;re excited to be bringing them to the world as open source in the future. In the meantime, we wanted to share some additional information about the projects here.&lt;/p&gt;
-
-&lt;script async class=&quot;speakerdeck-embed&quot; data-id=&quot;7af7c2f33bf9451a892dcd91de55b7c2&quot; data-ratio=&quot;1.29456384323641&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-is-relay&quot;&gt;&lt;/a&gt;What is Relay? &lt;a class=&quot;hash-link&quot; href=&quot;#what-is-relay&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Relay is a new framework from Facebook that provides data-fetching functionality for React applications. It was announced at React.js Conf (January 2015).&lt;/p&gt;
-
-&lt;p&gt;Each component specifies its own data dependencies declaratively using a query language called GraphQL. The data is made available to the component via properties on &lt;code&gt;this.props&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Developers compose these React components naturally, and Relay takes care of composing the data queries into efficient batches, providing each component with exactly the data that it requested (and no more), updating those components when the data changes, and maintaining a client-side store (cache) of all data.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-is-graphql&quot;&gt;&lt;/a&gt;What is GraphQL? &lt;a class=&quot;hash-link&quot; href=&quot;#what-is-graphql&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;GraphQL is a data querying language designed to describe the complex, nested data dependencies of modern applications. It&amp;#39;s been in production use in Facebook&amp;#39;s native apps for several years.&lt;/p&gt;
-
-&lt;p&gt;On the server, we configure the GraphQL system to map queries to underlying data-fetching code. This configuration layer allows GraphQL to work with arbitrary underlying storage mechanisms. Relay uses GraphQL as its query language, but it is not tied to a specific implementation of GraphQL.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-value-proposition&quot;&gt;&lt;/a&gt;The value proposition &lt;a class=&quot;hash-link&quot; href=&quot;#the-value-proposition&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Relay was born out of our experiences building large applications at Facebook. Our overarching goal is to enable developers to create correct, high-performance applications in a straightforward and obvious way. The design enables even large teams to make changes with a high degree of isolation and confidence. Fetching data is hard, dealing with ever-changing data is hard, and performance is hard. Relay aims to reduce these problems to simple ones, moving the tricky bits into the framework and freeing you to concentrate on building your application.&lt;/p&gt;
-
-&lt;p&gt;By co-locating the queries with the view code, the developer can reason about what a component is doing by looking at it in isolation; it&amp;#39;s not necessary to consider the context where the component was rendered in order to understand it. Components can be moved anywhere in a render hierarchy without having to apply a cascade of modifications to parent components or to the server code which prepares the data payload.&lt;/p&gt;
-
-&lt;p&gt;Co-location leads developers to fall into the &amp;quot;pit of success&amp;quot;, because they get exactly the data they asked for and the data they asked for is explicitly defined right next to where it is used. This means that performance becomes the default (it becomes much harder to accidentally over-fetch), and components are more robust (under-fetching is also less likely for the same reason, so components won&amp;#39;t try to render missing data and blow up at runtime).&lt;/p&gt;
-
-&lt;p&gt;Relay provides a predictable environment for developers by maintaining an invariant: a component won&amp;#39;t be rendered until all the data it requested is available. Additionally, queries are defined statically (ie. we can extract queries from a component tree before rendering) and the GraphQL schema provides an authoritative description of what queries are valid, so we can validate queries early and fail fast when the developer makes a mistake.&lt;/p&gt;
-
-&lt;p&gt;Only the fields of an object that a component explicitly asks for will be accessible to that component, even if other fields are known and cached in the store (because another component requested them). This makes it impossible for implicit data dependency bugs to exist latently in the system.&lt;/p&gt;
-
-&lt;p&gt;By handling all data-fetching via a single abstraction, we&amp;#39;re able to handle a bunch of things that would otherwise have to be dealt with repeatedly and pervasively across the application:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Performance:&lt;/strong&gt; All queries flow through the framework code, where things that would otherwise be inefficient, repeated query patterns get automatically collapsed and batched into efficient, minimal queries. Likewise, the framework knows which data have been previously requested, or for which requests are currently &amp;quot;in flight&amp;quot;, so queries can be automatically de-duplicated and the minimal queries can be produced.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Subscriptions:&lt;/strong&gt; All data flows into a single store, and all reads from the store are via the framework. This means the framework knows which components care about which data and which should be re-rendered when data changes; components never have to set up individual subscriptions.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Common patterns:&lt;/strong&gt; We can make common patterns easy. Pagination is the example that &lt;a href=&quot;https://twitter.com/jingc&quot;&gt;Jing&lt;/a&gt; gave at the conference: if you have 10 records initially, getting the next page just means declaring you want 15 records in total, and the framework automatically constructs the minimal query to grab the delta between what you have and what you need, requests it, and re-renders your view when the data become available.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Simplified server implementation:&lt;/strong&gt; Rather than having a proliferation of end-points (per action, per route), a single GraphQL endpoint can serve as a facade for any number of underlying resources.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Uniform mutations:&lt;/strong&gt; There is one consistent pattern for performing mutations (writes), and it is conceptually baked into the data querying model itself. You can think of a mutation as a query with side-effects: you provide some parameters that describe the change to be made (eg. attaching a comment to a record) and a query that specifies the data you&amp;#39;ll need to update your view of the world after the mutation completes (eg. the comment count on the record), and the data flows through the system using the normal flow. We can do an immediate &amp;quot;optimistic&amp;quot; update on the client (ie. update the view under the assumption that the write will succeed), and finally commit it, retry it or roll it back in the event of an error when the server payload comes back.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;how-does-it-relate-to-flux&quot;&gt;&lt;/a&gt;How does it relate to Flux? &lt;a class=&quot;hash-link&quot; href=&quot;#how-does-it-relate-to-flux&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;In some ways Relay is inspired by Flux, but the mental model is much simpler. Instead of multiple stores, there is one central store that caches all GraphQL data. Instead of explicit subscriptions, the framework itself can track which data each component requests, and which components should be updated whenever the data change. Instead of actions, modifications take the form of mutations.&lt;/p&gt;
-
-&lt;p&gt;At Facebook, we have apps built entirely using Flux, entirely using Relay, or with both. One pattern we see emerging is letting Relay manage the bulk of the data flow for an application, but using Flux stores on the side to handle a subset of application state.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;open-source-plans&quot;&gt;&lt;/a&gt;Open source plans &lt;a class=&quot;hash-link&quot; href=&quot;#open-source-plans&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We&amp;#39;re working very hard right now on getting both GraphQL (a spec, and a reference implementation) and Relay ready for public release (no specific dates yet, but we are super excited about getting these out there).&lt;/p&gt;
-
-&lt;p&gt;In the meantime, we&amp;#39;ll be providing more and more information in the form of blog posts (and in &lt;a href=&quot;https://gist.github.com/wincent/598fa75e22bdfa44cf47&quot;&gt;other channels&lt;/a&gt;). As we get closer to the open source release, you can expect more concrete details, syntax and API descriptions and more.&lt;/p&gt;
-
-&lt;p&gt;Watch this space!&lt;/p&gt;
-</description>
-				<pubDate>2015-02-20T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html</guid>
 			</item>
 		
 	</channel>

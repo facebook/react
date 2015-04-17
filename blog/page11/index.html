@@ -66,6 +66,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2015/04/17/react-native-v0.4.html">React Native v0.4</a></li>
+      
         <li><a href="/react/blog/2015/03/30/community-roundup-26.html">Community Round-up #26</a></li>
       
         <li><a href="/react/blog/2015/03/26/introducing-react-native.html">Introducing React Native</a></li>
@@ -84,14 +86,32 @@
       
         <li><a href="/react/blog/2015/02/24/streamlining-react-elements.html">Streamlining React Elements</a></li>
       
-        <li><a href="/react/blog/2015/02/20/introducing-relay-and-graphql.html">Introducing Relay and GraphQL</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        <h1><a href="/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html">React v0.5.2, v0.4.2</a></h1>
+        <p class="meta">December 18, 2013 by Paul O'Shannessy</p>
+        <hr />
+        <div class="post">
+         <p>Today we&#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a <code>key</code>. Typically &quot;safe&quot; data is used for a <code>key</code>, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.</p>
+
+<p>This only affects v0.5.x and v0.4.x. Versions in the 0.3.x family are unaffected.</p>
+
+<p>Updated versions are available for immediate download via npm, bower, and on our <a href="http://facebook.github.io/react/downloads.html">download page</a>.</p>
+
+<p>We take security very seriously at Facebook. For most of our products, users don&#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.</p>
+
+<p>While we&#39;ve encouraged responsible disclosure as part of <a href="https://www.facebook.com/whitehat/">Facebook&#39;s whitehat bounty program</a> since we launched, we don&#39;t have a good process for notifying our users. Hopefully we don&#39;t need to use it, but moving forward we&#39;ll set up a little bit more process to ensure the safety of our users. Ember.js has <a href="http://emberjs.com/security/">an excellent policy</a> which we may use as our model.</p>
+
+<p>You can learn more about the vulnerability discussed here: <a href="https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU">CVE-2013-7035</a>.</p>
+
+        </div>
+      </div>
     
       <div class="post-list-item">
         <h1><a href="/react/blog/2013/11/18/community-roundup-11.html">Community Round-up #11</a></h1>
@@ -451,56 +471,6 @@ Is this some sort of template language? Specifically no. This might have been th
 <h3><a class="anchor" name="react-with-addons"></a>React with Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
 <ul>
 <li>Fixed bug with transition and animation event detection.</li>
-</ul>
-
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a></h1>
-        <p class="meta">October 16, 2013 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>This release is the result of several months of hard work from members of the team and the community. While there are no groundbreaking changes in core, we&#39;ve worked hard to improve performance and memory usage. We&#39;ve also worked hard to make sure we are being consistent in our usage of DOM properties.</p>
-
-<p>The biggest change you&#39;ll notice as a developer is that we no longer support <code>class</code> in JSX as a way to provide CSS classes. Since this prop was being converted to <code>className</code> at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are <a href="https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156">a few exceptions</a> where we deviate slightly in an attempt to be consistent internally.</p>
-
-<p>The other major change in v0.5 is that we&#39;ve added an additional build - <code>react-with-addons</code> - which adds support for some extras that we&#39;ve been working on including animations and two-way binding. <a href="/react/docs/addons.html">Read more about these addons in the docs</a>.</p>
-<h2><a class="anchor" name="thanks-to-our-community"></a>Thanks to Our Community <a class="hash-link" href="#thanks-to-our-community">#</a></h2>
-<p>We added <em>22 new people</em> to the list of authors since we launched React v0.4.1 nearly 3 months ago. With a total of 48 names in our <code>AUTHORS</code> file, that means we&#39;ve nearly doubled the number of contributors in that time period. We&#39;ve seen the number of people contributing to discussion on IRC, mailing lists, Stack Overflow, and GitHub continue rising. We&#39;ve also had people tell us about talks they&#39;ve given in their local community about React.</p>
-
-<p>It&#39;s been awesome to see the things that people are building with React, and we can&#39;t wait to see what you come up with next!</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
-<ul>
-<li>Memory usage improvements - reduced allocations in core which will help with GC pauses</li>
-<li>Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.</li>
-<li>Standardized prop -&gt; DOM attribute process. This previously resulting in additional type checking and overhead as well as confusing cases for users. Now we will always convert your value to a string before inserting it into the DOM.</li>
-<li>Support for Selection events.</li>
-<li>Support for <a href="https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent">Composition events</a>.</li>
-<li>Support for additional DOM properties (<code>charSet</code>, <code>content</code>, <code>form</code>, <code>httpEquiv</code>, <code>rowSpan</code>, <code>autoCapitalize</code>).</li>
-<li>Support for additional SVG properties (<code>rx</code>, <code>ry</code>).</li>
-<li>Support for using <code>getInitialState</code> and <code>getDefaultProps</code> in mixins.</li>
-<li>Support mounting into iframes.</li>
-<li>Bug fixes for controlled form components.</li>
-<li>Bug fixes for SVG element creation.</li>
-<li>Added <code>React.version</code>.</li>
-<li>Added <code>React.isValidClass</code> - Used to determine if a value is a valid component constructor.</li>
-<li>Removed <code>React.autoBind</code> - This was deprecated in v0.4 and now properly removed.</li>
-<li>Renamed  <code>React.unmountAndReleaseReactRootNode</code> to <code>React.unmountComponentAtNode</code>.</li>
-<li>Began laying down work for refined performance analysis.</li>
-<li>Better support for server-side rendering - <a href="https://github.com/facebook/react-page">react-page</a> has helped improve the stability for server-side rendering.</li>
-<li>Made it possible to use React in environments enforcing a strict <a href="https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy">Content Security Policy</a>. This also makes it possible to use React to build Chrome extensions.</li>
-</ul>
-<h3><a class="anchor" name="react-with-addons-new"></a>React with Addons (New!) <a class="hash-link" href="#react-with-addons-new">#</a></h3>
-<ul>
-<li>Introduced a separate build with several &quot;addons&quot; which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. <a href="/react/docs/addons.html">Read more in the docs</a>.</li>
-</ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
-<ul>
-<li>No longer transform <code>class</code> to <code>className</code> as part of the transform! This is a breaking change - if you were using <code>class</code>, you <em>must</em> change this to <code>className</code> or your components will be visually broken.</li>
-<li>Added warnings to the in-browser transformer to make it clear it is not intended for production use.</li>
-<li>Improved compatibility for Windows</li>
-<li>Improved support for maintaining line numbers when transforming.</li>
 </ul>
 
         </div>

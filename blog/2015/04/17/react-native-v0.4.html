@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React v0.4.0 | React</title>
+  <title>React Native v0.4 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React v0.4.0 | React">
+  <meta property="og:title" content="React Native v0.4 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/17/react-v0-4-0.html">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2015/04/17/react-native-v0.4.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -66,7 +66,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2015/04/17/react-native-v0.4.html">React Native v0.4</a></li>
+        <li><a href="/react/blog/2015/04/17/react-native-v0.4.html" class="active">React Native v0.4</a></li>
       
         <li><a href="/react/blog/2015/03/30/community-roundup-26.html">Community Round-up #26</a></li>
       
@@ -92,44 +92,29 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.4.0</h1>
-    <p class="meta">July 17, 2013 by Paul O'Shannessy</p>
+    <h1>React Native v0.4</h1>
+    <p class="meta">April 17, 2015 by Vjeux</p>
 
     <hr>
 
     <div class="post">
-      <p>Over the past 2 months we&#39;ve been taking feedback and working hard to make React even better. We fixed some bugs, made some under-the-hood improvements, and added several features that we think will improve the experience developing with React. Today we&#39;re proud to announce the availability of React v0.4!</p>
+      <p>It&#39;s been three weeks since we open sourced React Native and there&#39;s been some insane amount of activity already: over 12.5k stars, 1000 commits, 500 issues, 380 pull requests, and 100 contributors, plus <a href="http://react.parts/native-ios">35 plugins</a> and <a href="http://herman.asia/building-a-flashcard-app-with-react-native">1 app in the app store</a>! We were expecting some buzz around the project but this is way beyond anything we imagined. Thank you!</p>
 
-<p>This release could not have happened without the support of our growing community. Since launch day, the community has contributed blog posts, questions to the <a href="http://groups.google.com/group/reactjs">Google Group</a>, and issues and pull requests on GitHub. We&#39;ve had contributions ranging from documentation improvements to major changes to React&#39;s rendering. We&#39;ve seen people integrate React into the tools they&#39;re using and the products they&#39;re building, and we&#39;re all very excited to see what our budding community builds next!</p>
+<p>I&#39;d especially like to thank community members Brent Vatne and James Ide who have both already contributed meaningfully to the project and have been extremely helpful on IRC and with issues and pull requests</p>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2>
+<p>The main focus of the past few weeks has been to make React Native the best possible experience for people outside of Facebook. Here&#39;s a high level summary of what&#39;s happened since we open sourced:</p>
 
-<p>React v0.4 has some big changes. We&#39;ve also restructured the documentation to better communicate how to use React. We&#39;ve summarized the changes below and linked to documentation where we think it will be especially useful.</p>
-
-<p>When you&#39;re ready, <a href="/react/downloads.html">go download it</a>!</p>
-<h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
 <ul>
-<li>Switch from using <code>id</code> attribute to <code>data-reactid</code> to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.</li>
-<li>Support for more DOM elements and attributes (e.g., <code>&lt;canvas&gt;</code>)</li>
-<li>Improved server-side rendering APIs. <code>React.renderComponentToString(&lt;component&gt;, callback)</code> allows you to use React on the server and generate markup which can be sent down to the browser.</li>
-<li><code>prop</code> improvements: validation and default values. <a href="http://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">Read our blog post for details...</a></li>
-<li>Support for the <code>key</code> prop, which allows for finer control over reconciliation. <a href="http://facebook.github.io/react/docs/multiple-components.html">Read the docs for details...</a></li>
-<li>Removed <code>React.autoBind</code>. <a href="http://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">Read our blog post for details...</a></li>
-<li>Improvements to forms. We&#39;ve written wrappers around <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;select&gt;</code> in order to standardize many inconsistencies in browser implementations. This includes support for <code>defaultValue</code>, and improved implementation of the <code>onChange</code> event, and circuit completion. <a href="http://facebook.github.io/react/docs/forms.html">Read the docs for details...</a></li>
-<li>We&#39;ve implemented an improved synthetic event system that conforms to the W3C spec.</li>
-<li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as its second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
+<li><strong>Error messages and documentation</strong>: We want React Native to be the absolute best developer experience for building mobile apps. We&#39;ve added a lot of warnings, improved the documentation, and fixed many bugs. If you encounter anything, and I really mean anything, that is not expected or clear, please create an issue - we want to hear about it and fix it.</li>
+<li><strong>NPM modules compatibility</strong>: There are a lot of libraries on NPM that do not depend on node/browser internals that would be really useful in React Native, such as superagent, underscore, parse, and many others.  The packager is now a lot more faithful to node/browserify/webpack dependency resolution. If your favorite library doesn&#39;t work out of the box, please open up an issue.</li>
+<li><strong>Infrastructure</strong>: We are refactoring the internals of React Native to make it easier to plug in to existing iOS codebases, as well as improve performance by removing redundant views and shadow views, supporting multiple root views and manually registering classes to reduce startup time.</li>
+<li><strong>Components</strong>: The API for a lot of UI components and APIs, especially the ones we&#39;re not using heavily inside of Facebook, has dramatically improved thanks to many of your pull requests.</li>
+<li><strong>Tests</strong>: We ported JavaScript tests, iOS Snapshot tests, and End to End tests to Travis CI. We have broken GitHub master a couple of times (whoops!) when syncing and we hope that with this growing suite of tests it&#39;s going to become harder and harder to do so.</li>
+<li><strong>Patent Grant</strong>: Many of you had concerns and questions around the PATENTS file. We pushed <a href="https://code.facebook.com/posts/1639473982937255/updating-our-open-source-patent-grant/">a new version of the grant</a>.</li>
+<li><strong>Per commit history</strong>: In order to synchronize from Facebook to GitHub, we used to do one giant commit every few days. We improved our tooling and now have per commit history that maintains author information (both internal and external from pull requests), and we retroactively applied this to historical diffs to provide proper attribution.</li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
-<ul>
-<li>Support for comment nodes <code>&lt;div&gt;{/* this is a comment and won&#39;t be rendered */}&lt;/div&gt;</code></li>
-<li>Children are now transformed directly into arguments instead of being wrapped in an array
-E.g. <code>&lt;div&gt;&lt;Component1/&gt;&lt;Component2/&gt;&lt;/div&gt;</code> is transformed into <code>React.DOM.div(null, Component1(null), Component2(null))</code>.
-Previously this would be transformed into <code>React.DOM.div(null, [Component1(null), Component2(null)])</code>.
-If you were using React without JSX previously, your code should still work.</li>
-</ul>
-<h3><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h3>
-<ul>
-<li>Fixed a number of bugs when transforming directories</li>
-<li>No longer re-write <code>require()</code>s to be relative unless specified</li>
-</ul>
+<h2><a class="anchor" name="where-are-we-going"></a>Where are we going? <a class="hash-link" href="#where-are-we-going">#</a></h2>
+<p>In addition to supporting pull requests, issues, and general improvements, we&#39;re also working hard on our internal React Native integrations and on React Native for Android.</p>
 
     </div>
 
