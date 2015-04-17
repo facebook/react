@@ -112,7 +112,7 @@ if ("production" !== "development") {
       if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
         console.debug(
           'Download the React DevTools for a better development experience: ' +
-          'http://fb.me/react-devtools'
+          'https://fb.me/react-devtools'
         );
       }
     }
@@ -139,7 +139,7 @@ if ("production" !== "development") {
       if (!expectedFeatures[i]) {
         console.error(
           'One or more ES5 shim/shams expected by React are not available: ' +
-          'http://fb.me/react-warning-polyfills'
+          'https://fb.me/react-warning-polyfills'
         );
         break;
       }
@@ -5808,7 +5808,7 @@ var ReactClass = {
         ("production" !== "development" ? warning(
           this instanceof Constructor,
           'Something is calling a React component directly. Use a factory or ' +
-          'JSX instead. See: http://fb.me/react-legacyfactory'
+          'JSX instead. See: https://fb.me/react-legacyfactory'
         ) : null);
       }
 
@@ -6702,7 +6702,7 @@ var ReactCompositeComponentMixin = {
         ownerBasedContext[key] === parentBasedContext[key],
         'owner-based and parent-based contexts differ '  +
         '(values: `%s` vs `%s`) for key (%s) while mounting %s ' +
-        '(see: http://fb.me/react-context-by-parent)',
+        '(see: https://fb.me/react-context-by-parent)',
         ownerBasedContext[key],
         parentBasedContext[key],
         key,
@@ -7459,7 +7459,7 @@ function assertValidProps(props) {
     ("production" !== "development" ? invariant(
       props.dangerouslySetInnerHTML.__html != null,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-      'Please visit http://fb.me/react-invariant-dangerously-set-inner-html ' +
+      'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
       'for more information.'
     ) : invariant(props.dangerouslySetInnerHTML.__html != null));
   }
@@ -10251,7 +10251,7 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
 
   ("production" !== "development" ? warning(
     false,
-    message + '%s%s See http://fb.me/react-warning-keys for more information.',
+    message + '%s%s See https://fb.me/react-warning-keys for more information.',
     parentOrOwnerAddendum,
     childOwnerAddendum
   ) : null);

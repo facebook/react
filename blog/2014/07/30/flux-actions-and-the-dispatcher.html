@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="Flux: Actions and the Dispatcher | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -98,9 +98,9 @@
     <hr>
 
     <div class="post">
-      <p>Flux is the application architecture Facebook uses to build JavaScript applications. It&#39;s based on a unidirectional data flow.  We&#39;ve built everything from small widgets to huge applications with Flux, and it&#39;s handled everything we&#39;ve thrown at it. Because we&#39;ve found it to be a great way to structure our code, we&#39;re excited to share it with the open source community. <a href="http://youtu.be/nYkdrAPrdcw?t=10m20s">Jing Chen presented Flux</a> at the F8 conference, and since that time we&#39;ve seen a lot of interest in it. We&#39;ve also published an <a href="http://facebook.github.io/flux/docs/overview.html">overview of Flux</a> and a <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/">TodoMVC example</a>, with an accompanying <a href="http://facebook.github.io/flux/docs/todo-list.html">tutorial</a>.</p>
+      <p>Flux is the application architecture Facebook uses to build JavaScript applications. It&#39;s based on a unidirectional data flow.  We&#39;ve built everything from small widgets to huge applications with Flux, and it&#39;s handled everything we&#39;ve thrown at it. Because we&#39;ve found it to be a great way to structure our code, we&#39;re excited to share it with the open source community. <a href="http://youtu.be/nYkdrAPrdcw?t=10m20s">Jing Chen presented Flux</a> at the F8 conference, and since that time we&#39;ve seen a lot of interest in it. We&#39;ve also published an <a href="https://facebook.github.io/flux/docs/overview.html">overview of Flux</a> and a <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/">TodoMVC example</a>, with an accompanying <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>.</p>
 
-<p>Flux is more of a pattern than a full-blown framework, and you can start using it without a lot of new code beyond React. Up until recently, however, we haven&#39;t released one crucial piece of our Flux software: the dispatcher. But along with the creation of the new <a href="https://github.com/facebook/flux">Flux code repository</a> and <a href="http://facebook.github.io/flux/">Flux website</a>, we&#39;ve now open sourced the same <a href="http://facebook.github.io/flux/docs/dispatcher.html">dispatcher</a> we use in our production applications.</p>
+<p>Flux is more of a pattern than a full-blown framework, and you can start using it without a lot of new code beyond React. Up until recently, however, we haven&#39;t released one crucial piece of our Flux software: the dispatcher. But along with the creation of the new <a href="https://github.com/facebook/flux">Flux code repository</a> and <a href="https://facebook.github.io/flux/">Flux website</a>, we&#39;ve now open sourced the same <a href="https://facebook.github.io/flux/docs/dispatcher.html">dispatcher</a> we use in our production applications.</p>
 <h2><a class="anchor" name="where-the-dispatcher-fits-in-the-flux-data-flow"></a>Where the Dispatcher Fits in the Flux Data Flow <a class="hash-link" href="#where-the-dispatcher-fits-in-the-flux-data-flow">#</a></h2>
 <p>The dispatcher is a singleton, and operates as the central hub of data flow in a Flux application. It is essentially a registry of callbacks, and can invoke these callbacks in order. Each <em>store</em> registers a callback with the dispatcher. When new data comes into the dispatcher, it then uses these callbacks to propagate that data to all of the stores. The process of invoking the callbacks is initiated through the dispatch() method, which takes a data payload object as its sole argument.</p>
 <h2><a class="anchor" name="actions-and-actioncreators"></a>Actions and ActionCreators <a class="hash-link" href="#actions-and-actioncreators">#</a></h2>
@@ -108,7 +108,7 @@
 
 <p>Different actions are identified by a type attribute. When all of the stores receive the action, they typically use this attribute to determine if and how they should respond to it. In a Flux application, both stores and views control themselves; they are not acted upon by external objects. Actions flow into the stores through the callbacks they define and register, not through setter methods.</p>
 
-<p>Letting the stores update themselves eliminates many entanglements typically found in MVC applications, where cascading updates between models can lead to unstable state and make accurate testing very difficult. The objects within a Flux application are highly decoupled, and adhere very strongly to the <a href="http://en.wikipedia.org/wiki/Law_of_Demeter">Law of Demeter</a>, the principle that each object within a system should know as little as possible about the other objects in the system. This results in software that is more maintainable, adaptable, testable, and easier for new engineering team members to understand.</p>
+<p>Letting the stores update themselves eliminates many entanglements typically found in MVC applications, where cascading updates between models can lead to unstable state and make accurate testing very difficult. The objects within a Flux application are highly decoupled, and adhere very strongly to the <a href="https://en.wikipedia.org/wiki/Law_of_Demeter">Law of Demeter</a>, the principle that each object within a system should know as little as possible about the other objects in the system. This results in software that is more maintainable, adaptable, testable, and easier for new engineering team members to understand.</p>
 
 <p><img src="/react/img/blog/flux-diagram.png" style="width: 100%;" /></p>
 <h2><a class="anchor" name="why-we-need-a-dispatcher"></a>Why We Need a Dispatcher <a class="hash-link" href="#why-we-need-a-dispatcher">#</a></h2>
