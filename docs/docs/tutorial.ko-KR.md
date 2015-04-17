@@ -214,7 +214,7 @@ var CommentList = React.createClass({
 
 Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들어, 별표(`*`)로 텍스트를 둘러싸는 것은 강조의 의미입니다.
 
-먼저 서드파티 라이브러리인 **Showdown**을 애플리케이션에 추가합니다. 이 JavaScript 라이브러리는 Markdown 텍스트를 HTML 문법으로 변환해줍니다. head 태그안에 스크립트 태그를 추가해 주세요. (React playground에는 이미 포함되어 있습니다):
+먼저 서드파티 라이브러리인 **marked**를 애플리케이션에 추가합니다. 이 JavaScript 라이브러리는 Markdown 텍스트를 HTML 문법으로 변환해줍니다. head 태그안에 스크립트 태그를 추가해 주세요. (React playground에는 이미 포함되어 있습니다):
 
 ```html{7}
 <!-- index.html -->
@@ -223,15 +223,14 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
   <script src="http://fb.me/react-{{site.react_version}}.js"></script>
   <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
   <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
 
 다음은, 댓글 텍스트를 Markdown으로 전환하고 출력해 봅시다.
 
-```javascript{2,10}
+```javascript{9}
 // tutorial6.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
     return (
@@ -239,25 +238,24 @@ var Comment = React.createClass({
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {converter.makeHtml(this.props.children.toString())}
+        {marked(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-우리가 한 일이라고는 Showdown 라이브러리를 호출한 것 뿐입니다. Showdown이 `this.props.children`에서 텍스트를 읽어들여 처리할 수 있도록 React 형식의 텍스트(React's wrapped text)를 단순 텍스트(raw string)으로 전환하기 위해 명시적으로 `toString()`을 호출했습니다.
+우리가 한 일이라고는 marked 라이브러리를 호출한 것 뿐입니다. marked가 `this.props.children`에서 텍스트를 읽어들여 처리할 수 있도록 React 형식의 텍스트(React's wrapped text)를 단순 텍스트(raw string)으로 전환하기 위해 명시적으로 `toString()`을 호출했습니다.
 
 하지만 여기엔 문제가 있습니다! 우리는 HTML 태그들이 정상적으로 렌더되길 원하지만 브라우저에 출력된 결과물은 "`<p>``<em>`또 다른`</em>` 댓글입니다`</p>`"처럼 태그가 그대로 보일것입니다.
 
 React는 이런 식으로 XSS 공격을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:
 
-```javascript{5,11}
+```javascript{4,10}
 // tutorial7.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
-    var rawMarkup = converter.makeHtml(this.props.children.toString());
+    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
     return (
       <div className="comment">
         <h2 className="commentAuthor">
@@ -270,9 +268,9 @@ var Comment = React.createClass({
 });
 ```
 
-이는 의도적으로 생(raw) HTML을 넣기 힘들게 하려고 만든 특별한 API지만 Showdown을 사용하기 위해 이 백도어를 활용합시다.
+이는 의도적으로 생(raw) HTML을 넣기 힘들게 하려고 만든 특별한 API지만 marked를 사용하기 위해 이 백도어를 활용합시다.
 
-**잊지 마세요:** 이 기능은 Showdown이 안전한 것으로 믿고 사용하는 것입니다.
+**잊지 마세요:** 이 기능은 marked가 안전한 것으로 믿고 사용하는 것입니다. 이 경우, 소스에 있는 그대로 넘겨 주는 대신, 모든 HTML 마크업을 이스케이프하도록 marked에게 `sanitize: true`를 넘겨 주었습니다.
 
 ### 데이터 모델 연결하기
 

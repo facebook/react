@@ -105,12 +105,12 @@ _마운트된_ 합성 컴포넌트들은 다음과 같은 메소드를 지원합
 
 페이스북에서 우리는 IE8을 포함한 구식 브라우저를 지원합니다. 미래지향적인 JS를 작성할 수 있도록 우리는 polyfill을 오랫동안 써왔습니다. 이는 우리의 코드베이스에 구식 브라우저를 위한 코드뭉치를 흩뿌려 놓을 필요가 없으며 그럼에도 우리의 코드가 "잘 작동"할 것이라 예상할 수 있음을 의미합니다. 예를 들어, `+new Date()` 대신에 그냥 `Date.now()`를 사용할 수 있습니다. 오픈소스 React는 우리가 내부에서 사용하는것과 동일하기 때문에, 우리는 이를 통해 미래지향적인 JS를 사용하는 철학을 전달했습니다.
 
-그 철학에 더하여, 우리는 또한 JS 라이브러리의 저자로서 polyfill을 라이브러리에 포함해서 배포하지 않습니다. 만약 모든 라이브러리가 이런 짓을 하면, 같은 polyfill을 여러 번 내리게 되어 쓸모없이 크기만 차지하는 죽은 코드들을 만들 것 입니다. 당신의 제품이 구식 브라우저를 지원해야한다면, [es5-shim](https://github.com/kriskowal/es5-shim) 같은 녀석을 사용할 기회가 있었을 겁니다.
+그 철학에 더하여, 우리는 또한 JS 라이브러리의 저자로서 polyfill을 라이브러리에 포함해서 배포하지 않습니다. 만약 모든 라이브러리가 이런 짓을 하면, 같은 polyfill을 여러 번 내리게 되어 쓸모없이 크기만 차지하는 죽은 코드들을 만들 것 입니다. 당신의 제품이 구식 브라우저를 지원해야한다면, [es5-shim](https://github.com/es-shims/es5-shim) 같은 녀석을 사용할 기회가 있었을 겁니다.
 
 
 ### Polyfill은 구식 브라우저를 지원하기 위해 필요하다
 
-[kriskowal's es5-shim](https://github.com/kriskowal/es5-shim)의 `es5-shim.js`는 React에 필요한 다음의 기능을 제공합니다:
+[kriskowal's es5-shim](https://github.com/es-shims/es5-shim)의 `es5-shim.js`는 React에 필요한 다음의 기능을 제공합니다:
 
 * `Array.isArray`
 * `Array.prototype.every`
