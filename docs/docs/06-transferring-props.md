@@ -11,13 +11,13 @@ It's a common pattern in React to wrap a component in an abstraction. The outer 
 You can use [JSX spread attributes](/react/docs/jsx-spread.html) to merge the old props with additional values:
 
 ```javascript
-return <Component {...this.props} more="values" />;
+<Component {...this.props} more="values" />
 ```
 
 If you don't use JSX, you can use any object helper such as ES6 `Object.assign` or Underscore `_.extend`:
 
 ```javascript
-return Component(Object.assign({}, this.props, { more: 'values' }));
+React.createElement(Component, Object.assign({}, this.props, { more: 'values' }));
 ```
 
 The rest of this tutorial explains best practices. It uses JSX and experimental ES7 syntax.
