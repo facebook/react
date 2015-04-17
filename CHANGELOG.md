@@ -1,3 +1,33 @@
+## 0.13.2 (April 18, 2015)
+
+### React Core
+
+#### New Features
+
+* Added `strokeDashoffset`, `flexPositive`, `flexNegative` to the list of unitless CSS properties
+* Added support for more DOM properties:
+  * `scoped` - for `<style>` elements
+  * `high`, `low`, `optimum` - for `<meter>` elements
+  * `unselectable` - IE-specific property to prevent user selection
+
+#### Bug Fixes
+
+* Fixed a case where re-rendering after rendering null didn't properly pass context
+* Fixed a case where re-rendering after rendering with `style={null}` didn't properly update `style`
+* Update `uglify` dependency to prevent a bug in IE8
+* Improved warnings
+
+### React with Add-Ons
+
+#### Bug Fixes
+
+* Immutabilty Helpers: Ensure it supports `hasOwnProperty` as an object key
+
+### React Tools
+
+* Improve documentation for new options
+
+
 ## 0.13.1 (March 16, 2015)
 
 ### React Core
@@ -9,7 +39,7 @@
 
 ### React with Add-Ons
 
-### Bug Fixes
+#### Bug Fixes
 
 * TestUtils: Don't warn about `getDOMNode` for ES6 classes
 * TestUtils: Ensure wrapped full page components (`<html>`, `<head>`, `<body>`) are treated as DOM components
