@@ -480,7 +480,7 @@ var CommentForm = React.createClass({
 
 Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
 
-```javascript{3-13,16-19}
+```javascript{3-14,16-19}
 // tutorial16.js
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
