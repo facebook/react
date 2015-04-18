@@ -41,7 +41,7 @@ Thomas Boyt ([@thomasaboyt](https://twitter.com/thomasaboyt)) wrote [this detail
 
 ## React vs. Ember
 
-Eric Berry ([@coderberry](https://twitter.com/coderberry)) developed Ember equivalents for some of the official React examples. Read his post for a side-by-side comparison of the respective implementations: ["Facebook React vs. Ember"](http://instructure.github.io/blog/2013/12/17/facebook-react-vs-ember/).
+Eric Berry ([@coderberry](https://twitter.com/coderberry)) developed Ember equivalents for some of the official React examples. Read his post for a side-by-side comparison of the respective implementations: ["Facebook React vs. Ember"](https://instructure.github.io/blog/2013/12/17/facebook-react-vs-ember/).
 
 
 ## React and plain old HTML
@@ -75,7 +75,7 @@ Ian Bicking ([@ianbicking](https://twitter.com/ianbicking)) of Mozilla Labs [exp
 
 React was also recently mentioned at ng-conf, where the Angular team commented on React's concept of the virtual DOM:
 
-<iframe width="560" height="315" src="//www.youtube.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
 
 ## React and Web Components
 

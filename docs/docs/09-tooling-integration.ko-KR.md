@@ -32,7 +32,7 @@ JSX를 사용하신다면, [다운로드 페이지](/react/downloads.html)에서
 
 ### 상용화하기: 미리 컴파일된 JSX
 
-[npm](http://npmjs.org/) 모듈을 가지고 있다면, 간단히 `npm install -g react-tools`를 실행해 커맨드 라인 `jsx` 툴을 설치할 수 있습니다. 이 툴은 JSX 구문을 일반적인 JavaScript파일로 변환해 브라우져에서 바로 실행할 수 있도록 합니다. 디렉터리를 감시해 파일이 변경되었을 때 자동으로 변환하도록 할 수도 있습니다. 예를 들면 `jsx --watch src/ build/` 이렇게요.
+[npm](https://www.npmjs.com/) 모듈을 가지고 있다면, 간단히 `npm install -g react-tools`를 실행해 커맨드 라인 `jsx` 툴을 설치할 수 있습니다. 이 툴은 JSX 구문을 일반적인 JavaScript파일로 변환해 브라우져에서 바로 실행할 수 있도록 합니다. 디렉터리를 감시해 파일이 변경되었을 때 자동으로 변환하도록 할 수도 있습니다. 예를 들면 `jsx --watch src/ build/` 이렇게요.
 
 기본적으로는 JSX 파일들은 `.js` 확장자로 변환됩니다. `jsx --extension jsx src/ build/`를 사용해 `.jsx` 확장자로 파일들을 변환할 수 있습니다.
 

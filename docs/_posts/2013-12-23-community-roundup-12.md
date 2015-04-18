@@ -3,26 +3,26 @@ title: "Community Round-up #12"
 author: Vjeux
 ---
 
-React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the [docs](/react/docs/getting-started.html) and do not hesitate to ask questions on the [Google Group](http://groups.google.com/group/reactjs), [IRC](irc://chat.freenode.net/reactjs) or [Stack Overflow](http://stackoverflow.com/questions/tagged/reactjs). We are trying our best to help you out!
+React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the [docs](/react/docs/getting-started.html) and do not hesitate to ask questions on the [Google Group](https://groups.google.com/group/reactjs), [IRC](irc://chat.freenode.net/reactjs) or [Stack Overflow](http://stackoverflow.com/questions/tagged/reactjs). We are trying our best to help you out!
 
 ## The Future of Javascript MVC
 
-[David Nolen](http://swannodette.github.io/) announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient [shouldComponentUpdate](http://facebook.github.io/react/docs/component-specs.html#updating-shouldcomponentupdate) and get huge performance improvements on some tasks.
+[David Nolen](https://swannodette.github.io/) announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient [shouldComponentUpdate](/react/docs/component-specs.html#updating-shouldcomponentupdate) and get huge performance improvements on some tasks.
 
 > We've known this for some time over here in the ClojureScript corner of the world - all of our collections are immutable and modeled directly on the original Clojure versions written in Java. Modern JavaScript engines have now been tuned to the point that it's no longer uncommon to see collection performance within 2.5X of the Java Virtual Machine.
 >
 > Wait, wait, wait. What does the performance of persistent data structures have to do with the future of JavaScript MVCs?
 >
 > A whole lot.
-> <figure>[![](/react/img/blog/om-backbone.png)](http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/)</figure>
+> <figure>[![](/react/img/blog/om-backbone.png)](https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/)</figure>
 >
-> [Read the full article...](http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/)
+> [Read the full article...](https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/)
 
 
 
 ## Scroll Position with React
 
-Managing the scroll position when new content is inserted is usually very tricky to get right. [Vjeux](http://blog.vjeux.com/) discovered that [componentWillUpdate](http://facebook.github.io/react/docs/component-specs.html#updating-componentwillupdate) and [componentDidUpdate](http://facebook.github.io/react/docs/component-specs.html#updating-componentdidupdate) were triggered exactly at the right time to manage the scroll position.
+Managing the scroll position when new content is inserted is usually very tricky to get right. [Vjeux](http://blog.vjeux.com/) discovered that [componentWillUpdate](/react/docs/component-specs.html#updating-componentwillupdate) and [componentDidUpdate](/react/docs/component-specs.html#updating-componentdidupdate) were triggered exactly at the right time to manage the scroll position.
 
 > We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate
 >
@@ -45,10 +45,10 @@ componentDidUpdate: function() {
 
 ## Lights Out
 
-React declarative approach is well suited to write games. [Cheng Lou](https://github.com/chenglou) wrote the famous Lights Out game in React. It's a good example of use of [TransitionGroup](http://facebook.github.io/react/docs/animation.html) to implement animations.
-<figure>[![](/react/img/blog/lights-out.png)](http://chenglou.github.io/react-lights-out/)</figure>
+React declarative approach is well suited to write games. [Cheng Lou](https://github.com/chenglou) wrote the famous Lights Out game in React. It's a good example of use of [TransitionGroup](/react/docs/animation.html) to implement animations.
+<figure>[![](/react/img/blog/lights-out.png)](https://chenglou.github.io/react-lights-out/)</figure>
 
-[Try it out!](http://chenglou.github.io/react-lights-out/)
+[Try it out!](https://chenglou.github.io/react-lights-out/)
 
 
 ## Reactive Table Bookmarklet
@@ -65,7 +65,7 @@ React declarative approach is well suited to write games. [Cheng Lou](https://gi
 
 <iframe width="100%" height="300" src="https://jsfiddle.net/ssorallen/fEsYt/embedded/result,html,js" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
-[View the source on JSFiddle...](http://jsfiddle.net/ssorallen/fEsYt/)
+[View the source on JSFiddle...](https://jsfiddle.net/ssorallen/fEsYt/)
 
 ## Writing Good React Components
 
@@ -93,9 +93,9 @@ hoodie new todomvc -t "hoodiehq/hoodie-react-todomvc"
 ## JSX Compiler
 
 Ever wanted to have a quick way to see what a JSX tag would be converted to? [Tim Yung](http://www.yungsters.com/) made a page for it.
-<figure>[![](/react/img/blog/jsx-compiler.png)](http://facebook.github.io/react/jsx-compiler.html)</figure>
+<figure>[![](/react/img/blog/jsx-compiler.png)](/react/jsx-compiler.html)</figure>
 
-[Try it out!](http://facebook.github.io/react/jsx-compiler.html)
+[Try it out!](/react/jsx-compiler.html)
 
 
 

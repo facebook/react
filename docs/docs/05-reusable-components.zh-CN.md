@@ -137,7 +137,7 @@ var MyComponent = React.createClass({
 
 ## Mixins
 
-组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 [跨切面关注点](http://en.wikipedia.org/wiki/Cross-cutting_concern)。React 使用 `mixins` 来解决这类问题。
+组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 [跨切面关注点](https://en.wikipedia.org/wiki/Cross-cutting_concern)。React 使用 `mixins` 来解决这类问题。
 
 一个通用的场景是：一个组件需要定期更新。用 `setInterval()` 做很容易，但当不需要它的时候取消定时器来节省内存是非常重要的。React 提供 [生命周期方法](/react/docs/working-with-the-browser.html#component-lifecycle) 来告知组件创建或销毁的时间。下面来做一个简单的 mixin，使用 `setInterval()` 并保证在组件销毁时清理定时器。
 

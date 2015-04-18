@@ -13,7 +13,7 @@ We open sourced React Native last week and the community reception blew away all
 
 **Give us 6 months**. At Facebook, we strive to only open-source projects that we are using in production. While the Android backend for React Native is starting to work (see video below at 37min), it hasn't been shipped to any users yet. There's a lot of work that goes into open-sourcing a project, and we want to do it right so that you have a great experience when using it.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
 
 
 ## Ray Wenderlich - Property Finder

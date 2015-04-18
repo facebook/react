@@ -10,7 +10,7 @@ It's been three months since we open sourced React and it is going well. Some st
 * [226 posts on Google Group](https://groups.google.com/forum/#!forum/reactjs)
 * [76 Github projects using React](https://gist.github.com/vjeux/6335762)
 * [30 contributors](https://github.com/facebook/react/graphs/contributors)
-* [15 blog posts](http://facebook.github.io/react/blog/)
+* [15 blog posts](/react/blog/)
 * 2 early adopters: [Khan Academy](http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html) and [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/)
 
 

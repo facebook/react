@@ -39,8 +39,8 @@ next: thinking-in-react-ko-KR.html
 <html>
   <head>
     <title>Hello React</title>
-    <script src="http://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   </head>
   <body>
@@ -220,9 +220,9 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
 <!-- index.html -->
 <head>
   <title>Hello React</title>
-  <script src="http://fb.me/react-{{site.react_version}}.js"></script>
-  <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+  <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+  <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+  <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```

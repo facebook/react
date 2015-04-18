@@ -374,7 +374,7 @@ describe('ReactClass-spec', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
-      'factory or JSX instead. See: http://fb.me/react-legacyfactory'
+      'factory or JSX instead. See: https://fb.me/react-legacyfactory'
     );
   });
 

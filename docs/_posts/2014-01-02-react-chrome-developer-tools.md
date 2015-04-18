@@ -5,7 +5,7 @@ author: Sebastian Markbåge
 
 With the new year, we thought you'd enjoy some new tools for debugging React code. Today we're releasing the [React Developer Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi), an extension to the Chrome Developer Tools. [Download them from the Chrome Web Store](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi).
 
-<figure><iframe width="560" height="315" src="//www.youtube.com/embed/Cey7BS6dE0M" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/Cey7BS6dE0M" frameborder="0" allowfullscreen></iframe></figure>
 
 You will get a new tab titled "React" in your Chrome DevTools. This tab shows you a list of the root React Components that are rendered on the page as well as the subcomponents that each root renders.
 

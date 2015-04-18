@@ -25,4 +25,4 @@ var myComponentInstance = React.render(myComponentElement, myContainer);
 
 > 주의:
 >
-> 이는 최상위 레벨에서만 사용되어야 합니다. 컴포넌트의 내부에서는 `prop`과 `state`가 자식컴포넌트와의 통신을 제어하며, [refs](http://facebook.github.io/react/docs/more-about-refs-ko-KR.html)를 통해서만 컴포넌트를 참조할 수 있습니다.
+> 이는 최상위 레벨에서만 사용되어야 합니다. 컴포넌트의 내부에서는 `prop`과 `state`가 자식컴포넌트와의 통신을 제어하며, [refs](/react/docs/more-about-refs-ko-KR.html)를 통해서만 컴포넌트를 참조할 수 있습니다.

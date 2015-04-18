@@ -4,7 +4,7 @@ author: Sebastian Markbåge
 redirect_from: "blog/2014/10/14/introducting-react-elements.html"
 ---
 
-The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the `ReactElement` type really FAST, [jest unit testing](http://facebook.github.io/jest/) easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!
+The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the `ReactElement` type really FAST, [jest unit testing](https://facebook.github.io/jest/) easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!
 
 If you currently use JSX everywhere, you don't really have to do anything to get these benefits! The updated transformer will do it for you.
 
@@ -72,7 +72,7 @@ This is the biggest change to 0.12. Don't worry though. This functionality conti
 
 ### React With JSX
 
-If you use the React specific [JSX](http://facebook.github.io/jsx/) transform, the upgrade path is simple. Just make sure you have React in scope.
+If you use the React specific [JSX](https://facebook.github.io/jsx/) transform, the upgrade path is simple. Just make sure you have React in scope.
 
 ```javascript
 // If you use node/browserify modules make sure
@@ -92,7 +92,7 @@ var MyOtherComponent = React.createClass({
 });
 ```
 
-*NOTE: React's JSX will not call arbitrary functions in future releases. This restriction is introduced so that it's easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use [the JSX spec](http://facebook.github.io/jsx/) with a different transpiler for custom purposes.*
+*NOTE: React's JSX will not call arbitrary functions in future releases. This restriction is introduced so that it's easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use [the JSX spec](https://facebook.github.io/jsx/) with a different transpiler for custom purposes.*
 
 ### React Without JSX
 

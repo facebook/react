@@ -9,7 +9,7 @@ One of the first questions people ask when considering React for a project is wh
 
 ## Avoiding reconciling the DOM
 
-React makes use of a *virtual DOM*, which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component's props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. Only in the case they are not equal, will React [reconcile](http://facebook.github.io/react/docs/reconciliation.html) the DOM, applying as few mutations as possible.
+React makes use of a *virtual DOM*, which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component's props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. Only in the case they are not equal, will React [reconcile](/react/docs/reconciliation.html) the DOM, applying as few mutations as possible.
 
 On top of this, React provides a component lifecycle function, `shouldComponentUpdate`, which is triggered before the re-rendering process starts (virtual DOM comparison and possible eventual DOM reconciliation), giving the developer the ability to short circuit this process. The default implementation of this function returns `true`, leaving React to perform the update:
 
@@ -67,7 +67,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 }
 ```
 
-So far so good, dealing with such simple props/state structures is easy. We could even generalize an implementation based on shallow equality and mix it into components. In fact, React already provides such implementation: [PureRenderMixin](http://facebook.github.io/react/docs/pure-render-mixin.html).
+So far so good, dealing with such simple props/state structures is easy. We could even generalize an implementation based on shallow equality and mix it into components. In fact, React already provides such implementation: [PureRenderMixin](/react/docs/pure-render-mixin.html).
 
 But what if your components' props or state are mutable data structures?. Say the prop the component receives, instead of being a string like `'bar'`, is a Javascript object that contains a string such as, `{ foo: 'bar' }`:
 
@@ -165,7 +165,7 @@ So, Immutable data structures provides you a cheap and less verbose way to track
 
 ## Immutable-js and Flux
 
-If you're using [Flux](http://facebook.github.io/flux/), you should start writing your stores using immutable-js. Take a look at the [full API](http://facebook.github.io/immutable-js/docs/#/).
+If you're using [Flux](https://facebook.github.io/flux/), you should start writing your stores using immutable-js. Take a look at the [full API](https://facebook.github.io/immutable-js/docs/#/).
 
 Let's see one possible way to model the thread example using Immutable data structures. First, we need to define a `Record` for each of the entities we're trying to model. Records are just immutable containers that hold values for a specific set of fields:
 

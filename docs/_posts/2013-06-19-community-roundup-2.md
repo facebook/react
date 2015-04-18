@@ -21,12 +21,12 @@ Since the launch we have received a lot of feedback and are actively working on 
 
 ## React and Socket.IO Chat Application
 
-[Danial Khosravi](http://danialk.github.io/) made a real-time chat application that interacts with the back-end using Socket.IO.
+[Danial Khosravi](https://danialk.github.io/) made a real-time chat application that interacts with the back-end using Socket.IO.
 
 > A week ago I was playing with AngularJS and [this little chat application](https://github.com/btford/angular-socket-io-im) which uses socket.io and nodejs for realtime communication. Yesterday I saw a post about ReactJS in [EchoJS](http://www.echojs.com/) and started playing with this UI library. After playing a bit with React, I decided to write and chat application using React and I used Bran Ford's Backend for server side of this little app.
-> <figure>[![](/react/img/blog/chatapp.png)](http://danialk.github.io/blog/2013/06/16/reactjs-and-socket-dot-io-chat-application/)</figure>
+> <figure>[![](/react/img/blog/chatapp.png)](https://danialk.github.io/blog/2013/06/16/reactjs-and-socket-dot-io-chat-application/)</figure>
 >
-> [Read the full post...](http://danialk.github.io/blog/2013/06/16/reactjs-and-socket-dot-io-chat-application/)
+> [Read the full post...](https://danialk.github.io/blog/2013/06/16/reactjs-and-socket-dot-io-chat-application/)
 
 ## React and Other Frameworks
 
@@ -36,9 +36,9 @@ Since the launch we have received a lot of feedback and are actively working on 
 >
 > We've designed React from the beginning to work well with other libraries. Angular is no exception. Let's take the original Angular example and use React to implement the fundoo-rating directive.
 >
-> [Read the full post...](http://www.quora.com/Pete-Hunt/Posts/Facebooks-React-vs-AngularJS-A-Closer-Look)
+> [Read the full post...](https://www.quora.com/Pete-Hunt/Posts/Facebooks-React-vs-AngularJS-A-Closer-Look)
 
-In the same vein, [Markov Twain](https://twitter.com/markov_twain/status/345702941845499906) re-implemented the examples on the front-page [with Ember](http://jsbin.com/azihiw/2/edit) and [Vlad Yazhbin](https://twitter.com/vla) re-implemented the tutorial [with Angular](http://jsfiddle.net/vla/Cdrse/).
+In the same vein, [Markov Twain](https://twitter.com/markov_twain/status/345702941845499906) re-implemented the examples on the front-page [with Ember](http://jsbin.com/azihiw/2/edit) and [Vlad Yazhbin](https://twitter.com/vla) re-implemented the tutorial [with Angular](https://jsfiddle.net/vla/Cdrse/).
 
 ## Web Components: React & x-tags
 
@@ -64,7 +64,7 @@ Mozilla and Google are actively working on Web Components. [Vjeux](http://blog.v
 
 Many of you pointed out differences between JSX and HTML. In order to clear up some confusion, we have added some documentation that covers the four main differences:
 
-  - [Whitespace removal](http://facebook.github.io/react/docs/jsx-is-not-html.html)
-  - [HTML Entities](http://facebook.github.io/react/docs/jsx-is-not-html.html)
-  - [Comments](http://facebook.github.io/react/docs/jsx-is-not-html.html)
-  - [Custom HTML Attributes](http://facebook.github.io/react/docs/jsx-is-not-html.html)
+  - [Whitespace removal](/react/docs/jsx-is-not-html.html)
+  - [HTML Entities](/react/docs/jsx-is-not-html.html)
+  - [Comments](/react/docs/jsx-is-not-html.html)
+  - [Custom HTML Attributes](/react/docs/jsx-is-not-html.html)

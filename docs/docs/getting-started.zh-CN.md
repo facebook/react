@@ -10,8 +10,8 @@ redirect_from: "docs/index-zh-CN.html"
 
 开始 Hack React 的最简单的方法是用下面 JSFiddle 的Hello Worlds：
 
- * **[React JSFiddle](http://jsfiddle.net/reactjs/69z2wepo/)**
- * [React JSFiddle without JSX](http://jsfiddle.net/reactjs/5vjqabv3/)
+ * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
+ * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
 ## 入门教程包 (Starter Kit)
 
@@ -65,7 +65,7 @@ React.render(
 
 ### 离线转换
 
-先安装命令行工具（依赖 [npm](http://npmjs.org/)）：
+先安装命令行工具（依赖 [npm](https://www.npmjs.com/)）：
 
 ```
 npm install -g react-tools
@@ -107,7 +107,7 @@ React.render(
 
 ## 想用 CommonJS？
 
-如果你想在 [browserify](http://browserify.org/)，[webpack](http://webpack.github.io/) 或者或其它兼容CommonJS的模块系统里使用 React，只要使用 [`react` npm 包](https://www.npmjs.org/package/react) 即可。而且，`jsx` 转换工具可以很轻松的地集成到大部分打包系统里（不仅仅是 CommonJS）。
+如果你想在 [browserify](http://browserify.org/)，[webpack](https://webpack.github.io/) 或者或其它兼容CommonJS的模块系统里使用 React，只要使用 [`react` npm 包](https://www.npmjs.com/package/react) 即可。而且，`jsx` 转换工具可以很轻松的地集成到大部分打包系统里（不仅仅是 CommonJS）。
 
 
 ## 下一步

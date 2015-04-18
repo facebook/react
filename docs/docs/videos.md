@@ -8,7 +8,7 @@ next: complementary-tools.html
 
 ### Rethinking best practices - JSConf.eu
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
 "At Facebook and Instagram, we’re trying to push the limits of what’s possible on the web with React. My talk will start with a brief introduction to the framework, and then dive into three controversial topics: Throwing out the notion of templates and building views with JavaScript, “re-rendering” your entire application when your data changes, and a lightweight implementation of the DOM and events." -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -23,7 +23,7 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 ### Secrets of the Virtual DOM - MtnWest JS
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
 
 "In this talk I’ll be discussing why we built a virtual DOM, how it compares to other systems, and its relevance to the future of browser technologies." -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -99,14 +99,14 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 ### Introduction to React.js - Facebook Seattle
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
 
 By [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/jordwalke)
 
 * * *
 
 ### Backbone + React + Middleman Screencast
-<iframe width="650" height="488" src="https://www.youtube.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
 Backbone is a great way in interface a REST API with React. This screencast shows how to integate the two using [Backbone-React-Component](https://github.com/magalhas/backbone-react-component). Middleman is the framework used in this example but could easily be replaced with other frameworks. A supported template of this can be found [here](https://github.com/jbhatab/middleman-backbone-react-template). -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
 
@@ -114,7 +114,7 @@ Backbone is a great way in interface a REST API with React. This screencast show
 
 ### Developing User Interfaces With React - Super VanJS
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
 
 By [Steven Luscher](https://github.com/steveluscher)
 
@@ -122,7 +122,7 @@ By [Steven Luscher](https://github.com/steveluscher)
 
 ### Introduction to React - LAWebSpeed meetup
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
 
 by [Stoyan Stefanov](http://www.phpied.com/)
 
@@ -130,7 +130,7 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 
 ### React, or how to make life simpler - FrontEnd Dev Conf '14
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
 
 **In Russian** by [Alexander Solovyov](http://solovyov.net/)
 
@@ -138,21 +138,21 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 
 ### "Functional DOM programming" - Meteor DevShop 11
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### "Rethinking Web App Development at Facebook" - Facebook F8 Conference 2014
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### React and Flux: Building Applications with a Unidirectional Data Flow - Forward JS 2014
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
-Facebook engineers [Bill Fisher](http://twitter.com/fisherwebdev) and [Jing Chen](http://twitter.com/jingc) talk about Flux and React, and how using an application architecture with a unidirectional data flow cleans up a lot of their code.
+Facebook engineers [Bill Fisher](https://twitter.com/fisherwebdev) and [Jing Chen](https://twitter.com/jingc) talk about Flux and React, and how using an application architecture with a unidirectional data flow cleans up a lot of their code.
 
 * * *
 
@@ -168,6 +168,6 @@ Walk-through by [Andres Suarez](https://github.com/zertosh) on how [SoundCloud](
 
 ### Introducing React Native (+Playlist) - React.js Conf 2015
 
-<iframe width="650" height="366" src="https://www.youtube.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
 
 [Tom Occhino](https://twitter.com/tomocchino) reviews the past and present of React in 2015, and teases where it's going next.
