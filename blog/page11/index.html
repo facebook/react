@@ -66,6 +66,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2015/04/18/react-v0.13.2.html">React v0.13.2</a></li>
+      
         <li><a href="/react/blog/2015/04/17/react-native-v0.4.html">React Native v0.4</a></li>
       
         <li><a href="/react/blog/2015/03/30/community-roundup-26.html">Community Round-up #26</a></li>
@@ -84,14 +86,62 @@
       
         <li><a href="/react/blog/2015/02/24/react-v0.13-rc1.html">React v0.13 RC</a></li>
       
-        <li><a href="/react/blog/2015/02/24/streamlining-react-elements.html">Streamlining React Elements</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        <h1><a href="/react/blog/2013/12/19/react-v0.8.0.html">React v0.8</a></h1>
+        <p class="meta">December 19, 2013 by Paul O'Shannessy</p>
+        <hr />
+        <div class="post">
+         <p>I&#39;ll start by answering the obvious question:</p>
+
+<blockquote>
+<p>What happened to 0.6 and 0.7?</p>
+</blockquote>
+
+<p>It&#39;s become increasingly obvious since our launch in May that people want to use React on the server. With the server-side rendering abilities, that&#39;s a perfect fit. However using the same copy of React on the server and then packaging it up for the client is surprisingly a harder problem. People have been using our <code>react-tools</code> module which includes React, but when browserifying that ends up packaging all of <code>esprima</code> and some other dependencies that aren&#39;t needed on the client. So we wanted to make this whole experience better.</p>
+
+<p>We talked with <a href="https://github.com/jeffbski">Jeff Barczewski</a> who was the owner of the <code>react</code> module on npm. He was kind enough to transition ownership to us and release his package under a different name: <code>autoflow</code>. I encourage you to <a href="https://github.com/jeffbski/autoflow">check it out</a> if you&#39;re writing a lot of asynchronous code. In order to not break all of <code>react</code>&#39;s current users of 0.7.x, we decided to bump our version to 0.8 and skip the issue entirely. We&#39;re also including a warning if you use our <code>react</code> module like you would use the previous package.</p>
+
+<p>In order to make the transition to 0.8 for our current users as painless as possible, we decided to make 0.8 primarily a bug fix release on top of 0.5. No public APIs were changed (even if they were already marked as deprecated). We haven&#39;t added any of the new features we have in master, though we did take the opportunity to pull in some improvements to internals.</p>
+
+<p>We hope that by releasing <code>react</code> on npm, we will enable a new set of uses that have been otherwise difficult. All feedback is welcome!</p>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
+<ul>
+<li>Added support for more attributes:
+
+<ul>
+<li><code>rows</code> &amp; <code>cols</code> for <code>&lt;textarea&gt;</code></li>
+<li><code>defer</code> &amp; <code>async</code> for <code>&lt;script&gt;</code></li>
+<li><code>loop</code> for <code>&lt;audio&gt;</code> &amp; <code>&lt;video&gt;</code></li>
+<li><code>autoCorrect</code> for form fields (a non-standard attribute only supported by mobile WebKit)</li>
+</ul></li>
+<li>Improved error messages</li>
+<li>Fixed Selection events in IE11</li>
+<li>Added <code>onContextMenu</code> events</li>
+</ul>
+<h3><a class="anchor" name="react-with-addons"></a>React with Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
+<ul>
+<li>Fixed bugs with TransitionGroup when children were undefined</li>
+<li>Added support for <code>onTransition</code></li>
+</ul>
+<h3><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h3>
+<ul>
+<li>Upgraded <code>jstransform</code> and <code>esprima-fb</code></li>
+</ul>
+<h3><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h3>
+<ul>
+<li>Added support for use in IE8</li>
+<li>Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)</li>
+</ul>
+
+        </div>
+      </div>
     
       <div class="post-list-item">
         <h1><a href="/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html">React v0.5.2, v0.4.2</a></h1>
@@ -451,27 +501,6 @@ Is this some sort of template language? Specifically no. This might have been th
 <p>Though this sounds like a lot it&#39;s really just a few lines of code. And it&#39;s really explicit how your data is flowing throughout the app.</p>
 <h2><a class="anchor" name="and-thats-it"></a>And that&#39;s it <a class="hash-link" href="#and-thats-it">#</a></h2>
 <p>Hopefully this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&#39;re used to, remember that code is read far more than it&#39;s written, and it&#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components you&#39;ll appreciate this explicitness and modularity, and with code reuse your lines of code will start to shrink :)</p>
-
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a></h1>
-        <p class="meta">October 29, 2013 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
-<ul>
-<li>Fixed bug with <code>&lt;input type=&quot;range&quot;&gt;</code> and selection events.</li>
-<li>Fixed bug with selection and focus.</li>
-<li>Made it possible to unmount components from the document root.</li>
-<li>Fixed bug for <code>disabled</code> attribute handling on non-<code>&lt;input&gt;</code> elements.</li>
-</ul>
-<h3><a class="anchor" name="react-with-addons"></a>React with Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
-<ul>
-<li>Fixed bug with transition and animation event detection.</li>
-</ul>
 
         </div>
       </div>
