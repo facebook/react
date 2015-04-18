@@ -434,7 +434,7 @@
 
 <p>자 그럼, 어떻게 <code>shouldComponentUpdate</code>를 구현해야 할까요? 문자열 값을 렌더하는 컴포넌트를 생각해보죠.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">propsTypes</span><span class="o">:</span> <span class="p">{</span>
+  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">isRequired</span>
   <span class="p">},</span>
 
@@ -452,7 +452,7 @@
 
 <p>하지만 만약 컴포넌트의 props나 state가 가변적인 데이터 구조로 되어 있다면 어떨까요? 컴포넌트의 prop으로 <code>&#39;bar&#39;</code>같은 문자열 대신에 <code>{ foo: &#39;bar&#39; }</code>처럼 문자열을 포함한 JavaScript 객체를 전달받는다고 해봅시다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">propsTypes</span><span class="o">:</span> <span class="p">{</span>
+  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">.</span><span class="nx">isRequired</span>
   <span class="p">},</span>
 

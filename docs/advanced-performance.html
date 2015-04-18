@@ -436,7 +436,7 @@ The last interesting case is C8. For this node React had to compute the virtual 
 
 <p>So, how should we implement <code>shouldComponentUpdate</code>? Say that you have a component that just renders a string value:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">propsTypes</span><span class="o">:</span> <span class="p">{</span>
+  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">isRequired</span>
   <span class="p">},</span>
 
@@ -454,7 +454,7 @@ The last interesting case is C8. For this node React had to compute the virtual 
 
 <p>But what if your components&#39; props or state are mutable data structures?. Say the prop the component receives, instead of being a string like <code>&#39;bar&#39;</code>, is a Javascript object that contains a string such as, <code>{ foo: &#39;bar&#39; }</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">propsTypes</span><span class="o">:</span> <span class="p">{</span>
+  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">.</span><span class="nx">isRequired</span>
   <span class="p">},</span>
 
