@@ -71,6 +71,32 @@ describe('Pooled class', function() {
     expect(log).toEqual(['a', 'b']);
   });
 
+  it('should call a new constructor with arguments', function() {
+    var log = [];
+    var PoolableClassWithOneArgument = function(a) {
+      log.push(a);
+    };
+    PooledClass.addPoolingTo(
+      PoolableClassWithOneArgument
+    );
+    PoolableClassWithOneArgument.getPooled('new');
+    expect(log).toEqual(['new']);
+  });
+
+  it('should call an old constructor with arguments', function() {
+    var log = [];
+    var PoolableClassWithOneArgument = function(a) {
+      log.push(a);
+    };
+    PooledClass.addPoolingTo(
+      PoolableClassWithOneArgument
+    );
+    var instance = PoolableClassWithOneArgument.getPooled('new');
+    PoolableClassWithOneArgument.release(instance);
+    PoolableClassWithOneArgument.getPooled('old');
+    expect(log).toEqual(['new', 'old']);
+  });
+
   it('should throw when the class releases an instance of a different type',
     function() {
       var RandomClass = function() {};
