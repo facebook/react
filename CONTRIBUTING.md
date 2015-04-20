@@ -1,6 +1,6 @@
 # Contributing to React
 
-React is one of Facebook's first open source projects that is both under very active development and is also being used to ship code to everybody on [facebook.com](https://facebook.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and preempts some questions you may have.
+React is one of Facebook's first open source projects that is both under very active development and is also being used to ship code to everybody on [facebook.com](https://www.facebook.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and preempts some questions you may have.
 
 ## Our Development Process
 
@@ -45,8 +45,8 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 
 ## How to Get in Touch
 
-* IRC - [#reactjs on freenode](http://webchat.freenode.net/?channels=reactjs)
-* Mailing list - [reactjs on Google Groups](http://groups.google.com/group/reactjs)
+* IRC - [#reactjs on freenode](https://webchat.freenode.net/?channels=reactjs)
+* Mailing list - [reactjs on Google Groups](https://groups.google.com/group/reactjs)
 
 ## Style Guide
 

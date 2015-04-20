@@ -163,7 +163,7 @@ x === y; // false
 
 ## Immutable-js와 Flux
 
-[Flux](http://facebook.github.io/flux/)를 사용한다면 immutable-js를 사용해 stores를 작성해야 합니다. [전체 API](http://facebook.github.io/immutable-js/docs/#/)를 살펴보세요.
+[Flux](https://facebook.github.io/flux/)를 사용한다면 immutable-js를 사용해 stores를 작성해야 합니다. [전체 API](https://facebook.github.io/immutable-js/docs/#/)를 살펴보세요.
 
 Immutable 자료구조를 이용해 스레드를 모델링하는 예제를 살펴봅시다. 먼저 모델링하려는 엔티티마다 `Record`를 정의해야 합니다. Record는 특정 필드들의 값을 유지하기 위한 불변의 컨테이너입니다:
 

@@ -26,12 +26,12 @@ Over the past several weeks, members of our team, [Pete Hunt](http://www.petehun
 
 > [Listening Scroll Event](https://groups.google.com/forum/#!topic/reactjs/l6PnP8qbofk)
 >
->  * [JSFiddle](http://jsfiddle.net/aabeL/1/): Basically I've given you two mixins. The first lets you react to global scroll events. The second is, IMO, much more useful: it gives you scroll start and scroll end events, which you can use with setState() to create components that react based on whether the user is scrolling or not.
+>  * [JSFiddle](https://jsfiddle.net/aabeL/1/): Basically I've given you two mixins. The first lets you react to global scroll events. The second is, IMO, much more useful: it gives you scroll start and scroll end events, which you can use with setState() to create components that react based on whether the user is scrolling or not.
 >
 > [Fade-in Transition](https://groups.google.com/forum/#!topic/reactjs/RVAY_eQmdpo)
 >
->  * [JSFiddle](http://jsfiddle.net/ufe8k/1/): Creating a new `<FadeInWhenAdded>` component and using jQuery `.fadeIn()` function on the DOM node.
->  * [JSFiddle](http://jsfiddle.net/R8f5L/5/): Using CSS transition instead.
+>  * [JSFiddle](https://jsfiddle.net/ufe8k/1/): Creating a new `<FadeInWhenAdded>` component and using jQuery `.fadeIn()` function on the DOM node.
+>  * [JSFiddle](https://jsfiddle.net/R8f5L/5/): Using CSS transition instead.
 >
 > [Socket.IO Integration](https://groups.google.com/forum/#!topic/reactjs/pyUZBRWcHB4)
 >
@@ -41,7 +41,7 @@ Over the past several weeks, members of our team, [Pete Hunt](http://www.petehun
 >
 > [Sortable jQuery Plugin Integration](https://groups.google.com/forum/#!topic/reactjs/mHfBGI3Qwz4)
 >
-> * [JSFiddle](http://jsfiddle.net/LQxy7/): Your React component simply render empty divs, and then in componentDidMount() you call React.renderComponent() on each of those divs to set up a new root React tree. Be sure to explicitly unmountAndReleaseReactRootNode() for each component in componentWillUnmount().
+> * [JSFiddle](https://jsfiddle.net/LQxy7/): Your React component simply render empty divs, and then in componentDidMount() you call React.renderComponent() on each of those divs to set up a new root React tree. Be sure to explicitly unmountAndReleaseReactRootNode() for each component in componentWillUnmount().
 
 ## Introduction to React Screencast
 
@@ -54,4 +54,4 @@ Over the past several weeks, members of our team, [Pete Hunt](http://www.petehun
 [Tom Occhino](http://tomocchino.com/) implemented Snake in 150 lines with React.
 
 > [Check the source on Github](https://github.com/tomocchino/react-snake/blob/master/src/snake.js)
-> <figure>[![](/react/img/blog/snake.png)](http://tomocchino.github.io/react-snake/)</figure>
+> <figure>[![](/react/img/blog/snake.png)](https://tomocchino.github.io/react-snake/)</figure>

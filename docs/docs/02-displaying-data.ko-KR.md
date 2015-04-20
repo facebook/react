@@ -17,8 +17,8 @@ UI를 가지고 할 수 있는 가장 기초적인 것은 데이터를 표시하
 <html>
   <head>
     <title>Hello React</title>
-    <script src="http://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
   </head>
   <body>
     <div id="example"></div>
@@ -82,11 +82,11 @@ React 컴포넌트들은 매우 단순합니다. 당신은 그것들을 `props` 
 
 **JSX는 당신으로 하여금 HTML 문법을 이용해 JavaScript 객체를 만들게 해줍니다.** React를 이용해 순수한 JavaScript 문법으로 링크를 만드려고 한다면, 코드는 다음과 같습니다:
 
-`React.createElement('a', {href: 'http://facebook.github.io/react/'}, '안녕하세요!')`
+`React.createElement('a', {href: 'https://facebook.github.io/react/'}, '안녕하세요!')`
 
 JSX를 이용하면:
 
-`<a href="http://facebook.github.io/react/">안녕하세요!</a>`
+`<a href="https://facebook.github.io/react/">안녕하세요!</a>`
 
 우리는 이것이 React 앱들을 만들기 쉽게 하고, 디자이너들이 이 문법을 더 선호하는 것을 발견했습니다, 하지만 모든 사람은 그들만의 선호하는 워크플로우가 있기 마련이므로, **JSX는 React를 사용하기 위해 필수적이지는 않습니다.**
 
@@ -94,7 +94,7 @@ JSX는 매우 작은 언어입니다. 그것을 배우고 싶다면, [JSX 깊게
 
 JSX는 HTML과 비슷하지만, 완전히 똑같지는 않습니다. [JSX의 실수하기 쉬운 부분들](/react/docs/jsx-gotchas-ko-KR.html)에 중요한 차이점들에 대해 설명되어 있습니다.
 
-JSX를 사용하기 시작하기 위한 가장 쉬운 방법은 브라우저에서 작동하는 `JSXTransformer`를 사용하는 것입니다. 우리는 이것을 프로덕션에서는 사용하지 않기를 강하게 권장하는 바입니다. 당신은 우리의 커맨드 라인 [react-tools](http://npmjs.org/package/react-tools) 패키지를 이용하여 미리 컴파일(precompile)해 사용할 수 있습니다.
+JSX를 사용하기 시작하기 위한 가장 쉬운 방법은 브라우저에서 작동하는 `JSXTransformer`를 사용하는 것입니다. 우리는 이것을 프로덕션에서는 사용하지 않기를 강하게 권장하는 바입니다. 당신은 우리의 커맨드 라인 [react-tools](https://www.npmjs.com/package/react-tools) 패키지를 이용하여 미리 컴파일(precompile)해 사용할 수 있습니다.
 
 
 ## JSX 없이 React 사용하기

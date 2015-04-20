@@ -19,8 +19,8 @@ next: jsx-in-depth-zh-CN.html
 <html>
   <head>
     <title>Hello React</title>
-    <script src="http://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
   </head>
   <body>
     <div id="example"></div>
@@ -82,11 +82,11 @@ React 组件非常简单。你可以认为它们就是简单的函数，接受 `
 
 **JSX 让你可以用 HTML 语法去写 JavaScript 函数调用** 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： 
 
-`React.createElement('a', {href: 'http://facebook.github.io/react/'}, 'Hello React!')`。
+`React.createElement('a', {href: 'https://facebook.github.io/react/'}, 'Hello React!')`。
 
 通过 JSX 这就变成了
 
-`<a href="http://facebook.github.io/react/">Hello React!</a>`。
+`<a href="https://facebook.github.io/react/">Hello React!</a>`。
 
 我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以**JSX 不是必须用的。**
 
@@ -94,7 +94,7 @@ JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性�
 
 JSX 类似于 HTML，但不是完全一样。参考 [JSX 陷阱](/react/docs/jsx-gotchas-zh-CN.html) 学习关键区别。
 
-最简单开始学习 JSX 的方法就是使用浏览器端的 `JSXTransformer`。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 [react-tools](http://npmjs.org/package/react-tools) 包来预编译你的代码。
+最简单开始学习 JSX 的方法就是使用浏览器端的 `JSXTransformer`。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 [react-tools](https://www.npmjs.com/package/react-tools) 包来预编译你的代码。
 
 
 ## 没有 JSX 的 React

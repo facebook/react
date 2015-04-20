@@ -10,4 +10,4 @@ React 팁 섹션에서는 여러 궁금증을 해결해주고 흔히 하는 실�
 
 ## 기여하기
 
-[현재 팁](https://github.com/facebook/react/tree/master/docs)의 형식을 따르는 풀 리퀘스트를 [React 저장소](https://github.com/facebook/react)에 보내주세요. PR을 보내기 전에 리뷰가 필요하다면 [freenode의 #reactjs 채널](irc://chat.freenode.net/reactjs)이나 [reactjs Google 그룹](http://groups.google.com/group/reactjs)에서 도움을 요청하실 수 있습니다.
+[현재 팁](https://github.com/facebook/react/tree/master/docs)의 형식을 따르는 풀 리퀘스트를 [React 저장소](https://github.com/facebook/react)에 보내주세요. PR을 보내기 전에 리뷰가 필요하다면 [freenode의 #reactjs 채널](irc://chat.freenode.net/reactjs)이나 [reactjs Google 그룹](https://groups.google.com/group/reactjs)에서 도움을 요청하실 수 있습니다.

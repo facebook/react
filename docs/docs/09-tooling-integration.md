@@ -32,7 +32,7 @@ If you like using JSX, we provide an in-browser JSX transformer for development 
 
 ### Productionizing: Precompiled JSX
 
-If you have [npm](http://npmjs.org/), you can simply run `npm install -g react-tools` to install our command-line `jsx` tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: `jsx --watch src/ build/`.
+If you have [npm](https://www.npmjs.com/), you can simply run `npm install -g react-tools` to install our command-line `jsx` tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: `jsx --watch src/ build/`.
 
 By default JSX files with a `.js` extension are transformed. Use `jsx --extension jsx src/ build/` to transform files with a `.jsx` extension.
 

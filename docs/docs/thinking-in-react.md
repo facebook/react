@@ -34,7 +34,7 @@ Our JSON API returns some data that looks like this:
 
 The first thing you'll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you're working with a designer they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!
 
-But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the [single responsibility principle](http://en.wikipedia.org/wiki/Single_responsibility_principle), that is, a component should ideally only do one thing. If it ends up growing it should be decomposed into smaller subcomponents.
+But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the [single responsibility principle](https://en.wikipedia.org/wiki/Single_responsibility_principle), that is, a component should ideally only do one thing. If it ends up growing it should be decomposed into smaller subcomponents.
 
 Since you're often displaying a JSON data model to a user, you'll find that if your model was built correctly your UI (and therefore your component structure) will map nicely onto it. That's because user interfaces and data models tend to adhere to the same *information architecture* which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.
 
@@ -70,11 +70,11 @@ You can build top-down or bottom-up. That is, you can either start with building
 
 At the end of this step you'll have a library of reusable components that render your data model. The components will only have `render()` methods since this is a static version of your app. The component at the top of the hierarchy (`FilterableProductTable`) will take your data model as a prop. If you make a change to your underlying data model and call `React.render()` again the UI will be updated. It's easy to see how your UI is updated and where to make changes since there's nothing complicated going on since React's **one-way data flow** (also called *one-way binding*) keeps everything modular, easy to reason about, and fast.
 
-Simply refer to the [React docs](http://facebook.github.io/react/docs/) if you need help executing this step.
+Simply refer to the [React docs](/react/docs/) if you need help executing this step.
 
 ### A brief interlude: props vs state
 
-There are two types of "model" data in React: props and state. It's important to understand the distinction between the two; skim [the official React docs](http://facebook.github.io/react/docs/interactivity-and-dynamic-uis.html) if you aren't sure what the difference is.
+There are two types of "model" data in React: props and state. It's important to understand the distinction between the two; skim [the official React docs](/react/docs/interactivity-and-dynamic-uis.html) if you aren't sure what the difference is.
 
 ## Step 3: Identify the minimal (but complete) representation of UI state
 

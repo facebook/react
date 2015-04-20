@@ -3,7 +3,7 @@ title: "Community Round-up #15"
 author: Jonas Gebhardt
 ---
 
-Interest in React seems to have surged ever since David Nolen ([@swannodette](https://twitter.com/swannodette))'s introduction of [Om](https://github.com/swannodette/om) in his post ["The Future of Javascript MVC Frameworks"](http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/).
+Interest in React seems to have surged ever since David Nolen ([@swannodette](https://twitter.com/swannodette))'s introduction of [Om](https://github.com/swannodette/om) in his post ["The Future of Javascript MVC Frameworks"](https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/).
 
 In this React Community Round-up, we are taking a closer look at React from a functional programming perspective.
 
@@ -15,13 +15,13 @@ To start things off, Eric Normand ([@ericnormand](https://twitter.com/ericnorman
 > [Read the full post...](http://www.lispcast.com/react-another-level-of-indirection)
 
 ## Reagent: Minimalistic React for ClojureScript
-Dan Holmsand ([@holmsand](https://twitter.com/holmsand)) created [Reagent](http://holmsand.github.io/reagent/), a simplistic ClojureScript API to React.
+Dan Holmsand ([@holmsand](https://twitter.com/holmsand)) created [Reagent](https://holmsand.github.io/reagent/), a simplistic ClojureScript API to React.
 
 > It allows you to define efficient React components using nothing but plain ClojureScript functions and data, that describe your UI using a Hiccup-like syntax.
 >
 > The goal of Reagent is to make it possible to define arbitrarily complex UIs using just a couple of basic concepts, and to be fast enough by default that you rarely have to care about performance.
 >
-> [Check it out on Github...](http://holmsand.github.io/reagent/)
+> [Check it out on Github...](https://holmsand.github.io/reagent/)
 
 
 ## Functional DOM programming
@@ -34,7 +34,7 @@ React's one-way data-binding naturally lends itself to a functional programming 
 
 Pete also explains this in detail at his #MeteorDevShop talk (about 30 Minutes):
 
-<iframe width="560" height="315" src="//www.youtube.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
 
 
 
@@ -106,7 +106,7 @@ In a separate post, Dyrkell breaks down [how to build a binary clock component](
 [[Demo](http://www.lexicallyscoped.com/demo/binclock/)] [[Code](https://github.com/fredyr/binclock/blob/master/src/binclock/core.cljs)]
 
 ### Time Travel: Implementing undo in Om
-David Nolen shows how to leverage immutable data structures to [add global undo](http://swannodette.github.io/2013/12/31/time-travel/) functionality to an app – using just 13 lines of ClojureScript.
+David Nolen shows how to leverage immutable data structures to [add global undo](https://swannodette.github.io/2013/12/31/time-travel/) functionality to an app – using just 13 lines of ClojureScript.
 
 ### A Step-by-Step Om Walkthrough
 

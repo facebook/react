@@ -103,7 +103,7 @@ renderB: <div><span>second</span><span>first</span></div>
 => [replaceAttribute textContent 'second'], [insertNode <span>first</span>]
 ```
 
-원소의 목록을 변환하기 위한 최소 연산 집합을 찾는 알고리즘이 여럿 있습니다. [Levenshtein distance](http://en.wikipedia.org/wiki/Levenshtein_distance)를 사용하면 O(n<sup>2</sup>) 복잡도로 원소 한 개의 삽입, 삭제, 교체를 위해 필요한 최솟값을 찾을 수 있습니다. Levenshtein 알고리즘을 사용해도 노드가 다른 위치로 이동한 경우는 알아낼 수 없고, 그것을 알아내는 알고리즘은 더욱 높은 복잡도를 가집니다.
+원소의 목록을 변환하기 위한 최소 연산 집합을 찾는 알고리즘이 여럿 있습니다. [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance)를 사용하면 O(n<sup>2</sup>) 복잡도로 원소 한 개의 삽입, 삭제, 교체를 위해 필요한 최솟값을 찾을 수 있습니다. Levenshtein 알고리즘을 사용해도 노드가 다른 위치로 이동한 경우는 알아낼 수 없고, 그것을 알아내는 알고리즘은 더욱 높은 복잡도를 가집니다.
 
 ### 키(keys)
 

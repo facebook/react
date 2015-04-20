@@ -4,7 +4,7 @@ author: Lou Husson
 ---
 
 ## React Router
-[Ryan Florence](http://ryanflorence.com/) and [Michael Jackson](http://twitter.com/mjackson) ported Ember's router to React in a project called [React Router](https://github.com/rackt/react-router). This is a very good example of both communities working together to make the web better!
+[Ryan Florence](http://ryanflorence.com/) and [Michael Jackson](https://twitter.com/mjackson) ported Ember's router to React in a project called [React Router](https://github.com/rackt/react-router). This is a very good example of both communities working together to make the web better!
 
 ```javascript
 React.renderComponent((
@@ -49,7 +49,7 @@ Areeb Malik, from Facebook, talks about his experience using React. "On paper, a
 
 ## Referencing Dynamic Children
 
-While Matt Zabriskie was working on [react-tabs](https://www.npmjs.org/package/react-tabs) he discovered how to use React.Children.map and React.addons.cloneWithProps in order to [reference dynamic children](http://www.mattzabriskie.com/blog/react-referencing-dynamic-children).
+While Matt Zabriskie was working on [react-tabs](https://www.npmjs.com/package/react-tabs) he discovered how to use React.Children.map and React.addons.cloneWithProps in order to [reference dynamic children](http://www.mattzabriskie.com/blog/react-referencing-dynamic-children).
 
 ```javascript
 var App = React.createClass({
@@ -83,12 +83,12 @@ Have you ever wondered how JSX was implemented? James Long wrote a very instruct
 
 [Matt Zabriskie](https://github.com/mzabriskie) released a [project](https://github.com/mzabriskie/react-draggable) to make your react components draggable.
 
-[![](/react/img/blog/react-draggable.png)](http://mzabriskie.github.io/react-draggable/example/)
+[![](/react/img/blog/react-draggable.png)](https://mzabriskie.github.io/react-draggable/example/)
 
 
 ## HTML Parser2 React
 
-[Jason Brown](http://browniefed.github.io/) adapted htmlparser2 to React: [htmlparser2-react](https://www.npmjs.org/package/htmlparser2-react). That allows you to convert raw HTML to the virtual DOM.
+[Jason Brown](https://browniefed.github.io/) adapted htmlparser2 to React: [htmlparser2-react](https://www.npmjs.com/package/htmlparser2-react). That allows you to convert raw HTML to the virtual DOM.
 This is not the intended way to use React but can be useful as last resort if you have an existing piece of HTML.
 
 ```javascript
@@ -104,7 +104,7 @@ var parsedComponent = reactParser(html, React);
 
 If you haven't yet tried out React, Jacob Rios did a Hangout where he covers the most important aspects and thankfully he recorded it!
 
-<iframe width="650" height="315" src="//www.youtube.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
 
 
 ## Random Tweets

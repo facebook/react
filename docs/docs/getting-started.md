@@ -9,8 +9,8 @@ redirect_from: "docs/index.html"
 
 The easiest way to start hacking on React is using the following JSFiddle Hello World examples:
 
- * **[React JSFiddle](http://jsfiddle.net/reactjs/69z2wepo/)**
- * [React JSFiddle without JSX](http://jsfiddle.net/reactjs/5vjqabv3/)
+ * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
+ * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
 ## Starter Kit
 
@@ -64,7 +64,7 @@ Then reference it from `helloworld.html`:
 
 ### Offline Transform
 
-First install the command-line tools (requires [npm](http://npmjs.org/)):
+First install the command-line tools (requires [npm](https://www.npmjs.com/)):
 
 ```
 npm install -g react-tools
@@ -106,7 +106,7 @@ Update your HTML file as below:
 
 ## Want CommonJS?
 
-If you want to use React with [browserify](http://browserify.org/), [webpack](http://webpack.github.io/), or another CommonJS-compatible module system, just use the [`react` npm package](https://www.npmjs.org/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
+If you want to use React with [browserify](http://browserify.org/), [webpack](https://webpack.github.io/), or another CommonJS-compatible module system, just use the [`react` npm package](https://www.npmjs.com/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
 
 ## Next Steps
 

@@ -12,7 +12,7 @@ Many members of the community use Stack Overflow to ask questions. Read through 
 
 ## Google Groups mailing list
 
-<a href="http://groups.google.com/group/reactjs" target="_blank">The **reactjs** Google Group</a> is also a good place to ask questions and find answers.
+<a href="https://groups.google.com/group/reactjs" target="_blank">The **reactjs** Google Group</a> is also a good place to ask questions and find answers.
 
 ## IRC
 

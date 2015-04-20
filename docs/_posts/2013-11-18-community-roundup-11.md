@@ -9,25 +9,25 @@ This round-up is the proof that React has taken off from its Facebook's root: it
 
 [Steve Luscher](https://github.com/steveluscher) working at [LeanPub](https://leanpub.com/) made a 30 min talk at [Super VanJS](https://twitter.com/vanjs). He does a remarkable job at explaining why React is so fast with very exciting demos using the HTML5 Audio API.
 
-<figure><iframe width="600" height="338" src="//www.youtube.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="600" height="338" src="//www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## React Tips
 
-[Connor McSheffrey](http://connormcsheffrey.com/) and [Cheng Lou](https://github.com/chenglou) added a new section to the documentation. It's a list of small tips that you will probably find useful while working on React. Since each article is very small and focused, we [encourage you to contribute](http://facebook.github.io/react/tips/introduction.html)!
+[Connor McSheffrey](http://connormcsheffrey.com/) and [Cheng Lou](https://github.com/chenglou) added a new section to the documentation. It's a list of small tips that you will probably find useful while working on React. Since each article is very small and focused, we [encourage you to contribute](/react/tips/introduction.html)!
 
-- [Inline Styles](http://facebook.github.io/react/tips/inline-styles.html)
-- [If-Else in JSX](http://facebook.github.io/react/tips/if-else-in-JSX.html)
-- [Self-Closing Tag](http://facebook.github.io/react/tips/self-closing-tag.html)
-- [Maximum Number of JSX Root Nodes](http://facebook.github.io/react/tips/maximum-number-of-jsx-root-nodes.html)
-- [Shorthand for Specifying Pixel Values in style props](http://facebook.github.io/react/tips/style-props-value-px.html)
-- [Type of the Children props](http://facebook.github.io/react/tips/children-props-type.html)
-- [Value of null for Controlled Input](http://facebook.github.io/react/tips/controlled-input-null-value.html)
-- [`componentWillReceiveProps` Not Triggered After Mounting](http://facebook.github.io/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html)
-- [Props in getInitialState Is an Anti-Pattern](http://facebook.github.io/react/tips/props-in-getInitialState-as-anti-pattern.html)
-- [DOM Event Listeners in a Component](http://facebook.github.io/react/tips/dom-event-listeners.html)
-- [Load Initial Data via AJAX](http://facebook.github.io/react/tips/initial-ajax.html)
-- [False in JSX](http://facebook.github.io/react/tips/false-in-jsx.html)
+- [Inline Styles](/react/tips/inline-styles.html)
+- [If-Else in JSX](/react/tips/if-else-in-JSX.html)
+- [Self-Closing Tag](/react/tips/self-closing-tag.html)
+- [Maximum Number of JSX Root Nodes](/react/tips/maximum-number-of-jsx-root-nodes.html)
+- [Shorthand for Specifying Pixel Values in style props](/react/tips/style-props-value-px.html)
+- [Type of the Children props](/react/tips/children-props-type.html)
+- [Value of null for Controlled Input](/react/tips/controlled-input-null-value.html)
+- [`componentWillReceiveProps` Not Triggered After Mounting](/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html)
+- [Props in getInitialState Is an Anti-Pattern](/react/tips/props-in-getInitialState-as-anti-pattern.html)
+- [DOM Event Listeners in a Component](/react/tips/dom-event-listeners.html)
+- [Load Initial Data via AJAX](/react/tips/initial-ajax.html)
+- [False in JSX](/react/tips/false-in-jsx.html)
 
 
 ## Intro to the React Framework
@@ -50,7 +50,7 @@ This round-up is the proof that React has taken off from its Facebook's root: it
 
 ## Genesis Skeleton
 
-[Eric Clemmons](http://ericclemmons.github.io/) is working on a "Modern, opinionated, full-stack starter kit for rapid, streamlined application development". The version 0.4.0 has just been released and has first-class support for React.
+[Eric Clemmons](https://ericclemmons.github.io/) is working on a "Modern, opinionated, full-stack starter kit for rapid, streamlined application development". The version 0.4.0 has just been released and has first-class support for React.
 <figure>[![](/react/img/blog/genesis_skeleton.png)](http://genesis-skeleton.com/)</figure>
 
 
