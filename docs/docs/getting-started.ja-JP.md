@@ -9,8 +9,8 @@ redirect_from: "docs/index-ja-JP.html"
 
 React でのハッキングを始めるにあたり、一番簡単なものとして次の JSFiddle で動いている Hello World の例を取り上げます。
 
- * **[React JSFiddle](http://jsfiddle.net/reactjs/69z2wepo/)**
- * [React JSFiddle without JSX](http://jsfiddle.net/reactjs/5vjqabv3/)
+ * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
+ * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
 ## スターターキット
 
@@ -63,7 +63,7 @@ React.render(
 
 ### オフラインでの変換
 
-まずはコマンドラインツールをインストールしましょう（[npm](http://npmjs.org/) が必要です）。
+まずはコマンドラインツールをインストールしましょう（[npm](https://www.npmjs.com/) が必要です）。
 
 ```
 npm install -g react-tools
@@ -105,7 +105,7 @@ React.render(
 
 ## CommonJS を使うには
 
-React を [browserify](http://browserify.org/) や [webpack](http://webpack.github.io/)、または CommonJS 準拠の他のモジュールシステムと一緒に使いたい場合、 [`react` npm package](https://www.npmjs.org/package/react) を使ってみてください。また、`jsx` ビルドツールをパッケージングシステム（CommonJS に限らず）に導入することも非常に簡単です。
+React を [browserify](http://browserify.org/) や [webpack](https://webpack.github.io/)、または CommonJS 準拠の他のモジュールシステムと一緒に使いたい場合、 [`react` npm package](https://www.npmjs.com/package/react) を使ってみてください。また、`jsx` ビルドツールをパッケージングシステム（CommonJS に限らず）に導入することも非常に簡単です。
 
 ## 次にすること
 

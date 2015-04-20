@@ -7,7 +7,7 @@ The highlight of this week is that an interaction-heavy app has been ported to R
 
 ## Moving From Backbone To React
 
-[Clay Allsopp](http://twitter.com/clayallsopp) successfully ported [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/), a fairly big, interaction-heavy JavaScript app, to React.
+[Clay Allsopp](https://twitter.com/clayallsopp) successfully ported [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/), a fairly big, interaction-heavy JavaScript app, to React.
 
 > [<img style="float: right; margin: 0 0 10px 10px;" src="/react/img/blog/propeller-logo.png" />](http://usepropeller.com/blog/posts/from-backbone-to-react/)Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn't automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they're all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.
 >
@@ -19,7 +19,7 @@ The highlight of this week is that an interaction-heavy app has been ported to R
 
 ## Grunt Task for JSX
 
-[Eric Clemmons](http://ericclemmons.github.io/) wrote a task for [Grunt](http://gruntjs.com/) that applies the JSX transformation to your Javascript files. It also works with [Browserify](http://browserify.org/) if you want all your files to be concatenated and minified together.
+[Eric Clemmons](https://ericclemmons.github.io/) wrote a task for [Grunt](http://gruntjs.com/) that applies the JSX transformation to your Javascript files. It also works with [Browserify](http://browserify.org/) if you want all your files to be concatenated and minified together.
 
 > Grunt task for compiling Facebook React's .jsx templates into .js
 >

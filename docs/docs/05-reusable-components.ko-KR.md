@@ -139,7 +139,7 @@ var MyComponent = React.createClass({
 
 ## 믹스인
 
-컴포넌트는 React에서 코드를 재사용할 수 있는 최고의 방법이지만, 가끔 아주 다른 컴포넌트에서 공통 기능이 필요한 때도 있습니다. 이런 상황을 [공통된 관심사(cross-cutting concerns)](http://en.wikipedia.org/wiki/Cross-cutting_concern)라 부르며, React에서는 `mixins`으로 이 문제를 해결합니다.
+컴포넌트는 React에서 코드를 재사용할 수 있는 최고의 방법이지만, 가끔 아주 다른 컴포넌트에서 공통 기능이 필요한 때도 있습니다. 이런 상황을 [공통된 관심사(cross-cutting concerns)](https://en.wikipedia.org/wiki/Cross-cutting_concern)라 부르며, React에서는 `mixins`으로 이 문제를 해결합니다.
 
 예를 들어, 컴포넌트가 주기적으로 업데이트되길 원할 경우가 있습니다. `setInterval()`을 사용하면 쉽지만, 필요 없어지면 메모리를 아끼기 위해 주기를 꼭 취소해야 합니다. React는 컴포넌트가 막 생성거나 없어질 때를 [생명주기 메소드](/react/docs/working-with-the-browser-ko-KR.html#component-lifecycle)를 통해 알려줍니다. 이런 메소드들을 사용해서 컴포넌트가 사라질 때 자동으로 정리해주는 `setInterval()`를 제공해주는 간단한 믹스인을 만들어보겠습니다.
 

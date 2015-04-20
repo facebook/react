@@ -12,7 +12,7 @@ Interest in React has been exploding recently, so it's a good time to explore so
 
 [Formidable Labs](https://github.com/FormidableLabs) and [Seattle JS](http://www.meetup.com/seattlejs/) recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:
 
-<iframe width="650" height="300" src="//www.youtube.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="300" src="//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
 
 [AEFlash](https://github.com/aearly) writes up [some best practices and tips](http://aeflash.com/2015-02/react-tips-and-best-practices.html) to help you avoid potential pitfalls when developing with React.
 
@@ -40,7 +40,7 @@ Our own [Sebastian Markbåge](https://github.com/sebmarkbage) was on the [Web Pl
 
 [Andrew Hillel](https://twitter.com/andyhillel) of the BBC gives [an excellent and thorough breakdown](http://www.bbc.co.uk/blogs/internet/entries/47a96d23-ae04-444e-808f-678e6809765d) of the stack they used to rebuild their homepage, with React as an integral part of the front-end.
 
-A team from New Zealand called [Atomic](https://atomic.io/) is [building web and mobile prototyping and design tools](http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/) entirely in-browser, and as co-founder [Darryl Gray](http://twitter.com/darrylgray) says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.
+A team from New Zealand called [Atomic](https://atomic.io/) is [building web and mobile prototyping and design tools](http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/) entirely in-browser, and as co-founder [Darryl Gray](https://twitter.com/darrylgray) says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.
 
 [Polarr](https://github.com/Polarrco) have rebuilt [their browser-based photo editor](http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here) with React.
 

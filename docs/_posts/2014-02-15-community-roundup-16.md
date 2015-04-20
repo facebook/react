@@ -54,7 +54,7 @@ It's great to see the React community expand internationally. [This site](http:/
 
 ### Egghead.io video tutorials
 
-Joe Maddalone ([@joemaddalone](https://twitter.com/joemaddalone)) of [egghead.io](https://egghead.io/) created a series of React video tutorials, such as [this](http://www.youtube.com/watch?v=rFvZydtmsxM&feature=youtu.be&a) introduction to React Components. [[part 1](http://www.youtube.com/watch?v=rFvZydtmsxM&feature=youtu.be&a)], [[part 2](http://www.youtube.com/watch?v=5yvFLrt7N8M)]
+Joe Maddalone ([@joemaddalone](https://twitter.com/joemaddalone)) of [egghead.io](https://egghead.io/) created a series of React video tutorials, such as [this](http://www.youtube-nocookie.com/watch?v=rFvZydtmsxM&feature=youtu.be&a) introduction to React Components. [[part 1](http://www.youtube-nocookie.com/watch?v=rFvZydtmsxM&feature=youtu.be&a)], [[part 2](http://www.youtube-nocookie.com/watch?v=5yvFLrt7N8M)]
 
 ### "React: Finally, a great server/client web stack"
 

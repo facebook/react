@@ -4,13 +4,13 @@ layout: post
 author: Lou Husson
 ---
 
-This round-up is a special edition on [Flux](http://facebook.github.io/flux/). If you expect to see diagrams showing arrows that all point in the same direction, you won't be disappointed!
+This round-up is a special edition on [Flux](https://facebook.github.io/flux/). If you expect to see diagrams showing arrows that all point in the same direction, you won't be disappointed!
 
 ## React And Flux at ForwardJS
 
 Facebook engineers [Jing Chen](https://github.com/jingc) and [Bill Fisher](https://github.com/fisherwebdev) gave a talk about Flux and React at [ForwardJS](http://forwardjs.com/), and how using an application architecture with a unidirectional data flow helped solve recurring bugs.
 
-<iframe width="650" height="315" src="//www.youtube.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
 # Yahoo
 
@@ -24,10 +24,10 @@ Yahoo is converting Yahoo Mail to React and Flux and in the process, they open s
 
 ## Reflux
 
-[Mikael Brassman](http://spoike.ghost.io/) wrote [Reflux](https://github.com/spoike/refluxjs), a library that implements Flux concepts. Note that it diverges significantly from the way we use Flux at Facebook. He explains [the reasons why in a blog post](http://spoike.ghost.io/deconstructing-reactjss-flux/).
+[Mikael Brassman](https://spoike.ghost.io/) wrote [Reflux](https://github.com/spoike/refluxjs), a library that implements Flux concepts. Note that it diverges significantly from the way we use Flux at Facebook. He explains [the reasons why in a blog post](https://spoike.ghost.io/deconstructing-reactjss-flux/).
 
 <center>
-<a href="http://spoike.ghost.io/deconstructing-reactjss-flux/"><img src="/react/img/blog/reflux-flux.png" width="400" /></a>
+<a href="https://spoike.ghost.io/deconstructing-reactjss-flux/"><img src="/react/img/blog/reflux-flux.png" width="400" /></a>
 </center>
 
 
@@ -107,22 +107,22 @@ undo: function() {
 
 ## React and Flux
 
-[Christian Alfoni](https://github.com/christianalfoni) wrote an article where [he compares Backbone, Angular and Flux](http://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html) on a simple example that's representative of a real project he worked on.
+[Christian Alfoni](https://github.com/christianalfoni) wrote an article where [he compares Backbone, Angular and Flux](https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html) on a simple example that's representative of a real project he worked on.
 
 > Wow, that was a bit more code! Well, try to think of it like this. In the above examples, if we were to do any changes to the application we would probably have to move things around. In the FLUX example we have considered that from the start.
 >
 > Any changes to the application is adding, not moving things around. If you need a new store, just add it and make components dependant of it. If you need more views, create a component and use it inside any other component without affecting their current "parent controller or models".
 >
-> [Read the full article...](http://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html)
+> [Read the full article...](https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html)
 
 
 
 ## Flux: Step by Step approach
 
-[Nicola Paolucci](https://github.com/durdn) from Atlassian wrote a great guide to help your getting understand [Flux step by step](http://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/).
+[Nicola Paolucci](https://github.com/durdn) from Atlassian wrote a great guide to help your getting understand [Flux step by step](https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/).
 
 <center>
-<a href="http://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/"><img src="/react/img/blog/flux-chart.png" width="400" /></a>
+<a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/"><img src="/react/img/blog/flux-chart.png" width="400" /></a>
 </center>
 
 
@@ -144,7 +144,7 @@ undo: function() {
 
 Last but not least, Flux and React ideas are not limited to JavaScript inside of the browser. The iOS team at Facebook re-implemented Newsfeed using very similar patterns.
 
-<iframe width="650" height="315" src="//www.youtube.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
 
 
 ## Random Tweet

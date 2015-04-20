@@ -12,14 +12,14 @@ Happy holidays! This blog post is a little-late Christmas present for all the Re
 
 <figure><iframe src="//player.vimeo.com/video/79659941" width="220" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></figure>
 
-[Try out the demos!](http://petehunt.github.io/react-touch/)
+[Try out the demos!](https://petehunt.github.io/react-touch/)
 
 
 ## Introduction to React
 
 [Stoyan Stefanov](http://www.phpied.com/) talked at Joe Dev On Tech about React. He goes over all the features of the library and ends with a concrete example.
 
-<figure><iframe width="560" height="315" src="//www.youtube.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## JSX: E4X The Good Parts

@@ -5,7 +5,7 @@ permalink: why-react-ko-KR.html
 next: displaying-data-ko-KR.html
 ---
 
-React는 페이스북과 인스타그램에서 사용자 인터페이스를 구성하기 위해 만들어진 라이브러리입니다. 많은 사람들은 React를 **[MVC](http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 에서의 **V** 로 생각하는 경향이 있습니다.
+React는 페이스북과 인스타그램에서 사용자 인터페이스를 구성하기 위해 만들어진 라이브러리입니다. 많은 사람들은 React를 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 에서의 **V** 로 생각하는 경향이 있습니다.
 
 우리는 단 하나의 문제를 해결하기 위해 React를 만들었습니다: **지속해서 데이터가 변화하는 대규모 애플리케이션을 구축하기.** 이 문제를 해결하기 위해, React는 두가지 컨셉을 도입했습니다.
 
@@ -23,8 +23,8 @@ React는 재사용 가능한 컴포넌트들을 만드는 데에 도움이 됩�
 
 ## 5분만 투자하세요
 
-React는 많은 관습적인 사고에 도전하며, 첫눈에 볼 때는 이상한 아이디어들의 모음이라고 생각할 수도 있습니다. 이 가이드를 읽기 위해 [5분만 투자하세요](http://37signals.com/svn/posts/3124-give-it-five-minutes); 그 이상한 아이디어들은 페이스북과 인스타그램 안팎의 수천 개의 컴포넌트들을 만드는 데에 사용되었기 때문입니다.
+React는 많은 관습적인 사고에 도전하며, 첫눈에 볼 때는 이상한 아이디어들의 모음이라고 생각할 수도 있습니다. 이 가이드를 읽기 위해 [5분만 투자하세요](https://signalvnoise.com/posts/3124-give-it-five-minutes); 그 이상한 아이디어들은 페이스북과 인스타그램 안팎의 수천 개의 컴포넌트들을 만드는 데에 사용되었기 때문입니다.
 
 ## 더 알아보기
 
-[이 블로그 포스트](http://facebook.github.io/react/blog/2013/06/05/why-react.html)에서 React를 만든 우리의 동기에 대해 알아볼 수 있습니다.
+[이 블로그 포스트](/react/blog/2013/06/05/why-react.html)에서 React를 만든 우리의 동기에 대해 알아볼 수 있습니다.

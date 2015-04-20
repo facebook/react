@@ -3,9 +3,9 @@ title: "Testing Flux Applications"
 author: Bill Fisher
 ---
 
-**A more up-to-date version of this post is available as part of the [Flux documentation](http://facebook.github.io/flux/docs/testing-flux-applications.html).**
+**A more up-to-date version of this post is available as part of the [Flux documentation](https://facebook.github.io/flux/docs/testing-flux-applications.html).**
 
-[Flux](http://facebook.github.io/flux/) is the application architecture that Facebook uses to build web applications with [React](http://facebook.github.io/react/). It's based on a unidirectional data flow. In previous blog posts and documentation articles, we've shown the [basic structure and data flow](http://facebook.github.io/flux/docs/overview.html), more closely examined the [dispatcher and action creators](http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html), and shown how to put it all together with a [tutorial](http://facebook.github.io/flux/docs/todo-list.html). Now let's look at how to do formal unit testing of Flux applications with [Jest](http://facebook.github.io/jest/), Facebook's auto-mocking testing framework.
+[Flux](https://facebook.github.io/flux/) is the application architecture that Facebook uses to build web applications with [React](/react/). It's based on a unidirectional data flow. In previous blog posts and documentation articles, we've shown the [basic structure and data flow](https://facebook.github.io/flux/docs/overview.html), more closely examined the [dispatcher and action creators](/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html), and shown how to put it all together with a [tutorial](https://facebook.github.io/flux/docs/todo-list.html). Now let's look at how to do formal unit testing of Flux applications with [Jest](https://facebook.github.io/jest/), Facebook's auto-mocking testing framework.
 
 
 Testing with Jest
@@ -180,7 +180,7 @@ Now we have a collection of objects that will come back from MyOtherStore whenev
 
 A brief example of this technique is up on GitHub within the Flux Chat example's [UnreadThreadStore-test.js](https://github.com/facebook/flux/tree/master/examples/flux-chat/js/stores/__tests__/UnreadThreadStore-test.js).
 
-For more information about the `mock` property of mocked methods or Jest's ability to provide custom mock values, see Jest's documentation on [mock functions](http://facebook.github.io/jest/docs/mock-functions.html).
+For more information about the `mock` property of mocked methods or Jest's ability to provide custom mock values, see Jest's documentation on [mock functions](https://facebook.github.io/jest/docs/mock-functions.html).
 
 
 Moving Logic from React to Stores
@@ -315,11 +315,11 @@ render: function() {
 },
 ```
 
-To learn how to test React components themselves, check out the [Jest tutorial for React](http://facebook.github.io/jest/docs/tutorial-react.html) and the [ReactTestUtils documentation](http://facebook.github.io/react/docs/test-utils.html).
+To learn how to test React components themselves, check out the [Jest tutorial for React](https://facebook.github.io/jest/docs/tutorial-react.html) and the [ReactTestUtils documentation](/react/docs/test-utils.html).
 
 
 Further Reading
 ---------------
 
 - [Mocks Aren't Stubs](http://martinfowler.com/articles/mocksArentStubs.html) by Martin Fowler
-- [Jest API Reference](http://facebook.github.io/jest/docs/api.html)
+- [Jest API Reference](https://facebook.github.io/jest/docs/api.html)

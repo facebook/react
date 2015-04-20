@@ -13,7 +13,7 @@ In case you haven't seen it, we've consolidated the tooling solution around Reac
 
 - [Ryan Florence](https://github.com/rpflorence) and [Michael Jackson](https://github.com/mjackson)'s [react-nested-router](https://github.com/rpflorence/react-nested-router), which is a translation of the Ember router API to React.
 
-- [Stephen J. Collings](https://github.com/stevoland)'s [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap), which wraps the popular framework with a bit of React goodness. The [website](http://react-bootstrap.github.io/components.html) features live-editable demos.
+- [Stephen J. Collings](https://github.com/stevoland)'s [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap), which wraps the popular framework with a bit of React goodness. The [website](https://react-bootstrap.github.io/components.html) features live-editable demos.
 
 - [Andrey Popp](https://github.com/andreypopp)'s [react-quickstart](https://github.com/andreypopp/react-quickstart), which gives you a quick template for server-side rendering and routing, among other features.
 
@@ -23,7 +23,7 @@ These are some of the links that often pop up on the #reactjs IRC channel. If yo
 
 The core concepts React themselves is something very valuable that the community is exploring and pushing further. A year ago, we wouldn't have imagined something like [Bruce Hauman](http://rigsomelight.com)'s [Flappy Bird ClojureScript port](http://rigsomelight.com/2014/05/01/interactive-programming-flappy-bird-clojurescript.html), whose interactive programming has been made possible through React:
 
-<iframe width="560" height="315" src="//www.youtube.com/embed/KZjFVdU8VLI" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/KZjFVdU8VLI" frameborder="0" allowfullscreen></iframe>
 
 And don't forget [Pete Hunt](https://github.com/petehunt)'s Wolfenstein 3D rendering engine in React ([source code](https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183)). While it's nearly a year old, it's still a nice demo.
 

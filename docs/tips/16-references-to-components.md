@@ -25,4 +25,4 @@ var myComponentInstance = React.render(myComponentElement, myContainer);
 
 > Note:
 >
-> This should only ever be used at the top level. Inside components, let your `props` and `state` handle communication with child components, and only reference components via [refs](http://facebook.github.io/react/docs/more-about-refs.html).
+> This should only ever be used at the top level. Inside components, let your `props` and `state` handle communication with child components, and only reference components via [refs](/react/docs/more-about-refs.html).

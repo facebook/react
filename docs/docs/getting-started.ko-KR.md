@@ -10,8 +10,8 @@ redirect_from: "docs/index-ko-KR.html"
 
 React를 시작하는 가장 빠른 방법은 다음의 Hello World JSFiddle 예제를 따라 해 보는 것입니다.
 
- * **[React JSFiddle](http://jsfiddle.net/reactjs/69z2wepo/)**
- * [React JSFiddle without JSX](http://jsfiddle.net/reactjs/5vjqabv3/)
+ * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
+ * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
 ## 초심자용 키트
 
@@ -65,7 +65,7 @@ React.render(
 
 ### 오프라인 변환
 
-먼저 커맨드라인 도구를 설치합니다. ([npm](http://npmjs.org/) 필요):
+먼저 커맨드라인 도구를 설치합니다. ([npm](https://www.npmjs.com/) 필요):
 
 ```
 npm install -g react-tools
@@ -105,7 +105,7 @@ React.render(
 
 ## CommonJS를 원하시나요?
 
-만약 React를 [browserify](http://browserify.org/), [webpack](http://webpack.github.io/)이나 기타 CommonJS와 호환되는 모듈시스템과 함께 사용하고 싶다면, [`react` npm 패키지](https://www.npmjs.org/package/react)를 사용하세요. 그 외에도 `jsx` 빌드툴은 아주 쉽게 CommonJS 외에도 대부분의 패키징 시스템에 통합될 수 있습니다.
+만약 React를 [browserify](http://browserify.org/), [webpack](https://webpack.github.io/)이나 기타 CommonJS와 호환되는 모듈시스템과 함께 사용하고 싶다면, [`react` npm 패키지](https://www.npmjs.com/package/react)를 사용하세요. 그 외에도 `jsx` 빌드툴은 아주 쉽게 CommonJS 외에도 대부분의 패키징 시스템에 통합될 수 있습니다.
 
 ## 다음 단계로
 

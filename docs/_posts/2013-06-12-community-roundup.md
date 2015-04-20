@@ -38,10 +38,10 @@ It looks like [Ben Alpert](http://benalpert.com/) is the first person outside of
 
 ## Origins of React
 
-[Pete Hunt](http://www.petehunt.net/blog/) explained what differentiates React from other JavaScript libraries in [a previous blog post](http://facebook.github.io/react/blog/2013/06/05/why-react.html). [Lee Byron](http://leebyron.com/) gives another perspective on Quora:
+[Pete Hunt](http://www.petehunt.net/blog/) explained what differentiates React from other JavaScript libraries in [a previous blog post](/react/blog/2013/06/05/why-react.html). [Lee Byron](http://leebyron.com/) gives another perspective on Quora:
 
 > React isn't quite like any other popular Javascript libraries, and it solves a very specific problem: complex UI rendering. It's also intended to be used along side many other popular libraries. For example, React works well with Backbone.js, amongst many others.
 >
 > React was born out of frustrations with the common pattern of writing two-way data bindings in complex MVC apps. React is an implementation of one-way data bindings.
 >
-> [Read the full post...](http://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Lee-Byron?srid=3DcX)
+> [Read the full post...](https://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Lee-Byron?srid=3DcX)

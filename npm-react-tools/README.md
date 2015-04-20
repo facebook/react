@@ -1,6 +1,6 @@
 # react-tools
 
-This package compliments the usage of [React](http://facebook.github.io/react/). It ships with tools that are often used in conjunction.
+This package compliments the usage of [React](https://facebook.github.io/react/). It ships with tools that are often used in conjunction.
 
 ## JSX
 

@@ -7,7 +7,7 @@ At Facebook we've been using JSX for a long time. We originally introduced it to
 
 In order to make it easier to implement new versions and to make sure that the syntax remains compatible, we're now formalizing the syntax of JSX in a stand-alone spec without any semantic meaning. It's completely stand-alone from React itself.
 
-Read the spec now at <http://facebook.github.io/jsx/>.
+Read the spec now at <https://facebook.github.io/jsx/>.
 
 This is not a proposal to be standardized in ECMAScript. It's just a reference document that transpiler writers and syntax highlighters can agree on. It's currently in a draft stage and will probably continue to be a living document.
 

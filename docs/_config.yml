@@ -1,7 +1,7 @@
 ---
 name: React
 description: A JavaScript library for building user interfaces
-url: http://facebook.github.io
+url: https://facebook.github.io
 baseurl: "/react"
 permalink: "/blog/:year/:month/:day/:title.html"
 paginate_path: "/blog/page:num/"
