@@ -777,6 +777,11 @@ var ReactClassMixin = {
    * @deprecated
    */
   setProps: function(partialProps, callback) {
+    warning(
+      false,
+      'setProps is deprecated.  Please use React.render() ' +
+      '(or React.addons.ReactRenderer as a temporary migration helper)'
+    );
     ReactUpdateQueue.enqueueSetProps(this, partialProps);
     if (callback) {
       ReactUpdateQueue.enqueueCallback(this, callback);

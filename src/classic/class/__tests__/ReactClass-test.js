@@ -397,4 +397,24 @@ describe('ReactClass-spec', function() {
     );
   });
 
+  it('warns when calling setProps', function() {
+    var MyComponent = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var container = document.createElement('div');
+    var instance = React.render(<MyComponent />, container);
+
+    instance.setProps({foo: 'bar'});
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain(
+      'Warning: setProps is deprecated.  ' +
+      'Please use React.render() ' +
+      '(or React.addons.ReactRenderer as a temporary migration helper)'
+    );
+  });
+
 });

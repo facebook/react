@@ -14,7 +14,9 @@
 'use strict';
 
 var React = require('React');
+var ReactRenderer = require('ReactRenderer');
 var ReactTestUtils = require('ReactTestUtils');
+
 var div = React.createFactory('div');
 
 describe('ReactDOM', function() {
@@ -74,40 +76,42 @@ describe('ReactDOM', function() {
    * DOM, instead of a stale cache.
    */
   it("should purge the DOM cache when removing nodes", function() {
-    var myDiv = ReactTestUtils.renderIntoDocument(
+    var container = document.createElement('div');
+    var myRenderer = new ReactRenderer(
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />
-      </div>
+      </div>,
+      container
     );
     // Warm the cache with theDog
-    myDiv.setProps({
+    myRenderer.setProps({
       children: [
         <div key="theDog" className="dogbeforedelete" />,
         <div key="theBird" className="bird" />
       ]
     });
     // Remove theDog - this should purge the cache
-    myDiv.setProps({
+    myRenderer.setProps({
       children: [
         <div key="theBird" className="bird" />
       ]
     });
     // Now, put theDog back. It's now a different DOM node.
-    myDiv.setProps({
+    myRenderer.setProps({
       children: [
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />
       ]
     });
     // Change the className of theDog. It will use the same element
-    myDiv.setProps({
+    myRenderer.setProps({
       children: [
         <div key="theDog" className="bigdog" />,
         <div key="theBird" className="bird" />
       ]
     });
-    var root = React.findDOMNode(myDiv);
+    var root = React.findDOMNode(myRenderer.component);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
