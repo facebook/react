@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="재사용가능한 컴포넌트 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/reusable-components-ko-KR.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/reusable-components-ko-KR.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -296,12 +296,12 @@
       <ul>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -513,7 +513,7 @@
 
 <span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name=""></a>믹스인 <a class="hash-link" href="#">#</a></h2>
-<p>컴포넌트는 React에서 코드를 재사용할 수 있는 최고의 방법이지만, 가끔 아주 다른 컴포넌트에서 공통 기능이 필요한 때도 있습니다. 이런 상황을 <a href="http://en.wikipedia.org/wiki/Cross-cutting_concern">공통된 관심사(cross-cutting concerns)</a>라 부르며, React에서는 <code>mixins</code>으로 이 문제를 해결합니다.</p>
+<p>컴포넌트는 React에서 코드를 재사용할 수 있는 최고의 방법이지만, 가끔 아주 다른 컴포넌트에서 공통 기능이 필요한 때도 있습니다. 이런 상황을 <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">공통된 관심사(cross-cutting concerns)</a>라 부르며, React에서는 <code>mixins</code>으로 이 문제를 해결합니다.</p>
 
 <p>예를 들어, 컴포넌트가 주기적으로 업데이트되길 원할 경우가 있습니다. <code>setInterval()</code>을 사용하면 쉽지만, 필요 없어지면 메모리를 아끼기 위해 주기를 꼭 취소해야 합니다. React는 컴포넌트가 막 생성거나 없어질 때를 <a href="/react/docs/working-with-the-browser-ko-KR.html#component-lifecycle">생명주기 메소드</a>를 통해 알려줍니다. 이런 메소드들을 사용해서 컴포넌트가 사라질 때 자동으로 정리해주는 <code>setInterval()</code>를 제공해주는 간단한 믹스인을 만들어보겠습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SetIntervalMixin</span> <span class="o">=</span> <span class="p">{</span>

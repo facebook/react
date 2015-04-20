@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="可复用组件 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/reusable-components-zh-CN.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/reusable-components-zh-CN.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -296,12 +296,12 @@
       <ul>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -510,7 +510,7 @@
 
 <span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="mixins"></a>Mixins <a class="hash-link" href="#mixins">#</a></h2>
-<p>组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 <a href="http://en.wikipedia.org/wiki/Cross-cutting_concern">跨切面关注点</a>。React 使用 <code>mixins</code> 来解决这类问题。</p>
+<p>组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">跨切面关注点</a>。React 使用 <code>mixins</code> 来解决这类问题。</p>
 
 <p>一个通用的场景是：一个组件需要定期更新。用 <code>setInterval()</code> 做很容易，但当不需要它的时候取消定时器来节省内存是非常重要的。React 提供 <a href="/react/docs/working-with-the-browser.html#component-lifecycle">生命周期方法</a> 来告知组件创建或销毁的时间。下面来做一个简单的 mixin，使用 <code>setInterval()</code> 并保证在组件销毁时清理定时器。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SetIntervalMixin</span> <span class="o">=</span> <span class="p">{</span>

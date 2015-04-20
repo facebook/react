@@ -3,8 +3,8 @@
 	<channel>
 		<title>React</title>
 		<description>A JavaScript library for building user interfaces</description>
-		<link>http://facebook.github.io/react</link>
-		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
+		<link>https://facebook.github.io/react</link>
+		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
 				<title>React v0.13.2</title>
@@ -54,8 +54,8 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 &lt;/ul&gt;
 </description>
 				<pubDate>2015-04-18T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/04/18/react-v0.13.2.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/04/18/react-v0.13.2.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/04/18/react-v0.13.2.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/04/18/react-v0.13.2.html</guid>
 			</item>
 		
 			<item>
@@ -79,8 +79,8 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 &lt;p&gt;In addition to supporting pull requests, issues, and general improvements, we&amp;#39;re also working hard on our internal React Native integrations and on React Native for Android.&lt;/p&gt;
 </description>
 				<pubDate>2015-04-17T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/04/17/react-native-v0.4.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/04/17/react-native-v0.4.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/04/17/react-native-v0.4.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/04/17/react-native-v0.4.html</guid>
 			</item>
 		
 			<item>
@@ -91,7 +91,7 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;when-is-react-native-android-coming&quot;&gt;&lt;/a&gt;When is React Native Android coming? &lt;a class=&quot;hash-link&quot; href=&quot;#when-is-react-native-android-coming&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;strong&gt;Give us 6 months&lt;/strong&gt;. At Facebook, we strive to only open-source projects that we are using in production. While the Android backend for React Native is starting to work (see video below at 37min), it hasn&amp;#39;t been shipped to any users yet. There&amp;#39;s a lot of work that goes into open-sourcing a project, and we want to do it right so that you have a great experience when using it.&lt;/p&gt;
 
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/X6YbAKiLCLU?start=2220&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube-nocookie.com/embed/X6YbAKiLCLU?start=2220&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;ray-wenderlich---property-finder&quot;&gt;&lt;/a&gt;Ray Wenderlich - Property Finder &lt;a class=&quot;hash-link&quot; href=&quot;#ray-wenderlich---property-finder&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;If you are getting started with React Native, you should absolutely &lt;a href=&quot;http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript&quot;&gt;use this tutorial&lt;/a&gt; from Colin Eberhardt. It goes through all the steps to make a reasonably complete app.&lt;/p&gt;
 
@@ -142,8 +142,8 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Wow. Getting started with React Native might have been the smoothest experience I’ve ever had with a new developer product.&lt;/p&gt;&amp;mdash; Andreas Eldh (@eldh) &lt;a href=&quot;https://twitter.com/eldh/status/581186172094980096&quot;&gt;March 26, 2015&lt;/a&gt;&lt;/blockquote&gt;
 </description>
 				<pubDate>2015-03-30T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/03/30/community-roundup-26.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/30/community-roundup-26.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/03/30/community-roundup-26.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/30/community-roundup-26.html</guid>
 			</item>
 		
 			<item>
@@ -160,16 +160,16 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 &lt;p&gt;&lt;em&gt;It&amp;#39;s worth noting that we&amp;#39;re not chasing “write once, run anywhere.” Different platforms have different looks, feels, and capabilities, and as such, we should still be developing discrete apps for each platform, but the same set of engineers should be able to build applications for whatever platform they choose, without needing to learn a fundamentally different set of technologies for each. We call this approach “learn once, write anywhere.”&lt;/em&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;To learn more, visit the &lt;a href=&quot;http://facebook.github.io/react-native/&quot;&gt;React Native website&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;To learn more, visit the &lt;a href=&quot;https://facebook.github.io/react-native/&quot;&gt;React Native website&lt;/a&gt;.&lt;/p&gt;
 </description>
 				<pubDate>2015-03-26T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/03/26/introducing-react-native.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/26/introducing-react-native.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/03/26/introducing-react-native.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/26/introducing-react-native.html</guid>
 			</item>
 		
 			<item>
 				<title>Building The Facebook News Feed With Relay</title>
-				<description>&lt;p&gt;At React.js Conf in January we gave a preview of Relay, a new framework for building data-driven applications in React. In this post we&amp;#39;ll describe the process of creating a Relay application. This post assumes some familiarity with the concepts of Relay and GraphQL, so if you haven&amp;#39;t already we recommend reading &lt;a href=&quot;http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html&quot;&gt;our introductory blog post&lt;/a&gt; or watching &lt;a href=&quot;https://www.youtube.com/watch?v=9sc8Pyc51uU&quot;&gt;the conference talk&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;At React.js Conf in January we gave a preview of Relay, a new framework for building data-driven applications in React. In this post we&amp;#39;ll describe the process of creating a Relay application. This post assumes some familiarity with the concepts of Relay and GraphQL, so if you haven&amp;#39;t already we recommend reading &lt;a href=&quot;/react/blog/2015/02/20/introducing-relay-and-graphql.html&quot;&gt;our introductory blog post&lt;/a&gt; or watching &lt;a href=&quot;https://www.youtube-nocookie.com/watch?v=9sc8Pyc51uU&quot;&gt;the conference talk&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;We&amp;#39;re working hard to prepare GraphQL and Relay for public release. In the meantime, we&amp;#39;ll continue to provide information about what you can expect.&lt;/p&gt;
 
@@ -355,8 +355,8 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 &lt;p&gt;But Relay has many more tricks up its sleeve. For example, it&amp;#39;s built from the start to handle reads and writes, allowing for features like optimistic client updates with transactional rollback. Relay can also defer fetching select parts of queries, and it uses a local data store to avoid fetching the same data twice. These are all powerful features that we hope to explore in future posts.&lt;/p&gt;
 </description>
 				<pubDate>2015-03-19T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html</guid>
 			</item>
 		
 			<item>
@@ -369,13 +369,13 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.1.js&quot;&gt;http://fb.me/react-0.13.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.1.min.js&quot;&gt;http://fb.me/react-0.13.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.1.js&quot;&gt;https://fb.me/react-0.13.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.1.min.js&quot;&gt;https://fb.me/react-0.13.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.1.js&quot;&gt;http://fb.me/react-with-addons-0.13.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.1.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.1.js&quot;&gt;https://fb.me/react-with-addons-0.13.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.1.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.1.js&quot;&gt;http://fb.me/JSXTransformer-0.13.1.js&lt;/a&gt;&lt;/li&gt;
+&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.1.js&quot;&gt;https://fb.me/JSXTransformer-0.13.1.js&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
@@ -398,8 +398,8 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;/ul&gt;
 </description>
 				<pubDate>2015-03-16T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</guid>
 			</item>
 		
 			<item>
@@ -419,13 +419,13 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.0.js&quot;&gt;http://fb.me/react-0.13.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.0.min.js&quot;&gt;http://fb.me/react-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.0.js&quot;&gt;https://fb.me/react-0.13.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.0.min.js&quot;&gt;https://fb.me/react-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0.js&quot;&gt;http://fb.me/react-with-addons-0.13.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0.js&quot;&gt;https://fb.me/react-with-addons-0.13.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.0.js&quot;&gt;http://fb.me/JSXTransformer-0.13.0.js&lt;/a&gt;&lt;/li&gt;
+&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.0.js&quot;&gt;https://fb.me/JSXTransformer-0.13.0.js&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
@@ -443,7 +443,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;/ul&gt;
 &lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
 &lt;ul&gt;
-&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details.&lt;/li&gt;
+&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details.&lt;/li&gt;
 &lt;li&gt;Added new top-level API &lt;code&gt;React.findDOMNode(component)&lt;/code&gt;, which should be used in place of &lt;code&gt;component.getDOMNode()&lt;/code&gt;. The base class for ES6-based components will not have &lt;code&gt;getDOMNode&lt;/code&gt;. This change will enable some more patterns moving forward.&lt;/li&gt;
 &lt;li&gt;Added a new top-level API &lt;code&gt;React.cloneElement(el, props)&lt;/code&gt; for making copies of React elements – see the &lt;a href=&quot;/react/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement&quot;&gt;v0.13 RC2 notes&lt;/a&gt; for more details.&lt;/li&gt;
 &lt;li&gt;New &lt;code&gt;ref&lt;/code&gt; style, allowing a callback to be used in place of a name: &lt;code&gt;&amp;lt;Photo ref={(c) =&amp;gt; this._photo = c} /&amp;gt;&lt;/code&gt; allows you to reference the component with &lt;code&gt;this._photo&lt;/code&gt; (as opposed to &lt;code&gt;ref=&amp;quot;photo&amp;quot;&lt;/code&gt; which gives &lt;code&gt;this.refs.photo&lt;/code&gt;).&lt;/li&gt;
@@ -484,8 +484,8 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;/ul&gt;
 </description>
 				<pubDate>2015-03-10T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</guid>
 			</item>
 		
 			<item>
@@ -497,7 +497,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;p&gt;&lt;a href=&quot;https://github.com/FormidableLabs&quot;&gt;Formidable Labs&lt;/a&gt; and &lt;a href=&quot;http://www.meetup.com/seattlejs/&quot;&gt;Seattle JS&lt;/a&gt; recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:&lt;/p&gt;
 
-&lt;iframe width=&quot;650&quot; height=&quot;300&quot; src=&quot;//www.youtube.com/embed/Pd6Ub7Ju2RM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;iframe width=&quot;650&quot; height=&quot;300&quot; src=&quot;//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
 
 &lt;p&gt;&lt;a href=&quot;https://github.com/aearly&quot;&gt;AEFlash&lt;/a&gt; writes up &lt;a href=&quot;http://aeflash.com/2015-02/react-tips-and-best-practices.html&quot;&gt;some best practices and tips&lt;/a&gt; to help you avoid potential pitfalls when developing with React.&lt;/p&gt;
 
@@ -521,7 +521,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;p&gt;&lt;a href=&quot;https://twitter.com/andyhillel&quot;&gt;Andrew Hillel&lt;/a&gt; of the BBC gives &lt;a href=&quot;http://www.bbc.co.uk/blogs/internet/entries/47a96d23-ae04-444e-808f-678e6809765d&quot;&gt;an excellent and thorough breakdown&lt;/a&gt; of the stack they used to rebuild their homepage, with React as an integral part of the front-end.&lt;/p&gt;
 
-&lt;p&gt;A team from New Zealand called &lt;a href=&quot;https://atomic.io/&quot;&gt;Atomic&lt;/a&gt; is &lt;a href=&quot;http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/&quot;&gt;building web and mobile prototyping and design tools&lt;/a&gt; entirely in-browser, and as co-founder &lt;a href=&quot;http://twitter.com/darrylgray&quot;&gt;Darryl Gray&lt;/a&gt; says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.&lt;/p&gt;
+&lt;p&gt;A team from New Zealand called &lt;a href=&quot;https://atomic.io/&quot;&gt;Atomic&lt;/a&gt; is &lt;a href=&quot;http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/&quot;&gt;building web and mobile prototyping and design tools&lt;/a&gt; entirely in-browser, and as co-founder &lt;a href=&quot;https://twitter.com/darrylgray&quot;&gt;Darryl Gray&lt;/a&gt; says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&quot;https://github.com/Polarrco&quot;&gt;Polarr&lt;/a&gt; have rebuilt &lt;a href=&quot;http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here&quot;&gt;their browser-based photo editor&lt;/a&gt; with React.&lt;/p&gt;
 
@@ -540,8 +540,8 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 </description>
 				<pubDate>2015-03-04T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</guid>
 			</item>
 		
 			<item>
@@ -559,13 +559,13 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.0-rc2.js&quot;&gt;http://fb.me/react-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.0-rc2.min.js&quot;&gt;http://fb.me/react-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.0-rc2.js&quot;&gt;https://fb.me/react-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.0-rc2.min.js&quot;&gt;https://fb.me/react-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc2.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc2.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc2.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc2.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.0-rc2.js&quot;&gt;http://fb.me/JSXTransformer-0.13.0-rc2.js&lt;/a&gt;&lt;/li&gt;
+&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.0-rc2.js&quot;&gt;https://fb.me/JSXTransformer-0.13.0-rc2.js&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0-rc2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
@@ -596,8 +596,8 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;p&gt;We plan to eventually deprecate &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt;. We&amp;#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using &lt;code&gt;React.cloneElement&lt;/code&gt; instead. We&amp;#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.&lt;/p&gt;
 </description>
 				<pubDate>2015-03-03T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</guid>
 			</item>
 		
 			<item>
@@ -610,13 +610,13 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.0-rc1.js&quot;&gt;http://fb.me/react-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.0-rc1.min.js&quot;&gt;http://fb.me/react-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.0-rc1.js&quot;&gt;https://fb.me/react-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.0-rc1.min.js&quot;&gt;https://fb.me/react-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc1.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc1.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.13.0-rc1.js&lt;/a&gt;&lt;/li&gt;
+&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.0-rc1.js&quot;&gt;https://fb.me/JSXTransformer-0.13.0-rc1.js&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
@@ -633,7 +633,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;/ul&gt;
 &lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
 &lt;ul&gt;
-&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details&lt;/li&gt;
+&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details&lt;/li&gt;
 &lt;li&gt;Added new top-level API &lt;code&gt;React.findDOMNode(component)&lt;/code&gt;, which should be used in place of &lt;code&gt;component.getDOMNode()&lt;/code&gt;. The base class for ES6-based components will not have &lt;code&gt;getDOMNode&lt;/code&gt;. This change will enable some more patterns moving forward.&lt;/li&gt;
 &lt;li&gt;New &lt;code&gt;ref&lt;/code&gt; style, allowing a callback to be used in place of a name: &lt;code&gt;&amp;lt;Photo ref={(c) =&amp;gt; this._photo = c} /&amp;gt;&lt;/code&gt; allows you to reference the component with &lt;code&gt;this._photo&lt;/code&gt; (as opposed to &lt;code&gt;ref=&amp;quot;photo&amp;quot;&lt;/code&gt; which gives &lt;code&gt;this.refs.photo&lt;/code&gt;)&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;this.setState()&lt;/code&gt; can now take a function as the first argument for transactional state updates, such as &lt;code&gt;this.setState((state, props) =&amp;gt; ({count: state.count + 1}));&lt;/code&gt; -- this means that you no longer need to use &lt;code&gt;this._pendingState&lt;/code&gt;, which is now gone.&lt;/li&gt;
@@ -668,8 +668,8 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;/ul&gt;
 </description>
 				<pubDate>2015-02-24T14:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</guid>
+				<link>https://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</guid>
 			</item>
 		
 	</channel>

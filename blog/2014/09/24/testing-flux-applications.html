@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="Testing Flux Applications | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/09/24/testing-flux-applications.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2014/09/24/testing-flux-applications.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -98,9 +98,9 @@
     <hr>
 
     <div class="post">
-      <p><strong>A more up-to-date version of this post is available as part of the <a href="http://facebook.github.io/flux/docs/testing-flux-applications.html">Flux documentation</a>.</strong></p>
+      <p><strong>A more up-to-date version of this post is available as part of the <a href="https://facebook.github.io/flux/docs/testing-flux-applications.html">Flux documentation</a>.</strong></p>
 
-<p><a href="http://facebook.github.io/flux/">Flux</a> is the application architecture that Facebook uses to build web applications with <a href="http://facebook.github.io/react/">React</a>. It&#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&#39;ve shown the <a href="http://facebook.github.io/flux/docs/overview.html">basic structure and data flow</a>, more closely examined the <a href="http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">dispatcher and action creators</a>, and shown how to put it all together with a <a href="http://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Now let&#39;s look at how to do formal unit testing of Flux applications with <a href="http://facebook.github.io/jest/">Jest</a>, Facebook&#39;s auto-mocking testing framework.</p>
+<p><a href="https://facebook.github.io/flux/">Flux</a> is the application architecture that Facebook uses to build web applications with <a href="/react/">React</a>. It&#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&#39;ve shown the <a href="https://facebook.github.io/flux/docs/overview.html">basic structure and data flow</a>, more closely examined the <a href="/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">dispatcher and action creators</a>, and shown how to put it all together with a <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Now let&#39;s look at how to do formal unit testing of Flux applications with <a href="https://facebook.github.io/jest/">Jest</a>, Facebook&#39;s auto-mocking testing framework.</p>
 <h2><a class="anchor" name="testing-with-jest"></a>Testing with Jest <a class="hash-link" href="#testing-with-jest">#</a></h2>
 <p>For a unit test to operate on a truly isolated <em>unit</em> of the application, we need to mock every module except the one we are testing. Jest makes the mocking of other parts of a Flux application trivial. To illustrate testing with Jest, we&#39;ll return to our <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example TodoMVC application</a>.</p>
 
@@ -241,7 +241,7 @@
 
 <p>A brief example of this technique is up on GitHub within the Flux Chat example&#39;s <a href="https://github.com/facebook/flux/tree/master/examples/flux-chat/js/stores/__tests__/UnreadThreadStore-test.js">UnreadThreadStore-test.js</a>.</p>
 
-<p>For more information about the <code>mock</code> property of mocked methods or Jest&#39;s ability to provide custom mock values, see Jest&#39;s documentation on <a href="http://facebook.github.io/jest/docs/mock-functions.html">mock functions</a>.</p>
+<p>For more information about the <code>mock</code> property of mocked methods or Jest&#39;s ability to provide custom mock values, see Jest&#39;s documentation on <a href="https://facebook.github.io/jest/docs/mock-functions.html">mock functions</a>.</p>
 <h2><a class="anchor" name="moving-logic-from-react-to-stores"></a>Moving Logic from React to Stores <a class="hash-link" href="#moving-logic-from-react-to-stores">#</a></h2>
 <p>What often starts as a little piece of seemingly benign logic in our React components often presents a problem while creating unit tests. We want to be able to write tests that read like a specification for our application&#39;s behavior, and when application logic slips into our view layer, this becomes more difficult.</p>
 
@@ -357,11 +357,11 @@
   <span class="p">);</span>
 <span class="p">},</span>
 </code></pre></div>
-<p>To learn how to test React components themselves, check out the <a href="http://facebook.github.io/jest/docs/tutorial-react.html">Jest tutorial for React</a> and the <a href="http://facebook.github.io/react/docs/test-utils.html">ReactTestUtils documentation</a>.</p>
+<p>To learn how to test React components themselves, check out the <a href="https://facebook.github.io/jest/docs/tutorial-react.html">Jest tutorial for React</a> and the <a href="/react/docs/test-utils.html">ReactTestUtils documentation</a>.</p>
 <h2><a class="anchor" name="further-reading"></a>Further Reading <a class="hash-link" href="#further-reading">#</a></h2>
 <ul>
 <li><a href="http://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren&#39;t Stubs</a> by Martin Fowler</li>
-<li><a href="http://facebook.github.io/jest/docs/api.html">Jest API Reference</a></li>
+<li><a href="https://facebook.github.io/jest/docs/api.html">Jest API Reference</a></li>
 </ul>
 
     </div>

@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="Blog | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/page8/index.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/page8/index.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -100,7 +100,7 @@
         <div class="post">
          <p>We recently spoke at one of f8&#39;s breakout session about Flux, a data flow architecture that works well with React.  Check out the video here:</p>
 
-<figure><iframe width="560" height="315" src="//www.youtube.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&start=621" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&start=621" frameborder="0" allowfullscreen></iframe></figure>
 
 <p>To summarize, Flux works well for us because the single directional data flow makes it easy to understand and modify an application as it becomes more complicated. We found that two-way data bindings lead to cascading updates, where changing one data model led to another data model updating, making it very difficult to predict what would change as the result of a single user interaction.</p>
 
@@ -108,7 +108,7 @@
 
 <p>When a user interacts with a React view, the view sends an action (usually represented as a JavaScript object with some fields) through the dispatcher, which notifies the various stores that hold the application&#39;s data and business logic. When the stores change state, they notify the views that something has updated. This works especially well with React&#39;s declarative model, which allows the stores to send updates without specifying how to transition views between states.</p>
 
-<p>Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example of this architecture</a> is available, along with more <a href="http://facebook.github.io/flux/docs/overview.html">detailed documentation</a> and a <a href="http://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Look for more examples to come in the future.</p>
+<p>Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example of this architecture</a> is available, along with more <a href="https://facebook.github.io/flux/docs/overview.html">detailed documentation</a> and a <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Look for more examples to come in the future.</p>
 
         </div>
       </div>
@@ -163,7 +163,7 @@ report bugs <a href="https://github.com/reactjs/React.NET">on GitHub</a>.</p>
 
 <p>Our primary goal with 1.0 is to clarify our messaging and converge on an API that is aligned with our goals. In order to do that, we want to clean up bad patterns we&#39;ve seen in use and really help enable developers write good code.</p>
 <h2><a class="anchor" name="descriptors"></a>Descriptors <a class="hash-link" href="#descriptors">#</a></h2>
-<p>The first part of this is what we&#39;re calling &quot;descriptors&quot;. I talked about this briefly in our <a href="http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html">v0.10 announcements</a>. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. <code>React.DOM.div()</code>, <code>MyComponent()</code>) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&#39;s our failure.</p>
+<p>The first part of this is what we&#39;re calling &quot;descriptors&quot;. I talked about this briefly in our <a href="/react/blog/2014/03/21/react-v0.10.html">v0.10 announcements</a>. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. <code>React.DOM.div()</code>, <code>MyComponent()</code>) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&#39;s our failure.</p>
 
 <p>We added some warnings in v0.9 to start migrating some of these bad patterns. With v0.10 we&#39;ll catch more. You&#39;ll see more on this soon as we expect to ship v0.11 with descriptors.</p>
 <h2><a class="anchor" name="api-cleanup"></a>API Cleanup <a class="hash-link" href="#api-cleanup">#</a></h2>
@@ -202,13 +202,13 @@ report bugs <a href="https://github.com/reactjs/React.NET">on GitHub</a>.</p>
 
 <ul>
 <li><strong>React</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-0.10.0.js">http://fb.me/react-0.10.0.js</a><br>
-Minified build for production: <a href="http://fb.me/react-0.10.0.min.js">http://fb.me/react-0.10.0.min.js</a><br></li>
+Dev build with warnings: <a href="https://fb.me/react-0.10.0.js">https://fb.me/react-0.10.0.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.10.0.min.js">https://fb.me/react-0.10.0.min.js</a><br></li>
 <li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-with-addons-0.10.0.js">http://fb.me/react-with-addons-0.10.0.js</a><br>
-Minified build for production: <a href="http://fb.me/react-with-addons-0.10.0.min.js">http://fb.me/react-with-addons-0.10.0.min.js</a><br></li>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.10.0.js">https://fb.me/react-with-addons-0.10.0.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0.min.js">https://fb.me/react-with-addons-0.10.0.min.js</a><br></li>
 <li><strong>In-Browser JSX transformer</strong><br>
-<a href="http://fb.me/JSXTransformer-0.10.0.js">http://fb.me/JSXTransformer-0.10.0.js</a></li>
+<a href="https://fb.me/JSXTransformer-0.10.0.js">https://fb.me/JSXTransformer-0.10.0.js</a></li>
 </ul>
 
 <p>We&#39;ve also published version <code>0.10.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
@@ -217,7 +217,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.10.0.mi
 <h2><a class="anchor" name="clone-on-mount"></a>Clone On Mount <a class="hash-link" href="#clone-on-mount">#</a></h2>
 <p>The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (<code>React.DOM.div()</code>, <code>MyComponent()</code>) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.</p>
 
-<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="http://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
+<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="https://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
 
 <p>Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>
@@ -270,19 +270,19 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.10.0.mi
         <p class="meta">March 19, 2014 by Paul O’Shannessy</p>
         <hr />
         <div class="post">
-         <p><a href="http://facebook.github.io/react/blog/2014/02/20/react-v0.9.html">v0.9 has only been out for a month</a>, but we’re getting ready to push out v0.10 already. Unlike v0.9 which took a long time, we don&#39;t have a long list of changes to talk about.</p>
+         <p><a href="/react/blog/2014/02/20/react-v0.9.html">v0.9 has only been out for a month</a>, but we’re getting ready to push out v0.10 already. Unlike v0.9 which took a long time, we don&#39;t have a long list of changes to talk about.</p>
 
 <p>The release candidate is available for download from the CDN:</p>
 
 <ul>
 <li><strong>React</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-0.10.0-rc1.js">http://fb.me/react-0.10.0-rc1.js</a><br>
-Minified build for production: <a href="http://fb.me/react-0.10.0-rc1.min.js">http://fb.me/react-0.10.0-rc1.min.js</a><br></li>
+Dev build with warnings: <a href="https://fb.me/react-0.10.0-rc1.js">https://fb.me/react-0.10.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.10.0-rc1.min.js">https://fb.me/react-0.10.0-rc1.min.js</a><br></li>
 <li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-with-addons-0.10.0-rc1.js">http://fb.me/react-with-addons-0.10.0-rc1.js</a><br>
-Minified build for production: <a href="http://fb.me/react-with-addons-0.10.0-rc1.min.js">http://fb.me/react-with-addons-0.10.0-rc1.min.js</a><br></li>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.10.0-rc1.js">https://fb.me/react-with-addons-0.10.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0-rc1.min.js">https://fb.me/react-with-addons-0.10.0-rc1.min.js</a><br></li>
 <li><strong>In-Browser JSX transformer</strong><br>
-<a href="http://fb.me/JSXTransformer-0.10.0-rc1.js">http://fb.me/JSXTransformer-0.10.0-rc1.js</a></li>
+<a href="https://fb.me/JSXTransformer-0.10.0-rc1.js">https://fb.me/JSXTransformer-0.10.0-rc1.js</a></li>
 </ul>
 
 <p>We&#39;ve also published version <code>0.10.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
@@ -291,7 +291,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.10.0-rc
 <h2><a class="anchor" name="clone-on-mount"></a>Clone On Mount <a class="hash-link" href="#clone-on-mount">#</a></h2>
 <p>The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (<code>React.DOM.div()</code>, <code>MyComponent()</code>) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.</p>
 
-<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="http://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
+<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="https://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
 
 <p>Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>

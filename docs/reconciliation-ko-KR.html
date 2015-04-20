@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="비교조정(Reconciliation) | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/reconciliation-ko-KR.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/reconciliation-ko-KR.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -296,12 +296,12 @@
       <ul>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -465,7 +465,7 @@ renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&l
 renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 =&gt; [replaceAttribute textContent &#39;second&#39;], [insertNode <span class="nt">&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;</span>]
 </code></pre></div>
-<p>원소의 목록을 변환하기 위한 최소 연산 집합을 찾는 알고리즘이 여럿 있습니다. <a href="http://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a>를 사용하면 O(n<sup>2</sup>) 복잡도로 원소 한 개의 삽입, 삭제, 교체를 위해 필요한 최솟값을 찾을 수 있습니다. Levenshtein 알고리즘을 사용해도 노드가 다른 위치로 이동한 경우는 알아낼 수 없고, 그것을 알아내는 알고리즘은 더욱 높은 복잡도를 가집니다.</p>
+<p>원소의 목록을 변환하기 위한 최소 연산 집합을 찾는 알고리즘이 여럿 있습니다. <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a>를 사용하면 O(n<sup>2</sup>) 복잡도로 원소 한 개의 삽입, 삭제, 교체를 위해 필요한 최솟값을 찾을 수 있습니다. Levenshtein 알고리즘을 사용해도 노드가 다른 위치로 이동한 경우는 알아낼 수 없고, 그것을 알아내는 알고리즘은 더욱 높은 복잡도를 가집니다.</p>
 <h3><a class="anchor" name="keys"></a>키(keys) <a class="hash-link" href="#keys">#</a></h3>
 <p>해결할 수 없어보이는 이 문제를 풀기 위해 선택적인 어트리뷰트를 도입했습니다. 각 자식에 키(key)를 할당해 이를 비교하는 데에 사용합니다. 키를 명시하면 React가 해시 테이블을 사용하여 삽입, 삭제, 교체 및 이동을 O(n) 복잡도로 찾아낼 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;first&quot;</span><span class="nt">&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>

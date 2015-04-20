@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="Dangerously Set innerHTML | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/tips/dangerously-set-inner-html-ko-KR.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/tips/dangerously-set-inner-html-ko-KR.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -296,12 +296,12 @@
       <ul>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -400,7 +400,7 @@
   <div class="inner-content">
     <h1>Dangerously Set innerHTML</h1>
     <div class="subHeader"></div>
-    <p>부적절히 <code>innerHTML</code>를 사용하면 <a href="http://en.wikipedia.org/wiki/Cross-site_scripting">사이트 간 스크립팅 (XSS)</a> 공격에 노출됩니다. 화면의 사용자 입력을 정제하다(sanitize) 오류를 내기 쉬우며, 적절하게 사용자의 입력을 정제하지 못하면 인터넷 상 <a href="http://owasptop10.googlecode.com/files/OWASP%20Top%2010%20-%202013.pdf">웹 취약점의 원인</a>이 됩니다.</p>
+    <p>부적절히 <code>innerHTML</code>를 사용하면 <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">사이트 간 스크립팅 (XSS)</a> 공격에 노출됩니다. 화면의 사용자 입력을 정제하다(sanitize) 오류를 내기 쉬우며, 적절하게 사용자의 입력을 정제하지 못하면 인터넷 상 <a href="https://owasptop10.googlecode.com/files/OWASP%20Top%2010%20-%202013.pdf">웹 취약점의 원인</a>이 됩니다.</p>
 
 <p>우리 설계철학은 안전을 &quot;쉽게&quot; 얻는 것입니다. 개발자는 그들의 의도를 명시적으로 알려야만 &quot;안전하지 않는&quot; 연산을 할 수 있습니다. <code>dangerouslySetInnerHTML</code> prop의 이름은 의도적으로 무섭게 만든 것인데, prop 값은 문자열이 아닌 객체이고 정제된 데이터를 지정하는데 쓸 수 있습니다.</p>
 

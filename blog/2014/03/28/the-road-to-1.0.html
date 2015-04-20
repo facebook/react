@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="The Road to 1.0 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/03/28/the-road-to-1.0.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2014/03/28/the-road-to-1.0.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -102,7 +102,7 @@
 
 <p>Our primary goal with 1.0 is to clarify our messaging and converge on an API that is aligned with our goals. In order to do that, we want to clean up bad patterns we&#39;ve seen in use and really help enable developers write good code.</p>
 <h2><a class="anchor" name="descriptors"></a>Descriptors <a class="hash-link" href="#descriptors">#</a></h2>
-<p>The first part of this is what we&#39;re calling &quot;descriptors&quot;. I talked about this briefly in our <a href="http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html">v0.10 announcements</a>. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. <code>React.DOM.div()</code>, <code>MyComponent()</code>) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&#39;s our failure.</p>
+<p>The first part of this is what we&#39;re calling &quot;descriptors&quot;. I talked about this briefly in our <a href="/react/blog/2014/03/21/react-v0.10.html">v0.10 announcements</a>. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. <code>React.DOM.div()</code>, <code>MyComponent()</code>) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&#39;s our failure.</p>
 
 <p>We added some warnings in v0.9 to start migrating some of these bad patterns. With v0.10 we&#39;ll catch more. You&#39;ll see more on this soon as we expect to ship v0.11 with descriptors.</p>
 <h2><a class="anchor" name="api-cleanup"></a>API Cleanup <a class="hash-link" href="#api-cleanup">#</a></h2>

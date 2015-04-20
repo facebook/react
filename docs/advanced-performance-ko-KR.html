@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="성능 심화 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/advanced-performance-ko-KR.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/advanced-performance-ko-KR.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -296,12 +296,12 @@
       <ul>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -526,7 +526,7 @@
 
 <p>그래서 Immutable 자료구조는 <code>shouldComponentUpdate</code>의 구현에 필요한 객체의 변경사항을 추적할 수 있는 덜 자세하지만 저렴한 방법을 제공합니다. 그에 따라 immutable-js가 제공하는 추상화를 사용해 props와 state 어트리뷰트를 모델링한다면, <code>PureRenderMixin</code>을 사용해 성능을 향상할 수 있습니다.</p>
 <h2><a class="anchor" name="immutable-js-flux"></a>Immutable-js와 Flux <a class="hash-link" href="#immutable-js-flux">#</a></h2>
-<p><a href="http://facebook.github.io/flux/">Flux</a>를 사용한다면 immutable-js를 사용해 stores를 작성해야 합니다. <a href="http://facebook.github.io/immutable-js/docs/#/">전체 API</a>를 살펴보세요.</p>
+<p><a href="https://facebook.github.io/flux/">Flux</a>를 사용한다면 immutable-js를 사용해 stores를 작성해야 합니다. <a href="https://facebook.github.io/immutable-js/docs/#/">전체 API</a>를 살펴보세요.</p>
 
 <p>Immutable 자료구조를 이용해 스레드를 모델링하는 예제를 살펴봅시다. 먼저 모델링하려는 엔티티마다 <code>Record</code>를 정의해야 합니다. Record는 특정 필드들의 값을 유지하기 위한 불변의 컨테이너입니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">User</span> <span class="o">=</span> <span class="nx">Immutable</span><span class="p">.</span><span class="nx">Record</span><span class="p">({</span>

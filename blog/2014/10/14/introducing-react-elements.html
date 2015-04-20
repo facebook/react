@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="Introducing React Elements | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/10/14/introducing-react-elements.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2014/10/14/introducing-react-elements.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -98,7 +98,7 @@
     <hr>
 
     <div class="post">
-      <p>The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the <code>ReactElement</code> type really FAST, <a href="http://facebook.github.io/jest/">jest unit testing</a> easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!</p>
+      <p>The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the <code>ReactElement</code> type really FAST, <a href="https://facebook.github.io/jest/">jest unit testing</a> easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!</p>
 
 <p>If you currently use JSX everywhere, you don&#39;t really have to do anything to get these benefits! The updated transformer will do it for you.</p>
 
@@ -138,7 +138,7 @@
 
 <p>This is the biggest change to 0.12. Don&#39;t worry though. This functionality continues to work the same for this release, it just warns you if you&#39;re using a deprecated API. That way you can upgrade piece-by-piece instead of everything at once.</p>
 <h2><a class="anchor" name="upgrading-to-0.12"></a>Upgrading to 0.12 <a class="hash-link" href="#upgrading-to-0.12">#</a></h2><h3><a class="anchor" name="react-with-jsx"></a>React With JSX <a class="hash-link" href="#react-with-jsx">#</a></h3>
-<p>If you use the React specific <a href="http://facebook.github.io/jsx/">JSX</a> transform, the upgrade path is simple. Just make sure you have React in scope.</p>
+<p>If you use the React specific <a href="https://facebook.github.io/jsx/">JSX</a> transform, the upgrade path is simple. Just make sure you have React in scope.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// If you use node/browserify modules make sure</span>
 <span class="c1">// that you require React into scope.</span>
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
@@ -152,7 +152,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><em>NOTE: React&#39;s JSX will not call arbitrary functions in future releases. This restriction is introduced so that it&#39;s easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use <a href="http://facebook.github.io/jsx/">the JSX spec</a> with a different transpiler for custom purposes.</em></p>
+<p><em>NOTE: React&#39;s JSX will not call arbitrary functions in future releases. This restriction is introduced so that it&#39;s easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use <a href="https://facebook.github.io/jsx/">the JSX spec</a> with a different transpiler for custom purposes.</em></p>
 <h3><a class="anchor" name="react-without-jsx"></a>React Without JSX <a class="hash-link" href="#react-without-jsx">#</a></h3>
 <p>If you don&#39;t use JSX and just call components as functions, you will need to explicitly create a factory before calling it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponentClass</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(...);</span>

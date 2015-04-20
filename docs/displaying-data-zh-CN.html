@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="显示数据 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/displaying-data-zh-CN.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/displaying-data-zh-CN.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -296,12 +296,12 @@
       <ul>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -411,8 +411,8 @@
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.13.2.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.13.2.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-0.13.2.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/JSXTransformer-0.13.2.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
@@ -463,11 +463,11 @@
 
 <p><strong>JSX 让你可以用 HTML 语法去写 JavaScript 函数调用</strong> 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： </p>
 
-<p><code>React.createElement(&#39;a&#39;, {href: &#39;http://facebook.github.io/react/&#39;}, &#39;Hello React!&#39;)</code>。</p>
+<p><code>React.createElement(&#39;a&#39;, {href: &#39;https://facebook.github.io/react/&#39;}, &#39;Hello React!&#39;)</code>。</p>
 
 <p>通过 JSX 这就变成了</p>
 
-<p><code>&lt;a href=&quot;http://facebook.github.io/react/&quot;&gt;Hello React!&lt;/a&gt;</code>。</p>
+<p><code>&lt;a href=&quot;https://facebook.github.io/react/&quot;&gt;Hello React!&lt;/a&gt;</code>。</p>
 
 <p>我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以<strong>JSX 不是必须用的。</strong></p>
 
@@ -475,7 +475,7 @@
 
 <p>JSX 类似于 HTML，但不是完全一样。参考 <a href="/react/docs/jsx-gotchas-zh-CN.html">JSX 陷阱</a> 学习关键区别。</p>
 
-<p>最简单开始学习 JSX 的方法就是使用浏览器端的 <code>JSXTransformer</code>。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 <a href="http://npmjs.org/package/react-tools">react-tools</a> 包来预编译你的代码。</p>
+<p>最简单开始学习 JSX 的方法就是使用浏览器端的 <code>JSXTransformer</code>。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 <a href="https://www.npmjs.com/package/react-tools">react-tools</a> 包来预编译你的代码。</p>
 <h2><a class="anchor" name="-jsx--react"></a>没有 JSX 的 React <a class="hash-link" href="#-jsx--react">#</a></h2>
 <p>你完全可以选择是否使用 JSX，并不是 React 必须的。你可以通过 <code>React.createElement</code> 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，每三个是子节点。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">);</span>

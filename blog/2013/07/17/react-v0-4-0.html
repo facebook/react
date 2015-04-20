@@ -8,13 +8,13 @@
   <meta name="viewport" content="width=device-width">
   <meta property="og:title" content="React v0.4.0 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/17/react-v0-4-0.html">
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2013/07/17/react-v0-4-0.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
-  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
@@ -53,7 +53,7 @@
 
         <ul class="nav-site nav-site-external">
           <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
         </ul>
       </div>
     </div>
@@ -100,7 +100,7 @@
     <div class="post">
       <p>Over the past 2 months we&#39;ve been taking feedback and working hard to make React even better. We fixed some bugs, made some under-the-hood improvements, and added several features that we think will improve the experience developing with React. Today we&#39;re proud to announce the availability of React v0.4!</p>
 
-<p>This release could not have happened without the support of our growing community. Since launch day, the community has contributed blog posts, questions to the <a href="http://groups.google.com/group/reactjs">Google Group</a>, and issues and pull requests on GitHub. We&#39;ve had contributions ranging from documentation improvements to major changes to React&#39;s rendering. We&#39;ve seen people integrate React into the tools they&#39;re using and the products they&#39;re building, and we&#39;re all very excited to see what our budding community builds next!</p>
+<p>This release could not have happened without the support of our growing community. Since launch day, the community has contributed blog posts, questions to the <a href="https://groups.google.com/group/reactjs">Google Group</a>, and issues and pull requests on GitHub. We&#39;ve had contributions ranging from documentation improvements to major changes to React&#39;s rendering. We&#39;ve seen people integrate React into the tools they&#39;re using and the products they&#39;re building, and we&#39;re all very excited to see what our budding community builds next!</p>
 
 <p>React v0.4 has some big changes. We&#39;ve also restructured the documentation to better communicate how to use React. We&#39;ve summarized the changes below and linked to documentation where we think it will be especially useful.</p>
 
@@ -110,10 +110,10 @@
 <li>Switch from using <code>id</code> attribute to <code>data-reactid</code> to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.</li>
 <li>Support for more DOM elements and attributes (e.g., <code>&lt;canvas&gt;</code>)</li>
 <li>Improved server-side rendering APIs. <code>React.renderComponentToString(&lt;component&gt;, callback)</code> allows you to use React on the server and generate markup which can be sent down to the browser.</li>
-<li><code>prop</code> improvements: validation and default values. <a href="http://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">Read our blog post for details...</a></li>
-<li>Support for the <code>key</code> prop, which allows for finer control over reconciliation. <a href="http://facebook.github.io/react/docs/multiple-components.html">Read the docs for details...</a></li>
-<li>Removed <code>React.autoBind</code>. <a href="http://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">Read our blog post for details...</a></li>
-<li>Improvements to forms. We&#39;ve written wrappers around <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;select&gt;</code> in order to standardize many inconsistencies in browser implementations. This includes support for <code>defaultValue</code>, and improved implementation of the <code>onChange</code> event, and circuit completion. <a href="http://facebook.github.io/react/docs/forms.html">Read the docs for details...</a></li>
+<li><code>prop</code> improvements: validation and default values. <a href="/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">Read our blog post for details...</a></li>
+<li>Support for the <code>key</code> prop, which allows for finer control over reconciliation. <a href="/react/docs/multiple-components.html">Read the docs for details...</a></li>
+<li>Removed <code>React.autoBind</code>. <a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">Read our blog post for details...</a></li>
+<li>Improvements to forms. We&#39;ve written wrappers around <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;select&gt;</code> in order to standardize many inconsistencies in browser implementations. This includes support for <code>defaultValue</code>, and improved implementation of the <code>onChange</code> event, and circuit completion. <a href="/react/docs/forms.html">Read the docs for details...</a></li>
 <li>We&#39;ve implemented an improved synthetic event system that conforms to the W3C spec.</li>
 <li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as its second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
 </ul>
