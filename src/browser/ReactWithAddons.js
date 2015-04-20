@@ -24,6 +24,7 @@ var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactFragment = require('ReactFragment');
+var ReactRenderer = require('ReactRenderer');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactUpdates = require('ReactUpdates');
 
@@ -40,6 +41,7 @@ React.addons = {
   batchedUpdates: ReactUpdates.batchedUpdates,
   cloneWithProps: cloneWithProps,
   createFragment: ReactFragment.create,
+  ReactRenderer: ReactRenderer,
   shallowCompare: shallowCompare,
   update: update
 };
