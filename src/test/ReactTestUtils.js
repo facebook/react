@@ -26,6 +26,7 @@ var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
 var assign = require('Object.assign');
+var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -369,6 +370,9 @@ assign(
 );
 
 ReactShallowRenderer.prototype.render = function(element, context) {
+  if (!context) {
+    context = emptyObject;
+  }
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
   this._render(element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
