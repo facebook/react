@@ -17,6 +17,9 @@ var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
+var instantiateReactComponent = require('instantiateReactComponent');
+var traverseAllChildren = require('traverseAllChildren');
+var warning = require('warning');
 
 /**
  * Updating children of a component may trigger recursive updates. The depth is
@@ -168,7 +171,6 @@ var ReactMultiChild = {
    * @lends {ReactMultiChild.prototype}
    */
   Mixin: {
-
     /**
      * Generates a "mount image" for each of the supplied children. In the case
      * of `ReactDOMComponent`, a mount image is a string of markup.
@@ -178,28 +180,46 @@ var ReactMultiChild = {
      * @internal
      */
     mountChildren: function(nestedChildren, transaction, context) {
-      var children = ReactChildReconciler.instantiateChildren(
-        nestedChildren, transaction, context
-      );
-      this._renderedChildren = children;
+      var rootNodeID = this._rootNodeID;
+      var children = {};
       var mountImages = [];
       var index = 0;
-      for (var name in children) {
-        if (children.hasOwnProperty(name)) {
-          var child = children[name];
-          // Inlined for performance, see `ReactInstanceHandles.createReactID`.
-          var rootID = this._rootNodeID + name;
-          var mountImage = ReactReconciler.mountComponent(
-            child,
-            rootID,
-            transaction,
-            context
-          );
-          child._mountIndex = index;
-          mountImages.push(mountImage);
-          index++;
-        }
+      if (nestedChildren == null) {
+        return mountImages;
       }
+      // Inlined for performance, see `ReactChildReconciler.instantiateChildren`.
+      traverseAllChildren(nestedChildren, function mountChild(traverseContext, child, name) {
+        if (child == null) {
+          return;
+        }
+        if (children[name] !== undefined) {
+          if (__DEV__) {
+            warning(
+              true,
+              'mountChildren(...): Encountered two children with the same key, ' +
+              '`%s`. Child keys must be unique; when two children share a key, only ' +
+              'the first child will be used.',
+              name
+            );
+          }
+          return;
+        }
+
+        var childInstance = instantiateReactComponent(child);
+        children[name] = childInstance;
+        // Inlined for performance, see `ReactInstanceHandles.createReactID`.
+        var rootID = rootNodeID + name;
+        var mountImage = ReactReconciler.mountComponent(
+          childInstance,
+          rootID,
+          transaction,
+          context
+        );
+        childInstance._mountIndex = index;
+        mountImages.push(mountImage);
+        index++;
+      }, mountImages);
+      this._renderedChildren = children;
       return mountImages;
     },
 
