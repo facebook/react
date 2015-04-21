@@ -99,7 +99,7 @@ describe('ReactElementValidator', function() {
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
-      '"key" prop. See https://fb.me/react-warning-keys for more information.'
+      '"key" prop. See http://fb.me/react-warning-keys for more information.'
     );
   });
 
@@ -116,7 +116,7 @@ describe('ReactElementValidator', function() {
     expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
       '"key" prop. Check the React.render call using <div>. See ' +
-      'https://fb.me/react-warning-keys for more information.'
+      'http://fb.me/react-warning-keys for more information.'
     );
   });
 
