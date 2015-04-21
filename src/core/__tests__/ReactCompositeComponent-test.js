@@ -836,6 +836,46 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should not warn if getChildContext returns a new object', function() {
+    var getChildContextCalls = 0;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        x: React.PropTypes.object
+      },
+      getChildContext: function() {
+        getChildContextCalls++;
+        return {
+          x: {}
+        };
+      },
+      render: function() {
+        return <Child />;
+      }
+    });
+
+    var Child = React.createClass({
+      contextTypes: {
+        x: React.PropTypes.object
+      },
+      render: function() {
+        return null;
+      }
+    });
+
+    var div = document.createElement('div');
+
+    // Initial render gives no context warning
+    React.render(<Parent />, div);
+    expect(getChildContextCalls).toBe(1);
+    expect(console.warn.argsForCall.length).toBe(0);
+
+    // Rerender
+    React.render(<Parent />, div);
+    expect(getChildContextCalls).toBe(2);
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
   it('unmasked context propagates through updates', function() {
 
     var Leaf = React.createClass({
