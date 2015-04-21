@@ -16,6 +16,13 @@
 var DOMProperty = require('DOMProperty');
 
 var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
+var HAS_NAMESPACE = DOMProperty.injection.HAS_NAMESPACE;
+
+var SVGDOMNamespaces = {
+  xlink: 'http://www.w3.org/1999/xlink',
+  xml: 'http://www.w3.org/XML/1998/namespace',
+  xmlns: 'http://www.w3.org/2000/xmlns/'
+};
 
 var SVGDOMPropertyConfig = {
   Properties: {
@@ -59,9 +66,33 @@ var SVGDOMPropertyConfig = {
     x1: MUST_USE_ATTRIBUTE,
     x2: MUST_USE_ATTRIBUTE,
     x: MUST_USE_ATTRIBUTE,
+    xlinkActuate: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xlinkArcrole: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xlinkHref: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xlinkRole: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xlinkShow: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xlinkTitle: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xlinkType: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xmlBase: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xmlLang: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xmlSpace: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xmlnsXlink: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
     y: MUST_USE_ATTRIBUTE
+  },
+  NamespaceProperties: {
+    xlinkActuate: SVGDOMNamespaces.xlink,
+    xlinkArcrole: SVGDOMNamespaces.xlink,
+    xlinkHref: SVGDOMNamespaces.xlink,
+    xlinkRole: SVGDOMNamespaces.xlink,
+    xlinkShow: SVGDOMNamespaces.xlink,
+    xlinkTitle: SVGDOMNamespaces.xlink,
+    xlinkType: SVGDOMNamespaces.xlink,
+    xmlBase: SVGDOMNamespaces.xml,
+    xmlLang: SVGDOMNamespaces.xml,
+    xmlSpace: SVGDOMNamespaces.xml,
+    xmlnsXlink: SVGDOMNamespaces.xmlns
   },
   DOMAttributeNames: {
     fillOpacity: 'fill-opacity',
@@ -83,7 +114,18 @@ var SVGDOMPropertyConfig = {
     strokeOpacity: 'stroke-opacity',
     strokeWidth: 'stroke-width',
     textAnchor: 'text-anchor',
-    viewBox: 'viewBox'
+    viewBox: 'viewBox',
+    xlinkActuate: 'xlink:actuate',
+    xlinkArcrole: 'xlink:arcrole',
+    xlinkHref: 'xlink:href',
+    xlinkRole: 'xlink:role',
+    xlinkShow: 'xlink:show',
+    xlinkTitle: 'xlink:title',
+    xlinkType: 'xlink:type',
+    xmlBase: 'xml:base',
+    xmlLang: 'xml:lang',
+    xmlSpace: 'xml:space',
+    xmlnsXlink: 'xmlns:xlink'
   }
 };
 

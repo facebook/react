@@ -25,6 +25,7 @@ var HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
 var HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
+var HAS_NAMESPACE = DOMProperty.injection.HAS_NAMESPACE;
 
 var hasSVG;
 if (ExecutionEnvironment.canUseDOM) {
@@ -39,6 +40,9 @@ if (ExecutionEnvironment.canUseDOM) {
   );
 }
 
+var HTMLDOMNamespaces = {
+  xmlns: 'http://www.w3.org/2000/xmlns/'
+};
 
 var HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
@@ -160,6 +164,7 @@ var HTMLDOMPropertyConfig = {
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
+    xmlns: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
 
     /**
      * Non-standard Properties
@@ -182,6 +187,9 @@ var HTMLDOMPropertyConfig = {
     property: null,
     // IE-only attribute that controls focus behavior
     unselectable: MUST_USE_ATTRIBUTE
+  },
+  NamespaceProperties: {
+    xmlns: HTMLDOMNamespaces.xmlns
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',

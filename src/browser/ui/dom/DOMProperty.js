@@ -32,6 +32,7 @@ var DOMPropertyInjection = {
   HAS_NUMERIC_VALUE: 0x10,
   HAS_POSITIVE_NUMERIC_VALUE: 0x20 | 0x10,
   HAS_OVERLOADED_BOOLEAN_VALUE: 0x40,
+  HAS_NAMESPACE: 0x80,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -60,6 +61,7 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Properties = domPropertyConfig.Properties || {};
+    var NamespaceProperties = domPropertyConfig.NamespaceProperties || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
@@ -69,6 +71,8 @@ var DOMPropertyInjection = {
         domPropertyConfig.isCustomAttribute
       );
     }
+
+    DOMProperty.getAttributeNamespace = NamespaceProperties;
 
     for (var propName in Properties) {
       invariant(
@@ -119,6 +123,8 @@ var DOMPropertyInjection = {
         checkMask(propConfig, DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE);
       DOMProperty.hasOverloadedBooleanValue[propName] =
         checkMask(propConfig, DOMPropertyInjection.HAS_OVERLOADED_BOOLEAN_VALUE);
+      DOMProperty.hasNamespace[propName] =
+        checkMask(propConfig, DOMPropertyInjection.HAS_NAMESPACE);
 
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||
@@ -138,6 +144,12 @@ var DOMPropertyInjection = {
           !!DOMProperty.hasOverloadedBooleanValue[propName] <= 1,
         'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
         'numeric value, but not a combination: %s',
+        propName
+      );
+      invariant(
+        DOMProperty.mustUseAttribute[propName] ||
+          !DOMProperty.hasNamespace[propName],
+        'DOMProperty: Attributes that have namespaces must use attribute: %s',
         propName
       );
     }
@@ -181,6 +193,12 @@ var DOMProperty = {
    * @type {Object}
    */
   getAttributeName: {},
+
+  /**
+   * Mapping from normalized names to namespaces.
+   * @type {Object}
+   */
+  getAttributeNamespace: {},
 
   /**
    * Mapping from normalized names to properties on DOM node instances.
@@ -244,6 +262,12 @@ var DOMProperty = {
    * @type {Object}
    */
   hasOverloadedBooleanValue: {},
+
+  /**
+   * Whether the attribute must be set using a namespace.
+   * @type {Object}
+   */
+  hasNamespace: {},
 
   /**
    * All of the isCustomAttribute() functions that have been injected.
