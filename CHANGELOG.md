@@ -104,6 +104,12 @@
   * `es3` restores the previous default behavior. An additional transform is added here to ensure the use of reserved words as properties is safe (eg `this.static` will become `this['static']` for IE8 compatibility).
 * The transform for the call spread operator has also been enabled.
 
+### JSXTransformer
+
+#### Breaking Changes
+
+* The return value of `transform` now contains `sourceMap` as a JS object already, not an instance of `SourceMapGenerator`.
+
 ### JSX
 
 #### Breaking Changes
