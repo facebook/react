@@ -87,6 +87,8 @@ React.render(
 );
 ```
 
+Note that native HTML element names start with a lowercase letter, while custom React classes names begin with an uppercase letter.
+
 #### JSX Syntax
 
 The first thing you'll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:
