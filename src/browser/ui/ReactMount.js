@@ -272,7 +272,7 @@ function mountComponentIntoNode(
       [container.nodeName.toLowerCase()];
   }
   var markup = ReactReconciler.mountComponent(
-    componentInstance, rootID, transaction, context
+    componentInstance, null, rootID, transaction, context
   );
   componentInstance._isTopLevel = true;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);

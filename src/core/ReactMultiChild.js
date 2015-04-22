@@ -191,6 +191,7 @@ var ReactMultiChild = {
           var rootID = this._rootNodeID + name;
           var mountImage = ReactReconciler.mountComponent(
             child,
+            this,
             rootID,
             transaction,
             context
@@ -399,6 +400,7 @@ var ReactMultiChild = {
       var rootID = this._rootNodeID + name;
       var mountImage = ReactReconciler.mountComponent(
         child,
+        this,
         rootID,
         transaction,
         context
