@@ -46,7 +46,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />, {});
+    shallowRenderer.render(<SomeComponent />);
 
     var result = shallowRenderer.getRenderOutput();
 
@@ -68,7 +68,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />, {});
+    shallowRenderer.render(<SomeComponent />);
     shallowRenderer.unmount();
 
     expect(componentWillUnmount).toBeCalled();
@@ -82,7 +82,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />, {});
+    shallowRenderer.render(<SomeComponent />);
 
     var result = shallowRenderer.getRenderOutput();
 
@@ -123,7 +123,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />, {});
+    shallowRenderer.render(<SomeComponent />);
     var result = shallowRenderer.getRenderOutput();
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -131,7 +131,7 @@ describe('ReactTestUtils', function() {
       <span className="child2" />
     ]);
 
-    shallowRenderer.render(<SomeComponent aNew="prop" />, {});
+    shallowRenderer.render(<SomeComponent aNew="prop" />);
     var updatedResult = shallowRenderer.getRenderOutput();
     expect(updatedResult.type).toBe('a');
 
@@ -141,6 +141,22 @@ describe('ReactTestUtils', function() {
     var updatedResultCausedByClick = shallowRenderer.getRenderOutput();
     expect(updatedResultCausedByClick.type).toBe('a');
     expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
+  });
+
+  it('can shallowly render components with contextTypes', function() {
+    var SimpleComponent = React.createClass({
+      contextTypes: {
+        name: React.PropTypes.string,
+      },
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+    var result = shallowRenderer.getRenderOutput();
+    expect(result).toEqual(<div />);
   });
 
   it('Test scryRenderedDOMComponentsWithClass with TextComponent', function() {
