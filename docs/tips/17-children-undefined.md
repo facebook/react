@@ -24,5 +24,3 @@ var App = React.createClass({
 
 React.render(<App></App>, mountNode);
 ```
-
-For a more sophisticated example, refer to the last example on the [front page](/).
