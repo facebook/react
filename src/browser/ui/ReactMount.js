@@ -268,8 +268,9 @@ function mountComponentIntoNode(
     if (context === emptyObject) {
       context = {};
     }
-    context[validateDOMNesting.tagStackContextKey] =
-      [container.nodeName.toLowerCase()];
+    var tag = container.nodeName.toLowerCase();
+    context[validateDOMNesting.ancestorInfoContextKey] =
+      validateDOMNesting.updatedAncestorInfo(null, tag, null);
   }
   var markup = ReactReconciler.mountComponent(
     componentInstance, rootID, transaction, context

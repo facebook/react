@@ -222,12 +222,13 @@ function validateDangerousTag(tag) {
   }
 }
 
-function processChildContext(context, tagName) {
+function processChildContext(context, inst) {
   if (__DEV__) {
     // Pass down our tag name to child components for validation purposes
     context = assign({}, context);
-    var stack = context[validateDOMNesting.tagStackContextKey] || [];
-    context[validateDOMNesting.tagStackContextKey] = stack.concat([tagName]);
+    var info = context[validateDOMNesting.ancestorInfoContextKey];
+    context[validateDOMNesting.ancestorInfoContextKey] =
+      validateDOMNesting.updatedAncestorInfo(info, inst._tag, inst);
   }
   return context;
 }
@@ -278,11 +279,11 @@ ReactDOMComponent.Mixin = {
 
     assertValidProps(this, this._currentElement.props);
     if (__DEV__) {
-      if (context[validateDOMNesting.tagStackContextKey]) {
+      if (context[validateDOMNesting.ancestorInfoContextKey]) {
         validateDOMNesting(
-          context[validateDOMNesting.tagStackContextKey],
           this._tag,
-          this._currentElement
+          this,
+          context[validateDOMNesting.ancestorInfoContextKey]
         );
       }
     }
@@ -379,7 +380,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          processChildContext(context, this._tag)
+          processChildContext(context, this)
         );
         ret = mountImages.join('');
       }
@@ -431,7 +432,7 @@ ReactDOMComponent.Mixin = {
     this._updateDOMChildren(
       prevElement.props,
       transaction,
-      processChildContext(context, this._tag)
+      processChildContext(context, this)
     );
   },
 
