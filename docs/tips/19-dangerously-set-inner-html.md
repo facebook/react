@@ -21,4 +21,4 @@ The point being that if you unintentionally do say `<div dangerouslySetInnerHTML
 
 This functionality is mainly provided for cooperation with DOM string manipulation libraries, so the HTML provided must be well-formed (ie., pass XML validation).
 
-For a more complete usage example, refer to the last example on the [front page](/).
+For a more complete usage example, refer to the last example on the [front page](/react/).
