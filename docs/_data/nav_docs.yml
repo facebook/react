@@ -56,7 +56,7 @@
     - id: test-utils
       title: Test Utilities
     - id: clone-with-props
-      title: Cloning Components
+      title: Cloning Elements
     - id: create-fragment
       title: Keyed Fragments
     - id: update
