@@ -17,6 +17,28 @@ var ReactReconciler = require('ReactReconciler');
 var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+var traverseAllChildren = require('traverseAllChildren');
+var warning = require('warning');
+
+function instantiateChildIntoContext(traverseContext, child, name) {
+  if (child == null) {
+    return;
+  }
+  if (traverseContext[name] !== undefined) {
+    if (__DEV__) {
+      warning(
+        true,
+        'instantiateChildren(...): Encountered two children with the same key, ' +
+        '`%s`. Child keys must be unique; when two children share a key, only ' +
+        'the first child will be used.',
+        name
+      );
+    }
+    return;
+  }
+
+  traverseContext[name] = instantiateReactComponent(child, null);
+}
 
 /**
  * ReactChildReconciler provides helpers for initializing or updating a set of
@@ -33,17 +55,13 @@ var ReactChildReconciler = {
    * @return {?object} A set of child instances.
    * @internal
    */
-  instantiateChildren: function(nestedChildNodes, transaction, context) {
-    var children = flattenChildren(nestedChildNodes);
-    for (var name in children) {
-      if (children.hasOwnProperty(name)) {
-        var child = children[name];
-        // The rendered children must be turned into instances as they're
-        // mounted.
-        var childInstance = instantiateReactComponent(child, null);
-        children[name] = childInstance;
-      }
+  instantiateChildren: function (nestedChildNodes, transaction, context) {
+    if (nestedChildNodes == null) {
+      return nestedChildNodes;
     }
+    var children = {};
+    // Inlined for performance, see `flattenChildren`.
+    traverseAllChildren(nestedChildNodes, instantiateChildIntoContext, children);
     return children;
   },
 
