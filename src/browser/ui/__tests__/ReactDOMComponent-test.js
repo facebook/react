@@ -401,6 +401,12 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('should allow {__html: null}', function() {
+      expect(function() {
+        mountComponent({dangerouslySetInnerHTML: {__html: null} });
+      }).not.toThrow();
+    });
+
     it("should warn about contentEditable and children", function() {
       spyOn(console, 'warn');
       mountComponent({contentEditable: true, children: ''});
