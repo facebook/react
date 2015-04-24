@@ -88,6 +88,8 @@ React.render(
 );
 ```
 
+네이티브 HTML 엘리먼트 이름은 소문자로 시작하고 커스텀 React 클래스 이름은 대문자로 시작합니다.
+
 #### JSX 문법
 
 JavsScript 안의 유사 XML 구문이 먼저 눈에 띌 것입니다. 우리에겐 이를 JavaScript로 변환해주는 간단한 프리컴파일러(precompiler)가 있습니다.

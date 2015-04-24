@@ -11,13 +11,13 @@ React에서는 컴포넌트를 감싸서 추상화하는 것이 일반적인 패
 [JSX 스프레드 어트리뷰트](/react/docs/jsx-spread-ko-KR.html)를 통해 props에 추가적인 값을 병합할 수 있습니다.
 
 ```javascript
-return <Component {...this.props} more="values" />;
+<Component {...this.props} more="values" />
 ```
 
 만약 JSX를 사용하지 않는다면 ES6의 `Object.assign`나 Underscore의 `_.extend` 같은 객체 헬퍼를 사용할 수 있습니다:
 
 ```javascript
-return Component(Object.assign({}, this.props, { more: 'values' }));
+React.createElement(Component, Object.assign({}, this.props, { more: 'values' }));
 ```
 
 이 튜토리얼의 나머지 부분은 모범 답안을 소개할 것입니다. JSX와 실험적인 ES7 구문을 사용합니다.
