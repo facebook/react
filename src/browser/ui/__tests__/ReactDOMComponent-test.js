@@ -119,7 +119,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toEqual(
         'Warning: `div` was passed a style object that has previously been ' +
-        'mutated. Mutating `style` will be deprecated. Consider cloning it ' +
+        'mutated. Mutating `style` is deprecated. Consider cloning it ' +
         'beforehand. Check the `render` of `App`. Previous style: ' +
         '{"border":"1px solid black"}. Mutated style: ' +
         '{"border":"1px solid black","position":"absolute"}.'
@@ -217,7 +217,6 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('');
     });
 
-    // trouble
     it("should update styles when 'style' changes from null to object", function() {
       var container = document.createElement('div');
       var styles = {color: 'red'};
