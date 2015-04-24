@@ -72,8 +72,8 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
   warning(
     false,
     '`%s` was passed a style object that has previously been mutated. ' +
-    'Mutating `style` will be deprecated. Consider cloning it beforehand. ' +
-    'Check the `render` %s. Previous style: %s. Mutated style: %s.',
+    'Mutating `style` is deprecated. Consider cloning it beforehand. Check ' +
+    'the `render` %s. Previous style: %s. Mutated style: %s.',
     componentName,
     owner ? 'of `' + ownerName + '`' : 'using <' + componentName + '>',
     JSON.stringify(style1),
