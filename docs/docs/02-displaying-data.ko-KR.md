@@ -31,7 +31,7 @@ UI를 가지고 할 수 있는 가장 기초적인 것은 데이터를 표시하
 </html>
 ```
 
-문서의 나머지에서, 코드가 위와 같은 HTML 템플릿에 들어갔다고 가정하고 JavaScript 코드에만 집중할 것입니다. 위의 주석 부분을 다음과 같은 JavaScript 코드로 바꿔 보세요:
+문서의 나머지에서, 코드가 위와 같은 HTML 템플릿에 들어갔다고 가정하고 JavaScript 코드에만 집중할 것입니다. 위의 주석 부분을 다음과 같은 JSX 코드로 바꿔 보세요:
 
 ```javascript
 var HelloWorld = React.createClass({
