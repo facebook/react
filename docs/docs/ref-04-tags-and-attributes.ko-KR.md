@@ -53,23 +53,24 @@ React는 모든 `data-*`, `aria-*` 어트리뷰트와 밑에 있는 모든 어�
 
 ```
 accept acceptCharset accessKey action allowFullScreen allowTransparency alt
-async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked classID
-className cols colSpan content contentEditable contextMenu controls coords
-crossOrigin data dateTime defer dir disabled download draggable encType form
-formAction formEncType formMethod formNoValidate formTarget frameBorder height
-hidden href hrefLang htmlFor httpEquiv icon id label lang list loop manifest
-marginHeight marginWidth max maxLength media mediaGroup method min multiple
-muted name noValidate open pattern placeholder poster preload radioGroup
-readOnly rel required role rows rowSpan sandbox scope scoped scrolling seamless
-selected shape size sizes span spellCheck src srcDoc srcSet start step style
-tabIndex target title type useMap value width wmode
+async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
+classID className colSpan cols content contentEditable contextMenu controls
+coords crossOrigin data dateTime defer dir disabled download draggable encType
+form formAction formEncType formMethod formNoValidate formTarget frameBorder
+headers height hidden high href hrefLang htmlFor httpEquiv icon id label lang
+list loop low manifest marginHeight marginWidth max maxLength media mediaGroup
+method min multiple muted name noValidate open optimum pattern placeholder
+poster preload radioGroup readOnly rel required role rowSpan rows sandbox scope
+scoped scrolling seamless selected shape size sizes span spellCheck src srcDoc
+srcSet start step style tabIndex target title type useMap value width wmode
 ```
 
 덧붙여, 이런 비표준 어트리뷰트도 지원됩니다.
 
 - 모바일 사파리를 위한 `autoCapitalize autoCorrect`.
 - [오픈 그래프](http://ogp.me/) 메타 태그를 위한 `property`.
-- [HTML5 마이크로데이터](http://schema.org/docs/gs.html)를 위한 `itemProp itemScope itemType itemRef itemId`.
+- [HTML5 마이크로데이터](http://schema.org/docs/gs.html)를 위한 `itemProp itemScope itemType itemRef itemID`.
+- 인터넷 익스플로어를 위한 `unselectable`.
 
 컴포넌트에 직접 HTML 문자열을 넣을 때 사용하는, React 전용 어트리뷰트 `dangerouslySetInnerHTML`([자세한 정보는 여기](/react/docs/special-non-dom-attributes-ko-KR.html))도 있습니다.
 
