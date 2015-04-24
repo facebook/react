@@ -145,7 +145,13 @@ function createArrayOfTypeChecker(typeChecker) {
       );
     }
     for (var i = 0; i < propValue.length; i++) {
-      var error = typeChecker(propValue, i, componentName, location);
+      // the type checker functions implicitly retrieve prop value through
+      // props[propName] (and warn using propName). Which requires passing (array,
+      // index, ...) here. But for debugging we'd want to see the name of the
+      // prop instead of an index. This makes it work.
+      var obj = {};
+      obj[propName] = propValue[i];
+      var error = typeChecker(obj, propName, componentName, location);
       if (error instanceof Error) {
         return error;
       }

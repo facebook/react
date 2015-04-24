@@ -161,8 +161,8 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf(PropTypes.number),
         [1, 2, 'b'],
-        'Invalid prop `2` of type `string` supplied to `testComponent`, ' +
-        'expected `number`.'
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `number`.'
       );
     });
 
@@ -173,7 +173,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf(PropTypes.instanceOf(Thing)),
         [new Thing(), 'xyz'],
-        'Invalid prop `1` supplied to `testComponent`, expected instance of `' +
+        'Invalid prop `testProp` supplied to `testComponent`, expected instance of `' +
         name + '`.'
       );
     });
