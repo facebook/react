@@ -468,7 +468,7 @@ function mixSpecIntoComponent(Constructor, spec) {
     }
 
     if (name === MIXINS_KEY) {
-      // We have already handled mixins in a special case above
+      // We have already handled mixins in a special case above.
       continue;
     }
 
@@ -501,7 +501,7 @@ function mixSpecIntoComponent(Constructor, spec) {
         if (isAlreadyDefined) {
           var specPolicy = ReactClassInterface[name];
 
-          // These cases should already be caught by validateMethodOverride
+          // These cases should already be caught by validateMethodOverride.
           invariant(
             isReactClassMethod && (
               specPolicy === SpecPolicy.DEFINE_MANY_MERGED ||
@@ -873,7 +873,7 @@ var ReactClass = {
 
     mixSpecIntoComponent(Constructor, spec);
 
-    // Initialize the defaultProps property after all mixins have been merged
+    // Initialize the defaultProps property after all mixins have been merged.
     if (Constructor.getDefaultProps) {
       Constructor.defaultProps = Constructor.getDefaultProps();
     }
