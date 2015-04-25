@@ -28,7 +28,7 @@ var TICK = 17;
 var NO_EVENT_TIMEOUT = 5000;
 
 var noEventListener = null;
-
+var noEventTimeout = null;
 
 if (__DEV__) {
   noEventListener = function() {
@@ -118,6 +118,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
   componentWillUnmount: function() {
     if (this.timeout) {
       clearTimeout(this.timeout);
+    }
+    if (__DEV__) {
+      clearTimeout(noEventTimeout);
     }
   },
 
