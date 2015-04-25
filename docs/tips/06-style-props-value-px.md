@@ -20,6 +20,7 @@ Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of pr
 
 - `boxFlex`
 - `boxFlexGroup`
+- `boxOrdinalGroup`
 - `columnCount`
 - `fillOpacity`
 - `flex`
@@ -27,6 +28,7 @@ Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of pr
 - `flexPositive`
 - `flexShrink`
 - `flexNegative`
+- `flexOrder`
 - `fontWeight`
 - `lineClamp`
 - `lineHeight`
