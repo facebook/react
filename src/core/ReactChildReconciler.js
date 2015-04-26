@@ -115,8 +115,10 @@ var ReactChildReconciler = {
    */
   unmountChildren: function(renderedChildren) {
     for (var name in renderedChildren) {
-      var renderedChild = renderedChildren[name];
-      ReactReconciler.unmountComponent(renderedChild);
+      if (renderedChildren.hasOwnProperty(name)) {
+        var renderedChild = renderedChildren[name];
+        ReactReconciler.unmountComponent(renderedChild);
+      }
     }
   }
 
