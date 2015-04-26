@@ -19,9 +19,12 @@ var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 
 var SVGDOMPropertyConfig = {
   Properties: {
+    alignmentBaseline: MUST_USE_ATTRIBUTE,
+    baselineShift: MUST_USE_ATTRIBUTE,
     cx: MUST_USE_ATTRIBUTE,
     cy: MUST_USE_ATTRIBUTE,
     d: MUST_USE_ATTRIBUTE,
+    dominantBaseline: MUST_USE_ATTRIBUTE,
     dx: MUST_USE_ATTRIBUTE,
     dy: MUST_USE_ATTRIBUTE,
     fill: MUST_USE_ATTRIBUTE,
@@ -64,6 +67,9 @@ var SVGDOMPropertyConfig = {
     y: MUST_USE_ATTRIBUTE
   },
   DOMAttributeNames: {
+    alignmentBaseline: 'alignment-baseline',
+    baselineShift: 'baseline-shift',
+    dominantBaseline: 'dominant-baseline',
     fillOpacity: 'fill-opacity',
     fontFamily: 'font-family',
     fontSize: 'font-size',
