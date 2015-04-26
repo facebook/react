@@ -13,8 +13,12 @@
 'use strict';
 
 var CSSProperty = require('CSSProperty');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var isUnitlessNumber = CSSProperty.isUnitlessNumber;
+var warning = require('warning');
+
+var loggedTypeFailures = {};
 
 /**
  * Convert a value into the proper css writable value. The style name `name`
@@ -50,6 +54,23 @@ function dangerousStyleValue(name, value) {
   if (typeof value === 'string') {
     value = value.trim();
   }
+
+  if (__DEV__) {
+    var message = 'Unitless css property (`' + name + '`) specified with ' +
+      'value `' + value + '`; assuming `' + value + 'px`.';
+    if (ReactCurrentOwner.current) {
+      message = message + '  Please check render method of ' +
+        '`' + ReactCurrentOwner.current + '`.';
+    }
+
+    if (!(message in loggedTypeFailures)) {
+        // Only monitor this failure once because there tends to be a lot of the
+        // same error.
+        loggedTypeFailures[message] = true;
+        warning(false, '%s', message);
+      }
+    }
+
   return value + 'px';
 }
 

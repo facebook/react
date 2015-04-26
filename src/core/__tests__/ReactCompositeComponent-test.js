@@ -485,6 +485,32 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should warn once for each of multiple properties', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+
+    try {
+      var Component = React.createClass({
+        render: function() {
+          var setup = { display: 'block', left: '1', top: 2, fontFamily: 'Arial' };
+          return <div style={setup}><div style={setup} /><div style={setup} /></div>;
+        }
+      });
+
+      // Render three times
+      ReactTestUtils.renderIntoDocument(<Component />);
+      ReactTestUtils.renderIntoDocument(<Component />);
+      ReactTestUtils.renderIntoDocument(<Component />);
+
+      expect(console.warn.mock.calls.length).toBe(2);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: Unitless css property (`left`) specified with value `1`; assuming `1px`.'
+      );
+    } finally {
+      console.warn = warn;
+    }
+  });
+
   it('should pass context', function() {
     var childInstance = null;
     var grandchildInstance = null;
