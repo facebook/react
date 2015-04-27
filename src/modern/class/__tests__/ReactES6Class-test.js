@@ -81,6 +81,7 @@ describe('ReactES6Class', function() {
   it('renders based on state using props in the constructor', function() {
     class Foo extends React.Component {
       constructor(props) {
+        super(props);
         this.state = {bar: props.initialValue};
       }
       changeState() {
@@ -133,6 +134,7 @@ describe('ReactES6Class', function() {
     var renderCount = 0;
     class Foo extends React.Component {
       constructor(props) {
+        super(props);
         this.state = {bar: props.initialValue};
       }
       componentWillMount() {
@@ -167,6 +169,7 @@ describe('ReactES6Class', function() {
   it('should render with null in the initial state property', function() {
     class Foo extends React.Component {
       constructor() {
+        super();
         this.state = null;
       }
       render() {
@@ -179,6 +182,7 @@ describe('ReactES6Class', function() {
   it('setState through an event handler', function() {
     class Foo extends React.Component {
       constructor(props) {
+        super(props);
         this.state = {bar: props.initialValue};
       }
       handleClick() {
@@ -201,6 +205,7 @@ describe('ReactES6Class', function() {
   it('should not implicitly bind event handlers', function() {
     class Foo extends React.Component {
       constructor(props) {
+        super(props);
         this.state = {bar: props.initialValue};
       }
       handleClick() {
@@ -222,6 +227,7 @@ describe('ReactES6Class', function() {
   it('renders using forceUpdate even when there is no state', function() {
     class Foo extends React.Component {
       constructor(props) {
+        super(props);
         this.mutativeValue = props.initialValue;
       }
       handleClick() {
@@ -301,6 +307,7 @@ describe('ReactES6Class', function() {
     var getInitialStateWasCalled = false;
     class Foo extends React.Component {
       constructor() {
+        super();
         this.contextTypes = {};
         this.propTypes = {};
       }
