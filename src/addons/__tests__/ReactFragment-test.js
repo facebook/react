@@ -49,13 +49,13 @@ describe('ReactFragment', function() {
       z: <span />
     };
     var element = <div>{[children]}</div>;
-    expect(console.error.calls.length).toBe(0);
-    var container = document.createElement('div');
-    React.render(element, container);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
       'Any use of a keyed object'
     );
+    var container = document.createElement('div');
+    React.render(element, container);
+    expect(console.error.calls.length).toBe(1);
   });
 
   it('should warn if accessing any property on a fragment', function() {

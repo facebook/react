@@ -92,11 +92,9 @@ function getCurrentOwnerDisplayName() {
  * @param {*} parentType element's parent's type.
  */
 function validateExplicitKey(element, parentType) {
-  if (element._store.validated || element.key != null) {
+  if (element.key != null) {
     return;
   }
-  element._store.validated = true;
-
   warnAndMonitorForKeyUse(
     'Each child in an array or iterator should have a unique "key" prop.',
     element,
@@ -183,15 +181,22 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
  */
 function validateChildKeys(node, parentType) {
   if (Array.isArray(node)) {
+    if (node._reactChildKeysValidated) {
+      // All child elements were passed in a valid location.
+      return;
+    }
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
       if (ReactElement.isValidElement(child)) {
         validateExplicitKey(child, parentType);
+      } else {
+        // TODO: Warn on unkeyed arrays and suggest using createFragment
+        validateChildKeys(child, parentType);
       }
     }
   } else if (ReactElement.isValidElement(node)) {
     // This element was passed in a valid location.
-    node._store.validated = true;
+    return;
   } else if (node) {
     var iteratorFn = getIteratorFn(node);
     // Entry iterators provide implicit keys.
@@ -202,6 +207,8 @@ function validateChildKeys(node, parentType) {
         while (!(step = iterator.next()).done) {
           if (ReactElement.isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
+          } else {
+            validateChildKeys(step.value, parentType);
           }
         }
       }
@@ -210,6 +217,7 @@ function validateChildKeys(node, parentType) {
       for (var key in fragment) {
         if (fragment.hasOwnProperty(key)) {
           validatePropertyKey(key, fragment[key], parentType);
+          validateChildKeys(fragment[key], parentType);
         }
       }
     }
