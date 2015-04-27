@@ -169,6 +169,17 @@ describe('ReactTestUtils', function() {
 
   });
 
+  it('Test findRenderedDOMComponentWithId', function() {
+    var renderedComponent = ReactTestUtils.renderIntoDocument(<div>Hello <span id="example">Jim</span></div>);
+    var result = ReactTestUtils.findRenderedDOMComponentWithId(
+      renderedComponent,
+      'example'
+    );
+    expect(result.tagName).toBe('SPAN');
+    expect(result.props.children).toEqual('Jim')
+
+  });
+
   it('traverses children in the correct order', function() {
     var container = document.createElement('div');
 
