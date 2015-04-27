@@ -16,6 +16,7 @@
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
 var ReactClass = require('ReactClass');
+var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
@@ -74,6 +75,7 @@ var React = {
   renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   isValidElement: ReactElement.isValidElement,
+  withContext: ReactContext.withContext,
 
   // Hook for JSX spread, don't use this for anything else.
   __spread: assign
