@@ -34,7 +34,7 @@ function detachRef(ref, component, owner) {
 }
 
 ReactRef.attachRefs = function(instance, element) {
-  var ref = element.ref;
+  var ref = (element && element.ref) || null;
   if (ref != null) {
     attachRef(ref, instance, element._owner);
   }
@@ -60,7 +60,7 @@ ReactRef.shouldUpdateRefs = function(prevElement, nextElement) {
 };
 
 ReactRef.detachRefs = function(instance, element) {
-  var ref = element.ref;
+  var ref = (element && element.ref) || null;
   if (ref != null) {
     detachRef(ref, instance, element._owner);
   }
