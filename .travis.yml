@@ -15,6 +15,7 @@ before_install:
       echo "Only docs were updated, stopping build process."
       exit
     fi
+    npm install -g npm
 script:
 - |
     if [ "$TEST_TYPE" = build_website ]; then
@@ -42,12 +43,12 @@ script:
         popd
       fi
     else
-      grunt $TEST_TYPE
+      ./node_modules/.bin/grunt $TEST_TYPE
     fi
 after_script:
 - |
     if [ "$TEST_TYPE" = test ] && [ "$SERVER" ]; then
-      grunt build
+      ./node_modules/.bin/grunt build
       curl \
         -F "react=@build/react.js" \
         -F "react.min=@build/react.min.js" \
