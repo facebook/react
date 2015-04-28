@@ -13,8 +13,7 @@
 
 'use strict';
 
-var ReactTools = require('../main');
-var inlineSourceMap = require('./inline-source-map');
+var jstransform = require('jstransform/simple');
 
 var headEl;
 var dummyAnchor;
@@ -36,6 +35,9 @@ var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
 function transformReact(source, options) {
   options = options || {};
 
+  // Always enable the React transforms.
+  options.react = true;
+
   // Force the sourcemaps option manually. We don't want to use it if it will
   // break (see above note about supportsAccessors). We'll only override the
   // value here if sourceMap was specified and is truthy. This guarantees that
@@ -45,7 +47,7 @@ function transformReact(source, options) {
   }
 
   // Otherwise just pass all options straight through to react-tools.
-  return ReactTools.transformWithDetails(source, options);
+  return jstransform.transform(source, options);
 }
 
 /**
@@ -119,7 +121,7 @@ function createSourceCodeErrorMessage(code, e) {
  */
 function transformCode(code, url, options) {
   try {
-    var transformed = transformReact(code, options);
+    return transformReact(code, options).code;
   } catch(e) {
     e.message += '\n    at ';
     if (url) {
@@ -136,32 +138,6 @@ function transformCode(code, url, options) {
     e.message += createSourceCodeErrorMessage(code, e);
     throw e;
   }
-
-  if (!transformed.sourceMap) {
-    return transformed.code;
-  }
-
-  var source;
-  if (url == null) {
-    source = 'Inline JSX script';
-    inlineScriptCount++;
-    if (inlineScriptCount > 1) {
-      source += ' (' + inlineScriptCount + ')';
-    }
-  } else if (dummyAnchor) {
-    // Firefox has problems when the sourcemap source is a proper URL with a
-    // protocol and hostname, so use the pathname. We could use just the
-    // filename, but hopefully using the full path will prevent potential
-    // issues where the same filename exists in multiple directories.
-    dummyAnchor.href = url;
-    source = dummyAnchor.pathname.substr(1);
-  }
-
-  return (
-    transformed.code +
-    '\n' +
-    inlineSourceMap(transformed.sourceMap, code, source)
-  );
 }
 
 
@@ -239,8 +215,27 @@ function loadScripts(scripts) {
   }
 
   scripts.forEach(function(script, i) {
+    // Determine the filename to use for the sourcemap.
+    var sourceFilename;
+    if (script.src == null) {
+      sourceFilename = 'Inline JSX script';
+      inlineScriptCount++;
+      if (inlineScriptCount > 1) {
+        sourceFilename += ' (' + inlineScriptCount + ')';
+      }
+    } else if (dummyAnchor) {
+      // Firefox has problems when the sourcemap sourceFilename is a proper URL
+      // with a protocol and hostname, so use the pathname. We could use just
+      // the filename, but hopefully using the full path will prevent potential
+      // issues where the same filename exists in multiple directories.
+      dummyAnchor.href = script.src;
+      sourceFilename = dummyAnchor.pathname.substr(1);
+    }
+    console.log(sourceFilename);
+
     var options = {
-      sourceMap: true
+      sourceMapInline: true,
+      sourceFilename: sourceFilename
     };
     if (/;harmony=true(;|$)/.test(script.type)) {
       options.harmony = true;

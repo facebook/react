@@ -14,9 +14,7 @@
   "files": [
     "main.js",
     "bin/jsx",
-    "src/",
-    "vendor/fbtransform/",
-    "vendor/inline-source-map.js"
+    "src/"
   ],
   "main": "main.js",
   "bin": {
@@ -28,7 +26,8 @@
   },
   "dependencies": {
     "commoner": "^0.10.0",
-    "jstransform": "^10.1.0"
+    "esprima-fb": "^15001.1.0-dev-harmony-fb",
+    "jstransform": "^11.0.0"
   },
   "devDependencies": {
     "babel-core": "^5.2.7",
