@@ -43,6 +43,12 @@ var SpecPolicy = keyMirror({
    */
   DEFINE_MANY: null,
   /**
+   * These methods may be defined by both the class specification and mixins.
+   * Subsequent definitions will be chained, but are called in reverse order of
+   * their order when being mixed in. These methods must return void.
+   */
+  DEFINE_MANY_REVERSED: null,
+  /**
    * These methods are overriding the base class.
    */
   OVERRIDE_BASE: null,
@@ -187,7 +193,7 @@ var ReactClassInterface = {
    *
    * @optional
    */
-  componentWillMount: SpecPolicy.DEFINE_MANY,
+  componentWillMount: SpecPolicy.DEFINE_MANY_REVERSED,
 
   /**
    * Invoked when the component has been mounted and has a DOM representation.
@@ -220,7 +226,7 @@ var ReactClassInterface = {
    * @param {object} nextProps
    * @optional
    */
-  componentWillReceiveProps: SpecPolicy.DEFINE_MANY,
+  componentWillReceiveProps: SpecPolicy.DEFINE_MANY_REVERSED,
 
   /**
    * Invoked while deciding if the component should be updated as a result of
@@ -259,7 +265,7 @@ var ReactClassInterface = {
    * @param {ReactReconcileTransaction} transaction
    * @optional
    */
-  componentWillUpdate: SpecPolicy.DEFINE_MANY,
+  componentWillUpdate: SpecPolicy.DEFINE_MANY_REVERSED,
 
   /**
    * Invoked when the component's DOM representation has been updated.
@@ -286,7 +292,7 @@ var ReactClassInterface = {
    *
    * @optional
    */
-  componentWillUnmount: SpecPolicy.DEFINE_MANY,
+  componentWillUnmount: SpecPolicy.DEFINE_MANY_REVERSED,
 
 
 
@@ -424,7 +430,8 @@ function validateMethodOverride(proto, name) {
   if (proto.hasOwnProperty(name)) {
     invariant(
       specPolicy === SpecPolicy.DEFINE_MANY ||
-      specPolicy === SpecPolicy.DEFINE_MANY_MERGED,
+      specPolicy === SpecPolicy.DEFINE_MANY_MERGED ||
+      specPolicy === SpecPolicy.DEFINE_MANY_REVERSED,
       'ReactClassInterface: You are attempting to define ' +
       '`%s` on your component more than once. This conflict may be due ' +
       'to a mixin.',
@@ -504,8 +511,9 @@ function mixSpecIntoComponent(Constructor, spec) {
           // These cases should already be caught by validateMethodOverride
           invariant(
             isReactClassMethod && (
+              specPolicy === SpecPolicy.DEFINE_MANY ||
               specPolicy === SpecPolicy.DEFINE_MANY_MERGED ||
-              specPolicy === SpecPolicy.DEFINE_MANY
+              specPolicy === SpecPolicy.DEFINE_MANY_REVERSED
             ),
             'ReactClass: Unexpected spec policy %s for key %s ' +
             'when mixing in component specs.',
@@ -519,6 +527,8 @@ function mixSpecIntoComponent(Constructor, spec) {
             proto[name] = createMergedResultFunction(proto[name], property);
           } else if (specPolicy === SpecPolicy.DEFINE_MANY) {
             proto[name] = createChainedFunction(proto[name], property);
+          } else if (specPolicy === SpecPolicy.DEFINE_MANY_REVERSED) {
+            proto[name] = createChainedFunction(property, proto[name]);
           }
         } else {
           proto[name] = property;
