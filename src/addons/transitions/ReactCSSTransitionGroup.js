@@ -27,7 +27,19 @@ var ReactCSSTransitionGroup = React.createClass({
   displayName: 'ReactCSSTransitionGroup',
 
   propTypes: {
-    transitionName: React.PropTypes.string.isRequired,
+    transitionName: React.PropTypes.oneOfType([
+      React.PropTypes.string,
+      React.PropTypes.shape({
+        enter: React.PropTypes.string,
+        leave: React.PropTypes.string
+      }),
+      React.PropTypes.shape({
+        enter: React.PropTypes.string,
+        enterActive: React.PropTypes.string,
+        leave: React.PropTypes.string,
+        leaveActive: React.PropTypes.string
+      })
+    ]).isRequired,
     transitionAppear: React.PropTypes.bool,
     transitionEnter: React.PropTypes.bool,
     transitionLeave: React.PropTypes.bool
