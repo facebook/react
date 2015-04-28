@@ -17,12 +17,5 @@ gemspec = Gem::Specification.new do |s|
   s.authors = ['Paul O’Shannessy']
   s.email = ['paul@oshannessy.com']
 
-  s.files = Dir[
-    'build/react.js',
-    'build/react.min.js',
-    'build/react-with-addons.js',
-    'build/react-with-addons.min.js',
-    'build/JSXTransformer.js',
-    'lib/react/source.rb'
-  ]
+  s.files = %w(lib/react/source.rb) + Dir['build/**/*.js']
 end
