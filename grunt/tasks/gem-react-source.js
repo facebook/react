@@ -7,8 +7,11 @@ var src = 'gem-react-source/';
 var dest = 'build/gem-react-source/';
 var build = dest + 'build/';
 var buildFiles = [
-  'react.js', 'react.min.js', 'JSXTransformer.js',
-  'react-with-addons.js', 'react-with-addons.min.js'
+  ['react.js', 'development/', 'react.js'],
+  ['react-with-addons.js', 'development-with-addons/', 'react.js'],
+  ['react.min.js', 'production/', 'react.js'],
+  ['react-with-addons.min.js', 'production-with-addons/', 'react.js'],
+  ['JSXTransformer.js', '', 'JSXTransformer.js']
 ];
 
 function buildRelease() {
@@ -31,9 +34,12 @@ function buildRelease() {
   });
 
   // Make built source available inside npm package
-  grunt.file.mkdir(build);
   buildFiles.forEach(function(file) {
-    grunt.file.copy('build/' + file, build + file);
+    var source = file[0];
+    var destDir = build + file[1];
+    var destPath = destDir + file[2];
+    grunt.file.mkdir(destDir);
+    grunt.file.copy('build/' + source, destPath);
   });
 }
 
