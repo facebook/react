@@ -222,7 +222,7 @@ First, add the third-party library **marked** to your application. This is a Jav
   <title>Hello React</title>
   <script src="https://fb.me/react-{{site.react_version}}.js"></script>
   <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
