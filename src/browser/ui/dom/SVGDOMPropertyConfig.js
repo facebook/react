@@ -16,7 +16,6 @@
 var DOMProperty = require('DOMProperty');
 
 var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
-var HAS_NAMESPACE = DOMProperty.injection.HAS_NAMESPACE;
 
 var SVGDOMNamespaces = {
   xlink: 'http://www.w3.org/1999/xlink',
@@ -66,22 +65,22 @@ var SVGDOMPropertyConfig = {
     x1: MUST_USE_ATTRIBUTE,
     x2: MUST_USE_ATTRIBUTE,
     x: MUST_USE_ATTRIBUTE,
-    xlinkActuate: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xlinkArcrole: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xlinkHref: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xlinkRole: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xlinkShow: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xlinkTitle: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xlinkType: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xmlBase: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xmlLang: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xmlSpace: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
-    xmlnsXlink: MUST_USE_ATTRIBUTE | HAS_NAMESPACE,
+    xlinkActuate: MUST_USE_ATTRIBUTE,
+    xlinkArcrole: MUST_USE_ATTRIBUTE,
+    xlinkHref: MUST_USE_ATTRIBUTE,
+    xlinkRole: MUST_USE_ATTRIBUTE,
+    xlinkShow: MUST_USE_ATTRIBUTE,
+    xlinkTitle: MUST_USE_ATTRIBUTE,
+    xlinkType: MUST_USE_ATTRIBUTE,
+    xmlBase: MUST_USE_ATTRIBUTE,
+    xmlLang: MUST_USE_ATTRIBUTE,
+    xmlSpace: MUST_USE_ATTRIBUTE,
+    xmlnsXlink: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
     y: MUST_USE_ATTRIBUTE
   },
-  NamespaceProperties: {
+  PropertyNamespaces: {
     xlinkActuate: SVGDOMNamespaces.xlink,
     xlinkArcrole: SVGDOMNamespaces.xlink,
     xlinkHref: SVGDOMNamespaces.xlink,

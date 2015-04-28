@@ -130,10 +130,10 @@ var DOMPropertyOperations = {
         var namespace = DOMProperty.getAttributeNamespace[name];
         // `setAttribute` with objects becomes only `[object]` in IE8/9,
         // ('' + value) makes it output the correct toString()-value.
-        if (!DOMProperty.hasNamespace[name]) {
-          node.setAttribute(attributeName, '' + value);
-        } else if (namespace) {
+        if (namespace) {
           node.setAttributeNS(namespace, attributeName, '' + value);
+        } else {
+          node.setAttribute(attributeName, '' + value);
         }
       } else {
         var propName = DOMProperty.getPropertyName[name];
