@@ -438,7 +438,7 @@ describe('ReactDOMComponent', function() {
 
       var container = document.createElement('div');
 
-      var returnedValue = React.renderToString(<menu><menuitem /></menu>, container);
+      var returnedValue = React.renderToString(<menu><menuitem /></menu>);
       expect(returnedValue).toContain('</menuitem>');
 
       React.render(<menu><menuitem>children</menuitem></menu>, container);
