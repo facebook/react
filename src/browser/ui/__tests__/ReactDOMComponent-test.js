@@ -435,12 +435,18 @@ describe('ReactDOMComponent', function() {
 
     it("should treat menuitem as a void element but still create the closing tag", function() {
       spyOn(console, 'error');
+      var ReactDOMComponent = require('../ReactDOMComponent');
+      var originalMountComponent = ReactDOMComponent.prototype.mountComponent;
+      var returnedValue;
+      spyOn(ReactDOMComponent.prototype, 'mountComponent').andCallFake(function() {
+        returnedValue = originalMountComponent.apply(this, arguments);
+        return returnedValue;
+      });
 
       var container = document.createElement('div');
 
       React.render(<menu><menuitem /></menu>, container);
-
-      expect(container.innerHTML).toContain('</menuitem>');
+      expect(returnedValue).toContain('</menuitem>');
 
       React.render(<menu><menuitem>children</menuitem></menu>, container);
 
