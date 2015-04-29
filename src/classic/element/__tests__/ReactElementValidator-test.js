@@ -173,7 +173,6 @@ describe('ReactElementValidator', function() {
   it('does not warn for keys when passing children down', function() {
     spyOn(console, 'error');
 
-    debugger;
     var Wrapper = React.createClass({
       render: function() {
         return (
