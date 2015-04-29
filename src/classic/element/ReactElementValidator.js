@@ -194,7 +194,10 @@ function validateChildKeys(node, parentType) {
         validateChildKeys(child, parentType);
       }
     }
-  } else if (ReactElement.isValidElement(node)) {
+  } else if (
+      typeof node === 'string' || typeof node === 'number' ||
+      ReactElement.isValidElement(node)
+    ) {
     // This element was passed in a valid location.
     return;
   } else if (node) {
