@@ -25,24 +25,7 @@ var dummyNode =
  *
  * In IE8, certain elements cannot render alone, so wrap all elements ('*').
  */
-var shouldWrap = {
-  // Force wrapping for SVG elements because if they get created inside a <div>,
-  // they will be initialized in the wrong namespace (and will not display).
-  'circle': true,
-  'clipPath': true,
-  'defs': true,
-  'ellipse': true,
-  'g': true,
-  'line': true,
-  'linearGradient': true,
-  'path': true,
-  'polygon': true,
-  'polyline': true,
-  'radialGradient': true,
-  'rect': true,
-  'stop': true,
-  'text': true
-};
+var shouldWrap = {};
 
 var selectWrap = [1, '<select multiple="true">', '</select>'];
 var tableWrap = [1, '<table>', '</table>'];
@@ -69,22 +52,7 @@ var markupWrap = {
   'thead': tableWrap,
 
   'td': trWrap,
-  'th': trWrap,
-
-  'circle': svgWrap,
-  'clipPath': svgWrap,
-  'defs': svgWrap,
-  'ellipse': svgWrap,
-  'g': svgWrap,
-  'line': svgWrap,
-  'linearGradient': svgWrap,
-  'path': svgWrap,
-  'polygon': svgWrap,
-  'polyline': svgWrap,
-  'radialGradient': svgWrap,
-  'rect': svgWrap,
-  'stop': svgWrap,
-  'text': svgWrap
+  'th': trWrap
 };
 
 /**
@@ -93,9 +61,10 @@ var markupWrap = {
  * NOTE: This lazily detects which wraps are necessary for the current browser.
  *
  * @param {string} nodeName Lowercase `nodeName`.
+ * @param {?string} root Future root node of the current node.
  * @return {?array} Markup wrap configuration, if applicable.
  */
-function getMarkupWrap(nodeName) {
+function getMarkupWrap(nodeName, root) {
   invariant(!!dummyNode, 'Markup wrapping node not initialized');
   if (!markupWrap.hasOwnProperty(nodeName)) {
     nodeName = '*';
@@ -107,6 +76,9 @@ function getMarkupWrap(nodeName) {
       dummyNode.innerHTML = '<' + nodeName + '></' + nodeName + '>';
     }
     shouldWrap[nodeName] = !dummyNode.firstChild;
+  }
+  if (root instanceof SVGElement) {
+    return svgWrap;
   }
   return shouldWrap[nodeName] ? markupWrap[nodeName] : null;
 }

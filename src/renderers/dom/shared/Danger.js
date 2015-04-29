@@ -45,10 +45,11 @@ var Danger = {
    * `markupList` should be the same.
    *
    * @param {array<string>} markupList List of markup strings to render.
+   * @param {?array<string>} rootList List of future root nodes.
    * @return {array<DOMElement>} List of rendered nodes.
    * @internal
    */
-  dangerouslyRenderMarkup: function(markupList) {
+  dangerouslyRenderMarkup: function(markupList, rootList) {
     invariant(
       ExecutionEnvironment.canUseDOM,
       'dangerouslyRenderMarkup(...): Cannot render markup in a worker ' +
@@ -56,6 +57,8 @@ var Danger = {
       'before requiring React when unit testing or use ' +
       'React.renderToString for server rendering.'
     );
+    rootList = rootList || [];
+
     var nodeName;
     var markupByNodeName = {};
     // Group markup by `nodeName` if a wrap is necessary, else by '*'.
@@ -65,7 +68,7 @@ var Danger = {
         'dangerouslyRenderMarkup(...): Missing markup.'
       );
       nodeName = getNodeName(markupList[i]);
-      nodeName = getMarkupWrap(nodeName) ? nodeName : '*';
+      nodeName = getMarkupWrap(nodeName, rootList[i]) ? nodeName : '*';
       markupByNodeName[nodeName] = markupByNodeName[nodeName] || [];
       markupByNodeName[nodeName][i] = markupList[i];
     }
@@ -80,8 +83,12 @@ var Danger = {
       // This for-in loop skips the holes of the sparse array. The order of
       // iteration should follow the order of assignment, which happens to match
       // numerical index order, but we don't rely on that.
+      var root = null;
       var resultIndex;
       for (resultIndex in markupListByNodeName) {
+        if (!root) {
+          root = rootList[resultIndex];
+        }
         if (markupListByNodeName.hasOwnProperty(resultIndex)) {
           var markup = markupListByNodeName[resultIndex];
 
@@ -99,6 +106,7 @@ var Danger = {
       // Render each group of markup with similar wrapping `nodeName`.
       var renderNodes = createNodesFromMarkup(
         markupListByNodeName.join(''),
+        root,
         emptyFunction // Do nothing special with <script> tags.
       );
 
@@ -171,9 +179,9 @@ var Danger = {
       'and/or slow. If you want to render to the root you must use ' +
       'server rendering. See React.renderToString().'
     );
-
-    var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
-    oldChild.parentNode.replaceChild(newChild, oldChild);
+    var root = oldChild.parentNode;
+    var newChild = createNodesFromMarkup(markup, root, emptyFunction)[0];
+    root.replaceChild(newChild, oldChild);
   }
 
 };

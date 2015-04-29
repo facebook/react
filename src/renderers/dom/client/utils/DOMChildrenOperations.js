@@ -97,17 +97,23 @@ var DOMChildrenOperations = {
       }
     }
 
-    var renderedMarkup = Danger.dangerouslyRenderMarkup(markupList);
+    var rootList = [];
+    if (updates) {
+      for (var j = 0; j < updates.length; j++) {
+        rootList.push(updates[j].parentNode);
+      }
+    }
+    var renderedMarkup = Danger.dangerouslyRenderMarkup(markupList, rootList);
 
     // Remove updated children first so that `toIndex` is consistent.
     if (updatedChildren) {
-      for (var j = 0; j < updatedChildren.length; j++) {
-        updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+      for (var k = 0; k < updatedChildren.length; k++) {
+        updatedChildren[k].parentNode.removeChild(updatedChildren[k]);
       }
     }
 
-    for (var k = 0; k < updates.length; k++) {
-      update = updates[k];
+    for (var l = 0; l < updates.length; l++) {
+      update = updates[l];
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
           insertChildAt(
