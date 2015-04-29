@@ -229,30 +229,6 @@ Counter.defaultProps = { initialCount: 0 };
 
 Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or [arrow](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>` functions.
 
-The example below illustrates `.bind(this)` being used to bind a method in the constructor.
-
-```javascript
-class Newsfeed extends React.Component {
-  constructor() {
-    super();
-    this.changeContent = this.changeContent.bind(this);
-    this.state = {inputContent: 'startValue'};
-  }
-
-  changeContent(e) {
-    this.setState({inputContent: e.target.value});
-  }
-
-  render() {
-    return (
-      <div>
-        ...
-      </div>
-    )
-  }
-}
-```
-
 ### No Mixins
 
 Unfortunately ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes. Instead, we're working on making it easier to support such use cases without resorting to mixins.
