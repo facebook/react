@@ -60,6 +60,7 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Properties = domPropertyConfig.Properties || {};
+    var PropertyNamespaces = domPropertyConfig.PropertyNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
@@ -69,8 +70,6 @@ var DOMPropertyInjection = {
         domPropertyConfig.isCustomAttribute
       );
     }
-
-    DOMProperty.getAttributeNamespace = domPropertyConfig.PropertyNamespaces;
 
     for (var propName in Properties) {
       invariant(
@@ -93,6 +92,11 @@ var DOMPropertyInjection = {
         DOMProperty.getAttributeName[propName] = attributeName;
       } else {
         DOMProperty.getAttributeName[propName] = lowerCased;
+      }
+
+      if (PropertyNamespaces.hasOwnProperty(propName)) {
+        DOMProperty.getAttributeNamespace[propName] =
+          PropertyNamespaces[propName];
       }
 
       DOMProperty.getPropertyName[propName] =

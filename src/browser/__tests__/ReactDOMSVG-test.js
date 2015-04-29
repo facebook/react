@@ -31,7 +31,7 @@ describe('ReactDOMSVG', function() {
     var xlink = svg.getAttributeNS(SVGDOMNamespaces.xmlns, 'xlink');
     expect(xlink).toBe('http://www.w3.org/1999/xlink');
   });
-  
+
   it("allows a SVG element with an image node", function() {
     var instance = ReactTestUtils.renderIntoDocument(
       <svg xmlnsXlink='http://www.w3.org/1999/xlink'>
@@ -41,7 +41,7 @@ describe('ReactDOMSVG', function() {
     var svg = React.findDOMNode(instance);
     var image = svg.childNodes[0];
     expect(image.tagName).toBe('image');
-    var href = image.getAttributeNS(SVGDOMNamespaces.xlink,'href');
+    var href = image.getAttributeNS(SVGDOMNamespaces.xlink, 'href');
     expect(href).toBe('http://i.imgur.com/w7GCRPb.png');
   });
 
@@ -66,26 +66,25 @@ describe('ReactDOMSVG', function() {
     var svg = React.findDOMNode(instance);
     var link = svg.childNodes[0].childNodes[0];
     expect(link.tagName).toBe('a');
-    var href = link.getAttributeNS(SVGDOMNamespaces.xlink,'href');
+    var href = link.getAttributeNS(SVGDOMNamespaces.xlink, 'href');
     expect(href).toBe('http://facebook.github.io/react/');
-    var actuate = link.getAttributeNS(SVGDOMNamespaces.xlink,'actuate')
+    var actuate = link.getAttributeNS(SVGDOMNamespaces.xlink, 'actuate');
     expect(actuate).toBe('onRequest');
-    var show = link.getAttributeNS(SVGDOMNamespaces.xlink,'show');
+    var show = link.getAttributeNS(SVGDOMNamespaces.xlink, 'show');
     expect(show).toBe('new');
-    var arcrole = link.getAttributeNS(SVGDOMNamespaces.xlink,'arcrole');
+    var arcrole = link.getAttributeNS(SVGDOMNamespaces.xlink, 'arcrole');
     expect(arcrole).toBe('http://example.com/iri-arcrole-reference.svg');
-    var role = link.getAttributeNS(SVGDOMNamespaces.xlink,'role');
+    var role = link.getAttributeNS(SVGDOMNamespaces.xlink, 'role');
     expect(role).toBe('http://example.com/iri-role-reference.svg');
-    var title = link.getAttributeNS(SVGDOMNamespaces.xlink,'title');
+    var title = link.getAttributeNS(SVGDOMNamespaces.xlink, 'title');
     expect(title).toBe('React');
-    var type = link.getAttributeNS(SVGDOMNamespaces.xlink,'type');
+    var type = link.getAttributeNS(SVGDOMNamespaces.xlink, 'type');
     expect(type).toBe('simple');
     var text = link.childNodes[0];
-    var lang = text.getAttributeNS(SVGDOMNamespaces.xml,'lang');
+    var lang = text.getAttributeNS(SVGDOMNamespaces.xml, 'lang');
     expect(lang).toBe('en-US');
-    var space = text.getAttributeNS(SVGDOMNamespaces.xml,'space');
+    var space = text.getAttributeNS(SVGDOMNamespaces.xml, 'space');
     expect(space).toBe('preserve');
   });
-  
+
 });
- 
