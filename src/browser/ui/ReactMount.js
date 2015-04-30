@@ -307,6 +307,28 @@ function batchedMountComponentIntoNode(
 }
 
 /**
+ * Unmounts a component and removes it from the DOM.
+ *
+ * @param {ReactComponent} instance React component instance.
+ * @param {DOMElement} container DOM element to unmount from.
+ * @final
+ * @internal
+ * @see {ReactMount.unmountComponentAtNode}
+ */
+function unmountComponentFromNode(instance, container) {
+  ReactReconciler.unmountComponent(instance);
+
+  if (container.nodeType === DOC_NODE_TYPE) {
+    container = container.documentElement;
+  }
+
+  // http://jsperf.com/emptying-a-node
+  while (container.lastChild) {
+    container.removeChild(container.lastChild);
+  }
+}
+
+/**
  * Mounting is the process of initializing a React component by creating its
  * representative DOM elements and inserting them into a supplied `container`.
  * Any prior content inside `container` is destroyed in the process.
@@ -668,35 +690,17 @@ var ReactMount = {
     if (!component) {
       return false;
     }
-    ReactMount.unmountComponentFromNode(component, container);
+    ReactUpdates.batchedUpdates(
+      unmountComponentFromNode,
+      component,
+      container
+    );
     delete instancesByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];
     if (__DEV__) {
       delete rootElementsByReactRootID[reactRootID];
     }
     return true;
-  },
-
-  /**
-   * Unmounts a component and removes it from the DOM.
-   *
-   * @param {ReactComponent} instance React component instance.
-   * @param {DOMElement} container DOM element to unmount from.
-   * @final
-   * @internal
-   * @see {ReactMount.unmountComponentAtNode}
-   */
-  unmountComponentFromNode: function(instance, container) {
-    ReactReconciler.unmountComponent(instance);
-
-    if (container.nodeType === DOC_NODE_TYPE) {
-      container = container.documentElement;
-    }
-
-    // http://jsperf.com/emptying-a-node
-    while (container.lastChild) {
-      container.removeChild(container.lastChild);
-    }
   },
 
   /**
