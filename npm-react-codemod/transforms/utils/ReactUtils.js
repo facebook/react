@@ -31,6 +31,7 @@ module.exports = function(j) {
       .filter(j.filters.VariableDeclarator.requiresModule(module))
       .size() === 1;
 
+  // TODO: any specific addon?
   const hasReact = path => (
     hasModule(path, 'React') ||
     hasModule(path, 'react') ||
