@@ -6,7 +6,7 @@ prev: tooling-integration.html
 next: animation.html
 ---
 
-`React.addons` is where we park some useful utilities for building React apps. **These should be considered experimental** but will eventually be rolled into core or a blessed utilities library:
+There are a number of addons that we ship with React. **These should be considered experimental** but will eventually be rolled into core or a blessed utilities library:
 
 - [`TransitionGroup` and `CSSTransitionGroup`](animation.html), for dealing with animations and transitions that are usually not simple to implement, such as before a component's removal.
 - [`LinkedStateMixin`](two-way-binding-helpers.html), to simplify the coordination between user's form input data and the component's state.
@@ -20,6 +20,7 @@ The add-ons below are in the development (unminified) version of React only:
 - [`TestUtils`](test-utils.html), simple helpers for writing test cases (unminified build only).
 - [`Perf`](perf.html), for measuring performance and giving you hint where to optimize.
 
-To get the add-ons, use `react-with-addons.js` (and its minified counterpart) rather than the common `react.js`.
+To get the add-ons, use `react-with-addons.js` (and its minified counterpart) rather than the common `react.js`. The add-ons are provided as `React.addons.{addon}`
 
-When using the react package from npm, just simply `require('react/addons')` instead of `require('react')` to get React with all of the add-ons.
+When using the react package from npm, the add-ons are available by name in `require('react/addons/')`. For example, use `require('react/addons/cloneWithProps')` to use the `cloneWithProps` add-on.
+

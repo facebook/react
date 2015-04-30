@@ -14,7 +14,9 @@ To use React in production mode, set the environment variable `NODE_ENV` to `pro
 ```js
 var React = require('react');
 
-// You can also access ReactWithAddons.
-var React = require('react/addons');
+// You can also access React's addons specifically.
+var cloneWithProps = require('react/addons/cloneWithProps');
+var TestUtils = require('react/addons/TestUtils');
+
 ```
 
