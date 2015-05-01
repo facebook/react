@@ -54,7 +54,7 @@ We will dig into the syntax and semantics of GraphQL in a later post, but even a
 
 * **Hierarchical:** Most product development today involves the creation and manipulation of view hierarchies. To achieve congruence with the structure of these applications, a GraphQL query itself is a hierarchical set of fields. The query is shaped just like the data it returns. It is a natural way for product engineers to describe data requirements.
 * **Product-centric:** GraphQL is unapologetically driven by the requirements of views and the front-end engineers that write them. We start with their way of thinking and requirements and build the language and runtime necessary to enable that.
-* **Client-specified queries:** In GraphQL, the specification for queries are encoded in the *client* rather than the *server*. These queries are specified at field-level granularity. In the vast majority of applications written without GraphQL, the server determines the data returned in its various scripted endpoints. A GraphQL, query on the other hand, returns exactly what a client asks for and no more. 
+* **Client-specified queries:** In GraphQL, the specification for queries are encoded in the *client* rather than the *server*. These queries are specified at field-level granularity. In the vast majority of applications written without GraphQL, the server determines the data returned in its various scripted endpoints. A GraphQL query, on the other hand, returns exactly what a client asks for and no more.
 * **Backwards Compatible:** In a world of deployed native mobile applications with no forced upgrades, backwards compatibility is a challenge. Facebook, for example, releases apps on a two week fixed cycle and pledges to maintain those apps for *at least* two years. This means there are at a *minimum* 52 versions of our clients per platform querying our servers at any given time. Client-specified queries simplifies managing our backwards compatibility guarantees.
 * **Structured, Arbitrary Code:** Query languages with field-level granularity have typically queried storage engines directly, such as SQL. GraphQL instead imposes a structure onto a server, and exposes fields that are backed by *arbitrary code*. This allows for both server-side flexibility and a uniform, powerful API across the entire surface area of an application.
 * **Application-Layer Protocol:** GraphQL is an application-layer protocol and does not require a particular transport. It is a string that is parsed and interpreted by a server.
@@ -85,7 +85,7 @@ Nearly all externally facing REST APIs we know of trend or end up in these non-i
 Because of multiple round-trips and over-fetching, applications built in the REST style inevitably end up building *ad hoc* endpoints that are superficially in the REST style. These actually couple the data to a particular view which explicitly violates one of REST's major goals. Most REST systems of any complexity end up as a continuum of endpoints that span from “traditional” REST to *ad hoc* endpoints.
 
 
-### Ad HOC Endpoints
+### Ad Hoc Endpoints
 
 Many applications have no formalized client-server contract. Product developers access server capabilities through *ad hoc* endpoints and write custom code to fetch the data they need. Servers define procedures, and they return data. This approach has the virtue of simplicity, but can often become untenable as systems age.
 
