@@ -69,7 +69,7 @@ function makeComponent(metadata) {
 
         instances.push(this);
         calls.push(Array.prototype.slice.call(arguments));
-        if (this instanceof arguments.callee) {
+        if (this instanceof f) {
           // This is probably being called as a constructor
           for (var slot in prototype) {
             // Copy prototype methods to the instance to make
@@ -106,8 +106,8 @@ function makeComponent(metadata) {
         }
 
         // Otherwise use prototype implementation
-        if (returnValue === undefined && arguments.callee._protoImpl) {
-          return arguments.callee._protoImpl.apply(this, arguments);
+        if (returnValue === undefined && f._protoImpl) {
+          return f._protoImpl.apply(this, arguments);
         }
 
         return returnValue;
