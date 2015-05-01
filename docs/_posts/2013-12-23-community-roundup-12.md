@@ -63,8 +63,6 @@ React declarative approach is well suited to write games. [Cheng Lou](https://gi
 
 [Ross Allen](https://twitter.com/ssorallen) implemented [MontageJS](http://montagejs.org/)'s [Reddit tutorial](http://montagejs.org/docs/tutorial-reddit-client-with-montagejs.html) in React. This is a good opportunity to compare the philosophies of the two libraries.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/ssorallen/fEsYt/embedded/result,html,js" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
-
 [View the source on JSFiddle...](https://jsfiddle.net/ssorallen/fEsYt/)
 
 ## Writing Good React Components
