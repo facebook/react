@@ -76,6 +76,10 @@ li {
   margin-left: 20px;
 }
 
+li + li {
+  margin-top: 10px;
+}
+
 // Make header navigation linkable and on the screen. Used in documentation and
 // blog posts.
 h1, h2, h3, h4, h5, h6 {
