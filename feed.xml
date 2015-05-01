@@ -7,6 +7,100 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>GraphQL Introduction</title>
+				<description>&lt;p&gt;At the React.js conference in late January 2015, we revealed our next major technology in the React family: &lt;a href=&quot;http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html&quot;&gt;Relay&lt;/a&gt;. &lt;/p&gt;
+
+&lt;p&gt;Relay is a new way of structuring client applications that co-locates data-fetching requirements and React components. Instead of placing data fetching logic in some other part of the client application – or embedding this logic in a custom endpoint on the server – we instead co-locate a &lt;em&gt;declarative&lt;/em&gt; data-fetching specification alongside the React component. The language of this declarative specification is GraphQL.&lt;/p&gt;
+
+&lt;p&gt;GraphQL was not invented to enable Relay. In fact, GraphQL predates Relay by nearly three years. It was invented during the move from Facebook&amp;#39;s HTML5-driven mobile applications to purely native applications. It is a query language for graph data that powers the lion&amp;#39;s share of interactions in the Facebook Android and iOS applications. Any user of the native iOS or Android app in the last two years has used an app powered by GraphQL.&lt;/p&gt;
+
+&lt;p&gt;We plan to open-source a reference implementation of a GraphQL server and publish a language specification in the coming months. Our goal is to evolve GraphQL to adapt to a wide range of backends, so that projects and companies can use this technology to access their own data. We believe that this is a compelling way to structure servers and to provide powerful abstractions, frameworks and tools – including, but not exclusively, Relay – for product developers.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-is-graphql&quot;&gt;&lt;/a&gt;What is GraphQL? &lt;a class=&quot;hash-link&quot; href=&quot;#what-is-graphql&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;A GraphQL query is a string interpreted by a server that returns data in a specified format. Here is an example query: &lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3500401&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;isViewerFriend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;profilePicture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;uri&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;width&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;height&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;(Note: this syntax is slightly different from previous GraphQL examples. We&amp;#39;ve recently been making improvements to the language.)&lt;/p&gt;
+
+&lt;p&gt;And here is the response to that query.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;user&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3500401&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;quot;name&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Jing Chen&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;quot;isViewerFriend&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;quot;profilePicture&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;quot;uri&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;http://someurl.cdn/pic.jpg&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;quot;width&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;quot;height&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We will dig into the syntax and semantics of GraphQL in a later post, but even a simple example shows many of its design principles:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Hierarchical:&lt;/strong&gt; Most product development today involves the creation and manipulation of view hierarchies. To achieve congruence with the structure of these applications, a GraphQL query itself is a hierarchical set of fields. The query is shaped just like the data it returns. It is a natural way for product engineers to describe data requirements.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Product-centric:&lt;/strong&gt; GraphQL is unapologetically driven by the requirements of views and the front-end engineers that write them. We start with their way of thinking and requirements and build the language and runtime necessary to enable that.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Client-specified queries:&lt;/strong&gt; In GraphQL, the specification for queries are encoded in the &lt;em&gt;client&lt;/em&gt; rather than the &lt;em&gt;server&lt;/em&gt;. These queries are specified at field-level granularity. In the vast majority of applications written without GraphQL, the server determines the data returned in its various scripted endpoints. A GraphQL, query on the other hand, returns exactly what a client asks for and no more. &lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Backwards Compatible:&lt;/strong&gt; In a world of deployed native mobile applications with no forced upgrades, backwards compatibility is a challenge. Facebook, for example, releases apps on a two week fixed cycle and pledges to maintain those apps for &lt;em&gt;at least&lt;/em&gt; two years. This means there are at a &lt;em&gt;minimum&lt;/em&gt; 52 versions of our clients per platform querying our servers at any given time. Client-specified queries simplifies managing our backwards compatibility guarantees.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Structured, Arbitrary Code:&lt;/strong&gt; Query languages with field-level granularity have typically queried storage engines directly, such as SQL. GraphQL instead imposes a structure onto a server, and exposes fields that are backed by &lt;em&gt;arbitrary code&lt;/em&gt;. This allows for both server-side flexibility and a uniform, powerful API across the entire surface area of an application.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Application-Layer Protocol:&lt;/strong&gt; GraphQL is an application-layer protocol and does not require a particular transport. It is a string that is parsed and interpreted by a server.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Strongly-typed:&lt;/strong&gt; GraphQL is strongly-typed. Given a query, tooling can ensure that the query is both syntactically correct and valid within the GraphQL type system before execution, i.e. at development time, and the server can make certain guarantees about the shape and nature of the response. This makes it easier to build high quality client tools.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Introspective:&lt;/strong&gt; GraphQL is introspective. Clients and tools can query the type system using the GraphQL syntax itself. This is a powerful platform for building tools and client software, such as automatic parsing of incoming data into strongly-typed interfaces. It is especially useful in statically typed languages such as Swift, Objective-C and Java, as it obviates the need for repetitive and error-prone code to shuffle raw, untyped JSON into strongly-typed business objects.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;why-invent-something-new&quot;&gt;&lt;/a&gt;Why invent something new? &lt;a class=&quot;hash-link&quot; href=&quot;#why-invent-something-new&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Obviously GraphQL is not the first system to manage client-server interactions. In today&amp;#39;s world there are two dominant architectural styles for client-server interaction: REST and &lt;em&gt;ad hoc&lt;/em&gt; endpoints. &lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;rest&quot;&gt;&lt;/a&gt;REST &lt;a class=&quot;hash-link&quot; href=&quot;#rest&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;REST an acronym for Representational State Transfer, which is an architectural style rather than a formal protocol. There is actually much debate about what exactly REST is and is not. We wish to avoid such debates. We are interested in the typical attributes of systems that &lt;em&gt;self-identity&lt;/em&gt; as REST, rather than systems which are formally REST.&lt;/p&gt;
+
+&lt;p&gt;Objects in a typical REST system are addressable by URI and interacted with using verbs in the HTTP protocol. An HTTP GET to a particular URI fetches and object and returns a server-specified set of fields. An HTTP PUT edits an object; an HTTP DELETE deletes an object; and so on.&lt;/p&gt;
+
+&lt;p&gt;We believe there are a number of weakness in typical REST systems, ones that are particularly problematic in mobile applications:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Fetching complicated object graphs require multiple round trips between the client and server to render single views. For mobile applications operating in variable network conditions, these multiple roundtrips are highly undesirable.&lt;/li&gt;
+&lt;li&gt;Invariably fields and additional data are added to REST endpoints as the system requirements change. However, old clients also receive this additional data as well, because the data fetching specification is encoded on the server rather than the client. As result, these payloads tend to grow over time for all clients. When this becomes a problem for a system, one solution is to overlay a versioning system onto the REST endpoints. Versioning also complicates a server, and results in code duplication, spaghetti code, or a sophisticated, hand-rolled infrastructure to manage it. Another solution to limit over-fetching is to provide multiple views – such as “compact” vs “full” – of the same REST endpoint, however this coarse granularity often does not offer adequate flexibility.&lt;/li&gt;
+&lt;li&gt;REST endpoints are usually weakly-typed and lack machine-readable metadata. While there is much debate about the merits of strong- versus weak-typing in distributed systems, we believe in strong typing because of the correctness guarantees and tooling opportunities it provides. Developer deal with systems that lack this metadata by inspecting frequently out-of-date documentation and then writing code against the documentation.&lt;/li&gt;
+&lt;li&gt;Many of these attributes are linked to the fact that “REST is intended for long-lived network-based applications that span multiple organizations” &lt;a href=&quot;http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven&quot;&gt;according to its inventor&lt;/a&gt;. This is not a requirement for APIs that serve a client app built within the same organization.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Nearly all externally facing REST APIs we know of trend or end up in these non-ideal states, as well as nearly all &lt;em&gt;internal&lt;/em&gt; REST APIs. The consequences of opaqueness and over-fetching are more severe in internal APIs since their velocity of change and level of usage is almost always higher.&lt;/p&gt;
+
+&lt;p&gt;Because of multiple round-trips and over-fetching, applications built in the REST style inevitably end up building &lt;em&gt;ad hoc&lt;/em&gt; endpoints that are superficially in the REST style. These actually couple the data to a particular view which explicitly violates one of REST&amp;#39;s major goals. Most REST systems of any complexity end up as a continuum of endpoints that span from “traditional” REST to &lt;em&gt;ad hoc&lt;/em&gt; endpoints.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;ad-hoc-endpoints&quot;&gt;&lt;/a&gt;Ad HOC Endpoints &lt;a class=&quot;hash-link&quot; href=&quot;#ad-hoc-endpoints&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Many applications have no formalized client-server contract. Product developers access server capabilities through &lt;em&gt;ad hoc&lt;/em&gt; endpoints and write custom code to fetch the data they need. Servers define procedures, and they return data. This approach has the virtue of simplicity, but can often become untenable as systems age.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;These systems typically define a custom endpoint per view. For systems with a wide surface area this can quickly grow into a maintenance nightmare of orphaned endpoints, inconsistent tooling, and massive server code duplication. Disciplined engineering organizations can mitigate these issues with great engineering practices, high quality abstractions, and custom tooling. However, given our experience we believe that custom endpoints tend to lead to entropic server codebases.&lt;/li&gt;
+&lt;li&gt;Much like REST, the payloads of custom endpoints grow monotonically (even with mitigation from versioning systems) as the server evolves. Deployed clients cannot break, and, with rapid release cycles and backwards compatibility guarantees, distributed applications will have large numbers of extant versions. Under these constraints it is difficult remove data from a custom endpoint.&lt;/li&gt;
+&lt;li&gt;Custom endpoints tend to – for a client developer – create a clunky, multi-language, multi-environment development process. No matter if the data has been accessed before in a different view, they are required to first change the custom endpoint, then deploy that code to a server accessible from a mobile device, and only then change the client to utilize that data. In GraphQL  – unless the data in the view is completely new to the entire system  – a product developer adds a field to a GraphQL query and the work on the client continues unabated.&lt;/li&gt;
+&lt;li&gt;Much like REST, most systems with custom endpoints do not have a formalized type system, which eliminates the possibility for the tools and guarantees that introspective type systems can provide. Some custom-endpoint-driven systems do use a strongly typed serialization scheme, such as Protocol Buffers, Thrift, or XML. Those do allow for direct parsing of responses into typed classes and eliminating boilerplate shuffling from JSON into handwritten classes. These systems are as not as expressive and flexible as GraphQL, and the other downsides of &lt;em&gt;ad hoc&lt;/em&gt; endpoints remain.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We believe that GraphQL represents a novel way of structuring the client-server contract. Servers publish a type system specific to their application, and GraphQL provides a unified language to query data within the constraints of that type system. That language allows product developers to express data requirements in a form natural to them: a declarative and hierarchal one.&lt;/p&gt;
+
+&lt;p&gt;This is a liberating platform for product developers. With GraphQL, no more contending with &lt;em&gt;ad hoc&lt;/em&gt; endpoints or object retrieval with multiple roundtrips to access server data; instead an elegant, hierarchical, declarative query dispatched to a single endpoint. No more  frequent jumps between client and server development environments to do experimentation or to change or create views of existing data; instead experiments are done and new views built within a native, client development environment exclusively. No more shuffling unstructured data from &lt;em&gt;ad hoc&lt;/em&gt; endpoints into business objects; instead a powerful, introspective type system that serves as a platform for tool building.&lt;/p&gt;
+
+&lt;p&gt;Product developers are free to focus on their client software and requirements while rarely leaving their development environment; they can more confidently support shipped clients as a system evolves; and they are using a protocol designed to operate well within the constraints of mobile applications. Product developers can query for exactly what they want, in the way they think about it, across their entire application&amp;#39;s data model. &lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-next&quot;&gt;&lt;/a&gt;What&amp;#39;s next? &lt;a class=&quot;hash-link&quot; href=&quot;#whats-next&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Over the coming months, we will share more technical details about GraphQL, including additional language features, tools that support it, and how it is built and used at Facebook. These posts will culminate in a formal specification of GraphQL to guide implementors across various languages and platforms. We also plan on releasing a reference implementation in the summer, in order to provide a basis for custom deployments and a platform for experimentation. We&amp;#39;re incredibly excited to share this system and work with the open source community to improve it.&lt;/p&gt;
+</description>
+				<pubDate>2015-05-01T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/05/01/graphql-introduction.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/05/01/graphql-introduction.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.13.2</title>
 				<description>&lt;p&gt;Yesterday the &lt;a href=&quot;/react/blog/2015/04/17/react-native-v0.4.html&quot;&gt;React Native team shipped v0.4&lt;/a&gt;. Those of us working on the web team just a few feet away couldn&amp;#39;t just be shown up like that so we&amp;#39;re shipping v0.13.2 today as well! This is a bug fix release to address a few things while we continue to work towards v0.14.&lt;/p&gt;
 
@@ -598,78 +692,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 				<pubDate>2015-03-03T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.13 RC</title>
-				<description>&lt;p&gt;Over the weekend we pushed out our first (and hopefully only) release candidate for React v0.13!&lt;/p&gt;
-
-&lt;p&gt;We&amp;#39;ve talked a little bit about the changes that are coming. The splashiest of these changes is support for ES6 Classes. You can read more about this in &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;our beta announcement&lt;/a&gt;. We&amp;#39;re really excited about this! Sebastian also posted earlier this morning about &lt;a href=&quot;/react/blog/2015/02/24/streamlining-react-elements.html&quot;&gt;some of the other changes coming focused around ReactElement&lt;/a&gt;. The changes we&amp;#39;ve been working on there will hopefully enable lots of improvements to performance and developer experience.&lt;/p&gt;
-
-&lt;p&gt;The release candidate is available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.0-rc1.js&quot;&gt;https://fb.me/react-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.0-rc1.min.js&quot;&gt;https://fb.me/react-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc1.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc1.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.0-rc1.js&quot;&gt;https://fb.me/JSXTransformer-0.13.0-rc1.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Mutating &lt;code&gt;props&lt;/code&gt; after an element is created is deprecated and will cause warnings in development mode; future versions of React will incorporate performance optimizations assuming that props aren&amp;#39;t mutated&lt;/li&gt;
-&lt;li&gt;Static methods (defined in &lt;code&gt;statics&lt;/code&gt;) are no longer autobound to the component class&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;ref&lt;/code&gt; resolution order has changed slightly such that a ref to a component is available immediately after its &lt;code&gt;componentDidMount&lt;/code&gt; method is called; this change should be observable only if your component calls a parent component&amp;#39;s callback within your &lt;code&gt;componentDidMount&lt;/code&gt;, which is an anti-pattern and should be avoided regardless&lt;/li&gt;
-&lt;li&gt;Calls to &lt;code&gt;setState&lt;/code&gt; in life-cycle methods are now always batched and therefore asynchronous. Previously the first call on the first mount was synchronous.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;setState&lt;/code&gt; and &lt;code&gt;forceUpdate&lt;/code&gt; on an unmounted component now warns instead of throwing. That avoids a possible race condition with Promises.&lt;/li&gt;
-&lt;li&gt;Access to most internal properties has been completely removed, including &lt;code&gt;this._pendingState&lt;/code&gt; and &lt;code&gt;this._rootNodeID&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details&lt;/li&gt;
-&lt;li&gt;Added new top-level API &lt;code&gt;React.findDOMNode(component)&lt;/code&gt;, which should be used in place of &lt;code&gt;component.getDOMNode()&lt;/code&gt;. The base class for ES6-based components will not have &lt;code&gt;getDOMNode&lt;/code&gt;. This change will enable some more patterns moving forward.&lt;/li&gt;
-&lt;li&gt;New &lt;code&gt;ref&lt;/code&gt; style, allowing a callback to be used in place of a name: &lt;code&gt;&amp;lt;Photo ref={(c) =&amp;gt; this._photo = c} /&amp;gt;&lt;/code&gt; allows you to reference the component with &lt;code&gt;this._photo&lt;/code&gt; (as opposed to &lt;code&gt;ref=&amp;quot;photo&amp;quot;&lt;/code&gt; which gives &lt;code&gt;this.refs.photo&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;this.setState()&lt;/code&gt; can now take a function as the first argument for transactional state updates, such as &lt;code&gt;this.setState((state, props) =&amp;gt; ({count: state.count + 1}));&lt;/code&gt; -- this means that you no longer need to use &lt;code&gt;this._pendingState&lt;/code&gt;, which is now gone.&lt;/li&gt;
-&lt;li&gt;Support for iterators and immutable-js sequences as children&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;ComponentClass.type&lt;/code&gt; is deprecated. Just use &lt;code&gt;ComponentClass&lt;/code&gt; (usually as &lt;code&gt;element.type === ComponentClass&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;Some methods that are available on &lt;code&gt;createClass&lt;/code&gt;-based components are removed or deprecated from ES6 classes (for example, &lt;code&gt;getDOMNode&lt;/code&gt;, &lt;code&gt;setProps&lt;/code&gt;, &lt;code&gt;replaceState&lt;/code&gt;).&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-add-ons&quot;&gt;&lt;/a&gt;React with Add-Ons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-add-ons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.addons.classSet&lt;/code&gt; is now deprecated. This functionality can be replaced with several freely available modules. &lt;a href=&quot;https://www.npmjs.com/package/classnames&quot;&gt;classnames&lt;/a&gt; is one such module.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;When transforming ES6 syntax, &lt;code&gt;class&lt;/code&gt; methods are no longer enumerable by default, which requires &lt;code&gt;Object.defineProperty&lt;/code&gt;; if you support browsers such as IE8, you can pass &lt;code&gt;--target es3&lt;/code&gt; to mirror the old behavior&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;--target&lt;/code&gt; option is available on the jsx command, allowing users to specify and ECMAScript version to target.
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;es5&lt;/code&gt; is the default.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;es3&lt;/code&gt; restored the previous default behavior. An additional transform is added here to ensure the use of reserved words as properties is safe (eg &lt;code&gt;this.static&lt;/code&gt; will become &lt;code&gt;this[&amp;#39;static&amp;#39;]&lt;/code&gt; for IE8 compatibility).&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;The transform for the call spread operator has also been enabled.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;A change was made to how some JSX was parsed, specifically around the use of &lt;code&gt;&amp;gt;&lt;/code&gt; or &lt;code&gt;}&lt;/code&gt; when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. We will be releasing a standalone executable to find and fix potential issues in your JSX code.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2015-02-24T14:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</guid>
 			</item>
 		
 	</channel>
