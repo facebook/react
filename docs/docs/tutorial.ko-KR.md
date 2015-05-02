@@ -171,7 +171,7 @@ var CommentBox = React.createClass({
 
 ### props 사용하기
 
-부모로 부터 받은 데이터에 의존하는 `Comment` 컴포넌트를 만들어 봅시다. 부모 컴포넌트로 부터 받은 데이터는 자식 컴포넌트에서 '프로퍼티'로 사용가능 합니다.  이 '프로퍼티들'은 `this.props`를 통해 접근합니다.  props를 사용해 `CommentList`에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.
+부모로 부터 받은 데이터에 의존하는 `Comment` 컴포넌트를 만들어 봅시다. 부모 컴포넌트로 부터 받은 데이터는 자식 컴포넌트에서 '프로퍼티'로 사용가능 합니다.  이 '프로퍼티들'은 `this.props`를 통해 접근합니다.  props를 사용해, `CommentList`에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.
 
 
 ```javascript
@@ -224,7 +224,7 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
   <title>Hello React</title>
   <script src="https://fb.me/react-{{site.react_version}}.js"></script>
   <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
