@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #9"
-author: Vjeux
+author: vjeux
 ---
 
 We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we'll probably organize more in the future.

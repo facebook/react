@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #19"
-author: Cheng Lou
+author: chenglou
 ---
 
 ## React Meetups!

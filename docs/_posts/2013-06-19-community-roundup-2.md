@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #2"
-author: Vjeux
+author: vjeux
 ---
 
 Since the launch we have received a lot of feedback and are actively working on React 0.4. In the meantime, here are the highlights of this week.
