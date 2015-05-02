@@ -373,7 +373,8 @@ describe('ReactES6Class', function() {
     expect(() => instance.replaceProps({name: 'bar'})).toThrow();
     expect(console.error.calls.length).toBe(5);
     expect(console.error.calls[0].args[0]).toContain(
-      'getDOMNode(...) is deprecated in plain JavaScript React classes'
+      'getDOMNode(...) is deprecated in plain JavaScript React classes. ' +
+      'Use React.findDOMNode(component) instead.'
     );
     expect(console.error.calls[1].args[0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
