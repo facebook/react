@@ -30,7 +30,7 @@ thead time title tr track u ul var video wbr
 다음의 SVG 엘리먼트가 지원됩니다.
 
 ```
-circle defs ellipse g line linearGradient mask path pattern polygon polyline
+circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
 radialGradient rect stop svg text tspan
 ```
 
@@ -77,7 +77,7 @@ srcSet start step style tabIndex target title type useMap value width wmode
 ### SVG 어트리뷰트
 
 ```
-cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
+clip-path cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
 gradientUnits markerEnd markerMid markerStart offset opacity
 patternContentUnits patternUnits points preserveAspectRatio r rx ry
 spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
