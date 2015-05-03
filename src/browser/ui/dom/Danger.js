@@ -176,6 +176,24 @@ var Danger = {
 
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
     oldChild.parentNode.replaceChild(newChild, oldChild);
+  },
+
+  /**
+   * Replaces the content of a container with a string of html.
+   *
+   * @param {DOMElement} container Container to update innerHTML for.
+   * @param {string} html An HTML string.
+   * @internal
+   */
+  dangerouslyUpdateInnerHTML: function(container, html) {
+    while (container.lastChild) {
+      container.removeChild(container.lastChild);
+    }
+
+    var newChildren = createNodesFromMarkup(html, emptyFunction);
+    for (var i = 0; i < newChildren.length; i++) {
+      container.appendChild(newChildren[i]);
+    }
   }
 
 };

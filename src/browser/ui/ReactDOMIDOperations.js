@@ -21,7 +21,6 @@ var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
 var invariant = require('invariant');
-var setInnerHTML = require('setInnerHTML');
 
 /**
  * Errors for properties that should not be updated with `updatePropertyById()`.
@@ -108,7 +107,7 @@ var ReactDOMIDOperations = {
    */
   updateInnerHTMLByID: function(id, html) {
     var node = ReactMount.getNode(id);
-    setInnerHTML(node, html);
+    DOMChildrenOperations.dangerouslyUpdateInnerHTML(node, html);
   },
 
   /**

@@ -51,6 +51,8 @@ var DOMChildrenOperations = {
 
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
 
+  dangerouslyUpdateInnerHTML: Danger.dangerouslyUpdateInnerHTML,
+
   updateTextContent: setTextContent,
 
   /**
