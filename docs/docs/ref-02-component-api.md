@@ -31,7 +31,7 @@ It's also possible to pass a function with the signature `function(state, props)
 ```javascript
 setState(function(previousState, currentProps) {
   return {myInteger: previousState.myInteger + 1};
-});`
+});
 ```
 
 The second (optional) parameter is a callback function that will be executed once `setState` is completed and the component is re-rendered.
