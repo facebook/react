@@ -262,10 +262,12 @@ function mountComponentIntoNode(
     rootID,
     container,
     transaction,
-    shouldReuseMarkup) {
-  var context = emptyObject;
+    shouldReuseMarkup,
+    context) {
   if (__DEV__) {
-    context = {};
+    if (context === emptyObject) {
+      context = {};
+    }
     context[validateDOMNesting.tagStackContextKey] =
       [container.nodeName.toLowerCase()];
   }
@@ -288,7 +290,8 @@ function batchedMountComponentIntoNode(
     componentInstance,
     rootID,
     container,
-    shouldReuseMarkup) {
+    shouldReuseMarkup,
+    context) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
   transaction.perform(
     mountComponentIntoNode,
@@ -297,9 +300,32 @@ function batchedMountComponentIntoNode(
     rootID,
     container,
     transaction,
-    shouldReuseMarkup
+    shouldReuseMarkup,
+    context
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
+}
+
+/**
+ * Unmounts a component and removes it from the DOM.
+ *
+ * @param {ReactComponent} instance React component instance.
+ * @param {DOMElement} container DOM element to unmount from.
+ * @final
+ * @internal
+ * @see {ReactMount.unmountComponentAtNode}
+ */
+function unmountComponentFromNode(instance, container) {
+  ReactReconciler.unmountComponent(instance);
+
+  if (container.nodeType === DOC_NODE_TYPE) {
+    container = container.documentElement;
+  }
+
+  // http://jsperf.com/emptying-a-node
+  while (container.lastChild) {
+    container.removeChild(container.lastChild);
+  }
 }
 
 /**
@@ -402,7 +428,8 @@ var ReactMount = {
   _renderNewRootComponent: function(
     nextElement,
     container,
-    shouldReuseMarkup
+    shouldReuseMarkup,
+    context
   ) {
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
@@ -432,7 +459,8 @@ var ReactMount = {
       componentInstance,
       reactRootID,
       container,
-      shouldReuseMarkup
+      shouldReuseMarkup,
+      context
     );
 
     if (__DEV__) {
@@ -451,12 +479,26 @@ var ReactMount = {
    * perform an update on it and only mutate the DOM as necessary to reflect the
    * latest React component.
    *
+   * @param {ReactComponent} parentComponent The conceptual parent of this render tree.
    * @param {ReactElement} nextElement Component element to render.
    * @param {DOMElement} container DOM element to render into.
    * @param {?function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
-  render: function(nextElement, container, callback) {
+  renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
+    invariant(
+      parentComponent != null && parentComponent._reactInternalInstance != null,
+      'parentComponent must be a valid React Component'
+    );
+    return ReactMount._renderSubtreeIntoContainer(
+      parentComponent,
+      nextElement,
+      container,
+      callback
+    );
+  },
+
+  _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     invariant(
       ReactElement.isValidElement(nextElement),
       'React.render(): Invalid component element.%s',
@@ -524,16 +566,37 @@ var ReactMount = {
     }
 
     var shouldReuseMarkup = containerHasReactMarkup && !prevComponent;
-
     var component = ReactMount._renderNewRootComponent(
       nextElement,
       container,
-      shouldReuseMarkup
+      shouldReuseMarkup,
+      parentComponent != null ?
+        parentComponent._reactInternalInstance._processChildContext(
+          parentComponent._reactInternalInstance._context
+        ) :
+        emptyObject
     ).getPublicInstance();
     if (callback) {
       callback.call(component);
     }
     return component;
+  },
+
+
+  /**
+   * Renders a React component into the DOM in the supplied `container`.
+   *
+   * If the React component was previously rendered into `container`, this will
+   * perform an update on it and only mutate the DOM as necessary to reflect the
+   * latest React component.
+   *
+   * @param {ReactElement} nextElement Component element to render.
+   * @param {DOMElement} container DOM element to render into.
+   * @param {?function} callback function triggered on completion
+   * @return {ReactComponent} Component instance rendered in `container`.
+   */
+  render: function(nextElement, container, callback) {
+    return ReactMount._renderSubtreeIntoContainer(null, nextElement, container, callback);
   },
 
   /**
@@ -627,35 +690,17 @@ var ReactMount = {
     if (!component) {
       return false;
     }
-    ReactMount.unmountComponentFromNode(component, container);
+    ReactUpdates.batchedUpdates(
+      unmountComponentFromNode,
+      component,
+      container
+    );
     delete instancesByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];
     if (__DEV__) {
       delete rootElementsByReactRootID[reactRootID];
     }
     return true;
-  },
-
-  /**
-   * Unmounts a component and removes it from the DOM.
-   *
-   * @param {ReactComponent} instance React component instance.
-   * @param {DOMElement} container DOM element to unmount from.
-   * @final
-   * @internal
-   * @see {ReactMount.unmountComponentAtNode}
-   */
-  unmountComponentFromNode: function(instance, container) {
-    ReactReconciler.unmountComponent(instance);
-
-    if (container.nodeType === DOC_NODE_TYPE) {
-      container = container.documentElement;
-    }
-
-    // http://jsperf.com/emptying-a-node
-    while (container.lastChild) {
-      container.removeChild(container.lastChild);
-    }
   },
 
   /**

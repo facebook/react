@@ -60,7 +60,11 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.fontFamily).toEqual('');
     });
 
+    // TODO: (poshannessy) deprecate this pattern.
     it("should update styles when mutating style object", function() {
+      // not actually used. Just to suppress the style mutation warning
+      spyOn(console, 'error');
+
       var styles = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
       var container = document.createElement('div');
       React.render(<div style={styles} />, container);
@@ -94,6 +98,46 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toBe('');
       expect(stubStyle.fontFamily).toBe('');
       expect(stubStyle.lineHeight).toBe('');
+    });
+
+    it('should warn when mutating style', function() {
+      spyOn(console, 'error');
+
+      var style = {border: '1px solid black'};
+      var App = React.createClass({
+        getInitialState: function() {
+          return {style: style};
+        },
+        render: function() {
+          return <div style={this.state.style}>asd</div>;
+        }
+      });
+
+      var stub = ReactTestUtils.renderIntoDocument(<App />);
+      style.position = 'absolute';
+      stub.setState({style: style});
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toEqual(
+        'Warning: `div` was passed a style object that has previously been ' +
+        'mutated. Mutating `style` is deprecated. Consider cloning it ' +
+        'beforehand. Check the `render` of `App`. Previous style: ' +
+        '{"border":"1px solid black"}. Mutated style: ' +
+        '{"border":"1px solid black","position":"absolute"}.'
+      );
+
+      style = {background: 'red'};
+      stub = ReactTestUtils.renderIntoDocument(<App />);
+      style.background = 'green';
+      stub.setState({style: {background: 'green'}});
+      // already warned once for the same component and owner
+      expect(console.error.argsForCall.length).toBe(1);
+
+      style = {background: 'red'};
+      var div = document.createElement('div');
+      React.render(<span style={style}></span>, div);
+      style.background = 'blue';
+      React.render(<span style={style}></span>, div);
+      expect(console.error.argsForCall.length).toBe(2);
     });
 
     it("should update styles if initially null", function() {
@@ -394,9 +438,9 @@ describe('ReactDOMComponent', function() {
 
       var container = document.createElement('div');
 
-      React.render(<menu><menuitem /></menu>, container);
+      var returnedValue = React.renderToString(<menu><menuitem /></menu>);
 
-      expect(container.innerHTML).toContain('</menuitem>');
+      expect(returnedValue).toContain('</menuitem>');
 
       React.render(<menu><menuitem>children</menuitem></menu>, container);
 
@@ -441,6 +485,12 @@ describe('ReactDOMComponent', function() {
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
       );
+    });
+
+    it('should allow {__html: null}', function() {
+      expect(function() {
+        mountComponent({dangerouslySetInnerHTML: {__html: null} });
+      }).not.toThrow();
     });
 
     it("should warn about contentEditable and children", function() {

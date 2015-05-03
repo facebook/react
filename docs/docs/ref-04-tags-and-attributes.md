@@ -30,7 +30,7 @@ thead time title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle defs ellipse g line linearGradient mask path pattern polygon polyline
+circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
 radialGradient rect stop svg text tspan
 ```
 
@@ -77,7 +77,7 @@ There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here
 ### SVG Attributes
 
 ```
-cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
+clip-path cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
 gradientUnits markerEnd markerMid markerStart offset opacity
 patternContentUnits patternUnits points preserveAspectRatio r rx ry
 spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap

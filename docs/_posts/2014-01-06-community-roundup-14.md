@@ -45,7 +45,7 @@ rails s
 
 [Eldar Djafarov](http://eldar.djafarov.com/) implemented a mixin to link Backbone models to React state and a small abstraction to write two-way binding on-top.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/djkojb/qZf48/13/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+[View code on JSFiddle](http://jsfiddle.net/djkojb/qZf48/13/)
 
 [Check out the blog post...](http://eldar.djafarov.com/2013/11/reactjs-mixing-with-backbone/)
 
@@ -71,8 +71,7 @@ rails s
 
 [Thomas Aylott](http://subtlegradient.com/) implemented an API that looks like Web Components but using React underneath.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/SubtleGradient/ue2Aa/embedded/html,js,result" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
-
+[View the source on JSFiddle...](http://jsfiddle.net/SubtleGradient/ue2Aa)
 
 ## React vs Angular
 

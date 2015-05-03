@@ -68,7 +68,7 @@ module.exports = function(grunt) {
   // Register jsx:normal and :release tasks.
   grunt.registerMultiTask('jsx', jsxTask);
 
-  // Our own browserify-based tasks to build a single JS file build
+  // Our own browserify-based tasks to build a single JS file build.
   grunt.registerMultiTask('browserify', browserifyTask);
 
   grunt.registerMultiTask('populist', populistTask);
@@ -258,6 +258,6 @@ module.exports = function(grunt) {
     'release:msg'
   ]);
 
-  // The default task - build - to keep setup easy
+  // The default task - build - to keep setup easy.
   grunt.registerTask('default', ['build']);
 };

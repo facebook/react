@@ -25,4 +25,4 @@ var App = React.createClass({
 React.render(<App></App>, mountNode);
 ```
 
-괜찮은 예제들을 더 알아보려면, [프론트 페이지](/)의 마지막 예제를 참고하세요.
+서브 컴포넌트(`span`)에 억세스하려면, [refs](/react/docs/more-about-refs.html)를 넣으세요.

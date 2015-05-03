@@ -88,6 +88,8 @@ React.render(
 );
 ```
 
+네이티브 HTML 엘리먼트 이름은 소문자로 시작하고 커스텀 React 클래스 이름은 대문자로 시작합니다.
+
 #### JSX 문법
 
 JavsScript 안의 유사 XML 구문이 먼저 눈에 띌 것입니다. 우리에겐 이를 JavaScript로 변환해주는 간단한 프리컴파일러(precompiler)가 있습니다.
@@ -169,7 +171,7 @@ var CommentBox = React.createClass({
 
 ### props 사용하기
 
-부모로 부터 받은 데이터에 의존하는 `Comment` 컴포넌트를 만들어 봅시다. 부모 컴포넌트로 부터 받은 데이터는 자식 컴포넌트에서 '프로퍼티'로 사용가능 합니다.  이 '프로퍼티들'은 `this.props`를 통해 접근합니다.  props를 사용해 `CommentList`에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.
+부모로 부터 받은 데이터에 의존하는 `Comment` 컴포넌트를 만들어 봅시다. 부모 컴포넌트로 부터 받은 데이터는 자식 컴포넌트에서 '프로퍼티'로 사용가능 합니다.  이 '프로퍼티들'은 `this.props`를 통해 접근합니다.  props를 사용해, `CommentList`에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.
 
 
 ```javascript
@@ -222,7 +224,7 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
   <title>Hello React</title>
   <script src="https://fb.me/react-{{site.react_version}}.js"></script>
   <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
@@ -388,7 +390,7 @@ var CommentBox = React.createClass({
 
 주의: 우리의 앱이 AJAX 애플리케이션으로 변화하고 있기 때문에, 이제 파일 시스템의 파일을 참조하는 대신 웹서버를 사용하도록 앱을 개발해야 합니다. [위에서 언급한 바와 같이](#running-a-server), 우리는 튜토리얼의 나머지 부분에 필요한 기능을 제공하는 서버를 몇 가지 준비해 놓았습니다. [GitHub에 올려놓았으니](https://github.com/reactjs/react-tutorial) 확인해 보세요.
 
-```javascript{6-17}
+```javascript{6-18}
 // tutorial13.js
 var CommentBox = React.createClass({
   getInitialState: function() {
@@ -398,6 +400,7 @@ var CommentBox = React.createClass({
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -420,13 +423,14 @@ var CommentBox = React.createClass({
 
 여기서 `componentDidMount`는 컴포넌트가 렌더링 된 다음 React에 의해 자동으로 호출되는 메소드입니다. 동적 업데이트의 핵심은 `this.setState()`의 호출입니다. 우리가 이전의 댓글 목록을 서버에서 넘어온 새로운 목록으로 변경하면 자동으로 UI가 업데이트 될 것입니다. 이 반응성 덕분에 실시간 업데이트에 아주 작은 수정만 가해집니다. 우리는 여기선 간단한 폴링을 사용할 것이지만 웹소켓등의 다른 기술도 쉽게 사용할 수 있습니다.
 
-```javascript{3,14,19-20,34}
+```javascript{3,15,20-21,35}
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -526,13 +530,14 @@ React는 카멜케이스 네이밍 컨벤션으로 컴포넌트에 이벤트 핸
 
 자식 컴포넌트가 그의 부모에게 데이터를 넘겨줄 필요가 있습니다. 부모의 `render` 메소드에서 새로운 콜백(`handleCommentSubmit`)을 자식에게 넘겨주고, 자식의 `onCommentSubmit` 이벤트에 그것을 바인딩해주는 식으로 구현합니다. 이벤트가 작동될때(triggered)마다, 콜백이 호출됩니다:
 
-```javascript{15-17,30}
+```javascript{16-18,31}
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -594,13 +599,14 @@ var CommentForm = React.createClass({
 
 이제 콜백이 제자리를 찾았습니다. 우리가 할 일은 서버에 요청을 날리고 목록을 업데이트하는 것 뿐입니다:
 
-```javascript{16-27}
+```javascript{17-28}
 // tutorial19.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -646,13 +652,14 @@ var CommentBox = React.createClass({
 
 우리의 애플리케이션은 이제 모든 기능을 갖추었습니다. 하지만 댓글이 목록에 업데이트되기 전에 완료요청을 기다리는 게 조금 느린듯한 느낌이 드네요. 우리는 낙관적 업데이트를 통해 댓글이 목록에 추가되도록 함으로써 앱이 좀 더 빨라진 것처럼 느껴지도록 할 수 있습니다.
 
-```javascript{16-18}
+```javascript{17-19}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),

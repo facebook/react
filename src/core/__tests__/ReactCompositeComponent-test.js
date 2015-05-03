@@ -485,7 +485,44 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should pass context', function() {
+  it('should pass context to children when not owner', function() {
+    var Parent = React.createClass({
+      render: function() {
+        return <Child><Grandchild /></Child>;
+      }
+    });
+
+    var Child = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return {
+          foo: 'bar'
+        };
+      },
+
+      render: function() {
+        return React.Children.only(this.props.children);
+      }
+    });
+
+    var Grandchild = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      render: function() {
+        return <div>{this.context.foo}</div>;
+      },
+    });
+
+    var component = ReactTestUtils.renderIntoDocument(<Parent />);
+    expect(React.findDOMNode(component).innerHTML).toBe('bar');
+  });
+
+  it('should pass context transitively', function() {
     var childInstance = null;
     var grandchildInstance = null;
 

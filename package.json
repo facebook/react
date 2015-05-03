@@ -43,7 +43,7 @@
     "eslint": "^0.14.1",
     "esprima-fb": "^13001.1001.0-dev-harmony-fb",
     "grunt": "~0.4.2",
-    "grunt-cli": "~0.1.9",
+    "grunt-cli": "^0.1.13",
     "grunt-compare-size": "~0.4.0",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-compress": "^0.13.0",

@@ -218,4 +218,32 @@ describe('ReactCompositeComponent-state', function() {
       ['componentWillUnmount', 'blue']
     ]);
   });
+
+  it('should batch unmounts', function() {
+    var outer;
+    var Inner = React.createClass({
+      render: function() {
+        return <div />;
+      },
+      componentWillUnmount: function() {
+        // This should get silently ignored (maybe with a warning), but it
+        // shouldn't break React.
+        outer.setState({showInner: false});
+      }
+    });
+    var Outer = React.createClass({
+      getInitialState: function() {
+        return {showInner: true};
+      },
+      render: function() {
+        return <div>{this.state.showInner && <Inner />}</div>;
+      }
+    });
+
+    var container = document.createElement('div');
+    outer = React.render(<Outer />, container);
+    expect(() => {
+      React.unmountComponentAtNode(container);
+    }).not.toThrow();
+  });
 });

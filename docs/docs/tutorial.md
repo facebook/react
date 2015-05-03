@@ -87,6 +87,8 @@ React.render(
 );
 ```
 
+Note that native HTML element names start with a lowercase letter, while custom React classes names begin with an uppercase letter.
+
 #### JSX Syntax
 
 The first thing you'll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:
@@ -168,7 +170,7 @@ Notice how we're mixing HTML tags and components we've built. HTML components ar
 
 ### Using props
 
-Let's create the `Comment` component, which will depend on data passed in from its parent. Data passed in from a parent component is available as a 'property' on the child component. These 'properties' are accessed through `this.props`. Using props we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
+Let's create the `Comment` component, which will depend on data passed in from its parent. Data passed in from a parent component is available as a 'property' on the child component. These 'properties' are accessed through `this.props`. Using props, we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
 
 ```javascript
 // tutorial4.js
@@ -220,7 +222,7 @@ First, add the third-party library **marked** to your application. This is a Jav
   <title>Hello React</title>
   <script src="https://fb.me/react-{{site.react_version}}.js"></script>
   <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
@@ -385,7 +387,7 @@ We'll use jQuery to help make an asynchronous request to the server.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. [As mentioned above](#running-a-server), we have provided several servers you can use [on GitHub](https://github.com/reactjs/react-tutorial/). They provide the functionality you need for the rest of this tutorial.
 
-```javascript{6-17}
+```javascript{6-18}
 // tutorial13.js
 var CommentBox = React.createClass({
   getInitialState: function() {
@@ -395,6 +397,7 @@ var CommentBox = React.createClass({
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -417,13 +420,14 @@ var CommentBox = React.createClass({
 
 Here, `componentDidMount` is a method called automatically by React when a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
-```javascript{3,14,19-20,34}
+```javascript{3,15,20-21,35}
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -523,13 +527,14 @@ When a user submits a comment, we will need to refresh the list of comments to i
 
 We need to pass data from the child component back up to its parent. We do this in our parent's `render` method by passing a new callback (`handleCommentSubmit`) into the child, binding it to the child's `onCommentSubmit` event. Whenever the event is triggered, the callback will be invoked:
 
-```javascript{15-17,30}
+```javascript{16-18,31}
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -591,13 +596,14 @@ var CommentForm = React.createClass({
 
 Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:
 
-```javascript{16-27}
+```javascript{17-28}
 // tutorial19.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -643,13 +649,14 @@ var CommentBox = React.createClass({
 
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
 
-```javascript{16-18}
+```javascript{17-19}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      cache: false,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
