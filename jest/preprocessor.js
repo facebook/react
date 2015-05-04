@@ -1,8 +1,8 @@
 'use strict';
 
-var ReactTools = require('../main.js');
-
+var babel = require('babel-core');
 var coffee = require('coffee-script');
+
 var tsPreprocessor = require('./ts-preprocessor');
 
 var defaultLibraries = [
@@ -20,6 +20,12 @@ module.exports = {
     if (path.match(/\.ts$/) && !path.match(/\.d\.ts$/)) {
       return ts.compile(src, path);
     }
-    return ReactTools.transform(src, {harmony: true});
+    if (!path.match(/\/node_modules\//)) {
+      return babel.transform(src, {
+        blacklist: ['spec.functionName', 'validation.react'],
+        filename: path
+      }).code;
+    }
+    return src;
   }
 };
