@@ -50,7 +50,7 @@ But what about the `name` prop? Or the `title` prop? Or `onMouseOver`?
 ## Transferring with `...` in JSX
 
 > NOTE:
-> 
+>
 > In the example below, the `--harmony ` flag is required as this syntax is an experimental ES7 syntax. If using the in-browser JSX transformer, simply open your script with `<script type="text/jsx;harmony=true">`. See the [Rest and Spread Properties ...](/react/docs/transferring-props.html#rest-and-spread-properties-...) section below for more details.
 
 Sometimes it's fragile and tedious to pass every property along. In that case you can use [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) with rest properties to extract a set of unknown properties.
@@ -83,7 +83,7 @@ React.render(
 ```
 
 > NOTE:
-> 
+>
 > In the example above, the `checked` prop is also a valid DOM attribute. If you didn't use destructuring in this way you might inadvertently pass it along.
 
 Always use the destructuring pattern when transferring unknown `other` props.
@@ -102,7 +102,7 @@ var FancyCheckbox = React.createClass({
 
 ## Consuming and Transferring the Same Prop
 
-If your component wants to consume a property but also pass it along, you can repass it explicitly `checked={checked}`. This is preferable to passing the full `this.props` object since it's easier to refactor and lint.
+If your component wants to consume a property but also wants to pass it along, you can repass it explicitly with `checked={checked}`. This is preferable to passing the full `this.props` object since it's easier to refactor and lint.
 
 ```javascript
 var FancyCheckbox = React.createClass({
@@ -125,7 +125,7 @@ var FancyCheckbox = React.createClass({
 ```
 
 > NOTE:
-> 
+>
 > Order matters. By putting the `{...other}` before your JSX props you ensure that the consumer of your component can't override them. In the example above we have guaranteed that the input will be of type `"checkbox"`.
 
 ## Rest and Spread Properties `...`
