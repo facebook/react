@@ -68,7 +68,7 @@ To build a static version of your app that renders your data model you'll want t
 
 You can build top-down or bottom-up. That is, you can either start with building the components higher up in the hierarchy (i.e. starting with `FilterableProductTable`) or with the ones lower in it (`ProductRow`). In simpler examples it's usually easier to go top-down and on larger projects it's easier to go bottom-up and write tests as you build.
 
-At the end of this step, you'll have a library of reusable components that render your data model. The components will only have `render()` methods since this is a static version of your app. The component at the top of the hierarchy (`FilterableProductTable`) will take your data model as a prop. If you make a change to your underlying data model and call `React.render()` again, the UI will be updated. It's easy to see how your UI is updated and where to make changes since React's **one-way data flow** (also called *one-way binding*). This is actually a good thing as it keeps everything modular, easy to reason about, and fast.
+At the end of this step, you'll have a library of reusable components that render your data model. The components will only have `render()` methods since this is a static version of your app. The component at the top of the hierarchy (`FilterableProductTable`) will take your data model as a prop. If you make a change to your underlying data model and call `React.render()` again, the UI will be updated. It's easy to see how your UI is updated and where to make changes since there's nothing complicated going on. React's **one-way data flow** (also called *one-way binding*) keeps everything modular and fast.
 
 Simply refer to the [React docs](/react/docs/) if you need help executing this step.
 
@@ -113,7 +113,7 @@ Remember: React is all about one-way data flow down the component hierarchy. It 
 For each piece of state in your application:
 
   * Identify every component that renders something based on that state.
-  * Find a common owner component (a single component above all the other components that needs the state in the hierarchy).
+  * Find a common owner component (a single component above all the components that needs the state in the hierarchy).
   * Either the common owner or another component higher up in the hierarchy should own the state.
   * If you can't find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.
 
