@@ -66,7 +66,7 @@ The inputs to this component are called `props` — short for "properties". They
 
 ## Components are Just Like Functions
 
-React components are very simple. You can think of them as simple functions that take in `props` and `state` (discussed later) and render HTML. Because they're so simple, it makes them very easy to reason about.
+React components are very simple. You can think of them as simple functions that take in `props` and `state` (discussed later) and render HTML. With this in mind, components are easy to reason about.
 
 > Note:
 >
@@ -109,7 +109,7 @@ var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
 React.render(root, document.getElementById('example'));
 ```
 
-As a convenience you can create short-hand factory functions to create elements from custom components.
+For convenience, you can create short-hand factory functions to create elements from custom components.
 
 ```javascript
 var Factory = React.createFactory(ComponentClass);
