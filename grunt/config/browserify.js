@@ -3,7 +3,6 @@
 'use strict';
 
 var envify = require('envify/custom');
-var es3ify = require('es3ify');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
@@ -59,7 +58,7 @@ var basic = {
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
   plugins: [collapser],
-  after: [es3ify.transform, derequire, simpleBannerify]
+  after: [derequire, simpleBannerify]
 };
 
 var min = {
@@ -74,7 +73,7 @@ var min = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [es3ify.transform, /*derequire,*/ minify, bannerify]
+  after: [/*derequire,*/ minify, bannerify]
 };
 
 var transformer = {
@@ -90,7 +89,7 @@ var transformer = {
   // collapser passes a number; this would throw.
 
   // plugins: [collapser],
-  after: [es3ify.transform, derequire, simpleBannerify]
+  after: [derequire, simpleBannerify]
 };
 
 var addons = {
@@ -103,7 +102,7 @@ var addons = {
   packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'development'})],
   plugins: [collapser],
-  after: [es3ify.transform, derequire, simpleBannerify]
+  after: [derequire, simpleBannerify]
 };
 
 var addonsMin = {
@@ -119,7 +118,7 @@ var addonsMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [es3ify.transform, /*derequire,*/ minify, bannerify]
+  after: [/*derequire,*/ minify, bannerify]
 };
 
 var withCodeCoverageLogging = {
