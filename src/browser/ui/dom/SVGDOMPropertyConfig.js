@@ -17,10 +17,9 @@ var DOMProperty = require('DOMProperty');
 
 var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 
-var SVGDOMNamespaces = {
+var NS = {
   xlink: 'http://www.w3.org/1999/xlink',
-  xml: 'http://www.w3.org/XML/1998/namespace',
-  xmlns: 'http://www.w3.org/2000/xmlns/'
+  xml: 'http://www.w3.org/XML/1998/namespace'
 };
 
 var SVGDOMPropertyConfig = {
@@ -76,23 +75,21 @@ var SVGDOMPropertyConfig = {
     xmlBase: MUST_USE_ATTRIBUTE,
     xmlLang: MUST_USE_ATTRIBUTE,
     xmlSpace: MUST_USE_ATTRIBUTE,
-    xmlnsXlink: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
     y: MUST_USE_ATTRIBUTE
   },
-  PropertyNamespaces: {
-    xlinkActuate: SVGDOMNamespaces.xlink,
-    xlinkArcrole: SVGDOMNamespaces.xlink,
-    xlinkHref: SVGDOMNamespaces.xlink,
-    xlinkRole: SVGDOMNamespaces.xlink,
-    xlinkShow: SVGDOMNamespaces.xlink,
-    xlinkTitle: SVGDOMNamespaces.xlink,
-    xlinkType: SVGDOMNamespaces.xlink,
-    xmlBase: SVGDOMNamespaces.xml,
-    xmlLang: SVGDOMNamespaces.xml,
-    xmlSpace: SVGDOMNamespaces.xml,
-    xmlnsXlink: SVGDOMNamespaces.xmlns
+  DOMAttributeNamespaces: {
+    xlinkActuate: NS.xlink,
+    xlinkArcrole: NS.xlink,
+    xlinkHref: NS.xlink,
+    xlinkRole: NS.xlink,
+    xlinkShow: NS.xlink,
+    xlinkTitle: NS.xlink,
+    xlinkType: NS.xlink,
+    xmlBase: NS.xml,
+    xmlLang: NS.xml,
+    xmlSpace: NS.xml
   },
   DOMAttributeNames: {
     clipPath: 'clip-path',
@@ -125,8 +122,7 @@ var SVGDOMPropertyConfig = {
     xlinkType: 'xlink:type',
     xmlBase: 'xml:base',
     xmlLang: 'xml:lang',
-    xmlSpace: 'xml:space',
-    xmlnsXlink: 'xmlns:xlink'
+    xmlSpace: 'xml:space'
   }
 };
 
