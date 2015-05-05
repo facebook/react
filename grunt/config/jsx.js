@@ -12,8 +12,7 @@ var normal = {
   rootIDs: rootIDs,
   getConfig: function() {
     return {
-      commonerConfig: grunt.config.data.pkg.commonerConfig,
-      constants: {}
+      commonerConfig: grunt.config.data.pkg.commonerConfig
     };
   },
   sourceDir: 'src',
