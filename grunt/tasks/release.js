@@ -111,9 +111,18 @@ function bower() {
 function docs() {
   var done = this.async();
 
-  grunt.file.copy('build/react-' + VERSION + '.zip', 'docs/downloads/react-' + VERSION + '.zip');
-  grunt.file.copy('build/react.js', 'docs/js/react.js');
-  grunt.file.copy('build/JSXTransformer.js', 'docs/js/JSXTransformer.js');
+  grunt.file.copy(
+    'build/react-' + VERSION + '.zip',
+    'docs/downloads/react-' + VERSION + '.zip'
+  );
+  grunt.file.copy(
+    'build/react.js',
+    'docs/js/react.js'
+  );
+  grunt.file.copy(
+    'build/JSXTransformer.js',
+    'docs/js/JSXTransformer.js'
+  );
 
   var files = grunt.file.expand(GH_PAGES_GLOB);
   files.forEach(function(file) {

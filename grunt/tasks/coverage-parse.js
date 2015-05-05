@@ -26,11 +26,17 @@ module.exports = function() {
         }
         var relativePath = concretePath.replace(ROOT, '');
         uncoveredExpressionCount += results[concretePath].length;
-        grunt.log.error(results[concretePath].length + ' expressions not covered ' + relativePath);
+        grunt.log.error(
+          results[concretePath].length +
+          ' expressions not covered ' + relativePath
+        );
 
         results[concretePath].forEach(function(c) {
           uncoveredLineCount += c.code.split('\n').length;
-          console.log('txmt://open?url=' + encodeURIComponent('file://' + concretePath) + '&line=' + (c.lineNum + 1) + '&column=' + (c.column[0] + 2));
+          console.log(
+            'txmt://open?url=' + encodeURIComponent('file://' + concretePath) +
+            '&line=' + (c.lineNum + 1) + '&column=' + (c.column[0] + 2)
+          );
         });
         console.log('');
       });

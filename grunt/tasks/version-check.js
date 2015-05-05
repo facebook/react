@@ -25,7 +25,8 @@ module.exports = function() {
   }
   if (npmReactVersion !== reactToolsVersion) {
     grunt.log.error(
-      'npm-react version does not match react-tools version. Expected %s, saw %s',
+      'npm-react version does not match react-tools version. ' +
+      'Expected %s, saw %s',
       reactToolsVersion,
       npmReactVersion
     );

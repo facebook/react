@@ -18,7 +18,9 @@ module.exports = function task(getJSReport) {
       desiredCapabilities[key] = config.desiredCapabilities[key];
     });
   }
-  grunt.verbose.writeln('desiredCapabilities', JSON.stringify(desiredCapabilities));
+  grunt.verbose.writeln(
+    'desiredCapabilities', JSON.stringify(desiredCapabilities)
+  );
 
   var browser = wd.promiseChainRemote(config.webdriver.remote);
 
@@ -47,7 +49,10 @@ module.exports = function task(getJSReport) {
     .fail(function(error) {
       grunt.log.error(error);
       return browser
-        .eval('document.documentElement.innerText || document.documentElement.textContent')
+        .eval(
+          'document.documentElement.innerText || ' +
+          'document.documentElement.textContent'
+        )
         .then(grunt.verbose.writeln.bind(grunt.verbose))
         .then(function() {
           throw error;
@@ -57,7 +62,10 @@ module.exports = function task(getJSReport) {
       if (grunt.option('webdriver-keep-open')) {
         return;
       }
-      grunt.verbose.writeln('Closing the browser window. To keep it open, pass the --webdriver-keep-open flag to grunt.');
+      grunt.verbose.writeln(
+        'Closing the browser window. To keep it open, ' +
+        'pass the --webdriver-keep-open flag to grunt.'
+      );
       return browser.quit();
     })
     .done(

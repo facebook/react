@@ -8,7 +8,9 @@ var path = require('path');
 function get(url, targetFilePath, completedSuccessfully) {
   grunt.verbose.writeln('getting url \'' + url + '\'');
   http.get(url, function(response) {
-    grunt.verbose.writeln('Received status code ' + response.statusCode + ' for \'' + url + '\'');
+    grunt.verbose.writeln(
+      'Received status code ' + response.statusCode + ' for \'' + url + '\''
+    );
 
     if (response.statusCode !== 200) {
       if (response.headers.location) {
