@@ -203,6 +203,9 @@ var HTMLDOMPropertyConfig = {
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
     srcSet: 'srcset'
+  },
+  Polyfills: {
+    autoFocus: null
   }
 };
 

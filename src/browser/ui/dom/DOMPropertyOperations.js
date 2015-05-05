@@ -49,6 +49,8 @@ if (__DEV__) {
         lowerCasedName :
       DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
         DOMProperty.getPossibleStandardName[lowerCasedName] :
+      DOMProperty.getPossiblePolyfillName.hasOwnProperty(lowerCasedName) ?
+        DOMProperty.getPossiblePolyfillName[lowerCasedName] :
         null
     );
 

@@ -64,6 +64,16 @@ describe('DOMPropertyOperations', function() {
       expect(console.error.argsForCall[0][0]).toContain('tabIndex');
     });
 
+    it('should warn about incorrect casing for autofocus', function() {
+      spyOn(console, 'warn');
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'autofocus',
+        '1'
+      )).toBe(null);
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('autoFocus');
+    });
+
     it('should warn about class', function() {
       spyOn(console, 'error');
       expect(DOMPropertyOperations.createMarkupForProperty(
