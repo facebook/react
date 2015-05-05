@@ -5,7 +5,7 @@
 
 var babel = require('babel-core');
 
-var propagate = require("../vendor/constants").propagate;
+var constants = require('../vendor/constants')(babel);
 
 require("commoner").version(
   require("../package.json").version
@@ -29,17 +29,13 @@ require("commoner").version(
 
 }).process(function(id, source) {
   var context = this;
-  var constants = context.config.constants || {};
 
   // This is where JSX, ES6, etc. desugaring happens.
   source = babel.transform(source, {
     blacklist: ['spec.functionName', 'validation.react'],
+    plugins: [constants],
     filename: id
   }).code;
-
-  // Constant propagation means removing any obviously dead code after
-  // replacing constant expressions with literal (boolean) values.
-  source = propagate(constants, source);
 
   if (context.config.mocking) {
     // Make sure there is exactly one newline at the end of the module.
