@@ -761,10 +761,11 @@ var ReactClassMixin = {
       }
     }
     var internalInstance = ReactInstanceMap.get(this);
-    return (
-      internalInstance &&
-      internalInstance !== ReactLifeCycle.currentlyMountingInstance
-    );
+    if (internalInstance) {
+      return internalInstance !== ReactLifeCycle.currentlyMountingInstance;
+    } else {
+      return false;
+    }
   },
 
   /**

@@ -287,6 +287,23 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
+  it('isMounted should return false when unmounted', function () {
+    var Component = React.createClass({
+      render: function() {
+        return <div/>;
+      }
+    });
+
+    var container = document.createElement('div');
+    var instance = React.render(<Component />, container);
+
+    expect(instance.isMounted()).toBe(true);
+
+    React.unmountComponentAtNode(container);
+
+    expect(instance.isMounted()).toBe(false);
+  });
+
   it('warns if findDOMNode is used inside render', function() {
     spyOn(console, 'error');
     var Component = React.createClass({
