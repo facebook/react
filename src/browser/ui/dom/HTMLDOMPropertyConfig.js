@@ -39,7 +39,6 @@ if (ExecutionEnvironment.canUseDOM) {
   );
 }
 
-
 var HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
     /^(data|aria)-[a-z_][a-z\d_.\-]*$/
@@ -160,6 +159,7 @@ var HTMLDOMPropertyConfig = {
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
+    xmlns: MUST_USE_ATTRIBUTE,
 
     /**
      * Non-standard Properties
@@ -182,6 +182,9 @@ var HTMLDOMPropertyConfig = {
     property: null,
     // IE-only attribute that controls focus behavior
     unselectable: MUST_USE_ATTRIBUTE
+  },
+  PropertyNamespaces: {
+    xmlns: 'http://www.w3.org/2000/xmlns/'
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',

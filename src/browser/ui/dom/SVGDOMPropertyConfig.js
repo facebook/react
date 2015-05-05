@@ -17,6 +17,12 @@ var DOMProperty = require('DOMProperty');
 
 var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 
+var SVGDOMNamespaces = {
+  xlink: 'http://www.w3.org/1999/xlink',
+  xml: 'http://www.w3.org/XML/1998/namespace',
+  xmlns: 'http://www.w3.org/2000/xmlns/'
+};
+
 var SVGDOMPropertyConfig = {
   Properties: {
     clipPath: MUST_USE_ATTRIBUTE,
@@ -60,9 +66,33 @@ var SVGDOMPropertyConfig = {
     x1: MUST_USE_ATTRIBUTE,
     x2: MUST_USE_ATTRIBUTE,
     x: MUST_USE_ATTRIBUTE,
+    xlinkActuate: MUST_USE_ATTRIBUTE,
+    xlinkArcrole: MUST_USE_ATTRIBUTE,
+    xlinkHref: MUST_USE_ATTRIBUTE,
+    xlinkRole: MUST_USE_ATTRIBUTE,
+    xlinkShow: MUST_USE_ATTRIBUTE,
+    xlinkTitle: MUST_USE_ATTRIBUTE,
+    xlinkType: MUST_USE_ATTRIBUTE,
+    xmlBase: MUST_USE_ATTRIBUTE,
+    xmlLang: MUST_USE_ATTRIBUTE,
+    xmlSpace: MUST_USE_ATTRIBUTE,
+    xmlnsXlink: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
     y: MUST_USE_ATTRIBUTE
+  },
+  PropertyNamespaces: {
+    xlinkActuate: SVGDOMNamespaces.xlink,
+    xlinkArcrole: SVGDOMNamespaces.xlink,
+    xlinkHref: SVGDOMNamespaces.xlink,
+    xlinkRole: SVGDOMNamespaces.xlink,
+    xlinkShow: SVGDOMNamespaces.xlink,
+    xlinkTitle: SVGDOMNamespaces.xlink,
+    xlinkType: SVGDOMNamespaces.xlink,
+    xmlBase: SVGDOMNamespaces.xml,
+    xmlLang: SVGDOMNamespaces.xml,
+    xmlSpace: SVGDOMNamespaces.xml,
+    xmlnsXlink: SVGDOMNamespaces.xmlns
   },
   DOMAttributeNames: {
     clipPath: 'clip-path',
@@ -85,7 +115,18 @@ var SVGDOMPropertyConfig = {
     strokeOpacity: 'stroke-opacity',
     strokeWidth: 'stroke-width',
     textAnchor: 'text-anchor',
-    viewBox: 'viewBox'
+    viewBox: 'viewBox',
+    xlinkActuate: 'xlink:actuate',
+    xlinkArcrole: 'xlink:arcrole',
+    xlinkHref: 'xlink:href',
+    xlinkRole: 'xlink:role',
+    xlinkShow: 'xlink:show',
+    xlinkTitle: 'xlink:title',
+    xlinkType: 'xlink:type',
+    xmlBase: 'xml:base',
+    xmlLang: 'xml:lang',
+    xmlSpace: 'xml:space',
+    xmlnsXlink: 'xmlns:xlink'
   }
 };
 
