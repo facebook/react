@@ -775,4 +775,12 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  it('should update option content',()=>{
+    var container = document.createElement('div');
+    var variable = 10;
+    React.render(<select><option>{variable}$</option></select>, container);
+    variable = 20;
+    React.render(<select><option>{variable}$</option></select>, container);
+    expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+  });
 });

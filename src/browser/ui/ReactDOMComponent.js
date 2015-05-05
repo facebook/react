@@ -23,6 +23,8 @@ var ReactComponentBrowserEnvironment =
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ReactChildren = require('./ReactChildren');
+var ReactElement = require('./ReactElement');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -232,6 +234,20 @@ function processChildContext(context, tagName) {
   return context;
 }
 
+function getChildrenContentForOption(children) {
+  var childrenContent = '';
+  ReactChildren.forEach(children, function (c) {
+    if ("production" !== process.env.NODE_ENV) {
+      ("production" !== process.env.NODE_ENV ? warning(
+        !ReactElement.isValidElement(c),
+        'option can not have nested tags'
+      ) : null);
+    }
+    childrenContent += c;
+  });
+  return childrenContent;
+}
+
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -369,6 +385,11 @@ ReactDOMComponent.Mixin = {
         ret = innerHTML.__html;
       }
     } else {
+      // option does not allow nested tags
+      if (this._tag === 'option') {
+        var childrenContent = getChildrenContentForOption(props.children);
+        return escapeTextContentForBrowser(childrenContent);
+      }
       var contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
@@ -566,6 +587,11 @@ ReactDOMComponent.Mixin = {
       CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
     var nextContent =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
+
+    if (this._tag === 'option') {
+      lastContent = getChildrenContentForOption(lastProps.children);
+      nextContent = getChildrenContentForOption(nextProps.children);
+    }
 
     var lastHtml =
       lastProps.dangerouslySetInnerHTML &&
