@@ -54,8 +54,19 @@ function visitReactTag(traverse, object, path, state) {
     throw new Error('Namespace tags are not supported. ReactJSX is not XML.');
   }
 
+  var name;
+  if (nameObject.type === Syntax.JSXIdentifier) {
+    name = nameObject.name;
+  } else {
+    name = state.g.source.slice(nameObject.range[0], nameObject.range[1])
+      .replace(/[^a-z0-9]+/gi, '_');
+  }
+
   // We assume that the React runtime is already in scope
-  utils.append('React.createElement(', state);
+  utils.append(
+    'React.createElementDebug(function element_' + name + '(x){x();},',
+    state
+  );
 
   if (nameObject.type === Syntax.JSXIdentifier && isTagName(nameObject.name)) {
     utils.append('"' + nameObject.name + '"', state);

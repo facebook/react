@@ -1,3 +1,20 @@
+var Foo = React.createClass({
+  render: function() {
+    debugger;
+    return <div>{this.props.children}</div>;
+  }
+});
+
+var Z = React.createClass({
+  render: function() {
+    return <Foo>
+      a: {this.props.a},
+      b: {this.props.b},
+      c: {this.props.c}
+    </Foo>;
+  }
+});
+
 var QuadraticCalculator = React.createClass({
   getInitialState: function() {
     return {
@@ -33,6 +50,7 @@ var QuadraticCalculator = React.createClass({
           <em>ax</em><sup>2</sup> + <em>bx</em> + <em>c</em> = 0
         </strong>
         <h4>Solve for <em>x</em>:</h4>
+        <Z a={a} b={b} c={c} />
         <p>
           <label>
             a: <input type="number" value={a} onChange={this.handleInputChange.bind(null, 'a')} />

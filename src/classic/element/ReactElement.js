@@ -104,7 +104,11 @@ var ReactElement = function(type, key, ref, owner, context, props) {
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
-    this._store = {props: props, originalProps: assign({}, props)};
+    this._store = {
+      props: props,
+      originalProps: assign({}, props),
+      stackHelper: null
+    };
 
     // We're not allowed to set props directly on the object so we early
     // return and rely on the prototype membrane to forward to the backing
