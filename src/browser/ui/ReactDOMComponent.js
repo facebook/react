@@ -23,8 +23,8 @@ var ReactComponentBrowserEnvironment =
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
-var ReactChildren = require('./ReactChildren');
-var ReactElement = require('./ReactElement');
+var ReactChildren = require('ReactChildren');
+var ReactElement = require('ReactElement');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
