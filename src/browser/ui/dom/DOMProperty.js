@@ -50,6 +50,9 @@ var DOMPropertyInjection = {
    * attribute name. Attribute names not specified use the **lowercase**
    * normalized name.
    *
+   * DOMAttributeNamespaces: object mapping React attribute name to the DOM
+   * attribute namespace URL. (Attribute names not specified use no namespace.)
+   *
    * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
    * Property names not specified use the normalized name.
    *
@@ -60,6 +63,7 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Properties = domPropertyConfig.Properties || {};
+    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
@@ -91,6 +95,13 @@ var DOMPropertyInjection = {
         DOMProperty.getAttributeName[propName] = attributeName;
       } else {
         DOMProperty.getAttributeName[propName] = lowerCased;
+      }
+
+      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
+        DOMProperty.getAttributeNamespace[propName] =
+          DOMAttributeNamespaces[propName];
+      } else {
+        DOMProperty.getAttributeNamespace[propName] = null;
       }
 
       DOMProperty.getPropertyName[propName] =
@@ -181,6 +192,12 @@ var DOMProperty = {
    * @type {Object}
    */
   getAttributeName: {},
+
+  /**
+   * Mapping from normalized names to namespaces.
+   * @type {Object}
+   */
+  getAttributeNamespace: {},
 
   /**
    * Mapping from normalized names to properties on DOM node instances.

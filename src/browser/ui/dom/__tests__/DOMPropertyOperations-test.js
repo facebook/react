@@ -197,6 +197,18 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.role).toBeUndefined();
     });
 
+    it('should set values as namespace attributes if necessary', function() {
+      spyOn(stubNode, 'setAttributeNS');
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'xlinkHref',
+        'about:blank'
+      );
+      expect(stubNode.setAttributeNS.argsForCall.length).toBe(1);
+      expect(stubNode.setAttributeNS.argsForCall[0])
+        .toEqual(['http://www.w3.org/1999/xlink', 'xlink:href', 'about:blank']);
+    });
+
     it('should convert attribute values to string first', function() {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.

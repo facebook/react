@@ -17,6 +17,11 @@ var DOMProperty = require('DOMProperty');
 
 var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 
+var NS = {
+  xlink: 'http://www.w3.org/1999/xlink',
+  xml: 'http://www.w3.org/XML/1998/namespace'
+};
+
 var SVGDOMPropertyConfig = {
   Properties: {
     clipPath: MUST_USE_ATTRIBUTE,
@@ -60,9 +65,31 @@ var SVGDOMPropertyConfig = {
     x1: MUST_USE_ATTRIBUTE,
     x2: MUST_USE_ATTRIBUTE,
     x: MUST_USE_ATTRIBUTE,
+    xlinkActuate: MUST_USE_ATTRIBUTE,
+    xlinkArcrole: MUST_USE_ATTRIBUTE,
+    xlinkHref: MUST_USE_ATTRIBUTE,
+    xlinkRole: MUST_USE_ATTRIBUTE,
+    xlinkShow: MUST_USE_ATTRIBUTE,
+    xlinkTitle: MUST_USE_ATTRIBUTE,
+    xlinkType: MUST_USE_ATTRIBUTE,
+    xmlBase: MUST_USE_ATTRIBUTE,
+    xmlLang: MUST_USE_ATTRIBUTE,
+    xmlSpace: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
     y: MUST_USE_ATTRIBUTE
+  },
+  DOMAttributeNamespaces: {
+    xlinkActuate: NS.xlink,
+    xlinkArcrole: NS.xlink,
+    xlinkHref: NS.xlink,
+    xlinkRole: NS.xlink,
+    xlinkShow: NS.xlink,
+    xlinkTitle: NS.xlink,
+    xlinkType: NS.xlink,
+    xmlBase: NS.xml,
+    xmlLang: NS.xml,
+    xmlSpace: NS.xml
   },
   DOMAttributeNames: {
     clipPath: 'clip-path',
@@ -85,7 +112,17 @@ var SVGDOMPropertyConfig = {
     strokeOpacity: 'stroke-opacity',
     strokeWidth: 'stroke-width',
     textAnchor: 'text-anchor',
-    viewBox: 'viewBox'
+    viewBox: 'viewBox',
+    xlinkActuate: 'xlink:actuate',
+    xlinkArcrole: 'xlink:arcrole',
+    xlinkHref: 'xlink:href',
+    xlinkRole: 'xlink:role',
+    xlinkShow: 'xlink:show',
+    xlinkTitle: 'xlink:title',
+    xlinkType: 'xlink:type',
+    xmlBase: 'xml:base',
+    xmlLang: 'xml:lang',
+    xmlSpace: 'xml:space'
   }
 };
 
