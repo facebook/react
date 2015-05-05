@@ -234,13 +234,17 @@ function processChildContext(context, tagName) {
   return context;
 }
 
-function getChildrenContentForOption(children) {
+var onlyNestTextTags = {
+  'option': true
+};
+
+function getChildrenTextContent(tag, children) {
   var childrenContent = '';
   ReactChildren.forEach(children, function (c) {
     if ("production" !== process.env.NODE_ENV) {
       ("production" !== process.env.NODE_ENV ? warning(
         !ReactElement.isValidElement(c),
-        'option can not have nested tags'
+        tag + ' can not have nested tags'
       ) : null);
     }
     childrenContent += c;
@@ -386,8 +390,8 @@ ReactDOMComponent.Mixin = {
       }
     } else {
       // option does not allow nested tags
-      if (this._tag === 'option') {
-        var childrenContent = getChildrenContentForOption(props.children);
+      if (onlyNestTextTags[this._tag]) {
+        var childrenContent = getChildrenTextContent(this._tag, props.children);
         return escapeTextContentForBrowser(childrenContent);
       }
       var contentToUse =
@@ -588,9 +592,9 @@ ReactDOMComponent.Mixin = {
     var nextContent =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
 
-    if (this._tag === 'option') {
-      lastContent = getChildrenContentForOption(lastProps.children);
-      nextContent = getChildrenContentForOption(nextProps.children);
+    if (onlyNestTextTags[this._tag]) {
+      lastContent = getChildrenTextContent(this._tag, lastProps.children);
+      nextContent = getChildrenTextContent(this._tag, nextProps.children);
     }
 
     var lastHtml =
