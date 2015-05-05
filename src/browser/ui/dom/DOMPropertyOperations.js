@@ -126,9 +126,15 @@ var DOMPropertyOperations = {
       } else if (shouldIgnoreValue(name, value)) {
         this.deleteValueForProperty(node, name);
       } else if (DOMProperty.mustUseAttribute[name]) {
+        var attributeName = DOMProperty.getAttributeName[name];
+        var namespace = DOMProperty.getAttributeNamespace[name];
         // `setAttribute` with objects becomes only `[object]` in IE8/9,
         // ('' + value) makes it output the correct toString()-value.
-        node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
+        if (namespace) {
+          node.setAttributeNS(namespace, attributeName, '' + value);
+        } else {
+          node.setAttribute(attributeName, '' + value);
+        }
       } else {
         var propName = DOMProperty.getPropertyName[name];
         // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the

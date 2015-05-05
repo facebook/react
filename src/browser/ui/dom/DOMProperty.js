@@ -60,6 +60,7 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Properties = domPropertyConfig.Properties || {};
+    var PropertyNamespaces = domPropertyConfig.PropertyNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
@@ -91,6 +92,11 @@ var DOMPropertyInjection = {
         DOMProperty.getAttributeName[propName] = attributeName;
       } else {
         DOMProperty.getAttributeName[propName] = lowerCased;
+      }
+
+      if (PropertyNamespaces.hasOwnProperty(propName)) {
+        DOMProperty.getAttributeNamespace[propName] =
+          PropertyNamespaces[propName];
       }
 
       DOMProperty.getPropertyName[propName] =
@@ -181,6 +187,12 @@ var DOMProperty = {
    * @type {Object}
    */
   getAttributeName: {},
+
+  /**
+   * Mapping from normalized names to namespaces.
+   * @type {Object}
+   */
+  getAttributeNamespace: {},
 
   /**
    * Mapping from normalized names to properties on DOM node instances.

@@ -181,9 +181,11 @@ describe('DOMPropertyOperations', function() {
 
   describe('setValueForProperty', function() {
     var stubNode;
+    var stubSVGNode;
 
     beforeEach(function() {
       stubNode = document.createElement('div');
+      stubSVGNode = document.createElement('svg');
     });
 
     it('should set values as properties by default', function() {
@@ -195,6 +197,11 @@ describe('DOMPropertyOperations', function() {
       DOMPropertyOperations.setValueForProperty(stubNode, 'role', '#');
       expect(stubNode.getAttribute('role')).toBe('#');
       expect(stubNode.role).toBeUndefined();
+    });
+    
+    it('should set values as namespace attributes if necessary', function() {
+      DOMPropertyOperations.setValueForProperty(stubSVGNode, 'xmlnsXlink', 'http://www.w3.org/1999/xlink');
+      expect(stubSVGNode.getAttribute('xmlns:xlink')).toBe('http://www.w3.org/1999/xlink');
     });
 
     it('should convert attribute values to string first', function() {
