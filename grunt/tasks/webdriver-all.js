@@ -48,7 +48,7 @@ module.exports = function task(getJSReport) {
         var user = config.webdriver.remote.user;
         var pwd = config.webdriver.remote.pwd;
         var url = 'curl -X PUT -s -d \'{"passed": ' + (results ? 'true' : 'false') + '}\' -u ' + user + ':' + pwd + ' https://saucelabs.com/rest/v1/' + user + '/jobs/' + sessionId;
-        return new Promise(function(resolve){
+        return new Promise(function(resolve) {
           require('child_process').exec(url, function (error, stdout, stderr) {
             grunt.verbose.writeln(' > ' + JSON.stringify(desiredCapabilities));
             grunt.verbose.writeln(' > SAUCE Labs status report stdout: ' + stdout);
