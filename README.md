@@ -1,4 +1,13 @@
+<<<<<<< HEAD
 # [React](https://facebook.github.io/react) [![Build Status](https://travis-ci.org/facebook/react.svg?branch=master)](https://travis-ci.org/facebook/react)
+=======
+# [React](http://facebook.github.io/react) 
+
+[![Build Status](https://travis-ci.org/facebook/react.svg?branch=master)](https://travis-ci.org/facebook/react)
+[![Sauce Test Status](https://saucelabs.com/buildstatus/React)](https://saucelabs.com/u/React)
+
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/React.svg)](https://saucelabs.com/u/React)
+>>>>>>> send tests status to sauce labs
 
 React is a JavaScript library for building user interfaces.
 
