@@ -280,7 +280,7 @@ ReactDOMComponent.displayName = 'ReactDOMComponent';
 
 ReactDOMComponent.Mixin = {
 
-  construct: function (element) {
+  construct: function(element) {
     this._currentElement = element;
   },
 
@@ -294,7 +294,7 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    * @return {string} The computed markup.
    */
-  mountComponent: function (rootID, transaction, context) {
+  mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
 
     assertValidProps(this, this._currentElement.props);
@@ -328,7 +328,7 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} Markup of opening tag.
    */
-  _createOpenTagMarkupAndPutListeners: function (transaction) {
+  _createOpenTagMarkupAndPutListeners: function(transaction) {
     var props = this._currentElement.props;
     var ret = '<' + this._tag;
 
@@ -379,7 +379,7 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    * @return {string} Content markup.
    */
-  _createContentMarkup: function (transaction, context) {
+  _createContentMarkup: function(transaction, context) {
     var ret = '';
     var props = this._currentElement.props;
 
@@ -390,7 +390,6 @@ ReactDOMComponent.Mixin = {
         ret = innerHTML.__html;
       }
     } else {
-      // option does not allow nested tags
       if (onlyNestTextTags[this._tag]) {
         var childrenContent = getChildrenTextContent(this._tag, props.children);
         return escapeTextContentForBrowser(childrenContent);
@@ -435,7 +434,7 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {object} context
    */
-  receiveComponent: function (nextElement, transaction, context) {
+  receiveComponent: function(nextElement, transaction, context) {
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
     this.updateComponent(transaction, prevElement, nextElement, context);
@@ -451,7 +450,7 @@ ReactDOMComponent.Mixin = {
    * @internal
    * @overridable
    */
-  updateComponent: function (transaction, prevElement, nextElement, context) {
+  updateComponent: function(transaction, prevElement, nextElement, context) {
     assertValidProps(this, this._currentElement.props);
     this._updateDOMProperties(prevElement.props, transaction);
     this._updateDOMChildren(
@@ -476,13 +475,14 @@ ReactDOMComponent.Mixin = {
    * @param {object} lastProps
    * @param {ReactReconcileTransaction} transaction
    */
-  _updateDOMProperties: function (lastProps, transaction) {
+  _updateDOMProperties: function(lastProps, transaction) {
     var nextProps = this._currentElement.props;
     var propKey;
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) || !lastProps.hasOwnProperty(propKey)) {
+      if (nextProps.hasOwnProperty(propKey) ||
+        !lastProps.hasOwnProperty(propKey)) {
         continue;
       }
       if (propKey === STYLE) {
@@ -584,7 +584,7 @@ ReactDOMComponent.Mixin = {
    * @param {object} lastProps
    * @param {ReactReconcileTransaction} transaction
    */
-  _updateDOMChildren: function (lastProps, transaction, context) {
+  _updateDOMChildren: function(lastProps, transaction, context) {
     var nextProps = this._currentElement.props;
 
     var lastContent =
@@ -640,7 +640,7 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    */
-  unmountComponent: function () {
+  unmountComponent: function() {
     this.unmountChildren();
     ReactBrowserEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
@@ -661,7 +661,7 @@ assign(
 );
 
 ReactDOMComponent.injection = {
-  injectIDOperations: function (IDOperations) {
+  injectIDOperations: function(IDOperations) {
     ReactDOMComponent.BackendIDOperations = BackendIDOperations = IDOperations;
   }
 };
