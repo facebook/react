@@ -71,7 +71,7 @@ function getDOMNodeToFindDOMNode(file, api, options) {
       .size();
 
     // this.refs.xxx.getDOMNode() or this.refs.xxx.refs.yyy.getDOMNode()
-    sum += j(classPath)
+    j(classPath)
       .find(j.MemberExpression, {
         object: {
           type: 'MemberExpression',
@@ -87,16 +87,19 @@ function getDOMNodeToFindDOMNode(file, api, options) {
           },
         },
       })
-      .closest(j.CallExpression)
-      .filter(path => (
-        path.value.callee.property &&
-        path.value.callee.property.type === 'Identifier' &&
-        path.value.callee.property.name === 'getDOMNode'
-      ))
-      .forEach(path => j(path).replaceWith(
-        createReactFindDOMNodeCall(path.value.callee.object)
-      ))
-      .size();
+      .forEach(p => {
+        sum += j(p)
+          .closest(j.CallExpression)
+          .filter(path => (
+            path.value.callee.property &&
+            path.value.callee.property.type === 'Identifier' &&
+            path.value.callee.property.name === 'getDOMNode'
+          ))
+          .forEach(path => j(path).replaceWith(
+            createReactFindDOMNodeCall(path.value.callee.object)
+          ))
+          .size();
+      });
 
     // someVariable.getDOMNode() wherre `someVariable = this.refs.xxx`
     sum += j(classPath)
