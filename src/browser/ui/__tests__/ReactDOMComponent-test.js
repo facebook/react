@@ -724,6 +724,33 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('tag validation', function() {
+    var oldUnknownElement;
+
+    beforeEach(function() {
+      // Work around lack of HTMLUnknownElement in PhantomJS
+      oldUnknownElement = window.HTMLUnknownElement;
+      window.HTMLUnknownElement = window.HTMLParagraphElement;
+    });
+
+    afterEach(function() {
+      window.HTMLUnknownElement = oldUnknownElement;
+    });
+
+    it('warns on unrecognized tags', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<p/>);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.mostRecentCall.args[0]).toBe(
+        'Warning: The tag p is unrecognized in this browser. If you meant to ' +
+        'render a React component, start its name with an uppercase letter.'
+      );
+    });
+  });
+
   describe('nesting validation', function() {
     var React;
     var ReactTestUtils;

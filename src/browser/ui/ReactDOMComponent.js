@@ -23,6 +23,9 @@ var ReactComponentBrowserEnvironment =
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ExecutionEnvironment = require('ExecutionEnvironment');
+var createNodesFromMarkup = require('createNodesFromMarkup');
+var emptyFunction = require('emptyFunction');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -214,11 +217,22 @@ var voidElementTags = assign({
 var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
 var validatedTagCache = {};
 var hasOwnProperty = {}.hasOwnProperty;
+var unknownConstructor = ExecutionEnvironment.canUseDOM &&
+  (typeof window.HTMLGenericElement !== 'undefined' ?
+    window.HTMLGenericElement : window.HTMLUnknownElement);
 
 function validateDangerousTag(tag) {
   if (!hasOwnProperty.call(validatedTagCache, tag)) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
     validatedTagCache[tag] = true;
+  }
+  if (__DEV__ && unknownConstructor) {
+    var dummyElement = createNodesFromMarkup('<' + tag + '>', emptyFunction)[0];
+    warning(
+      !(dummyElement instanceof unknownConstructor),
+      'The tag ' + tag + ' is unrecognized in this browser. If you meant to ' +
+      'render a React component, start its name with an uppercase letter.'
+    );
   }
 }
 
