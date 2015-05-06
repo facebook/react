@@ -19,6 +19,7 @@ var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
+var isTextInputElement = require('isTextInputElement');
 
 var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
@@ -28,11 +29,19 @@ var input = ReactElement.createFactory('input');
 
 var instancesByReactID = {};
 
+
 function forceUpdateIfMounted() {
   /*jshint validthis:true */
   if (this.isMounted()) {
     this.forceUpdate();
   }
+}
+
+function isIeInputEvent(event) {
+  return ('documentMode' in document)
+      && document.documentMode > 9
+      && event.nativeEvent.type === 'input'
+      && isTextInputElement(event.target);
 }
 
 /**
@@ -57,8 +66,15 @@ var ReactDOMInput = ReactClass.createClass({
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
+  componentWillMount: function() {
+    var defaultValue = this.props.defaultValue;
+
+    this._uncontrolledValue = defaultValue != null ? '' + defaultValue : '';
+  },
+
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
+
     return {
       initialChecked: this.props.defaultChecked || false,
       initialValue: defaultValue != null ? defaultValue : null
@@ -115,6 +131,24 @@ var ReactDOMInput = ReactClass.createClass({
   _handleChange: function(event) {
     var returnValue;
     var onChange = LinkedValueUtils.getOnChange(this.props);
+
+    // IE 10+ fire input events when setting/unsetting a placeholder
+    // we guard against it by checking if the next and
+    // last values are both empty and bailing out of the change
+    // https://github.com/facebook/react/issues/3484
+    if ( isIeInputEvent(event) ) {
+      var controlledValue = LinkedValueUtils.getValue(this.props);
+      var lastValue = controlledValue != null ?
+        '' + controlledValue :
+        this._uncontrolledValue;
+
+      this._uncontrolledValue = event.target.value;
+
+      if ( event.target.value === '' && lastValue === '') {
+        return returnValue;
+      }
+    }
+
     if (onChange) {
       returnValue = onChange.call(this, event);
     }

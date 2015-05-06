@@ -34,6 +34,12 @@ function forceUpdateIfMounted() {
   }
 }
 
+function isIeInputEvent(event) {
+  return ('documentMode' in document)
+      && document.documentMode > 9
+      && event.nativeEvent.type === 'input';
+}
+
 /**
  * Implements a <textarea> native component that allows setting `value`, and
  * `defaultValue`. This differs from the traditional DOM API because value is
@@ -54,6 +60,12 @@ var ReactDOMTextarea = ReactClass.createClass({
   tagName: 'TEXTAREA',
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
+
+  componentWillMount: function() {
+    var defaultValue = this.props.defaultValue;
+
+    this._uncontrolledValue = defaultValue != null ? '' + defaultValue : '';
+  },
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
@@ -125,6 +137,24 @@ var ReactDOMTextarea = ReactClass.createClass({
   _handleChange: function(event) {
     var returnValue;
     var onChange = LinkedValueUtils.getOnChange(this.props);
+
+    // IE 10+ fire input events when setting/unsetting a placeholder
+    // we guard against it by checking if the next and
+    // last values are both empty and bailing out of the change
+    // https://github.com/facebook/react/issues/3484
+    if ( isIeInputEvent(event) ) {
+      var controlledValue = LinkedValueUtils.getValue(this.props);
+      var lastValue = controlledValue != null ?
+        '' + controlledValue :
+        this._uncontrolledValue;
+
+      this._uncontrolledValue = event.target.value;
+
+      if ( event.target.value === '' && lastValue === '') {
+        return returnValue;
+      }
+    }
+
     if (onChange) {
       returnValue = onChange.call(this, event);
     }
