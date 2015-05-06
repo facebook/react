@@ -794,10 +794,10 @@ describe('ReactDOMComponent', function() {
 
     it('support boolean update',function(){
       variable = true;
-      React.render(<select><option>{variable}$</option></select>, container);
-      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+      React.render(<select><option>{variable && '20'}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
       variable = false;
-      React.render(<select><option>{variable}$</option></select>, container);
+      React.render(<select><option>{variable && '20'}$</option></select>, container);
       expect(container.firstChild.firstChild.innerHTML).toEqual('$');
     });
 
