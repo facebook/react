@@ -18,13 +18,12 @@ var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactChildren = require('ReactChildren');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
-var ReactChildren = require('ReactChildren');
-var ReactElement = require('ReactElement');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -241,13 +240,12 @@ var onlyNestTextTags = {
 function getChildrenTextContent(tag, children) {
   var childrenContent = '';
   ReactChildren.forEach(children, function (c) {
-    if ("production" !== process.env.NODE_ENV) {
-      ("production" !== process.env.NODE_ENV ? warning(
-        !ReactElement.isValidElement(c),
-        tag + ' can not have nested tags'
-      ) : null);
+    var childType = typeof c;
+    if (childType !== 'string' && childType !== 'number' && childType !== 'boolean' && c != null) {
+      warning(false, '%s can not have complex children/content', tag);
+    } else {
+      childrenContent += c;
     }
-    childrenContent += c;
   });
   return childrenContent;
 }

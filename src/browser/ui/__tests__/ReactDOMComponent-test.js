@@ -782,5 +782,17 @@ describe('ReactDOMComponent', function() {
     variable = 20;
     React.render(<select><option>{variable}$</option></select>, container);
     expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+    variable = '20';
+    React.render(<select><option>{variable}$</option></select>, container);
+    expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+    variable = true;
+    React.render(<select><option>{variable}$</option></select>, container);
+    expect(container.firstChild.firstChild.innerHTML).toEqual('true$');
+    variable = null;
+    React.render(<select><option>{variable}$</option></select>, container);
+    expect(container.firstChild.firstChild.innerHTML).toEqual('null$');
+    variable = undefined;
+    React.render(<select><option>{variable}$</option></select>, container);
+    expect(container.firstChild.firstChild.innerHTML).toEqual('undefined$');
   });
 });
