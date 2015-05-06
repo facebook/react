@@ -241,7 +241,7 @@ function getChildrenTextContent(tag, children) {
   var childrenContent = '';
   ReactChildren.forEach(children, function (c) {
     var childType = typeof c;
-    if (childType !== 'string' && childType !== 'number' && childType !== 'boolean' && c != null) {
+    if (childType !== 'string' && childType !== 'number') {
       warning(false, '%s can not have complex children/content', tag);
     } else {
       childrenContent += c;

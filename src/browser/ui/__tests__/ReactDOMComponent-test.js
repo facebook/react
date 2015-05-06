@@ -775,24 +775,39 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  it('should update option content',()=>{
+  describe('option update', function(){
     var container = document.createElement('div');
     var variable = 10;
     React.render(<select><option>{variable}$</option></select>, container);
-    variable = 20;
-    React.render(<select><option>{variable}$</option></select>, container);
-    expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
-    variable = '20';
-    React.render(<select><option>{variable}$</option></select>, container);
-    expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
-    variable = true;
-    React.render(<select><option>{variable}$</option></select>, container);
-    expect(container.firstChild.firstChild.innerHTML).toEqual('true$');
-    variable = null;
-    React.render(<select><option>{variable}$</option></select>, container);
-    expect(container.firstChild.firstChild.innerHTML).toEqual('null$');
-    variable = undefined;
-    React.render(<select><option>{variable}$</option></select>, container);
-    expect(container.firstChild.firstChild.innerHTML).toEqual('undefined$');
+
+    it('support number update',function(){
+      variable = 20;
+      React.render(<select><option>{variable}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+    });
+
+    it('support string update',function(){
+      variable = '20';
+      React.render(<select><option>{variable}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+    });
+
+    it('support boolean update',function(){
+      variable = true;
+      React.render(<select><option>{variable}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+      variable = false;
+      React.render(<select><option>{variable}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+    });
+
+    it('support null/undefined update',function(){
+      variable = null;
+      React.render(<select><option>{variable}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+      variable = undefined;
+      React.render(<select><option>{variable}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+    });
   });
 });
