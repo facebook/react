@@ -688,6 +688,13 @@ var ReactMount = {
     var reactRootID = getReactRootID(container);
     var component = instancesByReactRootID[reactRootID];
     if (!component) {
+      if (__DEV__) {
+        warning(
+          !reactRootID,
+          'unmountComponentAtNode(...): Target container was not rendered by ' +
+          'current instance of React.'
+        );
+      }
       return false;
     }
     ReactUpdates.batchedUpdates(

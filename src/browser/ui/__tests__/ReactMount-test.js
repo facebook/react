@@ -47,6 +47,19 @@ describe('ReactMount', function() {
         'is not a DOM element.'
       );
     });
+
+    it('should warn if unmounting a component from another React', function() {
+      var container = document.createElement('div');
+      container.innerHTML = React.renderToString(<div />);
+      spyOn(console, 'error');
+
+      React.unmountComponentAtNode(container);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toContain(
+        'Target container was not rendered by current instance of React'
+      );
+    });
   });
 
   it('throws when given a string', function() {
