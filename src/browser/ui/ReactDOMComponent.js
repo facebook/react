@@ -482,7 +482,7 @@ ReactDOMComponent.Mixin = {
     var styleUpdates;
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
-        !lastProps.hasOwnProperty(propKey)) {
+         !lastProps.hasOwnProperty(propKey)) {
         continue;
       }
       if (propKey === STYLE) {
@@ -502,8 +502,8 @@ ReactDOMComponent.Mixin = {
           deleteListener(this._rootNodeID, propKey);
         }
       } else if (
-        DOMProperty.isStandardName[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)) {
+          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.isCustomAttribute(propKey)) {
         BackendIDOperations.deletePropertyByID(
           this._rootNodeID,
           propKey
@@ -536,7 +536,7 @@ ReactDOMComponent.Mixin = {
           // Unset styles on `lastProp` but not on `nextProp`.
           for (styleName in lastProp) {
             if (lastProp.hasOwnProperty(styleName) &&
-              (!nextProp || !nextProp.hasOwnProperty(styleName))) {
+                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = '';
             }
@@ -544,7 +544,7 @@ ReactDOMComponent.Mixin = {
           // Update styles that changed since `lastProp`.
           for (styleName in nextProp) {
             if (nextProp.hasOwnProperty(styleName) &&
-              lastProp[styleName] !== nextProp[styleName]) {
+                lastProp[styleName] !== nextProp[styleName]) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = nextProp[styleName];
             }
@@ -560,8 +560,8 @@ ReactDOMComponent.Mixin = {
           deleteListener(this._rootNodeID, propKey);
         }
       } else if (
-        DOMProperty.isStandardName[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)) {
+          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.isCustomAttribute(propKey)) {
         BackendIDOperations.updatePropertyByID(
           this._rootNodeID,
           propKey,
