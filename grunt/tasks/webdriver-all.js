@@ -80,17 +80,17 @@ module.exports = function task(getJSReport) {
       return browser.quit();
     })
     .done(
-    function() {
-      if (config.onComplete) {
-        config.onComplete(results);
+      function() {
+        if (config.onComplete) {
+          config.onComplete(results);
+        }
+        taskSucceeded(true);
+      },
+      function(error) {
+        if (config.onError) {
+          config.onError(error);
+        }
+        taskSucceeded(false);
       }
-      taskSucceeded(true);
-    },
-    function(error) {
-      if (config.onError) {
-        config.onError(error);
-      }
-      taskSucceeded(false);
-    }
-  );
+    );
 };
