@@ -9,6 +9,8 @@
  * @providesModule requestAnimationFrame
  */
 
+'use strict';
+
 var emptyFunction = require('emptyFunction');
 var nativeRequestAnimationFrame = require('nativeRequestAnimationFrame');
 

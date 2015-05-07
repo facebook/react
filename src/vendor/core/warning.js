@@ -9,7 +9,7 @@
  * @providesModule warning
  */
 
-"use strict";
+'use strict';
 
 var emptyFunction = require('emptyFunction');
 

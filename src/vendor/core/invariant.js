@@ -9,7 +9,7 @@
  * @providesModule invariant
  */
 
-"use strict";
+'use strict';
 
 /**
  * Use invariant() to assert state which your program assumes to be true.

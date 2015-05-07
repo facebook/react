@@ -10,6 +10,8 @@
  * @typechecks
  */
 
+'use strict';
+
 var _uppercasePattern = /([A-Z])/g;
 
 /**

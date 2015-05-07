@@ -10,6 +10,8 @@
  * @typechecks
  */
 
+'use strict';
+
 var isNode = require('isNode');
 
 /**
@@ -17,7 +19,7 @@ var isNode = require('isNode');
  * @return {boolean} Whether or not the object is a DOM text node.
  */
 function isTextNode(object) {
-  return isNode(object) && object.nodeType == 3;
+  return isNode(object) && object.nodeType === 3;
 }
 
 module.exports = isTextNode;

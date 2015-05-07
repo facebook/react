@@ -7,7 +7,10 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule keyOf
+ * @typechecks static-only
  */
+
+'use strict';
 
 /**
  * Allows extraction of a minified key. Let's the build system minify keys
@@ -18,6 +21,9 @@
  * have aliased that key to be 'xa12'. keyOf({className: null}) will return
  * 'xa12' in that case. Resolve keys you want to use once at startup time, then
  * reuse those resolutions.
+ *
+ * @param {object} oneKeyObj
+ * @return {?string}
  */
 var keyOf = function(oneKeyObj) {
   var key;

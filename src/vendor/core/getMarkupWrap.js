@@ -9,6 +9,8 @@
  * @providesModule getMarkupWrap
  */
 
+'use strict';
+
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var invariant = require('invariant');

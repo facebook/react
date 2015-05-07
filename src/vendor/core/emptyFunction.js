@@ -9,6 +9,8 @@
  * @providesModule emptyFunction
  */
 
+'use strict';
+
 function makeEmptyFunction(arg) {
   return function() {
     return arg;

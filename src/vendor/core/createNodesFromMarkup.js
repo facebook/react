@@ -10,6 +10,8 @@
  * @typechecks
  */
 
+'use strict';
+
 /*jslint evil: true, sub: true */
 
 var ExecutionEnvironment = require('ExecutionEnvironment');

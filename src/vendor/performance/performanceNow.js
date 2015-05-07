@@ -10,6 +10,8 @@
  * @typechecks
  */
 
+'use strict';
+
 var performance = require('performance');
 
 /**

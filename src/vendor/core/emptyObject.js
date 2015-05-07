@@ -9,7 +9,7 @@
  * @providesModule emptyObject
  */
 
-"use strict";
+'use strict';
 
 var emptyObject = {};
 

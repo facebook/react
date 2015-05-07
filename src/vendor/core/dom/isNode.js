@@ -10,6 +10,8 @@
  * @typechecks
  */
 
+'use strict';
+
 /**
  * @param {*} object The object to check.
  * @return {boolean} Whether or not the object is a DOM node.

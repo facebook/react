@@ -10,6 +10,8 @@
  * @typechecks
  */
 
+'use strict';
+
 var isTextNode = require('isTextNode');
 
 /*jslint bitwise:true */

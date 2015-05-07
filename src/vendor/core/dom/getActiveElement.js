@@ -10,6 +10,8 @@
  * @typechecks
  */
 
+'use strict';
+
 /**
  * Same as document.activeElement but wraps in a try-catch block. In IE it is
  * not safe to call document.activeElement if there is nothing focused.

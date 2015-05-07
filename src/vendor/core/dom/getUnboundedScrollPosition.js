@@ -10,7 +10,7 @@
  * @typechecks
  */
 
-"use strict";
+'use strict';
 
 /**
  * Gets the scroll position of the supplied element or window.
