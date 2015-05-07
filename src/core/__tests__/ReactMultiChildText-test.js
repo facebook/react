@@ -210,7 +210,7 @@ describe('ReactMultiChildText', function() {
   it('should throw if rendering both HTML and children', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{_html: 'abcdef'}}>ghjkl</div>
+        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>
       );
     }).toThrow();
   });
