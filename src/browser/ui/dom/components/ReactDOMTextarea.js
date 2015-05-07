@@ -18,6 +18,7 @@ var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactUpdates = require('ReactUpdates');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
@@ -26,6 +27,11 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 var textarea = ReactElement.createFactory('textarea');
+var hasNoisyInputEvent = false;
+
+if (ExecutionEnvironment.canUseDOM) {
+  hasNoisyInputEvent = 'documentMode' in document && document.documentMode > 9;
+}
 
 function forceUpdateIfMounted() {
   /*jshint validthis:true */
@@ -34,10 +40,11 @@ function forceUpdateIfMounted() {
   }
 }
 
-function isIeInputEvent(event) {
-  return ('documentMode' in document)
-      && document.documentMode > 9
-      && event.nativeEvent.type === 'input';
+function isIEInputEvent(event) {
+  return (
+    hasNoisyInputEvent &&
+    event.nativeEvent.type === 'input'
+  );
 }
 
 /**
@@ -142,7 +149,7 @@ var ReactDOMTextarea = ReactClass.createClass({
     // we guard against it by checking if the next and
     // last values are both empty and bailing out of the change
     // https://github.com/facebook/react/issues/3484
-    if ( isIeInputEvent(event) ) {
+    if (isIEInputEvent(event)) {
       var controlledValue = LinkedValueUtils.getValue(this.props);
       var lastValue = controlledValue != null ?
         '' + controlledValue :

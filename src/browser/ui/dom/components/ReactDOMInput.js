@@ -19,6 +19,7 @@ var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var isTextInputElement = require('isTextInputElement');
 
 var assign = require('Object.assign');
@@ -28,7 +29,11 @@ var invariant = require('invariant');
 var input = ReactElement.createFactory('input');
 
 var instancesByReactID = {};
+var hasNoisyInputEvent = false;
 
+if (ExecutionEnvironment.canUseDOM) {
+  hasNoisyInputEvent = 'documentMode' in document && document.documentMode > 9;
+}
 
 function forceUpdateIfMounted() {
   /*jshint validthis:true */
@@ -37,11 +42,13 @@ function forceUpdateIfMounted() {
   }
 }
 
-function isIeInputEvent(event) {
-  return ('documentMode' in document)
-      && document.documentMode > 9
-      && event.nativeEvent.type === 'input'
-      && isTextInputElement(event.target);
+
+function isIEInputEvent(event) {
+  return (
+    hasNoisyInputEvent &&
+    event.nativeEvent.type === 'input' &&
+    isTextInputElement(event.target)
+  );
 }
 
 /**
@@ -136,7 +143,7 @@ var ReactDOMInput = ReactClass.createClass({
     // we guard against it by checking if the next and
     // last values are both empty and bailing out of the change
     // https://github.com/facebook/react/issues/3484
-    if ( isIeInputEvent(event) ) {
+    if (isIEInputEvent(event)) {
       var controlledValue = LinkedValueUtils.getValue(this.props);
       var lastValue = controlledValue != null ?
         '' + controlledValue :
