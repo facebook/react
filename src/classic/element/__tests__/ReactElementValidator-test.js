@@ -148,7 +148,7 @@ describe('ReactElementValidator', function() {
 
     var children = [f, g];
 
-    return (
+    ReactTestUtils.renderIntoDocument(
       <div>
         <div key="0">
           {g}
