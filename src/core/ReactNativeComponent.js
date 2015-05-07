@@ -16,7 +16,7 @@ var invariant = require('invariant');
 
 var autoGenerateWrapperClass = null;
 var genericComponentClass = null;
-// This registry keeps track of wrapper classes around native tags
+// This registry keeps track of wrapper classes around native tags.
 var tagToComponentClass = {};
 var textComponentClass = null;
 
