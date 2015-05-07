@@ -444,8 +444,8 @@ describe('ReactDOMComponent', function() {
 
       React.render(<menu><menuitem>children</menuitem></menu>, container);
 
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
+      expect(console.error.mostRecentCall.args.length).toBe(1);
+      expect(console.error.mostRecentCall.args[0]).toContain('void element');
     });
 
     it("should validate against multiple children props", function() {
