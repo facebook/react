@@ -29,6 +29,7 @@ var isUnitlessNumber = {
   opacity: true,
   order: true,
   orphans: true,
+  tabSize: true,
   widows: true,
   zIndex: true,
   zoom: true,
