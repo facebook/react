@@ -10,8 +10,6 @@
  * @typechecks static-only
  */
 
-/*jslint bitwise: true */
-
 'use strict';
 
 var invariant = require('invariant');
