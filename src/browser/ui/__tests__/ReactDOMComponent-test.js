@@ -722,6 +722,20 @@ describe('ReactDOMComponent', function() {
         'Invariant Violation: Invalid tag: div><img /><div'
       );
     });
+
+    it('should warn if the tag is unrecognized in the browser', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+      var hackzor = React.createElement('mycomponent');
+      spyOn(console, 'error');
+
+      ReactTestUtils.renderIntoDocument(hackzor)
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toContain(
+        'The `mycomponent` tag is unrecognized in this browser'
+      );
+    });
   });
 
   describe('nesting validation', function() {
