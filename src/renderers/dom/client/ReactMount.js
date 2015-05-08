@@ -524,6 +524,26 @@ var ReactMount = {
       )
     );
 
+    var containerOwnerDocument = null;
+    if (container) {
+      if (container.nodeType === DOC_NODE_TYPE) {
+        containerOwnerDocument = container;
+      }
+      if (container.nodeType === ELEMENT_NODE_TYPE ||
+        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE) {
+        containerOwnerDocument = container.ownerDocument;
+      }
+    }
+
+    warning(
+      containerOwnerDocument && containerOwnerDocument.body,
+      'render(): Rendering components before document.body is accessible is ' +
+      'discouraged. This is probably occuring because you called ' +
+      'React.render before the <head> closing tag. Try to put the script ' +
+      'calling this method before the <body> closing tag, or after ' +
+      'the "DOMContentReady" event.'
+    );
+
     warning(
       container && container.tagName && container.tagName.toUpperCase() !== 'BODY',
       'render(): Rendering components directly into document.body is ' +
