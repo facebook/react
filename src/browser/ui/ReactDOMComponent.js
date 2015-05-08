@@ -23,6 +23,7 @@ var ReactComponentBrowserEnvironment =
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -215,9 +216,30 @@ var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
 var validatedTagCache = {};
 var hasOwnProperty = {}.hasOwnProperty;
 
+function isBrowserKnownElement(tag) {
+  if(ExecutionEnvironment.canUseDOM) {
+    // IE8 uses `HTMLGenericElement` as `HTMLUnknownElement`
+    var UnknownConstructor =
+      window.HTMLGenericElement || window.HTMLUnknownElement
+    return !(document.createElement(tag) instanceof UnknownConstructor)
+  }
+  // If we are rendering on the server, always return true as there is no
+  // way to check.
+  return true
+}
+
 function validateDangerousTag(tag) {
   if (!hasOwnProperty.call(validatedTagCache, tag)) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    if(__DEV__) {
+      warning(
+        isBrowserKnownElement(tag),
+        'The `%s` tag is unrecognized in this browser. If you meant ' +
+        'to render a React component, start its name with an uppercase ' +
+        'letter.',
+        tag
+      )
+    }
     validatedTagCache[tag] = true;
   }
 }
