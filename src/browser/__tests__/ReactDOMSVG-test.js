@@ -14,19 +14,11 @@
 'use strict';
 
 var React;
-var ReactTestUtils;
-
-var SVGDOMNamespaces = {
-  xlink: 'http://www.w3.org/1999/xlink',
-  xml: 'http://www.w3.org/XML/1998/namespace',
-  xmlns: 'http://www.w3.org/2000/xmlns/'
-};
 
 describe('ReactDOMSVG', function() {
 
   beforeEach(function() {
     React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
   });
 
   it('creates initial namespaced markup', function() {
