@@ -111,8 +111,11 @@ var ReactTestUtils = {
       // this returns when we have DOM nodes as refs directly
       return false;
     }
-    return typeof inst.render === 'function' &&
-           typeof inst.setState === 'function';
+    return (
+      !!inst &&
+      typeof inst.render === 'function' &&
+      typeof inst.setState === 'function'
+    );
   },
 
   isCompositeComponentWithType: function(inst, type) {
