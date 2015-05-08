@@ -877,4 +877,69 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  it('should replace state', function() {
+    var Moo = React.createClass({
+      getInitialState: function() {
+        return {x: 1};
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var moo = ReactTestUtils.renderIntoDocument(<Moo />);
+    moo.replaceState({y: 2});
+    expect('x' in moo.state).toBe(false);
+    expect(moo.state.y).toBe(2);
+  });
+
+  it('should support objects with prototypes as state', function() {
+    var NotActuallyImmutable = function(str) {
+      this.str = str;
+    };
+    NotActuallyImmutable.prototype.amIImmutable = function() {
+      return true;
+    };
+    var Moo = React.createClass({
+      getInitialState: function() {
+        return new NotActuallyImmutable('first');
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var moo = ReactTestUtils.renderIntoDocument(<Moo />);
+    expect(moo.state.str).toBe('first');
+    expect(moo.state.amIImmutable()).toBe(true);
+
+    var secondState = new NotActuallyImmutable('second');
+    moo.replaceState(secondState);
+    expect(moo.state.str).toBe('second');
+    expect(moo.state.amIImmutable()).toBe(true);
+    expect(moo.state).toBe(secondState);
+
+    moo.setState({str: 'third'});
+    expect(moo.state.str).toBe('third');
+    // Here we lose the prototype.
+    expect(moo.state.amIImmutable).toBe(undefined);
+
+    // When more than one state update is enqueued, we have the same behavior
+    var fifthState = new NotActuallyImmutable('fifth');
+    ReactUpdates.batchedUpdates(function() {
+      moo.setState({str: 'fourth'});
+      moo.replaceState(fifthState);
+    });
+    expect(moo.state).toBe(fifthState);
+
+    // When more than one state update is enqueued, we have the same behavior
+    var sixthState = new NotActuallyImmutable('sixth');
+    ReactUpdates.batchedUpdates(function() {
+      moo.replaceState(sixthState);
+      moo.setState({str: 'seventh'});
+    });
+    expect(moo.state.str).toBe('seventh');
+    expect(moo.state.amIImmutable).toBe(undefined);
+  });
+
 });
