@@ -7,6 +7,47 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.13.3</title>
+				<description>&lt;p&gt;Today we&amp;#39;re sharing another patch release in the v0.13 branch. There are only a few small changes, with a couple to address some issues that arose around that undocumented feature so many of you are already using: &lt;code&gt;context&lt;/code&gt;. We also improved developer ergonomics just a little bit, making some warnings better.&lt;/p&gt;
+
+&lt;p&gt;The release is now available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.3.js&quot;&gt;https://fb.me/react-0.13.3.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.3.min.js&quot;&gt;https://fb.me/react-0.13.3.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.3.js&quot;&gt;https://fb.me/react-with-addons-0.13.3.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.3.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.3.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.3.js&quot;&gt;https://fb.me/JSXTransformer-0.13.3.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.3&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Added &lt;code&gt;clipPath&lt;/code&gt; element and attribute for SVG&lt;/li&gt;
+&lt;li&gt;Improved warnings for deprecated methods in plain JS classes&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Loosened &lt;code&gt;dangerouslySetInnerHTML&lt;/code&gt; restrictions so &lt;code&gt;{__html: undefined}&lt;/code&gt; will no longer throw&lt;/li&gt;
+&lt;li&gt;Fixed extraneous context warning with non-pure &lt;code&gt;getChildContext&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Ensure &lt;code&gt;replaceState(obj)&lt;/code&gt; retains prototype of &lt;code&gt;obj&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-add-ons&quot;&gt;&lt;/a&gt;React with Add-ons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-add-ons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Test Utils: Ensure that shallow rendering works when components define &lt;code&gt;contextTypes&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-05-08T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/05/08/react-v0.13.3.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/05/08/react-v0.13.3.html</guid>
+			</item>
+		
+			<item>
 				<title>GraphQL Introduction</title>
 				<description>&lt;p&gt;At the React.js conference in late January 2015, we revealed our next major technology in the React family: &lt;a href=&quot;http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html&quot;&gt;Relay&lt;/a&gt;. &lt;/p&gt;
 
@@ -636,62 +677,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 				<pubDate>2015-03-04T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.13 RC2</title>
-				<description>&lt;p&gt;Thanks to everybody who has already been testing the release candidate. We&amp;#39;ve received some good feedback and as a result we&amp;#39;re going to do a second release candidate. The changes are minimal. We haven&amp;#39;t changed the behavior of any APIs we exposed in the previous release candidate. Here&amp;#39;s a summary of the changes:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Introduced a new API (&lt;code&gt;React.cloneElement&lt;/code&gt;, see below for details).&lt;/li&gt;
-&lt;li&gt;Fixed a bug related to validating &lt;code&gt;propTypes&lt;/code&gt; when using the new &lt;code&gt;React.addons.createFragment&lt;/code&gt; API.&lt;/li&gt;
-&lt;li&gt;Improved a couple warning messages.&lt;/li&gt;
-&lt;li&gt;Upgraded jstransform and esprima.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;The release candidate is available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.0-rc2.js&quot;&gt;https://fb.me/react-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.0-rc2.min.js&quot;&gt;https://fb.me/react-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc2.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0-rc2.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.0-rc2.js&quot;&gt;https://fb.me/JSXTransformer-0.13.0-rc2.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0-rc2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react.cloneelement&quot;&gt;&lt;/a&gt;React.cloneElement &lt;a class=&quot;hash-link&quot; href=&quot;#react.cloneelement&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;In React v0.13 RC2 we will introduce a new API, similar to &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt;, with this signature:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cloneElement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Unlike &lt;code&gt;cloneWithProps&lt;/code&gt;, this new function does not have any magic built-in behavior for merging &lt;code&gt;style&lt;/code&gt; and &lt;code&gt;className&lt;/code&gt; for the same reason we don&amp;#39;t have that feature from &lt;code&gt;transferPropsTo&lt;/code&gt;. Nobody is sure what exactly the complete list of magic things are, which makes it difficult to reason about the code and difficult to reuse when &lt;code&gt;style&lt;/code&gt; has a different signature (e.g. in the upcoming React Native).&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;React.cloneElement&lt;/code&gt; is &lt;em&gt;almost&lt;/em&gt; equivalent to:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/element.type&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;However, unlike JSX and &lt;code&gt;cloneWithProps&lt;/code&gt;, it also preserves &lt;code&gt;ref&lt;/code&gt;s. This means that if you get a child with a &lt;code&gt;ref&lt;/code&gt; on it, you won&amp;#39;t accidentally steal it from your ancestor. You will get the same &lt;code&gt;ref&lt;/code&gt; attached to your new element.&lt;/p&gt;
-
-&lt;p&gt;One common pattern is to map over your children and add a new prop. There were many issues reported about &lt;code&gt;cloneWithProps&lt;/code&gt; losing the ref, making it harder to reason about your code. Now following the same pattern with &lt;code&gt;cloneElement&lt;/code&gt; will work as expected. For example:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;newChildren&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;child&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cloneElement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;child&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Note: &lt;code&gt;React.cloneElement(child, { ref: &amp;#39;newRef&amp;#39; })&lt;/code&gt; &lt;em&gt;DOES&lt;/em&gt; override the &lt;code&gt;ref&lt;/code&gt; so it is still not possible for two parents to have a ref to the same child, unless you use callback-refs.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;This was a critical feature to get into React 0.13 since props are now immutable. The upgrade path is often to clone the element, but by doing so you might lose the &lt;code&gt;ref&lt;/code&gt;. Therefore, we needed a nicer upgrade path here. As we were upgrading callsites at Facebook we realized that we needed this method. We got the same feedback from the community. Therefore we decided to make another RC before the final release to make sure we get this in.&lt;/p&gt;
-
-&lt;p&gt;We plan to eventually deprecate &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt;. We&amp;#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using &lt;code&gt;React.cloneElement&lt;/code&gt; instead. We&amp;#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.&lt;/p&gt;
-</description>
-				<pubDate>2015-03-03T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</guid>
 			</item>
 		
 	</channel>
