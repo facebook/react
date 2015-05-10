@@ -249,7 +249,7 @@ All we're doing here is calling the marked library. We need to convert `this.pro
 
 But there's a problem! Our rendered comments look like this in the browser: "`<p>`This is `<em>`another`</em>` comment`</p>`". We want those tags to actually render as HTML.
 
-That's React protecting you from an XSS attack. There's a way to get around it but the framework warns you not to use it:
+That's React protecting you from an [XSS attack](http://en.wikipedia.org/wiki/Cross-site_scripting). There's a way to get around it but the framework warns you not to use it:
 
 ```javascript{4,10}
 // tutorial7.js
