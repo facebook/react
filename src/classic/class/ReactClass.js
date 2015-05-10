@@ -893,7 +893,7 @@ var ReactClass = {
     }
 
     invariant(
-      Constructor.prototype.render,
+      'render' in Constructor.prototype,
       'createClass(...): Class specification must implement a `render` method.'
     );
 
