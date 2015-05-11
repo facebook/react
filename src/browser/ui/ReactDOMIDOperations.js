@@ -10,8 +10,6 @@
  * @typechecks static-only
  */
 
-/*jslint evil: true */
-
 'use strict';
 
 var CSSPropertyOperations = require('CSSPropertyOperations');

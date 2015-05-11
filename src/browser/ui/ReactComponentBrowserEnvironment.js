@@ -9,8 +9,6 @@
  * @providesModule ReactComponentBrowserEnvironment
  */
 
-/*jslint evil: true */
-
 'use strict';
 
 var ReactDOMIDOperations = require('ReactDOMIDOperations');

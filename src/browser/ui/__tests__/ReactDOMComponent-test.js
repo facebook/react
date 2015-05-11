@@ -9,8 +9,6 @@
  * @emails react-core
  */
 
-/*jslint evil: true */
-
 'use strict';
 
 var assign = require('Object.assign');
