@@ -146,12 +146,14 @@ describe('ReactMount', function() {
 
   it('should warn when mounting before document.body is accessible', function () {
     var iFrame = document.createElement('iframe');
+    /*eslint-disable no-script-url */
     iFrame.src = 'javascript:void 0;';
+    /*eslint-enable no-script-url */
     document.body.appendChild(iFrame);
     spyOn(console, 'error');
     iFrame.contentDocument.write('<!DOCTYPE html><html><head>');
 
-    ReactMount.render(<div />, iFrame.contentDocument.createElement("div"));
+    ReactMount.render(<div />, iFrame.contentDocument.createElement('div'));
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
