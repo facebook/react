@@ -440,7 +440,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>This works really well and it&#39;s very clear how data is flowing, however with a lot of form fields it could get a bit verbose. Let&#39;s use <code>ReactLink</code> to save us some typing:</p>
+<p>This works really well and it&#39;s very clear how data is flowing, however, with a lot of form fields it could get a bit verbose. Let&#39;s use <code>ReactLink</code> to save us some typing:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
 </span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

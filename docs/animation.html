@@ -491,7 +491,7 @@
 </span>    <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="animating-one-or-zero-items"></a>Animating One or Zero Items <a class="hash-link" href="#animating-one-or-zero-items">#</a></h3>
-<p>Although in the example above we rendered a list of items into <code>ReactCSSTransitionGroup</code>, the children of <code>ReactCSSTransitionGroup</code> can be one or zero items. This makes it possible to animate a single element entering or leaving. Similarly, you can animate a new element replacing the current element, with the new element animating in while the current animates out. For example, we can implement a simple image carousel like this:</p>
+<p>In the example above, we rendered a list of items into <code>ReactCSSTransitionGroup</code>. However, the children of <code>ReactCSSTransitionGroup</code> can also be one or zero items. This makes it possible to animate a single element entering or leaving. Similarly, you can animate a new element replacing the current element. For example, we can implement a simple image carousel like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">ImageCarousel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>

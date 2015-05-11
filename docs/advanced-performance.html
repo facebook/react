@@ -432,7 +432,7 @@
 <p>For C1 and C3 <code>shouldComponentUpdate</code> returned <code>true</code>, so React had to go down to the leaves and check them. For C6 it returned <code>true</code>; since the virtual DOMs weren&#39;t equivalent it had to reconcile the DOM.
 The last interesting case is C8. For this node React had to compute the virtual DOM, but since it was equal to the old one, it didn&#39;t have to reconcile it&#39;s DOM.</p>
 
-<p>Note that React only had to do DOM mutations for C6, which was inevitable. For C8 it bailed out by comparing the virtual DOMs, and for C2&#39;s subtree and C7, it didn&#39;t even have to compute the virtual DOM as we bailed out on <code>shouldComponentUpdate</code>.</p>
+<p>Note that React only had to do DOM mutations for C6, which was inevitable. For C8, it bailed out by comparing the virtual DOMs, and for C2&#39;s subtree and C7, it didn&#39;t even have to compute the virtual DOM as we bailed out on <code>shouldComponentUpdate</code>.</p>
 
 <p>So, how should we implement <code>shouldComponentUpdate</code>? Say that you have a component that just renders a string value:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -469,12 +469,12 @@ The last interesting case is C8. For this node React had to compute the virtual 
 <span class="c1">// but this reference is different to this.props.value</span>
 <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span> <span class="o">!==</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span> <span class="c1">// true</span>
 </code></pre></div>
-<p>The problem is <code>shouldComponentUpdate</code> will return <code>true</code> when the prop actually didn&#39;t change. To fix this we could come up with this alternative implementation:</p>
+<p>The problem is <code>shouldComponentUpdate</code> will return <code>true</code> when the prop actually didn&#39;t change. To fix this, we could come up with this alternative implementation:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">foo</span> <span class="o">!==</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">foo</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Basically, we ended up doing a deep comparison to make sure we properly track changes. This approach is pretty expensive in terms of performance and it doesn&#39;t scale as we would have to write different deep equality code for each model. On top of that, it might not even work if we don&#39;t carefully manage object references. Say this component is used by a parent:</p>
+<p>Basically, we ended up doing a deep comparison to make sure we properly track changes. In terms of performance, this approach is pretty expensive. It doesn&#39;t scale as we would have to write different deep equality code for each model. On top of that, it might not even work if we don&#39;t carefully manage object references. Say this component is used by a parent:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span> <span class="nx">value</span><span class="o">:</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;bar&#39;</span> <span class="p">}</span> <span class="p">};</span>
@@ -496,7 +496,7 @@ The last interesting case is C8. For this node React had to compute the virtual 
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>The first time the inner component gets rendered it will have <code>{ foo: &#39;bar&#39; }</code> as the value prop. If the user clicks on the anchor, the parent component&#39;s state will get updated to <code>{ value: { foo: &#39;barbar&#39; } }</code>, triggering the re-rendering process of the inner component, which will receive <code>{ foo: &#39;barbar&#39; }</code> as the new value for the prop.</p>
+<p>The first time the inner component gets rendered, it will have <code>{ foo: &#39;bar&#39; }</code> as the value prop. If the user clicks on the anchor, the parent component&#39;s state will get updated to <code>{ value: { foo: &#39;barbar&#39; } }</code>, triggering the re-rendering process of the inner component, which will receive <code>{ foo: &#39;barbar&#39; }</code> as the new value for the prop.</p>
 
 <p>The problem is that since the parent and inner components share a reference to the same object, when the object gets mutated on line 2 of the <code>onClick</code> function, the prop the inner component had will change. So, when the re-rendering process starts, and <code>shouldComponentUpdate</code> gets invoked, <code>this.props.value.foo</code> will be equal to <code>nextProps.value.foo</code>, because in fact, <code>this.props.value</code> references the same object as <code>nextProps.value</code>.</p>
 
@@ -543,7 +543,7 @@ The last interesting case is C8. For this node React had to compute the virtual 
   <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>The object the <code>Record</code> function receives defines the fields the object has and their default values.</p>
+<p>The <code>Record</code> function receives an object that defines the fields the object has and its default values.</p>
 
 <p>The messages <em>store</em> could keep track of the users and messages using two lists:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">users</span> <span class="o">=</span> <span class="nx">Immutable</span><span class="p">.</span><span class="nx">List</span><span class="p">();</span>
@@ -556,7 +556,7 @@ The last interesting case is C8. For this node React had to compute the virtual 
   <span class="nx">text</span><span class="o">:</span> <span class="nx">payload</span><span class="p">.</span><span class="nx">text</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Note that since the data structures are immutable, we need to assign the result of the push function to this.messages.</p>
+<p>Note that since the data structures are immutable, we need to assign the result of the push function to <code>this.messages</code>.</p>
 
 <p>On the React side, if we also use immutable-js data structures to hold the components&#39; state, we could mix <code>PureRenderMixin</code> into all our components and short circuit the re-rendering process.</p>
 

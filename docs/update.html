@@ -406,7 +406,7 @@
 
     <p>React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it&#39;s easy to implement a fast <code>shouldComponentUpdate()</code> method to significantly speed up your app.</p>
 
-<p>Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like <a href="http://clojure.org/">Clojure</a>. However, we&#39;ve provided a simple immutability helper, <code>update()</code>, that makes dealing with this type of data much easier, <em>without</em> fundamentally changing how your data is represented.</p>
+<p>Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like <a href="http://clojure.org/">Clojure</a>. However, we&#39;ve provided a simple immutability helper, <code>update()</code>, that makes dealing with this type of data much easier, <em>without</em> fundamentally changing how your data is represented. You can also take a look at Facebook&#39;s <a href="https://facebook.github.io/immutable-js/docs/">Immutable-js</a> and the <a href="react/docs/advanced-performance.html">Advanced Performance</a> section for more detail on Immutable-js.</p>
 <h2><a class="anchor" name="the-main-idea"></a>The main idea <a class="hash-link" href="#the-main-idea">#</a></h2>
 <p>If you mutate data like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>

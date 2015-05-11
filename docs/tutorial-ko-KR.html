@@ -541,7 +541,7 @@
 </code></pre></div>
 <p>방금 만든 컴포넌트들을 어떻게 HTML 태그들과 섞어 사용하는지 살펴보세요. HTML 컴포넌트들도 한가지 차이만 제외한다면 우리가 정의한 것과 같은 표준적인 React 컴포넌트입니다. JSX 컴파일러가 자동으로 HTML 태그들을 <code>React.createElement(tagName)</code> 표현식으로 재작성하고 나머지는 그대로 둘 것입니다. 이는 전역 네임스페이스가 오염되는 것을 막아줍니다.</p>
 <h3><a class="anchor" name="props-"></a>props 사용하기 <a class="hash-link" href="#props-">#</a></h3>
-<p>부모로 부터 받은 데이터에 의존하는 <code>Comment</code> 컴포넌트를 만들어 봅시다. 부모 컴포넌트로 부터 받은 데이터는 자식 컴포넌트에서 &#39;프로퍼티&#39;로 사용가능 합니다.  이 &#39;프로퍼티들&#39;은 <code>this.props</code>를 통해 접근합니다.  props를 사용해 <code>CommentList</code>에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.</p>
+<p>부모로 부터 받은 데이터에 의존하는 <code>Comment</code> 컴포넌트를 만들어 봅시다. 부모 컴포넌트로 부터 받은 데이터는 자식 컴포넌트에서 &#39;프로퍼티&#39;로 사용가능 합니다.  이 &#39;프로퍼티들&#39;은 <code>this.props</code>를 통해 접근합니다.  props를 사용해, <code>CommentList</code>에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial4.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -581,7 +581,7 @@
   <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/JSXTransformer-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://code.jquery.com/jquery-1.10.0.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://code.jquery.com/jquery-2.1.3.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>

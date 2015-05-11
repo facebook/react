@@ -418,7 +418,7 @@
 <p>It&#39;s also possible to pass a function with the signature <code>function(state, props)</code>. This can be useful in some cases when you want to enqueue an atomic update that consults the previous value of state+props before setting any values.  For instance, suppose we wanted to increment a value in state: </p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">previousState</span><span class="p">,</span> <span class="nx">currentProps</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">{</span><span class="nx">myInteger</span><span class="o">:</span> <span class="nx">previousState</span><span class="p">.</span><span class="nx">myInteger</span> <span class="o">+</span> <span class="mi">1</span><span class="p">};</span>
-<span class="p">});</span><span class="err">`</span>
+<span class="p">});</span>
 </code></pre></div>
 <p>The second (optional) parameter is a callback function that will be executed once <code>setState</code> is completed and the component is re-rendered.</p>
 

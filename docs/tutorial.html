@@ -604,7 +604,7 @@
 
 <p>But there&#39;s a problem! Our rendered comments look like this in the browser: &quot;<code>&lt;p&gt;</code>This is <code>&lt;em&gt;</code>another<code>&lt;/em&gt;</code> comment<code>&lt;/p&gt;</code>&quot;. We want those tags to actually render as HTML.</p>
 
-<p>That&#39;s React protecting you from an XSS attack. There&#39;s a way to get around it but the framework warns you not to use it:</p>
+<p>That&#39;s React protecting you from an <a href="http://en.wikipedia.org/wiki/Cross-site_scripting">XSS attack</a>. There&#39;s a way to get around it but the framework warns you not to use it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -680,7 +680,7 @@
 </code></pre></div>
 <p>This component is different from the prior components because it will have to re-render itself. The component won&#39;t have any data until the request from the server comes back, at which point the component may need to render some new comments.</p>
 <h3><a class="anchor" name="reactive-state"></a>Reactive state <a class="hash-link" href="#reactive-state">#</a></h3>
-<p>So far, each component has rendered itself once based on its props. <code>props</code> are immutable: they are passed from the parent and are &quot;owned&quot; by the parent. To implement interactions, we introduce mutable <strong>state</strong> to the component. <code>this.state</code> is private to the component and can be changed by calling <code>this.setState()</code>. When the state is updated, the component re-renders itself.</p>
+<p>So far, based on its props, each component has rendered itself once. <code>props</code> are immutable: they are passed from the parent and are &quot;owned&quot; by the parent. To implement interactions, we introduce mutable <strong>state</strong> to the component. <code>this.state</code> is private to the component and can be changed by calling <code>this.setState()</code>. When the state updates, the component re-renders itself.</p>
 
 <p><code>render()</code> methods are written declaratively as functions of <code>this.props</code> and <code>this.state</code>. The framework guarantees the UI is always consistent with the inputs.</p>
 

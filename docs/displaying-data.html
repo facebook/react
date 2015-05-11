@@ -449,7 +449,7 @@
 
 <p>The inputs to this component are called <code>props</code> — short for &quot;properties&quot;. They&#39;re passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, <strong>never write to <code>this.props</code></strong>.</p>
 <h2><a class="anchor" name="components-are-just-like-functions"></a>Components are Just Like Functions <a class="hash-link" href="#components-are-just-like-functions">#</a></h2>
-<p>React components are very simple. You can think of them as simple functions that take in <code>props</code> and <code>state</code> (discussed later) and render HTML. Because they&#39;re so simple, it makes them very easy to reason about.</p>
+<p>React components are very simple. You can think of them as simple functions that take in <code>props</code> and <code>state</code> (discussed later) and render HTML. With this in mind, components are easy to reason about.</p>
 
 <blockquote>
 <p>Note:</p>
@@ -485,7 +485,7 @@
 <span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child1</span><span class="p">,</span> <span class="nx">child2</span><span class="p">);</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
-<p>As a convenience you can create short-hand factory functions to create elements from custom components.</p>
+<p>For convenience, you can create short-hand factory functions to create elements from custom components.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Factory</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">ComponentClass</span><span class="p">);</span>
 <span class="p">...</span>
 <span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">Factory</span><span class="p">({</span> <span class="nx">custom</span><span class="o">:</span> <span class="s1">&#39;prop&#39;</span> <span class="p">});</span>

@@ -480,7 +480,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="consuming-and-transferring-the-same-prop"></a>Consuming and Transferring the Same Prop <a class="hash-link" href="#consuming-and-transferring-the-same-prop">#</a></h2>
-<p>If your component wants to consume a property but also pass it along, you can repass it explicitly <code>checked={checked}</code>. This is preferable to passing the full <code>this.props</code> object since it&#39;s easier to refactor and lint.</p>
+<p>If your component wants to consume a property but also wants to pass it along, you can repass it explicitly with <code>checked={checked}</code>. This is preferable to passing the full <code>this.props</code> object since it&#39;s easier to refactor and lint.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="nx">title</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">;</span>
