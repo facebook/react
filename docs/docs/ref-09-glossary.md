@@ -15,7 +15,7 @@ In React's terminology, there are five core types that are important to distingu
 
 The primary type in React is the `ReactElement`. It has four properties: `type`, `props`, `key` and `ref`. It has no methods and nothing on the prototype.
 
-You can create one of these object through `React.createElement`.
+You can create one of these objects through `React.createElement`.
 
 ```javascript
 var root = React.createElement('div');
