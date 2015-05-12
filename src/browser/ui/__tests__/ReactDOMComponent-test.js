@@ -773,4 +773,36 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('option update', function(){
+    var container;
+
+    beforeEach(() => {
+      container = document.createElement('div');
+      React.render(<select><option>{10}$</option></select>, container);
+    });
+
+    it('supports number update', () => {
+      React.render(<select><option>{20}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+    });
+
+    it('supports string update', () => {
+      React.render(<select><option>{'20'}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+    });
+
+    it('supports boolean update', () => {
+      React.render(<select><option>{true && '20'}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('20$');
+      React.render(<select><option>{false && '20'}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+    });
+
+    it('supports null/undefined update', () => {
+      React.render(<select><option>{null}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+      React.render(<select><option>{undefined}$</option></select>, container);
+      expect(container.firstChild.firstChild.innerHTML).toEqual('$');
+    });
+  });
 });

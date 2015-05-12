@@ -18,6 +18,7 @@ var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactChildren = require('ReactChildren');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactMount = require('ReactMount');
@@ -232,6 +233,26 @@ function processChildContext(context, tagName) {
   return context;
 }
 
+var onlyNestTextTags = {
+  'option': true
+};
+
+function getChildrenTextContent(tag, children) {
+  var childrenContent = '';
+  ReactChildren.forEach(children, function (c) {
+    var childType = typeof c;
+    if (childType !== 'string' && childType !== 'number') {
+      // not null/undefined/boolean
+      if (c !== null) {
+        warning(false, '%s can not have complex children/content', tag);
+      }
+    } else {
+      childrenContent += c;
+    }
+  });
+  return childrenContent;
+}
+
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -369,6 +390,10 @@ ReactDOMComponent.Mixin = {
         ret = innerHTML.__html;
       }
     } else {
+      if (onlyNestTextTags[this._tag]) {
+        var childrenContent = getChildrenTextContent(this._tag, props.children);
+        return escapeTextContentForBrowser(childrenContent);
+      }
       var contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
@@ -566,6 +591,11 @@ ReactDOMComponent.Mixin = {
       CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
     var nextContent =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
+
+    if (onlyNestTextTags[this._tag]) {
+      lastContent = getChildrenTextContent(this._tag, lastProps.children);
+      nextContent = getChildrenTextContent(this._tag, nextProps.children);
+    }
 
     var lastHtml =
       lastProps.dangerouslySetInnerHTML &&
