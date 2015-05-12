@@ -157,19 +157,21 @@ ReactElement.createElement = function(type, config, children) {
   } else if (childrenLength > 1) {
     var childArray = Array(childrenLength);
 
-    // To make comparing ReactElements easier for testing purposes, we make
-    // the validation flag non-enumerable (where possible, which should
-    // include every environment we run tests in), so the test framework
-    // ignores it.
-    try {
-      Object.defineProperty(childArray, '_reactChildKeysValidated', {
-        configurable: false,
-        enumerable: false,
-        writable: true
-      });
-    } catch (x) {
+    if (__DEV__) {
+      // To make comparing ReactElements easier for testing purposes, we make
+      // the validation flag non-enumerable (where possible, which should
+      // include every environment we run tests in), so the test framework
+      // ignores it.
+      try {
+        Object.defineProperty(childArray, '_reactChildKeysValidated', {
+          configurable: false,
+          enumerable: false,
+          writable: true
+        });
+      } catch (x) {
+      }
+      childArray._reactChildKeysValidated = true;
     }
-    childArray._reactChildKeysValidated = true;
 
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
