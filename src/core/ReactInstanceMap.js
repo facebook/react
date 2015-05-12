@@ -18,6 +18,9 @@
  * to internal methods.
  */
 
+var INTERNAL_KEY =
+  '_reactInternal_' + (Math.random().toString().substr(2, 7));
+
 // TODO: Replace this with ES6: var ReactInstanceMap = new Map();
 var ReactInstanceMap = {
 
@@ -27,19 +30,19 @@ var ReactInstanceMap = {
    * supported we can rename it.
    */
   remove: function(key) {
-    key._reactInternalInstance = undefined;
+    key[INTERNAL_KEY] = undefined;
   },
 
   get: function(key) {
-    return key._reactInternalInstance;
+    return key[INTERNAL_KEY];
   },
 
   has: function(key) {
-    return key._reactInternalInstance !== undefined;
+    return key[INTERNAL_KEY] !== undefined;
   },
 
   set: function(key, value) {
-    key._reactInternalInstance = value;
+    key[INTERNAL_KEY] = value;
   }
 
 };
