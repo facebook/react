@@ -161,7 +161,7 @@ function createElementTypeChecker() {
       var locationName = ReactPropTypeLocationNames[location];
       return new Error(
         `Invalid ${locationName} \`${propName}\` supplied to ` +
-        `\`${componentName}\`, expected a ReactElement.`
+        `\`${componentName}\`, expected a single ReactElement.`
       );
     }
     return null;

@@ -242,7 +242,7 @@ describe('ReactPropTypes', function() {
 
     it('should not support multiple components or scalar values', () => {
       var message = 'Invalid prop `testProp` supplied to `testComponent`, ' +
-        'expected a ReactElement.';
+        'expected a single ReactElement.';
       typeCheckFail(PropTypes.element, [<div />, <div />], message);
       typeCheckFail(PropTypes.element, 123, message);
       typeCheckFail(PropTypes.element, 'foo', message);
