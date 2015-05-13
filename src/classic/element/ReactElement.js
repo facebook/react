@@ -80,6 +80,21 @@ function defineMutationMembrane(prototype) {
   }
 }
 
+function markChildArrayValidated(childArray) {
+  // To make comparing ReactElements easier for testing purposes, we make the
+  // validation flag non-enumerable (where possible, which should include every
+  // environment we run tests in), so the test framework ignores it.
+  try {
+    Object.defineProperty(childArray, '_reactChildKeysValidated', {
+      configurable: false,
+      enumerable: false,
+      writable: true
+    });
+  } catch (x) {
+  }
+  childArray._reactChildKeysValidated = true;
+}
+
 /**
  * Base constructor for all React elements. This is only used to make this
  * work with a dynamic instanceof check. Nothing should live on this prototype.
@@ -156,23 +171,9 @@ ReactElement.createElement = function(type, config, children) {
     props.children = children;
   } else if (childrenLength > 1) {
     var childArray = Array(childrenLength);
-
     if (__DEV__) {
-      // To make comparing ReactElements easier for testing purposes, we make
-      // the validation flag non-enumerable (where possible, which should
-      // include every environment we run tests in), so the test framework
-      // ignores it.
-      try {
-        Object.defineProperty(childArray, '_reactChildKeysValidated', {
-          configurable: false,
-          enumerable: false,
-          writable: true
-        });
-      } catch (x) {
-      }
-      childArray._reactChildKeysValidated = true;
+      markChildArrayValidated(childArray);
     }
-
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
@@ -260,6 +261,9 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = children;
   } else if (childrenLength > 1) {
     var childArray = Array(childrenLength);
+    if (__DEV__) {
+      markChildArrayValidated(childArray);
+    }
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
