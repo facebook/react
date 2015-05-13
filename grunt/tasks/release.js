@@ -84,20 +84,11 @@ function setup() {
 function bower() {
   var done = this.async();
 
-  // read current bower.json
-  var bowerFilePath = BOWER_PATH + 'bower.json';
-  var bowerInfo = grunt.file.readJSON(bowerFilePath);
-
   // clean out the bower folder in case we're removing files
   var files = grunt.file.expand(BOWER_GLOB);
   files.forEach(function(file) {
     grunt.file.delete(file, {force: true});
   });
-
-  // Update bower package version and save the file back.
-  bowerInfo.version = VERSION;
-  var bowerFileContents = JSON.stringify(bowerInfo, null, 2);
-  grunt.file.write(bowerFilePath, bowerFileContents);
 
   // Now copy over build files
   BOWER_FILES.forEach(function(file) {
