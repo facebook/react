@@ -46,7 +46,7 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 ## How to Get in Touch
 
 * IRC - [#reactjs on freenode](https://webchat.freenode.net/?channels=reactjs)
-* Mailing list - [reactjs on Google Groups](https://groups.google.com/group/reactjs)
+* Discussion forum - [discuss.reactjs.org](https://discuss.reactjs.org/)
 
 ## Style Guide
 
