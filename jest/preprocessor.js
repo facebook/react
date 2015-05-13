@@ -1,6 +1,6 @@
 'use strict';
 
-var babel = require('babel-core');
+var babel = require('babel');
 var coffee = require('coffee-script');
 
 var tsPreprocessor = require('./ts-preprocessor');

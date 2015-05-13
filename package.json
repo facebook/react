@@ -29,7 +29,7 @@
     "jstransform": "^11.0.0"
   },
   "devDependencies": {
-    "babel-core": "^5.2.7",
+    "babel": "^5.3.3",
     "benchmark": "~1.0.0",
     "browserify": "^9.0.3",
     "bundle-collapser": "^1.1.1",
