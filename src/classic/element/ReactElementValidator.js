@@ -116,13 +116,17 @@ function validateExplicitKey(element, parentType, deep) {
  * @param {string} name Property name of the key.
  * @param {ReactElement} element Component that requires a key.
  * @param {*} parentType element's parent's type.
+ * @param {boolean} deep false if top-level collection, true if nested
  */
-function validatePropertyKey(name, element, parentType) {
+function validatePropertyKey(name, element, parentType, deep) {
   if (!NUMERIC_PROPERTY_REGEX.test(name)) {
     return;
   }
   warnAndMonitorForKeyUse(
-    'Child objects should have non-numeric keys so ordering is preserved.',
+    deep ?
+      'Nested child objects should have non-numeric keys ' +
+      'so ordering is preserved.' :
+      'Child objects should have non-numeric keys so ordering is preserved.',
     element,
     parentType
   );
@@ -226,7 +230,7 @@ function validateChildKeys(node, parentType, deep) {
       var fragment = ReactFragment.extractIfFragment(node);
       for (var key in fragment) {
         if (fragment.hasOwnProperty(key)) {
-          validatePropertyKey(key, fragment[key], parentType);
+          validatePropertyKey(key, fragment[key], parentType, deep);
           validateChildKeys(fragment[key], parentType, true);
         }
       }
