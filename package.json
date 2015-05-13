@@ -91,8 +91,7 @@
       "/.module-cache/"
     ],
     "testPathDirs": [
-      "<rootDir>/src",
-      "<rootDir>/vendor/fbtransform"
+      "<rootDir>/src"
     ],
     "unmockedModulePathPatterns": [
       ""
