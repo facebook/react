@@ -90,19 +90,15 @@ function getCurrentOwnerDisplayName() {
  * @internal
  * @param {ReactElement} element Element that requires a key.
  * @param {*} parentType element's parent's type.
- * @param {boolean} deep false if top-level collection, true if nested
  */
-function validateExplicitKey(element, parentType, deep) {
-  if (element.key != null) {
+function validateExplicitKey(element, parentType) {
+  if (element._store.validated || element.key != null) {
     return;
   }
+  element._store.validated = true;
+
   warnAndMonitorForKeyUse(
-    // We vary the message for nested key warning to allow filtering them out
-    // since we didn't historically warn in this case.
-    deep ?
-      'Each child in a nested array or iterator should have ' +
-      'a unique "key" prop.' :
-      'Each child in an array or iterator should have a unique "key" prop.',
+    'Each child in an array or iterator should have a unique "key" prop.',
     element,
     parentType
   );
@@ -116,17 +112,13 @@ function validateExplicitKey(element, parentType, deep) {
  * @param {string} name Property name of the key.
  * @param {ReactElement} element Component that requires a key.
  * @param {*} parentType element's parent's type.
- * @param {boolean} deep false if top-level collection, true if nested
  */
-function validatePropertyKey(name, element, parentType, deep) {
+function validatePropertyKey(name, element, parentType) {
   if (!NUMERIC_PROPERTY_REGEX.test(name)) {
     return;
   }
   warnAndMonitorForKeyUse(
-    deep ?
-      'Nested child objects should have non-numeric keys ' +
-      'so ordering is preserved.' :
-      'Child objects should have non-numeric keys so ordering is preserved.',
+    'Child objects should have non-numeric keys so ordering is preserved.',
     element,
     parentType
   );
@@ -188,29 +180,18 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
  * @internal
  * @param {ReactNode} node Statically passed child of any type.
  * @param {*} parentType node's parent's type.
- * @param {boolean} deep false if top-level collection, true if nested
  */
-function validateChildKeys(node, parentType, deep) {
+function validateChildKeys(node, parentType) {
   if (Array.isArray(node)) {
-    if (node._reactChildKeysValidated) {
-      // All child elements were passed in a valid location.
-      return;
-    }
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
       if (ReactElement.isValidElement(child)) {
-        validateExplicitKey(child, parentType, deep);
-      } else {
-        // TODO: Warn on unkeyed arrays and suggest using createFragment
-        validateChildKeys(child, parentType, true);
+        validateExplicitKey(child, parentType);
       }
     }
-  } else if (
-      typeof node === 'string' || typeof node === 'number' ||
-      ReactElement.isValidElement(node)
-    ) {
+  } else if (ReactElement.isValidElement(node)) {
     // This element was passed in a valid location.
-    return;
+    node._store.validated = true;
   } else if (node) {
     var iteratorFn = getIteratorFn(node);
     // Entry iterators provide implicit keys.
@@ -220,9 +201,7 @@ function validateChildKeys(node, parentType, deep) {
         var step;
         while (!(step = iterator.next()).done) {
           if (ReactElement.isValidElement(step.value)) {
-            validateExplicitKey(step.value, parentType, deep);
-          } else {
-            validateChildKeys(step.value, parentType, true);
+            validateExplicitKey(step.value, parentType);
           }
         }
       }
@@ -230,8 +209,7 @@ function validateChildKeys(node, parentType, deep) {
       var fragment = ReactFragment.extractIfFragment(node);
       for (var key in fragment) {
         if (fragment.hasOwnProperty(key)) {
-          validatePropertyKey(key, fragment[key], parentType, deep);
-          validateChildKeys(fragment[key], parentType, true);
+          validatePropertyKey(key, fragment[key], parentType);
         }
       }
     }
@@ -437,7 +415,7 @@ var ReactElementValidator = {
     }
 
     for (var i = 2; i < arguments.length; i++) {
-      validateChildKeys(arguments[i], type, false);
+      validateChildKeys(arguments[i], type);
     }
 
     validatePropTypes(element);
@@ -485,7 +463,7 @@ var ReactElementValidator = {
   cloneElement: function(element, props, children) {
     var newElement = ReactElement.cloneElement.apply(this, arguments);
     for (var i = 2; i < arguments.length; i++) {
-      validateChildKeys(arguments[i], newElement.type, false);
+      validateChildKeys(arguments[i], newElement.type);
     }
     validatePropTypes(newElement);
     return newElement;

@@ -80,21 +80,6 @@ function defineMutationMembrane(prototype) {
   }
 }
 
-function markChildArrayValidated(childArray) {
-  // To make comparing ReactElements easier for testing purposes, we make the
-  // validation flag non-enumerable (where possible, which should include every
-  // environment we run tests in), so the test framework ignores it.
-  try {
-    Object.defineProperty(childArray, '_reactChildKeysValidated', {
-      configurable: false,
-      enumerable: false,
-      writable: true
-    });
-  } catch (x) {
-  }
-  childArray._reactChildKeysValidated = true;
-}
-
 /**
  * Base constructor for all React elements. This is only used to make this
  * work with a dynamic instanceof check. Nothing should live on this prototype.
@@ -120,6 +105,20 @@ var ReactElement = function(type, key, ref, owner, context, props) {
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
     this._store = {props: props, originalProps: assign({}, props)};
+
+    // To make comparing ReactElements easier for testing purposes, we make
+    // the validation flag non-enumerable (where possible, which should
+    // include every environment we run tests in), so the test framework
+    // ignores it.
+    try {
+      Object.defineProperty(this._store, 'validated', {
+        configurable: false,
+        enumerable: false,
+        writable: true
+      });
+    } catch (x) {
+    }
+    this._store.validated = false;
 
     // We're not allowed to set props directly on the object so we early
     // return and rely on the prototype membrane to forward to the backing
@@ -171,9 +170,6 @@ ReactElement.createElement = function(type, config, children) {
     props.children = children;
   } else if (childrenLength > 1) {
     var childArray = Array(childrenLength);
-    if (__DEV__) {
-      markChildArrayValidated(childArray);
-    }
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
@@ -220,6 +216,11 @@ ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
     oldElement._context,
     newProps
   );
+
+  if (__DEV__) {
+    // If the key on the original is valid, then the clone is valid
+    newElement._store.validated = oldElement._store.validated;
+  }
   return newElement;
 };
 
@@ -261,9 +262,6 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = children;
   } else if (childrenLength > 1) {
     var childArray = Array(childrenLength);
-    if (__DEV__) {
-      markChildArrayValidated(childArray);
-    }
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
