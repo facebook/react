@@ -475,4 +475,21 @@ describe('ReactElementValidator', function() {
     expect(console.error.argsForCall.length).toBe(1);
   });
 
+  it('does not warn when using DOM node as children', function() {
+    spyOn(console, 'error');
+    var DOMContainer = React.createClass({
+      render: function() {
+        return <div />;
+      },
+      componentDidMount: function() {
+        React.findDOMNode(this).appendChild(this.props.children);
+      }
+    });
+
+    var node = document.createElement('div');
+    // This shouldn't cause a stack overflow or any other problems (#3883)
+    ReactTestUtils.renderIntoDocument(<DOMContainer>{node}</DOMContainer>);
+    expect(console.error.argsForCall.length).toBe(0);
+  });
+
 });
