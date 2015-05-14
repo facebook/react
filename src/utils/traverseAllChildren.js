@@ -84,7 +84,6 @@ function wrapUserProvidedKey(key) {
 /**
  * @param {?*} children Children tree container.
  * @param {!string} nameSoFar Name of the key path so far.
- * @param {!number} indexSoFar Number of children encountered until this point.
  * @param {!function} callback Callback to invoke with each child found.
  * @param {?*} traverseContext Used to pass information throughout the traversal
  * process.
@@ -93,7 +92,6 @@ function wrapUserProvidedKey(key) {
 function traverseAllChildrenImpl(
   children,
   nameSoFar,
-  indexSoFar,
   callback,
   traverseContext
 ) {
@@ -113,13 +111,13 @@ function traverseAllChildrenImpl(
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
-      indexSoFar
+      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar
     );
     return 1;
   }
 
-  var child, nextName, nextIndex;
+  var child;
+  var nextName;
   var subtreeCount = 0; // Count of children found in the current subtree.
 
   if (Array.isArray(children)) {
@@ -129,11 +127,9 @@ function traverseAllChildrenImpl(
         (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
         getComponentKey(child, i)
       );
-      nextIndex = indexSoFar + subtreeCount;
       subtreeCount += traverseAllChildrenImpl(
         child,
         nextName,
-        nextIndex,
         callback,
         traverseContext
       );
@@ -151,11 +147,9 @@ function traverseAllChildrenImpl(
             (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
             getComponentKey(child, ii++)
           );
-          nextIndex = indexSoFar + subtreeCount;
           subtreeCount += traverseAllChildrenImpl(
             child,
             nextName,
-            nextIndex,
             callback,
             traverseContext
           );
@@ -180,11 +174,9 @@ function traverseAllChildrenImpl(
               wrapUserProvidedKey(entry[0]) + SUBSEPARATOR +
               getComponentKey(child, 0)
             );
-            nextIndex = indexSoFar + subtreeCount;
             subtreeCount += traverseAllChildrenImpl(
               child,
               nextName,
-              nextIndex,
               callback,
               traverseContext
             );
@@ -206,11 +198,9 @@ function traverseAllChildrenImpl(
             wrapUserProvidedKey(key) + SUBSEPARATOR +
             getComponentKey(child, 0)
           );
-          nextIndex = indexSoFar + subtreeCount;
           subtreeCount += traverseAllChildrenImpl(
             child,
             nextName,
-            nextIndex,
             callback,
             traverseContext
           );
@@ -243,7 +233,7 @@ function traverseAllChildren(children, callback, traverseContext) {
     return 0;
   }
 
-  return traverseAllChildrenImpl(children, '', 0, callback, traverseContext);
+  return traverseAllChildrenImpl(children, '', callback, traverseContext);
 }
 
 module.exports = traverseAllChildren;

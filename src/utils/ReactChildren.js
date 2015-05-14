@@ -29,15 +29,15 @@ var threeArgumentPooler = PooledClass.threeArgumentPooler;
  * @param {?*} forEachContext Context to perform context with.
  */
 function ForEachBookKeeping(forEachFunction, forEachContext) {
-  this.forEachFunction = forEachFunction;
-  this.forEachContext = forEachContext;
+  this.func = forEachFunction;
+  this.context = forEachContext;
+  this.count = 0;
 }
 PooledClass.addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
 
-function forEachSingleChild(traverseContext, child, name, i) {
-  var forEachBookKeeping = traverseContext;
-  forEachBookKeeping.forEachFunction.call(
-    forEachBookKeeping.forEachContext, child, i);
+function forEachSingleChild(traverseContext, child, name) {
+  var bookKeeping = traverseContext;
+  bookKeeping.func.call(bookKeeping.context, child, bookKeeping.count++);
 }
 
 /**
@@ -71,15 +71,16 @@ function forEachChildren(children, forEachFunc, forEachContext) {
  * @param {?*} mapContext Context to perform mapping with.
  */
 function MapBookKeeping(mapResult, mapFunction, mapContext) {
-  this.mapResult = mapResult;
-  this.mapFunction = mapFunction;
-  this.mapContext = mapContext;
+  this.result = mapResult;
+  this.func = mapFunction;
+  this.context = mapContext;
+  this.count = 0;
 }
 PooledClass.addPoolingTo(MapBookKeeping, threeArgumentPooler);
 
-function mapSingleChildIntoContext(traverseContext, child, name, i) {
-  var mapBookKeeping = traverseContext;
-  var mapResult = mapBookKeeping.mapResult;
+function mapSingleChildIntoContext(traverseContext, child, name) {
+  var bookKeeping = traverseContext;
+  var mapResult = bookKeeping.result;
 
   var keyUnique = (mapResult[name] === undefined);
   if (__DEV__) {
@@ -94,7 +95,7 @@ function mapSingleChildIntoContext(traverseContext, child, name, i) {
 
   if (keyUnique) {
     var mappedChild =
-      mapBookKeeping.mapFunction.call(mapBookKeeping.mapContext, child, i);
+      bookKeeping.func.call(bookKeeping.context, child, bookKeeping.count++);
     mapResult[name] = mappedChild;
   }
 }
@@ -125,7 +126,7 @@ function mapChildren(children, func, context) {
   return ReactFragment.create(mapResult);
 }
 
-function forEachSingleChildDummy(traverseContext, child, name, i) {
+function forEachSingleChildDummy(traverseContext, child, name) {
   return null;
 }
 
