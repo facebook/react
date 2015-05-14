@@ -3,7 +3,7 @@
 // vim: set ft=javascript :
 "use strict";
 
-var babel = require('babel-core');
+var babel = require('babel');
 
 var constants = require('../vendor/constants')(babel);
 
