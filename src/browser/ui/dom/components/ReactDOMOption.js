@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
+var ReactChildren = require('ReactChildren');
 var ReactClass = require('ReactClass');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactElement = require('ReactElement');
@@ -86,7 +87,25 @@ var ReactDOMOption = ReactClass.createClass({
       props = assign({}, props, {selected: this.state.selected});
     }
 
-    return option(props, this.props.children);
+    var content = '';
+
+    // Flatten children and warn if they aren't strings or numbers;
+    // invalid types are ignored.
+    ReactChildren.forEach(this.props.children, function(child) {
+      if (child == null) {
+        return;
+      }
+      if (typeof child === 'string' || typeof child === 'number') {
+        content += child;
+      } else {
+        warning(
+          false,
+          'Only strings and numbers are supported as <option> children.'
+        );
+      }
+    });
+
+    return option(props, content);
   }
 
 });
