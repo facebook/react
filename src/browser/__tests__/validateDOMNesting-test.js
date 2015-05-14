@@ -11,7 +11,7 @@
 
 'use strict';
 
-var isTagValidInContext;
+var validateDOMNesting;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#special
 var specialTags = [
@@ -34,10 +34,13 @@ var formattingTags = [
 ];
 
 function isTagStackValid(stack) {
+  var ancestorInfo = null;
   for (var i = 0; i < stack.length; i++) {
-    if (!isTagValidInContext(stack[i], stack.slice(0, i))) {
+    if (!validateDOMNesting.isTagValidInContext(stack[i], ancestorInfo)) {
       return false;
     }
+    ancestorInfo =
+      validateDOMNesting.updatedAncestorInfo(ancestorInfo, stack[i], null);
   }
   return true;
 }
@@ -46,14 +49,14 @@ describe('ReactContextValidator', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    isTagValidInContext = require('validateDOMNesting').isTagValidInContext;
+    validateDOMNesting = require('validateDOMNesting');
   });
 
   it('allows any tag with no context', function() {
     // With renderToString (for example), we don't know where we're mounting the
     // tag so we must err on the side of leniency.
     specialTags.concat(formattingTags, ['mysterytag']).forEach(function(tag) {
-      expect(isTagValidInContext(tag, [])).toBe(true);
+      expect(validateDOMNesting.isTagValidInContext(tag, null)).toBe(true);
     });
   });
 
@@ -67,6 +70,8 @@ describe('ReactContextValidator', function() {
     // Invalid, but not changed by browser parsing so we allow them
     expect(isTagStackValid(['div', 'ul', 'ul', 'li'])).toBe(true);
     expect(isTagStackValid(['div', 'label', 'div'])).toBe(true);
+    expect(isTagStackValid(['div', 'ul', 'li', 'section', 'li'])).toBe(true);
+    expect(isTagStackValid(['div', 'ul', 'li', 'dd', 'li'])).toBe(true);
   });
 
   it('prevents problematic nestings', function() {
@@ -74,5 +79,6 @@ describe('ReactContextValidator', function() {
     expect(isTagStackValid(['form', 'form'])).toBe(false);
     expect(isTagStackValid(['p', 'p'])).toBe(false);
     expect(isTagStackValid(['table', 'tr'])).toBe(false);
+    expect(isTagStackValid(['div', 'ul', 'li', 'div', 'li'])).toBe(false);
   });
 });

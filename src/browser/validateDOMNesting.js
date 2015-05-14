@@ -11,6 +11,7 @@
 
 'use strict';
 
+var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 var warning = require('warning');
 
@@ -43,88 +44,93 @@ if (__DEV__) {
     'xmp'
   ];
 
-  /**
-   * Return whether `stack` contains `tag` and the last occurrence of `tag` is
-   * deeper than any element in the `scope` array.
-   *
-   * https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-the-specific-scope
-   *
-   * Examples:
-   *   stackHasTagInSpecificScope(['p', 'quote'], 'p', ['button']) is true
-   *   stackHasTagInSpecificScope(['p', 'button'], 'p', ['button']) is false
-   *
-   * @param {Array<string>} stack
-   * @param {string} tag
-   * @param {Array<string>} scope
-   */
-  var stackHasTagInSpecificScope = function(stack, tag, scope) {
-    for (var i = stack.length - 1; i >= 0; i--) {
-      if (stack[i] === tag) {
-        return true;
-      }
-      if (scope.indexOf(stack[i]) !== -1) {
-        return false;
-      }
-    }
-    return false;
-  };
-
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
   var inScopeTags = [
     'applet', 'caption', 'html', 'table', 'td', 'th', 'marquee', 'object',
     'template',
 
     // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
-    // TODO: Distinguish by namespace here
+    // TODO: Distinguish by namespace here -- for <title>, including it here
+    // errs on the side of fewer warnings
     'foreignObject', 'desc', 'title'
   ];
-  var stackHasTagInScope = function(stack, tag) {
-    return stackHasTagInSpecificScope(stack, tag, inScopeTags);
-  };
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
   var buttonScopeTags = inScopeTags.concat(['button']);
-  var stackHasTagInButtonScope = function(stack, tag) {
-    return stackHasTagInSpecificScope(stack, tag, buttonScopeTags);
-  };
-
-  // See rules for 'li', 'dd', 'dt' start tags in
-  // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
-  var listItemTagAllowed = function(tags, stack) {
-    // tags is ['li'] or ['dd, 'dt']
-    for (var i = stack.length - 1; i >= 0; i--) {
-      if (tags.indexOf(stack[i]) !== -1) {
-        return false;
-      } else if (
-        specialTags.indexOf(stack[i]) !== -1 &&
-        stack[i] !== 'address' && stack[i] !== 'div' && stack[i] !== 'p'
-      ) {
-        return true;
-      }
-    }
-    return true;
-  };
 
   // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
   var impliedEndTags =
     ['dd', 'dt', 'li', 'option', 'optgroup', 'p', 'rp', 'rt'];
 
-  /**
-   * Returns whether we allow putting `tag` in the document if the current stack
-   * of open tags is `openTagStack`.
-   *
-   * Examples:
-   *   isTagValidInContext('tr', [..., 'table', 'tbody']) is true
-   *   isTagValidInContext('tr', [..., 'table']) is false
-   *
-   * @param {string} tag Lowercase HTML tag name or node name like '#text'
-   * @param {Array<string>} openTagStack
-   */
-  var isTagValidInContext = function(tag, openTagStack) {
-    var currentTag = openTagStack[openTagStack.length - 1];
+  var emptyAncestorInfo = {
+    parentTag: null,
 
+    formTag: null,
+    aTagInScope: null,
+    buttonTagInScope: null,
+    nobrTagInScope: null,
+    pTagInButtonScope: null,
+
+    listItemTagAutoclosing: null,
+    dlItemTagAutoclosing: null
+  };
+
+  var updatedAncestorInfo = function(oldInfo, tag, instance) {
+    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfo);
+    var info = {tag: tag, instance: instance};
+
+    if (inScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.aTagInScope = null;
+      ancestorInfo.buttonTagInScope = null;
+      ancestorInfo.nobrTagInScope = null;
+    }
+    if (buttonScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.pTagInButtonScope = null;
+    }
+
+    // See rules for 'li', 'dd', 'dt' start tags in
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+    if (
+      specialTags.indexOf(tag) !== -1 &&
+      tag !== 'address' && tag !== 'div' && tag !== 'p'
+    ) {
+      ancestorInfo.listItemTagAutoclosing = null;
+      ancestorInfo.dlItemTagAutoclosing = null;
+    }
+
+    ancestorInfo.parentTag = info;
+
+    if (tag === 'form') {
+      ancestorInfo.formTag = info;
+    }
+    if (tag === 'a') {
+      ancestorInfo.aTagInScope = info;
+    }
+    if (tag === 'button') {
+      ancestorInfo.buttonTagInScope = info;
+    }
+    if (tag === 'nobr') {
+      ancestorInfo.nobrTagInScope = info;
+    }
+    if (tag === 'p') {
+      ancestorInfo.pTagInButtonScope = info;
+    }
+    if (tag === 'li') {
+      ancestorInfo.listItemTagAutoclosing = info;
+    }
+    if (tag === 'dd' || tag === 'dt') {
+      ancestorInfo.dlItemTagAutoclosing = info;
+    }
+
+    return ancestorInfo;
+  };
+
+  /**
+   * Returns whether
+   */
+  var isTagValidWithParent = function(tag, parentTag) {
     // First, let's check if we're in an unusual parsing mode...
-    switch (currentTag) {
+    switch (parentTag) {
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
       case 'select':
         return tag === 'option' || tag === 'optgroup' || tag === '#text';
@@ -186,6 +192,47 @@ if (__DEV__) {
     // where the parsing rules cause implicit opens or closes to be added.
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
     switch (tag) {
+      case 'h1':
+      case 'h2':
+      case 'h3':
+      case 'h4':
+      case 'h5':
+      case 'h6':
+        return (
+          parentTag !== 'h1' && parentTag !== 'h2' && parentTag !== 'h3' &&
+          parentTag !== 'h4' && parentTag !== 'h5' && parentTag !== 'h6'
+        );
+
+      case 'rp':
+      case 'rt':
+        return impliedEndTags.indexOf(parentTag) === -1;
+
+      case 'caption':
+      case 'col':
+      case 'colgroup':
+      case 'frame':
+      case 'head':
+      case 'tbody':
+      case 'td':
+      case 'tfoot':
+      case 'th':
+      case 'thead':
+      case 'tr':
+        // These tags are only valid with a few parents that have special child
+        // parsing rules -- if we're down here, then none of those matched and
+        // so we allow it only if we don't know what the parent is, as all other
+        // cases are invalid.
+        return parentTag == null;
+    }
+
+    return true;
+  };
+
+  /**
+   * Returns whether
+   */
+  var findInvalidAncestorForTag = function(tag, ancestorInfo) {
+    switch (tag) {
       case 'address':
       case 'article':
       case 'aside':
@@ -219,7 +266,6 @@ if (__DEV__) {
       case 'hr':
 
       case 'xmp':
-        return !stackHasTagInButtonScope(openTagStack, 'p');
 
       case 'h1':
       case 'h2':
@@ -227,90 +273,151 @@ if (__DEV__) {
       case 'h4':
       case 'h5':
       case 'h6':
-        return (
-          !stackHasTagInButtonScope(openTagStack, 'p') &&
-          currentTag !== 'h1' && currentTag !== 'h2' && currentTag !== 'h3' &&
-          currentTag !== 'h4' && currentTag !== 'h5' && currentTag !== 'h6'
-        );
+        return ancestorInfo.pTagInButtonScope;
 
       case 'form':
-        return (
-          openTagStack.indexOf('form') === -1 &&
-          !stackHasTagInButtonScope(openTagStack, 'p')
-        );
+        return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
 
       case 'li':
-        return listItemTagAllowed(['li'], openTagStack);
+        return ancestorInfo.listItemTagAutoclosing;
 
       case 'dd':
       case 'dt':
-        return listItemTagAllowed(['dd', 'dt'], openTagStack);
+        return ancestorInfo.dlItemTagAutoclosing;
 
       case 'button':
-        return !stackHasTagInScope(openTagStack, 'button');
+        return ancestorInfo.buttonTagInScope;
 
       case 'a':
         // Spec says something about storing a list of markers, but it sounds
         // equivalent to this check.
-        return !stackHasTagInScope(openTagStack, 'a');
+        return ancestorInfo.aTagInScope;
 
       case 'nobr':
-        return !stackHasTagInScope(openTagStack, 'nobr');
-
-      case 'rp':
-      case 'rt':
-        return impliedEndTags.indexOf(currentTag) === -1;
-
-      case 'caption':
-      case 'col':
-      case 'colgroup':
-      case 'frame':
-      case 'head':
-      case 'tbody':
-      case 'td':
-      case 'tfoot':
-      case 'th':
-      case 'thead':
-      case 'tr':
-        return currentTag === undefined;
+        return ancestorInfo.nobrTagInScope;
     }
 
-    return true;
+    return null;
   };
 
-  validateDOMNesting = function(parentStack, childTag, element) {
-    if (!isTagValidInContext(childTag, parentStack)) {
-      var info = '';
-      var parentTag = parentStack[parentStack.length - 1];
-      if (parentTag === 'table' && childTag === 'tr') {
-        info +=
-          ' Add a <tbody> to your code to match the DOM tree generated by ' +
-          'the browser.';
-      }
-      if (element && element._owner) {
-        var name = element._owner.getName();
-        if (name) {
-          info += ` Check the render method of \`${name}\`.`;
+  /**
+   * Given a ReactCompositeComponent instance, return a list of its recursive
+   * owners, starting at the root and ending with the instance itself.
+   */
+  var findOwnerStack = function(instance) {
+    if (!instance) {
+      return [];
+    }
+
+    var stack = [];
+    /*eslint-disable space-after-keywords */
+    do {
+    /*eslint-enable space-after-keywords */
+      stack.push(instance);
+    } while ((instance = instance._currentElement._owner));
+    stack.reverse();
+    return stack;
+  };
+
+  validateDOMNesting = function(childTag, childInstance, ancestorInfo) {
+    ancestorInfo = ancestorInfo || emptyAncestorInfo;
+    var parentInfo = ancestorInfo.parentTag;
+    var parentTag = parentInfo && parentInfo.tag;
+
+    var invalidParent =
+      isTagValidWithParent(childTag, parentTag) ? null : parentInfo;
+    var invalidAncestor =
+      invalidParent ? null : findInvalidAncestorForTag(childTag, ancestorInfo);
+    var problematic = invalidParent || invalidAncestor;
+
+    if (problematic) {
+      var ancestorTag = problematic.tag;
+      var ancestorInstance = problematic.instance;
+
+      var childOwner = childInstance && childInstance._currentElement._owner;
+      var ancestorOwner =
+        ancestorInstance && ancestorInstance._currentElement._owner;
+
+      var childOwners = findOwnerStack(childOwner);
+      var ancestorOwners = findOwnerStack(ancestorOwner);
+
+      var minStackLen = Math.min(childOwners.length, ancestorOwners.length);
+      var i;
+
+      var deepestCommon = -1;
+      for (i = 0; i < minStackLen; i++) {
+        if (childOwners[i] === ancestorOwners[i]) {
+          deepestCommon = i;
+        } else {
+          break;
         }
       }
 
-      warning(
-        false,
-        'validateDOMNesting(...): <%s> cannot appear as a child of <%s> ' +
-        'in this context (%s).%s',
-        childTag,
-        parentTag,
-        parentStack.join(' > '),
-        info
+      var UNKNOWN = '(unknown)';
+      var childOwnerNames = childOwners.slice(deepestCommon + 1).map(
+        (inst) => inst.getName() || UNKNOWN
       );
+      var ancestorOwnerNames = ancestorOwners.slice(deepestCommon + 1).map(
+        (inst) => inst.getName() || UNKNOWN
+      );
+      var ownerInfo = [].concat(
+        // If the parent and child instances have a common owner ancestor, start
+        // with that -- otherwise we just start with the parent's owners.
+        deepestCommon !== -1 ?
+          childOwners[deepestCommon].getName() || UNKNOWN :
+          [],
+        ancestorOwnerNames,
+        ancestorTag,
+        // If we're warning about an invalid (non-parent) ancestry, add '...'
+        invalidAncestor ? ['...'] : [],
+        childOwnerNames,
+        childTag
+      ).join(' > ');
+
+      if (invalidParent) {
+        var info = '';
+        if (ancestorTag === 'table' && childTag === 'tr') {
+          info +=
+            ' Add a <tbody> to your code to match the DOM tree generated by ' +
+            'the browser.';
+        }
+        warning(
+          false,
+          'validateDOMNesting(...): <%s> cannot appear as a child of <%s>. ' +
+          'See %s.%s',
+          childTag,
+          ancestorTag,
+          ownerInfo,
+          info
+        );
+      } else {
+        warning(
+          false,
+          'validateDOMNesting(...): <%s> cannot appear as a descendant of ' +
+          '<%s>. See %s.',
+          childTag,
+          ancestorTag,
+          ownerInfo
+        );
+      }
     }
   };
 
-  validateDOMNesting.tagStackContextKey =
-    '__validateDOMNesting_tagStack$' + Math.random().toString(36).slice(2);
+  validateDOMNesting.ancestorInfoContextKey =
+    '__validateDOMNesting_ancestorInfo$' + Math.random().toString(36).slice(2);
+
+  validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
 
   // For testing
-  validateDOMNesting.isTagValidInContext = isTagValidInContext;
+  validateDOMNesting.isTagValidInContext = function(tag, ancestorInfo) {
+    ancestorInfo = ancestorInfo || emptyAncestorInfo;
+    var parentInfo = ancestorInfo.parentTag;
+    var parentTag = parentInfo && parentInfo.tag;
+    return (
+      isTagValidWithParent(tag, parentTag) &&
+      !findInvalidAncestorForTag(tag, ancestorInfo)
+    );
+  };
 }
 
 module.exports = validateDOMNesting;
