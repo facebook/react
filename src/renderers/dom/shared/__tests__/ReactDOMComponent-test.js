@@ -768,6 +768,40 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('wrong event name case warning', function() {
+    var React;
+    var ReactTestUtils;
+
+    beforeEach(() => {
+      React = require('React');
+      ReactTestUtils = require('ReactTestUtils');
+    });
+
+    it('should warn when an event is lowercased', () => {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div onclick={function() {}} />);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.mostRecentCall.args[0]).toBe(
+        'Warning: `onclick` seems to be an invalid event name, did you mean `onClick`?'
+      );
+    });
+
+    it('should warn when an event has the wrong case', () => {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div onMouseup={function() {}} />);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.mostRecentCall.args[0]).toBe(
+        'Warning: `onMouseup` seems to be an invalid event name, did you mean `onMouseUp`?'
+      );
+    });
+
+    it('should not warn when a prop is not a supported, mistyped event type', () => {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div one={function() {}} />);
+      expect(console.error.calls.length).toBe(0);
+    });
+  });
+
   describe('tag sanitization', function() {
     it('should throw when an invalid tag name is used', () => {
       var React = require('React');

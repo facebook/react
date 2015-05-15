@@ -211,6 +211,15 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
  */
 var BackendIDOperations = null;
 
+var eventTypes = {};
+
+if (__DEV__) {
+  Object.keys(EventConstants.topLevelTypes)
+    .forEach(function(key) {
+      var eventType = key.replace(/^top/, 'on');
+      eventTypes[eventType.toLowerCase()] = eventType;
+    });
+}
 /**
  * @param {object} component
  * @param {?object} props
@@ -267,6 +276,18 @@ function assertValidProps(component, props) {
     'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
     'using JSX.'
   );
+  if (__DEV__) {
+    Object.keys(props).forEach(function(propName) {
+      var lowerCasePropName = propName.toLowerCase();
+      warning(
+        !eventTypes.hasOwnProperty(lowerCasePropName) ||
+          eventTypes[lowerCasePropName] === propName,
+        '`%s` seems to be an invalid event name, did you mean `%s`?',
+        propName,
+        eventTypes[lowerCasePropName]
+      );
+    });
+  }
 }
 
 function enqueuePutListener(id, registrationName, listener, transaction) {
