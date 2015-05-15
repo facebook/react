@@ -115,6 +115,7 @@ var HTMLDOMPropertyConfig = {
     mediaGroup: null,
     method: null,
     min: null,
+    minLength: MUST_USE_ATTRIBUTE,
     multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     muted: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     name: null,
