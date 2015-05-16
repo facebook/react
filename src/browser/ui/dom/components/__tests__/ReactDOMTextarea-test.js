@@ -231,4 +231,20 @@ describe('ReactDOMTextarea', function() {
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual('test');
   });
+
+  it('should not fire change handlers when setting placeholders', function() {
+    var change = mocks.getMockFunction();
+    var instance = <textarea onChange={change} placeholder={'test'}/>;
+
+    instance = ReactTestUtils.renderIntoDocument(instance);
+
+    React.findDOMNode(instance).focus()
+
+    instance.replaceProps({ onChange: change });
+
+    expect(change.mock.calls.length).toBe(0);
+
+    ReactTestUtils.Simulate.change(React.findDOMNode(instance));
+    expect(change.mock.calls.length).toBe(1);
+  });
 });

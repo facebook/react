@@ -348,4 +348,20 @@ describe('ReactDOMInput', function() {
       <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
     expect(React.render.bind(React, instance, node)).toThrow();
   });
+
+  it('should not fire change handlers when setting placeholders', function() {
+    var change = mocks.getMockFunction();
+    var instance = <input type="text" onChange={change} placeholder={'test'}/>;
+
+    instance = ReactTestUtils.renderIntoDocument(instance);
+
+    React.findDOMNode(instance).focus()
+
+    instance.replaceProps({ type: "text", onChange: change });
+
+    expect(change.mock.calls.length).toBe(0);
+    
+    ReactTestUtils.Simulate.change(React.findDOMNode(instance));
+    expect(change.mock.calls.length).toBe(1);
+  });
 });
