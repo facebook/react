@@ -153,8 +153,7 @@ var ReactDOMSelect = ReactClass.createClass({
   },
 
   render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
+    var { valueLink, checkedLink, defaultValue, ...props } = this.props;
 
     props.onChange = this._handleChange;
     props.value = null;

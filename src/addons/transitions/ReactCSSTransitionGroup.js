@@ -57,9 +57,16 @@ var ReactCSSTransitionGroup = React.createClass({
   },
 
   render: function() {
+    var {
+      transitionName,
+      transitionAppear,
+      transitionEnter,
+      transitionLeave,
+      ...transferredProps
+    } = this.props;
     return (
       ReactTransitionGroup(
-        assign({}, this.props, {childFactory: this._wrapChild})
+        assign({}, transferredProps, {childFactory: this._wrapChild})
       )
     );
   }
