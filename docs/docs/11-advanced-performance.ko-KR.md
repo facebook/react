@@ -41,7 +41,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 
 C1과 C3의 `shouldComponentUpdate`가 `true`를 반환했기 때문에 React는 하위 노드로 내려가 그들을 확인합니다. C6는 `true`를 반환했네요; 이는 가상의 DOM과 같지 않기 때문에 DOM의 조정이 일어났습니다. 마지막으로 흥미로운 사례는 C8입니다. React가 이 노드를 위해 가상의 DOM을 작동했지만, 노드가 이전의 것과 일치했기 때문에 DOM의 조정을 일어나지 않았습니다.
 
-React가 C6에만 DOM 변경을 수행한 것을 확인하세요. 이는 필연적이었습니다. C8의 경우는 가상의 DOM과 비교를 해 제외되었고, C2의 하위 트리와 C7은 `shouldComponentUpdate` 단계에서 제외되어 가상의 DOM은 구동조차 되지 않았습니다.
+React가 C6에만 DOM 변경을 수행한 것을 확인하세요. 이는 필연적이었습니다. C8의 경우는, 가상의 DOM과 비교를 해 제외되었고, C2의 하위 트리와 C7은 `shouldComponentUpdate` 단계에서 제외되어 가상의 DOM은 구동조차 되지 않았습니다.
 
 자 그럼, 어떻게 `shouldComponentUpdate`를 구현해야 할까요? 문자열 값을 렌더하는 컴포넌트를 생각해보죠.
 
@@ -90,7 +90,7 @@ React.createClass({
 this.props.value !== nextProps.value; // true
 ```
 
-문제는 prop이 실제로 변경되지 않았을 때도 `shouldComponentUpdate`가 `true`를 반환할 거라는 겁니다. 이를 해결하기 위한 대안으로 아래와 같이 구현해 볼 수 있습니다:
+문제는 prop이 실제로 변경되지 않았을 때도 `shouldComponentUpdate`가 `true`를 반환할 거라는 겁니다. 이를 해결하기 위한 대안으로, 아래와 같이 구현해 볼 수 있습니다:
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
@@ -98,7 +98,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 }
 ```
 
-기본적으로, 우리는 변경을 정확히 추적하기 위해서 깊은 비교를 해야 했습니다. 이 방법은 성능 면에서 제법 비싸고 각각의 모델마다 다른 깊은 등식 코드를 작성해야 하므로 확장이 힘들어 집니다. 심지어 객체 참조를 신중히 관리하지 않는다면 작동하지도 않을 수 있습니다. 컴포넌트가 부모에 의해 다뤄지는 경우를 살펴보죠:
+기본적으로, 우리는 변경을 정확히 추적하기 위해서 깊은 비교를 해야 했습니다. 이 방법은 성능 면에서 제법 비쌉니다. 각각의 모델마다 다른 깊은 등식 코드를 작성해야 하므로 확장이 힘들어 집니다. 심지어 객체 참조를 신중히 관리하지 않는다면 작동하지도 않을 수 있습니다. 컴포넌트가 부모에 의해 다뤄지는 경우를 살펴보죠:
 
 ```javascript
 React.createClass({
@@ -200,6 +200,6 @@ this.messages = this.messages.push(new Message({
 });
 ```
 
-자료구조가 불변이기 때문에 push 함수의 결과를 this.messages에 할당할 필요가 있으니 주의하세요.
+자료구조가 불변이기 때문에 push 함수의 결과를 `this.messages`에 할당할 필요가 있으니 주의하세요.
 
 React 측에서는, 컴포넌트의 state를 보존하기 위해 immutable-js 자료구조를 사용한다면, 모든 컴포넌트에 `PureRenderMixin`을 혼합해 다시 렌더링하는 프로세스를 중단할 수 있습니다.
