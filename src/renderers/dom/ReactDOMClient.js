@@ -6,77 +6,34 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule React
+ * @providesModule ReactDOMClient
  */
 
 /* globals __REACT_DEVTOOLS_GLOBAL_HOOK__*/
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
-var ReactClass = require('ReactClass');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
-var ReactDOM = require('ReactDOM');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
-var ReactPropTypes = require('ReactPropTypes');
 var ReactReconciler = require('ReactReconciler');
-var ReactServerRendering = require('ReactServerRendering');
 
-var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
-var onlyChild = require('onlyChild');
 var warning = require('warning');
 
 ReactDefaultInjection.inject();
 
-var createElement = ReactElement.createElement;
-var createFactory = ReactElement.createFactory;
-var cloneElement = ReactElement.cloneElement;
-
-if (__DEV__) {
-  createElement = ReactElementValidator.createElement;
-  createFactory = ReactElementValidator.createFactory;
-  cloneElement = ReactElementValidator.cloneElement;
-}
-
 var render = ReactPerf.measure('React', 'render', ReactMount.render);
 
 var React = {
-  Children: {
-    map: ReactChildren.map,
-    forEach: ReactChildren.forEach,
-    count: ReactChildren.count,
-    only: onlyChild
-  },
-  Component: ReactComponent,
-  DOM: ReactDOM,
-  PropTypes: ReactPropTypes,
-  createClass: ReactClass.createClass,
-  createElement: createElement,
-  cloneElement: cloneElement,
-  createFactory: createFactory,
-  createMixin: function(mixin) {
-    // Currently a noop. Will be used to validate and trace mixins.
-    return mixin;
-  },
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   findDOMNode: findDOMNode,
   render: render,
-  renderToString: ReactServerRendering.renderToString,
-  renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
-  unmountComponentAtNode: ReactMount.unmountComponentAtNode,
-  isValidElement: ReactElement.isValidElement,
-
-  // Hook for JSX spread, don't use this for anything else.
-  __spread: assign
+  unmountComponentAtNode: ReactMount.unmountComponentAtNode
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.
@@ -149,7 +106,5 @@ if (__DEV__) {
     }
   }
 }
-
-React.version = '0.14.0-alpha1';
 
 module.exports = React;

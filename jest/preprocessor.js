@@ -7,7 +7,7 @@ var tsPreprocessor = require('./ts-preprocessor');
 
 var defaultLibraries = [
   require.resolve('./jest.d.ts'),
-  require.resolve('../src/modern/class/React.d.ts')
+  require.resolve('../src/isomorphic/modern/class/React.d.ts')
 ];
 
 var ts = tsPreprocessor(defaultLibraries);
