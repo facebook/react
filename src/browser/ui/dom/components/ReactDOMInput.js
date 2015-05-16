@@ -20,8 +20,8 @@ var ReactElement = require('ReactElement');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
+var filterDisabledEvents = require('filterDisabledEvents');
 var invariant = require('invariant');
 
 var input = ReactElement.createFactory('input');
@@ -66,8 +66,7 @@ var ReactDOMInput = ReactClass.createClass({
   },
 
   render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
+    var props = filterDisabledEvents(this.props);
 
     props.defaultChecked = null;
     props.defaultValue = null;

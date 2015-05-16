@@ -21,12 +21,53 @@ describe('ReactDOMInput', function() {
   var ReactLink;
   var ReactTestUtils;
 
+  var onClick = mocks.getMockFunction();
+
+  function expectClickThru(input) {
+    onClick.mockClear();
+    ReactTestUtils.Simulate.click(input.getDOMNode());
+    expect(onClick.mock.calls.length).toBe(1);
+  }
+
+  function expectNoClickThru(input) {
+    onClick.mockClear();
+    ReactTestUtils.Simulate.click(input.getDOMNode());
+    expect(onClick.mock.calls.length).toBe(0);
+  }
+
+  function mounted(input) {
+    input = ReactTestUtils.renderIntoDocument(input);
+    return input;
+  }
+
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
     spyOn(console, 'error');
+  });
+
+  it('should forward clicks when it starts out not disabled', function() {
+    expectClickThru(mounted(<input onClick={onClick} />));
+  });
+
+  it('should not forward clicks when it starts out disabled', function() {
+    expectNoClickThru(
+      mounted(<input disabled={true} onClick={onClick} />)
+    );
+  });
+
+  it('should forward clicks when it becomes not disabled', function() {
+    var input = mounted(<input disabled={true} onClick={onClick} />);
+    input.setProps({disabled: false});
+    expectClickThru(input);
+  });
+
+  it('should not forward clicks when it becomes disabled', function() {
+    var input = mounted(<input onClick={onClick} />);
+    input.setProps({disabled: true});
+    expectNoClickThru(input);
   });
 
   it('should display `defaultValue` of number 0', function() {
