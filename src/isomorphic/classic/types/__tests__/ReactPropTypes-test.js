@@ -161,7 +161,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf(PropTypes.number),
         [1, 2, 'b'],
-        'Invalid prop `2` of type `string` supplied to `testComponent`, ' +
+        'Invalid prop `testProp[2]` of type `string` supplied to `testComponent`, ' +
         'expected `number`.'
       );
     });
@@ -173,7 +173,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf(PropTypes.instanceOf(Thing)),
         [new Thing(), 'xyz'],
-        'Invalid prop `1` supplied to `testComponent`, expected instance of `' +
+        'Invalid prop `testProp[1]` supplied to `testComponent`, expected instance of `' +
         name + '`.'
       );
     });
@@ -458,7 +458,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.objectOf(PropTypes.number),
         {a: 1, b: 2, c: 'b'},
-        'Invalid prop `c` of type `string` supplied to `testComponent`, ' +
+        'Invalid prop `testProp.c` of type `string` supplied to `testComponent`, ' +
         'expected `number`.'
       );
     });
@@ -470,7 +470,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.objectOf(PropTypes.instanceOf(Thing)),
         {a: new Thing(), b: 'xyz'},
-        'Invalid prop `b` supplied to `testComponent`, expected instance of `' +
+        'Invalid prop `testProp.b` supplied to `testComponent`, expected instance of `' +
         name + '`.'
       );
     });
@@ -668,7 +668,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.shape({key: PropTypes.number.isRequired}),
         {},
-        'Required prop `key` was not specified in `testComponent`.'
+        'Required prop `testProp.key` was not specified in `testComponent`.'
       );
     });
 
@@ -679,14 +679,14 @@ describe('ReactPropTypes', function() {
           secondKey: PropTypes.number.isRequired
         }),
         {},
-        'Required prop `key` was not specified in `testComponent`.'
+        'Required prop `testProp.key` was not specified in `testComponent`.'
       );
     });
 
     it("should warn for invalid key types", function() {
       typeCheckFail(PropTypes.shape({key: PropTypes.number}),
         {key: 'abc'},
-        'Invalid prop `key` of type `string` supplied to `testComponent`, ' +
+        'Invalid prop `testProp.key` of type `string` supplied to `testComponent`, ' +
         'expected `number`.'
       );
     });
