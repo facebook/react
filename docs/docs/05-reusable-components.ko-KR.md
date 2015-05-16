@@ -6,7 +6,7 @@ prev: multiple-components-ko-KR.html
 next: transferring-props-ko-KR.html
 ---
 
-인터페이스를 설계할 때, 공통적으로 사용되는 디자인 요소들(버튼, 폼 필드, 레이아웃 컴포넌트 등)을 잘 정의된 인터페이스의 재사용 가능한 컴포넌트로 분해합니다. 이런 방법으로 다음에 UI를 구축할 때에는 훨씬 적은 코드로 만들 수 있습니다. 이 말은 더 빠른 개발 시간, 더 적은 버그, 더 적은 용량으로 할 수 있다는 뜻이죠.
+인터페이스를 설계할 때, 공통적으로 사용되는 디자인 요소들(버튼, 폼 필드, 레이아웃 컴포넌트 등.)을 잘 정의된 인터페이스의 재사용 가능한 컴포넌트로 분해합니다. 이런 방법으로 다음에 UI를 구축할 때에는 훨씬 적은 코드로 만들 수 있습니다. 이 말은 더 빠른 개발 시간, 더 적은 버그, 더 적은 용량으로 할 수 있다는 뜻이죠.
 
 
 ## Prop 검증
@@ -224,7 +224,7 @@ Counter.defaultProps = { initialCount: 0 };
 
 ### 자동 바인딩 안됨
 
-메소드는 일반 ES6 클래스와 동일한 시멘틱을 따릅니다. `this`를 인스턴스에 자동으로 바인딩하지 않는다는 이야기입니다. 명시적으로 `.bind(this)`나 화살표 함수(arrow function)을 사용하세요.
+메소드는 일반 ES6 클래스와 동일한 시멘틱을 따릅니다. `this`를 인스턴스에 자동으로 바인딩하지 않는다는 이야기입니다. 명시적으로 `.bind(this)`나 [화살표 함수(arrow function)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`를 사용하세요.
 
 ### 믹스인 안됨
 
