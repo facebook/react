@@ -34,7 +34,7 @@ var ReactInputSelection = {
       (elem.nodeName === 'INPUT' && elem.type === 'text') ||
       elem.nodeName === 'TEXTAREA' ||
       elem.contentEditable === 'true'
-    );
+    ) && !elem.getAttribute('data-react-skip-selection-restoration');
   },
 
   getSelectionInformation: function() {
