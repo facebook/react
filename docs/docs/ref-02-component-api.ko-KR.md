@@ -32,7 +32,7 @@ setState({mykey: '새로운 값'});
 ```javascript
 setState(function(previousState, currentProps) {
   return {myInteger: previousState.myInteger + 1};
-});`
+});
 ```
 
 두번째 인자는 선택적이며, `setState`가 한번 완료되고 컴포넌트가 다시 렌더 되었을때 실행되는 콜백 함수입니다.
