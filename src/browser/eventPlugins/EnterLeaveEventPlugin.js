@@ -14,9 +14,10 @@
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
-
 var ReactMount = require('ReactMount');
+var SyntheticMouseEnterLeaveEvent = require('SyntheticMouseEnterLeaveEvent');
+
+var emptyFunction = require('emptyFunction');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -107,7 +108,7 @@ var EnterLeaveEventPlugin = {
     var fromID = from ? ReactMount.getID(from) : '';
     var toID = to ? ReactMount.getID(to) : '';
 
-    var leave = SyntheticMouseEvent.getPooled(
+    var leave = SyntheticMouseEnterLeaveEvent.getPooled(
       eventTypes.mouseLeave,
       fromID,
       nativeEvent
@@ -116,7 +117,7 @@ var EnterLeaveEventPlugin = {
     leave.target = from;
     leave.relatedTarget = to;
 
-    var enter = SyntheticMouseEvent.getPooled(
+    var enter = SyntheticMouseEnterLeaveEvent.getPooled(
       eventTypes.mouseEnter,
       toID,
       nativeEvent
