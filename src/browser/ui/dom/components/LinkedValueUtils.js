@@ -80,28 +80,30 @@ var LinkedValueUtils = {
             hasReadOnlyValue[props.type] ||
             props.onChange ||
             props.readOnly ||
+            props.onInput ||
             props.disabled) {
           return null;
         }
         return new Error(
           'You provided a `value` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultValue`. Otherwise, ' +
-          'set either `onChange` or `readOnly`.'
+          '`onChange` or `onInput` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set either `onChange`, `onInput`, or `readOnly`.'
         );
       },
       checked: function(props, propName, componentName) {
         if (!props[propName] ||
             props.onChange ||
             props.readOnly ||
+            props.onInput ||
             props.disabled) {
           return null;
         }
         return new Error(
           'You provided a `checked` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultChecked`. Otherwise, ' +
-          'set either `onChange` or `readOnly`.'
+          '`onChange` or `onInput` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultChecked`. ' +
+          'Otherwise, set either `onChange`, `onInput`,  or `readOnly`.'
         );
       },
       onChange: ReactPropTypes.func
