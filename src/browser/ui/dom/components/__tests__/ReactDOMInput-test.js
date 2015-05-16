@@ -82,7 +82,7 @@ describe('ReactDOMInput', function() {
 
     expect(node.value).toBe('yolo');
 
-    stub.replaceProps({value: true, onChange: emptyFunction});
+    stub.replaceProps({value: true, type: 'text', onChange: emptyFunction});
     expect(node.value).toEqual('true');
   });
 
@@ -93,7 +93,7 @@ describe('ReactDOMInput', function() {
 
     expect(node.value).toBe('yolo');
 
-    stub.replaceProps({value: false});
+    stub.replaceProps({value: false, type: 'text'});
     expect(node.value).toEqual('false');
   });
 
@@ -110,7 +110,11 @@ describe('ReactDOMInput', function() {
       }
     };
 
-    stub.replaceProps({value: objToString, onChange: emptyFunction});
+    stub.replaceProps({
+      value: objToString,
+      type: 'text',
+      onChange: emptyFunction
+    });
     expect(node.value).toEqual('foobar');
   });
 
@@ -194,6 +198,40 @@ describe('ReactDOMInput', function() {
     // The original state should have been restored
     expect(aNode.checked).toBe(true);
     expect(cNode.checked).toBe(true);
+  });
+
+  it('should not remount when adding type text', function() {
+    var node = document.createElement('div');
+
+    React.render(
+      <input defaultValue="foo" />,
+      node
+    );
+
+
+  });
+
+  it('should remount when changing type', function() {
+    var node = document.createElement('div');
+
+    React.render(
+      <input defaultValue="foobar" />,
+      node
+    );
+
+    var stub = React.render(
+      <input type="text" defaultValue="foo" />,
+      node
+    );
+
+    expect(stub.getDOMNode().value).toBe('foo');
+
+    stub = React.render(
+      <input type="foobar" defaultValue="bar" />,
+      node
+    );
+
+    expect(stub.getDOMNode().value).toBe('bar');
   });
 
   it('should support ReactLink', function() {
