@@ -44,6 +44,49 @@ describe('ReactClass-spec', function() {
       .toBe('TestComponent');
   });
 
+  it('gives methods a displayName for testing purposes', function() {
+      var a = function() {};
+      var b = function() {};
+      var c = function() {};
+      var d = function() {return <div></div>;};
+      var e = function() {};
+      var f = function() {};
+      var g = function() {};
+      var mixin = {
+        getInitialState: f,
+        componentDidMount: g,
+      };
+      var Component = React.createClass({
+        mixins: [mixin],
+        componentDidMount: a, // DEFINE_MANY
+        onClick: b,
+        random: c,
+        render: d,
+        getInitialState: e, // DEFINE_MANY_MERGED
+      });
+      // componentDidMount on component
+      expect(a.displayName).toBe('Component_componentDidMount');
+      expect(b.displayName).toBe('Component_onClick');
+      expect(c.displayName).toBe('Component_random');
+      expect(d.displayName).toBe('Component_render');
+      // getInitialState on component
+      expect(e.displayName).toBe('Component_getInitialState');
+      // both on mixin
+      expect(f.displayName).toBe('mixin_getInitialState');
+      expect(g.displayName).toBe('mixin_componentDidMount');
+      // DEFINE_MANY and DEFINE_MANY_MERGED specs create new chained/merged
+      // functions, test those too
+      expect(Component.type.prototype.getInitialState.displayName)
+        .toBe('Component_getInitialState');
+      expect(Component.type.prototype.componentDidMount.displayName)
+        .toBe('Component_componentDidMount');
+
+      React.createClass({
+        render: d,
+      });
+      expect(d.displayName).toBe('anonymous_render');
+    });
+
   it('should warn when accessing .type on a React class', function() {
     var TestComponent = React.createClass({
       render: function() {
