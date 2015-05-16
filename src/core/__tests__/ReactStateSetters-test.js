@@ -68,6 +68,29 @@ describe('ReactStateSetters', function() {
     expect(instance.state).toEqual({foo: 33, bar: 1320});
   });
 
+  it('createStateSetter should update state with more than 6 arguments', function() {
+    var instance = <TestComponent />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.state).toEqual({foo: 'foo'});
+
+    var setter = ReactStateSetters.createStateSetter(
+      instance,
+      function(a, b, c, d, e, f, g) {
+        return {
+          foo: a + b + c + d + e + f + g
+        };
+      }
+    );
+    expect(instance.state).toEqual({foo: 'foo'});
+
+    setter(1, 2, 3, 4, 5, 6, 7);
+    expect(instance.state).toEqual({foo: 28});
+
+    setter(1, 2, 3, 4, 5, 6, 8);
+    expect(instance.state).toEqual({foo: 29});
+
+  });
+
   it('createStateKeySetter should update state', function() {
     var instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
