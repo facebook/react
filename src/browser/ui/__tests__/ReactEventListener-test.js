@@ -190,4 +190,16 @@ describe('ReactEventListener', function() {
     expect(calls[0][EVENT_TARGET_PARAM])
       .toBe(React.findDOMNode(instance.getInner()));
   });
+
+  it('should not dispatch events coming from non own elements', function() {
+    var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
+    callback({
+      target: {
+        ownerDocument: {}
+      }
+    });
+
+    var calls = handleTopLevel.mock.calls;
+    expect(calls.length).toBe(0);
+  });
 });
