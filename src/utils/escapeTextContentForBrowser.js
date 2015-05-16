@@ -11,24 +11,25 @@
 
 'use strict';
 
+// `"` and `'` are not escaped; they are parsed as regular characters in the
+// context of text content.
+
 var ESCAPE_LOOKUP = {
   '&': '&amp;',
   '>': '&gt;',
-  '<': '&lt;',
-  '"': '&quot;',
-  '\'': '&#x27;'
+  '<': '&lt;'
 };
 
-var ESCAPE_REGEX = /[&><"']/g;
+var ESCAPE_REGEX = /[&><]/g;
 
 function escaper(match) {
   return ESCAPE_LOOKUP[match];
 }
 
 /**
- * Escapes text to prevent scripting attacks.
+ * Escapes text content to prevent scripting attacks.
  *
- * @param {*} text Text value to escape.
+ * @param {*} text Text content value to escape.
  * @return {string} An escaped string.
  */
 function escapeTextContentForBrowser(text) {
