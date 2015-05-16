@@ -40,7 +40,8 @@ function isCollapsed(anchorNode, anchorOffset, focusNode, focusOffset) {
  * @return {object}
  */
 function getIEOffsets(node) {
-  var selection = document.selection;
+  var doc = node.ownerDocument;
+  var selection = doc.selection;
   var selectedRange = selection.createRange();
   var selectedLength = selectedRange.text.length;
 
@@ -63,7 +64,9 @@ function getIEOffsets(node) {
  * @return {?object}
  */
 function getModernOffsets(node) {
-  var selection = window.getSelection && window.getSelection();
+  var doc = node.ownerDocument;
+  var win = doc.defaultView || doc.parentWindow;
+  var selection = win.getSelection && win.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
@@ -103,7 +106,7 @@ function getModernOffsets(node) {
   var end = start + rangeLength;
 
   // Detect whether the selection is backward.
-  var detectionRange = document.createRange();
+  var detectionRange = doc.createRange();
   detectionRange.setStart(anchorNode, anchorOffset);
   detectionRange.setEnd(focusNode, focusOffset);
   var isBackward = detectionRange.collapsed;
@@ -119,7 +122,8 @@ function getModernOffsets(node) {
  * @param {object} offsets
  */
 function setIEOffsets(node, offsets) {
-  var range = document.selection.createRange().duplicate();
+  var doc = node.ownerDocument;
+  var range = doc.selection.createRange().duplicate();
   var start, end;
 
   if (typeof offsets.end === 'undefined') {
@@ -153,11 +157,13 @@ function setIEOffsets(node, offsets) {
  * @param {object} offsets
  */
 function setModernOffsets(node, offsets) {
-  if (!window.getSelection) {
+  var doc = node.ownerDocument;
+  var win = doc.defaultView || doc.parentWindow;
+  if (!win.getSelection) {
     return;
   }
 
-  var selection = window.getSelection();
+  var selection = win.getSelection();
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
   var end = typeof offsets.end === 'undefined' ?
@@ -175,7 +181,7 @@ function setModernOffsets(node, offsets) {
   var endMarker = getNodeForCharacterOffset(node, end);
 
   if (startMarker && endMarker) {
-    var range = document.createRange();
+    var range = doc.createRange();
     range.setStart(startMarker.node, startMarker.offset);
     selection.removeAllRanges();
 
