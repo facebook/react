@@ -1,5 +1,5 @@
 # We can probably lint these later but not important at this point
-src/vendor
+src/shared/vendor
 # eslint uses JSX* node types to determine if using JSX. esprima-fb still uses
 # XJS* nodes. When we fix that (https://github.com/facebook/esprima/pull/85) we
 # can enable linting the tests and fix those errors.
