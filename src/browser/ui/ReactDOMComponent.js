@@ -43,6 +43,8 @@ var CONTENT_TYPES = {'string': true, 'number': true};
 var STYLE = keyOf({style: null});
 
 var ELEMENT_NODE_TYPE = 1;
+var DOC_NODE_TYPE = 9;
+var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
 var styleMutationWarning = {};
 
@@ -151,9 +153,19 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
   }
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
+
+    var doc = container; // Walk up from container to find best document
+    while (doc !== null &&
+        doc.nodeType !== DOC_NODE_TYPE &&
+        doc.nodeType !== DOCUMENT_FRAGMENT_NODE_TYPE) {
+      doc = doc.parentNode;
+    }
+
+    // If the container isn't mounted in a document, register with the default document
+    if (doc === null && container.nodeType === ELEMENT_NODE_TYPE) {
+      doc = container.ownerDocument;
+    }
+
     listenTo(registrationName, doc);
   }
   transaction.getReactMountReady().enqueue(putListener, {
