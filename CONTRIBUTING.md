@@ -27,7 +27,7 @@ The core team will be monitoring for pull requests. When we get one, we'll run s
 
 In order to accept your pull request, we need you to submit a CLA. You only need to do this once, so if you've done this for another Facebook open source project, you're good to go. If you are submitting a pull request for the first time, just let us know that you have completed the CLA and we can cross-check with your GitHub username.
 
-[Complete your CLA here](https://code.facebook.com/cla)
+[Complete your CLA here.](https://code.facebook.com/cla)
 
 ## Bugs
 
@@ -50,15 +50,20 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 
 ## Style Guide
 
-### Code
+Our linter will catch most styling issues that may exist in your code.
+You can check the status of your code styling by simply running: `grunt lint`
 
-* Use semicolons;
-* Commas last,
+However, there are still some styles that the linter cannot pick up. If you are unsure about something, looking at [Airbnb's Style Guide](https://github.com/airbnb/javascript) will guide you in the right direction.
+
+### Code Conventions
+
+* Use semicolons `;`
+* Commas last `,`
 * 2 spaces for indentation (no tabs)
 * Prefer `'` over `"`
 * `'use strict';`
 * 80 character line length
-* "Attractive"
+* Write "attractive" code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 
 ### Documentation
