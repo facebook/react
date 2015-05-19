@@ -107,4 +107,4 @@ Examples provided in this repository and in the documentation are [separately li
 There's only so much we can cram in here. To read more about the community and guidelines for submitting pull requests, please read the [Contributing document](CONTRIBUTING.md).
 
 ## Troubleshooting
-See the [Troubleshooting Guide](./TROUBLE_SHOOTING)
+See the [Troubleshooting Guide](./TROUBLE_SHOOTING.md)
