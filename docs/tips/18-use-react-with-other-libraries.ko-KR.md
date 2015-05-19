@@ -16,7 +16,7 @@ var App = React.createClass({
   },
 
   componentDidMount: function() {
-    $(this.refs.placeholder.getDOMNode()).append($('<span />'));
+    $(React.findDOMNode(this.refs.placeholder)).append($('<span />'));
   },
 
   componentWillUnmount: function() {
