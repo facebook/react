@@ -43,8 +43,6 @@ describe('ReactDOMOption', function() {
     spyOn(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
 
-    var node = React.findDOMNode(stub);
-
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
       'Only strings and numbers are supported as <option> children.'
