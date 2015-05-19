@@ -452,7 +452,7 @@ function updateReactCreateClassToES6(file, api, options) {
       path = j(classPath).closest(j.VariableDeclaration);
     }
 
-    path.replaceWith(
+    j(path.get()).replaceWith(
       createES6Class(
         name,
         functions,

@@ -123,9 +123,12 @@ function removePureRenderMixin(file, api, options) {
       })
       .filter(property => !!property);
 
-    ReactUtils.findReactCreateClassCallExpression(classPath).replaceWith(
-      ReactUtils.createCreateReactClassCallExpression(
-        insertShouldComponentUpdate(properties)
+    ReactUtils
+      .findReactCreateClassCallExpression(classPath)
+      .forEach(p => j(p).replaceWith(
+        ReactUtils.createCreateReactClassCallExpression(
+          insertShouldComponentUpdate(properties)
+        )
       )
     );
   };
@@ -142,8 +145,7 @@ function removePureRenderMixin(file, api, options) {
       return;
     }
 
-    const declaration = path
-      .findVariableDeclarators(PURE_RENDER_MIXIN)
+    const declaration = j(path.findVariableDeclarators(PURE_RENDER_MIXIN).get())
       .closest(j.VariableDeclaration);
 
     if (declaration.size > 1) {
