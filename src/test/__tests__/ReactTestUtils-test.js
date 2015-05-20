@@ -159,6 +159,24 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div />);
   });
 
+  it('can pass context when shallowly rendering', function() {
+    var SimpleComponent = React.createClass({
+      contextTypes: {
+        name: React.PropTypes.string,
+      },
+      render: function() {
+        return <div>{this.context.name}</div>;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SimpleComponent />, {
+        name: "foo",
+    });
+    var result = shallowRenderer.getRenderOutput();
+    expect(result).toEqual(<div>foo</div>);
+  });
+
   it('Test scryRenderedDOMComponentsWithClass with TextComponent', function() {
     var renderedComponent = ReactTestUtils.renderIntoDocument(<div>Hello <span>Jim</span></div>);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
