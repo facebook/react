@@ -23,6 +23,7 @@ var React = require('React');
 var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
+var ReactDataTracker = require('ReactDataTracker');
 var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactUpdates = require('ReactUpdates');
@@ -43,7 +44,15 @@ React.addons = {
   createFragment: ReactFragment.create,
   renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   shallowCompare: shallowCompare,
-  update: update
+  update: update,
+  observeRead: function(reactDataEntity) {
+    ReactDataTracker.startRead(reactDataEntity);
+    ReactDataTracker.endRead(reactDataEntity);
+  },
+  observeWrite: function(reactDataEntity) {
+    ReactDataTracker.startWrite(reactDataEntity);
+    ReactDataTracker.endWrite(reactDataEntity);
+  }
 };
 
 if (__DEV__) {

@@ -698,6 +698,9 @@ var ReactMount = {
     );
     delete instancesByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];
+    if (component._instance._tracker) {
+      component._instance._tracker.destroy();
+    }
     if (__DEV__) {
       delete rootElementsByReactRootID[reactRootID];
     }

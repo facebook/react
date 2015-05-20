@@ -14,6 +14,7 @@
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDataTracker = require('ReactDataTracker');
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -739,7 +740,20 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
     var inst = this._instance;
-    var renderedComponent = inst.render();
+
+    // Setup data tracker (TODO: Singleton tracker for faster perf)
+    if (inst._tracker === undefined) {
+      inst._tracker = new ReactDataTracker(function() {
+        return inst.render();
+      });
+      inst._tracker.setCallback(function() {
+        inst.setState({});
+      });
+    } else {
+      inst._tracker._cacheValid = false;
+    }
+
+    var renderedComponent = inst._tracker.read();
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
       if (typeof renderedComponent === 'undefined' &&
