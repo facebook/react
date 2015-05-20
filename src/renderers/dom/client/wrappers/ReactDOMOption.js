@@ -16,7 +16,6 @@ var ReactChildren = require('ReactChildren');
 var ReactClass = require('ReactClass');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactElement = require('ReactElement');
-var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPropTypes = require('ReactPropTypes');
 
 var assign = require('Object.assign');
@@ -56,7 +55,7 @@ var ReactDOMOption = ReactClass.createClass({
     }
 
     // Look up whether this option is 'selected' via parent-based context
-    var context = ReactInstanceMap.get(this)._context;
+    var context = this.context;
     var selectValue = context[valueContextKey];
 
     // If context key is null (e.g., no specified value or after initial mount)
