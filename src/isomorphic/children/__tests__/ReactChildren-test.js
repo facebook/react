@@ -75,7 +75,7 @@ describe('ReactChildren', function() {
       return kid;
     });
 
-    var simpleKid = <span />;
+    var simpleKid = <span key="simple" />;
     var instance = <div>{[simpleKid]}</div>;
     ReactChildren.forEach(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
@@ -83,6 +83,7 @@ describe('ReactChildren', function() {
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
     expect(nthChild(mappedChildren, 0)).toBe(simpleKid);
+
   });
 
   it('should pass key to returned component', function() {
