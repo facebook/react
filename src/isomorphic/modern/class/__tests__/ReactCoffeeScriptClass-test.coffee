@@ -44,10 +44,13 @@ describe 'ReactCoffeeScriptClass', ->
     expect(Foo.name).toBe 'Foo'
 
   it 'throws if no render function is defined', ->
+    spyOn console, 'error'
     class Foo extends React.Component
     expect(->
       React.render React.createElement(Foo), container
     ).toThrow()
+    expect(console.error.calls.length).toBe(1)
+    expect(console.error.calls[0].args[0]).toContain('No `render` method found on the returned component instance')
 
   it 'renders a simple stateless component with prop', ->
     class Foo

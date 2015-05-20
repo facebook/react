@@ -19,6 +19,8 @@ describe('ReactDOMSelect', function() {
   var ReactLink;
   var ReactTestUtils;
 
+  var noop = function() {};
+
   beforeEach(function() {
     React = require('React');
     ReactLink = require('ReactLink');
@@ -103,7 +105,7 @@ describe('ReactDOMSelect', function() {
 
   it('should allow setting `value`', function() {
     var stub =
-      <select value="giraffe">
+      <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -117,14 +119,14 @@ describe('ReactDOMSelect', function() {
 
     // Changing the `value` prop should change the selected option.
     React.render(
-      <select value="gorilla">{options}</select>,
+      <select value="gorilla" onChange={noop}>{options}</select>,
       container
     );
     expect(node.value).toEqual('gorilla');
   });
 
   it('should not throw with `value` and without children', function() {
-    var stub = <select value="dummy"></select>;
+    var stub = <select value="dummy" onChange={noop}></select>;
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(stub);
@@ -133,7 +135,7 @@ describe('ReactDOMSelect', function() {
 
   it('should allow setting `value` with multiple', function() {
     var stub =
-      <select multiple={true} value={['giraffe', 'gorilla']}>
+      <select multiple={true} value={['giraffe', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -149,7 +151,9 @@ describe('ReactDOMSelect', function() {
 
     // Changing the `value` prop should change the selected options.
     React.render(
-      <select multiple={true} value={['monkey']}>{options}</select>,
+      <select multiple={true} value={['monkey']} onChange={noop}>
+        {options}
+      </select>,
       container
     );
 
@@ -160,7 +164,7 @@ describe('ReactDOMSelect', function() {
 
   it('should not select other options automatically', function() {
     var stub =
-      <select multiple={true} value={['12']}>
+      <select multiple={true} value={['12']} onChange={noop}>
         <option value="1">one</option>
         <option value="2">two</option>
         <option value="12">twelve</option>
@@ -174,12 +178,12 @@ describe('ReactDOMSelect', function() {
   });
 
   it('should reset child options selected when they are changed and `value` is set', function() {
-    var stub = <select multiple={true} value={['a', 'b']} />;
+    var stub = <select multiple={true} value={['a', 'b']} onChange={noop} />;
     var container = document.createElement('div');
     stub = React.render(stub, container);
 
     React.render(
-      <select multiple={true} value={['a', 'b']}>
+      <select multiple={true} value={['a', 'b']} onChange={noop}>
         <option value="a">a</option>
         <option value="b">b</option>
         <option value="c">c</option>
@@ -203,7 +207,7 @@ describe('ReactDOMSelect', function() {
     };
 
     var el =
-      <select multiple={true} value={[objectToString]}>
+      <select multiple={true} value={[objectToString]} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -285,7 +289,7 @@ describe('ReactDOMSelect', function() {
 
   it('should remember value when switching to uncontrolled', function() {
     var stub =
-      <select value={'giraffe'}>
+      <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -308,7 +312,7 @@ describe('ReactDOMSelect', function() {
 
   it('should remember updated value when switching to uncontrolled', function() {
     var stub =
-      <select value={'giraffe'}>
+      <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -318,7 +322,10 @@ describe('ReactDOMSelect', function() {
     stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
-    React.render(<select value="gorilla">{options}</select>, container);
+    React.render(
+      <select value="gorilla" onChange={noop}>{options}</select>,
+      container
+    );
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
@@ -358,7 +365,7 @@ describe('ReactDOMSelect', function() {
 
   it('should support server-side rendering', function() {
     var stub =
-      <select value="giraffe">
+      <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -384,7 +391,7 @@ describe('ReactDOMSelect', function() {
 
   it('should support server-side rendering with multiple', function() {
     var stub =
-      <select multiple={true} value={['giraffe', 'gorilla']}>
+      <select multiple={true} value={['giraffe', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>

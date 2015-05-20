@@ -64,6 +64,7 @@ describe('traverseAllChildren', function() {
   });
 
   it('should treat single child in array as expected', function() {
+    spyOn(console, 'error');
     var traverseContext = [];
     var traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
@@ -79,6 +80,8 @@ describe('traverseAllChildren', function() {
       '.0'
     );
     expect(traverseContext.length).toEqual(1);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child', function() {
@@ -328,6 +331,7 @@ describe('traverseAllChildren', function() {
       traverseContext[2],
       '.2'
     );
+
   });
 
   it('should be called for each child in an iterable with keys', function() {

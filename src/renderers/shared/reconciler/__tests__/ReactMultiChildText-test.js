@@ -84,6 +84,7 @@ var expectChildren = function(d, children) {
  */
 describe('ReactMultiChildText', function() {
   it('should correctly handle all possible children for render and update', function() {
+    spyOn(console, 'error');
     testAllPermutations([
       // basic values
       undefined, [],
@@ -184,6 +185,8 @@ describe('ReactMultiChildText', function() {
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should throw if rendering both HTML and children', function() {

@@ -311,7 +311,19 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
+    var warn = jest.genMockFn();
+    console.error = warn;
+
     expect(() => React.render(React.createElement(Empty), container)).toThrow();
+
+    expect(warn.mock.calls.length).toBe(1);
+    expect(warn.mock.calls[0][0]).toBe(
+      'Warning: Empty(...): ' +
+      'No `render` method found on the returned component instance: you may ' +
+      'have forgotten to define `render` in your component or you may have ' +
+      'accidentally tried to render an element whose type is a function that ' +
+      'isn\'t a React component.'
+    );
   });
 
   it('renders a simple stateless component with prop', function() {

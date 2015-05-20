@@ -58,6 +58,8 @@ describe('ReactES6Class', function() {
     spyOn(console, 'error');
     class Foo extends React.Component { }
     expect(() => React.render(<Foo />, container)).toThrow();
+
+    expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: Foo(...): ' +
       'No `render` method found on the returned component instance: you may ' +

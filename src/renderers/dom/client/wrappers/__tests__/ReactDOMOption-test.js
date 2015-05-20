@@ -30,11 +30,14 @@ describe('ReactDOMOption', function() {
   });
 
   it('should ignore invalid children types', function() {
+    spyOn(console, 'error');
     var stub = <option>{1} <div /> {2}</option>;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = React.findDOMNode(stub);
 
     expect(node.innerHTML).toBe('1  2');
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain('Only strings and numbers are supported as <option> children.');
   });
 
   it('should warn when passing invalid children', function() {
