@@ -124,7 +124,7 @@ You do not have to return basic HTML. You can return a tree of components that y
 
 ## Composing components
 
-Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s:
+Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s. Add these two components to your file, keeping the existing `CommentBox` declaration and `React.render` call:
 
 ```javascript
 // tutorial2.js
