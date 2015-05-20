@@ -7,6 +7,8 @@ var babel = require('babel');
 
 var constants = require('../vendor/constants')(babel);
 
+var TRANSFORM_IGNORE_RE = /^WebComponents$/;
+
 require("commoner").version(
   require("../package.json").version
 ).resolve(function(id) {
@@ -30,12 +32,16 @@ require("commoner").version(
 }).process(function(id, source) {
   var context = this;
 
-  // This is where JSX, ES6, etc. desugaring happens.
-  source = babel.transform(source, {
-    blacklist: ['spec.functionName', 'validation.react'],
-    plugins: [constants],
-    filename: id
-  }).code;
+  // This is hacky but that's ok… It really only matters for tests since it
+  // won't otherwise be in the dependency tree.
+  if (!TRANSFORM_IGNORE_RE.test(id)) {
+    // This is where JSX, ES6, etc. desugaring happens.
+    source = babel.transform(source, {
+      blacklist: ['spec.functionName', 'validation.react'],
+      plugins: [constants],
+      filename: id
+    }).code;
+  }
 
   if (context.config.mocking) {
     // Make sure there is exactly one newline at the end of the module.
