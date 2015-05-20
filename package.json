@@ -1,7 +1,7 @@
 {
   "name": "react-tools",
   "description": "A set of complementary tools to React, including the JSX transformer.",
-  "version": "0.14.0-alpha1",
+  "version": "0.14.0-alpha2",
   "keywords": [
     "react",
     "jsx",

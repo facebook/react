@@ -23,6 +23,6 @@ assign(React, ReactIsomorphic);
 assign(React, ReactDOMClient);
 assign(React, ReactDOMServer);
 
-React.version = '0.14.0-alpha1';
+React.version = '0.14.0-alpha2';
 
 module.exports = React;
