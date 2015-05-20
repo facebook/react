@@ -49,10 +49,12 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
       warning(
         !callerName,
         '%s(...): Can only update a mounted or mounting component. ' +
-        'This usually means you called %s() on an unmounted ' +
-        'component. This is a no-op.',
+        'This usually means you called %s() on an unmounted component. ' +
+        'Please check the code for the %s component. ' +
+        'This is a no-op.',
         callerName,
-        callerName
+        callerName,
+        publicInstance.constructor.displayName
       );
     }
     return null;

@@ -257,7 +257,8 @@ describe('ReactComponentLifeCycle', function() {
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op.'
+      'unmounted component. Please check the code for the ' +
+      'StatefulComponent component. This is a no-op.'
     );
   });
 
@@ -636,4 +637,3 @@ describe('ReactComponentLifeCycle', function() {
     ]);
   });
 });
-
