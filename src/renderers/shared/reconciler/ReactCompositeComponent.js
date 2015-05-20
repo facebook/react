@@ -326,12 +326,10 @@ var ReactCompositeComponentMixin = {
    */
   _maskContext: function(context) {
     var maskedContext = null;
-    // This really should be getting the component class for the element,
-    // but we know that we're not going to need it for built-ins.
-    if (typeof this._currentElement.type === 'string') {
-      return emptyObject;
-    }
-    var contextTypes = this._currentElement.type.contextTypes;
+    var Component = ReactNativeComponent.getComponentClassForElement(
+      this._currentElement
+    );
+    var contextTypes = Component.contextTypes;
     if (!contextTypes) {
       return emptyObject;
     }
