@@ -1,6 +1,6 @@
 ---
 title: "Use React and JSX in Ruby on Rails"
-author: Paul O'Shannessy
+author: zpao
 ---
 
 Today we're releasing a gem to make it easier to use React and JSX in Ruby on Rails applications: [react-rails](https://github.com/facebook/react-rails).

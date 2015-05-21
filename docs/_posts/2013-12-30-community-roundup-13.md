@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #13"
-author: Vjeux
+author: vjeux
 ---
 
 Happy holidays! This blog post is a little-late Christmas present for all the React users. Hopefully it will inspire you to write awesome web apps in 2014!

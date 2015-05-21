@@ -1,6 +1,6 @@
 ---
 title: React.js Conf Diversity Scholarship
-author: Paul O’Shannessy
+author: zpao
 ---
 
 Today I'm really happy to announce the React.js Conf Diversity Scholarship! We believe that a diverse set of viewpoints and opinions is really important to build a thriving community. In an ideal world, every part of the tech community would be made up of people from all walks of life. However the reality is that we must be proactive and make an effort to make sure everybody has a voice. As conference organizers we worked closely with the Diversity Team here at Facebook to set aside 10 tickets and provide a scholarship. 10 tickets may not be many in the grand scheme but we really believe that this will have a positive impact on the discussions we have at the conference.

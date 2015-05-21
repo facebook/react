@@ -1,6 +1,6 @@
 ---
 title: "React Chrome Developer Tools"
-author: Sebastian Markbåge
+author: sebmarkbage
 ---
 
 With the new year, we thought you'd enjoy some new tools for debugging React code. Today we're releasing the [React Developer Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi), an extension to the Chrome Developer Tools. [Download them from the Chrome Web Store](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi).
