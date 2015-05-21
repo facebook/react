@@ -384,6 +384,44 @@ ReactShallowRenderer.prototype.unmount = function() {
   }
 };
 
+ReactShallowRenderer.prototype.findElementByRef = function(refName) {
+  var result = null;
+  var renderedElement = this.getRenderOutput();
+
+  if (null !== renderedElement) {
+    result = this._findRef(refName, renderedElement);
+  }
+
+  return result;
+};
+
+ReactShallowRenderer.prototype._findRef = function(refName, element) {
+  if (element.ref == refName) {
+    return element;
+  }
+
+  var children = element.props.children;
+
+  if (typeof children == "object") {
+
+    if (typeof children.forEach == "function") {
+      var result = null;
+
+      children.forEach(function(element) {
+        result = this._findRef(refName, element) || result;
+
+      }.bind(this));
+
+      return result;
+
+    } else {
+      return this._findRef(refName, children);
+    }
+  }
+
+  return null;
+};
+
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
   if (!this._instance) {
     var rootID = ReactInstanceHandles.createReactRootID();

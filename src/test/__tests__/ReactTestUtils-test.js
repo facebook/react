@@ -177,6 +177,34 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div>foo</div>);
   });
 
+  it('can find element by ref when shallow rendering', function() {
+    var SimpleComponent = React.createClass({
+      render: function() {
+        return (
+          <div ref="parent">
+            <div ref="foo">bar</div>
+            <div ref="bar"></div>
+          </div>
+        );
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+
+    var parentElement = shallowRenderer.findElementByRef("parent");
+    expect(parentElement.ref).toEqual("parent");
+
+    var fooElement = shallowRenderer.findElementByRef("foo");
+    expect(fooElement).toEqual(<div ref="foo">bar</div>);
+
+    var barElement = shallowRenderer.findElementByRef("bar");
+    expect(barElement).toEqual(<div ref="bar"></div>);
+
+    var undefinedElement = shallowRenderer.findElementByRef("undefined");
+    expect(undefinedElement).toEqual(null);
+  });
+
   it('Test scryRenderedDOMComponentsWithClass with TextComponent', function() {
     var renderedComponent = ReactTestUtils.renderIntoDocument(<div>Hello <span>Jim</span></div>);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
