@@ -414,7 +414,7 @@
 </code></pre></div>
 <p>이것은 안티 패턴입니다. 왜냐하면 한참 뒤까지 정확한 propTypes을 체크할 수 없다는 뜻이기 때문입니다. 이것은 propTypes 에러는 알기 힘든 스택 트레이스로 끝난다는 의미입니다.</p>
 
-<p>이 시점에서 props는 불변성인 것을 고려해야 합니다. props 객체를 변경하는 것은 다른 곳에서 예기치 못한 결과가 생길 수 있기 때문에 이상적으로는 이 시점에서 frozen 객체가 되어야 합니다.</p>
+<p>props는 변하지 않는 것으로 간주해야 합니다. props 객체를 변경하는 것은 다른 곳에서 예기치 못한 결과가 생길 수 있기 때문에 이상적으로는 이 시점에서 frozen 객체가 되어야 합니다.</p>
 <h2><a class="anchor" name="-"></a>스프레드 어트리뷰트 <a class="hash-link" href="#-">#</a></h2>
 <p>이제 JSX의 새로운 기능인 스프레드 어트리뷰트를 사용하실 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>

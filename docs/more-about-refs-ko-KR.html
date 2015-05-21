@@ -515,7 +515,7 @@
 <ul>
 <li>컴포넌트 클래스에 public 메소드(ex. Typeahead의 reset)를 선언할 수 있으며 refs를 통해 그를 호출할 수 있습니다. (ex. <code>this.refs.myTypeahead.reset()</code>)</li>
 <li>DOM을 측정하기 위해서는 거의 항상 <code>&lt;input /&gt;</code> 같은 &quot;기본&quot; 컴포넌트를 다루고 <code>React.findDOMNode(this.refs.myInput)</code>를 통해 그 기저의 DOM 노드에 접근해야 합니다. Refs는 이 일을 확실하게 수행하는 몇 안 되는 실용적인 방법의 하나입니다.</li>
-<li>Refs는 자동으로 기록을 관리합니다! 자식이 파괴되면, 그의 ref도 마찬가지로 파괴됩니다. 참조를 유지하기 위해 뭔가 미친 짓을 하지 않는 한, 메모리 걱정은 하지 않아도 됩니다.</li>
+<li>Refs는 자동으로 관리합니다! 자식이 파괴되면, 그의 ref도 마찬가지로 파괴됩니다. 참조를 유지하기 위해 뭔가 미친 짓을 하지 않는 한, 메모리 걱정은 하지 않아도 됩니다.</li>
 </ul>
 <h3><a class="anchor" name=""></a>주의: <a class="hash-link" href="#">#</a></h3>
 <ul>

@@ -414,7 +414,7 @@
 <h2><a class="anchor" name="react-elements"></a>React Elements <a class="hash-link" href="#react-elements">#</a></h2>
 <p>The primary type in React is the <code>ReactElement</code>. It has four properties: <code>type</code>, <code>props</code>, <code>key</code> and <code>ref</code>. It has no methods and nothing on the prototype.</p>
 
-<p>You can create one of these object through <code>React.createElement</code>.</p>
+<p>You can create one of these objects through <code>React.createElement</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
 </code></pre></div>
 <p>To render a new tree into the DOM, you create <code>ReactElement</code>s and pass them to <code>React.render</code> along with a regular DOM <code>Element</code> (<code>HTMLElement</code> or <code>SVGElement</code>). <code>ReactElement</code>s are not to be confused with DOM <code>Element</code>s. A <code>ReactElement</code> is a light, stateless, immutable, virtual representation of a DOM <code>Element</code>. It is a virtual DOM.</p>

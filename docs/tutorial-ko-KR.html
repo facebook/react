@@ -604,7 +604,7 @@
 
 <p>하지만 여기엔 문제가 있습니다! 우리는 HTML 태그들이 정상적으로 렌더되길 원하지만 브라우저에 출력된 결과물은 &quot;<code>&lt;p&gt;</code><code>&lt;em&gt;</code>또 다른<code>&lt;/em&gt;</code> 댓글입니다<code>&lt;/p&gt;</code>&quot;처럼 태그가 그대로 보일것입니다.</p>
 
-<p>React는 이런 식으로 XSS 공격을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:</p>
+<p>React는 이런 식으로 <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS 공격</a>을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

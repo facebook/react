@@ -304,7 +304,7 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 		
 			<item>
 				<title>Building The Facebook News Feed With Relay</title>
-				<description>&lt;p&gt;At React.js Conf in January we gave a preview of Relay, a new framework for building data-driven applications in React. In this post we&amp;#39;ll describe the process of creating a Relay application. This post assumes some familiarity with the concepts of Relay and GraphQL, so if you haven&amp;#39;t already we recommend reading &lt;a href=&quot;/react/blog/2015/02/20/introducing-relay-and-graphql.html&quot;&gt;our introductory blog post&lt;/a&gt; or watching &lt;a href=&quot;https://www.youtube-nocookie.com/watch?v=9sc8Pyc51uU&quot;&gt;the conference talk&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;At React.js Conf in January we gave a preview of Relay, a new framework for building data-driven applications in React. In this post, we&amp;#39;ll describe the process of creating a Relay application. This post assumes some familiarity with the concepts of Relay and GraphQL, so if you haven&amp;#39;t already we recommend reading &lt;a href=&quot;/react/blog/2015/02/20/introducing-relay-and-graphql.html&quot;&gt;our introductory blog post&lt;/a&gt; or watching &lt;a href=&quot;https://www.youtube-nocookie.com/watch?v=9sc8Pyc51uU&quot;&gt;the conference talk&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;We&amp;#39;re working hard to prepare GraphQL and Relay for public release. In the meantime, we&amp;#39;ll continue to provide information about what you can expect.&lt;/p&gt;
 

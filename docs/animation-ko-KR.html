@@ -473,8 +473,35 @@
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="----"></a>애니메이션 그룹이 작동하려면 마운트가 필요 <a class="hash-link" href="#----">#</a></h3>
-<p>자식들에게 트랜지션을 적용하려면 <code>ReactCSSTransitionGroup</code>은 이미 DOM에 마운트되어 있어야 합니다. 예를 들어, 밑의 코드는 동작하지 않을 것입니다. 왜냐하면 <code>ReactCSSTransitionGroup</code> 안에서 새 아이템을 마운트하는 대신 새 아이템과 같이 <code>ReactCSSTransitionGroup</code>를 마운트했기 때문입니다. 이 것을 위에 있는 <a href="#getting-stared">시작하기</a> 항목과 비교해보세요.</p>
+</code></pre></div><h3><a class="anchor" name="---"></a>처음 마운트에서 애니메이션 하기 <a class="hash-link" href="#---">#</a></h3>
+<p><code>ReactCSSTransitionGroup</code>은 컴포넌트를 처음 마운트할 때 추가 트렌지션 단계를 추가하기 위해, 선택적인 prop <code>transitionAppear</code>를 제공합니다. 일반적으로 처음 마운트할 때 트렌지션 단계를 넣지 않기 때문에 <code>transitionAppear</code>의 기본 값은 <code>false</code>입니다. 뒤의 예제는 <code>transitionAppear</code> prop에 <code>true</code> 값을 넘기고 있습니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionAppear</span><span class="o">=</span><span class="s2">&quot;true&quot;</span><span class="o">&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Fading</span> <span class="nx">at</span> <span class="nx">Initial</span> <span class="nx">Mount</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+</span><span class="hll">      <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+</span>    <span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>처음 마운트할 때 <code>ReactCSSTransitionGroup</code>은 <code>example-appear</code> CSS 클래스를 받고 그 다음에 <code>example-appear-active</code> CSS 클래스가 추가됩니다.</p>
+<div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-appear</span> <span class="p">{</span>
+  <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nc">.example-appear.example-appear-active</span> <span class="p">{</span>
+  <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>처음 마운트할 때, <code>ReactCSSTransitionGroup</code>의 모든 자식은 <code>appear</code>하지만 <code>enter</code>하지 않습니다. 하지만, 존재하는 <code>ReactCSSTransitionGroup</code>에 추가되는 모든 자식은 <code>enter</code>하지만 <code>appear</code>하지 않습니다.</p>
+
+<blockquote>
+<p>주의:</p>
+
+<p><code>transitionAppear</code> prop은 버전 <code>0.13</code>에서 <code>ReactCSSTransitionGroup</code>에 추가되었습니다. 하위 호환성을 생각해서, 기본 값은 <code>false</code>로 설정되어 있습니다.</p>
+</blockquote>
+<h3><a class="anchor" name="----"></a>애니메이션 그룹이 작동하려면 마운트가 필요 <a class="hash-link" href="#----">#</a></h3>
+<p>자식들에게 트랜지션을 적용하려면 <code>ReactCSSTransitionGroup</code>은 이미 DOM에 마운트되어 있거나 prop <code>transitionAppear</code>가 <code>true</code>로 설정되어야만 합니다. 예를 들어, 밑의 코드는 동작하지 않을 것입니다. 왜냐하면 <code>ReactCSSTransitionGroup</code> 안에서 새 아이템을 마운트하는 대신 새 아이템과 같이 <code>ReactCSSTransitionGroup</code>를 마운트했기 때문입니다. 이 것을 위에 있는 <a href="#getting-stared">시작하기</a> 항목과 비교해보세요.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">(</span>
@@ -493,7 +520,7 @@
 </span>    <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="----"></a>아이템 하나이거나 없을 때의 애니메이션 <a class="hash-link" href="#----">#</a></h3>
-<p>위의 에제에서 <code>ReactCSSTransitionGroup</code>에 아이템 목록을 렌더했지만, <code>ReactCSSTransitionGroup</code>의 자식은 하나이거나 없을 수도 있습니다. 이는 한 엘리먼트가 들어오고 나가는 것의 애니메이션을 가능하게 합니다. 비슷하게, 현재 엘리먼트가 나가는 동안 새 앨리먼트의 애니메이션을 하면, 새 엘리먼트가 현재 엘리먼트를 교체하는 애니메이션을 만들 수 있습니다. 예를 들어 이렇게 간단한 이미지 회전 베너(carousel)를 구현할 수 있습니다.</p>
+<p>위의 예제에서 <code>ReactCSSTransitionGroup</code>에 아이템 목록을 렌더했지만, <code>ReactCSSTransitionGroup</code>의 자식은 하나이거나 없을 수도 있습니다. 이는 한 엘리먼트가 들어오고 나가는 것의 애니메이션을 가능하게 합니다. 비슷하게, 현재 엘리먼트가 나가는 동안 새 앨리먼트의 애니메이션을 하면, 새 엘리먼트가 현재 엘리먼트를 교체하는 애니메이션을 만들 수 있습니다. 예를 들어 이렇게 간단한 이미지 회전 베너(carousel)를 구현할 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">ImageCarousel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>

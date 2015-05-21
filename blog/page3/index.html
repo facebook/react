@@ -94,11 +94,27 @@
   <div class="inner-content">
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2015/03/03/react-v0.13-rc2.html">React v0.13 RC2</a></h1>
-        <p class="meta">March  3, 2015 by Sebastian Markbåge</p>
-        <hr />
-        <div class="post">
-         <p>Thanks to everybody who has already been testing the release candidate. We&#39;ve received some good feedback and as a result we&#39;re going to do a second release candidate. The changes are minimal. We haven&#39;t changed the behavior of any APIs we exposed in the previous release candidate. Here&#39;s a summary of the changes:</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2015/03/03/react-v0.13-rc2.html">React v0.13 RC2</a>
+
+</h1>
+
+<p class="meta">
+  March  3, 2015
+  by
+  
+    <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Thanks to everybody who has already been testing the release candidate. We&#39;ve received some good feedback and as a result we&#39;re going to do a second release candidate. The changes are minimal. We haven&#39;t changed the behavior of any APIs we exposed in the previous release candidate. Here&#39;s a summary of the changes:</p>
 
 <ul>
 <li>Introduced a new API (<code>React.cloneElement</code>, see below for details).</li>
@@ -147,15 +163,34 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 
 <p>We plan to eventually deprecate <code>React.addons.cloneWithProps</code>. We&#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using <code>React.cloneElement</code> instead. We&#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.</p>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2015/02/24/react-v0.13-rc1.html">React v0.13 RC</a></h1>
-        <p class="meta">February 24, 2015 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>Over the weekend we pushed out our first (and hopefully only) release candidate for React v0.13!</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2015/02/24/react-v0.13-rc1.html">React v0.13 RC</a>
+
+</h1>
+
+<p class="meta">
+  February 24, 2015
+  by
+  
+    <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Over the weekend we pushed out our first (and hopefully only) release candidate for React v0.13!</p>
 
 <p>We&#39;ve talked a little bit about the changes that are coming. The splashiest of these changes is support for ES6 Classes. You can read more about this in <a href="/react/blog/2015/01/27/react-v0.13.0-beta-1.html">our beta announcement</a>. We&#39;re really excited about this! Sebastian also posted earlier this morning about <a href="/react/blog/2015/02/24/streamlining-react-elements.html">some of the other changes coming focused around ReactElement</a>. The changes we&#39;ve been working on there will hopefully enable lots of improvements to performance and developer experience.</p>
 
@@ -220,15 +255,34 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 <li>A change was made to how some JSX was parsed, specifically around the use of <code>&gt;</code> or <code>}</code> when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. We will be releasing a standalone executable to find and fix potential issues in your JSX code.</li>
 </ul>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2015/02/24/streamlining-react-elements.html">Streamlining React Elements</a></h1>
-        <p class="meta">February 24, 2015 by Sebastian Markbåge</p>
-        <hr />
-        <div class="post">
-         <p>React v0.13 is right around the corner and so we wanted to discuss some upcoming changes to ReactElement. In particular, we added several warnings to some esoteric use cases of ReactElement. There are no runtime behavior changes for ReactElement - we&#39;re adding these warnings in the hope that we can change some behavior in v0.14 if the changes are valuable to the community.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2015/02/24/streamlining-react-elements.html">Streamlining React Elements</a>
+
+</h1>
+
+<p class="meta">
+  February 24, 2015
+  by
+  
+    <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React v0.13 is right around the corner and so we wanted to discuss some upcoming changes to ReactElement. In particular, we added several warnings to some esoteric use cases of ReactElement. There are no runtime behavior changes for ReactElement - we&#39;re adding these warnings in the hope that we can change some behavior in v0.14 if the changes are valuable to the community.</p>
 
 <p>If you use React in an idiomatic way, chances are, you’ll never see any of these warnings. In that case, you can skip this blog post. You can just enjoy the benefits! These changes will unlock simplified semantics, better error messages, stack traces and compiler optimizations!</p>
 <h2><a class="anchor" name="immutable-props"></a>Immutable Props <a class="hash-link" href="#immutable-props">#</a></h2>
@@ -376,15 +430,34 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 
 <p>As always, we’d love to hear your feedback and if you have any trouble upgrading, please let us know.</p>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2015/02/20/introducing-relay-and-graphql.html">Introducing Relay and GraphQL</a></h1>
-        <p class="meta">February 20, 2015 by Greg Hurrell</p>
-        <hr />
-        <div class="post">
-         <h2><a class="anchor" name="data-fetching-for-react-applications"></a>Data fetching for React applications <a class="hash-link" href="#data-fetching-for-react-applications">#</a></h2>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2015/02/20/introducing-relay-and-graphql.html">Introducing Relay and GraphQL</a>
+
+</h1>
+
+<p class="meta">
+  February 20, 2015
+  by
+  
+    <a href="https://twitter.com/wincent">Greg Hurrell</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <h2><a class="anchor" name="data-fetching-for-react-applications"></a>Data fetching for React applications <a class="hash-link" href="#data-fetching-for-react-applications">#</a></h2>
 <p>There&#39;s more to building an application than creating a user interface. Data fetching is still a tricky problem, especially as applications become more complicated. At <a href="http://conf.reactjs.com/">React.js Conf</a> we announced two projects we&#39;ve created at Facebook to make data fetching simple for developers, even as a product grows to include dozens of contributors and the application becomes as complex as Facebook itself.</p>
 
 <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/9sc8Pyc51uU" frameborder="0" allowfullscreen></iframe>
@@ -433,15 +506,34 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 
 <p>Watch this space!</p>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2015/02/18/react-conf-roundup-2015.html">React.js Conf Round-up 2015</a></h1>
-        <p class="meta">February 18, 2015 by Steven Luscher</p>
-        <hr />
-        <div class="post">
-         <p>It was a privilege to welcome the React community to Facebook HQ on January 28–29 for the first-ever React.js Conf, and a pleasure to be be able to unveil three new technologies that we&#39;ve been using internally at Facebook for some time: GraphQL, Relay, and React Native.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2015/02/18/react-conf-roundup-2015.html">React.js Conf Round-up 2015</a>
+
+</h1>
+
+<p class="meta">
+  February 18, 2015
+  by
+  
+    <a href="https://twitter.com/steveluscher">Steven Luscher</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>It was a privilege to welcome the React community to Facebook HQ on January 28–29 for the first-ever React.js Conf, and a pleasure to be be able to unveil three new technologies that we&#39;ve been using internally at Facebook for some time: GraphQL, Relay, and React Native.</p>
 <h2><a class="anchor" name="the-talks"></a>The talks <a class="hash-link" href="#the-talks">#</a></h2>
 <div class="skinny-row">
   <div class="skinny-col">
@@ -702,7 +794,10 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 
 <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/FC5FbmsH4fw" frameborder="0" allowfullscreen></iframe>
 
-        </div>
+</div>
+
+
+
       </div>
     
 

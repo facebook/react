@@ -94,11 +94,27 @@
   <div class="inner-content">
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></h1>
-        <p class="meta">July  2, 2013 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>React v0.4 is very close to completion. As we finish it off, we&#39;d like to share with you some of the major changes we&#39;ve made since v0.3. This is the first of several posts we&#39;ll be making over the next week.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a>
+
+</h1>
+
+<p class="meta">
+  July  2, 2013
+  by
+  
+    <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React v0.4 is very close to completion. As we finish it off, we&#39;d like to share with you some of the major changes we&#39;ve made since v0.3. This is the first of several posts we&#39;ll be making over the next week.</p>
 <h2><a class="anchor" name="what-is-react.autobind"></a>What is React.autoBind? <a class="hash-link" href="#what-is-react.autobind">#</a></h2>
 <p>If you take a look at most of our current examples, you&#39;ll see us using <code>React.autoBind</code> for event handlers. This is used in place of <code>Function.prototype.bind</code>. Remember that in JS, <a href="https://bonsaiden.github.io/JavaScript-Garden/#function.this">function calls are late-bound</a>. That means that if you simply pass a function around, the <code>this</code> used inside won&#39;t necessarily be the <code>this</code> you expect. <code>Function.prototype.bind</code> creates a new, properly bound, function so that when called, <code>this</code> is exactly what you expect it to be.</p>
 
@@ -130,15 +146,34 @@
 </code></pre></div>
 <p>For v0.4 we will simply be making <code>React.autoBind</code> a no-op — it will just return the function you pass to it. Most likely you won&#39;t have to change your code to account for this change, though we encourage you to update. We&#39;ll publish a migration guide documenting this and other changes that come along with React v0.4.</p>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/06/27/community-roundup-3.html">Community Round-up #3</a></h1>
-        <p class="meta">June 27, 2013 by Vjeux</p>
-        <hr />
-        <div class="post">
-         <p>The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/06/27/community-roundup-3.html">Community Round-up #3</a>
+
+</h1>
+
+<p class="meta">
+  June 27, 2013
+  by
+  
+    <a href="https://twitter.com/vjeux">Vjeux</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.</p>
 <h2><a class="anchor" name="moving-from-backbone-to-react"></a>Moving From Backbone To React <a class="hash-link" href="#moving-from-backbone-to-react">#</a></h2>
 <p><a href="https://twitter.com/clayallsopp">Clay Allsopp</a> successfully ported <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a>, a fairly big, interaction-heavy JavaScript app, to React.</p>
 
@@ -213,15 +248,34 @@
 <p><a href="http://ricardo.cc/2013/06/07/react-tutorial-rewritten-in-plain-javascript.html">Read the full post...</a></p>
 </blockquote>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a></h1>
-        <p class="meta">June 21, 2013 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a>
+
+</h1>
+
+<p class="meta">
+  June 21, 2013
+  by
+  
+    <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
 <h2><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h2>
 <ul>
 <li>Upgrade Commoner so <code>require</code> statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&#39;t translate well for other consumers of <code>bin/jsx</code>.</li>
@@ -237,15 +291,34 @@
 <li>Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.</li>
 </ul>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/06/19/community-roundup-2.html">Community Round-up #2</a></h1>
-        <p class="meta">June 19, 2013 by Vjeux</p>
-        <hr />
-        <div class="post">
-         <p>Since the launch we have received a lot of feedback and are actively working on React 0.4. In the meantime, here are the highlights of this week.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/06/19/community-roundup-2.html">Community Round-up #2</a>
+
+</h1>
+
+<p class="meta">
+  June 19, 2013
+  by
+  
+    <a href="https://twitter.com/vjeux">Vjeux</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Since the launch we have received a lot of feedback and are actively working on React 0.4. In the meantime, here are the highlights of this week.</p>
 <h2><a class="anchor" name="some-quick-thoughts-on-react"></a>Some quick thoughts on React <a class="hash-link" href="#some-quick-thoughts-on-react">#</a></h2>
 <p><a href="http://www.andrewgreig.com/">Andrew Greig</a> made a blog post that gives a high level description of what React is.</p>
 
@@ -311,15 +384,34 @@
 <li><a href="/react/docs/jsx-is-not-html.html">Custom HTML Attributes</a></li>
 </ul>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/06/12/community-roundup.html">Community Round-up #1</a></h1>
-        <p class="meta">June 12, 2013 by Vjeux</p>
-        <hr />
-        <div class="post">
-         <p>React was open sourced two weeks ago and it&#39;s time for a little round-up of what has been going on.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/06/12/community-roundup.html">Community Round-up #1</a>
+
+</h1>
+
+<p class="meta">
+  June 12, 2013
+  by
+  
+    <a href="https://twitter.com/vjeux">Vjeux</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React was open sourced two weeks ago and it&#39;s time for a little round-up of what has been going on.</p>
 <h2><a class="anchor" name="khan-academy-question-editor"></a>Khan Academy Question Editor <a class="hash-link" href="#khan-academy-question-editor">#</a></h2>
 <p>It looks like <a href="http://benalpert.com/">Ben Alpert</a> is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC (<a href="irc://chat.freenode.net/reactjs">#reactjs on Freenode</a>). Ben wrote about his experience using React:</p>
 
@@ -362,7 +454,10 @@
 <p><a href="https://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Lee-Byron?srid=3DcX">Read the full post...</a></p>
 </blockquote>
 
-        </div>
+</div>
+
+
+
       </div>
     
 

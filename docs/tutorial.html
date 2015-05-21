@@ -503,7 +503,7 @@
 
 <p><code>React.render()</code> instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.</p>
 <h2><a class="anchor" name="composing-components"></a>Composing components <a class="hash-link" href="#composing-components">#</a></h2>
-<p>Let&#39;s build skeletons for <code>CommentList</code> and <code>CommentForm</code> which will, again, be simple <code>&lt;div&gt;</code>s:</p>
+<p>Let&#39;s build skeletons for <code>CommentList</code> and <code>CommentForm</code> which will, again, be simple <code>&lt;div&gt;</code>s. Add these two components to your file, keeping the existing <code>CommentBox</code> declaration and <code>React.render</code> call:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -604,7 +604,7 @@
 
 <p>But there&#39;s a problem! Our rendered comments look like this in the browser: &quot;<code>&lt;p&gt;</code>This is <code>&lt;em&gt;</code>another<code>&lt;/em&gt;</code> comment<code>&lt;/p&gt;</code>&quot;. We want those tags to actually render as HTML.</p>
 
-<p>That&#39;s React protecting you from an <a href="http://en.wikipedia.org/wiki/Cross-site_scripting">XSS attack</a>. There&#39;s a way to get around it but the framework warns you not to use it:</p>
+<p>That&#39;s React protecting you from an <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attack</a>. There&#39;s a way to get around it but the framework warns you not to use it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

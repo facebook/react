@@ -480,7 +480,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="-prop--"></a>같은 Prop을 소비하고 전달하기 <a class="hash-link" href="#-prop--">#</a></h2>
-<p>컴포넌트가 프로퍼티를 사용하지만 계속 넘겨야한다면, <code>checked={checked}</code>처럼 명시적으로 다시 넘길 수 있습니다. 리팩토링과 린트(lint)하기가 더 쉬우므로 이 방식이 <code>this.props</code> 객체 전부를 넘기는 것보다 낫습니다.</p>
+<p>컴포넌트가 프로퍼티를 사용하지만 계속 넘기길 원한다면, <code>checked={checked}</code>처럼 명시적으로 다시 넘길 수 있습니다. 리팩토링과 린트(lint)하기가 더 쉬우므로 이 방식이 <code>this.props</code> 객체 전부를 넘기는 것보다 낫습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="nx">title</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">;</span>

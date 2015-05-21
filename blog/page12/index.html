@@ -94,11 +94,27 @@
   <div class="inner-content">
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/11/06/community-roundup-10.html">Community Round-up #10</a></h1>
-        <p class="meta">November  6, 2013 by Vjeux</p>
-        <hr />
-        <div class="post">
-         <p>This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/11/06/community-roundup-10.html">Community Round-up #10</a>
+
+</h1>
+
+<p class="meta">
+  November  6, 2013
+  by
+  
+    <a href="https://twitter.com/vjeux">Vjeux</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.</p>
 
 <p>The best part is that no drastic changes have been required to support all those use cases. Most of the efforts were targeted at polishing edge cases, performance improvements, and documentation.</p>
 <h2><a class="anchor" name="khan-academy---officially-moving-to-react"></a>Khan Academy - Officially moving to React <a class="hash-link" href="#khan-academy---officially-moving-to-react">#</a></h2>
@@ -207,17 +223,36 @@
 
 <blockquote class="twitter-tweet"><p>This weekend <a href="https://twitter.com/search?q=%23angular&amp;src=hash">#angular</a> died for me. Meet new king <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; Eldar Djafarov &#x30C3; (@edjafarov) <a href="https://twitter.com/edjafarov/statuses/397033796710961152">November 3, 2013</a></blockquote>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/11/05/thinking-in-react.html">Thinking in React</a></h1>
-        <p class="meta">November  5, 2013 by Pete Hunt</p>
-        <hr />
-        <div class="post">
-         <p>React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.</p>
+        
 
-<p>One of the many great parts of React is how it makes you think about apps as you build them. In this post I&#39;ll walk you through the thought process of building a searchable product data table using React.</p>
+
+<h1>
+
+  <a href="/react/blog/2013/11/05/thinking-in-react.html">Thinking in React</a>
+
+</h1>
+
+<p class="meta">
+  November  5, 2013
+  by
+  
+    <a href="https://twitter.com/floydophone">Pete Hunt</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.</p>
+
+<p>One of the many great parts of React is how it makes you think about apps as you build them. In this post, I&#39;ll walk you through the thought process of building a searchable product data table using React.</p>
 <h2><a class="anchor" name="start-with-a-mock"></a>Start with a mock <a class="hash-link" href="#start-with-a-mock">#</a></h2>
 <p>Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn&#39;t very good because the mock looks like this:</p>
 
@@ -233,11 +268,11 @@
   {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
 ];
 </code></pre></div><h2><a class="anchor" name="step-1-break-the-ui-into-a-component-hierarchy"></a>Step 1: break the UI into a component hierarchy <a class="hash-link" href="#step-1-break-the-ui-into-a-component-hierarchy">#</a></h2>
-<p>The first thing you&#39;ll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you&#39;re working with a designer they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!</p>
+<p>The first thing you&#39;ll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you&#39;re working with a designer, they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!</p>
 
-<p>But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the <a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">single responsibility principle</a>, that is, a component should ideally only do one thing. If it ends up growing it should be decomposed into smaller subcomponents.</p>
+<p>But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the <a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">single responsibility principle</a>, that is, a component should ideally only do one thing. If it ends up growing, it should be decomposed into smaller subcomponents.</p>
 
-<p>Since you&#39;re often displaying a JSON data model to a user, you&#39;ll find that if your model was built correctly your UI (and therefore your component structure) will map nicely onto it. That&#39;s because user interfaces and data models tend to adhere to the same <em>information architecture</em> which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.</p>
+<p>Since you&#39;re often displaying a JSON data model to a user, you&#39;ll find that if your model was built correctly, your UI (and therefore your component structure) will map nicely onto it. That&#39;s because user interfaces and data models tend to adhere to the same <em>information architecture</em>, which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.</p>
 
 <p><img src="/react/img/blog/thinking-in-react-components.png" alt="Component diagram"></p>
 
@@ -251,7 +286,7 @@
 <li><strong><code>ProductRow</code> (red):</strong> displays a row for each <em>product</em></li>
 </ol>
 
-<p>If you look at <code>ProductTable</code> you&#39;ll see that the table header (containing the &quot;Name&quot; and &quot;Price&quot; labels) isn&#39;t its own component. This is a matter of preference and there&#39;s an argument to be made either way. For this example I left it as part of <code>ProductTable</code> because it is part of rendering the <em>data collection</em> which is <code>ProductTable</code>&#39;s responsibility. However if this header grows to be complex (i.e. if we were to add affordances for sorting) it would certainly make sense to make this its own <code>ProductTableHeader</code> component.</p>
+<p>If you look at <code>ProductTable</code>, you&#39;ll see that the table header (containing the &quot;Name&quot; and &quot;Price&quot; labels) isn&#39;t its own component. This is a matter of preference, and there&#39;s an argument to be made either way. For this example, I left it as part of <code>ProductTable</code> because it is part of rendering the <em>data collection</em> which is <code>ProductTable</code>&#39;s responsibility. However, if this header grows to be complex (i.e. if we were to add affordances for sorting), it would certainly make sense to make this its own <code>ProductTableHeader</code> component.</p>
 
 <p>Now that we&#39;ve identified the components in our mock, let&#39;s arrange them into a hierarchy. This is easy. Components that appear within another component in the mock should appear as a child in the hierarchy:</p>
 
@@ -273,9 +308,9 @@
 
 <p>Now that you have your component hierarchy it&#39;s time to start implementing your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It&#39;s easiest to decouple these processes because building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We&#39;ll see why.</p>
 
-<p>To build a static version of your app that renders your data model you&#39;ll want to build components that reuse other components and pass data using <em>props</em>. <em>props</em> are a way of passing data from parent to child. If you&#39;re familiar with the concept of <em>state</em>, <strong>don&#39;t use state at all</strong> to build this static version. State is reserved only for interactivity, that is, data that changes over time. Since this is a static version of the app you don&#39;t need it.</p>
+<p>To build a static version of your app that renders your data model, you&#39;ll want to build components that reuse other components and pass data using <em>props</em>. <em>props</em> are a way of passing data from parent to child. If you&#39;re familiar with the concept of <em>state</em>, <strong>don&#39;t use state at all</strong> to build this static version. State is reserved only for interactivity, that is, data that changes over time. Since this is a static version of the app, you don&#39;t need it.</p>
 
-<p>You can build top-down or bottom-up. That is, you can either start with building the components higher up in the hierarchy (i.e. starting with <code>FilterableProductTable</code>) or with the ones lower in it (<code>ProductRow</code>). In simpler examples it&#39;s usually easier to go top-down and on larger projects it&#39;s easier to go bottom-up and write tests as you build.</p>
+<p>You can build top-down or bottom-up. That is, you can either start with building the components higher up in the hierarchy (i.e. starting with <code>FilterableProductTable</code>) or with the ones lower in it (<code>ProductRow</code>). In simpler examples, it&#39;s usually easier to go top-down, and on larger projects, it&#39;s easier to go bottom-up and write tests as you build.</p>
 
 <p>At the end of this step you&#39;ll have a library of reusable components that render your data model. The components will only have <code>render()</code> methods since this is a static version of your app. The component at the top of the hierarchy (<code>FilterableProductTable</code>) will take your data model as a prop. If you make a change to your underlying data model and call <code>renderComponent()</code> again the UI will be updated. It&#39;s easy to see how your UI is updated and where to make changes since there&#39;s nothing complicated going on since React&#39;s <strong>one-way data flow</strong> (also called <em>one-way binding</em>) keeps everything modular, easy to reason about, and fast.</p>
 
@@ -285,7 +320,7 @@
 <h2><a class="anchor" name="step-3-identify-the-minimal-but-complete-representation-of-ui-state"></a>Step 3: Identify the minimal (but complete) representation of UI state <a class="hash-link" href="#step-3-identify-the-minimal-but-complete-representation-of-ui-state">#</a></h2>
 <p>To make your UI interactive, you need to be able to trigger changes to your underlying data model. React makes this easy with <strong>state</strong>.</p>
 
-<p>To build your app correctly, you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: <em>Don&#39;t Repeat Yourself</em>. Figure out what the absolute minimal representation of the state of your application needs to be and compute everything else you need on-demand. For example, if you&#39;re building a TODO list, just keep an array of the TODO items around; don&#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count simply take the length of the TODO items array.</p>
+<p>To build your app correctly, you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: <em>Don&#39;t Repeat Yourself</em>. Figure out what the absolute minimal representation of the state of your application needs to be and compute everything else you need on-demand. For example, if you&#39;re building a TODO list, just keep an array of the TODO items around; don&#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count, simply take the length of the TODO items array.</p>
 
 <p>Think of all of the pieces of data in our example application. We have:</p>
 
@@ -315,7 +350,7 @@
 <h2><a class="anchor" name="step-4-identify-where-your-state-should-live"></a>Step 4: Identify where your state should live <a class="hash-link" href="#step-4-identify-where-your-state-should-live">#</a></h2>
 <iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
-<p>OK, so we&#39;ve identified what the minimal set of app state is. Next we need to identify which component mutates, or <em>owns</em>, this state.</p>
+<p>OK, so we&#39;ve identified what the minimal set of app state is. Next, we need to identify which component mutates, or <em>owns</em>, this state.</p>
 
 <p>Remember: React is all about one-way data flow down the component hierarchy. It may not be immediately clear which component should own what state. <strong>This is often the most challenging part for newcomers to understand,</strong> so follow these steps to figure it out:</p>
 
@@ -336,33 +371,52 @@
 <li>It conceptually makes sense for the filter text and checked value to live in <code>FilterableProductTable</code></li>
 </ul>
 
-<p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add a <code>getInitialState()</code> method to <code>FilterableProductTable</code> that returns <code>{filterText: &#39;&#39;, inStockOnly: false}</code> to reflect the initial state of your application. Then pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
+<p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add a <code>getInitialState()</code> method to <code>FilterableProductTable</code> that returns <code>{filterText: &#39;&#39;, inStockOnly: false}</code> to reflect the initial state of your application. Then, pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
 
-<p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see the data table is updated correctly.</p>
+<p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see that the data table is updated correctly.</p>
 <h2><a class="anchor" name="step-5-add-inverse-data-flow"></a>Step 5: Add inverse data flow <a class="hash-link" href="#step-5-add-inverse-data-flow">#</a></h2>
 <iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>So far we&#39;ve built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it&#39;s time to support data flowing the other way: the form components deep in the hierarchy need to update the state in <code>FilterableProductTable</code>.</p>
 
-<p>React makes this data flow explicit to make it easy to understand how your program works, but it does require a little more typing than traditional two-way data binding. React provides an add-on called <code>ReactLink</code> to make this pattern as convenient as two-way binding, but for the purpose of this post we&#39;ll keep everything explicit.</p>
+<p>React makes this data flow explicit to make it easy to understand how your program works, but it does require a little more typing than traditional two-way data binding. React provides an add-on called <code>ReactLink</code> to make this pattern as convenient as two-way binding, but for the purpose of this post, we&#39;ll keep everything explicit.</p>
 
 <p>If you try to type or check the box in the current version of the example, you&#39;ll see that React ignores your input. This is intentional, as we&#39;ve set the <code>value</code> prop of the <code>input</code> to always be equal to the <code>state</code> passed in from <code>FilterableProductTable</code>.</p>
 
-<p>Let&#39;s think about what we want to happen. We want to make sure that whenever the user changes the form we update the state to reflect the user input. Since components should only update their own state, <code>FilterableProductTable</code> will pass a callback to <code>SearchBar</code> that will fire whenever the state should be updated. We can use the <code>onChange</code> event on the inputs to be notified of it. And the callback passed by <code>FilterableProductTable</code> will call <code>setState()</code> and the app will be updated.</p>
+<p>Let&#39;s think about what we want to happen. We want to make sure that whenever the user changes the form we update the state to reflect the user input. Since components should only update their own state, <code>FilterableProductTable</code> will pass a callback to <code>SearchBar</code> that will fire whenever the state should be updated. We can use the <code>onChange</code> event on the inputs to be notified of it. And the callback passed by <code>FilterableProductTable</code> will call <code>setState()</code>, and the app will be updated.</p>
 
 <p>Though this sounds like a lot it&#39;s really just a few lines of code. And it&#39;s really explicit how your data is flowing throughout the app.</p>
 <h2><a class="anchor" name="and-thats-it"></a>And that&#39;s it <a class="hash-link" href="#and-thats-it">#</a></h2>
-<p>Hopefully this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&#39;re used to, remember that code is read far more than it&#39;s written, and it&#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components, you&#39;ll appreciate this explicitness and modularity, and with code reuse your lines of code will start to shrink. :)</p>
+<p>Hopefully, this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&#39;re used to, remember that code is read far more than it&#39;s written, and it&#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components, you&#39;ll appreciate this explicitness and modularity, and with code reuse, your lines of code will start to shrink. :)</p>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a></h1>
-        <p class="meta">October 29, 2013 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a>
+
+</h1>
+
+<p class="meta">
+  October 29, 2013
+  by
+  
+    <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
 <h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
 <ul>
 <li>Fixed bug with <code>&lt;input type=&quot;range&quot;&gt;</code> and selection events.</li>
@@ -375,15 +429,34 @@
 <li>Fixed bug with transition and animation event detection.</li>
 </ul>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a></h1>
-        <p class="meta">October 16, 2013 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>This release is the result of several months of hard work from members of the team and the community. While there are no groundbreaking changes in core, we&#39;ve worked hard to improve performance and memory usage. We&#39;ve also worked hard to make sure we are being consistent in our usage of DOM properties.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a>
+
+</h1>
+
+<p class="meta">
+  October 16, 2013
+  by
+  
+    <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This release is the result of several months of hard work from members of the team and the community. While there are no groundbreaking changes in core, we&#39;ve worked hard to improve performance and memory usage. We&#39;ve also worked hard to make sure we are being consistent in our usage of DOM properties.</p>
 
 <p>The biggest change you&#39;ll notice as a developer is that we no longer support <code>class</code> in JSX as a way to provide CSS classes. Since this prop was being converted to <code>className</code> at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are <a href="https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156">a few exceptions</a> where we deviate slightly in an attempt to be consistent internally.</p>
 
@@ -425,15 +498,34 @@
 <li>Improved support for maintaining line numbers when transforming.</li>
 </ul>
 
-        </div>
+</div>
+
+
+
       </div>
     
       <div class="post-list-item">
-        <h1><a href="/react/blog/2013/10/03/community-roundup-9.html">Community Round-up #9</a></h1>
-        <p class="meta">October  3, 2013 by Vjeux</p>
-        <hr />
-        <div class="post">
-         <p>We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we&#39;ll probably organize more in the future.</p>
+        
+
+
+<h1>
+
+  <a href="/react/blog/2013/10/03/community-roundup-9.html">Community Round-up #9</a>
+
+</h1>
+
+<p class="meta">
+  October  3, 2013
+  by
+  
+    <a href="https://twitter.com/vjeux">Vjeux</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we&#39;ll probably organize more in the future.</p>
 
 <p><img src="/react/img/blog/react-hackathon.jpg" alt=""></p>
 <h2><a class="anchor" name="react-hackathon-winner"></a>React Hackathon Winner <a class="hash-link" href="#react-hackathon-winner">#</a></h2>
@@ -511,7 +603,10 @@
 <p><a href="http://www.phpied.com/reactive-table/">Read the full article...</a></p>
 </blockquote>
 
-        </div>
+</div>
+
+
+
       </div>
     
 

@@ -406,7 +406,7 @@
 
     <p>React에서는 mutation을 포함해 어떤 데이터 관리 방식도 사용하실 수 있습니다. 하지만 애플리케이션의 성능이 중요한 부분에서 불변의(immutable) 데이터를 사용할 수 있다면, 쉽게 빠른 <code>shouldComponentUpdate()</code> 메소드를 구현해 애플리케이션의 속도를 크게 향상시킬 수 있습니다.</p>
 
-<p>JavaScript에서 불변성의 데이터를 다루는 것은 <a href="http://clojure.org/">Clojure</a>같이 그것을 위해 디자인된 언어로 다루는 것보다는 어렵습니다. 하지만, React는 간단한 불변성 헬퍼를 제공합니다. <code>update()</code>는 이런 종류의 데이터를 근본적인 변화 <em>없이</em>  쉽게 다루도록 해줍니다.</p>
+<p>JavaScript에서 불변성의 데이터를 다루는 것은 <a href="http://clojure.org/">Clojure</a>같이 그것을 위해 디자인된 언어로 다루는 것보다는 어렵습니다. 하지만, React는 간단한 불변성 헬퍼를 제공합니다. <code>update()</code>는 이런 종류의 데이터를 근본적인 변화 <em>없이</em>  쉽게 다루도록 해줍니다. Immutable-js에 관한 좀 더 자세한 정보는 페이스북의 <a href="https://facebook.github.io/immutable-js/docs/">Immutable-js</a>나 <a href="react/docs/advanced-performance-ko-KR.html">성능 심화</a>을 참조하세요.</p>
 <h2><a class="anchor" name="-"></a>주요 아이디어 <a class="hash-link" href="#-">#</a></h2>
 <p>만약 데이터를 이렇게 변화시킨다면:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
