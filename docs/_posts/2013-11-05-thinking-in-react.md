@@ -1,6 +1,6 @@
 ---
 title: "Thinking in React"
-author: Pete Hunt
+author: petehunt
 ---
 
 React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.

@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #20"
-author: Lou Husson
+author: LoukaN
 ---
 
 It's an exciting time for React as there are now more commits from open source contributors than from Facebook engineers! Keep up the good work :)
@@ -112,4 +112,3 @@ var Foo = React.createClass({
 ## Random Tweet
 
 <blockquote class="twitter-tweet" data-conversation="none" lang="en"><p>“<a href="https://twitter.com/apphacker">@apphacker</a>: I take back the mean things I said about <a href="https://twitter.com/reactjs">@reactjs</a> I actually like it.” Summarizing the life of ReactJS in a single tweet.</p>&mdash; Jordan (@jordwalke) <a href="https://twitter.com/jordwalke/statuses/490747339607265280">July 20, 2014</a></blockquote>
-
