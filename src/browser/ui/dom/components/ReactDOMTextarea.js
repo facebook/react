@@ -69,9 +69,14 @@ var ReactDOMTextarea = ReactClass.createClass({
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   componentWillMount: function() {
+    var value = LinkedValueUtils.getValue(this.props);
     var defaultValue = this.props.defaultValue;
 
-    this._uncontrolledValue = defaultValue != null ? '' + defaultValue : '';
+    if (defaultValue == null) {
+      defaultValue = '';
+    }
+
+    this._lastValue = value != null ? value : defaultValue;
   },
 
   getInitialState: function() {
@@ -150,15 +155,13 @@ var ReactDOMTextarea = ReactClass.createClass({
     // last values are both empty and bailing out of the change
     // https://github.com/facebook/react/issues/3484
     if (isIEInputEvent(event)) {
-      var controlledValue = LinkedValueUtils.getValue(this.props);
-      var lastValue = controlledValue != null ?
-        '' + controlledValue :
-        this._uncontrolledValue;
+      var lastValue = this._lastValue;
 
-      this._uncontrolledValue = event.target.value;
+      this._lastValue = event.target.value;
 
       if ( event.target.value === '' && lastValue === '') {
-        return returnValue;
+        event.stopPropagation();
+        return undefined;
       }
     }
 
