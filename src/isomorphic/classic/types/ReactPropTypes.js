@@ -261,7 +261,7 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
     );
   }
 
-  function validate(props, propName, componentName, location) {
+  function validate(props, propName, componentName, location, propFullName) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
       if (
