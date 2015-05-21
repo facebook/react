@@ -1,6 +1,6 @@
 # Contributing to React
 
-React is one of Facebook's first open source projects that is both under very active development and is also being used to ship code to everybody on [facebook.com](https://www.facebook.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and preempts some questions you may have.
+React is one of Facebook's first open source projects that is both under very active development and is also being used to ship code to everybody on [facebook.com](https://www.facebook.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and answers some questions that you may have.
 
 ## Our Development Process
 
@@ -27,7 +27,7 @@ The core team will be monitoring for pull requests. When we get one, we'll run s
 
 In order to accept your pull request, we need you to submit a CLA. You only need to do this once, so if you've done this for another Facebook open source project, you're good to go. If you are submitting a pull request for the first time, just let us know that you have completed the CLA and we can cross-check with your GitHub username.
 
-[Complete your CLA here](https://code.facebook.com/cla)
+[Complete your CLA here.](https://code.facebook.com/cla)
 
 ## Bugs
 
@@ -46,19 +46,24 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 ## How to Get in Touch
 
 * IRC - [#reactjs on freenode](https://webchat.freenode.net/?channels=reactjs)
-* Mailing list - [reactjs on Google Groups](https://groups.google.com/group/reactjs)
+* Discussion forum - [discuss.reactjs.org](https://discuss.reactjs.org/)
 
 ## Style Guide
 
-### Code
+Our linter will catch most styling issues that may exist in your code.
+You can check the status of your code styling by simply running: `grunt lint`
 
-* Use semicolons;
-* Commas last,
+However, there are still some styles that the linter cannot pick up. If you are unsure about something, looking at [Airbnb's Style Guide](https://github.com/airbnb/javascript) will guide you in the right direction.
+
+### Code Conventions
+
+* Use semicolons `;`
+* Commas last `,`
 * 2 spaces for indentation (no tabs)
 * Prefer `'` over `"`
 * `'use strict';`
 * 80 character line length
-* "Attractive"
+* Write "attractive" code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 
 ### Documentation

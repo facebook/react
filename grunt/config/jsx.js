@@ -1,6 +1,6 @@
 'use strict';
 
-var assign = require('../../src/stubs/Object.assign');
+var assign = require('../../src/shared/stubs/Object.assign');
 var grunt = require('grunt');
 
 var rootIDs = [

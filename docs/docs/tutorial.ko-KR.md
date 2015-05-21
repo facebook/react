@@ -251,7 +251,7 @@ var Comment = React.createClass({
 
 하지만 여기엔 문제가 있습니다! 우리는 HTML 태그들이 정상적으로 렌더되길 원하지만 브라우저에 출력된 결과물은 "`<p>``<em>`또 다른`</em>` 댓글입니다`</p>`"처럼 태그가 그대로 보일것입니다.
 
-React는 이런 식으로 XSS 공격을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:
+React는 이런 식으로 [XSS 공격](https://en.wikipedia.org/wiki/Cross-site_scripting)을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:
 
 ```javascript{4,10}
 // tutorial7.js
