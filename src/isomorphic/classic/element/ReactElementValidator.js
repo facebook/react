@@ -144,7 +144,9 @@ function validateChildKeys(node, parentType) {
     }
   } else if (ReactElement.isValidElement(node)) {
     // This element was passed in a valid location.
-    node._store.validated = true;
+    if (node._store) {
+      node._store.validated = true;
+    }
   } else if (node) {
     var iteratorFn = getIteratorFn(node);
     // Entry iterators provide implicit keys.

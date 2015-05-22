@@ -22,6 +22,16 @@ var RESERVED_PROPS = {
   __source: true,
 };
 
+var canDefineProperty = false;
+if (__DEV__) {
+  try {
+    Object.defineProperty({}, 'x', {});
+    canDefineProperty = true;
+  } catch (x) {
+    // IE will fail on defineProperty
+  }
+}
+
 /**
  * Base constructor for all React elements. This is only used to make this
  * work with a dynamic instanceof check. Nothing should live on this prototype.
@@ -41,47 +51,47 @@ var RESERVED_PROPS = {
  * @internal
  */
 var ReactElement = function(type, key, ref, self, source, owner, props) {
-  // Built-in properties that belong on the element
-  this.type = type;
-  this.key = key;
-  this.ref = ref;
-  this.self = self;
-  this.source = source;
+  var element = {
+    // Built-in properties that belong on the element
+    type: type,
+    key: key,
+    ref: ref,
+    self: self,
+    source: source,
 
-  // Record the component responsible for creating this element.
-  this._owner = owner;
+    // Record the component responsible for creating this element.
+    _owner: owner,
 
-  this.props = props;
+    props: props,
+  };
 
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
-    this._store = {};
+    element._store = {};
 
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
     // include every environment we run tests in), so the test framework
     // ignores it.
-    try {
-      Object.defineProperty(this._store, 'validated', {
+    if (canDefineProperty) {
+      Object.defineProperty(element._store, 'validated', {
         configurable: false,
         enumerable: false,
         writable: true,
         value: false,
       });
-    } catch (x) {
+    } else {
       this._store.validated = false;
     }
-    Object.freeze(this.props);
-    Object.freeze(this);
+    Object.freeze(element.props);
+    Object.freeze(element);
   }
-};
 
-// We intentionally don't expose the function on the constructor property.
-// ReactElement should be indistinguishable from a plain object.
-ReactElement.prototype = {};
+  return element;
+};
 
 ReactElement.createElement = function(type, config, children) {
   var propName;
@@ -131,7 +141,7 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
-  return new ReactElement(
+  return ReactElement(
     type,
     key,
     ref,
@@ -168,7 +178,7 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
 };
 
 ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
-  var newElement = new ReactElement(
+  var newElement = ReactElement(
     oldElement.type,
     oldElement.key,
     oldElement.ref,
@@ -232,7 +242,7 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = childArray;
   }
 
-  return new ReactElement(
+  return ReactElement(
     element.type,
     key,
     ref,
