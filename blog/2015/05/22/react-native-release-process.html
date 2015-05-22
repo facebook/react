@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React v0.13.1 | React</title>
+  <title>React Native Release Process | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React v0.13.1 | React">
+  <meta property="og:title" content="React Native Release Process | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2015/05/22/react-native-release-process.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -66,7 +66,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2015/05/22/react-native-release-process.html">React Native Release Process</a></li>
+        <li><a href="/react/blog/2015/05/22/react-native-release-process.html" class="active">React Native Release Process</a></li>
       
         <li><a href="/react/blog/2015/05/08/react-v0.13.3.html">React v0.13.3</a></li>
       
@@ -82,7 +82,7 @@
       
         <li><a href="/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html">Building The Facebook News Feed With Relay</a></li>
       
-        <li><a href="/react/blog/2015/03/16/react-v0.13.1.html" class="active">React v0.13.1</a></li>
+        <li><a href="/react/blog/2015/03/16/react-v0.13.1.html">React v0.13.1</a></li>
       
         <li><a href="/react/blog/2015/03/10/react-v0.13.html">React v0.13</a></li>
       
@@ -97,56 +97,40 @@
 
 <h1>
 
-  React v0.13.1
+  React Native Release Process
 
 </h1>
 
 <p class="meta">
-  March 16, 2015
+  May 22, 2015
   by
   
-    <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    <a href="https://twitter.com/vjeux">Vjeux</a>
   
 </p>
 
 <hr>
 
 <div class="post">
-  <p>It&#39;s been less than a week since we shipped v0.13.0 but it&#39;s time to do another quick release. We just released v0.13.1 which contains bugfixes for a number of small issues.</p>
+  <p>The React Native release process have been a bit chaotic since we open sourced. It was unclear when new code was released, there was no changelog, we bumped the minor and patch version inconsistently and we often had to submit updates right after a release to fix a bad bug. In order to <em>move fast with stable infra</em>, we are introducing a real release process with a two-week release schedule.</p>
 
-<p>Thanks all of you who have been upgrading your applications and taking the time to report issues. And a huge thank you to those of you who submitted pull requests for the issues you found! 2 of the 6 fixes that went out today came from people who aren&#39;t on the core team!</p>
+<p>To explain how it works, let me walk you through an example. Today, Friday, we took the current state of master and put it on the 0.5-stable branch. We <a href="https://github.com/facebook/react-native/releases/tag/v0.5.0-rc">published 0.5.0-rc</a>, an RC (Release Candidate) when we cut the branch. For two weeks, we&#39;re going to let it stabilize and only cherry-pick critical bug fixes from master.</p>
 
-<p>The release is now available for download:</p>
+<p>Friday in two weeks, we&#39;re going to publish the 0.5.0 release, create the 0.6-stable branch and publish 0.6.0-rc as well.</p>
+
+<p>The release process is synchronized with Facebook&#39;s mobile release process. This means that everything in the open source release is also being shipped as part of all the Facebook apps that use React Native!</p>
+
+<p>You now have three ways to get React Native. You should chose the one you want based on the amount of risk you tolerate:</p>
 
 <ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.13.1.js">https://fb.me/react-0.13.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.13.1.min.js">https://fb.me/react-0.13.1.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.1.js">https://fb.me/react-with-addons-0.13.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.13.1.min.js">https://fb.me/react-with-addons-0.13.1.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.13.1.js">https://fb.me/JSXTransformer-0.13.1.js</a></li>
+<li><strong>master</strong>: You have updates as soon as they are committed. This is if you want to live on the bleeding edge or want to submit pull requests.</li>
+<li><strong>rc</strong>: If you don&#39;t want to update every day and deal with many instabilities but want to have recent updates, this is your best shot.</li>
+<li><strong>release</strong>: This is the most stable version we offer. The trade-off is that it contains commits that are up to a month old.</li>
 </ul>
 
-<p>We&#39;ve also published version <code>0.13.1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+<p>If you want more details, I highly recommend this video that explains how Facebook mobile release process works and why it was setup this way.</p>
 
-<hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
-<ul>
-<li>Don&#39;t throw when rendering empty <code>&lt;select&gt;</code> elements</li>
-<li>Ensure updating <code>style</code> works when transitioning from <code>null</code></li>
-</ul>
-<h3><a class="anchor" name="react-with-add-ons"></a>React with Add-Ons <a class="hash-link" href="#react-with-add-ons">#</a></h3><h3><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h3>
-<ul>
-<li>TestUtils: Don&#39;t warn about <code>getDOMNode</code> for ES6 classes</li>
-<li>TestUtils: Ensure wrapped full page components (<code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code>) are treated as DOM components</li>
-<li>Perf: Stop double-counting DOM components</li>
-</ul>
-<h3><a class="anchor" name="react-tools"></a>React Tools <a class="hash-link" href="#react-tools">#</a></h3><h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
-<ul>
-<li>Fix option parsing for <code>--non-strict-es6module</code></li>
-</ul>
+<iframe width="650" height="300" src="https://www.youtube.com/embed/mOyoTUETmSM" frameborder="0" allowfullscreen></iframe>
 
 </div>
 

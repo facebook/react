@@ -7,6 +7,33 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React Native Release Process</title>
+				<description>&lt;p&gt;The React Native release process have been a bit chaotic since we open sourced. It was unclear when new code was released, there was no changelog, we bumped the minor and patch version inconsistently and we often had to submit updates right after a release to fix a bad bug. In order to &lt;em&gt;move fast with stable infra&lt;/em&gt;, we are introducing a real release process with a two-week release schedule.&lt;/p&gt;
+
+&lt;p&gt;To explain how it works, let me walk you through an example. Today, Friday, we took the current state of master and put it on the 0.5-stable branch. We &lt;a href=&quot;https://github.com/facebook/react-native/releases/tag/v0.5.0-rc&quot;&gt;published 0.5.0-rc&lt;/a&gt;, an RC (Release Candidate) when we cut the branch. For two weeks, we&amp;#39;re going to let it stabilize and only cherry-pick critical bug fixes from master.&lt;/p&gt;
+
+&lt;p&gt;Friday in two weeks, we&amp;#39;re going to publish the 0.5.0 release, create the 0.6-stable branch and publish 0.6.0-rc as well.&lt;/p&gt;
+
+&lt;p&gt;The release process is synchronized with Facebook&amp;#39;s mobile release process. This means that everything in the open source release is also being shipped as part of all the Facebook apps that use React Native!&lt;/p&gt;
+
+&lt;p&gt;You now have three ways to get React Native. You should chose the one you want based on the amount of risk you tolerate:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;master&lt;/strong&gt;: You have updates as soon as they are committed. This is if you want to live on the bleeding edge or want to submit pull requests.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;rc&lt;/strong&gt;: If you don&amp;#39;t want to update every day and deal with many instabilities but want to have recent updates, this is your best shot.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;release&lt;/strong&gt;: This is the most stable version we offer. The trade-off is that it contains commits that are up to a month old.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you want more details, I highly recommend this video that explains how Facebook mobile release process works and why it was setup this way.&lt;/p&gt;
+
+&lt;iframe width=&quot;650&quot; height=&quot;300&quot; src=&quot;https://www.youtube.com/embed/mOyoTUETmSM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+</description>
+				<pubDate>2015-05-22T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/05/22/react-native-release-process.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/05/22/react-native-release-process.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.13.3</title>
 				<description>&lt;p&gt;Today we&amp;#39;re sharing another patch release in the v0.13 branch. There are only a few small changes, with a couple to address some issues that arose around that undocumented feature so many of you are already using: &lt;code&gt;context&lt;/code&gt;. We also improved developer ergonomics just a little bit, making some warnings better.&lt;/p&gt;
 
@@ -621,62 +648,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 				<pubDate>2015-03-10T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #25</title>
-				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-101&quot;&gt;&lt;/a&gt;React 101 &lt;a class=&quot;hash-link&quot; href=&quot;#react-101&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Interest in React has been exploding recently, so it&amp;#39;s a good time to explore some great recent tutorials and videos that cover getting started.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/rynclark&quot;&gt;Ryan Clark&lt;/a&gt; provides a &lt;a href=&quot;http://ryanclark.me/getting-started-with-react/&quot;&gt;great overview of the basics of React&lt;/a&gt; with the goal of building a really simple dropdown nav.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/FormidableLabs&quot;&gt;Formidable Labs&lt;/a&gt; and &lt;a href=&quot;http://www.meetup.com/seattlejs/&quot;&gt;Seattle JS&lt;/a&gt; recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;300&quot; src=&quot;//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/aearly&quot;&gt;AEFlash&lt;/a&gt; writes up &lt;a href=&quot;http://aeflash.com/2015-02/react-tips-and-best-practices.html&quot;&gt;some best practices and tips&lt;/a&gt; to help you avoid potential pitfalls when developing with React.&lt;/p&gt;
-
-&lt;p&gt;Black Mutt Media &lt;a href=&quot;http://blackmuttmedia.com/blog/react-tmdb-api/&quot;&gt;takes us through their usage of React&lt;/a&gt; and Ruby to build an autocomplete field, and some of the pitfalls they encountered along the way.&lt;/p&gt;
-
-&lt;p&gt;Our own &lt;a href=&quot;https://github.com/sebmarkbage&quot;&gt;Sebastian Markbåge&lt;/a&gt; was on the &lt;a href=&quot;http://thewebplatform.libsyn.com/31-building-with-reactjs&quot;&gt;Web Platform Podcast&lt;/a&gt; to have a chat about all aspects of React.&lt;/p&gt;
-
-&lt;iframe style=&quot;border: none&quot; src=&quot;//html5-player.libsyn.com/embed/episode/id/3370114/height/75/width/200/theme/standard-mini/direction/no/autoplay/no/autonext/no/thumbnail/yes/preload/no/no_addthis/no/&quot; height=&quot;26&quot; width=&quot;650&quot; scrolling=&quot;no&quot; allowfullscreen=&quot;&quot; webkitallowfullscreen=&quot;&quot; mozallowfullscreen=&quot;&quot; oallowfullscreen=&quot;&quot; msallowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;community-additions&quot;&gt;&lt;/a&gt;Community Additions &lt;a class=&quot;hash-link&quot; href=&quot;#community-additions&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/FormidableLabs&quot;&gt;Formidable Labs&lt;/a&gt; have been busy, as they&amp;#39;ve also&lt;a href=&quot;http://projects.formidablelabs.com/radium/&quot;&gt; just launched Radium&lt;/a&gt;, a React component that provides you with the ability to use inline styles instead of CSS. They&amp;#39;re also &lt;a href=&quot;http://projects.formidablelabs.com/radium-bootstrap/&quot;&gt;looking for some help&lt;/a&gt; contributing to a Radium Bootstrap implementation.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://reactiflux.com/&quot;&gt;Reactiflux.com&lt;/a&gt; is a new Slack community based around (you guessed it!) React, and Flux.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://reactweek.com/&quot;&gt;React Week&lt;/a&gt; is a week-long learning workshop, happening next week, for React, Flux, and other related technologies, run by &lt;a href=&quot;https://github.com/ryanflorence&quot;&gt;Ryan Florence&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/babel/babel-sublime&quot;&gt;Babel-sublime&lt;/a&gt; is a new package which provides Sublime with language definitions for ES6 JavaScript with React JSX syntax extensions.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/reactjs/react-meteor&quot;&gt;react-meteor&lt;/a&gt;, a package that replaces the default templating system of the Meteor platform with React, recently received a big update.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;rebuilding-with-react&quot;&gt;&lt;/a&gt;Rebuilding with React &lt;a class=&quot;hash-link&quot; href=&quot;#rebuilding-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/rmanalan&quot;&gt;Rich Manalang&lt;/a&gt; from Atlassian &lt;a href=&quot;https://developer.atlassian.com/blog/2015/02/rebuilding-hipchat-with-react/&quot;&gt;explains why&lt;/a&gt; they rebuilt their HipChat web client from scratch using React, and how they&amp;#39;re already using it to rebuild their native desktop clients.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/andyhillel&quot;&gt;Andrew Hillel&lt;/a&gt; of the BBC gives &lt;a href=&quot;http://www.bbc.co.uk/blogs/internet/entries/47a96d23-ae04-444e-808f-678e6809765d&quot;&gt;an excellent and thorough breakdown&lt;/a&gt; of the stack they used to rebuild their homepage, with React as an integral part of the front-end.&lt;/p&gt;
-
-&lt;p&gt;A team from New Zealand called &lt;a href=&quot;https://atomic.io/&quot;&gt;Atomic&lt;/a&gt; is &lt;a href=&quot;http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/&quot;&gt;building web and mobile prototyping and design tools&lt;/a&gt; entirely in-browser, and as co-founder &lt;a href=&quot;https://twitter.com/darrylgray&quot;&gt;Darryl Gray&lt;/a&gt; says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/Polarrco&quot;&gt;Polarr&lt;/a&gt; have rebuilt &lt;a href=&quot;http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here&quot;&gt;their browser-based photo editor&lt;/a&gt; with React.&lt;/p&gt;
-
-&lt;p&gt;&lt;center&gt;&lt;a href=&quot;http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here&quot;&gt;&lt;img src=&quot;/react/img/blog/polarr.jpg&quot;&gt;&lt;/a&gt;&lt;/center&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;its-f8&quot;&gt;&lt;/a&gt;It&amp;#39;s F8! &lt;a class=&quot;hash-link&quot; href=&quot;#its-f8&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;F8 2015 is just around the corner, and you can &lt;a href=&quot;https://www.fbf8.com/stream.html&quot;&gt;sign up for the video streams&lt;/a&gt; in advance because we&amp;#39;re sure to be covering all things React.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;meetups&quot;&gt;&lt;/a&gt;Meetups &lt;a class=&quot;hash-link&quot; href=&quot;#meetups&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;table&gt;&lt;tr&gt;&lt;td width=&quot;50%&quot; valign=&quot;top&quot;&gt;
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Our &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; meetup is in full effect &lt;a href=&quot;https://twitter.com/hashtag/ReactJS?src=hash&quot;&gt;#ReactJS&lt;/a&gt; &amp;#10;&amp;#10;btw bathroom code is 6012 lol &lt;a href=&quot;http://t.co/7iUpvmm3zz&quot;&gt;pic.twitter.com/7iUpvmm3zz&lt;/a&gt;&lt;/p&gt;&amp;mdash; littleBits (@littleBits) &lt;a href=&quot;https://twitter.com/littleBits/status/570373833028472832&quot;&gt;February 25, 2015&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;td width=&quot;50%&quot; valign=&quot;top&quot;&gt;
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;&lt;a href=&quot;https://twitter.com/yrezgui&quot;&gt;@yrezgui&lt;/a&gt; captivating us with &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; at &lt;a href=&quot;https://twitter.com/DevRocketUK&quot;&gt;@DevRocketUK&lt;/a&gt;. Thanks to the amazing sponsors &lt;a href=&quot;https://twitter.com/makersacademy&quot;&gt;@makersacademy&lt;/a&gt; and &lt;a href=&quot;https://twitter.com/couchbase&quot;&gt;@couchbase&lt;/a&gt;. &lt;a href=&quot;http://t.co/xwA773omky&quot;&gt;pic.twitter.com/xwA773omky&lt;/a&gt;&lt;/p&gt;&amp;mdash; James Nocentini (@jamiltz) &lt;a href=&quot;https://twitter.com/jamiltz/status/570306188577001473&quot;&gt;February 24, 2015&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width=&quot;50%&quot; valign=&quot;top&quot;&gt;
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Listening to a bunch of very clever geekoids at the &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; seminar. Nice! &lt;a href=&quot;http://t.co/0TeTOJOerO&quot;&gt;pic.twitter.com/0TeTOJOerO&lt;/a&gt;&lt;/p&gt;&amp;mdash; Nick Middleweek (@nmiddleweek) &lt;a href=&quot;https://twitter.com/nmiddleweek/status/568183658395394049&quot;&gt;February 18, 2015&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;td width=&quot;50%&quot; valign=&quot;top&quot;&gt;
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Watching the &lt;a href=&quot;https://twitter.com/FrontendMasters&quot;&gt;@FrontendMasters&lt;/a&gt; ReactJS workshop! &lt;a href=&quot;http://t.co/YraYIK97Lu&quot;&gt;pic.twitter.com/YraYIK97Lu&lt;/a&gt;&lt;/p&gt;&amp;mdash; ReactJS News (@ReactJSNews) &lt;a href=&quot;https://twitter.com/ReactJSNews/status/566269552112041985&quot;&gt;February 13, 2015&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-</description>
-				<pubDate>2015-03-04T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/04/community-roundup-25.html</guid>
 			</item>
 		
 	</channel>
