@@ -125,7 +125,7 @@ JSX의 사용은 선택적이지만 JSX 문법이 일반 JavsScript보다 사용
 
 ## 컴포넌트 조합하기
 
-이제 `CommentList`와 `CommentForm`을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 `<div>` 태그 하나 입니다.
+이제 `CommentList`와 `CommentForm`을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 `<div>` 태그 하나 입니다. 파일에 두 컴포넌트를 추가해, 이미 있는 `CommentBox` 선언을 참고로 `React.render`를 호출합시다.
 
 ```javascript
 // tutorial2.js
