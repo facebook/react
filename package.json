@@ -67,7 +67,7 @@
   },
   "preferGlobal": true,
   "commonerConfig": {
-    "version": 6
+    "version": 7
   },
   "scripts": {
     "test": "jest",
