@@ -17,12 +17,16 @@ describe('ReactMount', function() {
   var React = require('React');
   var ReactMount = require('ReactMount');
   var ReactTestUtils = require('ReactTestUtils');
-  var WebComponents = undefined;
+  var WebComponents = WebComponents;
 
   try {
-    WebComponents = require('WebComponents');
+    if (WebComponents === undefined && jest !== undefined) {
+      WebComponents = require('WebComponents');
+    }
   } catch(e) {
-    /* leave WebComponents undefined */
+    // Parse error expected on engines that don't support setters
+    // or otherwise aren't supportable by the polyfill.
+    // Leave WebComponents undefined.
   }
 
   describe('constructAndRenderComponentByID', function() {
