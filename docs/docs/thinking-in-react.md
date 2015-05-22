@@ -3,9 +3,10 @@ id: thinking-in-react
 title: Thinking in React
 prev: tutorial.html
 next: conferences.html
+redirect_from: 'blog/2013/11/05/thinking-in-react.html'
 ---
 
-This was originally a [blog post](/react/blog/2013/11/05/thinking-in-react.html) from the [official React blog](/react/blog).
+by Pete Hunt
 
 React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.
 
