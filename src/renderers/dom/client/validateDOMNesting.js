@@ -319,6 +319,8 @@ if (__DEV__) {
     return stack;
   };
 
+  var didWarn = {};
+
   validateDOMNesting = function(childTag, childInstance, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
     var parentInfo = ancestorInfo.parentTag;
@@ -373,6 +375,13 @@ if (__DEV__) {
         childOwnerNames,
         childTag
       ).join(' > ');
+
+      var warnKey =
+        !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + ownerInfo;
+      if (didWarn[warnKey]) {
+        return;
+      }
+      didWarn[warnKey] = true;
 
       if (invalidParent) {
         var info = '';

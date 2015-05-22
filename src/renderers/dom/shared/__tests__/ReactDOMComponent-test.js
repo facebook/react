@@ -733,7 +733,7 @@ describe('ReactDOMComponent', function() {
 
     it('warns on invalid nesting', () => {
       spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div><tr /></div>);
+      ReactTestUtils.renderIntoDocument(<div><tr /><tr /></div>);
 
       expect(console.error.calls.length).toBe(1);
       expect(console.error.calls[0].args[0]).toBe(
