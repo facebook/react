@@ -82,8 +82,13 @@ var ReactTestUtils = {
   },
 
   isCompositeComponentWithType: function(inst, type) {
+    var internalInstance = ReactInstanceMap.get(inst);
+    var constructor = internalInstance
+      ._currentElement
+      .type;
+
     return !!(ReactTestUtils.isCompositeComponent(inst) &&
-             (inst.constructor === type));
+             (constructor === type));
   },
 
   isCompositeComponentElement: function(inst) {
@@ -100,8 +105,13 @@ var ReactTestUtils = {
   },
 
   isCompositeComponentElementWithType: function(inst, type) {
+    var internalInstance = ReactInstanceMap.get(inst);
+    var constructor = internalInstance
+      ._currentElement
+      .type;
+
     return !!(ReactTestUtils.isCompositeComponentElement(inst) &&
-             (inst.constructor === type));
+             (constructor === type));
   },
 
   getRenderedChildOfCompositeComponent: function(inst) {
