@@ -158,6 +158,7 @@ var ReactDOM = mapObject({
   ellipse: 'ellipse',
   g: 'g',
   line: 'line',
+  image: 'image',
   linearGradient: 'linearGradient',
   mask: 'mask',
   path: 'path',
