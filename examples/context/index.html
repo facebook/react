@@ -45,6 +45,26 @@
         }
     });
 
+    // Swapper is a brute force tester to make sure context data flow is working correctly
+    // with:
+    //   1. intermediate components preventing updates
+    //   2. intermediate components being mounted/unmounted continuously
+    var Swapper = React.createClass({
+        contextTypes: {
+            elapsed: React.PropTypes.number.isRequired
+        },
+        shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+            var elapsed = Math.round(this.context.elapsed  / 100);
+
+            return elapsed % 10 < 7;
+        },
+        render: function() {
+            var elapsed = Math.round(this.context.elapsed  / 100);
+
+            return React.createElement(elapsed % 10 < 7 ? 'div' : 'span', null, React.createElement(Elapsed));
+        }
+    });
+
     var Container = React.createClass({
         render: function() {
             this.__renderNum__ = (this.__renderNum__ || 0) + 1;
@@ -55,7 +75,7 @@
                     React.createElement('br'),
                     React.createElement('span', null, "Hopefully the above should only ever say 1 if we are efficiently handling context updates! And the counter should be doing it's thing below!")
                 ]),
-                React.createElement(Elapsed)
+                React.createElement(Swapper)
             ]);
         }
     });
