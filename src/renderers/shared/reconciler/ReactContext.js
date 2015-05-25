@@ -25,8 +25,51 @@ var ReactContext = {
    * @internal
    * @type {object}
    */
-  current: emptyObject
+  current: emptyObject,
+
+  currentParent: null,
+  
+  parentChild: function(child, parent) {
+    if (parent) {
+      this._addChildToParent(parent, child);
+    }
+
+    child._contextParent = parent || null;
+  },
+  
+  orphanChild: function(child) {
+    if (!child._contextParent) {
+      return;
+    }
+
+    this._removeChildFromParent(child._contextParent, child);
+    child._contextParent = null;
+  },
+  
+  _addChildToParent: function(parent, child) {
+    var children = parent._contextChildren = parent._contextChildren || [];
+    
+    children.push(child);
+  },
+  
+  _removeChildFromParent: function(parent, child) {
+    var children = parent._contextChildren;
+    
+    if (!children) {
+      return;
+    }
+    
+    var index = children.indexOf(child);
+    if (index >= 0) {
+      children.splice(index, 1); 
+    }
+  }
 
 };
+
+// TODO: add context parent map - parent's need to know of their nearest context child
+// TODO: context parent is defined as any component with childContextType defined
+//   TODO: the nearest in the tree takes parentship over the context child
+// TODO: context child is defined as any component with contectType defined
 
 module.exports = ReactContext;

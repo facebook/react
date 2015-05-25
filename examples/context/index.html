@@ -53,7 +53,7 @@
                 React.createElement('p', null, [
                     React.createElement('span', null, "Middle container has been updated " + this.__renderNum__ + " times."),
                     React.createElement('br'),
-                    React.createElement('span', null, "Hopefully the above should only ever say 1 if we are efficiently handling context updates! And the counter should be ding it's thing below!")
+                    React.createElement('span', null, "Hopefully the above should only ever say 1 if we are efficiently handling context updates! And the counter should be doing it's thing below!")
                 ]),
                 React.createElement(Elapsed)
             ]);
@@ -83,14 +83,13 @@
         }
     });
 
-    // Call React.createFactory instead of directly call ExampleApplication({...}) in React.render
-    var ExampleApplicationFactory = React.createFactory(ExampleApplication);
-
     var start = new Date().getTime();
     setInterval(function() {
+        var elapsed = new Date().getTime() - start;
+
         React.render(
-                ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
-                document.getElementById('container')
+            React.createElement(ExampleApplication, {elapsed: elapsed}),
+            document.getElementById('container')
         );
     }, 50);
 </script>

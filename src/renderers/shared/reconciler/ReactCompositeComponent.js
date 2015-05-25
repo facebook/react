@@ -108,6 +108,12 @@ var ReactCompositeComponentMixin = {
 
     // See ReactUpdates and ReactUpdateQueue.
     this._pendingCallbacks = null;
+
+    // See ReactContext
+    this._contextChildren = null; // or array
+    this._contextParent = null;
+    this._isContextParent = false;
+    this._isContextChild = false;
   },
 
   /**
@@ -130,6 +136,11 @@ var ReactCompositeComponentMixin = {
     var Component = ReactNativeComponent.getComponentClassForElement(
       this._currentElement
     );
+
+    // This component can be classed as a "context parent" if it modified
+    // it's child context
+    this._isContextParent = !!Component.childContextTypes;
+    this._isContextChild = !!Component.contextTypes || !!Component.childContextTypes;
 
     // Initialize the public class
     var inst = new Component(publicProps, publicContext);
@@ -157,6 +168,19 @@ var ReactCompositeComponentMixin = {
 
     // Store a reference from the instance back to the internal representation
     ReactInstanceMap.set(inst, this);
+
+    // Setup context parent/child relationship
+    var previousContextParent = ReactContext.currentParent;
+    if (this._isContextChild) {
+      // set two way ref
+      ReactContext.parentChild(this, ReactContext.currentParent);
+      if (this._isContextParent) {
+        ReactContext.currentParent = this;
+      }
+    } else {
+      // set one way ref
+      this._isContextParent = ReactContext.currentParent;
+    }
 
     if (__DEV__) {
       // Since plain JS classes are defined without any special initialization
@@ -238,12 +262,16 @@ var ReactCompositeComponentMixin = {
       this._currentElement.type // The wrapping type
     );
 
-    var markup = ReactReconciler.mountComponent(
-      this._renderedComponent,
-      rootID,
-      transaction,
-      this._processChildContext(context)
-    );
+    try {
+      var markup = ReactReconciler.mountComponent(
+        this._renderedComponent,
+        rootID,
+        transaction,
+        this._processChildContext(context)
+      );
+    } finally {
+      ReactContext.currentParent = previousContextParent;
+    }
     if (inst.componentDidMount) {
       transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
     }
@@ -289,6 +317,9 @@ var ReactCompositeComponentMixin = {
     // which allow the internals to be properly cleaned up even if the user
     // leaks a reference to the public instance.
     ReactInstanceMap.remove(inst);
+
+    // Dispose of any context parent/child relationship
+    ReactContext.orphanChild(this);
 
     // Some existing components rely on inst.props even after they've been
     // destroyed (in event handlers).
@@ -497,6 +528,10 @@ var ReactCompositeComponentMixin = {
     );
   },
 
+  receiveContext: function(transaction, nextContext) {
+    this.receiveComponent(this._currentElement, transaction, nextContext);
+  },
+
   /**
    * If any of `_pendingElement`, `_pendingStateQueue`, or `_pendingForceUpdate`
    * is set, update the component.
@@ -558,9 +593,19 @@ var ReactCompositeComponentMixin = {
     var nextContext = inst.context;
     var nextProps = inst.props;
 
+    // Update context parent/child relationship
+    var previousContextParent = ReactContext.currentParent;
+    if (this._isContextParent) {
+      ReactContext.currentParent = this;
+    } else {
+      ReactContext.currentParent = this._contextParent;
+    }
+
+    // TODO: Maybe use some _receivingContext flag?
+    nextContext = this._processContext(nextUnmaskedContext);
+
     // Distinguish between a props update versus a simple state update
     if (prevParentElement !== nextParentElement) {
-      nextContext = this._processContext(nextUnmaskedContext);
       nextProps = this._processProps(nextParentElement.props);
 
       // An update here will schedule an update but immediately set
@@ -591,14 +636,18 @@ var ReactCompositeComponentMixin = {
     if (shouldUpdate) {
       this._pendingForceUpdate = false;
       // Will set `this.props`, `this.state` and `this.context`.
-      this._performComponentUpdate(
-        nextParentElement,
-        nextProps,
-        nextState,
-        nextContext,
-        transaction,
-        nextUnmaskedContext
-      );
+      try {
+        this._performComponentUpdate(
+          nextParentElement,
+          nextProps,
+          nextState,
+          nextContext,
+          transaction,
+          nextUnmaskedContext
+        );
+      } finally {
+        ReactContext.currentParent = previousContextParent;
+      }
     } else {
       // If it's determined that a component should not update, we still want
       // to set props and state but we shortcut the rest of the update.
@@ -607,6 +656,41 @@ var ReactCompositeComponentMixin = {
       inst.props = nextProps;
       inst.state = nextState;
       inst.context = nextContext;
+
+      // We will also, potentially, want to update components down the tree
+      // if the context has updated
+      var shouldUpdateChildContext = !inst.shouldUpdateChildContext ||
+        inst.shouldUpdateChildContext(nextProps, nextState, nextContext);
+
+      if (shouldUpdateChildContext) {
+        this._performContextUpdate(
+          nextUnmaskedContext,
+          transaction
+        )
+      }
+    }
+  },
+
+  /**
+   * Notifies delegate methods of update and performs update.
+   *
+   * @param {?object} nextUnmaskedContext unmasked context
+   * @param {ReactReconcileTransaction} transaction
+   * @private
+   */
+  _performContextUpdate: function(
+    nextUnmaskedContext,
+    transaction
+    ) {
+    var childContext = this._processChildContext(nextUnmaskedContext);
+    this._updateContextChildren(transaction, childContext);
+  },
+
+  _updateContextChildren: function(transaction, childContext) {
+    if (this._contextChildren) {
+      this._contextChildren.forEach(function(child) {
+        child.receiveContext(transaction, childContext);
+      });
     }
   },
 
