@@ -41,7 +41,7 @@
             var message =
                     'React has been successfully running (via context!) for ' + seconds + ' seconds.';
 
-            return React.DOM.p(null, message);
+            return React.createElement('div', null, React.createElement('p', null, message));
         }
     });
 
@@ -104,11 +104,12 @@
     });
 
     var start = new Date().getTime();
+    var iterations = 0;
     setInterval(function() {
         var elapsed = new Date().getTime() - start;
 
         React.render(
-            React.createElement(ExampleApplication, {elapsed: elapsed}),
+            React.createElement(ExampleApplication, {elapsed: elapsed, iterations: ++iterations}),
             document.getElementById('container')
         );
     }, 50);
