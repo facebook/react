@@ -48,7 +48,7 @@ GEM
       rb-inotify (>= 0.9)
     mercenary (0.3.4)
     mini_portile (0.6.0)
-    nokogiri (1.6.3.1)
+    nokogiri (1.6.6.2)
       mini_portile (= 0.6.0)
     parslet (1.5.0)
       blankslate (~> 2.0)
