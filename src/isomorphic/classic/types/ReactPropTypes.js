@@ -200,6 +200,12 @@ function createInstanceTypeChecker(expectedClass) {
 }
 
 function createEnumTypeChecker(expectedValues) {
+  if (!Array.isArray(expectedValues)) {
+    return new Error(
+      `Invalid argument supplied to oneOf, expected an instance of array.`
+    );
+  }
+
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
     for (var i = 0; i < expectedValues.length; i++) {
@@ -249,6 +255,12 @@ function createObjectOfTypeChecker(typeChecker) {
 }
 
 function createUnionTypeChecker(arrayOfTypeCheckers) {
+  if (!Array.isArray(arrayOfTypeCheckers)) {
+    return new Error(
+      `Invalid argument supplied to oneOfType, expected an instance of array.`
+    );
+  }
+
   function validate(props, propName, componentName, location, propFullName) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
