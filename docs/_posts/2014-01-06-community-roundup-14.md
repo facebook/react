@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #14"
-author: Vjeux
+author: vjeux
 ---
 
 The theme of this first round-up of 2014 is integration. I've tried to assemble a list of articles and projects that use React in various environments.

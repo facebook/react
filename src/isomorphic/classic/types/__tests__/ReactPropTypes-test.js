@@ -523,7 +523,7 @@ describe('ReactPropTypes', function() {
     it("should fail for invalid argument", function() {
       var error = PropTypes.oneOf('red', 'blue');
       expect(error instanceof Error).toBe(true);
-      expect(error.message).toBe('Invalid argument supplied to ' + 
+      expect(error.message).toBe('Invalid argument supplied to ' +
         'oneOf, expected an instance of array.');
     });
 

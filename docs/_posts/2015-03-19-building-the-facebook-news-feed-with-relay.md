@@ -1,6 +1,6 @@
 ---
 title: "Building The Facebook News Feed With Relay"
-author: Joseph Savona
+author: josephsavona
 ---
 
 At React.js Conf in January we gave a preview of Relay, a new framework for building data-driven applications in React. In this post, we'll describe the process of creating a Relay application. This post assumes some familiarity with the concepts of Relay and GraphQL, so if you haven't already we recommend reading [our introductory blog post](/react/blog/2015/02/20/introducing-relay-and-graphql.html) or watching [the conference talk](https://www.youtube-nocookie.com/watch?v=9sc8Pyc51uU).

@@ -1,3 +1,25 @@
+## 0.13.3 (May 8, 2015)
+
+### React Core
+
+#### New Features
+
+* Added `clipPath` element and attribute for SVG
+* Improved warnings for deprecated methods in plain JS classes
+
+#### Bug Fixes
+
+* Loosened `dangerouslySetInnerHTML` restrictions so `{__html: undefined}` will no longer throw
+* Fixed extraneous context warning with non-pure `getChildContext`
+* Ensure `replaceState(obj)` retains prototype of `obj`
+
+### React with Add-ons
+
+### Bug Fixes
+
+* Test Utils: Ensure that shallow rendering works when components define `contextTypes`
+
+
 ## 0.13.2 (April 18, 2015)
 
 ### React Core

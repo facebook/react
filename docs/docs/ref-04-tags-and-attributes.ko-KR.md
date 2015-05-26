@@ -77,8 +77,8 @@ srcSet start step style tabIndex target title type useMap value width wmode
 ### SVG 어트리뷰트
 
 ```
-clip-path cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
-gradientUnits markerEnd markerMid markerStart offset opacity
+clipPath cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy
+gradientTransform gradientUnits markerEnd markerMid markerStart offset opacity
 patternContentUnits patternUnits points preserveAspectRatio r rx ry
 spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
 strokeOpacity strokeWidth textAnchor transform version viewBox x1 x2 x y1 y2 y

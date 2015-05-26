@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #16"
-author: Jonas Gebhardt
+author: jgebhardt
 ---
 
 There have been many posts recently covering the <i>why</i> and <i>how</i> of React. This week's community round-up includes a collection of recent articles to help you get started with React, along with a few posts that explain some of the inner workings.
