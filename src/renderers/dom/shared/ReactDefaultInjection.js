@@ -59,7 +59,6 @@ function autoGenerateWrapperClass(type) {
         null,  // key
         null,  // ref
         internalInstance._currentElement._owner,  // owner
-        null,  // context
         this.props
       );
     }
