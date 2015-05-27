@@ -1,4 +1,4 @@
-/*eslint-disable brace-style*/
+/*eslint-disable brace-style, no-empty */
 function createXMLHttpRequest() {
   try {
     return new XMLHttpRequest();
@@ -13,7 +13,7 @@ function createXMLHttpRequest() {
   }
   catch (e) {}
 }
-/*eslint-enable brace-style*/
+/*eslint-enable brace-style, no-empty */
 
 function getURLSync(url) {
   var request = createXMLHttpRequest();

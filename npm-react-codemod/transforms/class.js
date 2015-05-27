@@ -8,7 +8,7 @@
  *
  */
 
-/*eslint-disable no-comma-dangle*/
+/*eslint-disable comma-dangle*/
 
 'use strict';
 
@@ -157,11 +157,11 @@ function updateReactCreateClassToES6(file, api, options) {
     )
     .filter(isFunctionExpression);
 
-  const findAutobindNamesFor = (root, fnNames, literalOrIdentifier) => {
+  const findAutobindNamesFor = (subtree, fnNames, literalOrIdentifier) => {
     const node = literalOrIdentifier;
     const autobindNames = {};
 
-    j(root)
+    j(subtree)
       .find(j.MemberExpression, {
         object: node.name ? {
           type: node.type,

@@ -1,5 +1,5 @@
 ---
-parser: esprima-fb
+parser: babel-eslint
 
 env:
   browser: true
@@ -17,16 +17,18 @@ rules:
   strict: 2
   # We actually have a transform to support this and we fix this for bundled
   # releases but not for the npm package, so enforce it strictly
-  no-comma-dangle: 2
+  comma-dangle: [2, never]
   # Make this a warning for now. We do this in a few places so we might need to
   # disable
   no-unused-expressions: 2
-  block-scoped-var: 2
   eol-last: 2
   dot-notation: 2
+  dot-location: [2, property]
   consistent-return: 2
   no-unused-vars: [2, args: none]
-  quotes: [2, 'single']
+  quotes: [2, single]
+  no-shadow: 2
+  no-multi-spaces: 2
 
   # WARNINGS
   # This is the only one that's hard to track since we don't lint just changes.
@@ -47,5 +49,9 @@ rules:
   # We do this in a few places to align values
   key-spacing: 0
 
-  # DISABLED. These currently cause errors when running.
-  no-multi-spaces: 0
+  # BROKEN. We'd like to turn these back on.
+  block-scoped-var: 0 # causes a ton of noise, eslint is too picky?
+  # on-empty is broken in babel-eslint:
+  # https://github.com/babel/babel-eslint/issues/62
+  # commented blocks shouldn't be marked as empty blocks.
+  no-empty: 0

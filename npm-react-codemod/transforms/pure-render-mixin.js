@@ -8,7 +8,7 @@
  *
  */
 
-/*eslint-disable no-comma-dangle*/
+/*eslint-disable comma-dangle*/
 
 'use strict';
 

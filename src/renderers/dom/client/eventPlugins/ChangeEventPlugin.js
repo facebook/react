@@ -150,7 +150,7 @@ if (ExecutionEnvironment.canUseDOM) {
  * (For old IE.) Replacement getter/setter for the `value` property that gets
  * set on the active element.
  */
-var newValueProp =  {
+var newValueProp = {
   get: function() {
     return activeElementValueProp.get.call(this);
   },

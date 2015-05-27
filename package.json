@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "babel": "^5.3.3",
+    "babel-eslint": "^3.1.9",
     "benchmark": "~1.0.0",
     "browserify": "^9.0.3",
     "bundle-collapser": "^1.1.1",
@@ -38,8 +39,7 @@
     "derequire": "^2.0.0",
     "envify": "^3.0.0",
     "es5-shim": "^4.0.0",
-    "eslint": "^0.14.1",
-    "esprima-fb": "^15001.1.0-dev-harmony-fb",
+    "eslint": "^0.21.2",
     "grunt": "~0.4.2",
     "grunt-cli": "^0.1.13",
     "grunt-compare-size": "~0.4.0",

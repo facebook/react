@@ -15,7 +15,7 @@ var EXAMPLES_PATH = 'examples/';
 var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*'];
 
 var STARTER_PATH = 'starter/';
-var STARTER_GLOB = [STARTER_PATH  + '/**/*.*'];
+var STARTER_GLOB = [STARTER_PATH + '/**/*.*'];
 
 var STARTER_BUILD_PATH = 'build/starter/';
 

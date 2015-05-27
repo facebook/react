@@ -117,6 +117,7 @@ var ReactElement = function(type, key, ref, owner, context, props) {
         writable: true
       });
     } catch (x) {
+      // IE will fail on defineProperty
     }
     this._store.validated = false;
 
