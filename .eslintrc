@@ -48,10 +48,8 @@ rules:
   no-use-before-define: 0
   # We do this in a few places to align values
   key-spacing: 0
+  # https://github.com/facebook/react/pull/3968
+  no-empty: 0
 
   # BROKEN. We'd like to turn these back on.
   block-scoped-var: 0 # causes a ton of noise, eslint is too picky?
-  # on-empty is broken in babel-eslint:
-  # https://github.com/babel/babel-eslint/issues/62
-  # commented blocks shouldn't be marked as empty blocks.
-  no-empty: 0

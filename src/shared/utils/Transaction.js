@@ -141,7 +141,6 @@ var Mixin = {
           try {
             this.closeAll(0);
           } catch (err) {
-            // Ignore additional errors, only throw the original
           }
         } else {
           // Since `method` didn't throw, we don't want to silence the exception
@@ -170,13 +169,12 @@ var Mixin = {
           null;
       } finally {
         if (this.wrapperInitData[i] === Transaction.OBSERVED_ERROR) {
-          // The initializer for wrapper i threw an error;
+          // The initializer for wrapper i threw an error; initialize the
+          // remaining wrappers but silence any exceptions from them to ensure
+          // that the first error is the one to bubble up.
           try {
-            // initialize the remaining wrappers,
             this.initializeAll(i + 1);
           } catch (err) {
-            // but silence any exceptions from them to ensure that the first
-            // error is the one to bubble up.
           }
         }
       }
@@ -211,13 +209,12 @@ var Mixin = {
         errorThrown = false;
       } finally {
         if (errorThrown) {
-          // The closer for wrapper i threw an error;
+          // The closer for wrapper i threw an error; close the remaining
+          // wrappers but silence any exceptions from them to ensure that the
+          // first error is the one to bubble up.
           try {
-            // close the remaining wrappers,
             this.closeAll(i + 1);
           } catch (e) {
-            // but silence any exceptions from them to ensure that the first
-            // error is the one to bubble up.
           }
         }
       }
