@@ -23,10 +23,13 @@ var warning = require('warning');
  * create a keyed fragment. The resulting data structure is opaque, for now.
  */
 
+var fragmentKey;
+var didWarnKey;
+var canWarnForReactFragment;
+
 if (__DEV__) {
-  var fragmentKey = '_reactFragment';
-  var didWarnKey = '_reactDidWarn';
-  var canWarnForReactFragment = false;
+  fragmentKey = '_reactFragment';
+  didWarnKey = '_reactDidWarn';
 
   try {
     // Feature test. Don't even try to issue this warning if we can't use
@@ -49,7 +52,9 @@ if (__DEV__) {
     );
 
     canWarnForReactFragment = true;
-  } catch (x) { }
+  } catch (x) {
+    canWarnForReactFragment = false;
+  }
 
   var proxyPropertyAccessWithWarning = function(obj, key) {
     Object.defineProperty(obj, key, {

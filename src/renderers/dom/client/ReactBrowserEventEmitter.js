@@ -212,8 +212,8 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
   listenTo: function(registrationName, contentDocumentHandle) {
     var mountAt = contentDocumentHandle;
     var isListening = getListeningForDocument(mountAt);
-    var dependencies = EventPluginRegistry.
-      registrationNameDependencies[registrationName];
+    var dependencies =
+      EventPluginRegistry.registrationNameDependencies[registrationName];
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0; i < dependencies.length; i++) {

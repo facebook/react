@@ -8,7 +8,7 @@
  *
  */
 
- /*eslint-disable no-comma-dangle*/
+/*eslint-disable comma-dangle*/
 
 'use strict';
 
@@ -47,7 +47,7 @@ module.exports = function(j) {
   const findReactCreateClass = path =>
     path
       .findVariableDeclarators()
-      .filter(path => findReactCreateClassCallExpression(path).size() > 0);
+      .filter(decl => findReactCreateClassCallExpression(decl).size() > 0);
 
   const findReactCreateClassModuleExports = path =>
     path
