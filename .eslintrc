@@ -52,4 +52,5 @@ rules:
   no-empty: 0
 
   # BROKEN. We'd like to turn these back on.
-  block-scoped-var: 0 # causes a ton of noise, eslint is too picky?
+  # causes a ton of noise, eslint is too picky?
+  block-scoped-var: 0
