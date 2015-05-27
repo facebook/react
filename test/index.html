@@ -20,7 +20,7 @@
     'the-files-to-test.generated.js',
     'lib/jasmine-execute.js'
   ];
-  
+
   if (typeof Function.prototype.bind == 'undefined') {
     urls.unshift('../node_modules/es5-shim/es5-sham.js');
     urls.unshift('../node_modules/es5-shim/es5-shim.js');
@@ -33,7 +33,6 @@
   }
 
   var base = location.protocol + '//' + location.hostname + ':' + location.port + location.pathname.replace(/^\/?/,'/').split('/').reverse().slice(1).reverse().join('/');
-  window.ReactWebWorker_URL = base + '/../src/test/worker.js' + cacheBust;
 
 }());
 </script>

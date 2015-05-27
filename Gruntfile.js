@@ -205,17 +205,13 @@ module.exports = function(grunt) {
     'coverage:parse'
   ]);
   grunt.registerTask('fasttest', function() {
+    grunt.task.run('test');
+  });
+  grunt.registerTask('test', function() {
     if (grunt.option('debug')) {
       grunt.task.run('build:test', 'connect:server:keepalive');
     } else {
       grunt.task.run('build:test', 'test:webdriver:phantomjs');
-    }
-  });
-  grunt.registerTask('test', function() {
-    if (grunt.option('debug')) {
-      grunt.task.run('build:test', 'build:basic', 'connect:server:keepalive');
-    } else {
-      grunt.task.run('build:test', 'build:basic', 'test:webdriver:phantomjs');
     }
   });
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
