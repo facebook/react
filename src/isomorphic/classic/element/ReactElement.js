@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
@@ -85,12 +84,13 @@ function defineMutationMembrane(prototype) {
  * work with a dynamic instanceof check. Nothing should live on this prototype.
  *
  * @param {*} type
- * @param {string|object} ref
  * @param {*} key
+ * @param {string|object} ref
+ * @param {*} owner
  * @param {*} props
  * @internal
  */
-var ReactElement = function(type, key, ref, owner, context, props) {
+var ReactElement = function(type, key, ref, owner, props) {
   // Built-in properties that belong on the element
   this.type = type;
   this.key = key;
@@ -191,7 +191,6 @@ ReactElement.createElement = function(type, config, children) {
     key,
     ref,
     ReactCurrentOwner.current,
-    ReactContext.current,
     props
   );
 };
@@ -213,7 +212,6 @@ ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
     oldElement.key,
     oldElement.ref,
     oldElement._owner,
-    oldElement._context,
     newProps
   );
 
@@ -273,7 +271,6 @@ ReactElement.cloneElement = function(element, config, children) {
     key,
     ref,
     owner,
-    element._context,
     props
   );
 };

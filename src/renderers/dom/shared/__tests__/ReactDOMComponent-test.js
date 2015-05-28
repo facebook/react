@@ -400,7 +400,6 @@ describe('ReactDOMComponent', function() {
           type: StubNativeComponent,
           props: props,
           _owner: null,
-          _context: null
         });
         return stubComponent.mountComponent('test', transaction, {});
       };
