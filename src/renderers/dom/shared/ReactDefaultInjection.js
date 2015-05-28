@@ -29,7 +29,6 @@ var ReactDOMForm = require('ReactDOMForm');
 var ReactDOMImg = require('ReactDOMImg');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactDOMIframe = require('ReactDOMIframe');
-var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
@@ -120,7 +119,6 @@ function inject() {
     'form': ReactDOMForm,
     'iframe': ReactDOMIframe,
     'img': ReactDOMImg,
-    'input': ReactDOMInput,
     'option': ReactDOMOption,
     'select': ReactDOMSelect,
     'textarea': ReactDOMTextarea,
