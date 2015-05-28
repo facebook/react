@@ -23,7 +23,8 @@ module.exports = {
     if (!path.match(/\/node_modules\//) && !path.match(/\/third_party\//)) {
       return babel.transform(src, {
         blacklist: ['spec.functionName', 'validation.react'],
-        filename: path
+        filename: path,
+        retainLines: true
       }).code;
     }
     return src;
