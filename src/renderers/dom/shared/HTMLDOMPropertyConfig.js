@@ -61,6 +61,7 @@ var HTMLDOMPropertyConfig = {
     cellPadding: null,
     cellSpacing: null,
     charSet: MUST_USE_ATTRIBUTE,
+    challenge: MUST_USE_ATTRIBUTE,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     classID: MUST_USE_ATTRIBUTE,
     // To set className on SVG elements, it's necessary to use .setAttribute;
@@ -102,6 +103,8 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: null,
     icon: null,
     id: MUST_USE_PROPERTY,
+    keyParams: MUST_USE_ATTRIBUTE,
+    keyType: MUST_USE_ATTRIBUTE,
     label: null,
     lang: null,
     list: MUST_USE_ATTRIBUTE,
