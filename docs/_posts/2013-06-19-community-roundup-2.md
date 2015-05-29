@@ -38,7 +38,7 @@ Since the launch we have received a lot of feedback and are actively working on 
 >
 > [Read the full post...](https://www.quora.com/Pete-Hunt/Posts/Facebooks-React-vs-AngularJS-A-Closer-Look)
 
-In the same vein, [Markov Twain](https://twitter.com/markov_twain/status/345702941845499906) re-implemented the examples on the front-page [with Ember](http://jsbin.com/azihiw/2/edit) and [Vlad Yazhbin](https://twitter.com/vla) re-implemented the tutorial [with Angular](https://jsfiddle.net/vla/Cdrse/).
+In the same vein, [Markov Twain](https://twitter.com/markov_twain/status/345702941845499906) re-implemented the examples on the front-page [with Ember](http://jsbin.com/azihiw/2/edit) and [Vlad Yazhbin](https://twitter.com/vla) re-implemented the tutorial [with Angular](http://jsfiddle.net/vla/Cdrse/).
 
 ## Web Components: React & x-tags
 
