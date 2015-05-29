@@ -55,9 +55,10 @@ var activeElementValueProp = null;
  * SECTION: handle `change` event
  */
 function shouldUseChangeEvent(elem) {
+  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
-    elem.nodeName === 'SELECT' ||
-    (elem.nodeName === 'INPUT' && elem.type === 'file')
+    nodeName === 'select' ||
+    (nodeName === 'input' && elem.type === 'file')
   );
 }
 
@@ -289,7 +290,7 @@ function shouldUseClickEvent(elem) {
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
   return (
-    elem.nodeName === 'INPUT' &&
+    (elem.nodeName && elem.nodeName.toLowerCase() === 'input') &&
     (elem.type === 'checkbox' || elem.type === 'radio')
   );
 }
