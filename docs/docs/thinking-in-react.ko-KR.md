@@ -6,7 +6,7 @@ prev: tutorial-ko-KR.html
 next: videos-ko-KR.html
 ---
 
-이 문서의 원본은 [공식 블로그](/react/blog)의 [포스팅](/react/blog/2013/11/05/thinking-in-react.html) 입니다.
+Pete Hunt의 글입니다.
 
 제가 생각하기에, React는 JavaScript로 크고 빠른 웹 애플리케이션을 만드는데 최고입니다. 페이스북과 인스타그램에서 우리에게 잘 맞도록 조정되어 왔습니다.
 
