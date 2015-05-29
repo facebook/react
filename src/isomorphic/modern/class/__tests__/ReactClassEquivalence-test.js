@@ -9,6 +9,8 @@
  * @emails react-core
  */
 
+'use strict';
+
 var MetaMatchers = require('MetaMatchers');
 
 describe('ReactClassEquivalence', function() {

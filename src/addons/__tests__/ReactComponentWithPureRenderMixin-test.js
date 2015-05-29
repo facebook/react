@@ -50,20 +50,20 @@ describe('ReactComponentWithPureRenderMixin', function() {
       getInitialState: function() {
         return {
           cut: false,
-          slices: 1,
+          slices: 1
         };
       },
 
       cut: function() {
         this.setState({
           cut: true,
-          slices: 10,
+          slices: 10
         });
       },
 
       eatSlice: function() {
         this.setState({
-          slices: this.state.slices - 1,
+          slices: this.state.slices - 1
         });
       },
 
@@ -101,7 +101,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
     function getInitialState() {
       return {
         foo: [1, 2, 3],
-        bar: {a: 4, b: 5, c: 6},
+        bar: {a: 4, b: 5, c: 6}
       };
     }
 
@@ -127,7 +127,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
     // Do not re-render if state is equal
     var settings = {
       foo: initialSettings.foo,
-      bar: initialSettings.bar,
+      bar: initialSettings.bar
     };
     instance.setState(settings);
     expect(renderCalls).toBe(1);

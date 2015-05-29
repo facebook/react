@@ -15,8 +15,6 @@ require('mock-modules')
   .dontMock('cloneWithProps')
   .dontMock('emptyObject');
 
-var mocks = require('mocks');
-
 var React;
 var ReactTestUtils;
 

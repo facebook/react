@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks;
-
 var React;
 var ReactTestUtils;
 
@@ -22,12 +20,12 @@ describe('ReactJSXElement', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    mocks = require('mocks');
-
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     Component = class {
-      render() { return <div />; }
+      render() {
+        return <div />;
+      }
     };
   });
 
@@ -145,7 +143,7 @@ describe('ReactJSXElement', function() {
     expect(React.isValidElement(null)).toEqual(false);
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement("string")).toEqual(false);
+    expect(React.isValidElement('string')).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
   });
 

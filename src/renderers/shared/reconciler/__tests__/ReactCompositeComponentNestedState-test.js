@@ -58,7 +58,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
         this.setState(function(state, props) {
           this.props.logger('setState-this', this.state.hue, this.props.color);
           this.props.logger('setState-args', state.hue, props.color);
-          return {hue: shade + ' ' + props.color}
+          return {hue: shade + ' ' + props.color};
         }, function() {
           this.props.logger('after-setState', this.state.hue, this.props.color);
         });
@@ -79,7 +79,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
           <button onClick={this.handleHue.bind(this, 'light', 'green')}>
             Light Green
           </button>
-        </div>
+        </div>;
       }
     });
 
@@ -88,7 +88,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
 
     var logger = mocks.getMockFunction();
 
-    var instance = React.render(
+    void React.render(
       <ParentComponent logger={logger} />,
       container
     );

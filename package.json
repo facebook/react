@@ -40,6 +40,7 @@
     "envify": "^3.0.0",
     "es5-shim": "^4.0.0",
     "eslint": "^0.21.2",
+    "eslint-plugin-react": "^2.3.0",
     "grunt": "~0.4.2",
     "grunt-cli": "^0.1.13",
     "grunt-compare-size": "~0.4.0",

@@ -33,7 +33,7 @@ describe('renderSubtreeIntoContainer', function() {
 
     var Parent = React.createClass({
       childContextTypes: {
-        foo: React.PropTypes.string.isRequired,
+        foo: React.PropTypes.string.isRequired
       },
 
       getChildContext: function() {
@@ -72,7 +72,7 @@ describe('renderSubtreeIntoContainer', function() {
 
     var Parent = React.createClass({
       childContextTypes: {
-        foo: React.PropTypes.string.isRequired,
+        foo: React.PropTypes.string.isRequired
       },
 
       getChildContext: function() {

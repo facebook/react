@@ -169,25 +169,27 @@ describe('ReactMount', function() {
     );
   });
 
-  (WebComponents === undefined ? xit : it)
-      ('should allow mounting/unmounting to document fragment container', function() {
-    var shadowRoot;
-    var proto = Object.create(HTMLElement.prototype, {
-      createdCallback: {
-        value: function() {
+  if (WebComponents !== undefined) {
+    it('should allow mounting/unmounting to document fragment container',
+        function() {
+      var shadowRoot;
+      var proto = Object.create(HTMLElement.prototype, {
+        createdCallback: {
+          value: function() {
             shadowRoot = this.createShadowRoot();
             React.render(<div>Hi, from within a WC!</div>, shadowRoot);
             expect(shadowRoot.firstChild.tagName).toBe('DIV');
             React.render(<span>Hi, from within a WC!</span>, shadowRoot);
             expect(shadowRoot.firstChild.tagName).toBe('SPAN');
+          }
         }
-      }
+      });
+      proto.unmount = function() {
+        React.unmountComponentAtNode(shadowRoot);
+      };
+      document.registerElement('x-foo', {prototype: proto});
+      var element = document.createElement('x-foo');
+      element.unmount();
     });
-    proto.unmount = function() {
-      React.unmountComponentAtNode(shadowRoot);
-    };
-    document.registerElement('x-foo', {prototype: proto});
-    var element = document.createElement('x-foo');
-    element.unmount();
-  });
+  }
 });

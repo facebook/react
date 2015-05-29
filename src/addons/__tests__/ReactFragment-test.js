@@ -27,7 +27,7 @@ describe('ReactFragment', function() {
       x: <span />,
       y: <span />
     };
-    <div>{children}</div>;
+    void <div>{children}</div>;
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
       'Any use of a keyed object'
@@ -37,7 +37,7 @@ describe('ReactFragment', function() {
       x: <span />,
       y: <span />
     };
-    <div>{sameChildren}</div>;
+    void <div>{sameChildren}</div>;
     expect(console.error.calls.length).toBe(1);
   });
 
@@ -65,7 +65,7 @@ describe('ReactFragment', function() {
       y: <span />
     };
     var frag = ReactFragment.create(children);
-    frag.x;
+    void frag.x;
     frag.y = 10;
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(

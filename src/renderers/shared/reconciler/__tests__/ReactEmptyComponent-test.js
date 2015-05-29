@@ -235,7 +235,9 @@ describe('ReactEmptyComponent', function() {
   it('does not break when updating during mount', function() {
     var Child = React.createClass({
       componentDidMount() {
-        this.props.onMount && this.props.onMount();
+        if (this.props.onMount) {
+          this.props.onMount();
+        }
       },
       render() {
         if (!this.props.visible) {
@@ -262,7 +264,7 @@ describe('ReactEmptyComponent', function() {
     });
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<Parent/>)
+      ReactTestUtils.renderIntoDocument(<Parent />);
     }).not.toThrow();
   });
 });

@@ -14,7 +14,6 @@
 require('mock-modules')
   .dontMock('ExecutionEnvironment')
   .dontMock('React')
-  .dontMock('ReactMount')
   .dontMock('ReactServerRendering')
   .dontMock('ReactTestUtils')
   .dontMock('ReactMarkupChecksum');
@@ -24,7 +23,6 @@ var mocks = require('mocks');
 var ExecutionEnvironment;
 var React;
 var ReactMarkupChecksum;
-var ReactMount;
 var ReactReconcileTransaction;
 var ReactTestUtils;
 var ReactServerRendering;
@@ -36,7 +34,6 @@ describe('ReactServerRendering', function() {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
 

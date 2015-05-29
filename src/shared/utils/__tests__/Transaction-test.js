@@ -56,7 +56,9 @@ describe('Transaction', function() {
           }
         },
         {
-          initialize: function() { return 'asdf'; },
+          initialize: function() {
+            return 'asdf';
+          },
           close: function(initResult) {
             this.secondCloseParam = initResult;
           }
@@ -201,7 +203,7 @@ describe('Transaction', function() {
       var isTypeError = false;
       try {
         transaction.perform(function() {
-          throw new TypeError("Thrown in main wrapped operation");
+          throw new TypeError('Thrown in main wrapped operation');
         });
       } catch (err) {
         isTypeError = (err instanceof TypeError);

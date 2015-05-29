@@ -252,10 +252,8 @@ describe('OrderedMap', function() {
       expect(om.has(0)).toBe(true);
       expect(om.has('0')).toBe(true);
     };
-    var om = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
-    verifyOM(om);
-    om = OrderedMap.fromArray(hasZeroNumberKey, extractUniqueID);
-    verifyOM(om);
+    verifyOM(OrderedMap.fromArray(hasZeroStringKey, extractUniqueID));
+    verifyOM(OrderedMap.fromArray(hasZeroNumberKey, extractUniqueID));
   });
 
   it('should throw when getting invalid public key', function() {
@@ -494,22 +492,22 @@ describe('OrderedMap', function() {
   });
 
   it('should compute indices on array that extracted numeric ids', function() {
-    var om = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
-    expect(om.keyAtIndex(0)).toBe('greg');
-    expect(om.keyAtIndex(1)).toBe('0');
-    expect(om.keyAtIndex(2)).toBe('tom');
-    expect(om.indexOfKey('greg')).toBe(0);
-    expect(om.indexOfKey('0')).toBe(1);
-    expect(om.indexOfKey('tom')).toBe(2);
+    var som = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
+    expect(som.keyAtIndex(0)).toBe('greg');
+    expect(som.keyAtIndex(1)).toBe('0');
+    expect(som.keyAtIndex(2)).toBe('tom');
+    expect(som.indexOfKey('greg')).toBe(0);
+    expect(som.indexOfKey('0')).toBe(1);
+    expect(som.indexOfKey('tom')).toBe(2);
 
 
-    var verifyNumericKeys = function(om) {
-      expect(om.keyAtIndex(0)).toBe('0');
-      expect(om.keyAtIndex(1)).toBe('2');
-      expect(om.keyAtIndex(2)).toBe('1');
-      expect(om.indexOfKey('0')).toBe(0);
-      expect(om.indexOfKey('2')).toBe(1); // Proove these are not ordered by
-      expect(om.indexOfKey('1')).toBe(2); // their keys
+    var verifyNumericKeys = function(nom) {
+      expect(nom.keyAtIndex(0)).toBe('0');
+      expect(nom.keyAtIndex(1)).toBe('2');
+      expect(nom.keyAtIndex(2)).toBe('1');
+      expect(nom.indexOfKey('0')).toBe(0);
+      expect(nom.indexOfKey('2')).toBe(1); // Prove these are not ordered by
+      expect(nom.indexOfKey('1')).toBe(2); // their keys
     };
     var omStringNumberKeys =
       OrderedMap.fromArray(hasAllNumericStringKeys, extractUniqueID);
@@ -731,7 +729,7 @@ describe('OrderedMap', function() {
       om.forEachRange(duplicate, 0, 3, scope);
     }).not.toThrow();
     expect(function() {
-      om.mapKeyRange(duplicate, 'x' , 3, scope);
+      om.mapKeyRange(duplicate, 'x', 3, scope);
     }).toThrow(
       'Invariant Violation: mapKeyRange must be given keys ' +
       'that are present.'

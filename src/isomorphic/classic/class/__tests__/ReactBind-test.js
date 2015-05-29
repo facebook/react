@@ -36,7 +36,7 @@ describe('autobinding', function() {
       // auto binding only occurs on top level functions in class defs.
       badIdeas: {
         badBind: function() {
-          this.state.something;
+          void this.state.something;
         }
       },
 
@@ -131,7 +131,7 @@ describe('autobinding', function() {
       }
     });
 
-    ReactTestUtils.renderIntoDocument(<TestBindComponent />)
+    ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
@@ -159,7 +159,7 @@ describe('autobinding', function() {
       }
     });
 
-    ReactTestUtils.renderIntoDocument(<TestBindComponent />)
+    ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
     expect(console.error.argsForCall.length).toBe(0);
   });

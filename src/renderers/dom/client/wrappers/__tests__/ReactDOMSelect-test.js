@@ -154,7 +154,7 @@ describe('ReactDOMSelect', function() {
   });
 
   it('should reset child options selected when they are changed and `value` is set', function() {
-    var stub = <select multiple={true} value={["a", "b"]} />;
+    var stub = <select multiple={true} value={['a', 'b']} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     stub.setProps({
@@ -174,7 +174,7 @@ describe('ReactDOMSelect', function() {
 
   it('should allow setting `value` with `objectToString`', function() {
     var objectToString = {
-      animal: "giraffe",
+      animal: 'giraffe',
       toString: function() {
         return this.animal;
       }
@@ -194,7 +194,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
 
     // Changing the `value` prop should change the selected options.
-    objectToString.animal = "monkey";
+    objectToString.animal = 'monkey';
     stub.forceUpdate();
 
     expect(node.options[0].selected).toBe(true);  // monkey

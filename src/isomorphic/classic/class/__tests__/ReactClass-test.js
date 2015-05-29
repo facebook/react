@@ -175,7 +175,8 @@ describe('ReactClass-spec', function() {
       'because the function is expected to return a value.'
     );
 
-    var NamedComponent = React.createClass({
+    React.createClass({
+      displayName: 'NamedComponent',
       componentShouldUpdate: function() {
         return false;
       },
@@ -189,8 +190,6 @@ describe('ReactClass-spec', function() {
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
     );
-
-    <NamedComponent />; // Shut up lint
   });
 
   it('should throw if a reserved property is in statics', function() {

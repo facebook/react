@@ -14,9 +14,6 @@
 var mocks = require('mocks');
 
 var React;
-var ReactInstanceMap;
-var ReactTestUtils;
-var reactComponentExpect;
 
 var TestComponent;
 
@@ -24,9 +21,6 @@ describe('ReactCompositeComponent-state', function() {
 
   beforeEach(function() {
     React = require('React');
-    ReactInstanceMap = require('ReactInstanceMap');
-    ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
 
     TestComponent = React.createClass({
       peekAtState: function(from, state) {
