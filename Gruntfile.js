@@ -1,20 +1,5 @@
 'use strict';
 
-var jsxTask = require('./grunt/tasks/jsx');
-var browserifyTask = require('./grunt/tasks/browserify');
-var populistTask = require('./grunt/tasks/populist');
-var webdriverPhantomJSTask = require('./grunt/tasks/webdriver-phantomjs');
-var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
-var sauceTunnelTask = require('./grunt/tasks/sauce-tunnel');
-var npmTask = require('./grunt/tasks/npm');
-var releaseTasks = require('./grunt/tasks/release');
-var npmReactTasks = require('./grunt/tasks/npm-react');
-var npmReactToolsTasks = require('./grunt/tasks/npm-react-tools');
-var versionCheckTask = require('./grunt/tasks/version-check');
-var gemReactSourceTasks = require('./grunt/tasks/gem-react-source');
-var eslintTask = require('./grunt/tasks/eslint');
-var testEslintRulesTask = require('./grunt/tasks/test-eslint-rules');
-
 module.exports = function(grunt) {
 
   grunt.initConfig({
@@ -50,7 +35,7 @@ module.exports = function(grunt) {
       grunt.loadNpmTasks(npmTaskName);
     });
 
-  grunt.registerTask('eslint', eslintTask);
+  grunt.registerTask('eslint', require('./grunt/tasks/eslint'));
 
   grunt.registerTask('lint', ['eslint']);
 
@@ -66,27 +51,32 @@ module.exports = function(grunt) {
   });
 
   // Register jsx:normal and :release tasks.
-  grunt.registerMultiTask('jsx', jsxTask);
+  grunt.registerMultiTask('jsx', require('./grunt/tasks/jsx'));
 
   // Our own browserify-based tasks to build a single JS file build.
-  grunt.registerMultiTask('browserify', browserifyTask);
+  grunt.registerMultiTask('browserify', require('./grunt/tasks/browserify'));
 
-  grunt.registerMultiTask('populist', populistTask);
+  grunt.registerMultiTask('populist', require('./grunt/tasks/populist'));
 
-  grunt.registerTask('sauce-tunnel', sauceTunnelTask);
+  grunt.registerTask('sauce-tunnel', require('./grunt/tasks/sauce-tunnel'));
 
-  grunt.registerMultiTask('webdriver-jasmine', webdriverJasmineTasks);
+  grunt.registerMultiTask('webdriver-jasmine', require('./grunt/tasks/webdriver-jasmine'));
 
-  grunt.registerMultiTask('npm', npmTask);
+  grunt.registerMultiTask('npm', require('./grunt/tasks/npm'));
 
+  var npmReactTasks = require('./grunt/tasks/npm-react');
   grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
+
+  var npmReactToolsTasks = require('./grunt/tasks/npm-react-tools');
   grunt.registerTask('npm-react-tools:release', npmReactToolsTasks.buildRelease);
   grunt.registerTask('npm-react-tools:pack', npmReactToolsTasks.packRelease);
+
+  var gemReactSourceTasks = require('./grunt/tasks/gem-react-source');
   grunt.registerTask('gem-react-source:release', gemReactSourceTasks.buildRelease);
   grunt.registerTask('gem-react-source:pack', gemReactSourceTasks.packRelease);
 
-  grunt.registerTask('version-check', versionCheckTask);
+  grunt.registerTask('version-check', require('./grunt/tasks/version-check'));
 
   grunt.registerTask('build:basic', [
     'jsx:normal',
@@ -132,11 +122,11 @@ module.exports = function(grunt) {
     'gem-react-source:release',
   ]);
 
-  grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
+  grunt.registerTask('webdriver-phantomjs', require('./grunt/tasks/webdriver-phantomjs'));
 
   grunt.registerTask('coverage:parse', require('./grunt/tasks/coverage-parse'));
 
-  grunt.registerTask('test:eslint-rules', testEslintRulesTask);
+  grunt.registerTask('test:eslint-rules', require('./grunt/tasks/test-eslint-rules'));
 
   grunt.registerTask('test:webdriver:phantomjs', [
     'connect',
@@ -238,6 +228,7 @@ module.exports = function(grunt) {
   ]);
 
   // Automate the release!
+  var releaseTasks = require('./grunt/tasks/release');
   grunt.registerTask('release:setup', releaseTasks.setup);
   grunt.registerTask('release:bower', releaseTasks.bower);
   grunt.registerTask('release:docs', releaseTasks.docs);
