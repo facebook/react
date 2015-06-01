@@ -430,6 +430,7 @@
 <h3><a class="anchor" name=""></a>시작하기 <a class="hash-link" href="#">#</a></h3>
 <p>이 튜토리얼에서는 CDN에 있는 미리 빌드된 JavaScript 파일들을 사용합니다. 선호하는 에디터를 열어, 새로운 HTML 문서를 만드세요:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
+<span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
@@ -503,7 +504,7 @@
 
 <p><code>React.render()</code>는 최상위 컴포넌트의 인스턴스를 만들고, 두 번째 인수로 전달받은 DOM 엘리먼트에 마크업을 삽입해 프레임워크를 시작합니다.</p>
 <h2><a class="anchor" name="-"></a>컴포넌트 조합하기 <a class="hash-link" href="#-">#</a></h2>
-<p>이제 <code>CommentList</code>와 <code>CommentForm</code>을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 <code>&lt;div&gt;</code> 태그 하나 입니다.</p>
+<p>이제 <code>CommentList</code>와 <code>CommentForm</code>을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 <code>&lt;div&gt;</code> 태그 하나 입니다. 파일에 두 컴포넌트를 추가해, 이미 있는 <code>CommentBox</code> 선언을 참고로 <code>React.render</code>를 호출합시다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
