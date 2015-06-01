@@ -36,6 +36,7 @@ next: thinking-in-react-ko-KR.html
 
 ```html
 <!-- index.html -->
+<!DOCTYPE html>
 <html>
   <head>
     <title>Hello React</title>

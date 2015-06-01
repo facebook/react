@@ -35,6 +35,7 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your fa
 
 ```html
 <!-- index.html -->
+<!DOCTYPE html>
 <html>
   <head>
     <title>Hello React</title>

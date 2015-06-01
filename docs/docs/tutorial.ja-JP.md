@@ -35,6 +35,7 @@ next: thinking-in-react-ja-JP.html
 
 ```html
 <!-- index.html -->
+<!DOCTYPE html>
 <html>
   <head>
     <title>Hello React</title>
