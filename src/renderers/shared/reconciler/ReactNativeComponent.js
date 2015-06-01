@@ -44,6 +44,29 @@ var ReactNativeComponentInjection = {
 };
 
 /**
+ * Wrap stateless function by component class.
+
+ * @internal
+ * @param {function} Stateless component function.
+ * @return {function} The React class constructor function.
+ */
+function wrapStatelessFunction(fn) {
+  if (!fn.ReactComponent) {
+    fn.ReactComponent = function(props) {
+      return {
+        render: function() {
+          return fn(props);
+        }
+      };
+    };
+
+    fn.ReactComponent.displayName = fn.name;
+  }
+
+  return fn.ReactComponent;
+}
+
+/**
  * Get a composite component wrapper class for a specific tag.
  *
  * @param {ReactElement} element The tag for which to get the class.
@@ -51,7 +74,11 @@ var ReactNativeComponentInjection = {
  */
 function getComponentClassForElement(element) {
   if (typeof element.type === 'function') {
-    return element.type;
+    if (element.type.prototype.render) {
+      return element.type;
+    } else {
+      return wrapStatelessFunction(element.type);
+    }
   }
   var tag = element.type;
   var componentClass = tagToComponentClass[tag];

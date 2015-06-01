@@ -845,17 +845,14 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
-  it('should warn when using non-React functions in JSX', function() {
-    function NotAComponent() {
-      return [<div />, <div />];
+  it('should render stateless functions', function() {
+    function StatelessComponent(props) {
+      return <div>{props.name}</div>;
     }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();  // has no method 'render'
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'NotAComponent(...): No `render` method found'
-    );
+
+    var comp = ReactTestUtils.renderIntoDocument(<StatelessComponent name="A" />);
+
+    expect(React.findDOMNode(comp).textContent).toBe('A');
   });
 
   it('context should be passed down from the parent', function() {
