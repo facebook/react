@@ -52,7 +52,7 @@ var NESTED_UPDATES = {
     } else {
       dirtyComponents.length = 0;
     }
-  }
+  },
 };
 
 var UPDATE_QUEUEING = {
@@ -61,7 +61,7 @@ var UPDATE_QUEUEING = {
   },
   close: function() {
     this.callbackQueue.notifyAll();
-  }
+  },
 };
 
 var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
@@ -100,7 +100,7 @@ assign(
       scope,
       a
     );
-  }
+  },
 });
 
 PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
@@ -256,7 +256,7 @@ var ReactUpdatesInjection = {
       'ReactUpdates: must provide an isBatchingUpdates boolean attribute'
     );
     batchingStrategy = _batchingStrategy;
-  }
+  },
 };
 
 var ReactUpdates = {
@@ -272,7 +272,7 @@ var ReactUpdates = {
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,
   injection: ReactUpdatesInjection,
-  asap: asap
+  asap: asap,
 };
 
 module.exports = ReactUpdates;

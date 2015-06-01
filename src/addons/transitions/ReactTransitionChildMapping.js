@@ -97,7 +97,7 @@ var ReactTransitionChildMapping = {
     }
 
     return childMapping;
-  }
+  },
 };
 
 module.exports = ReactTransitionChildMapping;

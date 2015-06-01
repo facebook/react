@@ -331,7 +331,7 @@ var ReactInstanceHandles = {
 
   isAncestorIDOf: isAncestorIDOf,
 
-  SEPARATOR: SEPARATOR
+  SEPARATOR: SEPARATOR,
 
 };
 

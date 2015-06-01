@@ -23,7 +23,7 @@ var ReactCurrentOwner = {
    * @internal
    * @type {ReactComponent}
    */
-  current: null
+  current: null,
 
 };
 

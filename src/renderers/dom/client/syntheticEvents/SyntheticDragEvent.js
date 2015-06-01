@@ -19,7 +19,7 @@ var SyntheticMouseEvent = require('SyntheticMouseEvent');
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var DragEventInterface = {
-  dataTransfer: null
+  dataTransfer: null,
 };
 
 /**

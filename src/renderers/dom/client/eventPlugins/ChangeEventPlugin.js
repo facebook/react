@@ -28,7 +28,7 @@ var eventTypes = {
   change: {
     phasedRegistrationNames: {
       bubbled: keyOf({onChange: null}),
-      captured: keyOf({onChangeCapture: null})
+      captured: keyOf({onChangeCapture: null}),
     },
     dependencies: [
       topLevelTypes.topBlur,
@@ -38,9 +38,9 @@ var eventTypes = {
       topLevelTypes.topInput,
       topLevelTypes.topKeyDown,
       topLevelTypes.topKeyUp,
-      topLevelTypes.topSelectionChange
-    ]
-  }
+      topLevelTypes.topSelectionChange,
+    ],
+  },
 };
 
 /**
@@ -158,7 +158,7 @@ var newValueProp = {
     // Cast to a string so we can do equality checks.
     activeElementValue = '' + val;
     activeElementValueProp.set.call(this, val);
-  }
+  },
 };
 
 /**
@@ -373,7 +373,7 @@ var ChangeEventPlugin = {
         topLevelTargetID
       );
     }
-  }
+  },
 
 };
 

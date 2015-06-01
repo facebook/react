@@ -82,7 +82,7 @@ var ReactPropTypes = {
   objectOf: createObjectOfTypeChecker,
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
-  shape: createShapeTypeChecker
+  shape: createShapeTypeChecker,
 };
 
 function createChainableTypeChecker(validate) {

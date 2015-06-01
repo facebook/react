@@ -460,7 +460,7 @@ var OrderedMapMethods = {
   _computePositions: function() {
     this._computedPositions = {
       keyByIndex: {},
-      indexByKey: {}
+      indexByKey: {},
     };
     var keyByIndex = this._computedPositions.keyByIndex;
     var indexByKey = this._computedPositions.indexByKey;
@@ -473,7 +473,7 @@ var OrderedMapMethods = {
         index++;
       }
     }
-  }
+  },
 };
 
 assign(OrderedMapImpl.prototype, OrderedMapMethods);
@@ -501,7 +501,7 @@ var OrderedMap = {
       extractObjectFromArray(arr, keyExtractor),
       arr.length
     );
-  }
+  },
 };
 
 module.exports = OrderedMap;

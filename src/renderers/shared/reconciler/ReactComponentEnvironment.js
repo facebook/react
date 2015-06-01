@@ -49,8 +49,8 @@ var ReactComponentEnvironment = {
       ReactComponentEnvironment.processChildrenUpdates =
         environment.processChildrenUpdates;
       injected = true;
-    }
-  }
+    },
+  },
 
 };
 

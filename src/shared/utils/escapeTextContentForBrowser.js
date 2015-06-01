@@ -16,7 +16,7 @@ var ESCAPE_LOOKUP = {
   '>': '&gt;',
   '<': '&lt;',
   '"': '&quot;',
-  '\'': '&#x27;'
+  '\'': '&#x27;',
 };
 
 var ESCAPE_REGEX = /[&><"']/g;

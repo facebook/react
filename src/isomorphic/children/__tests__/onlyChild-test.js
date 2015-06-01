@@ -29,7 +29,7 @@ describe('onlyChild', function() {
             {onlyChild(this.props.children, this.props.mapFn, this)}
           </div>
         );
-      }
+      },
     });
   });
 

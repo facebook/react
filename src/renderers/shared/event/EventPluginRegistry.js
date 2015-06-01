@@ -265,7 +265,7 @@ var EventPluginRegistry = {
         delete registrationNameModules[registrationName];
       }
     }
-  }
+  },
 
 };
 

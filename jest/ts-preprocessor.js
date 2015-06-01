@@ -39,7 +39,7 @@ function compile(defaultLib, content, contentFilename) {
     },
     getNewLine: function() {
       return '\n';
-    }
+    },
   };
   var program = ts.createProgram([contentFilename], tsOptions, compilerHost);
   var errors = program.getDiagnostics();
@@ -68,6 +68,6 @@ module.exports = function(defaultLibs) {
   );
 
   return {
-    compile: compile.bind(null, defaultLibSourceFile)
+    compile: compile.bind(null, defaultLibSourceFile),
   };
 };

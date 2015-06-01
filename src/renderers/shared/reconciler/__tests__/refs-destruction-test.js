@@ -25,7 +25,7 @@ var TestComponent = React.createClass({
         }
       </div>
     );
-  }
+  },
 });
 
 describe('refs-destruction', function() {

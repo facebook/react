@@ -138,7 +138,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
   render: function() {
     return onlyChild(this.props.children);
-  }
+  },
 });
 
 module.exports = ReactCSSTransitionGroupChild;

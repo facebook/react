@@ -828,7 +828,7 @@ var ReactCompositeComponentMixin = {
   },
 
   // Stub
-  _instantiateReactComponent: null
+  _instantiateReactComponent: null,
 
 };
 
@@ -838,13 +838,13 @@ ReactPerf.measureMethods(
   {
     mountComponent: 'mountComponent',
     updateComponent: 'updateComponent',
-    _renderValidatedComponent: '_renderValidatedComponent'
+    _renderValidatedComponent: '_renderValidatedComponent',
   }
 );
 
 var ReactCompositeComponent = {
 
-  Mixin: ReactCompositeComponentMixin
+  Mixin: ReactCompositeComponentMixin,
 
 };
 

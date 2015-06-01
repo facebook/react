@@ -30,7 +30,7 @@ var mouseListenerNames = keyMirror({
   onDoubleClickCapture: true,
   onMouseDownCapture: true,
   onMouseMoveCapture: true,
-  onMouseUpCapture: true
+  onMouseUpCapture: true,
 });
 
 /**
@@ -55,7 +55,7 @@ var ReactDOMButton = ReactClass.createClass({
     }
 
     return button(props, this.props.children);
-  }
+  },
 
 });
 

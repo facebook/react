@@ -3,7 +3,7 @@
 module.exports = {
   src: {
     options: {
-      jshintrc: './src/.jshintrc'
+      jshintrc: './src/.jshintrc',
     },
     files: {
       // We don't care about src/vendor (we shouldn't be touching this), and
@@ -12,16 +12,16 @@ module.exports = {
         './src/**/*.js',
         '!./src/vendor/**',
         '!./src/**/__tests__/**',
-        '!./src/test/**'
-      ]
-    }
+        '!./src/test/**',
+      ],
+    },
   },
   project: {
     options: {
-      jshintrc: './.jshintrc'
+      jshintrc: './.jshintrc',
     },
     files: {
-      src: ['./Gruntfile.js', './grunt/**/*.js', './bin/*.js', './vendor/*.js']
-    }
-  }
+      src: ['./Gruntfile.js', './grunt/**/*.js', './bin/*.js', './vendor/*.js'],
+    },
+  },
 };

@@ -59,12 +59,12 @@ var topLevelTypes = keyMirror({
   topTouchEnd: null,
   topTouchMove: null,
   topTouchStart: null,
-  topWheel: null
+  topWheel: null,
 });
 
 var EventConstants = {
   topLevelTypes: topLevelTypes,
-  PropagationPhases: PropagationPhases
+  PropagationPhases: PropagationPhases,
 };
 
 module.exports = EventConstants;

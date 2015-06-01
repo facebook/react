@@ -160,7 +160,7 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
   transaction.getReactMountReady().enqueue(putListener, {
     id: id,
     registrationName: registrationName,
-    listener: listener
+    listener: listener,
   });
 }
 
@@ -191,21 +191,21 @@ var omittedCloseTags = {
   'param': true,
   'source': true,
   'track': true,
-  'wbr': true
+  'wbr': true,
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
 var newlineEatingTags = {
   'listing': true,
   'pre': true,
-  'textarea': true
+  'textarea': true,
 };
 
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
 var voidElementTags = assign({
-  'menuitem': true
+  'menuitem': true,
 }, omittedCloseTags);
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
@@ -653,13 +653,13 @@ ReactDOMComponent.Mixin = {
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
     this._wrapperState = null;
-  }
+  },
 
 };
 
 ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {
   mountComponent: 'mountComponent',
-  updateComponent: 'updateComponent'
+  updateComponent: 'updateComponent',
 });
 
 assign(
@@ -671,7 +671,7 @@ assign(
 ReactDOMComponent.injection = {
   injectIDOperations: function(IDOperations) {
     ReactDOMComponent.BackendIDOperations = BackendIDOperations = IDOperations;
-  }
+  },
 };
 
 module.exports = ReactDOMComponent;

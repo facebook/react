@@ -121,7 +121,7 @@ describe('ReactCompositeComponent-state', function() {
 
       componentWillUnmount: function() {
         this.peekAtState('componentWillUnmount');
-      }
+      },
     });
 
   });
@@ -209,7 +209,7 @@ describe('ReactCompositeComponent-state', function() {
       ['forceUpdate', 'blue'],
       // unmountComponent()
       // state is available within `componentWillUnmount()`
-      ['componentWillUnmount', 'blue']
+      ['componentWillUnmount', 'blue'],
     ]);
   });
 
@@ -223,7 +223,7 @@ describe('ReactCompositeComponent-state', function() {
         // This should get silently ignored (maybe with a warning), but it
         // shouldn't break React.
         outer.setState({showInner: false});
-      }
+      },
     });
     var Outer = React.createClass({
       getInitialState: function() {
@@ -231,7 +231,7 @@ describe('ReactCompositeComponent-state', function() {
       },
       render: function() {
         return <div>{this.state.showInner && <Inner />}</div>;
-      }
+      },
     });
 
     var container = document.createElement('div');

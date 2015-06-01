@@ -215,7 +215,7 @@ describe('DOMPropertyOperations', function() {
       var obj = {
         toString: function() {
           return '<html>';
-        }
+        },
       };
       DOMPropertyOperations.setValueForProperty(stubNode, 'role', obj);
       expect(stubNode.getAttribute('role')).toBe('<html>');
@@ -251,8 +251,8 @@ describe('DOMPropertyOperations', function() {
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: null},
         DOMMutationMethods: {
-          foobar: foobarSetter
-        }
+          foobar: foobarSetter,
+        },
       });
 
       DOMPropertyOperations.setValueForProperty(
@@ -290,8 +290,8 @@ describe('DOMPropertyOperations', function() {
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: DOMProperty.injection.MUST_USE_PROPERTY},
         DOMPropertyNames: {
-          foobar: 'className'
-        }
+          foobar: 'className',
+        },
       });
 
       DOMPropertyOperations.setValueForProperty(
@@ -332,7 +332,7 @@ describe('DOMPropertyOperations', function() {
         isCustomAttribute: function(name) {
           return name.indexOf('foo-') === 0;
         },
-        Properties: {foobar: null}
+        Properties: {foobar: null},
       });
 
       // Ensure old attributes still work

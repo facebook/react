@@ -22,7 +22,7 @@ module.exports = function() {
   var requires = config.requires || [];
   grunt.file.expand({
     nonull: true, // Keep IDs that don't expand to anything.
-    cwd: config.rootDirectory
+    cwd: config.rootDirectory,
   }, requires).forEach(function(name) {
     name = name.replace(/\.js$/i, '');
     args.push(name);
@@ -31,7 +31,7 @@ module.exports = function() {
 
   require('populist').buildP({
     rootDirectory: config.rootDirectory,
-    args: args
+    args: args,
   }).then(function(output) {
     grunt.file.write(config.outfile, 'process = {env: {}};' + output);
     theFilesToTestScript.end();

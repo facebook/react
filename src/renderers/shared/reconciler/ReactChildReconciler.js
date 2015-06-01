@@ -120,7 +120,7 @@ var ReactChildReconciler = {
         ReactReconciler.unmountComponent(renderedChild);
       }
     }
-  }
+  },
 
 };
 

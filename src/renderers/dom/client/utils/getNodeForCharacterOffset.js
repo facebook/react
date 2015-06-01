@@ -59,7 +59,7 @@ function getNodeForCharacterOffset(root, offset) {
       if (nodeStart <= offset && nodeEnd >= offset) {
         return {
           node: node,
-          offset: offset - nodeStart
+          offset: offset - nodeStart,
         };
       }
 

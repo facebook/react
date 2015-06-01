@@ -226,12 +226,12 @@ describe('ReactPropTypes', function() {
     beforeEach(function() {
       Component = React.createClass({
         propTypes: {
-          label: PropTypes.element.isRequired
+          label: PropTypes.element.isRequired,
         },
 
         render: function() {
           return <div>{this.props.label}</div>;
-        }
+        },
       });
       spyOn(console, 'error');
     });
@@ -345,7 +345,7 @@ describe('ReactPropTypes', function() {
       MyComponent = React.createClass({
         render: function() {
           return <div />;
-        }
+        },
       });
     });
 
@@ -371,7 +371,7 @@ describe('ReactPropTypes', function() {
         'Some string',
         <div />,
         ['Another string', [456], <span />, <MyComponent />],
-        <MyComponent />
+        <MyComponent />,
       ]);
 
       // Object of renderable things
@@ -383,10 +383,10 @@ describe('ReactPropTypes', function() {
         k3: frag({
           k30: <MyComponent />,
           k31: frag({k310: <a />}),
-          k32: 'Another string'
+          k32: 'Another string',
         }),
         k4: null,
-        k5: undefined
+        k5: undefined,
       }));
       expect(console.error.calls).toEqual([]);
 
@@ -398,10 +398,10 @@ describe('ReactPropTypes', function() {
         k3: {
           k30: <MyComponent />,
           k31: {k310: <a />},
-          k32: 'Another string'
+          k32: 'Another string',
         },
         k4: null,
-        k5: undefined
+        k5: undefined,
       });
     });
 
@@ -597,7 +597,7 @@ describe('ReactPropTypes', function() {
 
       var checker = PropTypes.oneOfType([
         PropTypes.shape({a: PropTypes.number.isRequired}),
-        PropTypes.shape({b: PropTypes.number.isRequired})
+        PropTypes.shape({b: PropTypes.number.isRequired}),
       ]);
       typeCheckFail(
         checker,
@@ -609,7 +609,7 @@ describe('ReactPropTypes', function() {
     it('should not warn if one of the types are valid', function() {
       var checker = PropTypes.oneOfType([
         PropTypes.string,
-        PropTypes.number
+        PropTypes.number,
       ]);
       typeCheckPass(checker, null);
       typeCheckPass(checker, 'foo');
@@ -617,7 +617,7 @@ describe('ReactPropTypes', function() {
 
       checker = PropTypes.oneOfType([
         PropTypes.shape({a: PropTypes.number.isRequired}),
-        PropTypes.shape({b: PropTypes.number.isRequired})
+        PropTypes.shape({b: PropTypes.number.isRequired}),
       ]);
       typeCheckPass(checker, {a: 1});
       typeCheckPass(checker, {b: 1});
@@ -692,7 +692,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.shape({
           key: PropTypes.number.isRequired,
-          secondKey: PropTypes.number.isRequired
+          secondKey: PropTypes.number.isRequired,
         }),
         {},
         'Required prop `testProp.key` was not specified in `testComponent`.'
@@ -743,7 +743,7 @@ describe('ReactPropTypes', function() {
 
         render: function() {
           return <div />;
-        }
+        },
       });
 
       var instance = <Component num={5} />;
@@ -761,7 +761,7 @@ describe('ReactPropTypes', function() {
 
         render: function() {
           return <div />;
-        }
+        },
       });
 
       var instance = <Component bla={5} />;
@@ -783,7 +783,7 @@ describe('ReactPropTypes', function() {
 
         render: function() {
           return <div />;
-        }
+        },
       });
 
       var instance = <Component num={6} />;
@@ -806,7 +806,7 @@ describe('ReactPropTypes', function() {
 
           render: function() {
             return <div />;
-          }
+          },
         });
 
         var instance = <Component num={5} />;

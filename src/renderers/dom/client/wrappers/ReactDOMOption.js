@@ -105,7 +105,7 @@ var ReactDOMOption = ReactClass.createClass({
     });
 
     return option(props, content);
-  }
+  },
 
 });
 

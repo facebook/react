@@ -24,7 +24,7 @@ var nullComponentIDsRegistry = {};
 var ReactEmptyComponentInjection = {
   injectEmptyComponent: function(emptyComponent) {
     component = ReactElement.createFactory(emptyComponent);
-  }
+  },
 };
 
 var ReactEmptyComponentType = function() {};
@@ -85,7 +85,7 @@ function isNullComponentID(id) {
 var ReactEmptyComponent = {
   emptyElement: emptyElement,
   injection: ReactEmptyComponentInjection,
-  isNullComponentID: isNullComponentID
+  isNullComponentID: isNullComponentID,
 };
 
 module.exports = ReactEmptyComponent;

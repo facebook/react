@@ -60,7 +60,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -73,7 +73,7 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
     var instance = React.render(<Component />, container);
@@ -117,7 +117,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -130,7 +130,7 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
     var instance = React.render(<Component />, container);
@@ -146,7 +146,7 @@ describe('ReactTransitionGroup', function() {
     willEnterCb();
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter',
-      'didEnter', 'willLeave', 'didLeave', 'willUnmount'
+      'didEnter', 'willLeave', 'didLeave', 'willUnmount',
     ]);
   });
 
@@ -177,7 +177,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -190,7 +190,7 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
     var instance = React.render(<Component />, container);
@@ -204,7 +204,7 @@ describe('ReactTransitionGroup', function() {
     }
     willEnterCb();
     expect(log).toEqual([
-      'didMount', 'didMount', 'willEnter', 'didEnter'
+      'didMount', 'didMount', 'willEnter', 'didEnter',
     ]);
   });
 
@@ -234,7 +234,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -247,7 +247,7 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} id={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
     var instance = React.render(<Component />, container);
@@ -257,14 +257,14 @@ describe('ReactTransitionGroup', function() {
     instance.setState({count: 3});
     expect(log).toEqual([
       'didMount1', 'didMount2', 'willEnter1', 'didEnter1',
-      'willEnter2', 'didEnter2'
+      'willEnter2', 'didEnter2',
     ]);
     log = [];
 
     instance.setState({count: 0});
     expect(log).toEqual([
       'willLeave0', 'didLeave0', 'willLeave1', 'didLeave1',
-      'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2'
+      'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2',
     ]);
   });
 });

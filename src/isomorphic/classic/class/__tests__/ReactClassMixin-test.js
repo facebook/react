@@ -32,59 +32,59 @@ describe('ReactClass-mixin', function() {
 
     var MixinA = {
       propTypes: {
-        propA: function() {}
+        propA: function() {},
       },
       componentDidMount: function() {
         this.props.listener('MixinA didMount');
-      }
+      },
     };
 
     var MixinB = {
       mixins: [MixinA],
       propTypes: {
-        propB: function() {}
+        propB: function() {},
       },
       componentDidMount: function() {
         this.props.listener('MixinB didMount');
-      }
+      },
     };
 
     var MixinBWithReverseSpec = {
       componentDidMount: function() {
         this.props.listener('MixinBWithReverseSpec didMount');
       },
-      mixins: [MixinA]
+      mixins: [MixinA],
     };
 
     var MixinC = {
       statics: {
-        staticC: function() {}
+        staticC: function() {},
       },
       componentDidMount: function() {
         this.props.listener('MixinC didMount');
-      }
+      },
     };
 
     var MixinD = {
       propTypes: {
-        value: mixinPropValidator
-      }
+        value: mixinPropValidator,
+      },
     };
 
     TestComponent = React.createClass({
       mixins: [MixinB, MixinC, MixinD],
       statics: {
-        staticComponent: function() {}
+        staticComponent: function() {},
       },
       propTypes: {
-        propComponent: function() {}
+        propComponent: function() {},
       },
       componentDidMount: function() {
         this.props.listener('Component didMount');
       },
       render: function() {
         return <div />;
-      }
+      },
     });
 
     TestComponentWithReverseSpec = React.createClass({
@@ -94,17 +94,17 @@ describe('ReactClass-mixin', function() {
       componentDidMount: function() {
         this.props.listener('Component didMount');
       },
-      mixins: [MixinBWithReverseSpec, MixinC, MixinD]
+      mixins: [MixinBWithReverseSpec, MixinC, MixinD],
     });
 
     TestComponentWithPropTypes = React.createClass({
       mixins: [MixinD],
       propTypes: {
-        value: componentPropValidator
+        value: componentPropValidator,
       },
       render: function() {
         return <div />;
-      }
+      },
     });
   });
 
@@ -132,7 +132,7 @@ describe('ReactClass-mixin', function() {
       ['MixinA didMount'],
       ['MixinB didMount'],
       ['MixinC didMount'],
-      ['Component didMount']
+      ['Component didMount'],
     ]);
   });
 
@@ -145,7 +145,7 @@ describe('ReactClass-mixin', function() {
       ['MixinA didMount'],
       ['MixinBWithReverseSpec didMount'],
       ['MixinC didMount'],
-      ['Component didMount']
+      ['Component didMount'],
     ]);
   });
 
@@ -172,7 +172,7 @@ describe('ReactClass-mixin', function() {
     var Mixin = {
       getInitialState: function() {
         return {mixin: true};
-      }
+      },
     };
     var Component = React.createClass({
       mixins: [Mixin],
@@ -181,7 +181,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     var instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -193,7 +193,7 @@ describe('ReactClass-mixin', function() {
     var Mixin = {
       getInitialState: function() {
         return {x: true};
-      }
+      },
     };
     var Component = React.createClass({
       mixins: [Mixin],
@@ -202,7 +202,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     var instance = <Component />;
     expect(function() {
@@ -220,7 +220,7 @@ describe('ReactClass-mixin', function() {
     var Mixin = {
       getInitialState: function() {
         return Object.freeze({mixin: true});
-      }
+      },
     };
     var Component = React.createClass({
       mixins: [Mixin],
@@ -229,7 +229,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     expect(() => {
       ReactTestUtils.renderIntoDocument(<Component />);
@@ -239,19 +239,19 @@ describe('ReactClass-mixin', function() {
   it('should support statics in mixins', function() {
     var Mixin = {
       statics: {
-        foo: 'bar'
-      }
+        foo: 'bar',
+      },
     };
     var Component = React.createClass({
       mixins: [Mixin],
 
       statics: {
-        abc: 'def'
+        abc: 'def',
       },
 
       render: function() {
         return <span />;
-      }
+      },
     });
     var instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -265,19 +265,19 @@ describe('ReactClass-mixin', function() {
     expect(function() {
       var Mixin = {
         statics: {
-          abc: 'foo'
-        }
+          abc: 'foo',
+        },
       };
       React.createClass({
         mixins: [Mixin],
 
         statics: {
-          abc: 'bar'
+          abc: 'bar',
         },
 
         render: function() {
           return <span />;
-        }
+        },
       });
     }).toThrow(
       'Invariant Violation: ReactClass: You are attempting to ' +
@@ -292,8 +292,8 @@ describe('ReactClass-mixin', function() {
         statics: {
           abc: function() {
             console.log('foo');
-          }
-        }
+          },
+        },
       };
       React.createClass({
         mixins: [Mixin],
@@ -301,12 +301,12 @@ describe('ReactClass-mixin', function() {
         statics: {
           abc: function() {
             console.log('bar');
-          }
+          },
         },
 
         render: function() {
           return <span />;
-        }
+        },
       });
     }).toThrow(
       'Invariant Violation: ReactClass: You are attempting to ' +
@@ -322,7 +322,7 @@ describe('ReactClass-mixin', function() {
 
         render: function() {
           return <span />;
-        }
+        },
       });
     }).toThrow(
       'Invariant Violation: ReactClass: You\'re attempting to ' +
@@ -335,7 +335,7 @@ describe('ReactClass-mixin', function() {
       var Component = React.createClass({
         render: function() {
           return <span />;
-        }
+        },
       });
 
       React.createClass({
@@ -343,7 +343,7 @@ describe('ReactClass-mixin', function() {
 
         render: function() {
           return <span />;
-        }
+        },
       });
     }).toThrow(
       'Invariant Violation: ReactClass: You\'re attempting to ' +
@@ -355,7 +355,7 @@ describe('ReactClass-mixin', function() {
     var mixin = {
       mixinFunc: function() {
         return this;
-      }
+      },
     };
 
     var Component = React.createClass({
@@ -365,7 +365,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     var instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -375,7 +375,7 @@ describe('ReactClass-mixin', function() {
       function() {
     var mixin = {
       keyWithNullValue: null,
-      randomCounter: 0
+      randomCounter: 0,
     };
 
     var Component = React.createClass({
@@ -386,7 +386,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     var instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -399,7 +399,7 @@ describe('ReactClass-mixin', function() {
     var Mixin = {
       getInitialState: function() {
         return {foo: 'bar'};
-      }
+      },
     };
     Component = React.createClass({
       mixins: [Mixin],
@@ -408,7 +408,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     expect(
       () => ReactTestUtils.renderIntoDocument(<Component />)
@@ -422,7 +422,7 @@ describe('ReactClass-mixin', function() {
     var Mixin2 = {
       getInitialState: function() {
         return null;
-      }
+      },
     };
     Component = React.createClass({
       mixins: [Mixin2],
@@ -431,7 +431,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     expect(
       () => ReactTestUtils.renderIntoDocument(<Component />)
@@ -449,7 +449,7 @@ describe('ReactClass-mixin', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
     expect(
       () => ReactTestUtils.renderIntoDocument(<Component />)

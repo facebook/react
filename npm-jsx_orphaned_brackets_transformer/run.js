@@ -24,7 +24,7 @@ _visitFbt.test = function(node, path, state) {
 
 var VISITORS_LIST = [
   _visitFbt,
-  visitReactTag
+  visitReactTag,
 ];
 
 function _transformSource(source) {
@@ -36,7 +36,7 @@ function transformDir(dirPath, exclude) {
     rootFolder: dirPath,
     filterFunction: function(path, stat) {
       return /\.jsx?$/.test(path) && (!exclude || !exclude.test(path));
-    }
+    },
   });
 
   var numTransforms = 0;

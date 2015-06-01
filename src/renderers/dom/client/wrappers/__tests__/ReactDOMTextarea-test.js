@@ -68,7 +68,7 @@ describe('ReactDOMTextarea', function() {
     var objToString = {
       toString: function() {
         return 'foobar';
-      }
+      },
     };
 
     var stub = <textarea type="text" defaultValue={objToString} />;
@@ -137,7 +137,7 @@ describe('ReactDOMTextarea', function() {
     var objToString = {
       toString: function() {
         return 'foo';
-      }
+      },
     };
     stub.replaceProps({value: objToString, onChange: emptyFunction});
     expect(node.value).toEqual('foo');
@@ -187,7 +187,7 @@ describe('ReactDOMTextarea', function() {
     var obj = {
       toString: function() {
         return 'sharkswithlasers';
-      }
+      },
     };
     var node = React.findDOMNode(renderTextarea(<textarea>{obj}</textarea>));
     expect(console.error.argsForCall.length).toBe(1);

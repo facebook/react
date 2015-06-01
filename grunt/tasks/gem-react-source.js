@@ -8,7 +8,7 @@ var dest = 'build/gem-react-source/';
 var build = dest + 'build/';
 var buildFiles = [
   'react.js', 'react.min.js', 'JSXTransformer.js',
-  'react-with-addons.js', 'react-with-addons.min.js'
+  'react-with-addons.js', 'react-with-addons.min.js',
 ];
 
 function buildRelease() {
@@ -43,8 +43,8 @@ function packRelease() {
     cmd: 'gem',
     args: ['build', 'react-source.gemspec'],
     opts: {
-      cwd: dest
-    }
+      cwd: dest,
+    },
   };
   grunt.util.spawn(spawnCmd, function(err, result) {
     if (err) {
@@ -61,5 +61,5 @@ function packRelease() {
 
 module.exports = {
   buildRelease: buildRelease,
-  packRelease: packRelease
+  packRelease: packRelease,
 };

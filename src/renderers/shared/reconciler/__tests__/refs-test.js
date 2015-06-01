@@ -48,7 +48,7 @@ var ClickCounter = React.createClass({
         {children}
       </span>
     );
-  }
+  },
 });
 
 /**
@@ -59,7 +59,7 @@ var ClickCounter = React.createClass({
 var GeneralContainerComponent = React.createClass({
   render: function() {
     return <div>{this.props.children}</div>;
-  }
+  },
 });
 
 /**
@@ -81,7 +81,7 @@ var TestRefsComponent = React.createClass({
         </GeneralContainerComponent>
       </div>
     );
-  }
+  },
 });
 
 /**
@@ -192,7 +192,7 @@ describe('ref swapping', function() {
           />
         </div>
       );
-    }
+    },
   });
 
   it('Allow refs to hop around children correctly', function() {
@@ -234,7 +234,7 @@ describe('ref swapping', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);

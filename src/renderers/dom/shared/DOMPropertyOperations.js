@@ -30,7 +30,7 @@ if (__DEV__) {
     children: true,
     dangerouslySetInnerHTML: true,
     key: true,
-    ref: true
+    ref: true,
   };
   var warnedProperties = {};
 
@@ -187,7 +187,7 @@ var DOMPropertyOperations = {
     } else if (__DEV__) {
       warnUnknownProperty(name);
     }
-  }
+  },
 
 };
 

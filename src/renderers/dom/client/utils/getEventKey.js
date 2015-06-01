@@ -30,7 +30,7 @@ var normalizeKey = {
   'Menu': 'ContextMenu',
   'Apps': 'ContextMenu',
   'Scroll': 'ScrollLock',
-  'MozPrintableKey': 'Unidentified'
+  'MozPrintableKey': 'Unidentified',
 };
 
 /**
@@ -64,7 +64,7 @@ var translateToKey = {
   118: 'F7', 119: 'F8', 120: 'F9', 121: 'F10', 122: 'F11', 123: 'F12',
   144: 'NumLock',
   145: 'ScrollLock',
-  224: 'Meta'
+  224: 'Meta',
 };
 
 /**

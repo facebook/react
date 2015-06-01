@@ -82,28 +82,28 @@ describe('ReactDOM', function() {
     myDiv.setProps({
       children: [
         <div key="theDog" className="dogbeforedelete" />,
-        <div key="theBird" className="bird" />
-      ]
+        <div key="theBird" className="bird" />,
+      ],
     });
     // Remove theDog - this should purge the cache
     myDiv.setProps({
       children: [
-        <div key="theBird" className="bird" />
-      ]
+        <div key="theBird" className="bird" />,
+      ],
     });
     // Now, put theDog back. It's now a different DOM node.
     myDiv.setProps({
       children: [
         <div key="theDog" className="dog" />,
-        <div key="theBird" className="bird" />
-      ]
+        <div key="theBird" className="bird" />,
+      ],
     });
     // Change the className of theDog. It will use the same element
     myDiv.setProps({
       children: [
         <div key="theDog" className="bigdog" />,
-        <div key="theBird" className="bird" />
-      ]
+        <div key="theBird" className="bird" />,
+      ],
     });
     var root = React.findDOMNode(myDiv);
     var dog = root.childNodes[0];

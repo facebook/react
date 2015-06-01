@@ -53,7 +53,7 @@ describe('Transaction', function() {
           initialize: throwInInit,
           close: function(initResult) {
             this.firstCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: function() {
@@ -61,14 +61,14 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.secondCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: throwInInit,
           close: function(initResult) {
             this.lastCloseParam = initResult;
-          }
-        }
+          },
+        },
       ];
     };
 
@@ -106,7 +106,7 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.firstCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: function() {
@@ -114,7 +114,7 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.secondCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: function() {
@@ -122,8 +122,8 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.lastCloseParam = initResult;
-          }
-        }
+          },
+        },
       ];
     };
 
@@ -168,7 +168,7 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.firstCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: function() {
@@ -176,7 +176,7 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.secondCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: function() {
@@ -184,7 +184,7 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.lastCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: function() {
@@ -192,8 +192,8 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             throw new Error('The transaction should throw a TypeError.');
-          }
-        }
+          },
+        },
       ];
     };
 
@@ -229,8 +229,8 @@ describe('Transaction', function() {
         {
           close: function(initResult) {
             throw new Error(exceptionMsg);
-          }
-        }
+          },
+        },
       ];
     };
 
@@ -260,7 +260,7 @@ describe('Transaction', function() {
           },
           close: function(initResult) {
             this.firstCloseParam = initResult;
-          }
+          },
         },
         {
           initialize: function() {
@@ -271,8 +271,8 @@ describe('Transaction', function() {
             this.nestedTransaction.perform(function() {
               nestedPerformSideEffect = 'NESTED_SIDE_EFFECT';
             });
-          }
-        }
+          },
+        },
       ];
     };
 
@@ -281,14 +281,16 @@ describe('Transaction', function() {
     };
     assign(NestedTransaction.prototype, Transaction.Mixin);
     NestedTransaction.prototype.getTransactionWrappers = function() {
-      return [{
-        initialize: function() {
-          this.hasInitializedNested = true;
+      return [
+        {
+          initialize: function() {
+            this.hasInitializedNested = true;
+          },
+          close: function() {
+            this.hasClosedNested = true;
+          },
         },
-        close: function() {
-          this.hasClosedNested = true;
-        }
-      }];
+      ];
     };
 
     var transaction = new TestTransaction();

@@ -24,7 +24,7 @@ var hasReadOnlyValue = {
   'hidden': true,
   'radio': true,
   'reset': true,
-  'submit': true
+  'submit': true,
 };
 
 function _assertSingleLink(inputProps) {
@@ -83,7 +83,7 @@ var propTypes = {
       'set either `onChange` or `readOnly`.'
     );
   },
-  onChange: ReactPropTypes.func
+  onChange: ReactPropTypes.func,
 };
 
 var loggedTypeFailures = {};
@@ -157,7 +157,7 @@ var LinkedValueUtils = {
     } else if (inputProps.onChange) {
       return inputProps.onChange.call(undefined, event);
     }
-  }
+  },
 };
 
 module.exports = LinkedValueUtils;

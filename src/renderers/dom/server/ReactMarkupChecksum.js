@@ -40,7 +40,7 @@ var ReactMarkupChecksum = {
     existingChecksum = existingChecksum && parseInt(existingChecksum, 10);
     var markupChecksum = adler32(markup);
     return markupChecksum === existingChecksum;
-  }
+  },
 };
 
 module.exports = ReactMarkupChecksum;

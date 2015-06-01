@@ -205,11 +205,13 @@ describe('traverseAllChildren', function() {
 
     var instance = (
       <div>{
-        [frag({
-          firstHalfKey: [zero, one, two],
-          secondHalfKey: [three, four],
-          keyFive: five
-        })]
+        [
+          frag({
+            firstHalfKey: [zero, one, two],
+            secondHalfKey: [three, four],
+            keyFive: five,
+          }),
+        ]
       }</div>
     );
 
@@ -291,9 +293,9 @@ describe('traverseAllChildren', function() {
             } else {
               return {value: undefined, done: true};
             }
-          }
+          },
         };
-      }
+      },
     };
 
     var traverseContext = [];
@@ -339,9 +341,9 @@ describe('traverseAllChildren', function() {
             } else {
               return {value: undefined, done: true};
             }
-          }
+          },
         };
-      }
+      },
     };
 
     var traverseContext = [];
@@ -389,9 +391,9 @@ describe('traverseAllChildren', function() {
             } else {
               return {value: undefined, done: true};
             }
-          }
+          },
         };
-      }
+      },
     };
     threeDivEntryIterable.entries = threeDivEntryIterable['@@iterator'];
 

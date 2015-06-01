@@ -38,215 +38,215 @@ var eventTypes = {
   blur: {
     phasedRegistrationNames: {
       bubbled: keyOf({onBlur: true}),
-      captured: keyOf({onBlurCapture: true})
-    }
+      captured: keyOf({onBlurCapture: true}),
+    },
   },
   click: {
     phasedRegistrationNames: {
       bubbled: keyOf({onClick: true}),
-      captured: keyOf({onClickCapture: true})
-    }
+      captured: keyOf({onClickCapture: true}),
+    },
   },
   contextMenu: {
     phasedRegistrationNames: {
       bubbled: keyOf({onContextMenu: true}),
-      captured: keyOf({onContextMenuCapture: true})
-    }
+      captured: keyOf({onContextMenuCapture: true}),
+    },
   },
   copy: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCopy: true}),
-      captured: keyOf({onCopyCapture: true})
-    }
+      captured: keyOf({onCopyCapture: true}),
+    },
   },
   cut: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCut: true}),
-      captured: keyOf({onCutCapture: true})
-    }
+      captured: keyOf({onCutCapture: true}),
+    },
   },
   doubleClick: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDoubleClick: true}),
-      captured: keyOf({onDoubleClickCapture: true})
-    }
+      captured: keyOf({onDoubleClickCapture: true}),
+    },
   },
   drag: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDrag: true}),
-      captured: keyOf({onDragCapture: true})
-    }
+      captured: keyOf({onDragCapture: true}),
+    },
   },
   dragEnd: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragEnd: true}),
-      captured: keyOf({onDragEndCapture: true})
-    }
+      captured: keyOf({onDragEndCapture: true}),
+    },
   },
   dragEnter: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragEnter: true}),
-      captured: keyOf({onDragEnterCapture: true})
-    }
+      captured: keyOf({onDragEnterCapture: true}),
+    },
   },
   dragExit: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragExit: true}),
-      captured: keyOf({onDragExitCapture: true})
-    }
+      captured: keyOf({onDragExitCapture: true}),
+    },
   },
   dragLeave: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragLeave: true}),
-      captured: keyOf({onDragLeaveCapture: true})
-    }
+      captured: keyOf({onDragLeaveCapture: true}),
+    },
   },
   dragOver: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragOver: true}),
-      captured: keyOf({onDragOverCapture: true})
-    }
+      captured: keyOf({onDragOverCapture: true}),
+    },
   },
   dragStart: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragStart: true}),
-      captured: keyOf({onDragStartCapture: true})
-    }
+      captured: keyOf({onDragStartCapture: true}),
+    },
   },
   drop: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDrop: true}),
-      captured: keyOf({onDropCapture: true})
-    }
+      captured: keyOf({onDropCapture: true}),
+    },
   },
   focus: {
     phasedRegistrationNames: {
       bubbled: keyOf({onFocus: true}),
-      captured: keyOf({onFocusCapture: true})
-    }
+      captured: keyOf({onFocusCapture: true}),
+    },
   },
   input: {
     phasedRegistrationNames: {
       bubbled: keyOf({onInput: true}),
-      captured: keyOf({onInputCapture: true})
-    }
+      captured: keyOf({onInputCapture: true}),
+    },
   },
   keyDown: {
     phasedRegistrationNames: {
       bubbled: keyOf({onKeyDown: true}),
-      captured: keyOf({onKeyDownCapture: true})
-    }
+      captured: keyOf({onKeyDownCapture: true}),
+    },
   },
   keyPress: {
     phasedRegistrationNames: {
       bubbled: keyOf({onKeyPress: true}),
-      captured: keyOf({onKeyPressCapture: true})
-    }
+      captured: keyOf({onKeyPressCapture: true}),
+    },
   },
   keyUp: {
     phasedRegistrationNames: {
       bubbled: keyOf({onKeyUp: true}),
-      captured: keyOf({onKeyUpCapture: true})
-    }
+      captured: keyOf({onKeyUpCapture: true}),
+    },
   },
   load: {
     phasedRegistrationNames: {
       bubbled: keyOf({onLoad: true}),
-      captured: keyOf({onLoadCapture: true})
-    }
+      captured: keyOf({onLoadCapture: true}),
+    },
   },
   error: {
     phasedRegistrationNames: {
       bubbled: keyOf({onError: true}),
-      captured: keyOf({onErrorCapture: true})
-    }
+      captured: keyOf({onErrorCapture: true}),
+    },
   },
   // Note: We do not allow listening to mouseOver events. Instead, use the
   // onMouseEnter/onMouseLeave created by `EnterLeaveEventPlugin`.
   mouseDown: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseDown: true}),
-      captured: keyOf({onMouseDownCapture: true})
-    }
+      captured: keyOf({onMouseDownCapture: true}),
+    },
   },
   mouseMove: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseMove: true}),
-      captured: keyOf({onMouseMoveCapture: true})
-    }
+      captured: keyOf({onMouseMoveCapture: true}),
+    },
   },
   mouseOut: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseOut: true}),
-      captured: keyOf({onMouseOutCapture: true})
-    }
+      captured: keyOf({onMouseOutCapture: true}),
+    },
   },
   mouseOver: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseOver: true}),
-      captured: keyOf({onMouseOverCapture: true})
-    }
+      captured: keyOf({onMouseOverCapture: true}),
+    },
   },
   mouseUp: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseUp: true}),
-      captured: keyOf({onMouseUpCapture: true})
-    }
+      captured: keyOf({onMouseUpCapture: true}),
+    },
   },
   paste: {
     phasedRegistrationNames: {
       bubbled: keyOf({onPaste: true}),
-      captured: keyOf({onPasteCapture: true})
-    }
+      captured: keyOf({onPasteCapture: true}),
+    },
   },
   reset: {
     phasedRegistrationNames: {
       bubbled: keyOf({onReset: true}),
-      captured: keyOf({onResetCapture: true})
-    }
+      captured: keyOf({onResetCapture: true}),
+    },
   },
   scroll: {
     phasedRegistrationNames: {
       bubbled: keyOf({onScroll: true}),
-      captured: keyOf({onScrollCapture: true})
-    }
+      captured: keyOf({onScrollCapture: true}),
+    },
   },
   submit: {
     phasedRegistrationNames: {
       bubbled: keyOf({onSubmit: true}),
-      captured: keyOf({onSubmitCapture: true})
-    }
+      captured: keyOf({onSubmitCapture: true}),
+    },
   },
   touchCancel: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchCancel: true}),
-      captured: keyOf({onTouchCancelCapture: true})
-    }
+      captured: keyOf({onTouchCancelCapture: true}),
+    },
   },
   touchEnd: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchEnd: true}),
-      captured: keyOf({onTouchEndCapture: true})
-    }
+      captured: keyOf({onTouchEndCapture: true}),
+    },
   },
   touchMove: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchMove: true}),
-      captured: keyOf({onTouchMoveCapture: true})
-    }
+      captured: keyOf({onTouchMoveCapture: true}),
+    },
   },
   touchStart: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchStart: true}),
-      captured: keyOf({onTouchStartCapture: true})
-    }
+      captured: keyOf({onTouchStartCapture: true}),
+    },
   },
   wheel: {
     phasedRegistrationNames: {
       bubbled: keyOf({onWheel: true}),
-      captured: keyOf({onWheelCapture: true})
-    }
-  }
+      captured: keyOf({onWheelCapture: true}),
+    },
+  },
 };
 
 var topLevelEventsToDispatchConfig = {
@@ -284,7 +284,7 @@ var topLevelEventsToDispatchConfig = {
   topTouchEnd:    eventTypes.touchEnd,
   topTouchMove:   eventTypes.touchMove,
   topTouchStart:  eventTypes.touchStart,
-  topWheel:       eventTypes.wheel
+  topWheel:       eventTypes.wheel,
 };
 
 for (var type in topLevelEventsToDispatchConfig) {
@@ -446,7 +446,7 @@ var SimpleEventPlugin = {
       onClickListeners[id].remove();
       delete onClickListeners[id];
     }
-  }
+  },
 
 };
 

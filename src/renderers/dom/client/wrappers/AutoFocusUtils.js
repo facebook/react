@@ -22,7 +22,7 @@ var Mixin = {
     if (this.props.autoFocus) {
       focusNode(findDOMNode(this));
     }
-  }
+  },
 };
 
 var AutoFocusUtils = {
@@ -30,7 +30,7 @@ var AutoFocusUtils = {
 
   focusDOMComponent: function() {
     focusNode(ReactMount.getNode(this._rootNodeID));
-  }
+  },
 };
 
 module.exports = AutoFocusUtils;

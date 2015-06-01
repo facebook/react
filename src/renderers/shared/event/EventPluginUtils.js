@@ -35,7 +35,7 @@ var injection = {
         'module is missing getNode or getID.'
       );
     }
-  }
+  },
 };
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -219,7 +219,7 @@ var EventPluginUtils = {
     return injection.Mount.getID(node);
   },
 
-  injection: injection
+  injection: injection,
 };
 
 module.exports = EventPluginUtils;

@@ -48,7 +48,7 @@ describe('AnalyticsEventPlugin', function() {
     EventPluginHub.injection.injectEventPluginsByName({
       'SimpleEventPlugin': SimpleEventPlugin,
       'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
-      'ChangeEventPlugin': ChangeEventPlugin
+      'ChangeEventPlugin': ChangeEventPlugin,
     });
 
     spyOn(console, 'error');
@@ -67,7 +67,7 @@ describe('AnalyticsEventPlugin', function() {
             Test
           </div>
         );
-      }
+      },
     });
     var renderedComponent =
       ReactTestUtils.renderIntoDocument(<TestValidEvents />);
@@ -85,7 +85,7 @@ describe('AnalyticsEventPlugin', function() {
 
     EventPluginHub.injection.injectEventPluginsByName({
       AnalyticsEventPlugin:
-        AnalyticsEventPluginFactory.createAnalyticsPlugin(cb)
+        AnalyticsEventPluginFactory.createAnalyticsPlugin(cb),
     });
 
     // Simulate some clicks
@@ -121,7 +121,7 @@ describe('AnalyticsEventPlugin', function() {
             Test
           </div>
         );
-      }
+      },
     });
     var renderedComponent =
       ReactTestUtils.renderIntoDocument(<TestInvalidEvents />);
@@ -131,7 +131,7 @@ describe('AnalyticsEventPlugin', function() {
     EventPluginHub.injection.injectEventPluginsByName({
       AnalyticsEventPlugin: AnalyticsEventPluginFactory.createAnalyticsPlugin(
         cb
-      )
+      ),
     });
 
     ReactTestUtils.SimulateNative.click(renderedComponent.refs.testDiv);

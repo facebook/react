@@ -956,12 +956,12 @@ var ReactMount = {
 
   getNodeFromInstance: getNodeFromInstance,
 
-  purgeID: purgeID
+  purgeID: purgeID,
 };
 
 ReactPerf.measureMethods(ReactMount, 'ReactMount', {
   _renderNewRootComponent: '_renderNewRootComponent',
-  _mountImageIntoNode: '_mountImageIntoNode'
+  _mountImageIntoNode: '_mountImageIntoNode',
 });
 
 module.exports = ReactMount;

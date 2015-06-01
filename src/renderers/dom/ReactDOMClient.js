@@ -33,7 +33,7 @@ var React = {
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   findDOMNode: findDOMNode,
   render: render,
-  unmountComponentAtNode: ReactMount.unmountComponentAtNode
+  unmountComponentAtNode: ReactMount.unmountComponentAtNode,
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.
@@ -46,7 +46,7 @@ if (
     InstanceHandles: ReactInstanceHandles,
     Mount: ReactMount,
     Reconciler: ReactReconciler,
-    TextComponent: ReactDOMTextComponent
+    TextComponent: ReactDOMTextComponent,
   });
 }
 
@@ -92,7 +92,7 @@ if (__DEV__) {
 
       // shams
       Object.create,
-      Object.freeze
+      Object.freeze,
     ];
 
     for (var i = 0; i < expectedFeatures.length; i++) {

@@ -18,7 +18,7 @@ var warning = require('warning');
 
 var RESERVED_PROPS = {
   key: true,
-  ref: true
+  ref: true,
 };
 
 /**
@@ -49,7 +49,7 @@ function defineWarningProperty(object, key) {
         key
       );
       this._store[key] = value;
-    }
+    },
 
   });
 }
@@ -68,7 +68,7 @@ var useMutationMembrane = false;
 function defineMutationMembrane(prototype) {
   try {
     var pseudoFrozenProperties = {
-      props: true
+      props: true,
     };
     for (var key in pseudoFrozenProperties) {
       defineWarningProperty(prototype, key);
@@ -114,7 +114,7 @@ var ReactElement = function(type, key, ref, owner, props) {
       Object.defineProperty(this._store, 'validated', {
         configurable: false,
         enumerable: false,
-        writable: true
+        writable: true,
       });
     } catch (x) {
     }
@@ -135,7 +135,7 @@ var ReactElement = function(type, key, ref, owner, props) {
 // We intentionally don't expose the function on the constructor property.
 // ReactElement should be indistinguishable from a plain object.
 ReactElement.prototype = {
-  _isReactElement: true
+  _isReactElement: true,
 };
 
 if (__DEV__) {

@@ -100,26 +100,26 @@ if (__DEV__) {
   var deprecatedAPIs = {
     getDOMNode: [
       'getDOMNode',
-      'Use React.findDOMNode(component) instead.'
+      'Use React.findDOMNode(component) instead.',
     ],
     isMounted: [
       'isMounted',
       'Instead, make sure to clean up subscriptions and pending requests in ' +
-      'componentWillUnmount to prevent memory leaks.'
+      'componentWillUnmount to prevent memory leaks.',
     ],
     replaceProps: [
       'replaceProps',
-      'Instead, call React.render again at the top level.'
+      'Instead, call React.render again at the top level.',
     ],
     replaceState: [
       'replaceState',
       'Refactor your code to use setState instead (see ' +
-      'https://github.com/facebook/react/issues/3236).'
+      'https://github.com/facebook/react/issues/3236).',
     ],
     setProps: [
       'setProps',
-      'Instead, call React.render again at the top level.'
-    ]
+      'Instead, call React.render again at the top level.',
+    ],
   };
   var defineDeprecationWarning = function(methodName, info) {
     try {
@@ -132,7 +132,7 @@ if (__DEV__) {
             info[1]
           );
           return undefined;
-        }
+        },
       });
     } catch (x) {
       // IE will fail on defineProperty (es5-shim/sham too)

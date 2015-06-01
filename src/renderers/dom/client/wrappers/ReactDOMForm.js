@@ -41,7 +41,7 @@ var ReactDOMForm = ReactClass.createClass({
   componentDidMount: function() {
     this.trapBubbledEvent(EventConstants.topLevelTypes.topReset, 'reset');
     this.trapBubbledEvent(EventConstants.topLevelTypes.topSubmit, 'submit');
-  }
+  },
 });
 
 module.exports = ReactDOMForm;

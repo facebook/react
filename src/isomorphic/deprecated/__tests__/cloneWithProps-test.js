@@ -36,7 +36,7 @@ describe('cloneWithProps', function() {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><div className="child" /></Parent>;
-      }
+      },
     });
     var Parent = React.createClass({
       render: function() {
@@ -45,7 +45,7 @@ describe('cloneWithProps', function() {
             {cloneWithProps(onlyChild(this.props.children), {className: 'xyz'})}
           </div>
         );
-      }
+      },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(React.findDOMNode(component).childNodes[0].className)
@@ -57,13 +57,13 @@ describe('cloneWithProps', function() {
     var Child = React.createClass({
       render: function() {
         return <div className={this.props.className} />;
-      }
+      },
     });
 
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><Child className="child" /></Parent>;
-      }
+      },
     });
     var Parent = React.createClass({
       render: function() {
@@ -72,7 +72,7 @@ describe('cloneWithProps', function() {
             {cloneWithProps(onlyChild(this.props.children), {className: 'xyz'})}
           </div>
         );
-      }
+      },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(React.findDOMNode(component).childNodes[0].className)
@@ -85,7 +85,7 @@ describe('cloneWithProps', function() {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><div ref="yolo" /></Parent>;
-      }
+      },
     });
     var Parent = React.createClass({
       render: function() {
@@ -94,7 +94,7 @@ describe('cloneWithProps', function() {
             {cloneWithProps(onlyChild(this.props.children), {className: 'xyz'})}
           </div>
         );
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
@@ -106,7 +106,7 @@ describe('cloneWithProps', function() {
     var Component = React.createClass({
       render: function() {
         return null;
-      }
+      },
     });
     var clone = cloneWithProps(<Component />, {key: 'xyz'});
     expect(clone.key).toBe('xyz');
@@ -117,7 +117,7 @@ describe('cloneWithProps', function() {
       render: function() {
         expect(this.props.children).toBe('xyz');
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -130,7 +130,7 @@ describe('cloneWithProps', function() {
       render: function() {
         expect(this.props.children).toBe('xyz');
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -142,7 +142,7 @@ describe('cloneWithProps', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var Parent = React.createClass({
@@ -152,13 +152,13 @@ describe('cloneWithProps', function() {
         expect(clone.key).toBe('xyz');
         expect(clone.ref).toBe('xyz');
         return <div>{clone}</div>;
-      }
+      },
     });
 
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><Component key="abc" /></Parent>;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Grandparent />);
@@ -169,7 +169,7 @@ describe('cloneWithProps', function() {
       render: function() {
         expect(this.props.myprop).toBe('xyz');
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(

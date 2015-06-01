@@ -23,13 +23,13 @@ module.exports = function(props) {
 
   exports.local = {
     webdriver: {
-      remote: {protocol: 'http:', hostname: '127.0.0.1', port: 9515, path: '/'}
+      remote: {protocol: 'http:', hostname: '127.0.0.1', port: 9515, path: '/'},
     },
     url: props.url,
     onStart: props.onStart,
     onComplete: props.onComplete,
     onError: props.onError,
-    isDoneTimeout: props.isDoneTimeout
+    isDoneTimeout: props.isDoneTimeout,
   };
 
   if (grunt.option('debug')) {
@@ -45,13 +45,13 @@ module.exports = function(props) {
         protocol: 'http:',
         hostname: 'ondemand.saucelabs.com',
         port: '80',
-        path: '/wd/hub'
-      }
+        path: '/wd/hub',
+      },
     },
     desiredCapabilities: {
       'build': process.env.TRAVIS_BUILD_NUMBER || 'dev' + Date.now(),
       'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER || 'my awesome tunnel',
-      'browserName': 'chrome'
+      'browserName': 'chrome',
     },
     url: exports.local.url,
     onStart: function(browser) {
@@ -62,7 +62,7 @@ module.exports = function(props) {
     },
     onComplete: exports.local.onComplete,
     onError: exports.local.onError,
-    isDoneTimeout: exports.local.isDoneTimeout
+    isDoneTimeout: exports.local.isDoneTimeout,
   };
 
   /*eslint-disable camelcase*/
@@ -107,7 +107,7 @@ module.exports = function(props) {
       onComplete: exports.saucelabs.onComplete,
       onError: exports.saucelabs.onError,
       isDoneTimeout: exports.saucelabs.isDoneTimeout,
-      desiredCapabilities: desiredCapabilities
+      desiredCapabilities: desiredCapabilities,
     };
   }
 

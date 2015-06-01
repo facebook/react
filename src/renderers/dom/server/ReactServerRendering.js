@@ -74,5 +74,5 @@ function renderToStaticMarkup(element) {
 
 module.exports = {
   renderToString: renderToString,
-  renderToStaticMarkup: renderToStaticMarkup
+  renderToStaticMarkup: renderToStaticMarkup,
 };

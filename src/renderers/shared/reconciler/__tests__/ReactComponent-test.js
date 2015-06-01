@@ -59,7 +59,7 @@ describe('ReactComponent', function() {
 
       render: function() {
         return <div>{this.props.children}</div>;
-      }
+      },
 
     });
 
@@ -72,7 +72,7 @@ describe('ReactComponent', function() {
       componentDidMount: function() {
         expect(this.refs.inner.getObject()).toEqual(innerObj);
         expect(this.refs.outer.getObject()).toEqual(outerObj);
-      }
+      },
     });
 
     var instance = <Component />;
@@ -86,12 +86,12 @@ describe('ReactComponent', function() {
       },
       componentDidMount: function() {
         expect(this.refs && this.refs.test).toEqual(undefined);
-      }
+      },
     });
     var Child = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = <Parent child={<span />} />;
@@ -107,7 +107,7 @@ describe('ReactComponent', function() {
       },
       render: function() {
         return <div>{this.props.children}</div>;
-      }
+      },
     });
 
     var mounted = false;
@@ -125,7 +125,7 @@ describe('ReactComponent', function() {
         expect(this.innerRef.getObject()).toEqual(innerObj);
         expect(this.outerRef.getObject()).toEqual(outerObj);
         mounted = true;
-      }
+      },
     });
 
     var instance = <Component />;
@@ -137,7 +137,7 @@ describe('ReactComponent', function() {
     var Wrapper = React.createClass({
       render: function() {
         return this.props.getContent();
-      }
+      },
     });
 
     var mounted = false;
@@ -161,7 +161,7 @@ describe('ReactComponent', function() {
         expect(this.wrapperRef.props.title).toBe('wrapper');
         expect(this.innerRef.props.title).toBe('inner');
         mounted = true;
-      }
+      },
     });
 
     var instance = <Component />;
@@ -185,7 +185,7 @@ describe('ReactComponent', function() {
       },
       componentWillUnmount: function() {
         log.push(`inner ${this.props.id} componentWillUnmount`);
-      }
+      },
     });
 
     var Outer = React.createClass({
@@ -209,7 +209,7 @@ describe('ReactComponent', function() {
       },
       componentWillUnmount: function() {
         log.push('outer componentWillUnmount');
-      }
+      },
     });
 
     // mount, update, unmount
@@ -246,7 +246,7 @@ describe('ReactComponent', function() {
         'ref 1 got null',
         'inner 1 componentWillUnmount',
         'ref 2 got null',
-        'inner 2 componentWillUnmount'
+        'inner 2 componentWillUnmount',
     ]);
   });
 

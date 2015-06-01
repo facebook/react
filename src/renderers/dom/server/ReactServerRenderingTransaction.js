@@ -31,7 +31,7 @@ var ON_DOM_READY_QUEUEING = {
     this.reactMountReady.reset();
   },
 
-  close: emptyFunction
+  close: emptyFunction,
 };
 
 /**
@@ -40,7 +40,7 @@ var ON_DOM_READY_QUEUEING = {
  * each other.
  */
 var TRANSACTION_WRAPPERS = [
-  ON_DOM_READY_QUEUEING
+  ON_DOM_READY_QUEUEING,
 ];
 
 /**
@@ -78,7 +78,7 @@ var Mixin = {
   destructor: function() {
     CallbackQueue.release(this.reactMountReady);
     this.reactMountReady = null;
-  }
+  },
 };
 
 

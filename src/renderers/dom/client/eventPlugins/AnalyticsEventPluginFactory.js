@@ -104,7 +104,7 @@ var topLevelTypesToAnalyticsEvent = {
   topFocus:       'focus',
   topBlur:        'blur',
   topScroll:      'scroll',
-  topChange:      'change'
+  topChange:      'change',
 };
 
 if (__DEV__) {
@@ -122,7 +122,7 @@ if (__DEV__) {
     'focus':        topLevelTypes.topFocus,
     'blur':         topLevelTypes.topBlur,
     'scroll':       topLevelTypes.topScroll,
-    'change':       topLevelTypes.topChange
+    'change':       topLevelTypes.topChange,
   };
 }
 
@@ -220,7 +220,7 @@ var createAnalyticsPlugin = function(cb, interval) {
 };
 
 var AnalyticsEventPluginFactory = {
-  createAnalyticsPlugin: createAnalyticsPlugin
+  createAnalyticsPlugin: createAnalyticsPlugin,
 };
 
 module.exports = AnalyticsEventPluginFactory;

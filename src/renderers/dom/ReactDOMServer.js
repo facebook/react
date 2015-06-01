@@ -18,7 +18,7 @@ ReactDefaultInjection.inject();
 
 var ReactDOMServer = {
   renderToString: ReactServerRendering.renderToString,
-  renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup
+  renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
 };
 
 module.exports = ReactDOMServer;

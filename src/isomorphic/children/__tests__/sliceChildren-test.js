@@ -41,7 +41,7 @@ describe('sliceChildren', function() {
             )}
           </div>
         );
-      }
+      },
     });
   });
 
@@ -63,13 +63,13 @@ describe('sliceChildren', function() {
     var fullSet = [
       <div key="A" />,
       <div key="B" />,
-      <div key="C" />
+      <div key="C" />,
     ];
     var children = renderAndSlice(fullSet, 0);
     testKeyValuePairs(children, {
       '.$A': fullSet[0],
       '.$B': fullSet[1],
-      '.$C': fullSet[2]
+      '.$C': fullSet[2],
     });
   });
 
@@ -77,12 +77,12 @@ describe('sliceChildren', function() {
     var fullSet = [
       <div key="A" />,
       <div key="B" />,
-      <div key="C" />
+      <div key="C" />,
     ];
     var children = renderAndSlice(fullSet, 1);
     testKeyValuePairs(children, {
       '.$B': fullSet[1],
-      '.$C': fullSet[2]
+      '.$C': fullSet[2],
     });
   });
 
@@ -91,11 +91,11 @@ describe('sliceChildren', function() {
       <div key="A" />,
       <div key="B" />,
       <div key="C" />,
-      <div key="D" />
+      <div key="D" />,
     ];
     var children = renderAndSlice(fullSet, 1, 2);
     testKeyValuePairs(children, {
-      '.$B': fullSet[1]
+      '.$B': fullSet[1],
     });
   });
 
@@ -111,7 +111,7 @@ describe('sliceChildren', function() {
       .instance();
 
     testKeyValuePairs(rendered.props.children, {
-      '.1': b
+      '.1': b,
     });
   });
 

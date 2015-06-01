@@ -22,7 +22,7 @@ describe('ReactCompositeComponent-error', function() {
       someHandler: function() {},
       render: function() {
         return <div />;
-      }
+      },
     });
 
     void new Component();

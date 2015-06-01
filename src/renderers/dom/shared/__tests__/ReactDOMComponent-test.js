@@ -108,7 +108,7 @@ describe('ReactDOMComponent', function() {
         },
         render: function() {
           return <div style={this.state.style}>asd</div>;
-        }
+        },
       });
 
       var stub = ReactTestUtils.renderIntoDocument(<App />);
@@ -272,7 +272,7 @@ describe('ReactDOMComponent', function() {
         },
         set: nodeValueSetter.mockImplementation(function(newValue) {
           nodeValue = newValue;
-        })
+        }),
       });
 
       React.render(<div value="" />, container);
@@ -320,7 +320,7 @@ describe('ReactDOMComponent', function() {
             expected += quoteRegexp(value) + '[\\\'"]';
           }
           return this.actual.match(new RegExp(expected));
-        }
+        },
       });
     });
 
@@ -332,7 +332,7 @@ describe('ReactDOMComponent', function() {
 
     it('should escape style names and values', function() {
       expect(genMarkup({
-        style: {'b&ckground': '<3'}
+        style: {'b&ckground': '<3'},
       })).toHaveAttribute('style', 'b&amp;ckground:&lt;3;');
     });
   });
@@ -369,7 +369,7 @@ describe('ReactDOMComponent', function() {
         toHaveInnerhtml: function(html) {
           var expected = '^' + quoteRegexp(html) + '$';
           return this.actual.match(new RegExp(expected));
-        }
+        },
       });
     });
 
@@ -404,7 +404,7 @@ describe('ReactDOMComponent', function() {
         var stubComponent = new StubNativeComponent({
           type: StubNativeComponent,
           props: props,
-          _owner: null
+          _owner: null,
         });
         return stubComponent.mountComponent('test', transaction, {});
       };
@@ -638,8 +638,8 @@ describe('ReactDOMComponent', function() {
           React.DOM.div({
             title: '\'"<>&',
             style: {
-              textAlign: '\'"<>&'
-            }
+              textAlign: '\'"<>&',
+            },
           }, '\'"<>&')
         )
       ).toBe(
@@ -761,12 +761,12 @@ describe('ReactDOMComponent', function() {
       var Row = React.createClass({
         render: function() {
           return <tr />;
-        }
+        },
       });
       var Foo = React.createClass({
         render: function() {
           return <table><Row /></table>;
-        }
+        },
       });
       ReactTestUtils.renderIntoDocument(<Foo />);
 
@@ -781,27 +781,27 @@ describe('ReactDOMComponent', function() {
     it('gives useful context in warnings', () => {
       spyOn(console, 'error');
       var Row = React.createClass({
-        render: () => <tr />
+        render: () => <tr />,
       });
       var FancyRow = React.createClass({
-        render: () => <Row />
+        render: () => <Row />,
       });
       var Table = React.createClass({
         render: function() {
           return <table>{this.props.children}</table>;
-        }
+        },
       });
       var FancyTable = React.createClass({
         render: function() {
           return <Table>{this.props.children}</Table>;
-        }
+        },
       });
 
       var Viz1 = React.createClass({
-        render: () => <table><FancyRow /></table>
+        render: () => <table><FancyRow /></table>,
       });
       var App1 = React.createClass({
-        render: () => <Viz1 />
+        render: () => <Viz1 />,
       });
       ReactTestUtils.renderIntoDocument(<App1 />);
       expect(console.error.calls.length).toBe(1);
@@ -810,10 +810,10 @@ describe('ReactDOMComponent', function() {
       );
 
       var Viz2 = React.createClass({
-        render: () => <FancyTable><FancyRow /></FancyTable>
+        render: () => <FancyTable><FancyRow /></FancyTable>,
       });
       var App2 = React.createClass({
-        render: () => <Viz2 />
+        render: () => <Viz2 />,
       });
       ReactTestUtils.renderIntoDocument(<App2 />);
       expect(console.error.calls.length).toBe(2);
@@ -842,7 +842,7 @@ describe('ReactDOMComponent', function() {
       var Link = React.createClass({
         render: function() {
           return <a>{this.props.children}</a>;
-        }
+        },
       });
       ReactTestUtils.renderIntoDocument(<Link><div><Link /></div></Link>);
       expect(console.error.calls.length).toBe(6);

@@ -144,7 +144,7 @@ function countChildren(children, context) {
 var ReactChildren = {
   forEach: forEachChildren,
   map: mapChildren,
-  count: countChildren
+  count: countChildren,
 };
 
 module.exports = ReactChildren;

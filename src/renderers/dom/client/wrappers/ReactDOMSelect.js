@@ -122,12 +122,12 @@ var ReactDOMSelect = ReactClass.createClass({
   mixins: [AutoFocusUtils.Mixin, ReactBrowserComponentMixin],
 
   statics: {
-    valueContextKey: valueContextKey
+    valueContextKey: valueContextKey,
   },
 
   propTypes: {
     defaultValue: selectValueType,
-    value: selectValueType
+    value: selectValueType,
   },
 
   componentWillMount: function() {
@@ -201,7 +201,7 @@ var ReactDOMSelect = ReactClass.createClass({
     this._pendingUpdate = true;
     ReactUpdates.asap(updateOptionsIfPendingUpdateAndMounted, this);
     return returnValue;
-  }
+  },
 
 });
 

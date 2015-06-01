@@ -169,7 +169,7 @@ var ReactDOM = mapObject({
   stop: 'stop',
   svg: 'svg',
   text: 'text',
-  tspan: 'tspan'
+  tspan: 'tspan',
 
 }, createDOMFactory);
 

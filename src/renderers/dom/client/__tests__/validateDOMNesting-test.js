@@ -24,13 +24,13 @@ var specialTags = [
   'menuitem', 'meta', 'nav', 'noembed', 'noframes', 'noscript', 'object', 'ol',
   'p', 'param', 'plaintext', 'pre', 'script', 'section', 'select', 'source',
   'style', 'summary', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot',
-  'th', 'thead', 'title', 'tr', 'track', 'ul', 'wbr', 'xmp'
+  'th', 'thead', 'title', 'tr', 'track', 'ul', 'wbr', 'xmp',
 ];
 
 // https://html.spec.whatwg.org/multipage/syntax.html#formatting
 var formattingTags = [
   'a', 'b', 'big', 'code', 'em', 'font', 'i', 'nobr', 's', 'small', 'strike',
-  'strong', 'tt', 'u'
+  'strong', 'tt', 'u',
 ];
 
 function isTagStackValid(stack) {

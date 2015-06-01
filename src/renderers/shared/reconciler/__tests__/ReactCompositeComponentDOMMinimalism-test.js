@@ -41,7 +41,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
             {this.props.children}
           </div>
         );
-      }
+      },
     });
 
     MyCompositeComponent = React.createClass({
@@ -51,7 +51,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
             {this.props.children}
           </LowerLevelComposite>
         );
-      }
+      },
     });
 
     expectSingleChildlessDiv = function(instance) {

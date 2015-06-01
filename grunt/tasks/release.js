@@ -6,7 +6,7 @@ var BOWER_PATH = '../react-bower/';
 var BOWER_GLOB = [BOWER_PATH + '*.{js}'];
 var BOWER_FILES = [
   'react.js', 'react.min.js', 'JSXTransformer.js',
-  'react-with-addons.js', 'react-with-addons.min.js'
+  'react-with-addons.js', 'react-with-addons.min.js',
 ];
 var GH_PAGES_PATH = '../react-gh-pages/';
 var GH_PAGES_GLOB = [GH_PAGES_PATH + '*'];
@@ -34,22 +34,22 @@ function _gitCommitAndTag(cwd, commitMsg, tag, cb) {
   var gitAddAll = {
     cmd: 'git',
     args: ['add', '*'],
-    opts: opts
+    opts: opts,
   };
   var gitAddDel = {
     cmd: 'git',
     args: ['add', '-u'],
-    opts: opts
+    opts: opts,
   };
   var gitCommit = {
     cmd: 'git',
     args: ['commit', '-m', commitMsg],
-    opts: opts
+    opts: opts,
   };
   var gitTag = {
     cmd: 'git',
     args: ['tag', tag],
-    opts: opts
+    opts: opts,
   };
   grunt.util.spawn(gitAddAll, function() {
     grunt.util.spawn(gitAddDel, function() {
@@ -116,7 +116,7 @@ function docs() {
   var rakeOpts = {
     cmd: 'rake',
     args: ['release'],
-    opts: {cwd: 'docs'}
+    opts: {cwd: 'docs'},
   };
   grunt.util.spawn(rakeOpts, function() {
     // Commit the repo. We don't really care about tagging this.
@@ -133,7 +133,7 @@ function msg() {
     '* push changes to git repositories',
     '* publish npm module (`npm publish .`)',
     '* publish gem (`gem push react-source-' + VERSION + '.gem`)',
-    '* announce it on FB/Twitter/mailing list'
+    '* announce it on FB/Twitter/mailing list',
   ].forEach(function(ln) {
     grunt.log.writeln(ln);
   });
@@ -170,5 +170,5 @@ module.exports = {
   bower: bower,
   docs: docs,
   msg: msg,
-  starter: starter
+  starter: starter,
 };

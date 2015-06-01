@@ -20,7 +20,7 @@ var ViewportMetrics = {
   refreshScrollValues: function(scrollPosition) {
     ViewportMetrics.currentScrollLeft = scrollPosition.x;
     ViewportMetrics.currentScrollTop = scrollPosition.y;
-  }
+  },
 
 };
 

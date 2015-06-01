@@ -51,7 +51,7 @@ var SpecPolicy = keyMirror({
    * objects. We try to merge the keys of the return values of all the mixed in
    * functions. If there is a key conflict we throw.
    */
-  DEFINE_MANY_MERGED: null
+  DEFINE_MANY_MERGED: null,
 });
 
 
@@ -302,7 +302,7 @@ var ReactClassInterface = {
    * @internal
    * @overridable
    */
-  updateComponent: SpecPolicy.OVERRIDE_BASE
+  updateComponent: SpecPolicy.OVERRIDE_BASE,
 
 };
 
@@ -384,7 +384,7 @@ var RESERVED_SPEC_KEYS = {
   },
   statics: function(Constructor, statics) {
     mixStaticSpecIntoComponent(Constructor, statics);
-  }
+  },
 };
 
 function validateTypeDef(Constructor, typeDef, location) {
@@ -781,7 +781,7 @@ var ReactClassMixin = {
     if (callback) {
       ReactUpdateQueue.enqueueCallback(this, callback);
     }
-  }
+  },
 };
 
 var ReactClassComponent = function() {};
@@ -904,8 +904,8 @@ var ReactClass = {
   injection: {
     injectMixin: function(mixin) {
       injectedMixins.push(mixin);
-    }
-  }
+    },
+  },
 
 };
 

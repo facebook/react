@@ -120,7 +120,7 @@ var topEventMapping = {
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
-  topWheel: 'wheel'
+  topWheel: 'wheel',
 };
 
 /**
@@ -164,7 +164,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
         ReactBrowserEventEmitter.handleTopLevel
       );
       ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
-    }
+    },
   },
 
   /**
@@ -346,7 +346,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
 
   deleteListener: EventPluginHub.deleteListener,
 
-  deleteAllListeners: EventPluginHub.deleteAllListeners
+  deleteAllListeners: EventPluginHub.deleteAllListeners,
 
 });
 

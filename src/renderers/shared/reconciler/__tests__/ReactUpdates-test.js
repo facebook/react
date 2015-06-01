@@ -33,7 +33,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>{this.state.x}</div>;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
@@ -61,7 +61,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>({this.state.x}, {this.state.y})</div>;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
@@ -92,7 +92,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>({this.props.x}, {this.state.y})</div>;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component x={0} />);
@@ -123,7 +123,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div><Child ref="child" x={this.state.x} /></div>;
-      }
+      },
     });
     var childUpdateCount = 0;
     var Child = React.createClass({
@@ -135,7 +135,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>{this.props.x + this.state.y}</div>;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
@@ -169,7 +169,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div><Child ref="child" x={this.state.x} /></div>;
-      }
+      },
     });
     var childUpdateCount = 0;
     var Child = React.createClass({
@@ -181,7 +181,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>{this.props.x + this.state.y}</div>;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
@@ -217,7 +217,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>{this.state.x}</div>;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
@@ -259,7 +259,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>{this.state.x}</div>;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
@@ -296,14 +296,14 @@ describe('ReactUpdates', function() {
       render: function() {
         parentRenderCount++;
         return <Child ref="child" />;
-      }
+      },
     });
 
     var Child = React.createClass({
       render: function() {
         childRenderCount++;
         return <div />;
-      }
+      },
     });
 
     expect(parentRenderCount).toBe(0);
@@ -337,7 +337,7 @@ describe('ReactUpdates', function() {
     var Top = React.createClass({
       render: function() {
         return <Middle><Bottom /></Middle>;
-      }
+      },
     });
 
     var Middle = React.createClass({
@@ -348,14 +348,14 @@ describe('ReactUpdates', function() {
       render: function() {
         numMiddleRenders++;
         return <div>{this.props.children}</div>;
-      }
+      },
     });
 
     var Bottom = React.createClass({
       render: function() {
         numBottomRenders++;
         return <span />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Top />);
@@ -373,7 +373,7 @@ describe('ReactUpdates', function() {
       },
       componentDidUpdate: function() {
         didUpdates.push(this.constructor.displayName);
-      }
+      },
     };
 
     var Box = React.createClass({
@@ -381,7 +381,7 @@ describe('ReactUpdates', function() {
 
       render: function() {
         return <div ref="boxDiv">{this.props.children}</div>;
-      }
+      },
     });
 
     var Child = React.createClass({
@@ -389,7 +389,7 @@ describe('ReactUpdates', function() {
 
       render: function() {
         return <span ref="span">child</span>;
-      }
+      },
     });
 
     var Switcher = React.createClass({
@@ -407,13 +407,13 @@ describe('ReactUpdates', function() {
             <div
               ref="switcherDiv"
               style={{
-                display: this.state.tabKey === child.key ? '' : 'none'
+                display: this.state.tabKey === child.key ? '' : 'none',
             }}>
               {child}
             </div>
           </Box>
         );
-      }
+      },
     });
 
     var App = React.createClass({
@@ -425,7 +425,7 @@ describe('ReactUpdates', function() {
             <Child key="hello" ref="child" />
           </Switcher>
         );
-      }
+      },
     });
 
     var root = <App />;
@@ -493,7 +493,7 @@ describe('ReactUpdates', function() {
     var Component = React.createClass({
       render: function() {
         return <div>{this.props.text}</div>;
-      }
+      },
     });
 
     var containerA = document.createElement('div');
@@ -535,7 +535,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>A{this.state.x}</div>;
-      }
+      },
     });
 
     var B = React.createClass({
@@ -544,7 +544,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>B{this.state.x}</div>;
-      }
+      },
     });
 
     a = ReactTestUtils.renderIntoDocument(<A />);
@@ -575,7 +575,7 @@ describe('ReactUpdates', function() {
         this.refs.inner.setState({x: x}, function() {
           updates.push('Inner-callback-' + x);
         });
-      }
+      },
     });
     var Inner = React.createClass({
       getInitialState: function() {
@@ -587,7 +587,7 @@ describe('ReactUpdates', function() {
       },
       componentDidUpdate: function() {
         updates.push('Inner-didUpdate-' + this.props.x + '-' + this.state.x);
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Outer />);
@@ -625,7 +625,7 @@ describe('ReactUpdates', function() {
             'Inner-render-2-2',
             'Inner-didUpdate-2-2',
           'Inner-callback-2',
-      'Outer-callback-2'
+      'Outer-callback-2',
     ]);
   });
 
@@ -649,7 +649,7 @@ describe('ReactUpdates', function() {
             React.findDOMNode(this)
           );
         }
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<MockComponent depth={0} count={2} />);
@@ -686,7 +686,7 @@ describe('ReactUpdates', function() {
         this.setState({s: 1});
         this.setState({s: 0});
         this.setState({s: 1});
-      }
+      },
     });
 
     var Y = React.createClass({
@@ -694,7 +694,7 @@ describe('ReactUpdates', function() {
         return <div>
           <Z />
         </div>;
-      }
+      },
     });
 
     var Z = React.createClass({
@@ -703,7 +703,7 @@ describe('ReactUpdates', function() {
       },
       componentWillUpdate: function() {
         x.go();
-      }
+      },
     });
 
     var x;
@@ -730,7 +730,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>A{this.state.x}</div>;
-      }
+      },
     });
 
     var B = React.createClass({
@@ -739,7 +739,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
 
     ReactUpdates.batchedUpdates(function() {
@@ -771,7 +771,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return <div>{this.state.x}</div>;
-      }
+      },
     });
 
     var container = document.createElement('div');
@@ -796,7 +796,7 @@ describe('ReactUpdates', function() {
           expect(callbackCount).toBe(1);
         }, component);
         expect(callbackCount).toBe(0);
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
@@ -829,7 +829,7 @@ describe('ReactUpdates', function() {
           });
         }
         log.push('didUpdate-' + this.state.updates);
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
@@ -848,7 +848,7 @@ describe('ReactUpdates', function() {
       // asap-1.2.
       'setState-cb',
       'asap-2',
-      'asap-1.2'
+      'asap-1.2',
     ]);
   });
 
@@ -867,7 +867,7 @@ describe('ReactUpdates', function() {
       render: function() {
         renderCount++;
         return <div />;
-      }
+      },
     });
 
     var A = React.createClass({
@@ -876,7 +876,7 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         return this.state.showB ? <B /> : <div />;
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<A />);

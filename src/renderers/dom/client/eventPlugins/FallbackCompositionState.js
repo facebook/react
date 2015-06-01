@@ -81,7 +81,7 @@ assign(FallbackCompositionState.prototype, {
     var sliceTail = end > 1 ? 1 - end : undefined;
     this._fallbackText = endValue.slice(start, sliceTail);
     return this._fallbackText;
-  }
+  },
 });
 
 PooledClass.addPoolingTo(FallbackCompositionState);

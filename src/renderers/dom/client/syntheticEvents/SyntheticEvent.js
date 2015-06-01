@@ -34,7 +34,7 @@ var EventInterface = {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: null,
-  isTrusted: null
+  isTrusted: null,
 };
 
 /**
@@ -133,7 +133,7 @@ assign(SyntheticEvent.prototype, {
     this.dispatchConfig = null;
     this.dispatchMarker = null;
     this.nativeEvent = null;
-  }
+  },
 
 });
 

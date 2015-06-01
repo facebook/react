@@ -184,13 +184,13 @@ var HTMLDOMPropertyConfig = {
     // property is supported for OpenGraph in meta tags.
     property: null,
     // IE-only attribute that controls focus behavior
-    unselectable: MUST_USE_ATTRIBUTE
+    unselectable: MUST_USE_ATTRIBUTE,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',
     className: 'class',
     htmlFor: 'for',
-    httpEquiv: 'http-equiv'
+    httpEquiv: 'http-equiv',
   },
   DOMPropertyNames: {
     autoCapitalize: 'autocapitalize',
@@ -205,8 +205,8 @@ var HTMLDOMPropertyConfig = {
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
-    srcSet: 'srcset'
-  }
+    srcSet: 'srcset',
+  },
 };
 
 module.exports = HTMLDOMPropertyConfig;

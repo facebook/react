@@ -45,8 +45,8 @@ function packRelease() {
     cmd: 'npm',
     args: ['pack', 'npm-react-tools'],
     opts: {
-      cwd: 'build/'
-    }
+      cwd: 'build/',
+    },
   };
   grunt.util.spawn(spawnCmd, function() {
     var buildSrc = 'build/react-tools-' + grunt.config.data.pkg.version + '.tgz';
@@ -57,5 +57,5 @@ function packRelease() {
 
 module.exports = {
   buildRelease: buildRelease,
-  packRelease: packRelease
+  packRelease: packRelease,
 };

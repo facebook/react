@@ -71,12 +71,12 @@ describe('ReactServerRendering', function() {
       var Parent = React.createClass({
         render: function() {
           return <div><Child name="child" /></div>;
-        }
+        },
       });
       var Child = React.createClass({
         render: function() {
           return <span>My name is {this.props.name}</span>;
-        }
+        },
       });
       var response = ReactServerRendering.renderToString(
         <Parent />
@@ -124,7 +124,7 @@ describe('ReactServerRendering', function() {
           },
           componentWillUnmount: function() {
             lifecycle.push('componentWillUnmount');
-          }
+          },
         });
 
         var response = ReactServerRendering.renderToString(
@@ -168,7 +168,7 @@ describe('ReactServerRendering', function() {
           return (
             <span ref="span" onClick={this.click}>Name: {this.props.name}</span>
           );
-        }
+        },
       });
 
       var element = document.createElement('div');
@@ -242,13 +242,13 @@ describe('ReactServerRendering', function() {
       var NestedComponent = React.createClass({
         render: function() {
           return <div>inner text</div>;
-        }
+        },
       });
 
       var TestComponent = React.createClass({
         render: function() {
           return <span><NestedComponent /></span>;
-        }
+        },
       });
 
       var response = ReactServerRendering.renderToStaticMarkup(
@@ -262,7 +262,7 @@ describe('ReactServerRendering', function() {
       var TestComponent = React.createClass({
         render: function() {
           return <span>{'hello'} {'world'}</span>;
-        }
+        },
       });
 
       var response = ReactServerRendering.renderToStaticMarkup(
@@ -314,7 +314,7 @@ describe('ReactServerRendering', function() {
           },
           componentWillUnmount: function() {
             lifecycle.push('componentWillUnmount');
-          }
+          },
         });
 
         var response = ReactServerRendering.renderToStaticMarkup(
@@ -353,7 +353,7 @@ describe('ReactServerRendering', function() {
         },
         render: function() {
           return <div>{this.state.text}</div>;
-        }
+        },
       });
 
       ReactReconcileTransaction.prototype.perform = function() {

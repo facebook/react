@@ -19,7 +19,7 @@ var SyntheticEvent = require('SyntheticEvent');
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
  */
 var CompositionEventInterface = {
-  data: null
+  data: null,
 };
 
 /**

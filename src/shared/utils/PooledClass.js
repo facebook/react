@@ -106,7 +106,7 @@ var PooledClass = {
   oneArgumentPooler: oneArgumentPooler,
   twoArgumentPooler: twoArgumentPooler,
   threeArgumentPooler: threeArgumentPooler,
-  fiveArgumentPooler: fiveArgumentPooler
+  fiveArgumentPooler: fiveArgumentPooler,
 };
 
 module.exports = PooledClass;

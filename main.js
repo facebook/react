@@ -24,7 +24,7 @@ function transformWithDetails(code, opts) {
     sourceFilename: opts.sourceFilename,
     es6module: opts.es6module,
     nonStrictEs6module: opts.nonStrictEs6module,
-    target: opts.target
+    target: opts.target,
   };
 
   return jstransform.transform(code, options);
@@ -34,5 +34,5 @@ module.exports = {
   transform: function(input, options) {
     return transformWithDetails(input, options).code;
   },
-  transformWithDetails: transformWithDetails
+  transformWithDetails: transformWithDetails,
 };

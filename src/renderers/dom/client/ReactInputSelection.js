@@ -44,7 +44,7 @@ var ReactInputSelection = {
       selectionRange:
           ReactInputSelection.hasSelectionCapabilities(focusedElem) ?
           ReactInputSelection.getSelection(focusedElem) :
-          null
+          null,
     };
   },
 
@@ -82,7 +82,7 @@ var ReactInputSelection = {
       // Modern browser with input or textarea.
       selection = {
         start: input.selectionStart,
-        end: input.selectionEnd
+        end: input.selectionEnd,
       };
     } else if (document.selection && input.nodeName === 'INPUT') {
       // IE8 input.
@@ -92,7 +92,7 @@ var ReactInputSelection = {
       if (range.parentElement() === input) {
         selection = {
           start: -range.moveStart('character', -input.value.length),
-          end: -range.moveEnd('character', -input.value.length)
+          end: -range.moveEnd('character', -input.value.length),
         };
       }
     } else {
@@ -128,7 +128,7 @@ var ReactInputSelection = {
     } else {
       ReactDOMSelection.setOffsets(input, offsets);
     }
-  }
+  },
 };
 
 module.exports = ReactInputSelection;

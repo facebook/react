@@ -77,7 +77,7 @@ if (__DEV__) {
         );
         this[didWarnKey] = true;
         this[fragmentKey][key] = value;
-      }
+      },
     });
   };
 
@@ -121,12 +121,12 @@ var ReactFragment = {
         var proxy = {};
         Object.defineProperty(proxy, fragmentKey, {
           enumerable: false,
-          value: object
+          value: object,
         });
         Object.defineProperty(proxy, didWarnKey, {
           writable: true,
           enumerable: false,
-          value: false
+          value: false,
         });
         for (var key in object) {
           proxyPropertyAccessWithWarning(proxy, key);
@@ -180,7 +180,7 @@ var ReactFragment = {
       }
     }
     return fragment;
-  }
+  },
 };
 
 module.exports = ReactFragment;
