@@ -15,7 +15,6 @@ var mocks = require('mocks');
 
 var React;
 var ReactTestUtils;
-var reactComponentExpect;
 
 var TestComponent;
 var TestComponentWithPropTypes;
@@ -28,7 +27,6 @@ describe('ReactClass-mixin', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
     mixinPropValidator = mocks.getMockFunction();
     componentPropValidator = mocks.getMockFunction();
 
@@ -288,18 +286,22 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it("should throw if mixins override functions in statics", function() {
+  it('should throw if mixins override functions in statics', function() {
     expect(function() {
       var Mixin = {
         statics: {
-          abc: function() { console.log('foo'); }
+          abc: function() {
+            console.log('foo');
+          }
         }
       };
       React.createClass({
         mixins: [Mixin],
 
         statics: {
-          abc: function() { console.log('bar'); }
+          abc: function() {
+            console.log('bar');
+          }
         },
 
         render: function() {
@@ -313,7 +315,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it("should throw if the mixin is a React component", function() {
+  it('should throw if the mixin is a React component', function() {
     expect(function() {
       React.createClass({
         mixins: [<div />],
@@ -328,7 +330,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it("should throw if the mixin is a React component class", function() {
+  it('should throw if the mixin is a React component class', function() {
     expect(function() {
       var Component = React.createClass({
         render: function() {
@@ -351,7 +353,9 @@ describe('ReactClass-mixin', function() {
 
   it('should have bound the mixin methods to the component', function() {
     var mixin = {
-      mixinFunc: function() {return this;}
+      mixinFunc: function() {
+        return this;
+      }
     };
 
     var Component = React.createClass({
@@ -368,24 +372,24 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should include the mixin keys in even if their values are falsy',
-    function() {
-      var mixin = {
-        keyWithNullValue: null,
-        randomCounter: 0
-      };
+      function() {
+    var mixin = {
+      keyWithNullValue: null,
+      randomCounter: 0
+    };
 
-      var Component = React.createClass({
-        mixins: [mixin],
-        componentDidMount: function() {
-          expect(this.randomCounter).toBe(0);
-          expect(this.keyWithNullValue).toBeNull();
-        },
-        render: function() {
-          return <span />;
-        }
-      });
-      var instance = <Component />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+    var Component = React.createClass({
+      mixins: [mixin],
+      componentDidMount: function() {
+        expect(this.randomCounter).toBe(0);
+        expect(this.keyWithNullValue).toBeNull();
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should work with a null getInitialState return value and a mixin', () => {

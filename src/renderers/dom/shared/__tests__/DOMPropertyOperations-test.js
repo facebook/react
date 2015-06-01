@@ -212,7 +212,11 @@ describe('DOMPropertyOperations', function() {
     it('should convert attribute values to string first', function() {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
-      var obj = {toString: function() { return '<html>'; }};
+      var obj = {
+        toString: function() {
+          return '<html>';
+        }
+      };
       DOMPropertyOperations.setValueForProperty(stubNode, 'role', obj);
       expect(stubNode.getAttribute('role')).toBe('<html>');
     });

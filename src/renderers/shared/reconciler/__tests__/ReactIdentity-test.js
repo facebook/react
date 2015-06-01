@@ -107,12 +107,12 @@ describe('ReactIdentity', function() {
     var Wrapper = React.createClass({
 
       render: function() {
-        var span1 = <span ref="span1" key={key} />;
-        var span2 = <span ref="span2" />;
+        var s1 = <span ref="span1" key={key} />;
+        var s2 = <span ref="span2" />;
 
         var map = {};
-        map[key] = span2;
-        return <div>{[span1, frag(map)]}</div>;
+        map[key] = s2;
+        return <div>{[s1, frag(map)]}</div>;
       }
 
     });
@@ -132,7 +132,10 @@ describe('ReactIdentity', function() {
 
   it('should allow any character as a key, in a detached parent', function() {
     var detachedContainer = document.createElement('div');
-    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", detachedContainer);
+    renderAComponentWithKeyIntoContainer(
+      "<'WEIRD/&\\key'>",
+      detachedContainer
+    );
   });
 
   it('should allow any character as a key, in an attached parent', function() {
@@ -141,7 +144,10 @@ describe('ReactIdentity', function() {
     var attachedContainer = document.createElement('div');
     document.body.appendChild(attachedContainer);
 
-    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", attachedContainer);
+    renderAComponentWithKeyIntoContainer(
+      "<'WEIRD/&\\key'>",
+      attachedContainer
+    );
 
     document.body.removeChild(attachedContainer);
   });

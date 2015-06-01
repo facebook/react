@@ -1,12 +1,27 @@
 ---
 parser: babel-eslint
 
+plugins:
+  - react
+
 env:
   browser: true
   node: true
 
 globals:
   __DEV__: true
+  # Jest / Jasmine
+  describe: false
+  xdescribe: false
+  beforeEach: false
+  afterEach: false
+  it: false
+  xit: false
+  jest: false
+  pit: false
+  expect: false
+  spyOn: false
+  jasmine: false
 
 rules:
   # ERRORS
@@ -26,7 +41,7 @@ rules:
   dot-location: [2, property]
   consistent-return: 2
   no-unused-vars: [2, args: none]
-  quotes: [2, single]
+  quotes: [2, single, avoid-escape]
   no-shadow: 2
   no-multi-spaces: 2
 
@@ -50,7 +65,13 @@ rules:
   key-spacing: 0
   # It's nice to be able to leave catch blocks empty
   no-empty: 0
+  # It makes code more readable to make this explicit sometimes
+  no-undef-init: 0
 
   # BROKEN. We'd like to turn these back on.
   # causes a ton of noise, eslint is too picky?
   block-scoped-var: 0
+
+  # JSX
+  react/jsx-uses-react: 2
+  react/jsx-quotes: [2, "double"]

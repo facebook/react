@@ -12,19 +12,15 @@
 'use strict';
 
 var React;
-var ReactInstanceMap;
 var ReactTestUtils;
 
 var mocks;
-var reactComponentExpect;
 
 describe('ReactComponent', function() {
   beforeEach(function() {
     mocks = require('mocks');
     React = require('React');
-    ReactInstanceMap = require('ReactInstanceMap');
     ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
   });
 
   it('should throw on invalid render targets', function() {

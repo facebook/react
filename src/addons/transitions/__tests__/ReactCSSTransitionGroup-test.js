@@ -13,7 +13,6 @@
 
 var React;
 var ReactCSSTransitionGroup;
-var mocks;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
@@ -23,7 +22,6 @@ describe('ReactCSSTransitionGroup', function() {
   beforeEach(function() {
     React = require('React');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
-    mocks = require('mocks');
 
     container = document.createElement('div');
     spyOn(console, 'error');
@@ -52,7 +50,7 @@ describe('ReactCSSTransitionGroup', function() {
 
     // For some reason jst is adding extra setTimeout()s and grunt test isn't,
     // so we need to do this disgusting hack.
-    for (var i = 0 ; i < setTimeout.mock.calls.length; i++) {
+    for (var i = 0; i < setTimeout.mock.calls.length; i++) {
       if (setTimeout.mock.calls[i][1] === 5000) {
         setTimeout.mock.calls[i][0]();
         break;

@@ -67,7 +67,7 @@ describe('ReactDOMTextarea', function() {
   it('should display "foobar" for `defaultValue` of `objToString`', function() {
     var objToString = {
       toString: function() {
-        return "foobar";
+        return 'foobar';
       }
     };
 
@@ -136,7 +136,7 @@ describe('ReactDOMTextarea', function() {
 
     var objToString = {
       toString: function() {
-        return "foo";
+        return 'foo';
       }
     };
     stub.replaceProps({value: objToString, onChange: emptyFunction});
@@ -186,7 +186,7 @@ describe('ReactDOMTextarea', function() {
     spyOn(console, 'error');
     var obj = {
       toString: function() {
-        return "sharkswithlasers";
+        return 'sharkswithlasers';
       }
     };
     var node = React.findDOMNode(renderTextarea(<textarea>{obj}</textarea>));

@@ -207,7 +207,7 @@ describe('ReactComponentLifeCycle', function() {
   it('throws when accessing state in componentWillMount', function() {
     var StatefulComponent = React.createClass({
       componentWillMount: function() {
-        this.state.yada;
+        void this.state.yada;
       },
       render: function() {
         return (
@@ -271,7 +271,7 @@ describe('ReactComponentLifeCycle', function() {
         expect(this.isMounted()).toBeTruthy();
       },
       render: function() {
-        expect(this.isMounted()).toBeFalsy()
+        expect(this.isMounted()).toBeFalsy();
         return <div/>;
       }
     });
@@ -530,7 +530,7 @@ describe('ReactComponentLifeCycle', function() {
 
     // Since `instance` is a root component, we can set its props. This also
     // makes Tooltip rerender the tooltip component, which shouldn't throw.
-    instance.setProps({text: "dos", tooltipText: "two"});
+    instance.setProps({text: 'dos', tooltipText: 'two'});
   });
 
   it('should not allow setProps() called on an unmounted element',

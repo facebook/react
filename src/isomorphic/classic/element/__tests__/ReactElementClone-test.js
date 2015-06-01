@@ -13,8 +13,6 @@
 
 require('mock-modules');
 
-var mocks = require('mocks');
-
 var React;
 var ReactTestUtils;
 

@@ -18,7 +18,6 @@ describe('AnalyticsEventPlugin', function() {
   var EventPluginHub;
   var EventPluginRegistry;
   var React;
-  var ReactBrowserEventEmitter;
   var ReactTestUtils;
 
   var DefaultEventPluginOrder;
@@ -32,7 +31,6 @@ describe('AnalyticsEventPlugin', function() {
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
     React = require('React');
-    ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
 
     EventPluginRegistry._resetEventPlugins();
@@ -65,7 +63,7 @@ describe('AnalyticsEventPlugin', function() {
         return (
           <div ref="testDiv"
             data-analytics-id={TEST_ANALYTICS_ID}
-            data-analytics-events='click,doubleClick'>
+            data-analytics-events="click,doubleClick">
             Test
           </div>
         );
@@ -118,8 +116,8 @@ describe('AnalyticsEventPlugin', function() {
       render: function() {
         return (
           <div ref="testDiv"
-            data-analytics-id='test_invalid_events'
-            data-analytics-events='click,123'>
+            data-analytics-id="test_invalid_events"
+            data-analytics-events="click,123">
             Test
           </div>
         );

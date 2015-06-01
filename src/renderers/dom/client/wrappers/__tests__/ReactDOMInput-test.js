@@ -56,7 +56,7 @@ describe('ReactDOMInput', function() {
   it('should display "foobar" for `defaultValue` of `objToString`', function() {
     var objToString = {
       toString: function() {
-        return "foobar";
+        return 'foobar';
       }
     };
 
@@ -86,7 +86,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toEqual('true');
   });
 
-  it("should allow setting `value` to `false`", function() {
+  it('should allow setting `value` to `false`', function() {
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = React.findDOMNode(stub);
@@ -106,7 +106,7 @@ describe('ReactDOMInput', function() {
 
     var objToString = {
       toString: function() {
-        return "foobar";
+        return 'foobar';
       }
     };
 

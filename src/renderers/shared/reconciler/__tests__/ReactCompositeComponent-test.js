@@ -326,7 +326,7 @@ describe('ReactCompositeComponent', function() {
         expect(() => {
           this.setState({value: 2}, function() {
             cbCalled = true;
-          })
+          });
         }).not.toThrow();
       },
       render: function() {
@@ -515,7 +515,7 @@ describe('ReactCompositeComponent', function() {
 
       render: function() {
         return <div>{this.context.foo}</div>;
-      },
+      }
     });
 
     var component = ReactTestUtils.renderIntoDocument(<Parent />);
@@ -632,7 +632,7 @@ describe('ReactCompositeComponent', function() {
 
     expect(parentInstance.state.flag).toBe(false);
     ReactUpdates.batchedUpdates(function() {
-        parentInstance.setState({flag: true});
+      parentInstance.setState({flag: true});
     });
     expect(parentInstance.state.flag).toBe(true);
 
@@ -852,7 +852,7 @@ describe('ReactCompositeComponent', function() {
 
       getChildContext: function() {
         return {
-          foo: "bar"
+          foo: 'bar'
         };
       },
 

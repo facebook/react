@@ -25,7 +25,7 @@ describe('ReactDOMComponent', function() {
       ReactTestUtils = require('ReactTestUtils');
     });
 
-    it("should handle className", function() {
+    it('should handle className', function() {
       var container = document.createElement('div');
       React.render(<div style={{}} />, container);
 
@@ -37,7 +37,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.className).toEqual('');
     });
 
-    it("should gracefully handle various style value types", function() {
+    it('should gracefully handle various style value types', function() {
       var container = document.createElement('div');
       React.render(<div style={{}} />, container);
       var stubStyle = container.firstChild.style;
@@ -59,7 +59,7 @@ describe('ReactDOMComponent', function() {
     });
 
     // TODO: (poshannessy) deprecate this pattern.
-    it("should update styles when mutating style object", function() {
+    it('should update styles when mutating style object', function() {
       // not actually used. Just to suppress the style mutation warning
       spyOn(console, 'error');
 
@@ -138,7 +138,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall.length).toBe(2);
     });
 
-    it("should update styles if initially null", function() {
+    it('should update styles if initially null', function() {
       var styles = null;
       var container = document.createElement('div');
       React.render(<div style={styles} />, container);
@@ -151,7 +151,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('block');
     });
 
-    it("should update styles if updated to null multiple times", function() {
+    it('should update styles if updated to null multiple times', function() {
       var styles = null;
       var container = document.createElement('div');
       React.render(<div style={styles} />, container);
@@ -172,25 +172,25 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('');
     });
 
-    it("should remove attributes", function() {
+    it('should remove attributes', function() {
       var container = document.createElement('div');
-      React.render(<img height='17' />, container);
+      React.render(<img height="17" />, container);
 
       expect(container.firstChild.hasAttribute('height')).toBe(true);
       React.render(<img />, container);
       expect(container.firstChild.hasAttribute('height')).toBe(false);
     });
 
-    it("should remove properties", function() {
+    it('should remove properties', function() {
       var container = document.createElement('div');
-      React.render(<div className='monkey' />, container);
+      React.render(<div className="monkey" />, container);
 
       expect(container.firstChild.className).toEqual('monkey');
       React.render(<div />, container);
       expect(container.firstChild.className).toEqual('');
     });
 
-    it("should clear a single style prop when changing 'style'", function() {
+    it('should clear a single style prop when changing `style`', function() {
       var styles = {display: 'none', color: 'red'};
       var container = document.createElement('div');
       React.render(<div style={styles} />, container);
@@ -203,7 +203,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('green');
     });
 
-    it("should clear all the styles when removing 'style'", function() {
+    it('should clear all the styles when removing `style`', function() {
       var styles = {display: 'none', color: 'red'};
       var container = document.createElement('div');
       React.render(<div style={styles} />, container);
@@ -215,7 +215,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('');
     });
 
-    it("should update styles when 'style' changes from null to object", function() {
+    it('should update styles when `style` changes from null to object', function() {
       var container = document.createElement('div');
       var styles = {color: 'red'};
       React.render(<div style={styles} />, container);
@@ -226,7 +226,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('red');
     });
 
-    it("should empty element when removing innerHTML", function() {
+    it('should empty element when removing innerHTML', function() {
       var container = document.createElement('div');
       React.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />, container);
 
@@ -235,7 +235,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.innerHTML).toEqual('');
     });
 
-    it("should transition from string content to innerHTML", function() {
+    it('should transition from string content to innerHTML', function() {
       var container = document.createElement('div');
       React.render(<div>hello</div>, container);
 
@@ -247,7 +247,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.innerHTML).toEqual('goodbye');
     });
 
-    it("should transition from innerHTML to string content", function() {
+    it('should transition from innerHTML to string content', function() {
       var container = document.createElement('div');
       React.render(
         <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />,
@@ -259,7 +259,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.innerHTML).toEqual('adieu');
     });
 
-    it("should not incur unnecessary DOM mutations", function() {
+    it('should not incur unnecessary DOM mutations', function() {
       var container = document.createElement('div');
       React.render(<div value="" />, container);
 
@@ -287,7 +287,7 @@ describe('ReactDOMComponent', function() {
     var genMarkup;
 
     function quoteRegexp(str) {
-      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, "\\$1");
+      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
     beforeEach(function() {
@@ -315,7 +315,7 @@ describe('ReactDOMComponent', function() {
       this.addMatchers({
         toHaveAttribute: function(attr, value) {
           var expected = '(?:^|\\s)' + attr + '=[\\\'"]';
-          if (typeof value != 'undefined') {
+          if (typeof value !== 'undefined') {
             expected += quoteRegexp(value) + '[\\\'"]';
           }
           return this.actual.match(new RegExp(expected));
@@ -323,13 +323,13 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it("should generate the correct markup with className", function() {
+    it('should generate the correct markup with className', function() {
       expect(genMarkup({className: 'a'})).toHaveAttribute('class', 'a');
       expect(genMarkup({className: 'a b'})).toHaveAttribute('class', 'a b');
       expect(genMarkup({className: ''})).toHaveAttribute('class', '');
     });
 
-    it("should escape style names and values", function() {
+    it('should escape style names and values', function() {
       expect(genMarkup({
         style: {'b&ckground': '<3'}
       })).toHaveAttribute('style', 'b&amp;ckground:&lt;3;');
@@ -340,7 +340,7 @@ describe('ReactDOMComponent', function() {
     var genMarkup;
 
     function quoteRegexp(str) {
-      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, "\\$1");
+      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
     beforeEach(function() {
@@ -368,7 +368,7 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it("should handle dangerouslySetInnerHTML", function() {
+    it('should handle dangerouslySetInnerHTML', function() {
       var innerHTML = {__html: 'testContent'};
       expect(
         genMarkup({dangerouslySetInnerHTML: innerHTML})
@@ -399,13 +399,13 @@ describe('ReactDOMComponent', function() {
         var stubComponent = new StubNativeComponent({
           type: StubNativeComponent,
           props: props,
-          _owner: null,
+          _owner: null
         });
         return stubComponent.mountComponent('test', transaction, {});
       };
     });
 
-    it("should warn against children for void elements", function() {
+    it('should warn against children for void elements', function() {
       spyOn(console, 'error');
 
       var container = document.createElement('div');
@@ -416,7 +416,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
-    it("should warn against dangerouslySetInnerHTML for void elements", function() {
+    it('should warn against dangerouslySetInnerHTML for void elements', function() {
       spyOn(console, 'error');
 
       var container = document.createElement('div');
@@ -430,7 +430,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
-    it("should treat menuitem as a void element but still create the closing tag", function() {
+    it('should treat menuitem as a void element but still create the closing tag', function() {
       spyOn(console, 'error');
 
       var container = document.createElement('div');
@@ -445,7 +445,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
-    it("should validate against multiple children props", function() {
+    it('should validate against multiple children props', function() {
       expect(function() {
         mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).toThrow(
@@ -490,14 +490,14 @@ describe('ReactDOMComponent', function() {
       }).not.toThrow();
     });
 
-    it("should warn about contentEditable and children", function() {
+    it('should warn about contentEditable and children', function() {
       spyOn(console, 'error');
       mountComponent({contentEditable: true, children: ''});
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toContain('contentEditable');
     });
 
-    it("should validate against invalid styles", function() {
+    it('should validate against invalid styles', function() {
       expect(function() {
         mountComponent({style: 'display: none'});
       }).toThrow(
@@ -507,8 +507,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it("should execute custom event plugin listening behavior", function() {
-      var React = require('React');
+    it('should execute custom event plugin listening behavior', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
       SimpleEventPlugin.didPutListener = mocks.getMockFunction();
@@ -527,8 +526,7 @@ describe('ReactDOMComponent', function() {
       expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
     });
 
-    it("should handle null and missing properly with event hooks", function() {
-      var React = require('React');
+    it('should handle null and missing properly with event hooks', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
       SimpleEventPlugin.didPutListener = mocks.getMockFunction();
@@ -570,7 +568,7 @@ describe('ReactDOMComponent', function() {
       container = document.createElement('div');
     });
 
-    it("should warn against children for void elements", function() {
+    it('should warn against children for void elements', function() {
       spyOn(console, 'error');
 
       React.render(<input />, container);
@@ -580,7 +578,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
-    it("should warn against dangerouslySetInnerHTML for void elements", function() {
+    it('should warn against dangerouslySetInnerHTML for void elements', function() {
       spyOn(console, 'error');
 
       React.render(<input />, container);
@@ -593,7 +591,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
-    it("should validate against multiple children props", function() {
+    it('should validate against multiple children props', function() {
       React.render(<div></div>, container);
 
       expect(function() {
@@ -607,7 +605,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it("should warn about contentEditable and children", function() {
+    it('should warn about contentEditable and children', function() {
       spyOn(console, 'error');
       React.render(
         <div contentEditable><div /></div>,
@@ -617,7 +615,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('contentEditable');
     });
 
-    it("should validate against invalid styles", function() {
+    it('should validate against invalid styles', function() {
       React.render(<div></div>, container);
 
       expect(function() {
@@ -629,7 +627,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it("should properly escape text content and attributes values", function() {
+    it('should properly escape text content and attributes values', function() {
       expect(
         React.renderToStaticMarkup(
           React.DOM.div({
@@ -648,7 +646,7 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('unmountComponent', function() {
-    it("should clean up listeners", function() {
+    it('should clean up listeners', function() {
       var React = require('React');
       var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
       var ReactMount = require('ReactMount');
@@ -784,10 +782,14 @@ describe('ReactDOMComponent', function() {
         render: () => <Row />
       });
       var Table = React.createClass({
-        render: function() { return <table>{this.props.children}</table>; }
+        render: function() {
+          return <table>{this.props.children}</table>;
+        }
       });
       var FancyTable = React.createClass({
-        render: function() { return <Table>{this.props.children}</Table>; }
+        render: function() {
+          return <Table>{this.props.children}</Table>;
+        }
       });
 
       var Viz1 = React.createClass({
@@ -833,7 +835,9 @@ describe('ReactDOMComponent', function() {
       );
 
       var Link = React.createClass({
-        render: function() { return <a>{this.props.children}</a>; }
+        render: function() {
+          return <a>{this.props.children}</a>;
+        }
       });
       ReactTestUtils.renderIntoDocument(<Link><div><Link /></div></Link>);
       expect(console.error.calls.length).toBe(6);

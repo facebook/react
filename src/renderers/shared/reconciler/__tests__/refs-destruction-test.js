@@ -12,7 +12,6 @@
 'use strict';
 
 var React = require('React');
-var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
 
 var TestComponent = React.createClass({
@@ -34,7 +33,7 @@ describe('refs-destruction', function() {
     require('mock-modules').dumpCache();
   });
 
-  it("should remove refs when destroying the parent", function() {
+  it('should remove refs when destroying the parent', function() {
     var container = document.createElement('div');
     var testInstance = React.render(<TestComponent />, container);
     reactComponentExpect(testInstance.refs.theInnerDiv)
@@ -44,7 +43,7 @@ describe('refs-destruction', function() {
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
   });
 
-  it("should remove refs when destroying the child", function() {
+  it('should remove refs when destroying the child', function() {
     var container = document.createElement('div');
     var testInstance = React.render(<TestComponent />, container);
     reactComponentExpect(testInstance.refs.theInnerDiv)

@@ -16,13 +16,11 @@
 describe('LinkedStateMixin', function() {
   var LinkedStateMixin;
   var React;
-  var ReactLink;
   var ReactTestUtils;
 
   beforeEach(function() {
     LinkedStateMixin = require('LinkedStateMixin');
     React = require('React');
-    ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });
 

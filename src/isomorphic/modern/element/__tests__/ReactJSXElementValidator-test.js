@@ -29,7 +29,9 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils = require('ReactTestUtils');
 
     Component = class {
-      render() { return <div />; }
+      render() {
+        return <div />;
+      }
     };
   });
 
@@ -40,7 +42,7 @@ describe('ReactJSXElementValidator', function() {
   it('warns for keys for arrays of elements in children position', function() {
     spyOn(console, 'error');
 
-    <Component>{[<Component />, <Component />]}</Component>;
+    void <Component>{[<Component />, <Component />]}</Component>;
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
@@ -55,7 +57,7 @@ describe('ReactJSXElementValidator', function() {
       render() {
         return <Component>{this.props.childSet}</Component>;
       }
-    };
+    }
 
     class ComponentWrapper {
       render() {
@@ -65,7 +67,7 @@ describe('ReactJSXElementValidator', function() {
           />
         );
       }
-    };
+    }
 
     ReactTestUtils.renderIntoDocument(<ComponentWrapper />);
 
@@ -92,7 +94,7 @@ describe('ReactJSXElementValidator', function() {
       }
     };
 
-    <Component>{iterable}</Component>;
+    void <Component>{iterable}</Component>;
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
@@ -103,7 +105,7 @@ describe('ReactJSXElementValidator', function() {
   it('does not warns for arrays of elements with keys', function() {
     spyOn(console, 'error');
 
-    <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>;
+    void <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -126,7 +128,7 @@ describe('ReactJSXElementValidator', function() {
       }
     };
 
-    <Component>{iterable}</Component>
+    void <Component>{iterable}</Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -134,7 +136,7 @@ describe('ReactJSXElementValidator', function() {
   it('warns for numeric keys on objects as children', function() {
     spyOn(console, 'error');
 
-    <Component>{frag({1: <Component />, 2: <Component />})}</Component>;
+    void <Component>{frag({1: <Component />, 2: <Component />})}</Component>;
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
@@ -158,7 +160,7 @@ describe('ReactJSXElementValidator', function() {
     };
     iterable.entries = iterable['@@iterator'];
 
-    <Component>{iterable}</Component>;
+    void <Component>{iterable}</Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -166,7 +168,7 @@ describe('ReactJSXElementValidator', function() {
   it('does not warn when the element is directly as children', function() {
     spyOn(console, 'error');
 
-    <Component><Component /><Component /></Component>;
+    void <Component><Component /><Component /></Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -174,7 +176,7 @@ describe('ReactJSXElementValidator', function() {
   it('does not warn when the child array contains non-elements', function() {
     spyOn(console, 'error');
 
-    <Component>{[ {}, {} ]}</Component>;
+    void <Component>{[ {}, {} ]}</Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -215,10 +217,10 @@ describe('ReactJSXElementValidator', function() {
     var Num = 123;
     var Div = 'div';
     spyOn(console, 'error');
-    <Undefined />;
-    <Null />;
-    <True />;
-    <Num />;
+    void <Undefined />;
+    void <Null />;
+    void <True />;
+    void <Num />;
     expect(console.error.calls.length).toBe(4);
     expect(console.error.calls[0].args[0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
@@ -236,7 +238,7 @@ describe('ReactJSXElementValidator', function() {
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    <Div />;
+    void <Div />;
     expect(console.error.calls.length).toBe(4);
   });
 

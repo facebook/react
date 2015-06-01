@@ -45,13 +45,13 @@ describe('ReactDOM', function() {
   });
   */
 
-  it("allows a DOM element to be used with a string", function() {
+  it('allows a DOM element to be used with a string', function() {
     var element = React.createElement('div', {className: 'foo'});
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(React.findDOMNode(instance).tagName).toBe('DIV');
   });
 
-  it("should allow children to be passed as an argument", function() {
+  it('should allow children to be passed as an argument', function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       div(null, 'child')
     );
@@ -59,7 +59,7 @@ describe('ReactDOM', function() {
     expect(argNode.innerHTML).toBe('child');
   });
 
-  it("should overwrite props.children with children argument", function() {
+  it('should overwrite props.children with children argument', function() {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       div({children: 'fakechild'}, 'child')
     );
@@ -71,7 +71,7 @@ describe('ReactDOM', function() {
    * We need to make sure that updates occur to the actual node that's in the
    * DOM, instead of a stale cache.
    */
-  it("should purge the DOM cache when removing nodes", function() {
+  it('should purge the DOM cache when removing nodes', function() {
     var myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dog" />,

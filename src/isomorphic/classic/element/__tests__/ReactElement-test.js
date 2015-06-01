@@ -14,8 +14,6 @@
 // NOTE: We're explicitly not using JSX in this file. This is intended to test
 // classic JS without JSX.
 
-var mocks;
-
 var React;
 var ReactTestUtils;
 
@@ -25,12 +23,12 @@ describe('ReactElement', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    mocks = require('mocks');
-
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
-      render: function() { return React.createElement('div'); }
+      render: function() {
+        return React.createElement('div');
+      }
     });
   });
 
@@ -143,7 +141,7 @@ describe('ReactElement', function() {
   it('allows static methods to be called using the type property', function() {
     spyOn(console, 'error');
 
-    var ComponentClass = React.createClass({
+    var StaticMethodComponentClass = React.createClass({
       statics: {
         someStaticMethod: function() {
           return 'someReturnValue';
@@ -157,7 +155,7 @@ describe('ReactElement', function() {
       }
     });
 
-    var element = React.createElement(ComponentClass);
+    var element = React.createElement(StaticMethodComponentClass);
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -177,7 +175,7 @@ describe('ReactElement', function() {
     expect(React.isValidElement(null)).toEqual(false);
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement("string")).toEqual(false);
+    expect(React.isValidElement('string')).toEqual(false);
     expect(React.isValidElement(React.DOM.div)).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
   });
@@ -193,8 +191,8 @@ describe('ReactElement', function() {
       }
     });
 
-    expect(typeof Component.specialType).toBe("function");
-    expect(typeof Component.specialType.isRequired).toBe("function");
+    expect(typeof Component.specialType).toBe('function');
+    expect(typeof Component.specialType.isRequired).toBe('function');
   });
 
   it('is indistinguishable from a plain object', function() {
@@ -285,7 +283,7 @@ describe('ReactElement', function() {
 
   it('warns when adding a prop after element creation', function() {
     spyOn(console, 'error');
-    var el = document.createElement('div');
+    var container = document.createElement('div');
     var Outer = React.createClass({
       getDefaultProps: () => ({sound: 'meow'}),
       render: function() {
@@ -299,7 +297,7 @@ describe('ReactElement', function() {
         return el;
       }
     });
-    var outer = React.render(<Outer />, el);
+    var outer = React.render(<Outer />, container);
     expect(React.findDOMNode(outer).textContent).toBe('meow');
     expect(React.findDOMNode(outer).className).toBe('quack');
 
@@ -315,7 +313,7 @@ describe('ReactElement', function() {
 
     var newOuterEl = <Outer />;
     newOuterEl.props.sound = 'oink';
-    outer = React.render(newOuterEl, el);
+    outer = React.render(newOuterEl, container);
     expect(React.findDOMNode(outer).textContent).toBe('oink');
     expect(React.findDOMNode(outer).className).toBe('quack');
 

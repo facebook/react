@@ -21,7 +21,6 @@ var React;
 var ReactTestUtils;
 
 var reactComponentExpect;
-var mocks;
 
 describe('ReactContextValidator', function() {
   beforeEach(function() {
@@ -30,7 +29,6 @@ describe('ReactContextValidator', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
-    mocks = require('mocks');
 
     spyOn(console, 'error');
   });
@@ -86,7 +84,7 @@ describe('ReactContextValidator', function() {
       getChildContext: function() {
         return {
           foo: this.props.foo,
-          bar: "bar"
+          bar: 'bar'
         };
       },
 
@@ -125,7 +123,7 @@ describe('ReactContextValidator', function() {
 
     var instance = <Parent foo="abc" />;
     instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.replaceProps({foo: "def"});
+    instance.replaceProps({foo: 'def'});
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});

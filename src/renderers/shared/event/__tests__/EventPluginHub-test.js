@@ -26,7 +26,7 @@ describe('EventPluginHub', function() {
     isEventSupported.mockReturnValueOnce(false);
   });
 
-  it("should prevent non-function listeners", function() {
+  it('should prevent non-function listeners', function() {
     expect(function() {
       EventPluginHub.putListener(1, 'onClick', 'not a function');
     }).toThrow(

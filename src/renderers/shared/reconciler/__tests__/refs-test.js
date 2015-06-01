@@ -38,8 +38,8 @@ var ClickCounter = React.createClass({
       children.push(
         <div
           className="clickLogDiv"
-          key={"clickLog" + i}
-          ref={"clickLog" + i}
+          key={'clickLog' + i}
+          ref={'clickLog' + i}
         />
       );
     }
@@ -122,7 +122,7 @@ describe('reactiverefs', function() {
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
-  it("Should increase refs with an increase in divs", function() {
+  it('Should increase refs with an increase in divs', function() {
     var testRefsComponent = renderTestRefsComponent();
     var clickIncrementer =
       ReactTestUtils.findRenderedDOMComponentWithClass(
@@ -195,7 +195,7 @@ describe('ref swapping', function() {
     }
   });
 
-  it("Allow refs to hop around children correctly", function() {
+  it('Allow refs to hop around children correctly', function() {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
     var firstDiv =

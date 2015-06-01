@@ -13,7 +13,6 @@
 
 var React;
 var ReactTransitionGroup;
-var mocks;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
@@ -23,7 +22,6 @@ describe('ReactTransitionGroup', function() {
   beforeEach(function() {
     React = require('React');
     ReactTransitionGroup = require('ReactTransitionGroup');
-    mocks = require('mocks');
 
     container = document.createElement('div');
   });
@@ -94,15 +92,15 @@ describe('ReactTransitionGroup', function() {
 
   it('should handle enter/leave/enter/leave correctly', function() {
     var log = [];
-    var cb;
+    var willEnterCb;
 
     var Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount');
       },
-      componentWillEnter: function(_cb) {
+      componentWillEnter: function(cb) {
         log.push('willEnter');
-        cb = _cb;
+        willEnterCb = cb;
       },
       componentDidEnter: function() {
         log.push('didEnter');
@@ -139,12 +137,13 @@ describe('ReactTransitionGroup', function() {
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var i = 0; i < 5; i++) {
+    for (var k = 0; k < 5; k++) {
       instance.setState({count: 2});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 1});
     }
-    cb();
+    // other animations are blocked until willEnterCb is called
+    willEnterCb();
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter',
       'didEnter', 'willLeave', 'didLeave', 'willUnmount'
@@ -153,15 +152,15 @@ describe('ReactTransitionGroup', function() {
 
   it('should handle enter/leave/enter correctly', function() {
     var log = [];
-    var cb;
+    var willEnterCb;
 
     var Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount');
       },
-      componentWillEnter: function(_cb) {
+      componentWillEnter: function(cb) {
         log.push('willEnter');
-        cb = _cb;
+        willEnterCb = cb;
       },
       componentDidEnter: function() {
         log.push('didEnter');
@@ -198,12 +197,12 @@ describe('ReactTransitionGroup', function() {
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var i = 0; i < 5; i++) {
+    for (var k = 0; k < 5; k++) {
       instance.setState({count: 1});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 2});
     }
-    cb();
+    willEnterCb();
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 'didEnter'
     ]);
@@ -211,7 +210,6 @@ describe('ReactTransitionGroup', function() {
 
   it('should handle entering/leaving several elements at once', function() {
     var log = [];
-    var cb;
 
     var Child = React.createClass({
       componentDidMount: function() {

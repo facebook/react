@@ -18,8 +18,8 @@ describe('ReactDOMIDOperations', function() {
   var keyOf = require('keyOf');
 
   it('should disallow updating special properties', function() {
-    spyOn(ReactMount, "getNode");
-    spyOn(DOMPropertyOperations, "setValueForProperty");
+    spyOn(ReactMount, 'getNode');
+    spyOn(DOMPropertyOperations, 'setValueForProperty');
 
     expect(function() {
       ReactDOMIDOperations.updatePropertyByID(
@@ -40,7 +40,7 @@ describe('ReactDOMIDOperations', function() {
 
   it('should update innerHTML and preserve whitespace', function() {
     var stubNode = document.createElement('div');
-    spyOn(ReactMount, "getNode").andReturn(stubNode);
+    spyOn(ReactMount, 'getNode').andReturn(stubNode);
 
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 

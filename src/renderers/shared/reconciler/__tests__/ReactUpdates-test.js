@@ -530,7 +530,7 @@ describe('ReactUpdates', function() {
         return {x: 0};
       },
       componentDidUpdate: function() {
-        expect(React.findDOMNode(b).textContent).toBe("B1");
+        expect(React.findDOMNode(b).textContent).toBe('B1');
         aUpdated = true;
       },
       render: function() {
@@ -698,7 +698,9 @@ describe('ReactUpdates', function() {
     });
 
     var Z = React.createClass({
-      render: function() { return <div />; },
+      render: function() {
+        return <div />;
+      },
       componentWillUpdate: function() {
         x.go();
       }
@@ -785,7 +787,6 @@ describe('ReactUpdates', function() {
         return <div />;
       },
       componentDidUpdate: function() {
-        var component = this;
         ReactUpdates.asap(function() {
           expect(this).toBe(component);
           callbackCount++;
@@ -793,7 +794,7 @@ describe('ReactUpdates', function() {
             callbackCount++;
           });
           expect(callbackCount).toBe(1);
-        }, this);
+        }, component);
         expect(callbackCount).toBe(0);
       }
     });

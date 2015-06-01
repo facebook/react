@@ -72,7 +72,7 @@ describe('update', function() {
   });
 
   it('should support apply', function() {
-    expect(update(2, {$apply: function(x) { return x * 2; }})).toEqual(4);
+    expect(update(2, {$apply: (x) => x * 2})).toEqual(4);
     expect(update.bind(null, 2, {$apply: 123})).toThrow(
       'Invariant Violation: update(): expected spec of $apply to be a ' +
       'function; got 123.'

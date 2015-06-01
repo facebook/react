@@ -99,7 +99,7 @@ describe('Danger', function() {
         'Invariant Violation: dangerouslyRenderMarkup(...): Missing markup.'
       );
 
-      spyOn(console, "error");
+      spyOn(console, 'error');
 
       var renderedMarkup = Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
       var args = console.error.argsForCall[0];

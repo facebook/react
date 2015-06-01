@@ -28,7 +28,9 @@ describe('ReactElementValidator', function() {
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
-      render: function() { return React.createElement('div'); }
+      render: function() {
+        return React.createElement('div');
+      }
     });
   });
 
@@ -213,7 +215,8 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('does not warn for numeric keys in entry iterables in rest args', function() {
+  it('does not warn for numeric keys in entry iterables in rest args',
+      function() {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -283,7 +286,7 @@ describe('ReactElementValidator', function() {
   });
 
   it('gives a helpful error when passing null, undefined, boolean, or number',
-      () => {
+      function() {
     spyOn(console, 'error');
     React.createElement(undefined);
     React.createElement(null);
@@ -315,7 +318,7 @@ describe('ReactElementValidator', function() {
   });
 
   it('includes the owner name when passing null, undefined, boolean, or number',
-      () => {
+      function() {
     spyOn(console, 'error');
     var ParentComp = React.createClass({
       render: function() {
