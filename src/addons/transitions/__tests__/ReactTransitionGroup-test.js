@@ -151,6 +151,42 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
+  it('should handle transitionsComplete correctly', function() {
+    var log = [];
+
+    var Child = React.createClass({
+      componentWillEnter: function(cb) {
+        cb();
+      },
+      componentWillLeave: function(cb) {
+        cb();
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {count: 1};
+      },
+      transitionsComplete: function () {
+        log.push('transitionsComplete');
+      },
+      render: function() {
+        var children = [];
+        for (var i = 0; i < this.state.count; i++) {
+          children.push(<Child key={i} />);
+        }
+        return <ReactTransitionGroup transitionsComplete={this.transitionsComplete}>{children}</ReactTransitionGroup>;
+      }
+    });
+
+    var instance = React.render(<Component />, container);
+    instance.setState({count: 2});
+    expect(log).toEqual(['transitionsComplete']);
+  });
+
   it('should handle enter/leave/enter correctly', function() {
     var log = [];
     var cb;
