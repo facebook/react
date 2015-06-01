@@ -117,8 +117,7 @@ describe('ReactCSSTransitionGroup', function() {
 
   it('should work with no children', function() {
     React.render(
-      <ReactCSSTransitionGroup transitionName="yolo">
-      </ReactCSSTransitionGroup>,
+      <ReactCSSTransitionGroup transitionName="yolo" />,
       container
     );
   });
