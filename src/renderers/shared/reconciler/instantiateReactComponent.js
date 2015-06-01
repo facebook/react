@@ -15,6 +15,7 @@
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
+var ReactStatelessComponent = require('ReactStatelessComponent');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
@@ -27,6 +28,14 @@ assign(
   ReactCompositeComponent.Mixin,
   {
     _instantiateReactComponent: instantiateReactComponent,
+  }
+);
+var ReactStatelessComponentWrapper = function() { };
+assign(
+  ReactStatelessComponentWrapper.prototype,
+  ReactStatelessComponent.Mixin,
+  {
+    _instantiateReactComponent: instantiateReactComponent
   }
 );
 
@@ -43,6 +52,20 @@ function isInternalComponentType(type) {
     typeof type.prototype !== 'undefined' &&
     typeof type.prototype.mountComponent === 'function' &&
     typeof type.prototype.receiveComponent === 'function'
+  );
+}
+
+/**
+ * Check if the type reference is a stateless function type.
+ *
+ * @param {function} type
+ * @return {boolean} Returns true if this is a stateless function type.
+ */
+function isStatelessComponentType(type) {
+  return (
+    typeof type === 'function' &&
+    (typeof type.prototype === 'undefined' ||
+     typeof type.prototype.render !== 'function')
   );
 }
 
@@ -83,6 +106,8 @@ function instantiateReactComponent(node, parentCompositeType) {
       // represenations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
       instance = new element.type(element);
+    } else if (isStatelessComponentType(element.type)) {
+      instance = new ReactStatelessComponentWrapper();
     } else {
       instance = new ReactCompositeComponentWrapper();
     }

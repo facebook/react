@@ -845,16 +845,6 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
-  it('should render stateless functions', function() {
-    function StatelessComponent(props) {
-      return <div>{props.name}</div>;
-    }
-
-    var comp = ReactTestUtils.renderIntoDocument(<StatelessComponent name="A" />);
-
-    expect(React.findDOMNode(comp).textContent).toBe('A');
-  });
-
   it('context should be passed down from the parent', function() {
     var Parent = React.createClass({
       childContextTypes: {
