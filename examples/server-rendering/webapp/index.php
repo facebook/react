@@ -52,6 +52,7 @@ SCRIPT;
 }
 ?>
 
+<!DOCTYPE html>
 <html>
   <head>
     <title>React server rendering example</title>
