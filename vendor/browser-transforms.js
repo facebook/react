@@ -231,7 +231,6 @@ function loadScripts(scripts) {
       dummyAnchor.href = script.src;
       sourceFilename = dummyAnchor.pathname.substr(1);
     }
-    console.log(sourceFilename);
 
     var options = {
       sourceMapInline: true,
