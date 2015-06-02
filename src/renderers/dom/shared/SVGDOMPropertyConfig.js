@@ -30,6 +30,7 @@ var SVGDOMPropertyConfig = {
     dy: MUST_USE_ATTRIBUTE,
     fill: MUST_USE_ATTRIBUTE,
     fillOpacity: MUST_USE_ATTRIBUTE,
+    fillRule: MUST_USE_ATTRIBUTE,
     fontFamily: MUST_USE_ATTRIBUTE,
     fontSize: MUST_USE_ATTRIBUTE,
     fx: MUST_USE_ATTRIBUTE,
@@ -92,6 +93,7 @@ var SVGDOMPropertyConfig = {
   DOMAttributeNames: {
     clipPath: 'clip-path',
     fillOpacity: 'fill-opacity',
+    fillRule: 'fill-rule',
     fontFamily: 'font-family',
     fontSize: 'font-size',
     gradientTransform: 'gradientTransform',
