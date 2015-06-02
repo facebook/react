@@ -675,9 +675,11 @@ describe('ReactUpdates', function() {
       },
       render: function() {
         if (this.state.s === 0) {
-          return <div>
-            <span>0</span>
-          </div>;
+          return (
+            <div>
+              <span>0</span>
+            </div>
+          );
         } else {
           return <div>1</div>;
         }
@@ -691,9 +693,11 @@ describe('ReactUpdates', function() {
 
     var Y = React.createClass({
       render: function() {
-        return <div>
-          <Z />
-        </div>;
+        return (
+          <div>
+            <Z />
+          </div>
+        );
       },
     });
 

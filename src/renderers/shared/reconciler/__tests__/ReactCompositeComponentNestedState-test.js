@@ -38,11 +38,13 @@ describe('ReactCompositeComponentNestedState-state', function() {
 
       render: function() {
         this.props.logger('parent-render', this.state.color);
-        return <ChildComponent
-          logger={this.props.logger}
-          color={this.state.color}
-          onSelectColor={this.handleColor}
-        />;
+        return (
+          <ChildComponent
+            logger={this.props.logger}
+            color={this.state.color}
+            onSelectColor={this.handleColor}
+          />
+        );
       },
     });
 
@@ -66,20 +68,22 @@ describe('ReactCompositeComponentNestedState-state', function() {
 
       render: function() {
         this.props.logger('render', this.state.hue, this.props.color);
-        return <div>
-          <button onClick={this.handleHue.bind(this, 'dark', 'blue')}>
-            Dark Blue
-          </button>
-          <button onClick={this.handleHue.bind(this, 'light', 'blue')}>
-            Light Blue
-          </button>
-          <button onClick={this.handleHue.bind(this, 'dark', 'green')}>
-            Dark Green
-          </button>
-          <button onClick={this.handleHue.bind(this, 'light', 'green')}>
-            Light Green
-          </button>
-        </div>;
+        return (
+          <div>
+            <button onClick={this.handleHue.bind(this, 'dark', 'blue')}>
+              Dark Blue
+            </button>
+            <button onClick={this.handleHue.bind(this, 'light', 'blue')}>
+              Light Blue
+            </button>
+            <button onClick={this.handleHue.bind(this, 'dark', 'green')}>
+              Dark Green
+            </button>
+            <button onClick={this.handleHue.bind(this, 'light', 'green')}>
+              Light Green
+            </button>
+          </div>
+        );
       },
     });
 
