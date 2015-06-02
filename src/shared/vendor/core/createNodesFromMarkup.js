@@ -47,15 +47,16 @@ function getNodeName(markup) {
  * an exception is thrown if any <script> elements are rendered.
  *
  * @param {string} markup A string of valid HTML markup.
+ * @param {?string} root Future root node of the current node.
  * @param {?function} handleScript Invoked once for each rendered <script>.
  * @return {array<DOMElement|DOMTextNode>} An array of rendered nodes.
  */
-function createNodesFromMarkup(markup, handleScript) {
+function createNodesFromMarkup(markup, root, handleScript) {
   var node = dummyNode;
   invariant(!!dummyNode, 'createNodesFromMarkup dummy not initialized');
   var nodeName = getNodeName(markup);
 
-  var wrap = nodeName && getMarkupWrap(nodeName);
+  var wrap = nodeName && getMarkupWrap(nodeName, root);
   if (wrap) {
     node.innerHTML = wrap[1] + markup + wrap[2];
 
