@@ -79,6 +79,19 @@ describe('update', function() {
     );
   });
 
+  it('should support inc', function() {
+    expect(update(3, {$inc: 2})).toEqual(5);
+
+    expect(update.bind(null, '3', {$inc: 3})).toThrow(
+      'Invariant Violation: update(): Expected $inc target to be a number; got a string. '
+    );
+
+    expect(update.bind(null, 3, {$inc: '5'})).toThrow(
+      'Invariant Violation: update(): Expected spec of $inc to be a number; got a string. '
+    )
+
+  });
+
   it('should support deep updates', function() {
     expect(update({a: 'b', c: {d: 'e'}}, {c: {d: {$set: 'f'}}})).toEqual({
       a: 'b',
@@ -90,7 +103,7 @@ describe('update', function() {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
       'Invariant Violation: update(): You provided a key path to update() ' +
       'that did not contain one of $push, $unshift, $splice, $set, $merge, ' +
-      '$apply. Did you forget to include {$set: ...}?'
+      '$apply, $inc. Did you forget to include {$set: ...}?'
     );
   });
 
