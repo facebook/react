@@ -58,4 +58,49 @@ describe('ReactStatelessComponent', function() {
     expect(container.textContent).toBe('');
   });
 
+  it('should pass context thru stateless component', function() {
+    var Child = React.createClass({
+      contextTypes: {
+        test: React.PropTypes.string.isRequired
+      },
+
+      render: function() {
+        return <div>{this.context.test}</div>;
+      }
+    })
+
+    function Parent() {
+      return <Child />;
+    }
+    // var Parent = React.createClass({
+    //   render: function() {
+    //     return <Child />;
+    //   }
+    // });
+
+    var GrandParent = React.createClass({
+      childContextTypes: {
+        test: React.PropTypes.string.isRequired
+      },
+
+      getChildContext() {
+        return {test: this.props.test};
+      },
+
+      render: function() {
+        return <Parent />;
+      }
+    })
+
+    var comp = ReactTestUtils.renderIntoDocument(
+      <GrandParent test="test" />
+    );
+
+    expect(React.findDOMNode(comp).textContent).toBe('test');
+
+    comp.setProps({test: 'mest'});
+
+    expect(React.findDOMNode(comp).textContent).toBe('mest');
+  });
+
 });
