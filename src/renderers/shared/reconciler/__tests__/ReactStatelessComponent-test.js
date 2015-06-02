@@ -23,7 +23,7 @@ describe('ReactStatelessComponent', function() {
 
     StatelessComponent = function StatelessComponent(props) {
       return <div>{props.name}</div>;
-    }
+    };
   });
 
   it('should render stateless component', function() {
