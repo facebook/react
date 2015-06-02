@@ -11,11 +11,12 @@
 
 'use strict';
 
-var AutoFocusMixin = require('AutoFocusMixin');
+var AutoFocusUtils = require('AutoFocusUtils');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactUpdates = require('ReactUpdates');
 var ReactPropTypes = require('ReactPropTypes');
 
@@ -118,7 +119,7 @@ var ReactDOMSelect = ReactClass.createClass({
   displayName: 'ReactDOMSelect',
   tagName: 'SELECT',
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
+  mixins: [AutoFocusUtils.Mixin, ReactBrowserComponentMixin],
 
   statics: {
     valueContextKey: valueContextKey
@@ -127,6 +128,16 @@ var ReactDOMSelect = ReactClass.createClass({
   propTypes: {
     defaultValue: selectValueType,
     value: selectValueType
+  },
+
+  componentWillMount: function() {
+    LinkedValueUtils.checkPropTypes(
+      'select',
+      this.props,
+      ReactInstanceMap.get(this)._currentElement._owner
+    );
+
+    this._pendingUpdate = false;
   },
 
   getInitialState: function() {
@@ -162,10 +173,6 @@ var ReactDOMSelect = ReactClass.createClass({
     return select(props, this.props.children);
   },
 
-  componentWillMount: function() {
-    this._pendingUpdate = false;
-  },
-
   componentWillReceiveProps: function(nextProps) {
     // After the initial mount, we control selected-ness manually so don't pass
     // the context value down
@@ -189,11 +196,7 @@ var ReactDOMSelect = ReactClass.createClass({
   },
 
   _handleChange: function(event) {
-    var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this.props);
-    if (onChange) {
-      returnValue = onChange.call(this, event);
-    }
+    var returnValue = LinkedValueUtils.executeOnChange(this.props, event);
 
     this._pendingUpdate = true;
     ReactUpdates.asap(updateOptionsIfPendingUpdateAndMounted, this);

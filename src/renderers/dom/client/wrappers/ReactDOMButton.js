@@ -11,7 +11,7 @@
 
 'use strict';
 
-var AutoFocusMixin = require('AutoFocusMixin');
+var AutoFocusUtils = require('AutoFocusUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
@@ -41,7 +41,7 @@ var ReactDOMButton = ReactClass.createClass({
   displayName: 'ReactDOMButton',
   tagName: 'BUTTON',
 
-  mixins: [AutoFocusMixin, ReactBrowserComponentMixin],
+  mixins: [AutoFocusUtils.Mixin, ReactBrowserComponentMixin],
 
   render: function() {
     var props = {};

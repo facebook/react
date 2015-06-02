@@ -11,12 +11,13 @@
 
 'use strict';
 
-var AutoFocusMixin = require('AutoFocusMixin');
+var AutoFocusUtils = require('AutoFocusUtils');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
@@ -53,7 +54,15 @@ var ReactDOMTextarea = ReactClass.createClass({
   displayName: 'ReactDOMTextarea',
   tagName: 'TEXTAREA',
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
+  mixins: [AutoFocusUtils.Mixin, ReactBrowserComponentMixin],
+
+  componentWillMount: function() {
+    LinkedValueUtils.checkPropTypes(
+      'textarea',
+      this.props,
+      ReactInstanceMap.get(this)._currentElement._owner
+    );
+  },
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
@@ -123,11 +132,7 @@ var ReactDOMTextarea = ReactClass.createClass({
   },
 
   _handleChange: function(event) {
-    var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this.props);
-    if (onChange) {
-      returnValue = onChange.call(this, event);
-    }
+    var returnValue = LinkedValueUtils.executeOnChange(this.props, event);
     ReactUpdates.asap(forceUpdateIfMounted, this);
     return returnValue;
   }

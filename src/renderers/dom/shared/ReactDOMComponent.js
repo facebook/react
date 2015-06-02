@@ -20,6 +20,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
+var ReactDOMInput = require('ReactDOMInput');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
@@ -254,6 +255,7 @@ function ReactDOMComponent(tag) {
   this._previousStyle = null;
   this._previousStyleCopy = null;
   this._rootNodeID = null;
+  this._wrapperState = null;
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';
@@ -277,7 +279,16 @@ ReactDOMComponent.Mixin = {
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
 
-    assertValidProps(this, this._currentElement.props);
+    var props = this._currentElement.props;
+
+    switch (this._tag) {
+      case 'input':
+        ReactDOMInput.mountWrapper(this, props);
+        props = ReactDOMInput.getNativeProps(this, props, context);
+        break;
+    }
+
+    assertValidProps(this, props);
     if (__DEV__) {
       if (context[validateDOMNesting.ancestorInfoContextKey]) {
         validateDOMNesting(
@@ -288,8 +299,15 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction);
-    var tagContent = this._createContentMarkup(transaction, context);
+    var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
+    var tagContent = this._createContentMarkup(transaction, props, context);
+
+    switch (this._tag) {
+      case 'input':
+        ReactDOMInput.postMountWrapper(this, transaction, props);
+        break;
+    }
+
     if (!tagContent && omittedCloseTags[this._tag]) {
       return tagOpen + '/>';
     }
@@ -306,10 +324,10 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {object} props
    * @return {string} Markup of opening tag.
    */
-  _createOpenTagMarkupAndPutListeners: function(transaction) {
-    var props = this._currentElement.props;
+  _createOpenTagMarkupAndPutListeners: function(transaction, props) {
     var ret = '<' + this._tag;
 
     for (var propKey in props) {
@@ -356,12 +374,12 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {object} props
    * @param {object} context
    * @return {string} Content markup.
    */
-  _createContentMarkup: function(transaction, context) {
+  _createContentMarkup: function(transaction, props, context) {
     var ret = '';
-    var props = this._currentElement.props;
 
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
@@ -427,10 +445,22 @@ ReactDOMComponent.Mixin = {
    * @overridable
    */
   updateComponent: function(transaction, prevElement, nextElement, context) {
-    assertValidProps(this, this._currentElement.props);
-    this._updateDOMProperties(prevElement.props, transaction);
+    var lastProps = prevElement.props;
+    var nextProps = this._currentElement.props;
+
+    switch (this._tag) {
+      case 'input':
+        ReactDOMInput.updateWrapper(this);
+        lastProps = ReactDOMInput.getNativeProps(this, lastProps);
+        nextProps = ReactDOMInput.getNativeProps(this, nextProps);
+        break;
+    }
+
+    assertValidProps(this, nextProps);
+    this._updateDOMProperties(lastProps, nextProps, transaction);
     this._updateDOMChildren(
-      prevElement.props,
+      lastProps,
+      nextProps,
       transaction,
       processChildContext(context, this)
     );
@@ -449,10 +479,10 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {object} lastProps
+   * @param {object} nextProps
    * @param {ReactReconcileTransaction} transaction
    */
-  _updateDOMProperties: function(lastProps, transaction) {
-    var nextProps = this._currentElement.props;
+  _updateDOMProperties: function(lastProps, nextProps, transaction) {
     var propKey;
     var styleName;
     var styleUpdates;
@@ -558,11 +588,11 @@ ReactDOMComponent.Mixin = {
    * children content.
    *
    * @param {object} lastProps
+   * @param {object} nextProps
    * @param {ReactReconcileTransaction} transaction
+   * @param {object} context
    */
-  _updateDOMChildren: function(lastProps, transaction, context) {
-    var nextProps = this._currentElement.props;
-
+  _updateDOMChildren: function(lastProps, nextProps, transaction, context) {
     var lastContent =
       CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
     var nextContent =
@@ -612,10 +642,17 @@ ReactDOMComponent.Mixin = {
    * @internal
    */
   unmountComponent: function() {
+    switch (this._tag) {
+      case 'input':
+        ReactDOMInput.unmountWrapper(this);
+        break;
+    }
+
     this.unmountChildren();
     ReactBrowserEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
+    this._wrapperState = null;
   }
 
 };

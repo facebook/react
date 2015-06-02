@@ -308,7 +308,8 @@ describe('ReactDOMComponent', function() {
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
         return (new NodeStub(props))._createOpenTagMarkupAndPutListeners(
-          transaction
+          transaction,
+          props
         );
       };
 
@@ -357,7 +358,11 @@ describe('ReactDOMComponent', function() {
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createContentMarkup(transaction, {});
+        return (new NodeStub(props))._createContentMarkup(
+          transaction,
+          props,
+          {}
+        );
       };
 
       this.addMatchers({

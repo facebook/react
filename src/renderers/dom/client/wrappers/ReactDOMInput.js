@@ -11,27 +11,22 @@
 
 'use strict';
 
-var AutoFocusMixin = require('AutoFocusMixin');
-var DOMPropertyOperations = require('DOMPropertyOperations');
+var AutoFocusUtils = require('AutoFocusUtils');
+var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactClass = require('ReactClass');
-var ReactElement = require('ReactElement');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
-var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
-
-var input = ReactElement.createFactory('input');
 
 var instancesByReactID = {};
 
 function forceUpdateIfMounted() {
   /*jshint validthis:true */
-  if (this.isMounted()) {
-    this.forceUpdate();
+  if (this._rootNodeID) {
+    // DOM component is still mounted; update
+    ReactDOMInput.updateWrapper(this);
   }
 }
 
@@ -51,124 +46,132 @@ function forceUpdateIfMounted() {
  *
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
-var ReactDOMInput = ReactClass.createClass({
-  displayName: 'ReactDOMInput',
-  tagName: 'INPUT',
+var ReactDOMInput = {
+  getNativeProps: function(inst, props, context) {
+    var value = LinkedValueUtils.getValue(props);
+    var checked = LinkedValueUtils.getChecked(props);
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
+    var nativeProps = assign({}, props, {
+      defaultChecked: undefined,
+      defaultValue: undefined,
+      value: value != null ? value : inst._wrapperState.initialValue,
+      checked: checked != null ? checked : inst._wrapperState.initialChecked,
+      onChange: inst._wrapperState.onChange
+    });
 
-  getInitialState: function() {
-    var defaultValue = this.props.defaultValue;
-    return {
-      initialChecked: this.props.defaultChecked || false,
-      initialValue: defaultValue != null ? defaultValue : null
+    return nativeProps;
+  },
+
+  mountWrapper: function(inst, props) {
+    LinkedValueUtils.checkPropTypes(
+      'input',
+      props,
+      inst._currentElement._owner
+    );
+
+    var defaultValue = props.defaultValue;
+    inst._wrapperState = {
+      initialChecked: props.defaultChecked || false,
+      initialValue: defaultValue != null ? defaultValue : null,
+      onChange: _handleChange.bind(inst)
     };
+
+    instancesByReactID[inst._rootNodeID] = inst;
   },
 
-  render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
-
-    props.defaultChecked = null;
-    props.defaultValue = null;
-
-    var value = LinkedValueUtils.getValue(this.props);
-    props.value = value != null ? value : this.state.initialValue;
-
-    var checked = LinkedValueUtils.getChecked(this.props);
-    props.checked = checked != null ? checked : this.state.initialChecked;
-
-    props.onChange = this._handleChange;
-
-    return input(props, this.props.children);
+  postMountWrapper: function(inst, transaction, props) {
+    if (props.autoFocus) {
+      transaction.getReactMountReady().enqueue(
+        AutoFocusUtils.focusDOMComponent,
+        inst
+      );
+    }
   },
 
-  componentDidMount: function() {
-    var id = ReactMount.getID(findDOMNode(this));
-    instancesByReactID[id] = this;
+  unmountWrapper: function(inst) {
+    delete instancesByReactID[inst._rootNodeID];
   },
 
-  componentWillUnmount: function() {
-    var rootNode = findDOMNode(this);
-    var id = ReactMount.getID(rootNode);
-    delete instancesByReactID[id];
-  },
+  updateWrapper: function(inst) {
+    var props = inst._currentElement.props;
 
-  componentDidUpdate: function(prevProps, prevState, prevContext) {
-    var rootNode = findDOMNode(this);
-    if (this.props.checked != null) {
-      DOMPropertyOperations.setValueForProperty(
-        rootNode,
+    // TODO: Shouldn't this be getChecked(props)?
+    var checked = props.checked;
+    if (checked != null) {
+      ReactDOMIDOperations.updatePropertyByID(
+        inst._rootNodeID,
         'checked',
-        this.props.checked || false
+        checked || false
       );
     }
 
-    var value = LinkedValueUtils.getValue(this.props);
+    var value = LinkedValueUtils.getValue(props);
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);
+      ReactDOMIDOperations.updatePropertyByID(
+        inst._rootNodeID,
+        'value',
+        '' + value
+      );
     }
-  },
+  }
+};
 
-  _handleChange: function(event) {
-    var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this.props);
-    if (onChange) {
-      returnValue = onChange.call(this, event);
+function _handleChange(event) {
+  var props = this._currentElement.props;
+
+  var returnValue = LinkedValueUtils.executeOnChange(props, event);
+
+  // Here we use asap to wait until all updates have propagated, which
+  // is important when using controlled components within layers:
+  // https://github.com/facebook/react/issues/1698
+  ReactUpdates.asap(forceUpdateIfMounted, this);
+
+  var name = props.name;
+  if (props.type === 'radio' && name != null) {
+    var rootNode = ReactMount.getNode(this._rootNodeID);
+    var queryRoot = rootNode;
+
+    while (queryRoot.parentNode) {
+      queryRoot = queryRoot.parentNode;
     }
-    // Here we use asap to wait until all updates have propagated, which
-    // is important when using controlled components within layers:
-    // https://github.com/facebook/react/issues/1698
-    ReactUpdates.asap(forceUpdateIfMounted, this);
 
-    var name = this.props.name;
-    if (this.props.type === 'radio' && name != null) {
-      var rootNode = findDOMNode(this);
-      var queryRoot = rootNode;
+    // If `rootNode.form` was non-null, then we could try `form.elements`,
+    // but that sometimes behaves strangely in IE8. We could also try using
+    // `form.getElementsByName`, but that will only return direct children
+    // and won't include inputs that use the HTML5 `form=` attribute. Since
+    // the input might not even be in a form, let's just use the global
+    // `querySelectorAll` to ensure we don't miss anything.
+    var group = queryRoot.querySelectorAll(
+      'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
 
-      while (queryRoot.parentNode) {
-        queryRoot = queryRoot.parentNode;
+    for (var i = 0; i < group.length; i++) {
+      var otherNode = group[i];
+      if (otherNode === rootNode ||
+          otherNode.form !== rootNode.form) {
+        continue;
       }
-
-      // If `rootNode.form` was non-null, then we could try `form.elements`,
-      // but that sometimes behaves strangely in IE8. We could also try using
-      // `form.getElementsByName`, but that will only return direct children
-      // and won't include inputs that use the HTML5 `form=` attribute. Since
-      // the input might not even be in a form, let's just use the global
-      // `querySelectorAll` to ensure we don't miss anything.
-      var group = queryRoot.querySelectorAll(
-        'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
-
-      for (var i = 0; i < group.length; i++) {
-        var otherNode = group[i];
-        if (otherNode === rootNode ||
-            otherNode.form !== rootNode.form) {
-          continue;
-        }
-        var otherID = ReactMount.getID(otherNode);
-        invariant(
-          otherID,
-          'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.'
-        );
-        var otherInstance = instancesByReactID[otherID];
-        invariant(
-          otherInstance,
-          'ReactDOMInput: Unknown radio button ID %s.',
-          otherID
-        );
-        // If this is a controlled radio button group, forcing the input that
-        // was previously checked to update will cause it to be come re-checked
-        // as appropriate.
-        ReactUpdates.asap(forceUpdateIfMounted, otherInstance);
-      }
+      var otherID = ReactMount.getID(otherNode);
+      invariant(
+        otherID,
+        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+        'same `name` is not supported.'
+      );
+      var otherInstance = instancesByReactID[otherID];
+      invariant(
+        otherInstance,
+        'ReactDOMInput: Unknown radio button ID %s.',
+        otherID
+      );
+      // If this is a controlled radio button group, forcing the input that
+      // was previously checked to update will cause it to be come re-checked
+      // as appropriate.
+      ReactUpdates.asap(forceUpdateIfMounted, otherInstance);
     }
-
-    return returnValue;
   }
 
-});
+  return returnValue;
+}
 
 module.exports = ReactDOMInput;
