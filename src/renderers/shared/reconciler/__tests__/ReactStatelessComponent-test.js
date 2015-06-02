@@ -67,7 +67,7 @@ describe('ReactStatelessComponent', function() {
       render: function() {
         return <div>{this.context.test}</div>;
       }
-    })
+    });
 
     function Parent() {
       return <Child />;
@@ -90,7 +90,7 @@ describe('ReactStatelessComponent', function() {
       render: function() {
         return <Parent />;
       }
-    })
+    });
 
     var comp = ReactTestUtils.renderIntoDocument(
       <GrandParent test="test" />

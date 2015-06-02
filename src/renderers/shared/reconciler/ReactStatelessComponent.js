@@ -135,11 +135,14 @@ var ReactStatelessComponentMixin = {
 
   receiveComponent: function(nextElement, transaction, nextContext) {
     var prevElement = this._currentElement;
+    var prevContext = this._context;
 
     this.updateComponent(
       transaction,
       prevElement,
-      nextElement
+      nextElement,
+      prevContext,
+      nextContext
     );
   },
 
@@ -169,8 +172,8 @@ var ReactStatelessComponentMixin = {
     transaction,
     prevParentElement,
     nextParentElement,
-    prevUnmaskedContext,
-    nextUnmaskedContext
+    prevContext,
+    nextContext
   ) {
     var inst = this._instance;
 
@@ -188,13 +191,14 @@ var ReactStatelessComponentMixin = {
       this._performComponentUpdate(
         nextParentElement,
         nextProps,
+        nextContext,
         transaction
       );
     } else {
       // If it's determined that a component should not update, we still want
       // to set props and state but we shortcut the rest of the update.
       this._currentElement = nextParentElement;
-      this._context = nextUnmaskedContext;
+      this._context = nextContext;
       inst.props = nextProps;
     }
   },
@@ -211,11 +215,13 @@ var ReactStatelessComponentMixin = {
   _performComponentUpdate: function(
     nextElement,
     nextProps,
+    nextContext,
     transaction
   ) {
     var inst = this._instance;
 
     this._currentElement = nextElement;
+    this._context = nextContext;
     inst.props = nextProps;
 
     this._updateRenderedComponent(transaction);
