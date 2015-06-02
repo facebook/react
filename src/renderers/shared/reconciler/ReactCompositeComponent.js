@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
@@ -756,16 +755,11 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponent: function() {
     var renderedComponent;
-    var previousContext = ReactContext.current;
-    ReactContext.current = this._processChildContext(
-      this._currentElement._context
-    );
     ReactCurrentOwner.current = this;
     try {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
     } finally {
-      ReactContext.current = previousContext;
       ReactCurrentOwner.current = null;
     }
     invariant(
