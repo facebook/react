@@ -704,23 +704,6 @@ function bindAutoBindMethods(component) {
   }
 }
 
-var typeDeprecationDescriptor = {
-  enumerable: false,
-  get: function() {
-    var displayName = this.displayName || this.name || 'Component';
-    warning(
-      false,
-      '%s.type is deprecated. Use %s directly to access the class.',
-      displayName,
-      displayName
-    );
-    Object.defineProperty(this, 'type', {
-      value: this
-    });
-    return this;
-  }
-};
-
 /**
  * Add more to the ReactClass base class. These are all legacy features and
  * therefore not already part of the modern ReactComponent.
@@ -912,16 +895,6 @@ var ReactClass = {
     for (var methodName in ReactClassInterface) {
       if (!Constructor.prototype[methodName]) {
         Constructor.prototype[methodName] = null;
-      }
-    }
-
-    // Legacy hook
-    Constructor.type = Constructor;
-    if (__DEV__) {
-      try {
-        Object.defineProperty(Constructor, 'type', typeDeprecationDescriptor);
-      } catch (x) {
-        // IE will fail on defineProperty (es5-shim/sham too)
       }
     }
 

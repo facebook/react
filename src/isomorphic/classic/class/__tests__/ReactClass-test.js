@@ -44,35 +44,6 @@ describe('ReactClass-spec', function() {
       .toBe('TestComponent');
   });
 
-  it('should warn when accessing .type on a React class', function() {
-    var TestComponent = React.createClass({
-      render: function() {
-        return <div />;
-      }
-    });
-    var SecondTestComponent = React.createClass({
-      render: function() {
-        return <div />;
-      }
-    });
-    expect(TestComponent.type).toBe(TestComponent);
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: TestComponent.type is deprecated. Use TestComponent ' +
-      'directly to access the class.'
-    );
-    // Warn once per class
-    expect(SecondTestComponent.type).toBe(SecondTestComponent);
-    expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[1][0]).toBe(
-      'Warning: SecondTestComponent.type is deprecated. Use ' +
-      'SecondTestComponent directly to access the class.'
-    );
-    // Not again
-    expect(TestComponent.type).toBe(TestComponent);
-    expect(console.error.argsForCall.length).toBe(2);
-  });
-
   it('should copy prop types onto the Constructor', function() {
     var propValidator = mocks.getMockFunction();
     var TestComponent = React.createClass({
