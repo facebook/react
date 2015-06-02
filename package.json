@@ -1,33 +1,7 @@
 {
-  "name": "react-tools",
-  "description": "A set of complementary tools to React, including the JSX transformer.",
+  "name": "react-build",
+  "private": true,
   "version": "0.14.0-beta1",
-  "keywords": [
-    "jsx",
-    "react",
-    "transformer",
-    "view"
-  ],
-  "homepage": "https://facebook.github.io/react",
-  "bugs": "https://github.com/facebook/react/issues",
-  "license": "BSD-3-Clause",
-  "files": [
-    "bin/jsx",
-    "main.js",
-    "src/"
-  ],
-  "main": "main.js",
-  "bin": {
-    "jsx": "./bin/jsx"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/facebook/react"
-  },
-  "dependencies": {
-    "commoner": "^0.10.0",
-    "jstransform": "^11.0.0"
-  },
   "devDependencies": {
     "babel": "^5.8.3",
     "babel-eslint": "^3.1.25",
@@ -54,6 +28,7 @@
     "gulp-util": "^3.0.5",
     "gzip-js": "~0.3.2",
     "jest-cli": "^0.4.13",
+    "jstransform": "^11.0.0",
     "object-assign": "^3.0.0",
     "optimist": "^0.6.1",
     "platform": "^1.1.0",
@@ -67,7 +42,6 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "preferGlobal": true,
   "commonerConfig": {
     "version": 7
   },

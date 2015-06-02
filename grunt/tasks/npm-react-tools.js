@@ -4,6 +4,7 @@ var fs = require('fs');
 var grunt = require('grunt');
 
 var src = 'npm-react-tools';
+var srcSrc = 'src/**/*.js';
 var dest = 'build/npm-react-tools/';
 
 function buildRelease() {
@@ -11,22 +12,13 @@ function buildRelease() {
     grunt.file.delete(dest);
   }
 
-  // read our required files from package.json
-  var pkgFiles = grunt.config.data.pkg.files;
-
   // copy all files from src first, includes custom README
   var mappings = grunt.file.expandMapping('**/*', dest, {cwd: src});
 
-  // make sure we also get package.json
-  pkgFiles.push('package.json');
-
-  pkgFiles.map(function(file) {
-    if (grunt.file.isDir(file)) {
-      mappings = mappings.concat(grunt.file.expandMapping(file + '**/*', dest));
-    } else {
-      mappings.push({src: [file], dest: dest + file});
-    }
-  });
+  // Also copy all files from src/ (for react-native)
+  mappings = mappings.concat(
+    grunt.file.expandMapping(srcSrc, dest)
+  );
 
   mappings.forEach(function(mapping) {
     var mappingSrc = mapping.src[0];
