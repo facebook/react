@@ -8,8 +8,6 @@
  *
  */
 
-/*eslint-disable comma-dangle*/
-
 'use strict';
 
 function updateReactCreateClassToES6(file, api, options) {
@@ -256,12 +254,14 @@ function updateReactCreateClassToES6(file, api, options) {
   const createSuperCall = shouldAddSuperCall =>
     !shouldAddSuperCall ?
       [] :
-      [j.expressionStatement(
-        j.callExpression(
-          j.identifier('super'),
-          [j.identifier('props'), j.identifier('context')]
-        )
-      )];
+      [
+        j.expressionStatement(
+          j.callExpression(
+            j.identifier('super'),
+            [j.identifier('props'), j.identifier('context')]
+          )
+        ),
+      ];
 
   const updatePropsAccess = getInitialState =>
     getInitialState ?
@@ -323,20 +323,22 @@ function updateReactCreateClassToES6(file, api, options) {
     }
 
     const hasPropsAccess = updatePropsAccess(getInitialState);
-    return [createMethodDefinition({
-      key: j.identifier('constructor'),
-      value: j.functionExpression(
-        null,
-        createConstructorArgs(shouldAddSuperClass, hasPropsAccess),
-        j.blockStatement(
-          [].concat(
-            createSuperCall(shouldAddSuperClass),
-            autobindFunctions.map(createBindAssignment),
-            inlineGetInitialState(getInitialState)
+    return [
+      createMethodDefinition({
+        key: j.identifier('constructor'),
+        value: j.functionExpression(
+          null,
+          createConstructorArgs(shouldAddSuperClass, hasPropsAccess),
+          j.blockStatement(
+            [].concat(
+              createSuperCall(shouldAddSuperClass),
+              autobindFunctions.map(createBindAssignment),
+              inlineGetInitialState(getInitialState)
+            )
           )
-        )
-      ),
-    })];
+        ),
+      }),
+    ];
   };
 
   const createES6Class = (
