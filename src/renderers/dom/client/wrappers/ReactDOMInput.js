@@ -23,7 +23,6 @@ var invariant = require('invariant');
 var instancesByReactID = {};
 
 function forceUpdateIfMounted() {
-  /*jshint validthis:true */
   if (this._rootNodeID) {
     // DOM component is still mounted; update
     ReactDOMInput.updateWrapper(this);

@@ -11,7 +11,6 @@
 
 'use strict';
 
-/*jshint evil:true */
 
 var emptyFunction = require('emptyFunction');
 var mocks = require('mocks');
