@@ -34,7 +34,7 @@ describe('LinkedStateMixin', function() {
 
       render: function() {
         return <span>value is {this.state.value}</span>;
-      }
+      },
     });
     var component = ReactTestUtils.renderIntoDocument(<Component />);
     var link = component.linkState('value');

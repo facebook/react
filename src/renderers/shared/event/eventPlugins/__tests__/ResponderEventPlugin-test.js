@@ -39,7 +39,7 @@ var touchEvent = function(nodeHandle, touches, changedTouches) {
   return {
     target: nodeHandle,
     changedTouches: changedTouches,
-    touches: touches
+    touches: touches,
   };
 };
 
@@ -85,7 +85,7 @@ var _touchConfig =
     ),
     topLevelType: topType,
     target: targetNodeHandle,
-    targetID: targetNodeHandle
+    targetID: targetNodeHandle,
   };
 };
 
@@ -183,7 +183,7 @@ var oneEventLoopTestConfig = function(readableIDToID) {
     responderMove:      {},
     responderTerminate: {},
     responderEnd:       {},
-    responderRelease:   {}
+    responderRelease:   {},
   };
   for (var eventName in ret) {
     for (var readableNodeName in readableIDToID) {
@@ -309,13 +309,13 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
 var three = {
   grandParent: GRANDPARENT_ID,
   parent: PARENT_ID,
-  child: CHILD_ID
+  child: CHILD_ID,
 };
 
 var siblings = {
   parent: PARENT_ID,
   childOne: CHILD_ID,
-  childTwo: CHILD_ID2
+  childTwo: CHILD_ID2,
 };
 
 describe('ResponderEventPlugin', function() {
@@ -338,7 +338,7 @@ describe('ResponderEventPlugin', function() {
       },
       getID: function(nodeHandle) {
         return nodeHandle;
-      }
+      },
     });
 
     topLevelTypes = EventConstants.topLevelTypes;
@@ -913,7 +913,7 @@ describe('ResponderEventPlugin', function() {
       topLevelType: topLevelTypes.topScroll,
       target: three.parent,
       targetID: three.parent,
-      nativeEvent: {}
+      nativeEvent: {},
     });
     expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
 
@@ -931,7 +931,7 @@ describe('ResponderEventPlugin', function() {
       topLevelType: topLevelTypes.topScroll,
       target: three.parent,
       targetID: three.parent,
-      nativeEvent: {}
+      nativeEvent: {},
     });
     expect(ResponderEventPlugin.getResponderID()).toBe(three.parent);
 

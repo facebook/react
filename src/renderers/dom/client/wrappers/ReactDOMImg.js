@@ -38,7 +38,7 @@ var ReactDOMImg = ReactClass.createClass({
   componentDidMount: function() {
     this.trapBubbledEvent(EventConstants.topLevelTypes.topLoad, 'load');
     this.trapBubbledEvent(EventConstants.topLevelTypes.topError, 'error');
-  }
+  },
 });
 
 module.exports = ReactDOMImg;

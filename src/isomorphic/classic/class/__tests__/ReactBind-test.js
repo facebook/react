@@ -37,7 +37,7 @@ describe('autobinding', function() {
       badIdeas: {
         badBind: function() {
           void this.state.something;
-        }
+        },
       },
 
       render: function() {
@@ -48,7 +48,7 @@ describe('autobinding', function() {
             onClick={this.onClick}
           />
         );
-      }
+      },
     });
 
     var instance1 = <TestBindComponent />;
@@ -99,7 +99,7 @@ describe('autobinding', function() {
     var mouseDidClick = mocks.getMockFunction();
 
     var TestMixin = {
-      onClick: mouseDidClick
+      onClick: mouseDidClick,
     };
 
     var TestBindComponent = React.createClass({
@@ -107,7 +107,7 @@ describe('autobinding', function() {
 
       render: function() {
         return <div onClick={this.onClick} />;
-      }
+      },
     });
 
     var instance1 = <TestBindComponent />;
@@ -128,7 +128,7 @@ describe('autobinding', function() {
       handleClick: function() { },
       render: function() {
         return <div onClick={this.handleClick.bind(this)} />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);
@@ -156,7 +156,7 @@ describe('autobinding', function() {
       },
       render: function() {
         return <div onClick={this.handleClick} />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);

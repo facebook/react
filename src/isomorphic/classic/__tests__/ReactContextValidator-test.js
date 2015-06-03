@@ -39,30 +39,30 @@ describe('ReactContextValidator', function() {
   it('should filter out context not in contextTypes', function() {
     var Component = React.createClass({
       contextTypes: {
-        foo: React.PropTypes.string
+        foo: React.PropTypes.string,
       },
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var ComponentInFooBarContext = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string,
-        bar: React.PropTypes.number
+        bar: React.PropTypes.number,
       },
 
       getChildContext: function() {
         return {
           foo: 'abc',
-          bar: 123
+          bar: 123,
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
@@ -78,24 +78,24 @@ describe('ReactContextValidator', function() {
     var Parent = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
-        bar: React.PropTypes.string.isRequired
+        bar: React.PropTypes.string.isRequired,
       },
 
       getChildContext: function() {
         return {
           foo: this.props.foo,
-          bar: 'bar'
+          bar: 'bar',
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     var Component = React.createClass({
       contextTypes: {
-        foo: React.PropTypes.string
+        foo: React.PropTypes.string,
       },
 
       componentWillReceiveProps: function(nextProps, nextContext) {
@@ -118,7 +118,7 @@ describe('ReactContextValidator', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = <Parent foo="abc" />;
@@ -133,12 +133,12 @@ describe('ReactContextValidator', function() {
   it('should check context types', function() {
     var Component = React.createClass({
       contextTypes: {
-        foo: React.PropTypes.string.isRequired
+        foo: React.PropTypes.string.isRequired,
       },
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Component />);
@@ -151,18 +151,18 @@ describe('ReactContextValidator', function() {
 
     var ComponentInFooStringContext = React.createClass({
       childContextTypes: {
-        foo: React.PropTypes.string
+        foo: React.PropTypes.string,
       },
 
       getChildContext: function() {
         return {
-          foo: this.props.fooValue
+          foo: this.props.fooValue,
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -174,18 +174,18 @@ describe('ReactContextValidator', function() {
 
     var ComponentInFooNumberContext = React.createClass({
       childContextTypes: {
-        foo: React.PropTypes.number
+        foo: React.PropTypes.number,
       },
 
       getChildContext: function() {
         return {
-          foo: this.props.fooValue
+          foo: this.props.fooValue,
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
@@ -203,7 +203,7 @@ describe('ReactContextValidator', function() {
     var Component = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
-        bar: React.PropTypes.number
+        bar: React.PropTypes.number,
       },
 
       getChildContext: function() {
@@ -212,7 +212,7 @@ describe('ReactContextValidator', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);

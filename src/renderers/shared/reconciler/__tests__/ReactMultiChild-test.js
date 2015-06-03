@@ -35,7 +35,7 @@ describe('ReactMultiChild', function() {
         componentWillUnmount: mockUnmount,
         render: function() {
           return <span />;
-        }
+        },
       });
 
       expect(mockMount.mock.calls.length).toBe(0);
@@ -66,7 +66,7 @@ describe('ReactMultiChild', function() {
         componentWillUnmount: mockUnmount,
         render: function() {
           return <span />;
-        }
+        },
       });
 
       expect(mockMount.mock.calls.length).toBe(0);
@@ -94,13 +94,13 @@ describe('ReactMultiChild', function() {
         componentWillUnmount: mockUnmount,
         render: function() {
           return <span />;
-        }
+        },
       });
 
       var WrapperComponent = React.createClass({
         render: function() {
           return this.props.children || <MockComponent />;
-        }
+        },
       });
 
       expect(mockMount.mock.calls.length).toBe(0);
@@ -131,7 +131,7 @@ describe('ReactMultiChild', function() {
         componentWillUnmount: mockUnmount,
         render: function() {
           return <span />;
-        }
+        },
       });
 
       expect(mockMount.mock.calls.length).toBe(0);
@@ -165,7 +165,7 @@ describe('ReactMultiChild', function() {
       Object.defineProperty(Element.prototype, 'innerHTML', {
         set: setInnerHTML = jasmine.createSpy().andCallFake(
           innerHTMLDescriptor.set
-        )
+        ),
       });
     });
 

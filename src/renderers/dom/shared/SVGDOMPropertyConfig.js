@@ -17,7 +17,7 @@ var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 
 var NS = {
   xlink: 'http://www.w3.org/1999/xlink',
-  xml: 'http://www.w3.org/XML/1998/namespace'
+  xml: 'http://www.w3.org/XML/1998/namespace',
 };
 
 var SVGDOMPropertyConfig = {
@@ -75,7 +75,7 @@ var SVGDOMPropertyConfig = {
     xmlSpace: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
-    y: MUST_USE_ATTRIBUTE
+    y: MUST_USE_ATTRIBUTE,
   },
   DOMAttributeNamespaces: {
     xlinkActuate: NS.xlink,
@@ -87,7 +87,7 @@ var SVGDOMPropertyConfig = {
     xlinkType: NS.xlink,
     xmlBase: NS.xml,
     xmlLang: NS.xml,
-    xmlSpace: NS.xml
+    xmlSpace: NS.xml,
   },
   DOMAttributeNames: {
     clipPath: 'clip-path',
@@ -120,8 +120,8 @@ var SVGDOMPropertyConfig = {
     xlinkType: 'xlink:type',
     xmlBase: 'xml:base',
     xmlLang: 'xml:lang',
-    xmlSpace: 'xml:space'
-  }
+    xmlSpace: 'xml:space',
+  },
 };
 
 module.exports = SVGDOMPropertyConfig;

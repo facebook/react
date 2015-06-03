@@ -56,7 +56,7 @@ var TransferStrategies = {
   /**
    * Transfer the `style` prop (which is an object) by merging them.
    */
-  style: transferStrategyMerge
+  style: transferStrategyMerge,
 };
 
 /**
@@ -101,7 +101,7 @@ var ReactPropTransferer = {
    */
   mergeProps: function(oldProps, newProps) {
     return transferInto(assign({}, oldProps), newProps);
-  }
+  },
 
 };
 

@@ -87,7 +87,7 @@ assign(CallbackQueue.prototype, {
    */
   destructor: function() {
     this.reset();
-  }
+  },
 
 });
 

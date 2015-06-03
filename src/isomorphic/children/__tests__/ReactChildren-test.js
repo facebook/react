@@ -171,7 +171,7 @@ describe('ReactChildren', function() {
       keyOfNthChild(mappedChildren, 1),
       keyOfNthChild(mappedChildren, 2),
       keyOfNthChild(mappedChildren, 3),
-      keyOfNthChild(mappedChildren, 4)
+      keyOfNthChild(mappedChildren, 4),
     ]).toEqual(
       ['.$keyZero', '.1', '.$keyTwo', '.3', '.$keyFour']
     );
@@ -223,11 +223,13 @@ describe('ReactChildren', function() {
 
     var instance = (
       <div>{
-        [ReactFragment.create({
-          firstHalfKey: [zero, one, two],
-          secondHalfKey: [three, four],
-          keyFive: five
-        })]
+        [
+          ReactFragment.create({
+            firstHalfKey: [zero, one, two],
+            secondHalfKey: [three, four],
+            keyFive: five,
+          }),
+        ]
       }</div>
     );
 
@@ -250,14 +252,14 @@ describe('ReactChildren', function() {
       keyOfNthChild(mappedChildren, 2),
       keyOfNthChild(mappedChildren, 3),
       keyOfNthChild(mappedChildren, 4),
-      keyOfNthChild(mappedChildren, 5)
+      keyOfNthChild(mappedChildren, 5),
     ]).toEqual([
       '.0:$firstHalfKey:0:$keyZero',
       '.0:$firstHalfKey:0:1',
       '.0:$firstHalfKey:0:$keyTwo',
       '.0:$secondHalfKey:0:0',
       '.0:$secondHalfKey:0:$keyFour',
-      '.0:$keyFive:$keyFiveInner'
+      '.0:$keyFive:$keyFiveInner',
     ]);
 
     expect(callback).toHaveBeenCalledWith(zero, 0);
@@ -307,7 +309,7 @@ describe('ReactChildren', function() {
 
     var expectedRemappedForcedKeys = [
       '.$=1$keyZero:$giraffe',
-      '.$=1$keyOne:0'
+      '.$=1$keyOne:0',
     ];
     var remappedChildrenForcedKeys =
       ReactChildren.map(mappedChildrenForcedKeys, mapFn);
@@ -408,11 +410,13 @@ describe('ReactChildren', function() {
 
     var instance = (
       <div>{
-        [ReactFragment.create({
-          firstHalfKey: [zero, one, two],
-          secondHalfKey: [three, four],
-          keyFive: five
-        })]
+        [
+          ReactFragment.create({
+            firstHalfKey: [zero, one, two],
+            secondHalfKey: [three, four],
+            keyFive: five,
+          }),
+        ]
       }</div>
     );
     var numberOfChildren = ReactChildren.count(instance.props.children);

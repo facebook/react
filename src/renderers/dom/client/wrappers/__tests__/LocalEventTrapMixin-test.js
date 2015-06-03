@@ -32,7 +32,7 @@ describe('LocalEventTrapMixin', function() {
       },
       componentDidMount: function() {
         this.trapBubbledEvent(EventConstants.topLevelTypes.topLoad, 'load');
-      }
+      },
     });
 
     expect(function() {

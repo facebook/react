@@ -30,9 +30,7 @@ rules:
   brace-style: 2
   space-after-keywords: 2
   strict: 2
-  # We actually have a transform to support this and we fix this for bundled
-  # releases but not for the npm package, so enforce it strictly
-  comma-dangle: [2, never]
+  comma-dangle: [2, always-multiline]
   # Make this a warning for now. We do this in a few places so we might need to
   # disable
   no-unused-expressions: 2

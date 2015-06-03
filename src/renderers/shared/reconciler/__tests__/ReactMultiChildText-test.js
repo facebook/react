@@ -201,7 +201,7 @@ describe('ReactMultiChildText', function() {
       ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
 
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
-      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo']
+      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
   });
 

@@ -29,11 +29,11 @@ module.exports = function(grunt) {
       './*.gem',
       './docs/_site',
       './examples/shared/*.js',
-      '.module-cache'
+      '.module-cache',
     ],
     jshint: require('./grunt/config/jshint'),
     /*eslint-disable camelcase */
-    compare_size: require('./grunt/config/compare_size')
+    compare_size: require('./grunt/config/compare_size'),
     /*eslint-enable camelcase */
   });
 
@@ -91,44 +91,44 @@ module.exports = function(grunt) {
   grunt.registerTask('build:basic', [
     'jsx:normal',
     'version-check',
-    'browserify:basic'
+    'browserify:basic',
   ]);
   grunt.registerTask('build:addons', [
     'jsx:normal',
-    'browserify:addons'
+    'browserify:addons',
   ]);
   grunt.registerTask('build:transformer', [
     'jsx:normal',
-    'browserify:transformer'
+    'browserify:transformer',
   ]);
   grunt.registerTask('build:min', [
     'jsx:normal',
     'version-check',
-    'browserify:min'
+    'browserify:min',
   ]);
   grunt.registerTask('build:addons-min', [
     'jsx:normal',
-    'browserify:addonsMin'
+    'browserify:addonsMin',
   ]);
   grunt.registerTask('build:withCodeCoverageLogging', [
     'jsx:normal',
     'version-check',
-    'browserify:withCodeCoverageLogging'
+    'browserify:withCodeCoverageLogging',
   ]);
   grunt.registerTask('build:test', [
     'delete-build-modules',
     'jsx:test',
     'version-check',
-    'populist:test'
+    'populist:test',
   ]);
   grunt.registerTask('build:npm-react', [
     'version-check',
     'jsx:normal',
-    'npm-react:release'
+    'npm-react:release',
   ]);
   grunt.registerTask('build:gem-react-source', [
     'build',
-    'gem-react-source:release'
+    'gem-react-source:release',
   ]);
 
   grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
@@ -138,7 +138,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test:webdriver:phantomjs', [
     'connect',
     'webdriver-phantomjs',
-    'webdriver-jasmine:local'
+    'webdriver-jasmine:local',
   ]);
 
   grunt.registerTask('test:full', [
@@ -152,7 +152,7 @@ module.exports = function(grunt) {
     'sauce-tunnel',
     'webdriver-jasmine:saucelabs_android',
     'webdriver-jasmine:saucelabs_firefox',
-    'webdriver-jasmine:saucelabs_chrome'
+    'webdriver-jasmine:saucelabs_chrome',
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs', [
@@ -161,7 +161,7 @@ module.exports = function(grunt) {
 
     'connect',
     'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_' + (process.env.BROWSER_NAME || 'ie8')
+    'webdriver-jasmine:saucelabs_' + (process.env.BROWSER_NAME || 'ie8'),
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs:modern', [
@@ -173,7 +173,7 @@ module.exports = function(grunt) {
     'webdriver-jasmine:saucelabs_android',
     'webdriver-jasmine:saucelabs_firefox',
     'webdriver-jasmine:saucelabs_chrome',
-    'webdriver-jasmine:saucelabs_ie11'
+    'webdriver-jasmine:saucelabs_ie11',
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs:ie', [
@@ -185,7 +185,7 @@ module.exports = function(grunt) {
     'webdriver-jasmine:saucelabs_ie8',
     'webdriver-jasmine:saucelabs_ie9',
     'webdriver-jasmine:saucelabs_ie10',
-    'webdriver-jasmine:saucelabs_ie11'
+    'webdriver-jasmine:saucelabs_ie11',
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs:ios', [
@@ -196,13 +196,13 @@ module.exports = function(grunt) {
     'sauce-tunnel',
     'webdriver-jasmine:saucelabs_ios6_1',
     'webdriver-jasmine:saucelabs_ios5_1',
-    'webdriver-jasmine:saucelabs_ios4'
+    'webdriver-jasmine:saucelabs_ios4',
   ]);
 
   grunt.registerTask('test:coverage', [
     'build:withCodeCoverageLogging',
     'test:webdriver:phantomjs',
-    'coverage:parse'
+    'coverage:parse',
   ]);
   grunt.registerTask('fasttest', function() {
     grunt.task.run('test');
@@ -231,7 +231,7 @@ module.exports = function(grunt) {
     'npm-react:pack',
     'npm-react-tools:release',
     'npm-react-tools:pack',
-    'compare_size'
+    'compare_size',
   ]);
 
   // Automate the release!
@@ -251,7 +251,7 @@ module.exports = function(grunt) {
     'release:starter',
     'compress',
     'release:docs',
-    'release:msg'
+    'release:msg',
   ]);
 
   // The default task - build - to keep setup easy.

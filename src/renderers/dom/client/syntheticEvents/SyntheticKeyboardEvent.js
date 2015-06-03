@@ -67,7 +67,7 @@ var KeyboardEventInterface = {
       return event.keyCode;
     }
     return 0;
-  }
+  },
 };
 
 /**

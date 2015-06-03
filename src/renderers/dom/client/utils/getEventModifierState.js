@@ -21,7 +21,7 @@ var modifierKeyToProp = {
   'Alt': 'altKey',
   'Control': 'ctrlKey',
   'Meta': 'metaKey',
-  'Shift': 'shiftKey'
+  'Shift': 'shiftKey',
 };
 
 // IE8 does not implement getModifierState so we simply map it to the only

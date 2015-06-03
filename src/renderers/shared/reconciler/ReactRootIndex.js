@@ -18,12 +18,12 @@ var ReactRootIndexInjection = {
    */
   injectCreateReactRootIndex: function(_createReactRootIndex) {
     ReactRootIndex.createReactRootIndex = _createReactRootIndex;
-  }
+  },
 };
 
 var ReactRootIndex = {
   createReactRootIndex: null,
-  injection: ReactRootIndexInjection
+  injection: ReactRootIndexInjection,
 };
 
 module.exports = ReactRootIndex;

@@ -112,7 +112,7 @@ describe('ReactES6Class', function() {
     }
     Foo.contextTypes = {
       tag: React.PropTypes.string,
-      className: React.PropTypes.string
+      className: React.PropTypes.string,
     };
 
     class Outer extends React.Component {
@@ -125,7 +125,7 @@ describe('ReactES6Class', function() {
     }
     Outer.childContextTypes = {
       tag: React.PropTypes.string,
-      className: React.PropTypes.string
+      className: React.PropTypes.string,
     };
     test(<Outer />, 'SPAN', 'foo');
   });
@@ -283,7 +283,7 @@ describe('ReactES6Class', function() {
     test(<Foo value="foo" />, 'SPAN', 'foo');
     expect(lifeCycles).toEqual([
       'will-mount',
-      'did-mount'
+      'did-mount',
     ]);
     lifeCycles = []; // reset
     test(<Foo value="bar" />, 'SPAN', 'bar');
@@ -291,12 +291,12 @@ describe('ReactES6Class', function() {
       'receive-props', {value: 'bar'},
       'should-update', {value: 'bar'}, {},
       'will-update', {value: 'bar'}, {},
-      'did-update', {value: 'foo'}, {}
+      'did-update', {value: 'foo'}, {},
     ]);
     lifeCycles = []; // reset
     React.unmountComponentAtNode(container);
     expect(lifeCycles).toEqual([
-      'will-unmount'
+      'will-unmount',
     ]);
   });
 

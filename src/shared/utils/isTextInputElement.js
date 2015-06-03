@@ -29,7 +29,7 @@ var supportedInputTypes = {
   'text': true,
   'time': true,
   'url': true,
-  'week': true
+  'week': true,
 };
 
 function isTextInputElement(elem) {

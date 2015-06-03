@@ -49,7 +49,7 @@ function createFullPageComponent(tag) {
 
     render: function() {
       return elementFactory(this.props);
-    }
+    },
   });
 
   return FullPageComponent;

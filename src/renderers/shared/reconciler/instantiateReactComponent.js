@@ -26,7 +26,7 @@ assign(
   ReactCompositeComponentWrapper.prototype,
   ReactCompositeComponent.Mixin,
   {
-    _instantiateReactComponent: instantiateReactComponent
+    _instantiateReactComponent: instantiateReactComponent,
   }
 );
 

@@ -72,7 +72,7 @@ describe('ReactDOMButton', function() {
 
     btn.setProps({
       disabled: false,
-      onClick: onClick
+      onClick: onClick,
     });
 
     expectClickThru(btn);

@@ -29,7 +29,7 @@
 
 var ReactLifeCycle = {
   currentlyMountingInstance: null,
-  currentlyUnmountingInstance: null
+  currentlyUnmountingInstance: null,
 };
 
 module.exports = ReactLifeCycle;

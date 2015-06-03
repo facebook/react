@@ -150,7 +150,7 @@ var DOMPropertyInjection = {
         propName
       );
     }
-  }
+  },
 };
 var defaultValueCache = {};
 
@@ -300,7 +300,7 @@ var DOMProperty = {
     return nodeDefaults[prop];
   },
 
-  injection: DOMPropertyInjection
+  injection: DOMPropertyInjection,
 };
 
 module.exports = DOMProperty;

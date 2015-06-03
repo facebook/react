@@ -25,7 +25,7 @@ var ClipboardEventInterface = {
         event.clipboardData :
         window.clipboardData
     );
-  }
+  },
 };
 
 /**

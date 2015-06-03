@@ -5,37 +5,37 @@ var grunt = require('grunt');
 
 var rootIDs = [
   'React',
-  'ReactWithAddons'
+  'ReactWithAddons',
 ];
 
 var normal = {
   rootIDs: rootIDs,
   getConfig: function() {
     return {
-      commonerConfig: grunt.config.data.pkg.commonerConfig
+      commonerConfig: grunt.config.data.pkg.commonerConfig,
     };
   },
   sourceDir: 'src',
-  outputDir: 'build/modules'
+  outputDir: 'build/modules',
 };
 
 
 var test = {
   rootIDs: rootIDs.concat([
     'test/all.js',
-    '**/__tests__/*.js'
+    '**/__tests__/*.js',
   ]),
   getConfig: function() {
     return assign({}, normal.getConfig(), {
-      mocking: true
+      mocking: true,
     });
   },
   sourceDir: 'src',
-  outputDir: 'build/modules'
+  outputDir: 'build/modules',
 };
 
 
 module.exports = {
   normal: normal,
-  test: test
+  test: test,
 };

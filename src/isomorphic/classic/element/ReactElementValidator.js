@@ -445,10 +445,10 @@ var ReactElementValidator = {
                 'before passing it to createFactory.'
               );
               Object.defineProperty(this, 'type', {
-                value: type
+                value: type,
               });
               return type;
-            }
+            },
           }
         );
       } catch (x) {
@@ -467,7 +467,7 @@ var ReactElementValidator = {
     }
     validatePropTypes(newElement);
     return newElement;
-  }
+  },
 
 };
 

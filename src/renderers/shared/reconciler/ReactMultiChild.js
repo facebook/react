@@ -62,7 +62,7 @@ function enqueueMarkup(parentID, markup, toIndex) {
     markupIndex: markupQueue.push(markup) - 1,
     textContent: null,
     fromIndex: null,
-    toIndex: toIndex
+    toIndex: toIndex,
   });
 }
 
@@ -83,7 +83,7 @@ function enqueueMove(parentID, fromIndex, toIndex) {
     markupIndex: null,
     textContent: null,
     fromIndex: fromIndex,
-    toIndex: toIndex
+    toIndex: toIndex,
   });
 }
 
@@ -103,7 +103,7 @@ function enqueueRemove(parentID, fromIndex) {
     markupIndex: null,
     textContent: null,
     fromIndex: fromIndex,
-    toIndex: null
+    toIndex: null,
   });
 }
 
@@ -123,7 +123,7 @@ function enqueueTextContent(parentID, textContent) {
     markupIndex: null,
     textContent: textContent,
     fromIndex: null,
-    toIndex: null
+    toIndex: null,
   });
 }
 
@@ -419,9 +419,9 @@ var ReactMultiChild = {
     _unmountChildByName: function(child, name) {
       this.removeChild(child);
       child._mountIndex = null;
-    }
+    },
 
-  }
+  },
 
 };
 

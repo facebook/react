@@ -32,7 +32,7 @@ module.exports = function(babel) {
         if (this.isIdentifier({name: '__DEV__'})) {
           return DEV_EXPRESSION;
         }
-      }
+      },
     },
     CallExpression: {
       exit: function(node, parent) {
@@ -69,7 +69,7 @@ module.exports = function(babel) {
                       node.callee,
                       [t.literal(false)].concat(node.arguments.slice(1))
                     )
-                  )
+                  ),
                 ]),
                 t.blockStatement([
                   t.expressionStatement(
@@ -77,9 +77,9 @@ module.exports = function(babel) {
                       node.callee,
                       [t.literal(false)]
                     )
-                  )
+                  ),
                 ])
-              )
+              ),
             ])
           );
         } else if (this.get('callee').isIdentifier({name: 'warning'})) {
@@ -102,11 +102,11 @@ module.exports = function(babel) {
             t.blockStatement([
               t.expressionStatement(
                 node
-              )
+              ),
             ])
           );
         }
-      }
-    }
+      },
+    },
   });
 };

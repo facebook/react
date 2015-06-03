@@ -67,7 +67,7 @@ describe('ReactMount', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
     expect(function() {
       ReactTestUtils.renderIntoDocument(Component);
@@ -100,7 +100,7 @@ describe('ReactMount', function() {
       componentWillUnmount: mockUnmount,
       render: function() {
         return <span>{this.props.text}</span>;
-      }
+      },
     });
 
     expect(mockMount.mock.calls.length).toBe(0);
@@ -181,8 +181,8 @@ describe('ReactMount', function() {
             expect(shadowRoot.firstChild.tagName).toBe('DIV');
             React.render(<span>Hi, from within a WC!</span>, shadowRoot);
             expect(shadowRoot.firstChild.tagName).toBe('SPAN');
-          }
-        }
+          },
+        },
       });
       proto.unmount = function() {
         React.unmountComponentAtNode(shadowRoot);

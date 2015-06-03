@@ -43,7 +43,7 @@ React.addons = {
   createFragment: ReactFragment.create,
   renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   shallowCompare: shallowCompare,
-  update: update
+  update: update,
 };
 
 if (__DEV__) {

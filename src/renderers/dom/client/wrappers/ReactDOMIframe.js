@@ -37,7 +37,7 @@ var ReactDOMIframe = ReactClass.createClass({
 
   componentDidMount: function() {
     this.trapBubbledEvent(EventConstants.topLevelTypes.topLoad, 'load');
-  }
+  },
 });
 
 module.exports = ReactDOMIframe;

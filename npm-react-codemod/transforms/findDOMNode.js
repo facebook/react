@@ -8,8 +8,6 @@
  *
  */
 
-/*eslint-disable comma-dangle*/
-
 'use strict';
 
 function getDOMNodeToFindDOMNode(file, api, options) {

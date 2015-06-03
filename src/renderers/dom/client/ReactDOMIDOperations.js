@@ -30,7 +30,7 @@ var setInnerHTML = require('setInnerHTML');
 var INVALID_PROPERTY_ERRORS = {
   dangerouslySetInnerHTML:
     '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
-  style: '`style` must be set using `updateStylesByID()`.'
+  style: '`style` must be set using `updateStylesByID()`.',
 };
 
 /**
@@ -146,7 +146,7 @@ var ReactDOMIDOperations = {
       updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
     }
     DOMChildrenOperations.processUpdates(updates, markup);
-  }
+  },
 };
 
 ReactPerf.measureMethods(ReactDOMIDOperations, 'ReactDOMIDOperations', {
@@ -156,7 +156,7 @@ ReactPerf.measureMethods(ReactDOMIDOperations, 'ReactDOMIDOperations', {
   updateInnerHTMLByID: 'updateInnerHTMLByID',
   updateTextContentByID: 'updateTextContentByID',
   dangerouslyReplaceNodeWithMarkupByID: 'dangerouslyReplaceNodeWithMarkupByID',
-  dangerouslyProcessChildrenUpdates: 'dangerouslyProcessChildrenUpdates'
+  dangerouslyProcessChildrenUpdates: 'dangerouslyProcessChildrenUpdates',
 });
 
 module.exports = ReactDOMIDOperations;

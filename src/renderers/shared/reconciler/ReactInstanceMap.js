@@ -40,7 +40,7 @@ var ReactInstanceMap = {
 
   set: function(key, value) {
     key._reactInternalInstance = value;
-  }
+  },
 
 };
 

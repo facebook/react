@@ -7,7 +7,7 @@ var tsPreprocessor = require('./ts-preprocessor');
 
 var defaultLibraries = [
   require.resolve('./jest.d.ts'),
-  require.resolve('../src/isomorphic/modern/class/React.d.ts')
+  require.resolve('../src/isomorphic/modern/class/React.d.ts'),
 ];
 
 var ts = tsPreprocessor(defaultLibraries);
@@ -24,9 +24,9 @@ module.exports = {
       return babel.transform(src, {
         blacklist: ['spec.functionName', 'validation.react'],
         filename: path,
-        retainLines: true
+        retainLines: true,
       }).code;
     }
     return src;
-  }
+  },
 };

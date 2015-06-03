@@ -49,7 +49,7 @@ describe('ReactEventListener', function() {
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
-        target: React.findDOMNode(childControl)
+        target: React.findDOMNode(childControl),
       });
 
       var calls = handleTopLevel.mock.calls;
@@ -77,7 +77,7 @@ describe('ReactEventListener', function() {
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
-        target: React.findDOMNode(childControl)
+        target: React.findDOMNode(childControl),
       });
 
       var calls = handleTopLevel.mock.calls;
@@ -115,7 +115,7 @@ describe('ReactEventListener', function() {
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
-        target: childNode
+        target: childNode,
       });
 
       var calls = handleTopLevel.mock.calls;
@@ -155,7 +155,7 @@ describe('ReactEventListener', function() {
       var callback =
         ReactEventListener.dispatchEvent.bind(ReactEventListener, 'test');
       callback({
-        target: childNode
+        target: childNode,
       });
 
       var calls = handleTopLevel.mock.calls;
@@ -174,7 +174,7 @@ describe('ReactEventListener', function() {
       render: function() {
         var inner = <div ref="inner">Inner</div>;
         return <div><div id="outer">{inner}</div></div>;
-      }
+      },
 
     });
 
@@ -182,7 +182,7 @@ describe('ReactEventListener', function() {
 
     var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
     callback({
-      target: React.findDOMNode(instance.getInner())
+      target: React.findDOMNode(instance.getInner()),
     });
 
     var calls = handleTopLevel.mock.calls;

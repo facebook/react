@@ -20,7 +20,7 @@ var SyntheticEvent = require('SyntheticEvent');
  *      /#events-inputevents
  */
 var InputEventInterface = {
-  data: null
+  data: null,
 };
 
 /**

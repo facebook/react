@@ -234,7 +234,7 @@ function loadScripts(scripts) {
 
     var options = {
       sourceMapInline: true,
-      sourceFilename: sourceFilename
+      sourceFilename: sourceFilename,
     };
     if (/;harmony=true(;|$)/.test(script.type)) {
       options.harmony = true;
@@ -254,7 +254,7 @@ function loadScripts(scripts) {
         content: null,
         loaded: false,
         url: script.src,
-        options: options
+        options: options,
       };
 
       load(script.src, function(content) {
@@ -273,7 +273,7 @@ function loadScripts(scripts) {
         content: script.innerHTML,
         loaded: true,
         url: null,
-        options: options
+        options: options,
       };
     }
   });
@@ -325,5 +325,5 @@ if (typeof window !== 'undefined' && window !== null) {
 
 module.exports = {
   transform: transformReact,
-  exec: exec
+  exec: exec,
 };

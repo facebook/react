@@ -40,7 +40,7 @@ var ReactNativeComponentInjection = {
   // for this release.
   injectAutoWrapper: function(wrapperFactory) {
     autoGenerateWrapperClass = wrapperFactory;
-  }
+  },
 };
 
 /**
@@ -97,7 +97,7 @@ var ReactNativeComponent = {
   createInternalComponent: createInternalComponent,
   createInstanceForText: createInstanceForText,
   isTextComponent: isTextComponent,
-  injection: ReactNativeComponentInjection
+  injection: ReactNativeComponentInjection,
 };
 
 module.exports = ReactNativeComponent;

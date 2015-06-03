@@ -56,7 +56,7 @@ var ReactDOMInput = {
       defaultValue: undefined,
       value: value != null ? value : inst._wrapperState.initialValue,
       checked: checked != null ? checked : inst._wrapperState.initialChecked,
-      onChange: inst._wrapperState.onChange
+      onChange: inst._wrapperState.onChange,
     });
 
     return nativeProps;
@@ -73,7 +73,7 @@ var ReactDOMInput = {
     inst._wrapperState = {
       initialChecked: props.defaultChecked || false,
       initialValue: defaultValue != null ? defaultValue : null,
-      onChange: _handleChange.bind(inst)
+      onChange: _handleChange.bind(inst),
     };
 
     instancesByReactID[inst._rootNodeID] = inst;
@@ -115,7 +115,7 @@ var ReactDOMInput = {
         '' + value
       );
     }
-  }
+  },
 };
 
 function _handleChange(event) {

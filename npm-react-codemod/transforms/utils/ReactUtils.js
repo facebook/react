@@ -8,8 +8,6 @@
  *
  */
 
-/*eslint-disable comma-dangle*/
-
 'use strict';
 
 module.exports = function(j) {

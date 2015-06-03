@@ -27,16 +27,16 @@ var eventTypes = {
     registrationName: keyOf({onMouseEnter: null}),
     dependencies: [
       topLevelTypes.topMouseOut,
-      topLevelTypes.topMouseOver
-    ]
+      topLevelTypes.topMouseOver,
+    ],
   },
   mouseLeave: {
     registrationName: keyOf({onMouseLeave: null}),
     dependencies: [
       topLevelTypes.topMouseOut,
-      topLevelTypes.topMouseOver
-    ]
-  }
+      topLevelTypes.topMouseOver,
+    ],
+  },
 };
 
 var extractedEvents = [null, null];
@@ -131,7 +131,7 @@ var EnterLeaveEventPlugin = {
     extractedEvents[1] = enter;
 
     return extractedEvents;
-  }
+  },
 
 };
 

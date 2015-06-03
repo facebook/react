@@ -17,7 +17,7 @@ if (__DEV__) {
   ReactPropTypeLocationNames = {
     prop: 'prop',
     context: 'context',
-    childContext: 'child context'
+    childContext: 'child context',
   };
 }
 

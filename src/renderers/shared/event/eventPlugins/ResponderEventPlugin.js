@@ -66,8 +66,8 @@ var eventTypes = {
   startShouldSetResponder: {
     phasedRegistrationNames: {
       bubbled: keyOf({onStartShouldSetResponder: null}),
-      captured: keyOf({onStartShouldSetResponderCapture: null})
-    }
+      captured: keyOf({onStartShouldSetResponderCapture: null}),
+    },
   },
 
   /**
@@ -82,8 +82,8 @@ var eventTypes = {
   scrollShouldSetResponder: {
     phasedRegistrationNames: {
       bubbled: keyOf({onScrollShouldSetResponder: null}),
-      captured: keyOf({onScrollShouldSetResponderCapture: null})
-    }
+      captured: keyOf({onScrollShouldSetResponderCapture: null}),
+    },
   },
 
   /**
@@ -96,8 +96,8 @@ var eventTypes = {
   selectionChangeShouldSetResponder: {
     phasedRegistrationNames: {
       bubbled: keyOf({onSelectionChangeShouldSetResponder: null}),
-      captured: keyOf({onSelectionChangeShouldSetResponderCapture: null})
-    }
+      captured: keyOf({onSelectionChangeShouldSetResponderCapture: null}),
+    },
   },
 
   /**
@@ -107,8 +107,8 @@ var eventTypes = {
   moveShouldSetResponder: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMoveShouldSetResponder: null}),
-      captured: keyOf({onMoveShouldSetResponderCapture: null})
-    }
+      captured: keyOf({onMoveShouldSetResponderCapture: null}),
+    },
   },
 
   /**
@@ -119,11 +119,11 @@ var eventTypes = {
   responderEnd: {registrationName: keyOf({onResponderEnd: null})},
   responderRelease: {registrationName: keyOf({onResponderRelease: null})},
   responderTerminationRequest: {
-    registrationName: keyOf({onResponderTerminationRequest: null})
+    registrationName: keyOf({onResponderTerminationRequest: null}),
   },
   responderGrant: {registrationName: keyOf({onResponderGrant: null})},
   responderReject: {registrationName: keyOf({onResponderReject: null})},
-  responderTerminate: {registrationName: keyOf({onResponderTerminate: null})}
+  responderTerminate: {registrationName: keyOf({onResponderTerminate: null})},
 };
 
 /**
@@ -584,8 +584,8 @@ var ResponderEventPlugin = {
      */
     injectGlobalInteractionHandler: function(GlobalInteractionHandler) {
       ResponderEventPlugin.GlobalInteractionHandler = GlobalInteractionHandler;
-    }
-  }
+    },
+  },
 };
 
 module.exports = ResponderEventPlugin;

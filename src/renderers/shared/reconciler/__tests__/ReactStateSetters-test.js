@@ -29,7 +29,7 @@ describe('ReactStateSetters', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     TestComponentWithMixin = React.createClass({
@@ -41,7 +41,7 @@ describe('ReactStateSetters', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
   });
 
@@ -55,7 +55,7 @@ describe('ReactStateSetters', function() {
       function(a, b, c) {
         return {
           foo: a + b + c,
-          bar: a * b * c
+          bar: a * b * c,
         };
       }
     );
@@ -108,7 +108,7 @@ describe('ReactStateSetters', function() {
       function(a, b, c) {
         return {
           foo: a + b + c,
-          bar: a * b * c
+          bar: a * b * c,
         };
       }
     );

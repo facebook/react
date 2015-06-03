@@ -30,7 +30,7 @@ var ChildComponent = React.createClass({
         <div ref="DIV_2" />
       </div>
     );
-  }
+  },
 });
 
 var ParentComponent = React.createClass({
@@ -44,7 +44,7 @@ var ParentComponent = React.createClass({
         <div ref="P_OneOff" />
       </div>
     );
-  }
+  },
 });
 
 function renderParentIntoDocument() {
@@ -59,7 +59,7 @@ describe('ReactInstanceHandles', function() {
     aggregatedArgs.push({
       id: id,
       isUp: isUp,
-      arg: arg
+      arg: arg,
     });
   }
 
@@ -196,7 +196,7 @@ describe('ReactInstanceHandles', function() {
         {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: true, arg: ARG},
         {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: true, arg: ARG},
         {id: getNodeID(parent.refs.P_P1), isUp: true, arg: ARG},
-        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG},
       ];
       ReactInstanceHandles.traverseTwoPhase(targetID, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
@@ -207,7 +207,7 @@ describe('ReactInstanceHandles', function() {
       var targetID = getNodeID(parent.refs.P);
       var expectedAggregation = [
         {id: getNodeID(parent.refs.P), isUp: false, arg: ARG},
-        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG},
       ];
       ReactInstanceHandles.traverseTwoPhase(targetID, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
@@ -242,7 +242,7 @@ describe('ReactInstanceHandles', function() {
       var expectedAggregation = [
         {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: true, arg: ARG},
         // enter/leave shouldn't fire antyhing on the parent
-        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_2), isUp: false, arg: ARG2}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_2), isUp: false, arg: ARG2},
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -255,7 +255,7 @@ describe('ReactInstanceHandles', function() {
       var leaveID = getNodeID(parent.refs.P_P1_C1.refs.DIV_1);
       var enterID = getNodeID(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: true, arg: ARG},
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -270,7 +270,7 @@ describe('ReactInstanceHandles', function() {
       var expectedAggregation = [
         {id: getNodeID(parent.refs.P), isUp: false, arg: ARG2},
         {id: getNodeID(parent.refs.P_P1), isUp: false, arg: ARG2},
-        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: false, arg: ARG2}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: false, arg: ARG2},
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -283,7 +283,7 @@ describe('ReactInstanceHandles', function() {
       var leaveID = ''; // From the window or outside of the React sandbox.
       var enterID = getNodeID(parent.refs.P);
       var expectedAggregation = [
-        {id: getNodeID(parent.refs.P), isUp: false, arg: ARG2}
+        {id: getNodeID(parent.refs.P), isUp: false, arg: ARG2},
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -298,7 +298,7 @@ describe('ReactInstanceHandles', function() {
       var expectedAggregation = [
         {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: true, arg: ARG},
         {id: getNodeID(parent.refs.P_P1), isUp: true, arg: ARG},
-        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG},
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -313,7 +313,7 @@ describe('ReactInstanceHandles', function() {
       var expectedAggregation = [
         {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: true, arg: ARG},
         {id: getNodeID(parent.refs.P_P1), isUp: true, arg: ARG},
-        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG},
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -355,22 +355,22 @@ describe('ReactInstanceHandles', function() {
         // Common ancestor from window to deep element is ''.
         {one: null,
           two: parent.refs.P_P1_C1.refs.DIV_1,
-          com: null
+          com: null,
         },
         // Same as previous - reversed direction.
         {one: parent.refs.P_P1_C1.refs.DIV_1,
           two: null,
-          com: null
+          com: null,
         },
         // Common ancestor from window to shallow id is ''.
         {one: parent.refs.P,
           two: null,
-          com: null
+          com: null,
         },
         // Common ancestor with self is self.
         {one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C1.refs.DIV_1,
-          com: parent.refs.P_P1_C1.refs.DIV_1
+          com: parent.refs.P_P1_C1.refs.DIV_1,
         },
         // Common ancestor with self is self - even if topmost DOM.
         {one: parent.refs.P, two: parent.refs.P, com: parent.refs.P},
@@ -378,32 +378,32 @@ describe('ReactInstanceHandles', function() {
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C1.refs.DIV_2,
-          com: parent.refs.P_P1_C1.refs.DIV
+          com: parent.refs.P_P1_C1.refs.DIV,
         },
         // Common ancestor with parent is the parent.
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C1.refs.DIV,
-          com: parent.refs.P_P1_C1.refs.DIV
+          com: parent.refs.P_P1_C1.refs.DIV,
         },
         // Common ancestor with grandparent is the grandparent.
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C1,
-          com: parent.refs.P_P1_C1
+          com: parent.refs.P_P1_C1,
         },
         // Grantparent across subcomponent boundaries.
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C2.refs.DIV_1,
-          com: parent.refs.P_P1
+          com: parent.refs.P_P1,
         },
         // Something deep with something one-off.
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_OneOff,
-          com: parent.refs.P
-        }
+          com: parent.refs.P,
+        },
       ];
       var i;
       for (i = 0; i < ancestors.length; i++) {

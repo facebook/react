@@ -48,7 +48,7 @@ var LocalEventTrapMixin = {
     if (this._localEventListeners) {
       forEachAccumulated(this._localEventListeners, remove);
     }
-  }
+  },
 };
 
 module.exports = LocalEventTrapMixin;

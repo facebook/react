@@ -171,7 +171,7 @@ var CSSPropertyOperations = {
         }
       }
     }
-  }
+  },
 
 };
 

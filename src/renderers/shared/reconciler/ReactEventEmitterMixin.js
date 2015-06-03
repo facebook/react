@@ -42,7 +42,7 @@ var ReactEventEmitterMixin = {
     );
 
     runEventQueueInBatch(events);
-  }
+  },
 };
 
 module.exports = ReactEventEmitterMixin;

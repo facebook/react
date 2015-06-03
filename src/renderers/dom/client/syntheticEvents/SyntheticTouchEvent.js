@@ -28,7 +28,7 @@ var TouchEventInterface = {
   metaKey: null,
   ctrlKey: null,
   shiftKey: null,
-  getModifierState: getEventModifierState
+  getModifierState: getEventModifierState,
 };
 
 /**

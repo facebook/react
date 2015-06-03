@@ -134,7 +134,7 @@ var DOMChildrenOperations = {
           break;
       }
     }
-  }
+  },
 
 };
 

@@ -23,7 +23,7 @@ module.exports = function() {
   var options = {
     entries: entries,
     debug: config.debug, // sourcemaps
-    standalone: config.standalone // global
+    standalone: config.standalone, // global
   };
 
   var bundle = browserify(options);

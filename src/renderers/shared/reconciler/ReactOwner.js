@@ -102,7 +102,7 @@ var ReactOwner = {
     if (owner.getPublicInstance().refs[ref] === component.getPublicInstance()) {
       owner.detachRef(ref);
     }
-  }
+  },
 
 };
 

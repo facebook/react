@@ -113,7 +113,7 @@ var ReactReconciler = {
     transaction
   ) {
     internalInstance.performUpdateIfNecessary(transaction);
-  }
+  },
 
 };
 

@@ -17,7 +17,7 @@ var nextReactRootIndex = 0;
 var ClientReactRootIndex = {
   createReactRootIndex: function() {
     return nextReactRootIndex++;
-  }
+  },
 };
 
 module.exports = ClientReactRootIndex;

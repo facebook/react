@@ -43,7 +43,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
           color={this.state.color}
           onSelectColor={this.handleColor}
         />;
-      }
+      },
     });
 
     var ChildComponent = React.createClass({
@@ -80,7 +80,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
             Light Green
           </button>
         </div>;
-      }
+      },
     });
 
     var container = document.createElement('div');
@@ -109,7 +109,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
       ['setState-args', 'dark blue', 'green'],
       ['render', 'light green', 'green'],
       ['parent-after-setState', 'green'],
-      ['after-setState', 'light green', 'green']
+      ['after-setState', 'light green', 'green'],
     ]);
   });
 });

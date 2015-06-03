@@ -46,7 +46,7 @@ describe('ReactIdentity', function() {
       <div>
         {frag({
           first: <div />,
-          second: <div />
+          second: <div />,
         })}
       </div>;
 
@@ -80,7 +80,7 @@ describe('ReactIdentity', function() {
     var Wrapper = React.createClass({
       render: function() {
         return <a key="i_get_overwritten">{this.props.children}</a>;
-      }
+      },
     });
 
     var instance =
@@ -113,7 +113,7 @@ describe('ReactIdentity', function() {
         var map = {};
         map[key] = s2;
         return <div>{[s1, frag(map)]}</div>;
-      }
+      },
 
     });
 
@@ -181,14 +181,14 @@ describe('ReactIdentity', function() {
             {this.props.children[1]}
           </div>
         );
-      }
+      },
     });
 
     var TestContainer = React.createClass({
 
       render: function() {
         return <TestComponent>{instance0}{instance1}</TestComponent>;
-      }
+      },
 
     });
 
@@ -213,7 +213,7 @@ describe('ReactIdentity', function() {
             {this.props.children[1]}
           </div>
         );
-      }
+      },
     });
 
     var TestContainer = React.createClass({
@@ -224,7 +224,7 @@ describe('ReactIdentity', function() {
             <TestComponent>{instance0}{instance1}</TestComponent>
           </div>
         );
-      }
+      },
 
     });
 
@@ -239,7 +239,7 @@ describe('ReactIdentity', function() {
     var TestComponent = React.createClass({
       render: function() {
         return <div>{this.props.children}<span /></div>;
-      }
+      },
     });
 
     var TestContainer = React.createClass({
@@ -251,7 +251,7 @@ describe('ReactIdentity', function() {
             {'second'}
           </TestComponent>
         );
-      }
+      },
 
     });
 
@@ -267,7 +267,7 @@ describe('ReactIdentity', function() {
     var TestComponent = React.createClass({
       render: function() {
         return <div>{this.props.children}</div>;
-      }
+      },
     });
 
     var TestContainer = React.createClass({
@@ -287,7 +287,7 @@ describe('ReactIdentity', function() {
             {this.state.swapped ? this.props.first : this.props.second}
           </TestComponent>
         );
-      }
+      },
 
     });
 

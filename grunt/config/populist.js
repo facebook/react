@@ -7,7 +7,7 @@ module.exports = function(grunt) {
     // (build/jasmine/jasmine.js) as global.jasmine, and to require the
     // 'all' module (build/jasmine/all.js) but not expose it globally.
     args: ['jasmine:jasmine', 'all:'],
-    outfile: './build/jasmine.js'
+    outfile: './build/jasmine.js',
   };
 
   var filterExpr = grunt.option('filter');
@@ -22,11 +22,11 @@ module.exports = function(grunt) {
     rootDirectory: 'build/modules',
     args: ['test/all:harness'],
     requires: [filterExpr],
-    outfile: './build/react-test.js'
+    outfile: './build/react-test.js',
   };
 
   return {
     jasmine: jasmine,
-    test: test
+    test: test,
   };
 };

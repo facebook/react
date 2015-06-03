@@ -54,7 +54,7 @@ function getIEOffsets(node) {
 
   return {
     start: startOffset,
-    end: endOffset
+    end: endOffset,
   };
 }
 
@@ -110,7 +110,7 @@ function getModernOffsets(node) {
 
   return {
     start: isBackward ? end : start,
-    end: isBackward ? start : end
+    end: isBackward ? start : end,
   };
 }
 
@@ -205,7 +205,7 @@ var ReactDOMSelection = {
    * @param {DOMElement|DOMTextNode} node
    * @param {object} offsets
    */
-  setOffsets: useIEOffsets ? setIEOffsets : setModernOffsets
+  setOffsets: useIEOffsets ? setIEOffsets : setModernOffsets,
 };
 
 module.exports = ReactDOMSelection;

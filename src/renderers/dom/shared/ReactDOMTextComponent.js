@@ -119,7 +119,7 @@ assign(ReactDOMTextComponent.prototype, {
 
   unmountComponent: function() {
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
-  }
+  },
 
 });
 

@@ -131,7 +131,7 @@ var EventPluginHub = {
     /**
      * @param {object} injectedNamesToPlugins Map from names to plugin modules.
      */
-    injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName
+    injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
 
   },
 
@@ -291,7 +291,7 @@ var EventPluginHub = {
 
   __getListenerBank: function() {
     return listenerBank;
-  }
+  },
 
 };
 

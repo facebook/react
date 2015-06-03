@@ -23,19 +23,19 @@ var ReactTransitionGroup = React.createClass({
 
   propTypes: {
     component: React.PropTypes.any,
-    childFactory: React.PropTypes.func
+    childFactory: React.PropTypes.func,
   },
 
   getDefaultProps: function() {
     return {
       component: 'span',
-      childFactory: emptyFunction.thatReturnsArgument
+      childFactory: emptyFunction.thatReturnsArgument,
     };
   },
 
   getInitialState: function() {
     return {
-      children: ReactTransitionChildMapping.getChildMapping(this.props.children)
+      children: ReactTransitionChildMapping.getChildMapping(this.props.children),
     };
   },
 
@@ -64,7 +64,7 @@ var ReactTransitionGroup = React.createClass({
       children: ReactTransitionChildMapping.mergeChildMappings(
         prevChildMapping,
         nextChildMapping
-      )
+      ),
     });
 
     var key;
@@ -224,7 +224,7 @@ var ReactTransitionGroup = React.createClass({
       this.props,
       childrenToRender
     );
-  }
+  },
 });
 
 module.exports = ReactTransitionGroup;

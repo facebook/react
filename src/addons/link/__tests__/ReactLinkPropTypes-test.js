@@ -74,7 +74,7 @@ describe('ReactLink', function() {
     );
     typeCheckPass(
       LinkPropTypes.link(),
-      {value: {}, requestChange: emptyFunction
+      {value: {}, requestChange: emptyFunction,
     });
   });
 

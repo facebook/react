@@ -220,7 +220,7 @@ var Mixin = {
       }
     }
     this.wrapperInitData.length = 0;
-  }
+  },
 };
 
 var Transaction = {
@@ -230,7 +230,7 @@ var Transaction = {
   /**
    * Token to look for to determine if an error occured.
    */
-  OBSERVED_ERROR: {}
+  OBSERVED_ERROR: {},
 
 };
 

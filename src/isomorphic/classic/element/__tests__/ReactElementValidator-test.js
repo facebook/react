@@ -30,7 +30,7 @@ describe('ReactElementValidator', function() {
     ComponentClass = React.createClass({
       render: function() {
         return React.createElement('div');
-      }
+      },
     });
   });
 
@@ -58,7 +58,7 @@ describe('ReactElementValidator', function() {
       displayName: 'InnerClass',
       render: function() {
         return Component(null, this.props.childSet);
-      }
+      },
     });
 
     var InnerComponent = React.createFactory(InnerClass);
@@ -67,7 +67,7 @@ describe('ReactElementValidator', function() {
       displayName: 'ComponentWrapper',
       render: function() {
         return InnerComponent({childSet: [Component(), Component()] });
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -89,12 +89,12 @@ describe('ReactElementValidator', function() {
       displayName: undefined,
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var divs = [
       <div />,
-      <div />
+      <div />,
     ];
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
 
@@ -110,7 +110,7 @@ describe('ReactElementValidator', function() {
 
     var divs = [
       <div />,
-      <div />
+      <div />,
     ];
     ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
 
@@ -133,7 +133,7 @@ describe('ReactElementValidator', function() {
             <footer />
           </div>
         );
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -157,9 +157,9 @@ describe('ReactElementValidator', function() {
           next: function() {
             var done = ++i > 2;
             return {value: done ? undefined : Component(), done: done};
-          }
+          },
         };
-      }
+      },
     };
 
     Component(null, iterable);
@@ -191,11 +191,11 @@ describe('ReactElementValidator', function() {
             var done = ++i > 2;
             return {
               value: done ? undefined : Component({key: '#' + i}),
-              done: done
+              done: done,
             };
-          }
+          },
         };
-      }
+      },
     };
 
     Component(null, iterable);
@@ -227,9 +227,9 @@ describe('ReactElementValidator', function() {
           next: function() {
             var done = ++i > 2;
             return {value: done ? undefined : [i, Component()], done: done};
-          }
+          },
         };
-      }
+      },
     };
     iterable.entries = iterable['@@iterator'];
 
@@ -266,16 +266,16 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'error');
     var MyComp = React.createClass({
       propTypes: {
-        color: React.PropTypes.string
+        color: React.PropTypes.string,
       },
       render: function() {
         return React.createElement('div', null, 'My color is ' + this.color);
-      }
+      },
     });
     var ParentComp = React.createClass({
       render: function() {
         return React.createElement(MyComp, {color: 123});
-      }
+      },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     expect(console.error.calls[0].args[0]).toBe(
@@ -323,7 +323,7 @@ describe('ReactElementValidator', function() {
     var ParentComp = React.createClass({
       render: function() {
         return React.createElement(null);
-      }
+      },
     });
     expect(function() {
       ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
@@ -350,7 +350,7 @@ describe('ReactElementValidator', function() {
       },
       render: function() {
         return React.createElement('span', null, this.props.prop);
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
@@ -372,7 +372,7 @@ describe('ReactElementValidator', function() {
       },
       render: function() {
         return React.createElement('span', null, this.props.prop);
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -391,11 +391,11 @@ describe('ReactElementValidator', function() {
 
     var Component = React.createClass({
       propTypes: {
-        prop: React.PropTypes.string.isRequired
+        prop: React.PropTypes.string.isRequired,
       },
       render: function() {
         return React.createElement('span', null, this.props.prop);
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -430,11 +430,11 @@ describe('ReactElementValidator', function() {
 
     var Component = React.createClass({
       propTypes: {
-        myProp: React.PropTypes.shape
+        myProp: React.PropTypes.shape,
       },
       render: function() {
         return React.createElement('span', null, this.props.myProp.value);
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -464,7 +464,7 @@ describe('ReactElementValidator', function() {
     var TestComponent = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
     var TestFactory = React.createFactory(TestComponent);
     expect(TestFactory.type).toBe(TestComponent);
@@ -486,7 +486,7 @@ describe('ReactElementValidator', function() {
       },
       componentDidMount: function() {
         React.findDOMNode(this).appendChild(this.props.children);
-      }
+      },
     });
 
     var node = document.createElement('div');

@@ -68,7 +68,7 @@ var StatusDisplay = React.createClass({
         {this.state.internalState}
       </div>
     );
-  }
+  },
 });
 
 /**
@@ -121,7 +121,7 @@ var FriendsStatusDisplay = React.createClass({
         {children}
       </div>
     );
-  }
+  },
 });
 
 
@@ -240,8 +240,8 @@ describe('ReactMultiChildReconcile', function() {
     // Test basics.
     var props = {
       usernameToStatus: {
-        jcw: 'jcwStatus'
-      }
+        jcw: 'jcwStatus',
+      },
     };
 
     var parentInstance = ReactTestUtils.renderIntoDocument(
@@ -268,7 +268,7 @@ describe('ReactMultiChildReconcile', function() {
     var usernameToStatus = {
       jcw: 'jcwStatus',
       awalke: 'awalkeStatus',
-      bob: 'bobStatus'
+      bob: 'bobStatus',
     };
 
     testPropsSequence([ {usernameToStatus: usernameToStatus} ]);
@@ -279,15 +279,15 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jcw: 'jcwstatus2',
-          jordanjcw: 'jordanjcwstatus2'
-        }
-      }
+          jordanjcw: 'jordanjcwstatus2',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -297,9 +297,9 @@ describe('ReactMultiChildReconcile', function() {
       {usernameToStatus: {} },
       {
         usernameToStatus: {
-          first: 'firstStatus'
-        }
-      }
+          first: 'firstStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -308,10 +308,10 @@ describe('ReactMultiChildReconcile', function() {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
-          first: 'firstStatus'
-        }
+          first: 'firstStatus',
+        },
       },
-      {usernameToStatus: {} }
+      {usernameToStatus: {} },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -320,10 +320,10 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence([
       {
         usernameToStatus: {
-          first: 'firstStatus'
-        }
+          first: 'firstStatus',
+        },
       },
-      {}
+      {},
     ]);
   });
 
@@ -332,18 +332,18 @@ describe('ReactMultiChildReconcile', function() {
       {},
       {
         usernameToStatus: {
-          first: 'firstStatus'
-        }
-      }
+          first: 'firstStatus',
+        },
+      },
     ]);
   });
 
   it('should transition from zero children to null children', function() {
     testPropsSequence([
       {
-        usernameToStatus: {}
+        usernameToStatus: {},
       },
-      {}
+      {},
     ]);
   });
 
@@ -351,8 +351,8 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence([
       {},
       {
-        usernameToStatus: {}
-      }
+        usernameToStatus: {},
+      },
     ]);
   });
 
@@ -367,15 +367,15 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jcw: null,
-          jordanjcw: 'jordanjcwstatus2'
-        }
-      }
+          jordanjcw: 'jordanjcwstatus2',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -385,15 +385,15 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jcw: 'jcwstatus2',
-          jordanjcw: null
-        }
-      }
+          jordanjcw: null,
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -403,15 +403,15 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           userOne: 'userOneStatus',
-          userTwo: 'userTwoStatus'
-        }
+          userTwo: 'userTwoStatus',
+        },
       },
       {
         usernameToStatus: {
           userTwo: 'userTwoStatus',
-          userOne: 'userOneStatus'
-        }
-      }
+          userOne: 'userOneStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -422,16 +422,16 @@ describe('ReactMultiChildReconcile', function() {
         usernameToStatus: {
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
-          userThree: 'userThreeStatus'
-        }
+          userThree: 'userThreeStatus',
+        },
       },
       {
         usernameToStatus: {
           userThree: 'userThreeStatus',
           userTwo: 'userTwoStatus',
-          userOne: 'userOneStatus'
-        }
-      }
+          userOne: 'userOneStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -443,41 +443,41 @@ describe('ReactMultiChildReconcile', function() {
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
-          userFour: 'userFourStatus'
-        }
+          userFour: 'userFourStatus',
+        },
       },
       {
         usernameToStatus: {
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
           userFour: 'userFourStatus',
-          userOne: 'userOneStatus'
-        }
+          userOne: 'userOneStatus',
+        },
       },
       {
         usernameToStatus: {
           userThree: 'userThreeStatus',
           userFour: 'userFourStatus',
           userOne: 'userOneStatus',
-          userTwo: 'userTwoStatus'
-        }
+          userTwo: 'userTwoStatus',
+        },
       },
       {
         usernameToStatus: {
           userFour: 'userFourStatus',
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
-          userThree: 'userThreeStatus'
-        }
+          userThree: 'userThreeStatus',
+        },
       },
       {
         usernameToStatus: {               // Full circle!
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
-          userFour: 'userFourStatus'
-        }
-      }
+          userFour: 'userFourStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -489,41 +489,41 @@ describe('ReactMultiChildReconcile', function() {
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
-          userFour: 'userFourStatus'
-        }
+          userFour: 'userFourStatus',
+        },
       },
       {
         usernameToStatus: {
           userFour: 'userFourStatus',
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
-          userThree: 'userThreeStatus'
-        }
+          userThree: 'userThreeStatus',
+        },
       },
       {
         usernameToStatus: {
           userThree: 'userThreeStatus',
           userFour: 'userFourStatus',
           userOne: 'userOneStatus',
-          userTwo: 'userTwoStatus'
-        }
+          userTwo: 'userTwoStatus',
+        },
       },
       {
         usernameToStatus: {
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
           userFour: 'userFourStatus',
-          userOne: 'userOneStatus'
-        }
+          userOne: 'userOneStatus',
+        },
       },
       {
         usernameToStatus: {               // Full circle!
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
-          userFour: 'userFourStatus'
-        }
-      }
+          userFour: 'userFourStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -535,16 +535,16 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jordanjcw: 'jordanjcwstatus2',
           jcw: null,
-          another: null
-        }
-      }
+          another: null,
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -556,16 +556,16 @@ describe('ReactMultiChildReconcile', function() {
           jcw: 'jcwStatus',
           jordanjcw: 'jordanjcwStatus',
           john: 'johnStatus',  // john will go away
-          joe: 'joeStatus'
-        }
+          joe: 'joeStatus',
+        },
       },
       {
         usernameToStatus: {
           jordanjcw: 'jordanjcwStatus',
           joe: 'joeStatus',
-          jcw: 'jcwStatus'
-        }
-      }
+          jcw: 'jcwStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -575,16 +575,16 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
           jordanjcw: 'jordanjcwStatus',
-          jordanjcwnew: 'jordanjcwnewStatus'
-        }
-      }
+          jordanjcwnew: 'jordanjcwnewStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -594,17 +594,17 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
           jordanjcw: 'jordanjcwStatus',
           jordanjcwnew: 'jordanjcwnewStatus',
-          jordanjcwnew2: 'jordanjcwnewStatus2'
-        }
-      }
+          jordanjcwnew2: 'jordanjcwnewStatus2',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -614,16 +614,16 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           newUsername: 'newUsernameStatus',
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
-      }
+          jordanjcw: 'jordanjcwStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -633,17 +633,17 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           newNewUsername: 'newNewUsernameStatus',
           newUsername: 'newUsernameStatus',
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
-      }
+          jordanjcw: 'jordanjcwStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -653,16 +653,16 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           emptyUsername: null,
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
-      }
+          jordanjcw: 'jordanjcwStatus',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -672,16 +672,16 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
           jordanjcw: 'jordanjcwStatus',
-          emptyUsername: null
-        }
-      }
+          emptyUsername: null,
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -691,8 +691,8 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
@@ -700,9 +700,9 @@ describe('ReactMultiChildReconcile', function() {
           skipOverMe: null,
           skipOverMeToo: null,
           definitelySkipOverMe: null,
-          jordanjcw: 'jordanjcwstatus2'
-        }
-      }
+          jordanjcw: 'jordanjcwstatus2',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -712,16 +712,16 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
           jcw: 'jcwstatus2',
           insertThis: 'insertThisStatus',
-          jordanjcw: 'jordanjcwstatus2'
-        }
-      }
+          jordanjcw: 'jordanjcwstatus2',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -731,8 +731,8 @@ describe('ReactMultiChildReconcile', function() {
       {
         usernameToStatus: {
           jcw: 'jcwStatus',
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
@@ -740,9 +740,9 @@ describe('ReactMultiChildReconcile', function() {
           insertThis: 'insertThisStatus',
           insertThisToo: 'insertThisTooStatus',
           definitelyInsertThisToo: 'definitelyInsertThisTooStatus',
-          jordanjcw: 'jordanjcwstatus2'
-        }
-      }
+          jordanjcw: 'jordanjcwstatus2',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -755,8 +755,8 @@ describe('ReactMultiChildReconcile', function() {
           insertThis: null,
           insertThisToo: null,
           definitelyInsertThisToo: null,
-          jordanjcw: 'jordanjcwStatus'
-        }
+          jordanjcw: 'jordanjcwStatus',
+        },
       },
       {
         usernameToStatus: {
@@ -764,9 +764,9 @@ describe('ReactMultiChildReconcile', function() {
           insertThis: 'insertThisStatus',
           insertThisToo: 'insertThisTooStatus',
           definitelyInsertThisToo: 'definitelyInsertThisTooStatus',
-          jordanjcw: 'jordanjcwstatus2'
-        }
-      }
+          jordanjcw: 'jordanjcwstatus2',
+        },
+      },
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });

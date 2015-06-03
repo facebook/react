@@ -30,7 +30,7 @@ var SUBSEPARATOR = ':';
 var userProvidedKeyEscaperLookup = {
   '=': '=0',
   '.': '=1',
-  ':': '=2'
+  ':': '=2',
 };
 
 var userProvidedKeyEscapeRegex = /[=.:]/g;

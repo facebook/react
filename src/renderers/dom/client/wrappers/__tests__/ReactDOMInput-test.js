@@ -57,7 +57,7 @@ describe('ReactDOMInput', function() {
     var objToString = {
       toString: function() {
         return 'foobar';
-      }
+      },
     };
 
     var stub = <input type="text" defaultValue={objToString} />;
@@ -107,7 +107,7 @@ describe('ReactDOMInput', function() {
     var objToString = {
       toString: function() {
         return 'foobar';
-      }
+      },
     };
 
     stub.replaceProps({value: objToString, onChange: emptyFunction});
@@ -168,7 +168,7 @@ describe('ReactDOMInput', function() {
             </form>
           </div>
         );
-      }
+      },
     });
 
     var stub = ReactTestUtils.renderIntoDocument(<RadioGroup />);

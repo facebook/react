@@ -41,7 +41,7 @@ if (__DEV__) {
     'object', 'ol', 'p', 'param', 'plaintext', 'pre', 'script', 'section',
     'select', 'source', 'style', 'summary', 'table', 'tbody', 'td', 'template',
     'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'track', 'ul', 'wbr',
-    'xmp'
+    'xmp',
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
@@ -52,7 +52,7 @@ if (__DEV__) {
     // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
     // TODO: Distinguish by namespace here -- for <title>, including it here
     // errs on the side of fewer warnings
-    'foreignObject', 'desc', 'title'
+    'foreignObject', 'desc', 'title',
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
@@ -72,7 +72,7 @@ if (__DEV__) {
     pTagInButtonScope: null,
 
     listItemTagAutoclosing: null,
-    dlItemTagAutoclosing: null
+    dlItemTagAutoclosing: null,
   };
 
   var updatedAncestorInfo = function(oldInfo, tag, instance) {

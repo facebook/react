@@ -15,12 +15,12 @@ module.exports = function() {
     '--follow-requires',
     '--use-provides-module',
     config.sourceDir,
-    config.outputDir
+    config.outputDir,
   ];
 
   var rootIDs = expand({
     nonull: true, // Keep IDs that don't expand to anything.
-    cwd: 'src'
+    cwd: 'src',
   }, config.rootIDs).map(function(id) {
     return id.replace(/\.js$/i, '');
   });
@@ -30,7 +30,7 @@ module.exports = function() {
 
   var child = spawn({
     cmd: 'node',
-    args: [path.join('bin', 'jsx-internal')].concat(args)
+    args: [path.join('bin', 'jsx-internal')].concat(args),
   }, function(error, result, code) {
     if (error) {
       grunt.log.error(error);

@@ -52,7 +52,7 @@ describe('ReactCompositeComponent', function() {
         return !this.state.activated ?
           <a ref="x" onClick={toggleActivatedState} /> :
           <b ref="x" onClick={toggleActivatedState} />;
-      }
+      },
     });
 
     /**
@@ -68,7 +68,7 @@ describe('ReactCompositeComponent', function() {
         return this.props.renderAnchor ?
           <a ref="anch" className={className}></a> :
           <b></b>;
-      }
+      },
     });
 
     console.error = mocks.getMockFunction();
@@ -98,12 +98,12 @@ describe('ReactCompositeComponent', function() {
     var Child = React.createClass({
       render: function() {
         return null;
-      }
+      },
     });
     var Parent = React.createClass({
       render: function() {
         return <div><Child /></div>;
-      }
+      },
     });
 
     var markup = ReactServerRendering.renderToString(<Parent />);
@@ -165,7 +165,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div></div>;
-      }
+      },
     });
     var instance = <ComponentClass />;
 
@@ -204,7 +204,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
     ReactTestUtils.renderIntoDocument(<Component />);
   });
@@ -216,7 +216,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var instance1 = <Component />;
@@ -239,7 +239,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var inputProps = {};
@@ -259,7 +259,7 @@ describe('ReactCompositeComponent', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = <Component />;
@@ -291,7 +291,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = <Component />;
@@ -331,7 +331,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = React.render(<Component />, container);
@@ -351,7 +351,7 @@ describe('ReactCompositeComponent', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = <Component />;
@@ -388,7 +388,7 @@ describe('ReactCompositeComponent', function() {
       },
       componentDidMount: function() {
         innerInstance = this.refs.inner;
-      }
+      },
     });
     React.render(<Component />, container);
 
@@ -408,7 +408,7 @@ describe('ReactCompositeComponent', function() {
     var BadComponent = React.createClass({
       render: function() {
         throw new Error();
-      }
+      },
     });
     var instance = <BadComponent />;
 
@@ -433,7 +433,7 @@ describe('ReactCompositeComponent', function() {
           <Inner />
           Text
         </div>;
-      }
+      },
     });
     var Inner = React.createClass({
       componentWillUnmount: function() {
@@ -446,7 +446,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
 
     React.render(<Component />, container);
@@ -472,7 +472,7 @@ describe('ReactCompositeComponent', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
@@ -489,33 +489,33 @@ describe('ReactCompositeComponent', function() {
     var Parent = React.createClass({
       render: function() {
         return <Child><Grandchild /></Child>;
-      }
+      },
     });
 
     var Child = React.createClass({
       childContextTypes: {
-        foo: ReactPropTypes.string
+        foo: ReactPropTypes.string,
       },
 
       getChildContext: function() {
         return {
-          foo: 'bar'
+          foo: 'bar',
         };
       },
 
       render: function() {
         return React.Children.only(this.props.children);
-      }
+      },
     });
 
     var Grandchild = React.createClass({
       contextTypes: {
-        foo: ReactPropTypes.string
+        foo: ReactPropTypes.string,
       },
 
       render: function() {
         return <div>{this.context.foo}</div>;
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<Parent />);
@@ -529,53 +529,53 @@ describe('ReactCompositeComponent', function() {
     var Parent = React.createClass({
       childContextTypes: {
         foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
+        depth: ReactPropTypes.number,
       },
 
       getChildContext: function() {
         return {
           foo: 'bar',
-          depth: 0
+          depth: 0,
         };
       },
 
       render: function() {
         return <Child />;
-      }
+      },
     });
 
     var Child = React.createClass({
       contextTypes: {
         foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
+        depth: ReactPropTypes.number,
       },
 
       childContextTypes: {
-        depth: ReactPropTypes.number
+        depth: ReactPropTypes.number,
       },
 
       getChildContext: function() {
         return {
-          depth: this.context.depth + 1
+          depth: this.context.depth + 1,
         };
       },
 
       render: function() {
         childInstance = this;
         return <Grandchild />;
-      }
+      },
     });
 
     var Grandchild = React.createClass({
       contextTypes: {
         foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
+        depth: ReactPropTypes.number,
       },
 
       render: function() {
         grandchildInstance = this;
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Parent />);
@@ -590,19 +590,19 @@ describe('ReactCompositeComponent', function() {
     var Parent = React.createClass({
       childContextTypes: {
         foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
+        depth: ReactPropTypes.number,
       },
 
       getChildContext: function() {
         return {
           foo: 'bar',
-          depth: 0
+          depth: 0,
         };
       },
 
       getInitialState: function() {
         return {
-          flag: false
+          flag: false,
         };
       },
 
@@ -612,19 +612,19 @@ describe('ReactCompositeComponent', function() {
           output = <span>Child</span>;
         }
         return output;
-      }
+      },
     });
 
     var Child = React.createClass({
       contextTypes: {
         foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
+        depth: ReactPropTypes.number,
       },
 
       render: function() {
         childInstance = this;
         return <span>Child</span>;
-      }
+      },
     });
 
     parentInstance = ReactTestUtils.renderIntoDocument(<Parent />);
@@ -645,7 +645,7 @@ describe('ReactCompositeComponent', function() {
 
     var Leaf = React.createClass({
       contextTypes: {
-        foo: ReactPropTypes.string.isRequired
+        foo: ReactPropTypes.string.isRequired,
       },
 
       componentWillReceiveProps: function(nextProps, nextContext) {
@@ -663,7 +663,7 @@ describe('ReactCompositeComponent', function() {
 
       render: function() {
         return <span>{this.context.foo}</span>;
-      }
+      },
     });
 
     var Intermediary = React.createClass({
@@ -683,23 +683,23 @@ describe('ReactCompositeComponent', function() {
 
       render: function() {
         return <Leaf />;
-      }
+      },
     });
 
     var Parent = React.createClass({
       childContextTypes: {
-        foo: ReactPropTypes.string
+        foo: ReactPropTypes.string,
       },
 
       getChildContext: function() {
         return {
-          foo: this.props.cntxt
+          foo: this.props.cntxt,
         };
       },
 
       render: function() {
         return <Intermediary />;
-      }
+      },
     });
 
     var div = document.createElement('div');
@@ -718,13 +718,13 @@ describe('ReactCompositeComponent', function() {
     var Inner = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
     var Outer = React.createClass({
       render: function() {
         ReactTestUtils.renderIntoDocument(<Inner />);
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Outer />);
@@ -750,7 +750,7 @@ describe('ReactCompositeComponent', function() {
       render: function() {
         renders++;
         return <div />;
-      }
+      },
     });
 
     var container = document.createElement('div');
@@ -769,7 +769,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div>{this.props.children}</div>;
-      }
+      },
     });
     var Component = React.createClass({
       render: function() {
@@ -784,7 +784,7 @@ describe('ReactCompositeComponent', function() {
             <Static ref="static1" key="B">B</Static>
           </div>;
         }
-      }
+      },
     });
 
     var comp = ReactTestUtils.renderIntoDocument(<Component flipped={false} />);
@@ -822,7 +822,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
     var container = document.createElement('div');
     expect(a).toBe(container.firstChild);
@@ -847,28 +847,28 @@ describe('ReactCompositeComponent', function() {
   it('context should be passed down from the parent', function() {
     var Parent = React.createClass({
       childContextTypes: {
-        foo: ReactPropTypes.string
+        foo: ReactPropTypes.string,
       },
 
       getChildContext: function() {
         return {
-          foo: 'bar'
+          foo: 'bar',
         };
       },
 
       render: function() {
         return <div>{this.props.children}</div>;
-      }
+      },
     });
 
     var Component = React.createClass({
       contextTypes: {
-        foo: ReactPropTypes.string.isRequired
+        foo: ReactPropTypes.string.isRequired,
       },
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var div = document.createElement('div');
@@ -884,7 +884,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var moo = ReactTestUtils.renderIntoDocument(<Moo />);
@@ -906,7 +906,7 @@ describe('ReactCompositeComponent', function() {
       },
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var moo = ReactTestUtils.renderIntoDocument(<Moo />);

@@ -11,5 +11,5 @@ module.exports = require('./webdriver-all')({
   },
   onError: function(error) {
     grunt.fatal(error);
-  }
+  },
 });

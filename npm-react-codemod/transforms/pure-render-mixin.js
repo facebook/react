@@ -8,8 +8,6 @@
  *
  */
 
-/*eslint-disable comma-dangle*/
-
 'use strict';
 
 function removePureRenderMixin(file, api, options) {
@@ -47,10 +45,10 @@ function removePureRenderMixin(file, api, options) {
             [
               j.thisExpression(),
               j.identifier(NEXT_PROPS),
-              j.identifier(NEXT_STATE)
+              j.identifier(NEXT_STATE),
             ]
           )
-        )
+        ),
       ])
     );
 

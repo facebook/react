@@ -51,19 +51,19 @@ function simpleBannerify(src) {
 // Our basic config which we'll add to to make our other builds
 var basic = {
   entries: [
-    './build/modules/React.js'
+    './build/modules/React.js',
   ],
   outfile: './build/react.js',
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
   plugins: [collapser],
-  after: [derequire, simpleBannerify]
+  after: [derequire, simpleBannerify],
 };
 
 var min = {
   entries: [
-    './build/modules/React.js'
+    './build/modules/React.js',
   ],
   outfile: './build/react.min.js',
   debug: false,
@@ -73,12 +73,12 @@ var min = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [/*derequire,*/ minify, bannerify]
+  after: [/*derequire,*/ minify, bannerify],
 };
 
 var transformer = {
   entries:[
-    './vendor/browser-transforms.js'
+    './vendor/browser-transforms.js',
   ],
   outfile: './build/JSXTransformer.js',
   debug: false,
@@ -89,12 +89,12 @@ var transformer = {
   // collapser passes a number; this would throw.
 
   // plugins: [collapser],
-  after: [derequire, simpleBannerify]
+  after: [derequire, simpleBannerify],
 };
 
 var addons = {
   entries: [
-    './build/modules/ReactWithAddons.js'
+    './build/modules/ReactWithAddons.js',
   ],
   outfile: './build/react-with-addons.js',
   debug: false,
@@ -102,12 +102,12 @@ var addons = {
   packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'development'})],
   plugins: [collapser],
-  after: [derequire, simpleBannerify]
+  after: [derequire, simpleBannerify],
 };
 
 var addonsMin = {
   entries: [
-    './build/modules/ReactWithAddons.js'
+    './build/modules/ReactWithAddons.js',
   ],
   outfile: './build/react-with-addons.min.js',
   debug: false,
@@ -118,21 +118,21 @@ var addonsMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [/*derequire,*/ minify, bannerify]
+  after: [/*derequire,*/ minify, bannerify],
 };
 
 var withCodeCoverageLogging = {
   entries: [
-    './build/modules/React.js'
+    './build/modules/React.js',
   ],
   outfile: './build/react.js',
   debug: true,
   standalone: 'React',
   transforms: [
     envify({NODE_ENV: 'development'}),
-    require('coverify')
+    require('coverify'),
   ],
-  plugins: [collapser]
+  plugins: [collapser],
 };
 
 module.exports = {
@@ -141,5 +141,5 @@ module.exports = {
   transformer: transformer,
   addons: addons,
   addonsMin: addonsMin,
-  withCodeCoverageLogging: withCodeCoverageLogging
+  withCodeCoverageLogging: withCodeCoverageLogging,
 };

@@ -52,7 +52,7 @@ assign(TopLevelCallbackBookKeeping.prototype, {
     this.topLevelType = null;
     this.nativeEvent = null;
     this.ancestors.length = 0;
-  }
+  },
 });
 PooledClass.addPoolingTo(
   TopLevelCallbackBookKeeping,
@@ -175,7 +175,7 @@ var ReactEventListener = {
     } finally {
       TopLevelCallbackBookKeeping.release(bookKeeping);
     }
-  }
+  },
 };
 
 module.exports = ReactEventListener;

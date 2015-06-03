@@ -153,7 +153,7 @@ var EventPropagators = {
   accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
   accumulateTwoPhaseDispatchesSkipTarget: accumulateTwoPhaseDispatchesSkipTarget,
   accumulateDirectDispatches: accumulateDirectDispatches,
-  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches
+  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
 };
 
 module.exports = EventPropagators;

@@ -24,28 +24,28 @@ describe('CSSPropertyOperations', function() {
   it('should create markup for simple styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: '#3b5998',
-      display: 'none'
+      display: 'none',
     })).toBe('background-color:#3b5998;display:none;');
   });
 
   it('should ignore undefined styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: undefined,
-      display: 'none'
+      display: 'none',
     })).toBe('display:none;');
   });
 
   it('should ignore null styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: null,
-      display: 'none'
+      display: 'none',
     })).toBe('display:none;');
   });
 
   it('should return null for no styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: null,
-      display: null
+      display: null,
     })).toBe(null);
   });
 
@@ -54,7 +54,7 @@ describe('CSSPropertyOperations', function() {
       left: 0,
       margin: 16,
       opacity: 0.5,
-      padding: '4px'
+      padding: '4px',
     })).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
   });
 
@@ -62,7 +62,7 @@ describe('CSSPropertyOperations', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       margin: '16 ',
       opacity: 0.5,
-      padding: ' 4 '
+      padding: ' 4 ',
     })).toBe('margin:16px;opacity:0.5;padding:4px;');
   });
 
@@ -80,14 +80,14 @@ describe('CSSPropertyOperations', function() {
   it('should create vendor-prefixed markup correctly', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       msTransition: 'none',
-      MozTransition: 'none'
+      MozTransition: 'none',
     })).toBe('-ms-transition:none;-moz-transition:none;');
   });
 
   it('should set style attribute when styles exist', function() {
     var styles = {
       backgroundColor: '#000',
-      display: 'none'
+      display: 'none',
     };
     var div = <div style={styles} />;
     var root = document.createElement('div');
@@ -98,7 +98,7 @@ describe('CSSPropertyOperations', function() {
   it('should not set style attribute when no styles exist', function() {
     var styles = {
       backgroundColor: null,
-      display: null
+      display: null,
     };
     var div = <div style={styles} />;
     var root = document.createElement('div');
@@ -110,7 +110,7 @@ describe('CSSPropertyOperations', function() {
     spyOn(console, 'error');
 
     expect(CSSPropertyOperations.createMarkupForStyles({
-      'background-color': 'crimson'
+      'background-color': 'crimson',
     })).toBe('background-color:crimson;');
 
     expect(console.error.argsForCall.length).toBe(1);
@@ -123,7 +123,7 @@ describe('CSSPropertyOperations', function() {
     var root = document.createElement('div');
     var styles = {
       '-ms-transform': 'translate3d(0, 0, 0)',
-      '-webkit-transform': 'translate3d(0, 0, 0)'
+      '-webkit-transform': 'translate3d(0, 0, 0)',
     };
 
     React.render(<div />, root);
@@ -140,7 +140,7 @@ describe('CSSPropertyOperations', function() {
     CSSPropertyOperations.createMarkupForStyles({
       msTransform: 'translate3d(0, 0, 0)',
       oTransform: 'translate3d(0, 0, 0)',
-      webkitTransform: 'translate3d(0, 0, 0)'
+      webkitTransform: 'translate3d(0, 0, 0)',
     });
 
     // msTransform is correct already and shouldn't warn
@@ -158,7 +158,7 @@ describe('CSSPropertyOperations', function() {
       fontFamily: 'Helvetica, arial',
       backgroundImage: 'url(foo;bar)',
       backgroundColor: 'blue;',
-      color: 'red;   '
+      color: 'red;   ',
     });
 
     expect(console.error.calls.length).toBe(2);

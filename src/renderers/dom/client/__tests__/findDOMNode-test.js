@@ -23,7 +23,7 @@ describe('findDOMNode', function() {
     var MyNode = React.createClass({
       render: function() {
         return <div><span>Noise</span></div>;
-      }
+      },
     });
 
     var myNode = ReactTestUtils.renderIntoDocument(<MyNode />);

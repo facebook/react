@@ -43,7 +43,7 @@ describe('ReactMockedComponent', function() {
 
       render: function() {
         return <span />;
-      }
+      },
 
     });
 
@@ -74,7 +74,7 @@ describe('ReactMockedComponent', function() {
 
       render: function() {
         return <AutoMockedComponent prop={this.state.foo} />;
-      }
+      },
 
     });
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
@@ -114,7 +114,7 @@ describe('ReactMockedComponent', function() {
 
       render: function() {
         return <MockedComponent prop={this.state.foo} />;
-      }
+      },
 
     });
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);

@@ -34,7 +34,7 @@ var ReactInjection = {
   NativeComponent: ReactNativeComponent.injection,
   Perf: ReactPerf.injection,
   RootIndex: ReactRootIndex.injection,
-  Updates: ReactUpdates.injection
+  Updates: ReactUpdates.injection,
 };
 
 module.exports = ReactInjection;

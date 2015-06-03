@@ -25,7 +25,7 @@ describe('ReactFragment', function() {
     spyOn(console, 'error');
     var children = {
       x: <span />,
-      y: <span />
+      y: <span />,
     };
     void <div>{children}</div>;
     expect(console.error.calls.length).toBe(1);
@@ -35,7 +35,7 @@ describe('ReactFragment', function() {
     // Only warn once for the same set of children
     var sameChildren = {
       x: <span />,
-      y: <span />
+      y: <span />,
     };
     void <div>{sameChildren}</div>;
     expect(console.error.calls.length).toBe(1);
@@ -46,7 +46,7 @@ describe('ReactFragment', function() {
     var children = {
       x: <span />,
       y: <span />,
-      z: <span />
+      z: <span />,
     };
     var element = <div>{[children]}</div>;
     expect(console.error.calls.length).toBe(0);
@@ -62,7 +62,7 @@ describe('ReactFragment', function() {
     spyOn(console, 'error');
     var children = {
       x: <span />,
-      y: <span />
+      y: <span />,
     };
     var frag = ReactFragment.create(children);
     void frag.x;

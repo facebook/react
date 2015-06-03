@@ -82,7 +82,7 @@ describe('update', function() {
   it('should support deep updates', function() {
     expect(update({a: 'b', c: {d: 'e'}}, {c: {d: {$set: 'f'}}})).toEqual({
       a: 'b',
-      c: {d: 'f'}
+      c: {d: 'f'},
     });
   });
 
@@ -96,7 +96,7 @@ describe('update', function() {
 
   it('should perform safe hasOwnProperty check', function() {
     expect(update({}, {'hasOwnProperty': {$set: 'a'}})).toEqual({
-      'hasOwnProperty': 'a'
+      'hasOwnProperty': 'a',
     });
   });
 });

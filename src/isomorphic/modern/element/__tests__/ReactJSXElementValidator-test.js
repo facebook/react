@@ -89,9 +89,9 @@ describe('ReactJSXElementValidator', function() {
           next: function() {
             var done = ++i > 2;
             return {value: done ? undefined : <Component />, done: done};
-          }
+          },
         };
-      }
+      },
     };
 
     void <Component>{iterable}</Component>;
@@ -121,11 +121,11 @@ describe('ReactJSXElementValidator', function() {
             var done = ++i > 2;
             return {
               value: done ? undefined : <Component key={'#' + i} />,
-              done: done
+              done: done,
             };
-          }
+          },
         };
-      }
+      },
     };
 
     void <Component>{iterable}</Component>;
@@ -154,9 +154,9 @@ describe('ReactJSXElementValidator', function() {
           next: function() {
             var done = ++i > 2;
             return {value: done ? undefined : [i, <Component />], done: done};
-          }
+          },
         };
-      }
+      },
     };
     iterable.entries = iterable['@@iterator'];
 
@@ -195,7 +195,7 @@ describe('ReactJSXElementValidator', function() {
       }
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string
+      color: React.PropTypes.string,
     };
     class ParentComp {
       render() {
@@ -291,7 +291,7 @@ describe('ReactJSXElementValidator', function() {
       }
     }
     Component.propTypes = {
-      prop: React.PropTypes.string.isRequired
+      prop: React.PropTypes.string.isRequired,
     };
 
     ReactTestUtils.renderIntoDocument(<Component />);
@@ -327,7 +327,7 @@ describe('ReactJSXElementValidator', function() {
       }
     }
     Component.propTypes = {
-      prop: null
+      prop: null,
     };
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(console.error.calls.length).toBe(1);
@@ -345,7 +345,7 @@ describe('ReactJSXElementValidator', function() {
       }
     }
     Component.contextTypes = {
-      prop: null
+      prop: null,
     };
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(console.error.calls.length).toBe(1);
@@ -363,7 +363,7 @@ describe('ReactJSXElementValidator', function() {
       }
     }
     Component.getDefaultProps = () => ({
-      prop: 'foo'
+      prop: 'foo',
     });
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(console.error.calls.length).toBe(1);

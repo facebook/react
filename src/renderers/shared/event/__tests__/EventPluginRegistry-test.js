@@ -34,10 +34,10 @@ describe('EventPluginRegistry', function() {
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      two: TwoPlugin
+      two: TwoPlugin,
     });
     EventPluginRegistry.injectEventPluginsByName({
-      three: ThreePlugin
+      three: ThreePlugin,
     });
 
     expect(EventPluginRegistry.plugins.length).toBe(3);
@@ -53,11 +53,11 @@ describe('EventPluginRegistry', function() {
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      two: TwoPlugin
+      two: TwoPlugin,
     });
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
-      three: ThreePlugin
+      three: ThreePlugin,
     });
 
     expect(EventPluginRegistry.plugins.length).toBe(3);
@@ -73,12 +73,12 @@ describe('EventPluginRegistry', function() {
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      three: ThreePlugin
+      three: ThreePlugin,
     });
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
       two: TwoPlugin,
-      three: ThreePlugin
+      three: ThreePlugin,
     });
 
     expect(EventPluginRegistry.plugins.length).toBe(3);
@@ -94,7 +94,7 @@ describe('EventPluginRegistry', function() {
 
     expect(function() {
       EventPluginRegistry.injectEventPluginsByName({
-        bad: BadPlugin
+        bad: BadPlugin,
       });
     }).toThrow(
       'Invariant Violation: EventPluginRegistry: Event plugins must ' +
@@ -111,7 +111,7 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginsByName({
         one: OnePlugin,
-        random: RandomPlugin
+        random: RandomPlugin,
       });
     }).toThrow(
       'Invariant Violation: EventPluginRegistry: Cannot inject event plugins ' +
@@ -151,18 +151,18 @@ describe('EventPluginRegistry', function() {
     var OnePlugin = createPlugin({
       eventTypes: {
         click: {registrationName: 'onClick'},
-        focus: {registrationName: 'onFocus'}
-      }
+        focus: {registrationName: 'onFocus'},
+      },
     });
     var TwoPlugin = createPlugin({
       eventTypes: {
         magic: {
           phasedRegistrationNames: {
             bubbled: 'onMagicBubble',
-            captured: 'onMagicCapture'
-          }
-        }
-      }
+            captured: 'onMagicCapture',
+          },
+        },
+      },
     });
 
     EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
@@ -184,23 +184,23 @@ describe('EventPluginRegistry', function() {
   it('should throw if multiple registration names collide', function() {
     var OnePlugin = createPlugin({
       eventTypes: {
-        photoCapture: {registrationName: 'onPhotoCapture'}
-      }
+        photoCapture: {registrationName: 'onPhotoCapture'},
+      },
     });
     var TwoPlugin = createPlugin({
       eventTypes: {
         photo: {
           phasedRegistrationNames: {
             bubbled: 'onPhotoBubble',
-            captured: 'onPhotoCapture'
-          }
-        }
-      }
+            captured: 'onPhotoCapture',
+          },
+        },
+      },
     });
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      two: TwoPlugin
+      two: TwoPlugin,
     });
 
     expect(function() {
@@ -214,8 +214,8 @@ describe('EventPluginRegistry', function() {
   it('should throw if an invalid event is published', function() {
     var OnePlugin = createPlugin({
       eventTypes: {
-        badEvent: {/* missing configuration */}
-      }
+        badEvent: {/* missing configuration */},
+      },
     });
 
     EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
@@ -230,20 +230,20 @@ describe('EventPluginRegistry', function() {
 
   it('should be able to get the plugin from synthetic events', function() {
     var clickDispatchConfig = {
-      registrationName: 'onClick'
+      registrationName: 'onClick',
     };
     var magicDispatchConfig = {
       phasedRegistrationNames: {
         bubbled: 'onMagicBubble',
-        captured: 'onMagicCapture'
-      }
+        captured: 'onMagicCapture',
+      },
     };
 
     var OnePlugin = createPlugin({
       eventTypes: {
         click: clickDispatchConfig,
-        magic: magicDispatchConfig
-      }
+        magic: magicDispatchConfig,
+      },
     });
 
     var clickEvent = {dispatchConfig: clickDispatchConfig};

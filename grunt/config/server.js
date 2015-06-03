@@ -103,10 +103,10 @@ module.exports = function(grunt) {
 
             connect.logger({format:'[:user-agent][:timestamp] :method :url', stream:grunt.verbose}),
             connect.static(options.base),
-            connect.directory(options.base)
+            connect.directory(options.base),
           ];
-        }
-      }
-    }
+        },
+      },
+    },
   };
 };

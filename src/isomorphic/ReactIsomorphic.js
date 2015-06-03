@@ -40,7 +40,7 @@ var React = {
     map: ReactChildren.map,
     forEach: ReactChildren.forEach,
     count: ReactChildren.count,
-    only: onlyChild
+    only: onlyChild,
   },
 
   Component: ReactComponent,
@@ -64,7 +64,7 @@ var React = {
   DOM: ReactDOM,
 
   // Hook for JSX spread, don't use this for anything else.
-  __spread: assign
+  __spread: assign,
 };
 
 module.exports = React;

@@ -19,7 +19,7 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var FocusEventInterface = {
-  relatedTarget: null
+  relatedTarget: null,
 };
 
 /**

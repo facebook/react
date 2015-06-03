@@ -42,7 +42,7 @@ var UIEventInterface = {
   },
   detail: function(event) {
     return event.detail || 0;
-  }
+  },
 };
 
 /**

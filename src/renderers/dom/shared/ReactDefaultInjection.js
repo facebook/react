@@ -60,7 +60,7 @@ function autoGenerateWrapperClass(type) {
         internalInstance._currentElement._owner,  // owner
         this.props
       );
-    }
+    },
   });
 }
 
@@ -95,7 +95,7 @@ function inject() {
     EnterLeaveEventPlugin: EnterLeaveEventPlugin,
     ChangeEventPlugin: ChangeEventPlugin,
     SelectEventPlugin: SelectEventPlugin,
-    BeforeInputEventPlugin: BeforeInputEventPlugin
+    BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
   ReactInjection.NativeComponent.injectGenericComponentClass(
@@ -125,7 +125,7 @@ function inject() {
 
     'html': createFullPageComponent('html'),
     'head': createFullPageComponent('head'),
-    'body': createFullPageComponent('body')
+    'body': createFullPageComponent('body'),
   });
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
@@ -159,5 +159,5 @@ function inject() {
 }
 
 module.exports = {
-  inject: inject
+  inject: inject,
 };

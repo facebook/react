@@ -35,7 +35,7 @@ var ReactBrowserComponentMixin = {
     );
     this.constructor[didWarnKey] = true;
     return findDOMNode(this);
-  }
+  },
 };
 
 module.exports = ReactBrowserComponentMixin;

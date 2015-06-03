@@ -10,7 +10,7 @@ var lib = dest + 'lib/';
 var dist = dest + 'dist/';
 var distFiles = [
   'react.js', 'react.min.js', 'JSXTransformer.js',
-  'react-with-addons.js', 'react-with-addons.min.js'
+  'react-with-addons.js', 'react-with-addons.min.js',
 ];
 
 function buildRelease() {
@@ -56,8 +56,8 @@ function packRelease() {
     cmd: 'npm',
     args: ['pack', 'npm-react'],
     opts: {
-      cwd: 'build/'
-    }
+      cwd: 'build/',
+    },
   };
   grunt.util.spawn(spawnCmd, function() {
     var buildSrc = 'build/react-' + grunt.config.data.pkg.version + '.tgz';
@@ -68,5 +68,5 @@ function packRelease() {
 
 module.exports = {
   buildRelease: buildRelease,
-  packRelease: packRelease
+  packRelease: packRelease,
 };
