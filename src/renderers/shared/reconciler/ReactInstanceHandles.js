@@ -204,7 +204,7 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
       depth++ < MAX_TREE_DEPTH,
       'traverseParentPath(%s, %s, ...): Detected an infinite loop while ' +
       'traversing the React DOM ID tree. This may be due to malformed IDs: %s',
-      start, stop
+      start, stop, id
     );
   }
 }
