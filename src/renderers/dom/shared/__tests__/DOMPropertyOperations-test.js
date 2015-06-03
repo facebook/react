@@ -179,6 +179,21 @@ describe('DOMPropertyOperations', function() {
 
   });
 
+  describe('createMarkupForProperty', function() {
+
+    it('should allow custom properties on web components', function() {
+      expect(DOMPropertyOperations.createMarkupForCustomAttribute(
+        'awesomeness',
+        5
+      )).toBe('awesomeness="5"');
+
+      expect(DOMPropertyOperations.createMarkupForCustomAttribute(
+        'dev',
+        'jim'
+      )).toBe('dev="jim"');
+    });
+  });
+
   describe('setValueForProperty', function() {
     var stubNode;
 

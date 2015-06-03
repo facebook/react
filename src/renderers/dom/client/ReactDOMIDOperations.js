@@ -67,6 +67,24 @@ var ReactDOMIDOperations = {
   },
 
   /**
+   * Updates a DOM node with new property values.
+   *
+   * @param {string} id ID of the node to update.
+   * @param {string} name A valid property name.
+   * @param {*} value New value of the property.
+   * @internal
+   */
+  updateAttributeByID: function(id, name, value) {
+    var node = ReactMount.getNode(id);
+    invariant(
+      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
+      'updatePropertyByID(...): %s',
+      INVALID_PROPERTY_ERRORS[name]
+    );
+    DOMPropertyOperations.setValueForAttribute(node, name, value);
+  },
+
+  /**
    * Updates a DOM node to remove a property. This should only be used to remove
    * DOM properties in `DOMProperty`.
    *
