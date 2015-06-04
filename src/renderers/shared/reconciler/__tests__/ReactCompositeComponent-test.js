@@ -429,10 +429,12 @@ describe('ReactCompositeComponent', function() {
 
     var Component = React.createClass({
       render: function() {
-        return <div>
-          <Inner />
-          Text
-        </div>;
+        return (
+          <div>
+            <Inner />
+            Text
+          </div>
+        );
       },
     });
     var Inner = React.createClass({
@@ -774,15 +776,19 @@ describe('ReactCompositeComponent', function() {
     var Component = React.createClass({
       render: function() {
         if (this.props.flipped) {
-          return <div>
-            <Static ref="static0" key="B">B (ignored)</Static>
-            <Static ref="static1" key="A">A (ignored)</Static>
-          </div>;
+          return (
+            <div>
+              <Static ref="static0" key="B">B (ignored)</Static>
+              <Static ref="static1" key="A">A (ignored)</Static>
+            </div>
+          );
         } else {
-          return <div>
-            <Static ref="static0" key="A">A</Static>
-            <Static ref="static1" key="B">B</Static>
-          </div>;
+          return (
+            <div>
+              <Static ref="static0" key="A">A</Static>
+              <Static ref="static1" key="B">B</Static>
+            </div>
+          );
         }
       },
     });

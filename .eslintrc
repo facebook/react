@@ -71,8 +71,29 @@ rules:
   block-scoped-var: 0
 
   # JSX
+  # Our transforms set this automatically
+  react/display-name: 0
+  react/jsx-boolean-value: [2, always]
+  react/jsx-no-undef: 2
+  react/jsx-quotes: [2, double]
+  # We don't care to do this
+  react/jsx-sort-prop-types: 0
+  react/jsx-sort-props: 0
   react/jsx-uses-react: 2
-  react/jsx-quotes: [2, "double"]
+  react/jsx-uses-vars: 2
+  # It's easier to test some things this way
+  react/no-did-mount-set-state: 0
+  react/no-did-update-set-state: 0
+  # We define multiple components in test files
+  react/no-multi-comp: 0
+  react/no-unknown-property: 2
+  # This isn't useful in our test code
+  react/prop-types: 0
+  react/react-in-jsx-scope: 2
+  react/self-closing-comp: 2
+  # We don't care to do this
+  react/sort-comp: 0
+  react/wrap-multilines: [2, {declaration: false, assignment: false}]
 
   # CUSTOM RULES
   # the second argument of warning/invariant should be a literal string

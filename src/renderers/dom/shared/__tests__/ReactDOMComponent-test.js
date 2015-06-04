@@ -663,7 +663,7 @@ describe('ReactDOMComponent', function() {
     it('should warn about contentEditable and children', function() {
       spyOn(console, 'error');
       React.render(
-        <div contentEditable><div /></div>,
+        <div contentEditable={true}><div /></div>,
         container
       );
       expect(console.error.argsForCall.length).toBe(1);
