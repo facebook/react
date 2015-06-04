@@ -45,8 +45,6 @@ var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
-var createFullPageComponent = require('createFullPageComponent');
-
 function autoGenerateWrapperClass(type) {
   return ReactClass.createClass({
     tagName: type.toUpperCase(),
@@ -110,8 +108,6 @@ function inject() {
     autoGenerateWrapperClass
   );
 
-  // This needs to happen before createFullPageComponent() otherwise the mixin
-  // won't be included.
   ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
 
   ReactInjection.NativeComponent.injectComponentClasses({
@@ -122,10 +118,6 @@ function inject() {
     'option': ReactDOMOption,
     'select': ReactDOMSelect,
     'textarea': ReactDOMTextarea,
-
-    'html': createFullPageComponent('html'),
-    'head': createFullPageComponent('head'),
-    'body': createFullPageComponent('body'),
   });
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);

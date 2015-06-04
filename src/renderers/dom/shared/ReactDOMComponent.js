@@ -656,6 +656,25 @@ ReactDOMComponent.Mixin = {
       case 'input':
         ReactDOMInput.unmountWrapper(this);
         break;
+      case 'html':
+      case 'head':
+      case 'body':
+        /**
+         * Components like <html> <head> and <body> can't be removed or added
+         * easily in a cross-browser way, however it's valuable to be able to
+         * take advantage of React's reconciliation for styling and <title>
+         * management. So we just document it and throw in dangerous cases.
+         */
+        invariant(
+          false,
+          '<%s> tried to unmount. Because of cross-browser quirks it is ' +
+          'impossible to unmount some top-level components (eg <html>, ' +
+          '<head>, and <body>) reliably and efficiently. To fix this, have a ' +
+          'single top-level component that never unmounts render these ' +
+          'elements.',
+          this._tag
+        );
+        break;
     }
 
     this.unmountChildren();
