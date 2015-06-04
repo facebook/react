@@ -13,6 +13,7 @@ var npmReactToolsTasks = require('./grunt/tasks/npm-react-tools');
 var versionCheckTask = require('./grunt/tasks/version-check');
 var gemReactSourceTasks = require('./grunt/tasks/gem-react-source');
 var eslintTask = require('./grunt/tasks/eslint');
+var testEslintRulesTask = require('./grunt/tasks/test-eslint-rules');
 
 module.exports = function(grunt) {
 
@@ -117,6 +118,7 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('build:test', [
     'delete-build-modules',
+    'test:eslint-rules',
     'jsx:test',
     'version-check',
     'populist:test',
@@ -134,6 +136,8 @@ module.exports = function(grunt) {
   grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
 
   grunt.registerTask('coverage:parse', require('./grunt/tasks/coverage-parse'));
+
+  grunt.registerTask('test:eslint-rules', testEslintRulesTask);
 
   grunt.registerTask('test:webdriver:phantomjs', [
     'connect',

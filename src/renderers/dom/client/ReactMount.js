@@ -736,7 +736,8 @@ var ReactMount = {
           warning(
             false,
             'ReactMount: Root element has been removed from its original ' +
-            'container. New container:', rootElement.parentNode
+            'container. New container: %s',
+            rootElement.parentNode
           );
         }
       }

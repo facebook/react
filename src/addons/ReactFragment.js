@@ -104,7 +104,7 @@ var ReactFragment = {
       if (typeof object !== 'object' || !object || Array.isArray(object)) {
         warning(
           false,
-          'React.addons.createFragment only accepts a single object.',
+          'React.addons.createFragment only accepts a single object. Got: %s',
           object
         );
         return object;

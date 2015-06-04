@@ -166,7 +166,8 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
 
   warning(
     false,
-    message + '%s%s See https://fb.me/react-warning-keys for more information.',
+    '%s%s%s See https://fb.me/react-warning-keys for more information.',
+    message,
     parentOrOwnerAddendum,
     childOwnerAddendum
   );

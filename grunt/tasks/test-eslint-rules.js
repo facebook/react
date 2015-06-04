@@ -5,14 +5,14 @@ var grunt = require('grunt');
 module.exports = function() {
   var done = this.async();
   grunt.util.spawn({
-    cmd: 'node_modules/.bin/eslint',
-    args: ['.', '--rulesdir=eslint-rules'],
+    cmd: 'node_modules/eslint-tester/node_modules/mocha/bin/mocha',
+    args: ['eslint-rules/__tests__'],
     opts: {stdio: 'inherit'}, // allows colors to passthrough
   }, function(err, result, code) {
     if (err) {
-      grunt.log.error('Lint failed');
+      grunt.log.error('Custom linter rules are broken');
     } else {
-      grunt.log.ok('Lint passed (but may contain warnings)');
+      grunt.log.ok('Custom linter rules are okay');
     }
 
     done(code === 0);
