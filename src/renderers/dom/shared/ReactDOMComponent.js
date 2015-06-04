@@ -14,6 +14,7 @@
 
 'use strict';
 
+var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
@@ -21,6 +22,7 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMInput = require('ReactDOMInput');
+var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
@@ -286,6 +288,10 @@ ReactDOMComponent.Mixin = {
         ReactDOMInput.mountWrapper(this, props);
         props = ReactDOMInput.getNativeProps(this, props, context);
         break;
+      case 'textarea':
+        ReactDOMTextarea.mountWrapper(this, props);
+        props = ReactDOMTextarea.getNativeProps(this, props, context);
+        break;
     }
 
     assertValidProps(this, props);
@@ -304,7 +310,13 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'input':
-        ReactDOMInput.postMountWrapper(this, transaction, props);
+      case 'textarea':
+        if (props.autoFocus) {
+          transaction.getReactMountReady().enqueue(
+            AutoFocusUtils.focusDOMComponent,
+            this
+          );
+        }
         break;
     }
 
@@ -457,6 +469,11 @@ ReactDOMComponent.Mixin = {
         ReactDOMInput.updateWrapper(this);
         lastProps = ReactDOMInput.getNativeProps(this, lastProps);
         nextProps = ReactDOMInput.getNativeProps(this, nextProps);
+        break;
+      case 'textarea':
+        ReactDOMTextarea.updateWrapper(this);
+        lastProps = ReactDOMTextarea.getNativeProps(this, lastProps);
+        nextProps = ReactDOMTextarea.getNativeProps(this, nextProps);
         break;
     }
 
@@ -655,6 +672,9 @@ ReactDOMComponent.Mixin = {
     switch (this._tag) {
       case 'input':
         ReactDOMInput.unmountWrapper(this);
+        break;
+      case 'textarea':
+        ReactDOMTextarea.unmountWrapper(this);
         break;
       case 'html':
       case 'head':
