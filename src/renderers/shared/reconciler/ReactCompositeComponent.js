@@ -370,25 +370,28 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processChildContext: function(currentContext) {
+    var Component = ReactNativeComponent.getComponentClassForElement(
+      this._currentElement
+    );
     var inst = this._instance;
     var childContext = inst.getChildContext && inst.getChildContext();
     if (childContext) {
       invariant(
-        typeof inst.constructor.childContextTypes === 'object',
+        typeof Component.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
         'use getChildContext().',
         this.getName() || 'ReactCompositeComponent'
       );
       if (__DEV__) {
         this._checkPropTypes(
-          inst.constructor.childContextTypes,
+          Component.childContextTypes,
           childContext,
           ReactPropTypeLocations.childContext
         );
       }
       for (var name in childContext) {
         invariant(
-          name in inst.constructor.childContextTypes,
+          name in Component.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
           this.getName() || 'ReactCompositeComponent',
           name
