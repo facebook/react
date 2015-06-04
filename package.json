@@ -70,12 +70,6 @@
   "commonerConfig": {
     "version": 7
   },
-  "scripts": {
-    "test": "jest",
-    "jest": "jest",
-    "lint": "grunt lint",
-    "build": "grunt build"
-  },
   "jest": {
     "rootDir": "",
     "scriptPreprocessor": "jest/preprocessor.js",
