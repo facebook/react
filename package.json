@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "babel": "^5.3.3",
-    "babel-eslint": "^3.1.9",
+    "babel-eslint": "3.1.9",
     "benchmark": "~1.0.0",
     "browserify": "^9.0.3",
     "bundle-collapser": "^1.1.1",
