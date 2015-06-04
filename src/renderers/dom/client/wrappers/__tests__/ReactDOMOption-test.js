@@ -11,7 +11,6 @@
 
 'use strict';
 
-/*jshint evil:true */
 
 describe('ReactDOMOption', function() {
   var React;

@@ -29,7 +29,6 @@ var valueContextKey =
   '__ReactDOMSelect_value$' + Math.random().toString(36).slice(2);
 
 function updateOptionsIfPendingUpdateAndMounted() {
-  /*jshint validthis:true */
   if (this._pendingUpdate) {
     this._pendingUpdate = false;
     var value = LinkedValueUtils.getValue(this.props);

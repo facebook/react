@@ -11,7 +11,6 @@
 
 'use strict';
 
-/*jshint evil:true */
 
 var mocks = require('mocks');
 

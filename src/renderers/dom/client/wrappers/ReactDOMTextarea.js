@@ -29,7 +29,6 @@ var warning = require('warning');
 var textarea = ReactElement.createFactory('textarea');
 
 function forceUpdateIfMounted() {
-  /*jshint validthis:true */
   if (this.isMounted()) {
     this.forceUpdate();
   }

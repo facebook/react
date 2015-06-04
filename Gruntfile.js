@@ -32,7 +32,6 @@ module.exports = function(grunt) {
       './examples/shared/*.js',
       '.module-cache',
     ],
-    jshint: require('./grunt/config/jshint'),
     /*eslint-disable camelcase */
     compare_size: require('./grunt/config/compare_size'),
     /*eslint-enable camelcase */
