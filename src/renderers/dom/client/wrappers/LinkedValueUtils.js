@@ -13,6 +13,7 @@
 'use strict';
 
 var ReactPropTypes = require('ReactPropTypes');
+var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -105,7 +106,12 @@ var LinkedValueUtils = {
   checkPropTypes: function (tagName, props, owner) {
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
-        var error = propTypes[propName](props, propName, tagName, location);
+        var error = propTypes[propName](
+          props,
+          propName,
+          tagName,
+          ReactPropTypeLocations.prop
+        );
       }
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {
         // Only monitor this failure once because there tends to be a lot of the
