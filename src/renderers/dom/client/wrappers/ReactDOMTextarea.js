@@ -11,26 +11,18 @@
 
 'use strict';
 
-var AutoFocusUtils = require('AutoFocusUtils');
-var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactClass = require('ReactClass');
-var ReactElement = require('ReactElement');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
-var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
-
 var warning = require('warning');
 
-var textarea = ReactElement.createFactory('textarea');
-
 function forceUpdateIfMounted() {
-  if (this.isMounted()) {
-    this.forceUpdate();
+  if (this._rootNodeID) {
+    // DOM component is still mounted; update
+    ReactDOMTextarea.updateWrapper(this);
   }
 }
 
@@ -49,24 +41,35 @@ function forceUpdateIfMounted() {
  * The rendered element will be initialized with an empty value, the prop
  * `defaultValue` if specified, or the children content (deprecated).
  */
-var ReactDOMTextarea = ReactClass.createClass({
-  displayName: 'ReactDOMTextarea',
-  tagName: 'TEXTAREA',
-
-  mixins: [AutoFocusUtils.Mixin, ReactBrowserComponentMixin],
-
-  componentWillMount: function() {
-    LinkedValueUtils.checkPropTypes(
-      'textarea',
-      this.props,
-      ReactInstanceMap.get(this)._currentElement._owner
+var ReactDOMTextarea = {
+  getNativeProps: function(inst, props, context) {
+    invariant(
+      props.dangerouslySetInnerHTML == null,
+      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
     );
+
+    // Always set children to the same thing. In IE9, the selection range will
+    // get reset if `textContent` is mutated.
+    var nativeProps = assign({}, props, {
+      defaultValue: undefined,
+      value: undefined,
+      children: inst._wrapperState.initialValue,
+      onChange: inst._wrapperState.onChange,
+    });
+
+    return nativeProps;
   },
 
-  getInitialState: function() {
-    var defaultValue = this.props.defaultValue;
+  mountWrapper: function(inst, props) {
+    LinkedValueUtils.checkPropTypes(
+      'textarea',
+      props,
+      inst._currentElement._owner
+    );
+
+    var defaultValue = props.defaultValue;
     // TODO (yungsters): Remove support for children content in <textarea>.
-    var children = this.props.children;
+    var children = props.children;
     if (children != null) {
       if (__DEV__) {
         warning(
@@ -92,50 +95,38 @@ var ReactDOMTextarea = ReactClass.createClass({
     if (defaultValue == null) {
       defaultValue = '';
     }
-    var value = LinkedValueUtils.getValue(this.props);
-    return {
+    var value = LinkedValueUtils.getValue(props);
+
+    inst._wrapperState = {
       // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
       // The initial value can be a boolean or object so that's why it's
       // forced to be a string.
       initialValue: '' + (value != null ? value : defaultValue),
+      onChange: _handleChange.bind(inst),
     };
   },
 
-  render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
-
-    invariant(
-      props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
-    );
-
-    props.defaultValue = null;
-    props.value = null;
-    props.onChange = this._handleChange;
-
-    // Always set children to the same thing. In IE9, the selection range will
-    // get reset if `textContent` is mutated.
-    return textarea(props, this.state.initialValue);
-  },
-
-  componentDidUpdate: function(prevProps, prevState, prevContext) {
-    var value = LinkedValueUtils.getValue(this.props);
+  updateWrapper: function(inst) {
+    var props = inst._currentElement.props;
+    var value = LinkedValueUtils.getValue(props);
     if (value != null) {
-      var rootNode = findDOMNode(this);
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);
+      ReactDOMIDOperations.updatePropertyByID(
+        inst._rootNodeID,
+        'value',
+        '' + value
+      );
     }
   },
+};
 
-  _handleChange: function(event) {
-    var returnValue = LinkedValueUtils.executeOnChange(this.props, event);
-    ReactUpdates.asap(forceUpdateIfMounted, this);
-    return returnValue;
-  },
-
-});
+function _handleChange(event) {
+  var props = this._currentElement.props;
+  var returnValue = LinkedValueUtils.executeOnChange(props, event);
+  ReactUpdates.asap(forceUpdateIfMounted, this);
+  return returnValue;
+}
 
 module.exports = ReactDOMTextarea;

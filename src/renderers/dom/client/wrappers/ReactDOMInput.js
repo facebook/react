@@ -11,7 +11,6 @@
 
 'use strict';
 
-var AutoFocusUtils = require('AutoFocusUtils');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactMount = require('ReactMount');
@@ -76,15 +75,6 @@ var ReactDOMInput = {
     };
 
     instancesByReactID[inst._rootNodeID] = inst;
-  },
-
-  postMountWrapper: function(inst, transaction, props) {
-    if (props.autoFocus) {
-      transaction.getReactMountReady().enqueue(
-        AutoFocusUtils.focusDOMComponent,
-        inst
-      );
-    }
   },
 
   unmountWrapper: function(inst) {

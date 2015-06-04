@@ -31,7 +31,6 @@ var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactDOMIframe = require('ReactDOMIframe');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
-var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactElement = require('ReactElement');
 var ReactEventListener = require('ReactEventListener');
@@ -117,7 +116,6 @@ function inject() {
     'img': ReactDOMImg,
     'option': ReactDOMOption,
     'select': ReactDOMSelect,
-    'textarea': ReactDOMTextarea,
   });
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
