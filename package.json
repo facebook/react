@@ -73,7 +73,7 @@
   "scripts": {
     "test": "jest",
     "jest": "jest",
-    "lint": "eslint src",
+    "lint": "grunt lint",
     "build": "grunt build"
   },
   "jest": {
