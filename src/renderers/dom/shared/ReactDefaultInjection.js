@@ -24,7 +24,6 @@ var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactDOMComponent = require('ReactDOMComponent');
-var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
 var ReactDOMImg = require('ReactDOMImg');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
@@ -110,7 +109,6 @@ function inject() {
   ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
 
   ReactInjection.NativeComponent.injectComponentClasses({
-    'button': ReactDOMButton,
     'form': ReactDOMForm,
     'iframe': ReactDOMIframe,
     'img': ReactDOMImg,

@@ -21,6 +21,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
+var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMount = require('ReactMount');
@@ -284,6 +285,9 @@ ReactDOMComponent.Mixin = {
     var props = this._currentElement.props;
 
     switch (this._tag) {
+      case 'button':
+        props = ReactDOMButton.getNativeProps(this, props, context);
+        break;
       case 'input':
         ReactDOMInput.mountWrapper(this, props);
         props = ReactDOMInput.getNativeProps(this, props, context);
@@ -309,6 +313,7 @@ ReactDOMComponent.Mixin = {
     var tagContent = this._createContentMarkup(transaction, props, context);
 
     switch (this._tag) {
+      case 'button':
       case 'input':
       case 'textarea':
         if (props.autoFocus) {
@@ -465,6 +470,10 @@ ReactDOMComponent.Mixin = {
     var nextProps = this._currentElement.props;
 
     switch (this._tag) {
+      case 'button':
+        lastProps = ReactDOMButton.getNativeProps(this, lastProps);
+        nextProps = ReactDOMButton.getNativeProps(this, nextProps);
+        break;
       case 'input':
         ReactDOMInput.updateWrapper(this);
         lastProps = ReactDOMInput.getNativeProps(this, lastProps);
