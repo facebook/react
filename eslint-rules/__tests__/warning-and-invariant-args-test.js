@@ -51,8 +51,9 @@ eslintTester.addRuleTest('eslint-rules/warning-and-invariant-args', {
       code: "warning(true, 'expected %s, got %s');",
       errors: [
         {
-          message: 'Expected 4 arguments in call to warning, but got 2 ' +
-                   'based on the number of "%s" substitutions',
+          message:
+            'Expected 4 arguments in call to warning based on the number of ' +
+            '"%s" substitutions, but got 2',
         },
       ],
     },
@@ -60,8 +61,9 @@ eslintTester.addRuleTest('eslint-rules/warning-and-invariant-args', {
       code: "warning(true, 'foobar', 'junk argument');",
       errors: [
         {
-          message: 'Expected 2 arguments in call to warning, but got 3 ' +
-                   'based on the number of "%s" substitutions',
+          message:
+            'Expected 2 arguments in call to warning based on the number of ' +
+            '"%s" substitutions, but got 3',
         },
       ],
     },

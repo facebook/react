@@ -63,8 +63,8 @@ module.exports = function(context) {
       if (node.arguments.length !== expectedNArgs) {
         context.report(
           node,
-          'Expected {{expectedNArgs}} arguments in call to {{name}}, but ' +
-          'got {{length}} based on the number of "%s" substitutions',
+          'Expected {{expectedNArgs}} arguments in call to {{name}} based on ' +
+          'the number of "%s" substitutions, but got {{length}}',
           {
             expectedNArgs: expectedNArgs,
             name: node.callee.name,
