@@ -58,12 +58,43 @@ eslintTester.addRuleTest('eslint-rules/warning-and-invariant-args', {
       ],
     },
     {
-      code: "warning(true, 'foobar', 'junk argument');",
+      code: "warning(true, 'foo is a bar under foobar', 'junk argument');",
       errors: [
         {
           message:
             'Expected 2 arguments in call to warning based on the number of ' +
             '"%s" substitutions, but got 3',
+        },
+      ],
+    },
+    {
+      code: "invariant(true, 'error!');",
+      errors: [
+        {
+          message:
+            'The invariant format should be able to uniquely identify this ' +
+            'invariant. Please, use a more descriptive format than: error!',
+        },
+      ],
+    },
+    {
+      code: "warning(true, 'error!');",
+      errors: [
+        {
+          message:
+            'The warning format should be able to uniquely identify this ' +
+            'warning. Please, use a more descriptive format than: error!',
+        },
+      ],
+    },
+    {
+      code: "warning(true, '%s %s, %s %s: %s (%s)', 1, 2, 3, 4, 5, 6);",
+      errors: [
+        {
+          message:
+            'The warning format should be able to uniquely identify this ' +
+            'warning. Please, use a more descriptive format than: ' +
+            '%s %s, %s %s: %s (%s)',
         },
       ],
     },

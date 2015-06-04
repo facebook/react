@@ -31,13 +31,6 @@ if (__DEV__) {
       );
     }
 
-    if (format.length < 10 || /^[s\W]*$/.test(format)) {
-      throw new Error(
-        'The warning format should be able to uniquely identify this ' +
-        'warning. Please, use a more descriptive format than: ' + format
-      );
-    }
-
     if (format.indexOf('Failed Composite propType: ') === 0) {
       return; // Ignore CompositeComponent proptype check.
     }
