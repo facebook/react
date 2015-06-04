@@ -276,8 +276,9 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called forceUpdate() on ' +
-      'an unmounted component. This is a no-op.'
+      'mounting component. This usually means you called forceUpdate() on an ' +
+      'unmounted component. This is a no-op. Please check the code for the ' +
+      'Component component.'
     );
   });
 
@@ -308,7 +309,8 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op.'
+      'unmounted component. This is a no-op. Please check the code for the ' +
+      'Component component.'
     );
   });
 
@@ -372,7 +374,8 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setProps(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setProps() on an ' +
-      'unmounted component. This is a no-op.'
+      'unmounted component. This is a no-op. Please check the code for the ' +
+      'Component component.'
     );
   });
 
