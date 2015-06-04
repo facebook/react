@@ -49,8 +49,8 @@ module.exports = function(context) {
         );
         return;
       }
-      var str = getLiteralString(node.arguments[1]);
-      if (str === null) {
+      var format = getLiteralString(node.arguments[1]);
+      if (format === null) {
         context.report(
           node,
           'The second argument to {{name}} must be a string literal',
@@ -58,13 +58,22 @@ module.exports = function(context) {
         );
         return;
       }
-      // count the number of string substitutions, plus the first two args
-      var expectedNArgs = (str.match(/%s/g) || []).length + 2;
+      if (format.length < 10 || /^[s\W]*$/.test(format)) {
+        context.report(
+          node,
+          'The {{name}} format should be able to uniquely identify this ' +
+          '{{name}}. Please, use a more descriptive format than: {{format}}',
+          {name: node.callee.name, format: format}
+        );
+        return;
+      }
+      // count the number of formating substitutions, plus the first two args
+      var expectedNArgs = (format.match(/%s/g) || []).length + 2;
       if (node.arguments.length !== expectedNArgs) {
         context.report(
           node,
-          'Expected {{expectedNArgs}} arguments in call to {{name}}, but ' +
-          'got {{length}} based on the number of "%s" substitutions',
+          'Expected {{expectedNArgs}} arguments in call to {{name}} based on ' +
+          'the number of "%s" substitutions, but got {{length}}',
           {
             expectedNArgs: expectedNArgs,
             name: node.callee.name,

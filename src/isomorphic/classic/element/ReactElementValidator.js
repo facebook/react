@@ -97,10 +97,18 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  warnAndMonitorForKeyUse(
-    'Each child in an array or iterator should have a unique "key" prop.',
-    element,
-    parentType
+  var addenda = getAddendaForKeyUse('uniqueKey', element, parentType);
+  if (addenda === null) {
+    // we already showed the warning
+    return;
+  }
+  warning(
+    false,
+    'Each child in an array or iterator should have a unique "key" prop.' +
+    '%s%s%s',
+    addenda.parentOrOwner || '',
+    addenda.childOwner || '',
+    addenda.url || ''
   );
 }
 
@@ -117,10 +125,18 @@ function validatePropertyKey(name, element, parentType) {
   if (!NUMERIC_PROPERTY_REGEX.test(name)) {
     return;
   }
-  warnAndMonitorForKeyUse(
-    'Child objects should have non-numeric keys so ordering is preserved.',
-    element,
-    parentType
+  var addenda = getAddendaForKeyUse('numericKeys', element, parentType);
+  if (addenda === null) {
+    // we already showed the warning
+    return;
+  }
+  warning(
+    false,
+    'Child objects should have non-numeric keys so ordering is preserved.' +
+    '%s%s%s',
+    addenda.parentOrOwner || '',
+    addenda.childOwner || '',
+    addenda.url || ''
   );
 }
 
@@ -128,49 +144,47 @@ function validatePropertyKey(name, element, parentType) {
  * Shared warning and monitoring code for the key warnings.
  *
  * @internal
- * @param {string} message The base warning that gets output.
+ * @param {string} messageType A key used for de-duping warnings.
  * @param {ReactElement} element Component that requires a key.
  * @param {*} parentType element's parent's type.
+ * @returns {?object} A set of addenda to use in the warning message, or null
+ * if the warning has already been shown before (and shouldn't be shown again).
  */
-function warnAndMonitorForKeyUse(message, element, parentType) {
+function getAddendaForKeyUse(messageType, element, parentType) {
   var ownerName = getCurrentOwnerDisplayName();
   var parentName = typeof parentType === 'string' ?
     parentType : parentType.displayName || parentType.name;
 
   var useName = ownerName || parentName;
-  var memoizer = ownerHasKeyUseWarning[message] || (
-    ownerHasKeyUseWarning[message] = {}
+  var memoizer = ownerHasKeyUseWarning[messageType] || (
+    ownerHasKeyUseWarning[messageType] = {}
   );
-  if (memoizer.hasOwnProperty(useName)) {
-    return;
+  if (memoizer[useName]) {
+    return null;
   }
   memoizer[useName] = true;
 
-  var parentOrOwnerAddendum =
-    ownerName ? ` Check the render method of ${ownerName}.` :
-    parentName ? ` Check the React.render call using <${parentName}>.` :
-    '';
+  var addenda = {
+    parentOrOwner:
+      ownerName ? ` Check the render method of ${ownerName}.` :
+      parentName ? ` Check the React.render call using <${parentName}>.` :
+      null,
+    url: ' See https://fb.me/react-warning-keys for more information.',
+    childOwner: null,
+  };
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
-  var childOwnerAddendum = '';
   if (element &&
       element._owner &&
       element._owner !== ReactCurrentOwner.current) {
-    // Name of the component that originally created this child.
-    var childOwnerName = getName(element._owner);
-
-    childOwnerAddendum = ` It was passed a child from ${childOwnerName}.`;
+    // Give the component that originally created this child.
+    addenda.childOwner =
+      ` It was passed a child from ${getName(element._owner)}.`;
   }
 
-  warning(
-    false,
-    '%s%s%s See https://fb.me/react-warning-keys for more information.',
-    message,
-    parentOrOwnerAddendum,
-    childOwnerAddendum
-  );
+  return addenda;
 }
 
 /**
