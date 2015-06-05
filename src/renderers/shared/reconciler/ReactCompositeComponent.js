@@ -197,6 +197,12 @@ var ReactCompositeComponentMixin = {
         'expected to return a value.',
         (this.getName() || 'A component')
       );
+      warning(
+        typeof inst.componentWillRecieveProps !== 'function',
+        '%s has a method called ' +
+        'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
+        (this.getName() || 'A component')
+      );
     }
 
     var initialState = inst.state;

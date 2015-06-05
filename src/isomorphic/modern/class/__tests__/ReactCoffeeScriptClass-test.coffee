@@ -319,6 +319,23 @@ describe 'ReactCoffeeScriptClass', ->
        question because the function is expected to return a value.'
     )
 
+    it 'should warn when mispelling componentWillReceiveProps', ->
+    spyOn console, 'error'
+    class NamedComponent
+      componentWillRecieveProps: ->
+        false
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(NamedComponent), 'SPAN', 'foo'
+    expect(console.error.calls.length).toBe 1
+    expect(console.error.calls[0].args[0]).toBe(
+      'Warning: NamedComponent has a method called componentWillRecieveProps().
+       Did you mean componentWillReceiveProps()?'
+    )
+
   it 'should throw AND warn when trying to access classic APIs', ->
     spyOn console, 'error'
     instance =
