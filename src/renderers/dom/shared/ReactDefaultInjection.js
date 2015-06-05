@@ -24,10 +24,7 @@ var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactDOMComponent = require('ReactDOMComponent');
-var ReactDOMForm = require('ReactDOMForm');
-var ReactDOMImg = require('ReactDOMImg');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactDOMIframe = require('ReactDOMIframe');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
@@ -109,9 +106,6 @@ function inject() {
   ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
 
   ReactInjection.NativeComponent.injectComponentClasses({
-    'form': ReactDOMForm,
-    'iframe': ReactDOMIframe,
-    'img': ReactDOMImg,
     'option': ReactDOMOption,
     'select': ReactDOMSelect,
   });

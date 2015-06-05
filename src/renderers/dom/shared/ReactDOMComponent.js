@@ -18,6 +18,7 @@ var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var EventConstants = require('EventConstants');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
@@ -176,6 +177,58 @@ function putListener() {
   );
 }
 
+function trapBubbledEventsLocal() {
+  var inst = this;
+  // If a component renders to null or if another component fatals and causes
+  // the state of the tree to be corrupted, `node` here can be null.
+  invariant(inst._rootNodeID, 'Must be mounted to trap events');
+  var node = ReactMount.getNode(inst._rootNodeID);
+  invariant(
+    node,
+    'trapBubbledEvent(...): Requires node to be rendered.'
+  );
+
+  switch (inst._tag) {
+    case 'iframe':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topLoad,
+          'load',
+          node
+        ),
+      ];
+      break;
+    case 'img':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topError,
+          'error',
+          node
+        ),
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topLoad,
+          'load',
+          node
+        ),
+      ];
+      break;
+    case 'form':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topReset,
+          'reset',
+          node
+        ),
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topSubmit,
+          'submit',
+          node
+        ),
+      ];
+      break;
+  }
+}
+
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
 // those special cased tags.
 
@@ -285,6 +338,14 @@ ReactDOMComponent.Mixin = {
     var props = this._currentElement.props;
 
     switch (this._tag) {
+      case 'iframe':
+      case 'img':
+      case 'form':
+        this._wrapperState = {
+          listeners: null,
+        };
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        break;
       case 'button':
         props = ReactDOMButton.getNativeProps(this, props, context);
         break;
@@ -679,6 +740,16 @@ ReactDOMComponent.Mixin = {
    */
   unmountComponent: function() {
     switch (this._tag) {
+      case 'iframe':
+      case 'img':
+      case 'form':
+        var listeners = this._wrapperState.listeners;
+        if (listeners) {
+          for (var i = 0; i < listeners.length; i++) {
+            listeners[i].remove();
+          }
+        }
+        break;
       case 'input':
         ReactDOMInput.unmountWrapper(this);
         break;
