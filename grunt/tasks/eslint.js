@@ -12,7 +12,7 @@ module.exports = function() {
     if (err) {
       grunt.log.error('Lint failed');
     } else {
-      grunt.log.ok('Lint passed (but may contain warnings)');
+      grunt.log.ok('Lint passed');
     }
 
     done(code === 0);
