@@ -24,6 +24,8 @@ var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMInput = require('ReactDOMInput');
+var ReactDOMOption = require('ReactDOMOption');
+var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
@@ -229,6 +231,10 @@ function trapBubbledEventsLocal() {
   }
 }
 
+function postUpdateSelectWrapper() {
+  ReactDOMSelect.postUpdateWrapper(this);
+}
+
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
 // those special cased tags.
 
@@ -350,11 +356,20 @@ ReactDOMComponent.Mixin = {
         props = ReactDOMButton.getNativeProps(this, props, context);
         break;
       case 'input':
-        ReactDOMInput.mountWrapper(this, props);
+        ReactDOMInput.mountWrapper(this, props, context);
         props = ReactDOMInput.getNativeProps(this, props, context);
         break;
+      case 'option':
+        ReactDOMOption.mountWrapper(this, props, context);
+        props = ReactDOMOption.getNativeProps(this, props, context);
+        break;
+      case 'select':
+        ReactDOMSelect.mountWrapper(this, props, context);
+        props = ReactDOMSelect.getNativeProps(this, props, context);
+        context = ReactDOMSelect.processChildContext(this, props, context);
+        break;
       case 'textarea':
-        ReactDOMTextarea.mountWrapper(this, props);
+        ReactDOMTextarea.mountWrapper(this, props, context);
         props = ReactDOMTextarea.getNativeProps(this, props, context);
         break;
     }
@@ -376,6 +391,7 @@ ReactDOMComponent.Mixin = {
     switch (this._tag) {
       case 'button':
       case 'input':
+      case 'select':
       case 'textarea':
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
@@ -540,6 +556,14 @@ ReactDOMComponent.Mixin = {
         lastProps = ReactDOMInput.getNativeProps(this, lastProps);
         nextProps = ReactDOMInput.getNativeProps(this, nextProps);
         break;
+      case 'option':
+        lastProps = ReactDOMOption.getNativeProps(this, lastProps);
+        nextProps = ReactDOMOption.getNativeProps(this, nextProps);
+        break;
+      case 'select':
+        lastProps = ReactDOMSelect.getNativeProps(this, lastProps);
+        nextProps = ReactDOMSelect.getNativeProps(this, nextProps);
+        break;
       case 'textarea':
         ReactDOMTextarea.updateWrapper(this);
         lastProps = ReactDOMTextarea.getNativeProps(this, lastProps);
@@ -555,6 +579,12 @@ ReactDOMComponent.Mixin = {
       transaction,
       processChildContext(context, this)
     );
+
+    if (this._tag === 'select') {
+      // <select> value update needs to occur after <option> children
+      // reconciliation
+      transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, this);
+    }
   },
 
   /**

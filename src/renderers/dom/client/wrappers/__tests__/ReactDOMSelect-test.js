@@ -323,9 +323,9 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     var markup = React.renderToString(stub);
-    expect(markup).toContain('<option value="giraffe" selected=');
-    expect(markup).not.toContain('<option value="monkey" selected=');
-    expect(markup).not.toContain('<option value="gorilla" selected=');
+    expect(markup).toContain('<option selected="" value="giraffe"');
+    expect(markup).not.toContain('<option selected="" value="monkey"');
+    expect(markup).not.toContain('<option selected="" value="gorilla"');
   });
 
   it('should support server-side rendering with defaultValue', function() {
@@ -336,9 +336,9 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     var markup = React.renderToString(stub);
-    expect(markup).toContain('<option value="giraffe" selected=');
-    expect(markup).not.toContain('<option value="monkey" selected=');
-    expect(markup).not.toContain('<option value="gorilla" selected=');
+    expect(markup).toContain('<option selected="" value="giraffe"');
+    expect(markup).not.toContain('<option selected="" value="monkey"');
+    expect(markup).not.toContain('<option selected="" value="gorilla"');
   });
 
   it('should support server-side rendering with multiple', function() {
@@ -349,9 +349,9 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     var markup = React.renderToString(stub);
-    expect(markup).toContain('<option value="giraffe" selected=');
-    expect(markup).toContain('<option value="gorilla" selected=');
-    expect(markup).not.toContain('<option value="monkey" selected=');
+    expect(markup).toContain('<option selected="" value="giraffe"');
+    expect(markup).toContain('<option selected="" value="gorilla"');
+    expect(markup).not.toContain('<option selected="" value="monkey"');
   });
 
   it('should not control defaultValue if readding options', function() {

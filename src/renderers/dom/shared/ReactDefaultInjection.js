@@ -25,8 +25,6 @@ var ReactComponentBrowserEnvironment =
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactDOMOption = require('ReactDOMOption');
-var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactElement = require('ReactElement');
 var ReactEventListener = require('ReactEventListener');
@@ -104,11 +102,6 @@ function inject() {
   );
 
   ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
-
-  ReactInjection.NativeComponent.injectComponentClasses({
-    'option': ReactDOMOption,
-    'select': ReactDOMSelect,
-  });
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
