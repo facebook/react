@@ -13,13 +13,13 @@
 
 var ReactDOMClient = require('ReactDOMClient');
 var ReactDOMServer = require('ReactDOMServer');
-var ReactIsomorphic = require('ReactIsomorphic');
+var ReactUniversal = require('ReactUniversal');
 
 var assign = require('Object.assign');
 
 var React = {};
 
-assign(React, ReactIsomorphic);
+assign(React, ReactUniversal);
 assign(React, ReactDOMClient);
 assign(React, ReactDOMServer);
 
