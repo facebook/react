@@ -135,6 +135,9 @@ describe('ReactComponent', function() {
 
   it('should support new-style refs with mixed-up owners', function() {
     var Wrapper = React.createClass({
+      getTitle: function() {
+        return this.props.title;
+      },
       render: function() {
         return this.props.getContent();
       },
@@ -158,8 +161,8 @@ describe('ReactComponent', function() {
       },
       componentDidMount: function() {
         // Check .props.title to make sure we got the right elements back
-        expect(this.wrapperRef.props.title).toBe('wrapper');
-        expect(this.innerRef.props.title).toBe('inner');
+        expect(this.wrapperRef.getTitle()).toBe('wrapper');
+        expect(React.findDOMNode(this.innerRef).title).toBe('inner');
         mounted = true;
       },
     });

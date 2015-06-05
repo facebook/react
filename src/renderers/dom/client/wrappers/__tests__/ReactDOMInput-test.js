@@ -75,30 +75,39 @@ describe('ReactDOMInput', function() {
   });
 
   it('should allow setting `value` to `true`', function() {
+    var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('yolo');
 
-    stub.replaceProps({value: true, onChange: emptyFunction});
+    stub = React.render(
+      <input type="text" value={true} onChange={emptyFunction} />,
+      container
+    );
     expect(node.value).toEqual('true');
   });
 
   it('should allow setting `value` to `false`', function() {
+    var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('yolo');
 
-    stub.replaceProps({value: false});
+    stub = React.render(
+      <input type="text" value={false} onChange={emptyFunction} />,
+      container
+    );
     expect(node.value).toEqual('false');
   });
 
   it('should allow setting `value` to `objToString`', function() {
+    var container = document.createElement('div');
     var stub = <input type="text" value="foo" onChange={emptyFunction} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('foo');
@@ -108,8 +117,10 @@ describe('ReactDOMInput', function() {
         return 'foobar';
       },
     };
-
-    stub.replaceProps({value: objToString, onChange: emptyFunction});
+    stub = React.render(
+      <input type="text" value={objToString} onChange={emptyFunction} />,
+      container
+    );
     expect(node.value).toEqual('foobar');
   });
 

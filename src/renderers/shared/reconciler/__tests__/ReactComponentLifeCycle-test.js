@@ -464,15 +464,20 @@ describe('ReactComponentLifeCycle', function() {
     /**
      * calls setProps in an componentDidMount.
      */
+    var Inner = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
     var PropsUpdaterInOnDOMReady = React.createClass({
       componentDidMount: function() {
         this.refs.theSimpleComponent.setProps({
-          valueToUseInitially: this.props.valueToUseInOnDOMReady,
+          className: this.props.valueToUseInOnDOMReady,
         });
       },
       render: function() {
         return (
-          <div
+          <Inner
             className={this.props.valueToUseInitially}
             ref="theSimpleComponent"
           />

@@ -902,4 +902,41 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('DOM nodes as refs', function() {
+    var React;
+    var ReactTestUtils;
+
+    beforeEach(function() {
+      React = require('React');
+      ReactTestUtils = require('ReactTestUtils');
+    });
+
+    it('warns when accessing properties on DOM components', function() {
+      spyOn(console, 'error');
+      var Animal = React.createClass({
+        render: function() {
+          return <div ref="div">iguana</div>;
+        },
+        componentDidMount: function() {
+          void this.refs.div.props;
+          void this.refs.div.setProps;
+        },
+      });
+      ReactTestUtils.renderIntoDocument(<Animal />);
+
+      expect(console.error.calls.length).toBe(2);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: ReactDOMComponent.props: Do not access .props of a DOM ' +
+        'component directly; instead, recreate the props as `render` did ' +
+        'originally or use React.findDOMNode and read the DOM ' +
+        'properties/attributes directly. This DOM component was rendered ' +
+        'by `Animal`.'
+      );
+      expect(console.error.calls[1].args[0]).toBe(
+        'Warning: ReactDOMComponent.setProps(): Do not access .setProps() of ' +
+        'a DOM component. This DOM component was rendered by `Animal`.'
+      );
+    });
+  });
+
 });

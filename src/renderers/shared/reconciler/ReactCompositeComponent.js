@@ -557,11 +557,16 @@ var ReactCompositeComponentMixin = {
   ) {
     var inst = this._instance;
 
-    var nextContext = inst.context;
-    var nextProps = inst.props;
+    var nextContext;
+    var nextProps;
 
     // Distinguish between a props update versus a simple state update
-    if (prevParentElement !== nextParentElement) {
+    if (prevParentElement === nextParentElement) {
+      nextContext = inst.context;
+      // Skip checking prop types again -- we don't read inst.props to avoid
+      // warning for DOM component props in this upgrade
+      nextProps = nextParentElement.props;
+    } else {
       nextContext = this._processContext(nextUnmaskedContext);
       nextProps = this._processProps(nextParentElement.props);
 
@@ -663,9 +668,15 @@ var ReactCompositeComponentMixin = {
   ) {
     var inst = this._instance;
 
-    var prevProps = inst.props;
-    var prevState = inst.state;
-    var prevContext = inst.context;
+    var hasComponentDidUpdate = Boolean(inst.componentDidUpdate);
+    var prevProps;
+    var prevState;
+    var prevContext;
+    if (hasComponentDidUpdate) {
+      prevProps = inst.props;
+      prevState = inst.state;
+      prevContext = inst.context;
+    }
 
     if (inst.componentWillUpdate) {
       inst.componentWillUpdate(nextProps, nextState, nextContext);
@@ -679,7 +690,7 @@ var ReactCompositeComponentMixin = {
 
     this._updateRenderedComponent(transaction, unmaskedContext);
 
-    if (inst.componentDidUpdate) {
+    if (hasComponentDidUpdate) {
       transaction.getReactMountReady().enqueue(
         inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
         inst

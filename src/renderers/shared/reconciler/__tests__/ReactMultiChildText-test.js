@@ -31,23 +31,14 @@ var testAllPermutations = function(testCases) {
       var updateWithChildren = testCases[j];
       var expectedResultAfterUpdate = testCases[j + 1];
 
-      var d = renderChildren(renderWithChildren);
+      var container = document.createElement('div');
+      var d = React.render(<div>{renderWithChildren}</div>, container);
       expectChildren(d, expectedResultAfterRender);
 
-      updateChildren(d, updateWithChildren);
+      d = React.render(<div>{updateWithChildren}</div>, container);
       expectChildren(d, expectedResultAfterUpdate);
     }
   }
-};
-
-var renderChildren = function(children) {
-  return ReactTestUtils.renderIntoDocument(
-    <div>{children}</div>
-  );
-};
-
-var updateChildren = function(d, children) {
-  d.replaceProps({children: children});
 };
 
 var expectChildren = function(d, children) {

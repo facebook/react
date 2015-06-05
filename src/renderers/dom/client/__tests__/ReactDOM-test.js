@@ -79,32 +79,32 @@ describe('ReactDOM', function() {
       </div>
     );
     // Warm the cache with theDog
-    myDiv.setProps({
-      children: [
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
         <div key="theDog" className="dogbeforedelete" />,
         <div key="theBird" className="bird" />,
-      ],
-    });
+      </div>
+    );
     // Remove theDog - this should purge the cache
-    myDiv.setProps({
-      children: [
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
         <div key="theBird" className="bird" />,
-      ],
-    });
+      </div>
+    );
     // Now, put theDog back. It's now a different DOM node.
-    myDiv.setProps({
-      children: [
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />,
-      ],
-    });
+      </div>
+    );
     // Change the className of theDog. It will use the same element
-    myDiv.setProps({
-      children: [
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
         <div key="theDog" className="bigdog" />,
         <div key="theBird" className="bird" />,
-      ],
-    });
+      </div>
+    );
     var root = React.findDOMNode(myDiv);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
