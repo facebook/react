@@ -18,7 +18,7 @@ In order to do this, you need to do a few things. You need to be able to run Jav
 
 Let's augment an existing PHP app to support server rendering. This architecture runs an Express-based Node web service to run the JavaScript server side. PHP simply uses `file_get_contents()` to send an HTTP request to this service to get the static HTML string.
 
-Browserify is used to run the same code that Node.js is running inside of the browser (aka "isomorphic" JavaScript).
+Browserify is used to run the same code that Node.js is running inside of the browser (aka "universal" JavaScript).
 
 ```
 +-------------+       +------------------+                                              +----------------------+

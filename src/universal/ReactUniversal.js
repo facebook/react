@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactIsomorphic
+ * @providesModule ReactUniversal
  */
 
 'use strict';
@@ -59,7 +59,7 @@ var React = {
     return mixin;
   },
 
-  // This looks DOM specific but these are actually isomorphic helpers
+  // This looks DOM specific but these are actually universal helpers
   // since they are just generating DOM strings.
   DOM: ReactDOM,
 
