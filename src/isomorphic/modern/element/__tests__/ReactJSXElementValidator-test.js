@@ -20,6 +20,7 @@ var ReactTestUtils;
 
 describe('ReactJSXElementValidator', function() {
   var Component;
+  var RequiredPropComponent;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
@@ -33,6 +34,14 @@ describe('ReactJSXElementValidator', function() {
         return <div />;
       }
     };
+
+    RequiredPropComponent = class {
+      render() {
+        return <span>{this.props.prop}</span>;
+      }
+    };
+    RequiredPropComponent.displayName = 'RequiredPropComponent';
+    RequiredPropComponent.propTypes = {prop: React.PropTypes.string.isRequired};
   });
 
   function frag(obj) {
@@ -245,71 +254,48 @@ describe('ReactJSXElementValidator', function() {
   it('should check default prop values', function() {
     spyOn(console, 'error');
 
-    class Component {
-      render() {
-        return <span>{this.props.prop}</span>;
-      }
-    }
-    Component.defaultProps = {prop: null};
-    Component.propTypes = {prop: React.PropTypes.string.isRequired};
+    RequiredPropComponent.defaultProps = {prop: null};
 
-    ReactTestUtils.renderIntoDocument(<Component />);
+    ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `Component`.'
+      'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
   });
 
   it('should not check the default for explicit null', function() {
     spyOn(console, 'error');
 
-    class Component {
-      render() {
-        return <span>{this.props.prop}</span>;
-      }
-    }
-    Component.defaultProps = {prop: 'text'};
-    Component.propTypes = {prop: React.PropTypes.string.isRequired};
-
-    ReactTestUtils.renderIntoDocument(<Component prop={null} />);
+    ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `Component`.'
+      'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
   });
 
   it('should check declared prop types', function() {
     spyOn(console, 'error');
 
-    class Component {
-      render() {
-        return <span>{this.props.prop}</span>;
-      }
-    }
-    Component.propTypes = {
-      prop: React.PropTypes.string.isRequired,
-    };
-
-    ReactTestUtils.renderIntoDocument(<Component />);
-    ReactTestUtils.renderIntoDocument(<Component prop={42} />);
+    ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
+    ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={42} />);
 
     expect(console.error.calls.length).toBe(2);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `Component`.'
+      'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
 
     expect(console.error.calls[1].args[0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
-      '`Component`, expected `string`.'
+      '`RequiredPropComponent`, expected `string`.'
     );
 
-    ReactTestUtils.renderIntoDocument(<Component prop="string" />);
+    ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop="string" />);
 
     // Should not error for strings
     expect(console.error.calls.length).toBe(2);
@@ -321,51 +307,51 @@ describe('ReactJSXElementValidator', function() {
     // actually occurs. Since this step is skipped in production, we should just
     // warn instead of throwing for this case.
     spyOn(console, 'error');
-    class Component {
+    class NullPropTypeComponent {
       render() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.propTypes = {
+    NullPropTypeComponent.propTypes = {
       prop: null,
     };
-    ReactTestUtils.renderIntoDocument(<Component />);
+    ReactTestUtils.renderIntoDocument(<NullPropTypeComponent />);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
-      'Invariant Violation: Component: prop type `prop` is invalid; ' +
-      'it must be a function, usually from React.PropTypes.'
+      'Invariant Violation: NullPropTypeComponent: prop type `prop` is ' +
+      'invalid; it must be a function, usually from React.PropTypes.'
     );
   });
 
   it('should warn on invalid context types', function() {
     spyOn(console, 'error');
-    class Component {
+    class NullContextTypeComponent {
       render() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.contextTypes = {
+    NullContextTypeComponent.contextTypes = {
       prop: null,
     };
-    ReactTestUtils.renderIntoDocument(<Component />);
+    ReactTestUtils.renderIntoDocument(<NullContextTypeComponent />);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
-      'Invariant Violation: Component: context type `prop` is invalid; ' +
-      'it must be a function, usually from React.PropTypes.'
+      'Invariant Violation: NullContextTypeComponent: context type `prop` is ' +
+      'invalid; it must be a function, usually from React.PropTypes.'
     );
   });
 
   it('should warn if getDefaultProps is specificed on the class', function() {
     spyOn(console, 'error');
-    class Component {
+    class GetDefaultPropsComponent {
       render() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.getDefaultProps = () => ({
+    GetDefaultPropsComponent.getDefaultProps = () => ({
       prop: 'foo',
     });
-    ReactTestUtils.renderIntoDocument(<Component />);
+    ReactTestUtils.renderIntoDocument(<GetDefaultPropsComponent />);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
       'getDefaultProps is only used on classic React.createClass definitions.' +
