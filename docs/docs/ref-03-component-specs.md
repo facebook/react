@@ -10,6 +10,8 @@ next: tags-and-attributes.html
 
 When creating a component class by invoking `React.createClass()`, you should provide a specification object that contains a `render` method and can optionally contain other lifecycle methods described here.
 
+Note: If use ES6 classes you can extend your class from `React.Component` and then `props` are passed in to the constructor, `propTypes` and `defaultProps` should be static members and `getInitialState` is not called (instead you should set the initial state on `this.state` in your constructor). [More on this](http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html#es6-classes)
+
 
 ### render
 
