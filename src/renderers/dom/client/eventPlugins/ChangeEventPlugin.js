@@ -140,14 +140,16 @@ function handleEventsForChangeEventIE8(
 var isInputEventSupported = false;
 if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
-  // deleting text, so we ignore its input events
+  // deleting text, so we ignore its input events.
+  // IE10+ fire input events to often, such when a placeholder
+  // changes or when an input with a placeholder is focused.
   isInputEventSupported = isEventSupported('input') && (
-    !('documentMode' in document) || document.documentMode > 9
+    !('documentMode' in document) || document.documentMode > 11
   );
 }
 
 /**
- * (For old IE.) Replacement getter/setter for the `value` property that gets
+ * (For IE <=11) Replacement getter/setter for the `value` property that gets
  * set on the active element.
  */
 var newValueProp = {
@@ -162,7 +164,7 @@ var newValueProp = {
 };
 
 /**
- * (For old IE.) Starts tracking propertychange events on the passed-in element
+ * (For IE <=11) Starts tracking propertychange events on the passed-in element
  * and override the value property so that we can distinguish user events from
  * value changes in JS.
  */
@@ -176,11 +178,15 @@ function startWatchingForValueChange(target, targetID) {
   );
 
   Object.defineProperty(activeElement, 'value', newValueProp);
-  activeElement.attachEvent('onpropertychange', handlePropertyChange);
+  if (activeElement.attachEvent) {
+    activeElement.attachEvent('onpropertychange', handlePropertyChange);
+  } else {
+    activeElement.addEventListener('propertychange', handlePropertyChange, false);
+  }
 }
 
 /**
- * (For old IE.) Removes the event listeners from the currently-tracked element,
+ * (For IE <=11) Removes the event listeners from the currently-tracked element,
  * if any exists.
  */
 function stopWatchingForValueChange() {
@@ -190,7 +196,12 @@ function stopWatchingForValueChange() {
 
   // delete restores the original property definition
   delete activeElement.value;
-  activeElement.detachEvent('onpropertychange', handlePropertyChange);
+
+  if (activeElement.detachEvent) {
+    activeElement.detachEvent('onpropertychange', handlePropertyChange);
+  } else {
+    activeElement.removeEventListener('propertychange', handlePropertyChange, false);
+  }
 
   activeElement = null;
   activeElementID = null;
@@ -199,7 +210,7 @@ function stopWatchingForValueChange() {
 }
 
 /**
- * (For old IE.) Handles a propertychange event, sending a `change` event if
+ * (For IE <=11) Handles a propertychange event, sending a `change` event if
  * the value of the active element has changed.
  */
 function handlePropertyChange(nativeEvent) {
@@ -229,7 +240,6 @@ function getTargetIDForInputEvent(
   }
 }
 
-// For IE8 and IE9.
 function handleEventsForInputEventIE(
     topLevelType,
     topLevelTarget,
@@ -238,7 +248,7 @@ function handleEventsForInputEventIE(
     // In IE8, we can capture almost all .value changes by adding a
     // propertychange handler and looking for events with propertyName
     // equal to 'value'
-    // In IE9, propertychange fires for most input events but is buggy and
+    // In IE9-11, propertychange fires for most input events but is buggy and
     // doesn't fire when text is deleted, but conveniently, selectionchange
     // appears to fire in all of the remaining cases so we catch those and
     // forward the event if the value has changed
