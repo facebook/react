@@ -53,27 +53,41 @@ describe('ReactDOMButton', function() {
   });
 
   it('should forward clicks when it becomes not disabled', function() {
-    var btn = mounted(<button disabled={true} onClick={onClick} />);
-    btn.setProps({disabled: false});
+    var container = document.createElement('div');
+    var btn = React.render(
+      <button disabled={true} onClick={onClick} />,
+      container
+    );
+    btn = React.render(
+      <button onClick={onClick} />,
+      container
+    );
     expectClickThru(btn);
   });
 
   it('should not forward clicks when it becomes disabled', function() {
-    var btn = mounted(<button onClick={onClick} />);
-    btn.setProps({disabled: true});
+    var container = document.createElement('div');
+    var btn = React.render(
+      <button onClick={onClick} />,
+      container
+    );
+    btn = React.render(
+      <button disabled={true} onClick={onClick} />,
+      container
+    );
     expectNoClickThru(btn);
   });
 
   it('should work correctly if the listener is changed', function() {
-    var btn = mounted(
-      <button disabled={true} onClick={function() {}} />
+    var container = document.createElement('div');
+    var btn = React.render(
+      <button disabled={true} onClick={function() {}} />,
+      container
     );
-
-    btn.setProps({
-      disabled: false,
-      onClick: onClick,
-    });
-
+    btn = React.render(
+      <button disabled={false} onClick={onClick} />,
+      container
+    );
     expectClickThru(btn);
   });
 });

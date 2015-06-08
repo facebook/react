@@ -77,6 +77,11 @@ var ReactTestUtils = {
   },
 
   isCompositeComponent: function(inst) {
+    if (ReactTestUtils.isDOMComponent(inst)) {
+      // Accessing inst.setState warns; just return false as that'll be what
+      // this returns when we have DOM nodes as refs directly
+      return false;
+    }
     return typeof inst.render === 'function' &&
            typeof inst.setState === 'function';
   },
@@ -165,11 +170,14 @@ var ReactTestUtils = {
    */
   scryRenderedDOMComponentsWithClass: function(root, className) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      var instClassName = inst.props.className;
-      return ReactTestUtils.isDOMComponent(inst) && (
-        instClassName &&
-        (' ' + instClassName + ' ').indexOf(' ' + className + ' ') !== -1
-      );
+      if (ReactTestUtils.isDOMComponent(inst)) {
+        var instClassName = React.findDOMNode(inst).className;
+        return (
+          instClassName &&
+          (' ' + instClassName + ' ').indexOf(' ' + className + ' ') !== -1
+        );
+      }
+      return false;
     });
   },
 

@@ -26,8 +26,11 @@ describe('ReactDOMTextarea', function() {
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
 
-    renderTextarea = function(component) {
-      var stub = ReactTestUtils.renderIntoDocument(component);
+    renderTextarea = function(component, container) {
+      if (!container) {
+        container = document.createElement('div');
+      }
+      var stub = React.render(component, container);
       var node = React.findDOMNode(stub);
       // Fixing jsdom's quirky behavior -- in reality, the parser should strip
       // off the leading newline but we need to do it by hand here.
@@ -37,14 +40,14 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should allow setting `defaultValue`', function() {
-    var stub = <textarea defaultValue="giraffe" />;
-    stub = renderTextarea(stub);
+    var container = document.createElement('div');
+    var stub = renderTextarea(<textarea defaultValue="giraffe" />, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
     // Changing `defaultValue` should do nothing.
-    stub.replaceProps({defaultValue: 'gorilla'});
+    stub = renderTextarea(<textarea defaultValue="gorilla" />, container);
     expect(node.value).toEqual('giraffe');
   });
 
@@ -95,41 +98,54 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should allow setting `value` to `giraffe`', function() {
+    var container = document.createElement('div');
     var stub = <textarea value="giraffe" onChange={emptyFunction} />;
-    stub = renderTextarea(stub);
+    stub = renderTextarea(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
-    stub.replaceProps({value: 'gorilla', onChange: emptyFunction});
+    stub = React.render(
+      <textarea value="gorilla" onChange={emptyFunction} />,
+      container
+    );
     expect(node.value).toEqual('gorilla');
   });
 
   it('should allow setting `value` to `true`', function() {
+    var container = document.createElement('div');
     var stub = <textarea value="giraffe" onChange={emptyFunction} />;
-    stub = renderTextarea(stub);
+    stub = renderTextarea(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
-    stub.replaceProps({value: true, onChange: emptyFunction});
+    stub = React.render(
+      <textarea value={true} onChange={emptyFunction} />,
+      container
+    );
     expect(node.value).toEqual('true');
   });
 
   it('should allow setting `value` to `false`', function() {
+    var container = document.createElement('div');
     var stub = <textarea value="giraffe" onChange={emptyFunction} />;
-    stub = renderTextarea(stub);
+    stub = renderTextarea(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
-    stub.replaceProps({value: false});
+    stub = React.render(
+      <textarea value={false} onChange={emptyFunction} />,
+      container
+    );
     expect(node.value).toEqual('false');
   });
 
   it('should allow setting `value` to `objToString`', function() {
+    var container = document.createElement('div');
     var stub = <textarea value="giraffe" onChange={emptyFunction} />;
-    stub = renderTextarea(stub);
+    stub = renderTextarea(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
@@ -139,7 +155,10 @@ describe('ReactDOMTextarea', function() {
         return 'foo';
       },
     };
-    stub.replaceProps({value: objToString, onChange: emptyFunction});
+    stub = React.render(
+      <textarea value={objToString} onChange={emptyFunction} />,
+      container
+    );
     expect(node.value).toEqual('foo');
   });
 
@@ -156,15 +175,16 @@ describe('ReactDOMTextarea', function() {
   it('should treat children like `defaultValue`', function() {
     spyOn(console, 'error');
 
+    var container = document.createElement('div');
     var stub = <textarea>giraffe</textarea>;
-    stub = renderTextarea(stub);
+    stub = renderTextarea(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(node.value).toBe('giraffe');
 
     // Changing children should do nothing, it functions like `defaultValue`.
-    stub.replaceProps({children: 'gorilla'});
+    stub = React.render(<textarea>gorilla</textarea>, container);
     expect(node.value).toEqual('giraffe');
   });
 

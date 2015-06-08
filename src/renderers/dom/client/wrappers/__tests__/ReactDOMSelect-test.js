@@ -32,13 +32,18 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
     // Changing `defaultValue` should do nothing.
-    stub.setProps({defaultValue: 'gorilla'});
+    React.render(
+      <select defaultValue="gorilla">{options}</select>,
+      container
+    );
     expect(node.value).toEqual('giraffe');
   });
 
@@ -51,19 +56,20 @@ describe('ReactDOMSelect', function() {
   });
 
   it('should not control when using `defaultValue`', function() {
-    var stub =
+    var el =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var container = document.createElement('div');
+    var stub = React.render(el, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
     node.value = 'monkey';
-    stub.forceUpdate();
+    React.render(el, container);
     // Uncontrolled selects shouldn't change the value after first mounting
     expect(node.value).toEqual('monkey');
   });
@@ -75,7 +81,9 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
@@ -83,7 +91,10 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
 
     // Changing `defaultValue` should do nothing.
-    stub.setProps({defaultValue: ['monkey']});
+    React.render(
+      <select multiple={true} defaultValue={['monkey']}>{options}</select>,
+      container
+    );
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -97,13 +108,18 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
     // Changing the `value` prop should change the selected option.
-    stub.setProps({value: 'gorilla'});
+    React.render(
+      <select value="gorilla">{options}</select>,
+      container
+    );
     expect(node.value).toEqual('gorilla');
   });
 
@@ -122,7 +138,9 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
@@ -130,7 +148,10 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
 
     // Changing the `value` prop should change the selected options.
-    stub.setProps({value: ['monkey']});
+    React.render(
+      <select multiple={true} value={['monkey']}>{options}</select>,
+      container
+    );
 
     expect(node.options[0].selected).toBe(true);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
@@ -154,15 +175,17 @@ describe('ReactDOMSelect', function() {
 
   it('should reset child options selected when they are changed and `value` is set', function() {
     var stub = <select multiple={true} value={['a', 'b']} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
 
-    stub.setProps({
-      children: [
-        <option value="a">a</option>,
-        <option value="b">b</option>,
-        <option value="c">c</option>,
-      ],
-    });
+    React.render(
+      <select multiple={true} value={['a', 'b']}>
+        <option value="a">a</option>
+        <option value="b">b</option>
+        <option value="c">c</option>
+      </select>,
+      container
+    );
 
     var node = React.findDOMNode(stub);
 
@@ -179,13 +202,14 @@ describe('ReactDOMSelect', function() {
       },
     };
 
-    var stub =
+    var el =
       <select multiple={true} value={[objectToString]}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var container = document.createElement('div');
+    var stub = React.render(el, container);
     var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
@@ -194,7 +218,7 @@ describe('ReactDOMSelect', function() {
 
     // Changing the `value` prop should change the selected options.
     objectToString.animal = 'monkey';
-    stub.forceUpdate();
+    React.render(el, container);
 
     expect(node.options[0].selected).toBe(true);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
@@ -208,7 +232,9 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
@@ -216,7 +242,12 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
 
     // When making it multiple, giraffe and gorilla should be selected
-    stub.setProps({multiple: true, defaultValue: ['giraffe', 'gorilla']});
+    React.render(
+      <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
+        {options}
+      </select>,
+      container
+    );
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -230,7 +261,9 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
@@ -239,7 +272,11 @@ describe('ReactDOMSelect', function() {
 
     // When removing multiple, defaultValue is applied again, being omitted
     // means that "monkey" will be selected
-    stub.setProps({multiple: false, defaultValue: 'gorilla'});
+    React.render(
+      <select defaultValue="gorilla">{options}</select>,
+      container
+    );
+
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
@@ -253,14 +290,16 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
     expect(node.options[2].selected).toBe(false);  // gorilla
 
-    stub.setProps({value: null});
+    React.render(<select>{options}</select>, container);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -274,16 +313,18 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = React.render(stub, container);
     var node = React.findDOMNode(stub);
 
-    stub.setProps({value: 'gorilla'});
+    React.render(<select value="gorilla">{options}</select>, container);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
     expect(node.options[2].selected).toBe(true);  // gorilla
 
-    stub.setProps({value: null});
+    React.render(<select>{options}</select>, container);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe

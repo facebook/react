@@ -38,8 +38,27 @@ var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
+var warning = require('warning');
+
+var deprecatedDOMMethods = [
+  'isMounted', 'replaceProps', 'replaceState', 'setProps', 'setState',
+  'forceUpdate',
+];
+
+function getDeclarationErrorAddendum(domWrapperClass) {
+  var internalInstance = ReactInstanceMap.get(domWrapperClass);
+  var owner = internalInstance._currentElement._owner || null;
+  if (owner) {
+    var name = owner.getName();
+    if (name) {
+      return ' This DOM component was rendered by `' + name + '`.';
+    }
+  }
+  return '';
+}
+
 function autoGenerateWrapperClass(type) {
-  return ReactClass.createClass({
+  var wrapperClass = ReactClass.createClass({
     tagName: type.toUpperCase(),
     render: function() {
       // Copy owner down for debugging info
@@ -49,10 +68,51 @@ function autoGenerateWrapperClass(type) {
         null,  // key
         null,  // ref
         internalInstance._currentElement._owner,  // owner
-        this.props
+        this._internalProps
       );
     },
   });
+
+  Object.defineProperty(wrapperClass.prototype, 'props', {
+    enumerable: true,
+    set: function(props) {
+      this._internalProps = props;
+    },
+    get: function() {
+      if (__DEV__) {
+        warning(
+          false,
+          'ReactDOMComponent.props: Do not access .props of a DOM component ' +
+          'directly; instead, recreate the props as `render` did originally ' +
+          'or use React.findDOMNode and read the DOM properties/attributes ' +
+          'directly.%s',
+          getDeclarationErrorAddendum(this)
+        );
+      }
+      return this._internalProps;
+    },
+  });
+
+  deprecatedDOMMethods.forEach(function(method) {
+    var old = wrapperClass.prototype[method];
+    Object.defineProperty(wrapperClass.prototype, method, {
+      enumerable: true,
+      get: function() {
+        if (__DEV__) {
+          warning(
+            false,
+            'ReactDOMComponent.%s(): Do not access .%s() of a DOM component.%s',
+            method,
+            method,
+            getDeclarationErrorAddendum(this)
+          );
+        }
+        return old;
+      },
+    });
+  });
+
+  return wrapperClass;
 }
 
 var alreadyInjected = false;

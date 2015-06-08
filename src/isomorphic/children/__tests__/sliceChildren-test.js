@@ -15,44 +15,15 @@ describe('sliceChildren', function() {
 
   var React;
   var ReactFragment;
-  var ReactTestUtils;
 
   var sliceChildren;
-  var reactComponentExpect;
-
-  var Partial;
 
   beforeEach(function() {
     React = require('React');
     ReactFragment = require('ReactFragment');
-    ReactTestUtils = require('ReactTestUtils');
 
     sliceChildren = require('sliceChildren');
-    reactComponentExpect = require('reactComponentExpect');
-
-    Partial = React.createClass({
-      render: function() {
-        return (
-          <div>
-            {sliceChildren(
-              this.props.children,
-              this.props.start,
-              this.props.end
-            )}
-          </div>
-        );
-      },
-    });
   });
-
-  function renderAndSlice(set, start, end) {
-    var instance = <Partial start={start} end={end}>{set}</Partial>;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    var rendered = reactComponentExpect(instance)
-      .expectRenderedChild()
-      .instance();
-    return rendered.props.children;
-  }
 
   function testKeyValuePairs(children, expectedPairs) {
     var obj = ReactFragment.extract(children);
@@ -65,7 +36,7 @@ describe('sliceChildren', function() {
       <div key="B" />,
       <div key="C" />,
     ];
-    var children = renderAndSlice(fullSet, 0);
+    var children = sliceChildren(fullSet, 0);
     testKeyValuePairs(children, {
       '.$A': fullSet[0],
       '.$B': fullSet[1],
@@ -79,7 +50,7 @@ describe('sliceChildren', function() {
       <div key="B" />,
       <div key="C" />,
     ];
-    var children = renderAndSlice(fullSet, 1);
+    var children = sliceChildren(fullSet, 1);
     testKeyValuePairs(children, {
       '.$B': fullSet[1],
       '.$C': fullSet[2],
@@ -93,7 +64,7 @@ describe('sliceChildren', function() {
       <div key="C" />,
       <div key="D" />,
     ];
-    var children = renderAndSlice(fullSet, 1, 2);
+    var children = sliceChildren(fullSet, 1, 2);
     testKeyValuePairs(children, {
       '.$B': fullSet[1],
     });
@@ -104,13 +75,9 @@ describe('sliceChildren', function() {
     var b = <div />;
     var c = <div />;
 
-    var instance = <Partial start={1} end={2}>{a}{b}{c}</Partial>;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    var rendered = reactComponentExpect(instance)
-      .expectRenderedChild()
-      .instance();
-
-    testKeyValuePairs(rendered.props.children, {
+    var el = <div>{a}{b}{c}</div>;
+    var children = sliceChildren(el.props.children, 1, 2);
+    testKeyValuePairs(children, {
       '.1': b,
     });
   });

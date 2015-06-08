@@ -385,9 +385,14 @@ describe('ReactCompositeComponent', function() {
 
     var innerInstance;
 
+    var Inner = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
     var Component = React.createClass({
       render: function() {
-        return <div><div ref="inner" /></div>;
+        return <div><Inner ref="inner" /></div>;
       },
       componentDidMount: function() {
         innerInstance = this.refs.inner;
