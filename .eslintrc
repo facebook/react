@@ -44,14 +44,14 @@ rules:
   no-shadow: 2
   no-multi-spaces: 2
 
-  # WARNINGS
-  # This is the only one that's hard to track since we don't lint just changes.
-  max-len: [1, 80]
-
   # WISHLIST. One day...
   # We'll need a custom version of this that does a subset of the whole rule.
   # Otherwise this is just too noisy.
   # valid-jsdoc: 1
+  # Ideally, we could just warn when *new* lines are added that exceed 80 chars
+  # while not warning about existing ones (often URLs, etc. which are
+  # necessarily long), but we don't have a good way to do so.
+  # max-len: [0, 80]
 
   # DISABLED. These aren't compatible with our style
   # We use this for private/internal variables
