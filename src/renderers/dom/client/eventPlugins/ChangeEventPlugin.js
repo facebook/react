@@ -51,23 +51,33 @@ var activeElementID = null;
 var activeElementValue = null;
 var activeElementValueProp = null;
 
+var doesChangeEventBubble = false;
+var documentMode = false;
+
+if (ExecutionEnvironment.canUseDOM) {
+  documentMode = ('documentMode' in document) && document.documentMode;
+
+  // See `handleChange` comment below
+  doesChangeEventBubble = isEventSupported('change') && (
+    !documentMode || documentMode > 8
+  );
+}
+
 /**
  * SECTION: handle `change` event
  */
 function shouldUseChangeEvent(elem) {
+  var isIeRangeType = (
+    elem.type === 'range' && documentMode && documentMode <= 11
+  );
+
   return (
     elem.nodeName === 'SELECT' ||
+    (elem.nodeName === 'INPUT' && isIeRangeType) ||
     (elem.nodeName === 'INPUT' && elem.type === 'file')
   );
 }
 
-var doesChangeEventBubble = false;
-if (ExecutionEnvironment.canUseDOM) {
-  // See `handleChange` comment below
-  doesChangeEventBubble = isEventSupported('change') && (
-    !('documentMode' in document) || document.documentMode > 8
-  );
-}
 
 function manualDispatchChangeEvent(nativeEvent) {
   var event = SyntheticEvent.getPooled(
@@ -142,7 +152,7 @@ if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events
   isInputEventSupported = isEventSupported('input') && (
-    !('documentMode' in document) || document.documentMode > 9
+    !documentMode || documentMode > 9
   );
 }
 
