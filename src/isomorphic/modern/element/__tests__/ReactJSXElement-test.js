@@ -116,7 +116,7 @@ describe('ReactJSXElement', function() {
   it('allows static methods to be called using the type property', function() {
     spyOn(console, 'error');
 
-    class Component {
+    class StaticMethodComponent {
       static someStaticMethod() {
         return 'someReturnValue';
       }
@@ -125,18 +125,12 @@ describe('ReactJSXElement', function() {
       }
     }
 
-    var element = <Component />;
+    var element = <StaticMethodComponent />;
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
     expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('identifies valid elements', function() {
-    class Component {
-      render() {
-        return <div />;
-      }
-    }
-
     expect(React.isValidElement(<div />)).toEqual(true);
     expect(React.isValidElement(<Component />)).toEqual(true);
 
@@ -154,11 +148,6 @@ describe('ReactJSXElement', function() {
   });
 
   it('should use default prop value when removing a prop', function() {
-    class Component {
-      render() {
-        return <span />;
-      }
-    }
     Component.defaultProps = {fruit: 'persimmon'};
 
     var container = document.createElement('div');
@@ -173,17 +162,18 @@ describe('ReactJSXElement', function() {
   });
 
   it('should normalize props with default values', function() {
-    class Component {
+    class NormalizingComponent {
       render() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.defaultProps = {prop: 'testKey'};
+    NormalizingComponent.defaultProps = {prop: 'testKey'};
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = ReactTestUtils.renderIntoDocument(<NormalizingComponent />);
     expect(instance.props.prop).toBe('testKey');
 
-    var inst2 = ReactTestUtils.renderIntoDocument(<Component prop={null} />);
+    var inst2 =
+      ReactTestUtils.renderIntoDocument(<NormalizingComponent prop={null} />);
     expect(inst2.props.prop).toBe(null);
   });
 
