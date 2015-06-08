@@ -20,5 +20,5 @@ var immutabilityHelpers = require('react/addons/updates');
 var CSSTransitionGroup = require('react/addons/CSSTransitionGroup');
 ```
 
-For a complete list of addons vist the [addons documention page](https://facebook.github.io/react/docs/addons.html)
+For a complete list of addons visit the [addons documentation page](https://facebook.github.io/react/docs/addons.html)
 
