@@ -163,6 +163,22 @@ describe('ReactClass-spec', function() {
     );
   });
 
+  it('should warn when mispelling componentWillReceiveProps', function() {
+    React.createClass({
+      componentWillRecieveProps: function() {
+        return false;
+      },
+      render: function() {
+        return <div />;
+      },
+    });
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
+      'mean componentWillReceiveProps()?'
+    );
+  });
+
   it('should throw if a reserved property is in statics', function() {
     expect(function() {
       React.createClass({
