@@ -24,6 +24,7 @@ React でのハッキングを始めるにあたり、一番簡単なものと�
 </div>
 
 スターターキットのルートディレクトリに `helloworld.html` を作り、次のように書いてみましょう。
+
 ```html
 <!DOCTYPE html>
 <html>
