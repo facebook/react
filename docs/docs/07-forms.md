@@ -28,6 +28,10 @@ Form components allow listening for changes by setting a callback to the `onChan
 
 Like all DOM events, the `onChange` prop is supported on all native components and can be used to listen to bubbled change events.
 
+> Note:
+>
+> For `<input>` and `<textarea>`, `onChange` supersedes — and should generally be used instead of — the DOM's built-in [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) event handler.
+
 
 ## Controlled Components
 
