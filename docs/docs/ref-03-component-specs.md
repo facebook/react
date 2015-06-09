@@ -12,7 +12,7 @@ When creating a component class by invoking `React.createClass()`, you should pr
 
 > Note:
 >
-> It is also possible to use plain JavaScript classes as component classes. These classes can implement most of the same methods, though there are some differences. For more information about these differences, please read our documentation about [ES6 classes](/react/blog/2015/01/27/react-v0.13.0-beta-1.html#es6-classes).
+> It is also possible to use plain JavaScript classes as component classes. These classes can implement most of the same methods, though there are some differences. For more information about these differences, please read our documentation about [ES6 classes](/react/docs/reusable-components.html#es6-classes).
 
 ### render
 
