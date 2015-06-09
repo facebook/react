@@ -1,6 +1,7 @@
 ---
 id: getting-started-ja-JP
 title: 始めてみましょう
+permalink: getting-started-ja-JP.html
 next: tutorial-ja-JP.html
 redirect_from: "docs/index-ja-JP.html"
 ---
