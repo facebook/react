@@ -420,26 +420,24 @@
   </a>
 </div>
 
-<p>スターターキットのルートディレクトリに <code>helloworld.html</code> を作り、次のように書いてみましょう。
-<code>html
-&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-  &lt;head&gt;
-    &lt;script src=&quot;build/react.js&quot;&gt;&lt;/script&gt;
-    &lt;script src=&quot;build/JSXTransformer.js&quot;&gt;&lt;/script&gt;
-  &lt;/head&gt;
-  &lt;body&gt;
-    &lt;div id=&quot;example&quot;&gt;&lt;/div&gt;
-    &lt;script type=&quot;text/jsx&quot;&gt;
-      React.render(
-        &lt;h1&gt;Hello, world!&lt;/h1&gt;,
-        document.getElementById(&#39;example&#39;)
-      );
-    &lt;/script&gt;
-  &lt;/body&gt;
-&lt;/html&gt;
-</code></p>
-
+<p>スターターキットのルートディレクトリに <code>helloworld.html</code> を作り、次のように書いてみましょう。</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/JSXTransformer.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
+        <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+      <span class="p">);</span>
+    <span class="nt">&lt;/script&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
 <p>JavaScript の中に書かれた XML シンタックスは JSX と呼ばれるものです（JSX の詳しいことについては <a href="/react/docs/jsx-in-depth.html">JSX syntax</a> を読んでください）。ここでは JSX から vanilla JavaScript への変換をブラウザ内で行わせるため、先程のコードには <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> と書いており、加えて <code>JSXTransformer.js</code> を読み込ませています。</p>
 <h3><a class="anchor" name=""></a>ファイルの分割 <a class="hash-link" href="#">#</a></h3>
 <p>React の JSX コードは別ファイルに分離することができます。 次のような <code>src/helloworld.js</code> を作ってみましょう。</p>

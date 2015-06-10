@@ -406,6 +406,12 @@
 
     <h2><a class="anchor" name="component-specifications"></a>Component Specifications <a class="hash-link" href="#component-specifications">#</a></h2>
 <p>When creating a component class by invoking <code>React.createClass()</code>, you should provide a specification object that contains a <code>render</code> method and can optionally contain other lifecycle methods described here.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>It is also possible to use plain JavaScript classes as component classes. These classes can implement most of the same methods, though there are some differences. For more information about these differences, please read our documentation about <a href="/react/docs/reusable-components.html#es6-classes">ES6 classes</a>.</p>
+</blockquote>
 <h3><a class="anchor" name="render"></a>render <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactElement</span> <span class="nx">render</span><span class="p">()</span>
 </code></pre></div>
 <p>The <code>render()</code> method is required.</p>
