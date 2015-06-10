@@ -29,8 +29,6 @@ ReactDefaultInjection.inject();
 var render = ReactPerf.measure('React', 'render', ReactMount.render);
 
 var React = {
-  constructAndRenderComponent: ReactMount.constructAndRenderComponent,
-  constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   findDOMNode: findDOMNode,
   render: render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,

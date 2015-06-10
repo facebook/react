@@ -29,18 +29,6 @@ describe('ReactMount', function() {
     // Leave WebComponents undefined.
   }
 
-  describe('constructAndRenderComponentByID', function() {
-    it('throws if given an id for a component that doesn\'t exist', function() {
-      expect(function() {
-        ReactMount.constructAndRenderComponentByID(
-          function dummyComponentConstructor() {},
-          {},
-          'SOME_ID_THAT_DOESNT_EXIST'
-        );
-      }).toThrow();
-    });
-  });
-
   describe('unmountComponentAtNode', function() {
     it('throws when given a non-node', function() {
       var nodeArray = document.getElementsByTagName('div');
