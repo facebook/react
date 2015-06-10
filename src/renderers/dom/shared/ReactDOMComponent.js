@@ -787,9 +787,6 @@ ReactDOMComponent.Mixin = {
       case 'input':
         ReactDOMInput.unmountWrapper(this);
         break;
-      case 'textarea':
-        ReactDOMTextarea.unmountWrapper(this);
-        break;
       case 'html':
       case 'head':
       case 'body':
