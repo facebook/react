@@ -296,6 +296,10 @@ function processChildContext(context, inst) {
   return context;
 }
 
+function isCustomComponent(tagName, props) {
+  return tagName.indexOf('-') >= 0 || props.is != null;
+}
+
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -446,7 +450,7 @@ ReactDOMComponent.Mixin = {
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
         }
         var markup = null;
-        if (this._tag != null && this._tag.indexOf('-') >= 0) {
+        if (this._tag != null && isCustomComponent(this._tag, props)) {
           markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
         } else {
           markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
@@ -686,7 +690,7 @@ ReactDOMComponent.Mixin = {
         } else if (lastProp) {
           deleteListener(this._rootNodeID, propKey);
         }
-      } else if (this._tag.indexOf('-') >= 0) {
+      } else if (isCustomComponent(this._tag, nextProps)) {
         BackendIDOperations.updateAttributeByID(
           this._rootNodeID,
           propKey,

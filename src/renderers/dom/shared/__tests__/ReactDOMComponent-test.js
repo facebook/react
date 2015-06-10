@@ -331,6 +331,12 @@ describe('ReactDOMComponent', function() {
       React.render(<div />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
     });
+
+    it('should ignore attribute whitelist for elements with the "is: attribute', function() {
+      var container = document.createElement('div');
+      React.render(<button is="test" cowabunga="chevynova"/>, container);
+      expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
+    });
   });
 
   describe('createOpenTagMarkup', function() {
