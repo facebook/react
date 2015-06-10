@@ -157,15 +157,15 @@ If this component has been mounted into the DOM, this returns the corresponding 
 #### React.Children.map
 
 ```javascript
-object React.Children.map(object children, function fn [, object context])
+object React.Children.map(object children, function fn [, object thisArg])
 ```
 
-Invoke `fn` on every immediate child contained within `children` with `this` set to `context`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an empty object.
+Invoke `fn` on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an empty object.
 
 #### React.Children.forEach
 
 ```javascript
-React.Children.forEach(object children, function fn [, object context])
+React.Children.forEach(object children, function fn [, object thisArg])
 ```
 
 Like `React.Children.map()` but does not return an object.
