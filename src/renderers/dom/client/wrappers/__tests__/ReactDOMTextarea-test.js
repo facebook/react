@@ -251,4 +251,10 @@ describe('ReactDOMTextarea', function() {
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual('test');
   });
+
+  it('should unmount', function() {
+    var container = document.createElement('div');
+    renderTextarea(<textarea />, container);
+    React.unmountComponentAtNode(container);
+  });
 });
