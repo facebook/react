@@ -7,7 +7,7 @@ prev: initial-ajax.html
 next: communicate-between-components.html
 ---
 
-Here's how `false` renders in different contexts:
+Here's how `false` renders in different situations:
 
 Renders as `id="false"`:
 
