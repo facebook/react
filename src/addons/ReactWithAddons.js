@@ -31,6 +31,7 @@ var cloneWithProps = require('cloneWithProps');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var shallowCompare = require('shallowCompare');
 var update = require('update');
+var extendUnitlessNumber = require('extendUnitlessNumber');
 
 React.addons = {
   CSSTransitionGroup: ReactCSSTransitionGroup,
@@ -44,6 +45,7 @@ React.addons = {
   renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   shallowCompare: shallowCompare,
   update: update,
+  extendUnitlessNumber: extendUnitlessNumber,
 };
 
 if (__DEV__) {
