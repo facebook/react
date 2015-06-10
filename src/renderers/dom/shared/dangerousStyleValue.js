@@ -14,8 +14,6 @@
 
 var CSSProperty = require('CSSProperty');
 
-var isUnitlessNumber = CSSProperty.isUnitlessNumber;
-
 /**
  * Convert a value into the proper css writable value. The style name `name`
  * should be logical (no hyphens), as specified
@@ -41,6 +39,7 @@ function dangerousStyleValue(name, value) {
     return '';
   }
 
+  var isUnitlessNumber = CSSProperty.isUnitlessNumber;
   var isNonNumeric = isNaN(value);
   if (isNonNumeric || value === 0 ||
       isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name]) {
