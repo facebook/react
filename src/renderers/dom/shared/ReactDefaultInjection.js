@@ -40,6 +40,13 @@ var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
 var warning = require('warning');
 
+var canDefineProperty = false;
+try {
+  Object.defineProperty({}, 'test', {get: function() {}});
+  canDefineProperty = true;
+} catch (e) {
+}
+
 var deprecatedDOMMethods = [
   'isMounted', 'replaceProps', 'replaceState', 'setProps', 'setState',
   'forceUpdate',
@@ -68,49 +75,50 @@ function autoGenerateWrapperClass(type) {
         null,  // key
         null,  // ref
         internalInstance._currentElement._owner,  // owner
-        this._internalProps
+        this._internalProps || this.props
       );
     },
   });
 
-  Object.defineProperty(wrapperClass.prototype, 'props', {
-    enumerable: true,
-    set: function(props) {
-      this._internalProps = props;
-    },
-    get: function() {
-      if (__DEV__) {
-        warning(
-          false,
-          'ReactDOMComponent.props: Do not access .props of a DOM component ' +
-          'directly; instead, recreate the props as `render` did originally ' +
-          'or use React.findDOMNode and read the DOM properties/attributes ' +
-          'directly.%s',
-          getDeclarationErrorAddendum(this)
-        );
-      }
-      return this._internalProps;
-    },
-  });
-
-  deprecatedDOMMethods.forEach(function(method) {
-    var old = wrapperClass.prototype[method];
-    Object.defineProperty(wrapperClass.prototype, method, {
-      enumerable: true,
-      get: function() {
-        if (__DEV__) {
+  if (__DEV__) {
+    if (canDefineProperty) {
+      Object.defineProperty(wrapperClass.prototype, 'props', {
+        enumerable: true,
+        set: function(props) {
+          this._internalProps = props;
+        },
+        get: function() {
           warning(
             false,
-            'ReactDOMComponent.%s(): Do not access .%s() of a DOM component.%s',
-            method,
-            method,
+            'ReactDOMComponent.props: Do not access .props of a DOM ' +
+            'component directly; instead, recreate the props as `render` ' +
+            'did originally or use React.findDOMNode and read the DOM ' +
+            'properties/attributes directly.%s',
             getDeclarationErrorAddendum(this)
           );
-        }
-        return old;
-      },
-    });
-  });
+          return this._internalProps;
+        },
+      });
+
+      deprecatedDOMMethods.forEach(function(method) {
+        var old = wrapperClass.prototype[method];
+        Object.defineProperty(wrapperClass.prototype, method, {
+          enumerable: true,
+          get: function() {
+            warning(
+              false,
+              'ReactDOMComponent.%s(): Do not access .%s() of a DOM ' +
+              'component.%s',
+              method,
+              method,
+              getDeclarationErrorAddendum(this)
+            );
+            return old;
+          },
+        });
+      });
+    }
+  }
 
   return wrapperClass;
 }
