@@ -188,14 +188,15 @@ describe('ReactTestUtils', function() {
   });
 
   it('Test scryRenderedDOMComponentsWithClass with className contains \\n', function() {
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<div>Hello <span className={`x
-    y`}>Jim</span></div>);
+    var renderedComponent = ReactTestUtils.renderIntoDocument(
+      <div>Hello <span className={`x
+      y`}>Jim</span></div>
+    );
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'x'
     );
     expect(scryResults.length).toBe(1);
-
   });
 
   it('traverses children in the correct order', function() {
