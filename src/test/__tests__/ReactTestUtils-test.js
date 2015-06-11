@@ -189,8 +189,7 @@ describe('ReactTestUtils', function() {
 
   it('Test scryRenderedDOMComponentsWithClass with className contains \\n', function() {
     var renderedComponent = ReactTestUtils.renderIntoDocument(
-      <div>Hello <span className={`x
-      y`}>Jim</span></div>
+      <div>Hello <span className={'x\ny'}>Jim</span></div>
     );
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
