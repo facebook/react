@@ -445,24 +445,10 @@ describe('ReactDOMComponent', function() {
       require('mock-modules').dumpCache();
 
       React = require('React');
-      var ReactMultiChild = require('ReactMultiChild');
-      var ReactDOMComponent = require('ReactDOMComponent');
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
-
-      var StubNativeComponent = function(element) {
-        this._currentElement = element;
-      };
-      assign(StubNativeComponent.prototype, ReactDOMComponent.Mixin);
-      assign(StubNativeComponent.prototype, ReactMultiChild.Mixin);
 
       mountComponent = function(props) {
-        var transaction = new ReactReconcileTransaction();
-        var stubComponent = new StubNativeComponent({
-          type: StubNativeComponent,
-          props: props,
-          _owner: null,
-        });
-        return stubComponent.mountComponent('test', transaction, {});
+        var container = document.createElement('div');
+        React.render(<div {...props} />, container);
       };
     });
 
