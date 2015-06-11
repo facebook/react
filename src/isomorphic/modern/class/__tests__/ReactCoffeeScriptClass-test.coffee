@@ -301,7 +301,7 @@ describe 'ReactCoffeeScriptClass', ->
       'contextTypes was defined as an instance property on Foo.'
     )
 
-  it 'should warn when mispelling shouldComponentUpdate', ->
+  it 'should warn when misspelling shouldComponentUpdate', ->
     spyOn console, 'error'
     class NamedComponent
       componentShouldUpdate: ->
@@ -319,7 +319,7 @@ describe 'ReactCoffeeScriptClass', ->
        question because the function is expected to return a value.'
     )
 
-    it 'should warn when mispelling componentWillReceiveProps', ->
+  it 'should warn when misspelling componentWillReceiveProps', ->
     spyOn console, 'error'
     class NamedComponent
       componentWillRecieveProps: ->
