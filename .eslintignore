@@ -10,6 +10,7 @@ vendor/jasmine-jsreporter/
 # But not in docs/_js/examples/*
 docs/_js/*.js
 docs/js/
+docs/_site/
 # gems
 docs/vendor/bundle/
 # This should be more like examples/**/thirdparty/** but
