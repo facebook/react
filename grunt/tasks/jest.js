@@ -8,6 +8,7 @@ module.exports = function() {
   grunt.util.spawn({
     cmd: 'node_modules/.bin/jest',
     args: ['-i'],
+    opts: {stdio: 'inherit'},
   }, function(err, result, code) {
     if (err) {
       grunt.log.error('jest failed');
