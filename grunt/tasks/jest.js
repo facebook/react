@@ -7,6 +7,7 @@ module.exports = function() {
   grunt.log.writeln('running jest (this may take a while)');
   grunt.util.spawn({
     cmd: 'node_modules/.bin/jest',
+    args: ['-i'],
   }, function(err, result, code) {
     if (err) {
       grunt.log.error('jest failed');
