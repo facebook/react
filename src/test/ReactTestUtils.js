@@ -174,7 +174,7 @@ var ReactTestUtils = {
         var instClassName = React.findDOMNode(inst).className;
         return (
           instClassName &&
-          (' ' + instClassName + ' ').indexOf(' ' + className + ' ') !== -1
+          (('' + instClassName).split(/\s+/)).indexOf(className) !== -1
         );
       }
       return false;
