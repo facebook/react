@@ -252,11 +252,18 @@ class ClassicProperties extends React.Component {
   }
 }
 
-// it should warn when mispelling shouldComponentUpdate
-class NamedComponent {
+// it should warn when misspelling shouldComponentUpdate
+class MisspelledComponent1 {
   componentShouldUpdate() {
     return false;
   }
+  render() {
+    return React.createElement('span', {className: 'foo'});
+  }
+}
+
+// it should warn when misspelling componentWillReceiveProps
+class MisspelledComponent2 {
   componentWillRecieveProps() {
     return false;
   }
@@ -439,32 +446,32 @@ describe('ReactTypeScriptClass', function() {
     );
   });
 
-  it('should warn when mispelling shouldComponentUpdate', function() {
+  it('should warn when misspelling shouldComponentUpdate', function() {
     var warn = jest.genMockFn();
     console.error = warn;
 
-    test(React.createElement(NamedComponent), 'SPAN', 'foo');
+    test(React.createElement(MisspelledComponent1), 'SPAN', 'foo');
 
     expect(warn.mock.calls.length).toBe(1);
     expect(warn.mock.calls[0][0]).toBe(
       'Warning: ' +
-      'NamedComponent has a method called componentShouldUpdate(). Did you ' +
-      'mean shouldComponentUpdate()? The name is phrased as a question ' +
+      'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
+      'you mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
     );
   });
 
-  it('should warn when mispelling componentWillReceiveProps', function() {
+  it('should warn when misspelling componentWillReceiveProps', function() {
     var warn = jest.genMockFn();
     console.error = warn;
 
-    test(React.createElement(NamedComponent), 'SPAN', 'foo');
+    test(React.createElement(MisspelledComponent2), 'SPAN', 'foo');
 
     expect(warn.mock.calls.length).toBe(1);
     expect(warn.mock.calls[0][0]).toBe(
       'Warning: ' +
-      'NamedComponent has a method called componentWillRecieveProps(). Did you ' +
-      'mean componentWillReceiveProps()?'
+      'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
+      'Did you mean componentWillReceiveProps()?'
     );
   });
 

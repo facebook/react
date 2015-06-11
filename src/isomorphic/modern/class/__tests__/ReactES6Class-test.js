@@ -341,7 +341,7 @@ describe('ReactES6Class', function() {
     );
   });
 
-  it('should warn when mispelling shouldComponentUpdate', function() {
+  it('should warn when misspelling shouldComponentUpdate', function() {
     spyOn(console, 'error');
 
     class NamedComponent {
@@ -363,7 +363,7 @@ describe('ReactES6Class', function() {
     );
   });
 
-  it('should warn when mispelling componentWillReceiveProps', function() {
+  it('should warn when misspelling componentWillReceiveProps', function() {
     spyOn(console, 'error');
 
     class NamedComponent {
@@ -379,8 +379,8 @@ describe('ReactES6Class', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: ' +
-      'NamedComponent has a method called componentWillRecieveProps(). Did you ' +
-      'mean componentWillReceiveProps()?'
+      'NamedComponent has a method called componentWillRecieveProps(). Did ' +
+      'you mean componentWillReceiveProps()?'
     );
   });
 
