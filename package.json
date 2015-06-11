@@ -52,7 +52,7 @@
     "grunt-jest": "^0.1.2",
     "gzip-js": "~0.3.2",
     "jasmine-tapreporter": "~0.2.2",
-    "jest-cli": "^0.2.1",
+    "jest-cli": "^0.4.11",
     "optimist": "~0.6.0",
     "phantomjs": "~1.9",
     "platform": "^1.1.0",
