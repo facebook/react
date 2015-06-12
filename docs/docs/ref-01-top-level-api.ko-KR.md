@@ -152,15 +152,15 @@ DOMElement findDOMNode(ReactComponent component)
 #### React.Children.map
 
 ```javascript
-object React.Children.map(object children, function fn [, object context])
+object React.Children.map(object children, function fn [, object thisArg])
 ```
 
-`children`의 바로 밑에 있는 모든 자식에 `fn`을 호출합니다. 이 때 `this`는 `context`로 설정됩니다. `children`이 중첩된 객체나 배열일 경우 그 안의 값을 순회합니다. 따라서 `fn`에 컨테이너 객체가 넘어가는 일은 일어나지 않습니다. `children`이 `null`이거나 `undefined`면 빈 객체 대신 `null` 또는 `undefined`를 리턴합니다.
+`children`의 바로 밑에 있는 모든 자식에 `fn`을 호출합니다. 이 때 `this`는 `thisArg`로 설정됩니다. `children`이 중첩된 객체나 배열일 경우 그 안의 값을 순회합니다. 따라서 `fn`에 컨테이너 객체가 넘어가는 일은 일어나지 않습니다. `children`이 `null`이거나 `undefined`면 빈 객체 대신 `null` 또는 `undefined`를 리턴합니다.
 
 #### React.Children.forEach
 
 ```javascript
-React.Children.forEach(object children, function fn [, object context])
+React.Children.forEach(object children, function fn [, object thisArg])
 ```
 
 `React.Children.map()`과 비슷하지만 객체를 리턴하지 않습니다.
