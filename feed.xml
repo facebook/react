@@ -7,6 +7,29 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Deprecating JSTransform and react-tools</title>
+				<description>&lt;p&gt;Today we&amp;#39;re announcing the deprecation of react-tools and JSTransform.&lt;/p&gt;
+
+&lt;p&gt;As many people have noticed already, React and React Native have both switched their respective build systems to make use of &lt;a href=&quot;http://babeljs.io/&quot;&gt;Babel&lt;/a&gt;. This replaced &lt;a href=&quot;https://github.com/facebook/jstransform&quot;&gt;JSTransform&lt;/a&gt;, the source transformation tool that we wrote at Facebook. JSTransform has been really good for us over the past several years, however as the JavaScript language continues to evolve, the architecture we used has begun to show its age. We&amp;#39;ve faced maintenance issues and lagged behind implementing new language features. Last year, Babel (previously 6to5) exploded onto the scene, implementing new features at an amazing pace. Since then it has evolved a solid plugin API, and implemented some of our non-standard language features (JSX and Flow type annotations).&lt;/p&gt;
+
+&lt;p&gt;react-tools has always been a very thin wrapper around JSTransform. It has served as a great tool for the community to get up and running, but at this point we&amp;#39;re ready to &lt;a href=&quot;https://www.youtube.com/watch?v=moSFlvxnbgk&quot;&gt;let it go&lt;/a&gt;. We won&amp;#39;t ship a new version for v0.14.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;migrating-to-babel&quot;&gt;&lt;/a&gt;Migrating to Babel &lt;a class=&quot;hash-link&quot; href=&quot;#migrating-to-babel&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Many people in the React and broader JavaScript community have already adopted Babel. It has &lt;a href=&quot;http://babeljs.io/docs/setup/&quot;&gt;integrations with a number of tools&lt;/a&gt;. Depending on your tool, you&amp;#39;ll want to read up on the instructions.&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;ve been working with the Babel team as we started making use of it and we&amp;#39;re confident that it will be the right tool to use with React.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;other-deprecations&quot;&gt;&lt;/a&gt;Other Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#other-deprecations&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;esprima-fb&quot;&gt;&lt;/a&gt;esprima-fb &lt;a class=&quot;hash-link&quot; href=&quot;#esprima-fb&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork (&lt;a href=&quot;https://github.com/facebook/esprima/&quot;&gt;esprima-fb&lt;/a&gt;). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parse, we encourage you to look into using one of those.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsxtransformer&quot;&gt;&lt;/a&gt;JSXTransformer &lt;a class=&quot;hash-link&quot; href=&quot;#jsxtransformer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; tags with &lt;code&gt;type=&amp;quot;text/jsx&amp;quot;&lt;/code&gt; and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with &lt;a href=&quot;https://babeljs.io/docs/usage/browser/&quot;&gt;a nearly identical tool&lt;/a&gt;, which has already been integrated into &lt;a href=&quot;https://jsbin.com/&quot;&gt;JS Bin&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;ll be deprecating JSXTransformer, however the current version will still be available from various CDNs and Bower.&lt;/p&gt;
+</description>
+				<pubDate>2015-06-12T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html</guid>
+			</item>
+		
+			<item>
 				<title>React Native Release Process</title>
 				<description>&lt;p&gt;The React Native release process have been a bit chaotic since we open sourced. It was unclear when new code was released, there was no changelog, we bumped the minor and patch version inconsistently and we often had to submit updates right after a release to fix a bad bug. In order to &lt;em&gt;move fast with stable infra&lt;/em&gt;, we are introducing a real release process with a two-week release schedule.&lt;/p&gt;
 
@@ -562,92 +585,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 				<pubDate>2015-03-16T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.13</title>
-				<description>&lt;p&gt;Today, we&amp;#39;re happy to release React v0.13!&lt;/p&gt;
-
-&lt;p&gt;The most notable new feature is &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;support for ES6 classes&lt;/a&gt;, which allows developers to have more flexibility when writing components. Our eventual goal is for ES6 classes to replace &lt;code&gt;React.createClass&lt;/code&gt; completely, but until we have a replacement for current mixin use cases and support for class property initializers in the language, we don&amp;#39;t plan to deprecate &lt;code&gt;React.createClass&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;At EmberConf and ng-conf last week, we were excited to see that Ember and Angular have been working on speed improvements and now both have performance comparable to React. We&amp;#39;ve always thought that performance isn&amp;#39;t the most important reason to choose React, but we&amp;#39;re still planning more optimizations to &lt;strong&gt;make React even faster&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;Our planned optimizations require that ReactElement objects are immutable, which has always been a best practice when writing idiomatic React code. In this release, we&amp;#39;ve added runtime warnings that fire when props are changed or added between the time an element is created and when it&amp;#39;s rendered. When migrating your code, you may want to use new &lt;code&gt;React.cloneElement&lt;/code&gt; API (which is similar to &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt; but preserves &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; and does not merge &lt;code&gt;style&lt;/code&gt; or &lt;code&gt;className&lt;/code&gt; automatically). For more information about our planned optimizations, see GitHub issues
-&lt;a href=&quot;https://github.com/facebook/react/issues/3226&quot;&gt;#3226&lt;/a&gt;,
-&lt;a href=&quot;https://github.com/facebook/react/issues/3227&quot;&gt;#3227&lt;/a&gt;,
-&lt;a href=&quot;https://github.com/facebook/react/issues/3228&quot;&gt;#3228&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;The release is now available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.13.0.js&quot;&gt;https://fb.me/react-0.13.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.13.0.min.js&quot;&gt;https://fb.me/react-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0.js&quot;&gt;https://fb.me/react-with-addons-0.13.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.13.0.min.js&quot;&gt;https://fb.me/react-with-addons-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;https://fb.me/JSXTransformer-0.13.0.js&quot;&gt;https://fb.me/JSXTransformer-0.13.0.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Deprecated patterns that warned in 0.12 no longer work: most prominently, calling component classes without using JSX or React.createElement and using non-component functions with JSX or createElement&lt;/li&gt;
-&lt;li&gt;Mutating &lt;code&gt;props&lt;/code&gt; after an element is created is deprecated and will cause warnings in development mode; future versions of React will incorporate performance optimizations assuming that props aren&amp;#39;t mutated&lt;/li&gt;
-&lt;li&gt;Static methods (defined in &lt;code&gt;statics&lt;/code&gt;) are no longer autobound to the component class&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;ref&lt;/code&gt; resolution order has changed slightly such that a ref to a component is available immediately after its &lt;code&gt;componentDidMount&lt;/code&gt; method is called; this change should be observable only if your component calls a parent component&amp;#39;s callback within your &lt;code&gt;componentDidMount&lt;/code&gt;, which is an anti-pattern and should be avoided regardless&lt;/li&gt;
-&lt;li&gt;Calls to &lt;code&gt;setState&lt;/code&gt; in life-cycle methods are now always batched and therefore asynchronous. Previously the first call on the first mount was synchronous.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;setState&lt;/code&gt; and &lt;code&gt;forceUpdate&lt;/code&gt; on an unmounted component now warns instead of throwing. That avoids a possible race condition with Promises.&lt;/li&gt;
-&lt;li&gt;Access to most internal properties has been completely removed, including &lt;code&gt;this._pendingState&lt;/code&gt; and &lt;code&gt;this._rootNodeID&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details.&lt;/li&gt;
-&lt;li&gt;Added new top-level API &lt;code&gt;React.findDOMNode(component)&lt;/code&gt;, which should be used in place of &lt;code&gt;component.getDOMNode()&lt;/code&gt;. The base class for ES6-based components will not have &lt;code&gt;getDOMNode&lt;/code&gt;. This change will enable some more patterns moving forward.&lt;/li&gt;
-&lt;li&gt;Added a new top-level API &lt;code&gt;React.cloneElement(el, props)&lt;/code&gt; for making copies of React elements – see the &lt;a href=&quot;/react/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement&quot;&gt;v0.13 RC2 notes&lt;/a&gt; for more details.&lt;/li&gt;
-&lt;li&gt;New &lt;code&gt;ref&lt;/code&gt; style, allowing a callback to be used in place of a name: &lt;code&gt;&amp;lt;Photo ref={(c) =&amp;gt; this._photo = c} /&amp;gt;&lt;/code&gt; allows you to reference the component with &lt;code&gt;this._photo&lt;/code&gt; (as opposed to &lt;code&gt;ref=&amp;quot;photo&amp;quot;&lt;/code&gt; which gives &lt;code&gt;this.refs.photo&lt;/code&gt;).&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;this.setState()&lt;/code&gt; can now take a function as the first argument for transactional state updates, such as &lt;code&gt;this.setState((state, props) =&amp;gt; ({count: state.count + 1}));&lt;/code&gt; – this means that you no longer need to use &lt;code&gt;this._pendingState&lt;/code&gt;, which is now gone.&lt;/li&gt;
-&lt;li&gt;Support for iterators and immutable-js sequences as children.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;ComponentClass.type&lt;/code&gt; is deprecated. Just use &lt;code&gt;ComponentClass&lt;/code&gt; (usually as &lt;code&gt;element.type === ComponentClass&lt;/code&gt;).&lt;/li&gt;
-&lt;li&gt;Some methods that are available on &lt;code&gt;createClass&lt;/code&gt;-based components are removed or deprecated from ES6 classes (&lt;code&gt;getDOMNode&lt;/code&gt;, &lt;code&gt;replaceState&lt;/code&gt;, &lt;code&gt;isMounted&lt;/code&gt;, &lt;code&gt;setProps&lt;/code&gt;, &lt;code&gt;replaceProps&lt;/code&gt;).&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-add-ons&quot;&gt;&lt;/a&gt;React with Add-Ons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-add-ons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/create-fragment.html&quot;&gt;&lt;code&gt;React.addons.createFragment&lt;/code&gt; was added&lt;/a&gt; for adding keys to entire sets of children.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.addons.classSet&lt;/code&gt; is now deprecated. This functionality can be replaced with several freely available modules. &lt;a href=&quot;https://www.npmjs.com/package/classnames&quot;&gt;classnames&lt;/a&gt; is one such module.&lt;/li&gt;
-&lt;li&gt;Calls to &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt; can be migrated to use &lt;code&gt;React.cloneElement&lt;/code&gt; instead – make sure to merge &lt;code&gt;style&lt;/code&gt; and &lt;code&gt;className&lt;/code&gt; manually if desired.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;When transforming ES6 syntax, &lt;code&gt;class&lt;/code&gt; methods are no longer enumerable by default, which requires &lt;code&gt;Object.defineProperty&lt;/code&gt;; if you support browsers such as IE8, you can pass &lt;code&gt;--target es3&lt;/code&gt; to mirror the old behavior&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;--target&lt;/code&gt; option is available on the jsx command, allowing users to specify and ECMAScript version to target.
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;es5&lt;/code&gt; is the default.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;es3&lt;/code&gt; restores the previous default behavior. An additional transform is added here to ensure the use of reserved words as properties is safe (eg &lt;code&gt;this.static&lt;/code&gt; will become &lt;code&gt;this[&amp;#39;static&amp;#39;]&lt;/code&gt; for IE8 compatibility).&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;The transform for the call spread operator has also been enabled.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;A change was made to how some JSX was parsed, specifically around the use of &lt;code&gt;&amp;gt;&lt;/code&gt; or &lt;code&gt;}&lt;/code&gt; when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. The &lt;a href=&quot;https://www.npmjs.com/package/jsx_orphaned_brackets_transformer&quot;&gt;&lt;code&gt;jsx_orphaned_brackets_transformer&lt;/code&gt;&lt;/a&gt; package on npm can be used to find and fix potential issues in your JSX code.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2015-03-10T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</guid>
 			</item>
 		
 	</channel>

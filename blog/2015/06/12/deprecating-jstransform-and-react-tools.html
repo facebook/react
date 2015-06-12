@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Why did we build React? | React</title>
+  <title>Deprecating JSTransform and react-tools | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Why did we build React? | React">
+  <meta property="og:title" content="Deprecating JSTransform and react-tools | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/blog/2013/06/05/why-react.html">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -66,7 +66,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating JSTransform and react-tools</a></li>
+        <li><a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html" class="active">Deprecating JSTransform and react-tools</a></li>
       
         <li><a href="/react/blog/2015/05/22/react-native-release-process.html">React Native Release Process</a></li>
       
@@ -97,102 +97,36 @@
 
 <h1>
 
-  Why did we build React?
+  Deprecating JSTransform and react-tools
 
 </h1>
 
 <p class="meta">
-  June  5, 2013
+  June 12, 2015
   by
   
-    <a href="https://twitter.com/floydophone">Pete Hunt</a>
+    <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
   
 </p>
 
 <hr>
 
 <div class="post">
-  <p>There are a lot of JavaScript MVC frameworks out there. Why did we build React
-and why would you want to use it?</p>
-<h2><a class="anchor" name="react-isnt-an-mvc-framework."></a>React isn&#39;t an MVC framework. <a class="hash-link" href="#react-isnt-an-mvc-framework.">#</a></h2>
-<p>React is a library for building composable user interfaces. It encourages
-the creation of reusable UI components which present data that changes over
-time.</p>
-<h2><a class="anchor" name="react-doesnt-use-templates."></a>React doesn&#39;t use templates. <a class="hash-link" href="#react-doesnt-use-templates.">#</a></h2>
-<p>Traditionally, web application UIs are built using templates or HTML directives.
-These templates dictate the full set of abstractions that you are allowed to use
-to build your UI.</p>
+  <p>Today we&#39;re announcing the deprecation of react-tools and JSTransform.</p>
 
-<p>React approaches building user interfaces differently by breaking them into
-<strong>components</strong>. This means React uses a real, full featured programming language
-to render views, which we see as an advantage over templates for a few reasons:</p>
+<p>As many people have noticed already, React and React Native have both switched their respective build systems to make use of <a href="http://babeljs.io/">Babel</a>. This replaced <a href="https://github.com/facebook/jstransform">JSTransform</a>, the source transformation tool that we wrote at Facebook. JSTransform has been really good for us over the past several years, however as the JavaScript language continues to evolve, the architecture we used has begun to show its age. We&#39;ve faced maintenance issues and lagged behind implementing new language features. Last year, Babel (previously 6to5) exploded onto the scene, implementing new features at an amazing pace. Since then it has evolved a solid plugin API, and implemented some of our non-standard language features (JSX and Flow type annotations).</p>
 
-<ul>
-<li><strong>JavaScript is a flexible, powerful programming language</strong> with the ability
-to build abstractions. This is incredibly important in large applications.</li>
-<li>By unifying your markup with its corresponding view logic, React can actually
-make views <strong>easier to extend and maintain</strong>.</li>
-<li>By baking an understanding of markup and content into JavaScript, there&#39;s
-<strong>no manual string concatenation</strong> and therefore less surface area for XSS
-vulnerabilities.</li>
-</ul>
+<p>react-tools has always been a very thin wrapper around JSTransform. It has served as a great tool for the community to get up and running, but at this point we&#39;re ready to <a href="https://www.youtube.com/watch?v=moSFlvxnbgk">let it go</a>. We won&#39;t ship a new version for v0.14.</p>
+<h2><a class="anchor" name="migrating-to-babel"></a>Migrating to Babel <a class="hash-link" href="#migrating-to-babel">#</a></h2>
+<p>Many people in the React and broader JavaScript community have already adopted Babel. It has <a href="http://babeljs.io/docs/setup/">integrations with a number of tools</a>. Depending on your tool, you&#39;ll want to read up on the instructions.</p>
 
-<p>We&#39;ve also created <a href="/react/docs/jsx-in-depth.html">JSX</a>, an optional syntax
-extension, in case you prefer the readability of HTML to raw JavaScript.</p>
-<h2><a class="anchor" name="reactive-updates-are-dead-simple."></a>Reactive updates are dead simple. <a class="hash-link" href="#reactive-updates-are-dead-simple.">#</a></h2>
-<p>React really shines when your data changes over time.</p>
+<p>We&#39;ve been working with the Babel team as we started making use of it and we&#39;re confident that it will be the right tool to use with React.</p>
+<h2><a class="anchor" name="other-deprecations"></a>Other Deprecations <a class="hash-link" href="#other-deprecations">#</a></h2><h3><a class="anchor" name="esprima-fb"></a>esprima-fb <a class="hash-link" href="#esprima-fb">#</a></h3>
+<p>As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork (<a href="https://github.com/facebook/esprima/">esprima-fb</a>). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parse, we encourage you to look into using one of those.</p>
+<h3><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h3>
+<p>JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for <code>&lt;script&gt;</code> tags with <code>type=&quot;text/jsx&quot;</code> and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with <a href="https://babeljs.io/docs/usage/browser/">a nearly identical tool</a>, which has already been integrated into <a href="https://jsbin.com/">JS Bin</a>.</p>
 
-<p>In a traditional JavaScript application, you need to look at what data changed
-and imperatively make changes to the DOM to keep it up-to-date. Even AngularJS,
-which provides a declarative interface via directives and data binding <a href="https://code.angularjs.org/1.0.8/docs/guide/directive#reasonsbehindthecompilelinkseparation">requires
-a linking function to manually update DOM nodes</a>.</p>
-
-<p>React takes a different approach.</p>
-
-<p>When your component is first initialized, the <code>render</code> method is called,
-generating a lightweight representation of your view. From that representation,
-a string of markup is produced, and injected into the document. When your data
-changes, the <code>render</code> method is called again. In order to perform updates as
-efficiently as possible, we diff the return value from the previous call to
-<code>render</code> with the new one, and generate a minimal set of changes to be applied
-to the DOM.</p>
-
-<blockquote>
-<p>The data returned from <code>render</code> is neither a string nor a DOM node -- it&#39;s a
-lightweight description of what the DOM should look like.</p>
-</blockquote>
-
-<p>We call this process <strong>reconciliation</strong>. Check out
-<a href="http://jsfiddle.net/fv6RD/3/">this jsFiddle</a> to see an example of
-reconciliation in action.</p>
-
-<p>Because this re-render is so fast (around 1ms for TodoMVC), the developer
-doesn&#39;t need to explicitly specify data bindings. We&#39;ve found this approach
-makes it easier to build apps.</p>
-<h2><a class="anchor" name="html-is-just-the-beginning."></a>HTML is just the beginning. <a class="hash-link" href="#html-is-just-the-beginning.">#</a></h2>
-<p>Because React has its own lightweight representation of the document, we can do
-some pretty cool things with it:</p>
-
-<ul>
-<li>Facebook has dynamic charts that render to <code>&lt;canvas&gt;</code> instead of HTML.</li>
-<li>Instagram is a &quot;single page&quot; web app built entirely with React and
-<code>Backbone.Router</code>. Designers regularly contribute React code with JSX.</li>
-<li>We&#39;ve built internal prototypes that run React apps in a web worker and use
-React to drive <strong>native iOS views</strong> via an Objective-C bridge.</li>
-<li>You can run React
-<a href="https://github.com/petehunt/react-server-rendering-example">on the server</a>
-for SEO, performance, code sharing and overall flexibility.</li>
-<li>Events behave in a consistent, standards-compliant way in all browsers
-(including IE8) and automatically use
-<a href="http://davidwalsh.name/event-delegate">event delegation</a>.</li>
-</ul>
-
-<p>Head on over to <a href="/react">facebook.github.io/react</a> to check out what we have
-built. Our documentation is geared towards building apps with the framework,
-but if you are interested in the nuts and bolts
-<a href="/react/support.html">get in touch</a> with us!</p>
-
-<p>Thanks for reading!</p>
+<p>We&#39;ll be deprecating JSXTransformer, however the current version will still be available from various CDNs and Bower.</p>
 
 </div>
 
