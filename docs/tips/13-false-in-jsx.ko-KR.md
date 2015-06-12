@@ -7,7 +7,7 @@ prev: initial-ajax-ko-KR.html
 next: communicate-between-components-ko-KR.html
 ---
 
-`false` 렌더링이 여러 문맥에서 어떻게 다뤄지는지 봅시다.
+`false` 렌더링이 여러 상황에서 어떻게 다뤄지는지 봅시다.
 
 `id="false"`로 렌더링
 
