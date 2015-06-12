@@ -35,7 +35,7 @@ assign(
   ReactStatelessComponentWrapper.prototype,
   ReactStatelessComponent.Mixin,
   {
-    _instantiateReactComponent: instantiateReactComponent
+    _instantiateReactComponent: instantiateReactComponent,
   }
 );
 

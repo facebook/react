@@ -38,7 +38,7 @@ describe('ReactStatelessComponent', function() {
     var Parent = React.createClass({
       render() {
         return <StatelessComponent {...this.props} />;
-      }
+      },
     });
 
     var comp = ReactTestUtils.renderIntoDocument(<Parent name="A" />);
@@ -61,12 +61,12 @@ describe('ReactStatelessComponent', function() {
   it('should pass context thru stateless component', function() {
     var Child = React.createClass({
       contextTypes: {
-        test: React.PropTypes.string.isRequired
+        test: React.PropTypes.string.isRequired,
       },
 
       render: function() {
         return <div>{this.context.test}</div>;
-      }
+      },
     });
 
     function Parent() {
@@ -80,7 +80,7 @@ describe('ReactStatelessComponent', function() {
 
     var GrandParent = React.createClass({
       childContextTypes: {
-        test: React.PropTypes.string.isRequired
+        test: React.PropTypes.string.isRequired,
       },
 
       getChildContext() {
@@ -89,7 +89,7 @@ describe('ReactStatelessComponent', function() {
 
       render: function() {
         return <Parent />;
-      }
+      },
     });
 
     var comp = ReactTestUtils.renderIntoDocument(

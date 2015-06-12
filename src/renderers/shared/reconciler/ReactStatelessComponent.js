@@ -257,7 +257,7 @@ var ReactStatelessComponentMixin = {
   },
 
   // Stub
-  _instantiateReactComponent: null
+  _instantiateReactComponent: null,
 
 };
 
@@ -267,13 +267,13 @@ ReactPerf.measureMethods(
   {
     mountComponent: 'mountComponent',
     updateComponent: 'updateComponent',
-    _renderValidatedComponent: '_renderValidatedComponent'
+    _renderValidatedComponent: '_renderValidatedComponent',
   }
 );
 
 var ReactStatelessComponent = {
 
-  Mixin: ReactStatelessComponentMixin
+  Mixin: ReactStatelessComponentMixin,
 
 };
 
