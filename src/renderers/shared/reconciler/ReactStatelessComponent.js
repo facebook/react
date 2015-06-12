@@ -12,8 +12,6 @@
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactContext = require('ReactContext');
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactLifeCycle = require('ReactLifeCycle');
