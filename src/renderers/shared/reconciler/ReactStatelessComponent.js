@@ -184,23 +184,12 @@ var ReactStatelessComponentMixin = {
       nextProps = nextParentElement.props;
     }
 
-    var shouldUpdate = true;
-
-    if (shouldUpdate) {
-      // Will set `this.props`
-      this._performComponentUpdate(
-        nextParentElement,
-        nextProps,
-        nextContext,
-        transaction
-      );
-    } else {
-      // If it's determined that a component should not update, we still want
-      // to set props and state but we shortcut the rest of the update.
-      this._currentElement = nextParentElement;
-      this._context = nextContext;
-      inst.props = nextProps;
-    }
+    this._performComponentUpdate(
+      nextParentElement,
+      nextProps,
+      nextContext,
+      transaction
+    );
   },
 
   /**
