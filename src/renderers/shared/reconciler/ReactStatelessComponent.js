@@ -321,32 +321,6 @@ var ReactStatelessComponentMixin = {
   },
 
   /**
-   * Lazily allocates the refs object and stores `component` as `ref`.
-   *
-   * @param {string} ref Reference name.
-   * @param {component} component Component to store as `ref`.
-   * @final
-   * @private
-   */
-  attachRef: function(ref, component) {
-    var inst = this.getPublicInstance();
-    var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
-    refs[ref] = component.getPublicInstance();
-  },
-
-  /**
-   * Detaches a reference name.
-   *
-   * @param {string} ref Name to dereference.
-   * @final
-   * @private
-   */
-  detachRef: function(ref) {
-    var refs = this.getPublicInstance().refs;
-    delete refs[ref];
-  },
-
-  /**
    * Get a text description of the component that can be used to identify it
    * in error messages.
    * @return {string} The name or null.
