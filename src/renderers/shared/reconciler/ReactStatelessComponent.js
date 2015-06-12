@@ -43,7 +43,6 @@ var ReactStatelessComponentMixin = {
 
     this._renderedComponent = null;
 
-    this._context = null;
     this._isTopLevel = false;
   },
 
@@ -57,7 +56,6 @@ var ReactStatelessComponentMixin = {
    * @internal
    */
   mountComponent: function(rootID, transaction, context) {
-    this._context = context;
     this._rootNodeID = rootID;
 
     var publicProps = this._currentElement.props;
@@ -114,7 +112,6 @@ var ReactStatelessComponentMixin = {
 
     // These fields do not really need to be reset since this object is no
     // longer accessible.
-    this._context = null;
     this._rootNodeID = null;
 
     // Delete the reference from the instance to this internal representation
@@ -125,13 +122,11 @@ var ReactStatelessComponentMixin = {
 
   receiveComponent: function(nextElement, transaction, nextContext) {
     var prevElement = this._currentElement;
-    var prevContext = this._context;
 
     this.updateComponent(
       transaction,
       prevElement,
       nextElement,
-      prevContext,
       nextContext
     );
   },
@@ -162,7 +157,6 @@ var ReactStatelessComponentMixin = {
     transaction,
     prevParentElement,
     nextParentElement,
-    prevContext,
     nextContext
   ) {
     var inst = this._instance;
@@ -173,18 +167,7 @@ var ReactStatelessComponentMixin = {
     }
 
     this._currentElement = nextParentElement;
-    this._context = nextContext;
 
-    this._updateRenderedComponent(transaction);
-  },
-
-  /**
-   * Call the component's `render` method and update the DOM accordingly.
-   *
-   * @param {ReactReconcileTransaction} transaction
-   * @internal
-   */
-  _updateRenderedComponent: function(transaction) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
     var nextRenderedElement = this._renderValidatedComponent();
@@ -193,7 +176,7 @@ var ReactStatelessComponentMixin = {
         prevComponentInstance,
         nextRenderedElement,
         transaction,
-        this._context
+        nextContext
       );
     } else {
       // These two IDs are actually the same! But nothing should rely on that.
@@ -209,7 +192,7 @@ var ReactStatelessComponentMixin = {
         this._renderedComponent,
         thisID,
         transaction,
-        this._context
+        nextContext
       );
       ReactComponentEnvironment.replaceNodeWithMarkupByID(
         prevComponentID,
