@@ -618,6 +618,22 @@ describe('ReactDOMComponent', function() {
       expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(2);
       expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
     });
+
+    it('should warn for children on void elements', function() {
+      spyOn(console, 'error');
+      var X = React.createClass({
+        render: function() {
+          return <input>moo</input>;
+        },
+      });
+      var container = document.createElement('div');
+      React.render(<X />, container);
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: input is a void element tag and must not have `children` ' +
+        'or use `props.dangerouslySetInnerHTML`. Check the render method of X.'
+      );
+    });
   });
 
   describe('updateComponent', function() {
