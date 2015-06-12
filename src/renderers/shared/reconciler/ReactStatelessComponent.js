@@ -239,18 +239,11 @@ var ReactStatelessComponentMixin = {
         transaction,
         this._context
       );
-      this._replaceNodeWithMarkupByID(prevComponentID, nextMarkup);
+      ReactComponentEnvironment.replaceNodeWithMarkupByID(
+        prevComponentID,
+        nextMarkup
+      );
     }
-  },
-
-  /**
-   * @protected
-   */
-  _replaceNodeWithMarkupByID: function(prevComponentID, nextMarkup) {
-    ReactComponentEnvironment.replaceNodeWithMarkupByID(
-      prevComponentID,
-      nextMarkup
-    );
   },
 
   /**
