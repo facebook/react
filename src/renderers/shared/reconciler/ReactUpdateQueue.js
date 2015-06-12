@@ -73,6 +73,37 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
 var ReactUpdateQueue = {
 
   /**
+   * Checks whether or not this composite component is mounted.
+   * @param {ReactClass} publicInstance The instance we want to test.
+   * @return {boolean} True if mounted, false otherwise.
+   * @protected
+   * @final
+   */
+  isMounted: function(publicInstance) {
+    if (__DEV__) {
+      var owner = ReactCurrentOwner.current;
+      if (owner !== null) {
+        warning(
+          owner._warnedAboutRefsInRender,
+          '%s is accessing isMounted inside its render() function. ' +
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+          owner.getName() || 'A component'
+        );
+        owner._warnedAboutRefsInRender = true;
+      }
+    }
+    var internalInstance = ReactInstanceMap.get(publicInstance);
+    if (internalInstance) {
+      return internalInstance !== ReactLifeCycle.currentlyMountingInstance;
+    } else {
+      return false;
+    }
+  },
+
+  /**
    * Enqueue a callback that will be executed after all the pending updates
    * have processed.
    *
