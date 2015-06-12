@@ -26,24 +26,6 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
  * @lends {ReactStatelessComponent.prototype}
  */
 var ReactStatelessComponentMixin = {
-
-  /**
-   * Base constructor for all stateless component.
-   *
-   * @param {ReactElement} element
-   * @final
-   * @internal
-   */
-  construct: function(element) {
-    this._currentElement = element;
-    this._rootNodeID = null;
-    this._instance = null;
-
-    this._renderedComponent = null;
-
-    this._isTopLevel = false;
-  },
-
   /**
    * Initializes the component, renders markup, and registers event listeners.
    *

@@ -103,4 +103,19 @@ describe('ReactStatelessComponent', function() {
     expect(React.findDOMNode(comp).textContent).toBe('mest');
   });
 
+  it('should support module pattern components', function() {
+    function Child({test}) {
+      return {
+        render() {
+          return <div>{test}</div>
+        },
+      };
+    }
+
+    var comp = ReactTestUtils.renderIntoDocument(
+      <Child test="test" />
+    );
+
+    expect(React.findDOMNode(comp).textContent).toBe('test');
+  });
 });
