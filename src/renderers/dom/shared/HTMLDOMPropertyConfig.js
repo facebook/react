@@ -45,6 +45,7 @@ var HTMLDOMPropertyConfig = {
     /**
      * Standard Properties
      */
+    about: null,
     accept: null,
     acceptCharset: null,
     accessKey: null,
@@ -79,6 +80,7 @@ var HTMLDOMPropertyConfig = {
     coords: null,
     crossOrigin: null,
     data: null, // For `<object />` acts as `src`.
+    datatype: null,
     dateTime: MUST_USE_ATTRIBUTE,
     defer: HAS_BOOLEAN_VALUE,
     dir: null,
@@ -103,6 +105,7 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: null,
     icon: null,
     id: MUST_USE_PROPERTY,
+    inlist: null,
     is: MUST_USE_ATTRIBUTE,
     keyParams: MUST_USE_ATTRIBUTE,
     keyType: MUST_USE_ATTRIBUTE,
@@ -130,11 +133,15 @@ var HTMLDOMPropertyConfig = {
     pattern: null,
     placeholder: null,
     poster: null,
+    prefix: null,
     preload: null,
+    property: null,
     radioGroup: null,
     readOnly: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     rel: null,
     required: HAS_BOOLEAN_VALUE,
+    resource: null,
+    rev: null,
     role: MUST_USE_ATTRIBUTE,
     rows: MUST_USE_ATTRIBUTE | HAS_POSITIVE_NUMERIC_VALUE,
     rowSpan: null,
@@ -159,8 +166,10 @@ var HTMLDOMPropertyConfig = {
     target: null,
     title: null,
     type: null,
+    typeof: null,
     useMap: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
+    vocab: null,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
 
