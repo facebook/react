@@ -346,6 +346,49 @@ describe('ReactCompositeComponent', function() {
     expect(cbCalled).toBe(false);
   });
 
+
+  it('should warn about `setState` in render', function() {
+    var container = document.createElement('div');
+
+    var renderedState = -1;
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {value: 0};
+      },
+      render: function() {
+        renderedState = this.state.value;
+        if (this.state.value === 0) {
+          this.setState({ value: 1 });
+        }
+        return <div />;
+      },
+    });
+
+    expect(console.error.calls.length).toBe(0);
+
+    var instance = React.render(<Component />, container);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: setState(...): Cannot update during an existing state ' +
+      'transition (such as within `render`). Render methods should be a pure ' +
+      'function of props and state.'
+    );
+
+    // The setState call is queued but the result isn't immediately available
+    // during this pass. It is queued up but not flushed. The behavior is more
+    // or less undefined.
+    expect(renderedState).toBe(0);
+    expect(instance.state.value).toBe(0);
+
+    // Forcing a rerender anywhere will cause the update to happen.
+    var instance2 = React.render(<Component prop={123} />, container);
+    expect(instance).toBe(instance2);
+    expect(renderedState).toBe(1);
+    expect(instance2.state.value).toBe(1);
+  });
+
   it('should not allow `setProps` on unmounted components', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
