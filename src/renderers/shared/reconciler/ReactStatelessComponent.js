@@ -254,36 +254,26 @@ var ReactStatelessComponentMixin = {
   },
 
   /**
-   * @protected
-   */
-  _renderValidatedComponentWithoutOwnerOrContext: function() {
-    var inst = this._instance;
-    var render = this._currentElement.type;
-    var renderedComponent = render(inst.props);
-    if (__DEV__) {
-      // We allow auto-mocks to proceed as if they're returning null.
-      if (typeof renderedComponent === 'undefined' &&
-          render._isMockFunction) {
-        // This is probably bad practice. Consider warning here and
-        // deprecating this convenience.
-        renderedComponent = null;
-      }
-    }
-
-    return renderedComponent;
-  },
-
-  /**
    * @private
    */
   _renderValidatedComponent: function() {
     var renderedComponent;
+    var inst = this._instance;
+    var render = this._currentElement.type;
     var previousContext = ReactContext.current;
     ReactContext.current = this._currentElement._context;
     ReactCurrentOwner.current = this;
     try {
-      renderedComponent =
-        this._renderValidatedComponentWithoutOwnerOrContext();
+      renderedComponent = render(inst.props);
+      if (__DEV__) {
+        // We allow auto-mocks to proceed as if they're returning null.
+        if (typeof renderedComponent === 'undefined' &&
+            render._isMockFunction) {
+          // This is probably bad practice. Consider warning here and
+          // deprecating this convenience.
+          renderedComponent = null;
+        }
+      }
     } finally {
       ReactContext.current = previousContext;
       ReactCurrentOwner.current = null;
