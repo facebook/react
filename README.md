@@ -8,7 +8,7 @@ React is a JavaScript library for building user interfaces.
 
 **NEW**! Check out our newest project [React Native](https://github.com/facebook/react-native), which uses React and JavaScript to create native mobile apps.
 
-[Learn how to use React in your own project.](https://facebook.github.io/react/docs/getting-started.html).
+[Learn how to use React in your own project](https://facebook.github.io/react/docs/getting-started.html).
 
 ## Examples
 
