@@ -25,14 +25,6 @@ var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 /**
- * An incrementing ID assigned to each component when it is mounted. This is
- * used to enforce the order in which `ReactUpdates` updates dirty components.
- *
- * @private
- */
-var nextMountID = 1;
-
-/**
  * @lends {ReactStatelessComponent.prototype}
  */
 var ReactStatelessComponentMixin = {
@@ -52,7 +44,6 @@ var ReactStatelessComponentMixin = {
     this._renderedComponent = null;
 
     this._context = null;
-    this._mountOrder = 0;
     this._isTopLevel = false;
   },
 
@@ -67,7 +58,6 @@ var ReactStatelessComponentMixin = {
    */
   mountComponent: function(rootID, transaction, context) {
     this._context = context;
-    this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
 
     var publicProps = this._currentElement.props;
