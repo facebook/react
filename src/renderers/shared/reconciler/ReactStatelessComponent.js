@@ -205,27 +205,21 @@ var ReactStatelessComponentMixin = {
    * @private
    */
   _renderValidatedComponent: function() {
-    var renderedComponent;
     var inst = this._instance;
     var render = this._currentElement.type;
-    var previousContext = ReactContext.current;
-    ReactContext.current = this._currentElement._context;
-    ReactCurrentOwner.current = this;
-    try {
-      renderedComponent = render(inst.props);
-      if (__DEV__) {
-        // We allow auto-mocks to proceed as if they're returning null.
-        if (typeof renderedComponent === 'undefined' &&
-            render._isMockFunction) {
-          // This is probably bad practice. Consider warning here and
-          // deprecating this convenience.
-          renderedComponent = null;
-        }
+
+    var renderedComponent = render(inst.props);
+
+    if (__DEV__) {
+      // We allow auto-mocks to proceed as if they're returning null.
+      if (typeof renderedComponent === 'undefined' &&
+          render._isMockFunction) {
+        // This is probably bad practice. Consider warning here and
+        // deprecating this convenience.
+        renderedComponent = null;
       }
-    } finally {
-      ReactContext.current = previousContext;
-      ReactCurrentOwner.current = null;
     }
+
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
       renderedComponent === null || renderedComponent === false ||
@@ -234,6 +228,7 @@ var ReactStatelessComponentMixin = {
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactStatelessComponent'
     );
+
     return renderedComponent;
   },
 
