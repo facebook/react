@@ -167,41 +167,13 @@ var ReactStatelessComponentMixin = {
   ) {
     var inst = this._instance;
 
-    var nextProps = inst.props;
-
     // Distinguish between a props update versus a simple state update
     if (prevParentElement !== nextParentElement) {
-      nextProps = nextParentElement.props;
+      inst.props = nextParentElement.props;
     }
 
-    this._performComponentUpdate(
-      nextParentElement,
-      nextProps,
-      nextContext,
-      transaction
-    );
-  },
-
-  /**
-   * Merges new props and state, notifies delegate methods of update and
-   * performs update.
-   *
-   * @param {ReactElement} nextElement Next element
-   * @param {object} nextProps Next public object to set as properties.
-   * @param {ReactReconcileTransaction} transaction
-   * @private
-   */
-  _performComponentUpdate: function(
-    nextElement,
-    nextProps,
-    nextContext,
-    transaction
-  ) {
-    var inst = this._instance;
-
-    this._currentElement = nextElement;
+    this._currentElement = nextParentElement;
     this._context = nextContext;
-    inst.props = nextProps;
 
     this._updateRenderedComponent(transaction);
   },
