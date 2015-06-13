@@ -107,8 +107,12 @@ function assertValidProps(component, props) {
       warning(
         props.children == null && props.dangerouslySetInnerHTML == null,
         '%s is a void element tag and must not have `children` or ' +
-        'use `props.dangerouslySetInnerHTML`.',
-        component._tag
+        'use `props.dangerouslySetInnerHTML`.%s',
+        component._tag,
+        component._currentElement._owner ?
+          ' Check the render method of ' +
+          component._currentElement._owner.getName() + '.' :
+          ''
       );
     }
   }
