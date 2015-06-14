@@ -16,12 +16,12 @@
     "react-codemod": "./react-codemod"
   },
   "dependencies": {
-    "jscodeshift": "^0.1.0"
+    "jscodeshift": "^0.1.5"
   },
   "devDependencies": {
     "babel": "^4.7.16",
     "babel-jest": "^4.0.0",
-    "jest-cli": "^0.4.0"
+    "jest-cli": "^0.4.12"
   },
   "jest": {
     "scriptPreprocessor": "./node_modules/babel-jest",

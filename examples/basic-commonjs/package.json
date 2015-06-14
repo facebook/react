@@ -3,8 +3,8 @@
   "description": "Basic example of using React with CommonJS",
   "main": "index.js",
   "devDependencies": {
-    "browserify": "^6.3.3",
-    "react": "^0.13.0",
+    "browserify": "^6.3.4",
+    "react": "^0.13.3",
     "reactify": "^0.17.1"
   },
   "scripts": {
