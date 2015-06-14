@@ -3,9 +3,9 @@
   "description": "Basic example of using React with CommonJS",
   "main": "index.js",
   "devDependencies": {
-    "browserify": "^6.3.4",
+    "browserify": "^10.2.4",
     "react": "^0.13.3",
-    "reactify": "^0.17.1"
+    "reactify": "^1.1.1"
   },
   "scripts": {
     "build": "browserify --debug --transform reactify index.js > bundle.js"

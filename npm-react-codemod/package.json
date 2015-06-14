@@ -19,8 +19,8 @@
     "jscodeshift": "^0.1.5"
   },
   "devDependencies": {
-    "babel": "^4.7.16",
-    "babel-jest": "^4.0.0",
+    "babel": "^5.5.8",
+    "babel-jest": "^5.3.0",
     "jest-cli": "^0.4.12"
   },
   "jest": {

@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "envify": "^3.4.0",
-    "express": "^3.5.1",
-    "node-jsx": "^0.12.4",
+    "express": "^4.12.4",
+    "node-jsx": "^0.13.3",
     "react": "^0.13.3"
   }
 }

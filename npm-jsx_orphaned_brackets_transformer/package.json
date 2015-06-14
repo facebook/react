@@ -4,9 +4,9 @@
   "version": "1.0.1",
   "main": "run.js",
   "dependencies": {
-    "graceful-fs": "^2.0.3",
-    "jstransform": "^8.2.0",
-    "node-find-files": "0.0.2",
+    "graceful-fs": "^3.0.8",
+    "jstransform": "^11.0.1",
+    "node-find-files": "0.0.4",
     "optimist": "^0.6.1"
   },
   "bin": {

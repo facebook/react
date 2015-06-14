@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "browserify": "^3.46.1",
+    "browserify": "^10.2.4",
     "envify": "^3.4.0",
     "react": "^0.13.3",
     "reactify": "^1.1.1"
