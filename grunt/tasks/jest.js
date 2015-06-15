@@ -6,8 +6,8 @@ module.exports = function() {
   var done = this.async();
   grunt.log.writeln('running jest (this may take a while)');
   grunt.util.spawn({
-    cmd: 'node_modules/.bin/jest',
-    args: ['-i'],
+    cmd: 'node',
+    args: ['--harmony', 'node_modules/.bin/jest', '-i'],
     opts: {stdio: 'inherit'},
   }, function(err, result, code) {
     if (err) {
