@@ -42,6 +42,8 @@ script:
         fi
         popd
       fi
+    elif [ "$TEST_TYPE" = jest ]; then
+      ./node_modules/.bin/jest
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi
