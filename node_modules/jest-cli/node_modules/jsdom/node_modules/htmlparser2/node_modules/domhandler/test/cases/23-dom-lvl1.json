@@ -1,0 +1,131 @@
+{
+  "name": "DOM level 1",
+  "options": { "withDomLvl1": true },
+  "html": "<div>some stray text<h1>Hello, world.</h1><!-- comment node -->more stray text</div>",
+  "expected": [
+    {
+      "type": "tag",
+      "nodeType": 1,
+      "name": "div",
+      "tagName": "div",
+      "attribs": {},
+      "nodeValue": null,
+      "children": [
+        {
+          "type": "text",
+          "nodeType": 3,
+          "tagName": null,
+          "data": "some stray text",
+          "nodeValue": "some stray text",
+          "childNodes": null,
+          "firstChild": null,
+          "lastChild": null
+        },
+        {
+          "type": "tag",
+          "nodeType": 1,
+          "name": "h1",
+          "tagName": "h1",
+          "nodeValue": null,
+          "attribs": {},
+          "children": [
+            {
+              "type": "text",
+              "nodeType": 3,
+              "tagName": null,
+              "data": "Hello, world.",
+              "nodeValue": "Hello, world.",
+              "childNodes": null,
+              "firstChild": null,
+              "lastChild": null
+            }
+          ],
+          "firstChild": {
+            "type": "text",
+            "nodeType": 3,
+            "tagName": null,
+            "data": "Hello, world.",
+            "nodeValue": "Hello, world.",
+            "childNodes": null,
+            "firstChild": null,
+            "lastChild": null
+          },
+          "lastChild": {
+            "type": "text",
+            "nodeType": 3,
+            "tagName": null,
+            "data": "Hello, world.",
+            "nodeValue": "Hello, world.",
+            "childNodes": null,
+            "firstChild": null,
+            "lastChild": null
+          }
+        },
+        {
+          "type": "comment",
+          "nodeType": 8,
+          "tagName": null,
+          "data": " comment node ",
+          "nodeValue": " comment node ",
+          "childNodes": null,
+          "firstChild": null,
+          "lastChild": null,
+          "prev": {
+            "type": "tag",
+            "name": "h1",
+            "nodeValue": null,
+            "attribs": {}
+          },
+          "previousSibling": {
+            "type": "tag",
+            "name": "h1",
+            "nodeValue": null,
+            "attribs": {}
+          },
+          "next": {
+            "type": "text",
+            "tagName": null,
+            "data": "more stray text"
+          },
+          "nextSibling": {
+            "type": "text",
+            "tagName": null,
+            "data": "more stray text"
+          }
+        },
+        {
+          "type": "text",
+          "nodeType": 3,
+          "tagName": null,
+          "data": "more stray text",
+          "nodeValue": "more stray text",
+          "childNodes": null,
+          "firstChild": null,
+          "lastChild": null,
+          "next": null,
+          "nextSibling": null
+        }
+      ],
+      "firstChild": {
+        "type": "text",
+        "nodeType": 3,
+        "tagName": null,
+        "data": "some stray text",
+        "nodeValue": "some stray text",
+        "childNodes": null,
+        "firstChild": null,
+        "lastChild": null
+       },
+       "lastChild": {
+          "type": "text",
+          "nodeType": 3,
+          "tagName": null,
+          "data": "more stray text",
+          "nodeValue": "more stray text",
+          "childNodes": null,
+          "firstChild": null,
+          "lastChild": null
+        }
+    }
+  ]
+}

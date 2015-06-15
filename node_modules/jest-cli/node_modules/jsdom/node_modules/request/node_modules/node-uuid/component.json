@@ -1,0 +1,18 @@
+{
+  "name": "node-uuid",
+  "repo": "broofa/node-uuid",
+  "description": "Rigorous implementation of RFC4122 (v1 and v4) UUIDs.",
+  "version": "1.4.3",
+  "author": "Robert Kieffer <robert@broofa.com>",
+  "contributors": [
+    {"name": "Christoph Tavan <dev@tavan.de>", "github": "https://github.com/ctavan"}
+  ],
+  "keywords": ["uuid", "guid", "rfc4122"],
+  "dependencies": {},
+  "development": {},
+  "main": "uuid.js",
+  "scripts": [
+    "uuid.js"
+  ],
+  "license": "MIT"
+}

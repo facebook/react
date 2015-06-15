@@ -1,0 +1,37 @@
+{
+  "author": {
+    "name": "Felix Geisendörfer",
+    "email": "felix@debuggable.com",
+    "url": "http://debuggable.com/"
+  },
+  "name": "combined-stream",
+  "description": "A stream that emits multiple other streams one after another.",
+  "version": "0.0.7",
+  "homepage": "https://github.com/felixge/node-combined-stream",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/felixge/node-combined-stream.git"
+  },
+  "main": "./lib/combined_stream",
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "engines": {
+    "node": ">= 0.8"
+  },
+  "dependencies": {
+    "delayed-stream": "0.0.5"
+  },
+  "devDependencies": {
+    "far": "~0.0.7"
+  },
+  "readme": "# combined-stream [![Build Status](https://travis-ci.org/felixge/node-combined-stream.svg?branch=master)](https://travis-ci.org/felixge/node-combined-stream)\n\nA stream that emits multiple other streams one after another.\n\n## Installation\n\n``` bash\nnpm install combined-stream\n```\n\n## Usage\n\nHere is a simple example that shows how you can use combined-stream to combine\ntwo files into one:\n\n``` javascript\nvar CombinedStream = require('combined-stream');\nvar fs = require('fs');\n\nvar combinedStream = CombinedStream.create();\ncombinedStream.append(fs.createReadStream('file1.txt'));\ncombinedStream.append(fs.createReadStream('file2.txt'));\n\ncombinedStream.pipe(fs.createWriteStream('combined.txt'));\n```\n\nWhile the example above works great, it will pause all source streams until\nthey are needed. If you don't want that to happen, you can set `pauseStreams`\nto `false`:\n\n``` javascript\nvar CombinedStream = require('combined-stream');\nvar fs = require('fs');\n\nvar combinedStream = CombinedStream.create({pauseStreams: false});\ncombinedStream.append(fs.createReadStream('file1.txt'));\ncombinedStream.append(fs.createReadStream('file2.txt'));\n\ncombinedStream.pipe(fs.createWriteStream('combined.txt'));\n```\n\nHowever, what if you don't have all the source streams yet, or you don't want\nto allocate the resources (file descriptors, memory, etc.) for them right away?\nWell, in that case you can simply provide a callback that supplies the stream\nby calling a `next()` function:\n\n``` javascript\nvar CombinedStream = require('combined-stream');\nvar fs = require('fs');\n\nvar combinedStream = CombinedStream.create();\ncombinedStream.append(function(next) {\n  next(fs.createReadStream('file1.txt'));\n});\ncombinedStream.append(function(next) {\n  next(fs.createReadStream('file2.txt'));\n});\n\ncombinedStream.pipe(fs.createWriteStream('combined.txt'));\n```\n\n## API\n\n### CombinedStream.create([options])\n\nReturns a new combined stream object. Available options are:\n\n* `maxDataSize`\n* `pauseStreams`\n\nThe effect of those options is described below.\n\n### combinedStream.pauseStreams = `true`\n\nWhether to apply back pressure to the underlaying streams. If set to `false`,\nthe underlaying streams will never be paused. If set to `true`, the\nunderlaying streams will be paused right after being appended, as well as when\n`delayedStream.pipe()` wants to throttle.\n\n### combinedStream.maxDataSize = `2 * 1024 * 1024`\n\nThe maximum amount of bytes (or characters) to buffer for all source streams.\nIf this value is exceeded, `combinedStream` emits an `'error'` event.\n\n### combinedStream.dataSize = `0`\n\nThe amount of bytes (or characters) currently buffered by `combinedStream`.\n\n### combinedStream.append(stream)\n\nAppends the given `stream` to the combinedStream object. If `pauseStreams` is\nset to `true, this stream will also be paused right away.\n\n`streams` can also be a function that takes one parameter called `next`. `next`\nis a function that must be invoked in order to provide the `next` stream, see\nexample above.\n\nRegardless of how the `stream` is appended, combined-stream always attaches an\n`'error'` listener to it, so you don't have to do that manually.\n\nSpecial case: `stream` can also be a String or Buffer.\n\n### combinedStream.write(data)\n\nYou should not call this, `combinedStream` takes care of piping the appended\nstreams into itself for you.\n\n### combinedStream.resume()\n\nCauses `combinedStream` to start drain the streams it manages. The function is\nidempotent, and also emits a `'resume'` event each time which usually goes to\nthe stream that is currently being drained.\n\n### combinedStream.pause();\n\nIf `combinedStream.pauseStreams` is set to `false`, this does nothing.\nOtherwise a `'pause'` event is emitted, this goes to the stream that is\ncurrently being drained, so you can use it to apply back pressure.\n\n### combinedStream.end();\n\nSets `combinedStream.writable` to false, emits an `'end'` event, and removes\nall streams from the queue.\n\n### combinedStream.destroy();\n\nSame as `combinedStream.end()`, except it emits a `'close'` event instead of\n`'end'`.\n\n## License\n\ncombined-stream is licensed under the MIT license.\n",
+  "readmeFilename": "Readme.md",
+  "bugs": {
+    "url": "https://github.com/felixge/node-combined-stream/issues"
+  },
+  "_id": "combined-stream@0.0.7",
+  "_shasum": "0137e657baa5a7541c57ac37ac5fc07d73b4dc1f",
+  "_resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-0.0.7.tgz",
+  "_from": "combined-stream@>=0.0.4 <0.1.0"
+}

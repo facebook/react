@@ -1,0 +1,108 @@
+{
+  "name": "request",
+  "description": "Simplified HTTP request client.",
+  "tags": [
+    "http",
+    "simple",
+    "util",
+    "utility"
+  ],
+  "version": "2.57.0",
+  "author": {
+    "name": "Mikeal Rogers",
+    "email": "mikeal.rogers@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/request/request.git"
+  },
+  "bugs": {
+    "url": "http://github.com/request/request/issues"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "bl": "~0.9.0",
+    "caseless": "~0.10.0",
+    "forever-agent": "~0.6.0",
+    "form-data": "~0.2.0",
+    "json-stringify-safe": "~5.0.0",
+    "mime-types": "~2.0.1",
+    "node-uuid": "~1.4.0",
+    "qs": "~3.1.0",
+    "tunnel-agent": "~0.4.0",
+    "tough-cookie": ">=0.12.0",
+    "http-signature": "~0.11.0",
+    "oauth-sign": "~0.8.0",
+    "hawk": "~2.3.0",
+    "aws-sign2": "~0.5.0",
+    "stringstream": "~0.0.4",
+    "combined-stream": "~1.0.1",
+    "isstream": "~0.1.1",
+    "har-validator": "^1.6.1"
+  },
+  "scripts": {
+    "test": "npm run lint && node node_modules/.bin/taper tests/test-*.js && npm run test-browser",
+    "test-browser": "node tests/browser/start.js",
+    "lint": "node node_modules/.bin/eslint lib/ *.js tests/ && echo Lint passed."
+  },
+  "devDependencies": {
+    "browserify": "~5.9.1",
+    "browserify-istanbul": "~0.1.3",
+    "buffer-equal": "0.0.1",
+    "coveralls": "~2.11.2",
+    "eslint": "0.18.0",
+    "function-bind": "~1.0.0",
+    "istanbul": "~0.3.2",
+    "karma": "~0.12.21",
+    "karma-browserify": "~3.0.1",
+    "karma-cli": "0.0.4",
+    "karma-coverage": "0.2.6",
+    "karma-phantomjs-launcher": "~0.1.4",
+    "karma-tap": "~1.0.1",
+    "rimraf": "~2.2.8",
+    "server-destroy": "~1.0.0",
+    "tape": "~3.0.0",
+    "taper": "~0.4.0",
+    "bluebird": "~2.9.21"
+  },
+  "gitHead": "1fafe0dc387e5efa9ae95b40aa80c43e83e1b98f",
+  "homepage": "https://github.com/request/request#readme",
+  "_id": "request@2.57.0",
+  "_shasum": "d445105a42d009b9d724289633b449a6d723d989",
+  "_from": "request@>=2.0.0 <3.0.0",
+  "_npmVersion": "2.10.1",
+  "_nodeVersion": "0.12.4",
+  "_npmUser": {
+    "name": "simov",
+    "email": "simeonvelichkov@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "mikeal",
+      "email": "mikeal.rogers@gmail.com"
+    },
+    {
+      "name": "nylen",
+      "email": "jnylen@gmail.com"
+    },
+    {
+      "name": "fredkschott",
+      "email": "fkschott@gmail.com"
+    },
+    {
+      "name": "simov",
+      "email": "simeonvelichkov@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "d445105a42d009b9d724289633b449a6d723d989",
+    "tarball": "http://registry.npmjs.org/request/-/request-2.57.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/request/-/request-2.57.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

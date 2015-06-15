@@ -1,0 +1,48 @@
+{
+  "author": {
+    "name": "Felix Geisendörfer",
+    "email": "felix@debuggable.com",
+    "url": "http://debuggable.com/"
+  },
+  "name": "form-data",
+  "description": "A module to create readable \"multipart/form-data\" streams.  Can be used to submit forms and file uploads to other web applications.",
+  "version": "0.2.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/felixge/node-form-data.git"
+  },
+  "main": "./lib/form_data",
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "engines": {
+    "node": ">= 0.8"
+  },
+  "dependencies": {
+    "async": "~0.9.0",
+    "combined-stream": "~0.0.4",
+    "mime-types": "~2.0.3"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://raw.github.com/felixge/node-form-data/master/License"
+    }
+  ],
+  "devDependencies": {
+    "fake": "~0.2.2",
+    "far": "~0.0.7",
+    "formidable": "~1.0.14",
+    "request": "~2.36.0"
+  },
+  "readme": "# Form-Data [![Build Status](https://travis-ci.org/felixge/node-form-data.png?branch=master)](https://travis-ci.org/felixge/node-form-data) [![Dependency Status](https://gemnasium.com/felixge/node-form-data.png)](https://gemnasium.com/felixge/node-form-data)\n\nA module to create readable ```\"multipart/form-data\"``` streams. Can be used to submit forms and file uploads to other web applications.\n\nThe API of this module is inspired by the [XMLHttpRequest-2 FormData Interface][xhr2-fd].\n\n[xhr2-fd]: http://dev.w3.org/2006/webapi/XMLHttpRequest-2/Overview.html#the-formdata-interface\n[streams2-thing]: http://nodejs.org/api/stream.html#stream_compatibility_with_older_node_versions\n\n## Install\n\n```\nnpm install form-data\n```\n\n## Usage\n\nIn this example we are constructing a form with 3 fields that contain a string,\na buffer and a file stream.\n\n``` javascript\nvar FormData = require('form-data');\nvar fs = require('fs');\n\nvar form = new FormData();\nform.append('my_field', 'my value');\nform.append('my_buffer', new Buffer(10));\nform.append('my_file', fs.createReadStream('/foo/bar.jpg'));\n```\n\nAlso you can use http-response stream:\n\n``` javascript\nvar FormData = require('form-data');\nvar http = require('http');\n\nvar form = new FormData();\n\nhttp.request('http://nodejs.org/images/logo.png', function(response) {\n  form.append('my_field', 'my value');\n  form.append('my_buffer', new Buffer(10));\n  form.append('my_logo', response);\n});\n```\n\nOr @mikeal's request stream:\n\n``` javascript\nvar FormData = require('form-data');\nvar request = require('request');\n\nvar form = new FormData();\n\nform.append('my_field', 'my value');\nform.append('my_buffer', new Buffer(10));\nform.append('my_logo', request('http://nodejs.org/images/logo.png'));\n```\n\nIn order to submit this form to a web application, call ```submit(url, [callback])``` method:\n\n``` javascript\nform.submit('http://example.org/', function(err, res) {\n  // res – response object (http.IncomingMessage)  //\n  res.resume(); // for node-0.10.x\n});\n\n```\n\nFor more advanced request manipulations ```submit()``` method returns ```http.ClientRequest``` object, or you can choose from one of the alternative submission methods.\n\n### Alternative submission methods\n\nYou can use node's http client interface:\n\n``` javascript\nvar http = require('http');\n\nvar request = http.request({\n  method: 'post',\n  host: 'example.org',\n  path: '/upload',\n  headers: form.getHeaders()\n});\n\nform.pipe(request);\n\nrequest.on('response', function(res) {\n  console.log(res.statusCode);\n});\n```\n\nOr if you would prefer the `'Content-Length'` header to be set for you:\n\n``` javascript\nform.submit('example.org/upload', function(err, res) {\n  console.log(res.statusCode);\n});\n```\n\nTo use custom headers and pre-known length in parts:\n\n``` javascript\nvar CRLF = '\\r\\n';\nvar form = new FormData();\n\nvar options = {\n  header: CRLF + '--' + form.getBoundary() + CRLF + 'X-Custom-Header: 123' + CRLF + CRLF,\n  knownLength: 1\n};\n\nform.append('my_buffer', buffer, options);\n\nform.submit('http://example.com/', function(err, res) {\n  if (err) throw err;\n  console.log('Done');\n});\n```\n\nForm-Data can recognize and fetch all the required information from common types of streams (```fs.readStream```, ```http.response``` and ```mikeal's request```), for some other types of streams you'd need to provide \"file\"-related information manually:\n\n``` javascript\nsomeModule.stream(function(err, stdout, stderr) {\n  if (err) throw err;\n\n  var form = new FormData();\n\n  form.append('file', stdout, {\n    filename: 'unicycle.jpg',\n    contentType: 'image/jpg',\n    knownLength: 19806\n  });\n\n  form.submit('http://example.com/', function(err, res) {\n    if (err) throw err;\n    console.log('Done');\n  });\n});\n```\n\nFor edge cases, like POST request to URL with query string or to pass HTTP auth credentials, object can be passed to `form.submit()` as first parameter:\n\n``` javascript\nform.submit({\n  host: 'example.com',\n  path: '/probably.php?extra=params',\n  auth: 'username:password'\n}, function(err, res) {\n  console.log(res.statusCode);\n});\n```\n\nIn case you need to also send custom HTTP headers with the POST request, you can use the `headers` key in first parameter of `form.submit()`:\n\n``` javascript\nform.submit({\n  host: 'example.com',\n  path: '/surelynot.php',\n  headers: {'x-test-header': 'test-header-value'}\n}, function(err, res) {\n  console.log(res.statusCode);\n});\n```\n\n## Notes\n\n- ```getLengthSync()``` method DOESN'T calculate length for streams, use ```knownLength``` options as workaround.\n- If it feels like FormData hangs after submit and you're on ```node-0.10```, please check [Compatibility with Older Node Versions][streams2-thing]\n\n## TODO\n\n- Add new streams (0.10) support and try really hard not to break it for 0.8.x.\n\n## License\n\nForm-Data is licensed under the MIT license.\n",
+  "readmeFilename": "Readme.md",
+  "bugs": {
+    "url": "https://github.com/felixge/node-form-data/issues"
+  },
+  "homepage": "https://github.com/felixge/node-form-data",
+  "_id": "form-data@0.2.0",
+  "_shasum": "26f8bc26da6440e299cbdcfb69035c4f77a6e466",
+  "_resolved": "https://registry.npmjs.org/form-data/-/form-data-0.2.0.tgz",
+  "_from": "form-data@>=0.2.0 <0.3.0"
+}

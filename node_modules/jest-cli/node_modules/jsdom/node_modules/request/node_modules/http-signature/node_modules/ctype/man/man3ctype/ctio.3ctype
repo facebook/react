@@ -1,0 +1,241 @@
+'\" te
+.\" Copyright (c) 2011, Robert Mustacchi.  All Rights Reserved.
+.\" Copyright (c) 2011, Joyent, Inc.  All Rights Reserved.
+.\"
+.\" Permission is hereby granted, free of charge, to any person obtaining a copy
+.\" of this software and associated documentation files (the "Software"), to
+.\" deal in the Software without restriction, including without limitation the
+.\" rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+.\" sell copies of the Software, and to permit persons to whom the Software is
+.\" furnished to do so, subject to the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be included in
+.\" all copies or substantial portions of the Software.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+.\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+.\" AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+.\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+.\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+.\" IN THE SOFTWARE.
+.TH CTIO 3CTYPE "December 12, 2011"
+.SH NAME
+ctio, ruint8, ruint16, ruint32, ruint64, wuint8, wuint16, wuint32, wuint64,
+rsint8, rsint16, rsint32, rsint64, wsint8, wsint16, wsint32, wsint64, rfloat,
+rdouble, wfloat, wdouble \- integer and float operations
+.SH SYNOPSIS
+.LP
+.nf
+var mod_ctype = require('ctype');
+
+\fBNumber\fR \fBmod_ctype.ruint8\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber\fR \fBmod_ctype.ruint16\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber\fR \fBmod_ctype.ruint32\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber[2]\fR \fBmod_ctype.ruint64\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber\fR \fBmod_ctype.rsint8\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber\fR \fBmod_ctype.rsint16\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber\fR \fBmod_ctype.rsint32\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber[2]\fR \fBmod_ctype.rsint64\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber\fR \fBmod_ctype.rfloat\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBNumber\fR \fBmod_ctype.rdouble\fR(\fBBuffer\fR \fIbuf\fR, \fBString\fR \fIendian\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wuint8\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wuint16\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wuint32\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wuint64\fR(\fBNumber[2]\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wsint8\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wsint16\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wsint32\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wsint64\fR(\fBNumber[2]\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wfloat\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.LP
+.nf
+\fBvoid\fR \fBmod_ctype.wdouble\fR(\fBNumber\fR value, \fBString\fR \fIendian\fR, \fBBuffer\fR \fIbuf\fR, \fBNumber\fR \fIoffset\fR);
+.fi
+
+.SH DESCRIPTION
+.sp
+.LP
+The argument \fIbuf\fR refers to a valid buffer (from calling new Buffer()). The
+argument \fIendian\fR is either the string 'big' or 'little' and controls
+whether the data in the buffer is interpreted as big or little endian. The argument
+\fIoffset\fR indicates the starting index into the buffer to read or write. All
+functions ensure that starting at \fIoffset\fR does not overflow the end of the
+buffer. The argument \fIvalue\fR is a Number that is the valid type for the
+specific function. All functions that take \fIvalue\fR as an argument, verify
+that the passed value is valid.
+
+.SS "\fBruint8()\fR, \fBruint16()\fR, \fBruint32()\fR"
+.sp
+.LP
+The \fBruint8()\fR, \fBruint16()\fR, and \fBruint32()\fR functions read an 8,
+16, and 32-bit unsigned value from \fIbuf\fR and return it. The value read is
+influenced by the values of \fIoffset\fR and \fRendian\fI.
+
+
+.SS "\fBrsint8()\fR, \fBrsint16()\fR, \fBrsint32()\fR"
+.sp
+.LP
+The \fBruint8()\fR, \fBruint16()\fR, and \fBruint32()\fR functions work just as
+\fBruint8()\fR, \fBruint16()\fR, and \fBruint32()\fR, except they return signed
+integers.
+
+.SS "\fBruint64()\fR, \fBrsint64()\fR"
+.sp
+.LP
+The \fBruint64()\fR and \fBrsint64()\fR functions read unsigned and signed 64
+bit integers respectively from \fBbuf\fR. Due to the limitations of ECMAScript's
+\fBNumber\fR type, they cannot be stored as one value without a loss of
+precision. Instead of returning the values as a single \fBNumber\fR, the
+functions return an array of two numbers. The first entry always contains the
+upper 32-bits and the second value contains the lower 32-bits. The lossy
+transformation into a number would be \fIres[0]*Math.pow(2,32)+res[1]\fR.
+Note that, unless an entry is zero, both array entries are guaranteed to have
+the same sign.
+
+.SS "\fBwuint8()\fR, \fBwuint16()\fR, \fBwuint32()\fR"
+.sp
+.LP
+The functions \fBwuint8()\fR, \fBwuint16()\fR, and \fBwuint32()\fR modify the
+contents of \fBbuf\fR by writing an 8, 16, and 32-bit unsigned integer
+respectively to \fBbuf\fR. It is illegal to pass a number that is not an integer
+within the domain of the integer size, for example, for \fBwuint8()\fR the valid
+range is \fB[0, 255]\fR. The value will be written in either big or little
+endian format based upon the value of \fBendian\fR.
+
+
+.SS "\fBwsint8()\fR, \fBwsint16()\fR, \fBwsint32()\fR"
+.sp
+.LP
+The functions \fBwsint8()\fR, \fBwsint16()\fR, and \fBwsint32()\fR function
+identically to the functions \fBwuint8()\fR, \fBwuint16()\fR, and
+\fBwuint32()\fR except that they the valid domain for \fBvalue\fR is that of a
+signed number instead of an unsigned number. For example the \fBwsint8()\fR has
+a domain of \fB[-128, 127]\fR.
+
+.SS "\fBwuint64()\fR, \fBwsint64()\fR"
+.sp
+.LP
+The functions \fBwuint64()\fR and \fBswint64()\fR write out 64-bit unsigned and
+signed integers to \fBbuf\fR. The \fBvalue\fR argument must be in the same
+format as described in \fBruint64()\fR and \fBrsint64()\fR.
+
+.SS "\fBrfloat()\fR, \fBrdouble()\fR"
+.sp
+.LP
+The functions "\fBrfloat()\fR and \fBrdouble()\fR" work like the other read
+functions, except that they read a single precision and double precision
+IEEE-754 floating point value instead.
+
+.SS "\fBwfloat()\fR, \fBwdouble()\fR"
+.sp
+.LP
+The functions "\fBrfloat()\fR and \fBrdouble()\fR" work like the other write 
+functions, except that the domain for a float is that of a single precision 4
+byte value. The domain for a double is any \fBNumber\fR in ECMAScript, which is
+defined to be represented by a double.
+
+.SH ATTRIBUTES
+.sp
+.LP
+See \fBattributes\fR(5) for descriptions of the following attributes:
+.sp
+
+.sp
+.TS
+box;
+c | c
+l | l .
+ATTRIBUTE TYPE	ATTRIBUTE VALUE
+_
+Interface Stability	Committed
+_
+MT-Level	See below.
+_
+Standard	Not standardized.
+.TE
+
+.sp
+.LP
+
+All functions are MT-safe in so far as there aren't shared memory MT concerns in
+most node programs. If one where to concoct such an environment, these functions
+wouldn't be MT-safe.
+
+.SH SEE ALSO
+.sp
+.LP

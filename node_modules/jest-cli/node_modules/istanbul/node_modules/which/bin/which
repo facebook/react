@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+var which = require("../")
+if (process.argv.length < 3) {
+  console.error("Usage: which <thing>")
+  process.exit(1)
+}
+
+which(process.argv[2], function (er, thing) {
+  if (er) {
+    console.error(er.message)
+    process.exit(er.errno || 127)
+  }
+  console.log(thing)
+})

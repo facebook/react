@@ -1,0 +1,36 @@
+{
+  "name": "inflight",
+  "version": "1.0.4",
+  "description": "Add callbacks to requests in flight to avoid async duplication",
+  "main": "inflight.js",
+  "dependencies": {
+    "once": "^1.3.0",
+    "wrappy": "1"
+  },
+  "devDependencies": {
+    "tap": "^0.4.10"
+  },
+  "scripts": {
+    "test": "tap test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/inflight.git"
+  },
+  "author": {
+    "name": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/"
+  },
+  "bugs": {
+    "url": "https://github.com/isaacs/inflight/issues"
+  },
+  "homepage": "https://github.com/isaacs/inflight",
+  "license": "ISC",
+  "readme": "# inflight\n\nAdd callbacks to requests in flight to avoid async duplication\n\n## USAGE\n\n```javascript\nvar inflight = require('inflight')\n\n// some request that does some stuff\nfunction req(key, callback) {\n  // key is any random string.  like a url or filename or whatever.\n  //\n  // will return either a falsey value, indicating that the\n  // request for this key is already in flight, or a new callback\n  // which when called will call all callbacks passed to inflightk\n  // with the same key\n  callback = inflight(key, callback)\n\n  // If we got a falsey value back, then there's already a req going\n  if (!callback) return\n\n  // this is where you'd fetch the url or whatever\n  // callback is also once()-ified, so it can safely be assigned\n  // to multiple events etc.  First call wins.\n  setTimeout(function() {\n    callback(null, key)\n  }, 100)\n}\n\n// only assigns a single setTimeout\n// when it dings, all cbs get called\nreq('foo', cb1)\nreq('foo', cb2)\nreq('foo', cb3)\nreq('foo', cb4)\n```\n",
+  "readmeFilename": "README.md",
+  "_id": "inflight@1.0.4",
+  "_shasum": "6cbb4521ebd51ce0ec0a936bfd7657ef7e9b172a",
+  "_resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.4.tgz",
+  "_from": "inflight@>=1.0.4 <2.0.0"
+}

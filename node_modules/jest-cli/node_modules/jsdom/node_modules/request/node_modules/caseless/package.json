@@ -1,0 +1,57 @@
+{
+  "name": "caseless",
+  "version": "0.10.0",
+  "description": "Caseless object set/get/has, very useful when working with HTTP headers.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikeal/caseless.git"
+  },
+  "keywords": [
+    "headers",
+    "http",
+    "caseless"
+  ],
+  "test": "node test.js",
+  "author": {
+    "name": "Mikeal Rogers",
+    "email": "mikeal.rogers@gmail.com"
+  },
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/mikeal/caseless/issues"
+  },
+  "devDependencies": {
+    "tape": "^2.10.2"
+  },
+  "gitHead": "9c85efef6c37d48923b79f3f282441414dd691c9",
+  "homepage": "https://github.com/mikeal/caseless",
+  "_id": "caseless@0.10.0",
+  "_shasum": "ed6b2719adcd1fd18f58dc081c0f1a5b43963909",
+  "_from": "caseless@>=0.10.0 <0.11.0",
+  "_npmVersion": "1.4.14",
+  "_npmUser": {
+    "name": "nylen",
+    "email": "jnylen@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "mikeal",
+      "email": "mikeal.rogers@gmail.com"
+    },
+    {
+      "name": "nylen",
+      "email": "jnylen@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "ed6b2719adcd1fd18f58dc081c0f1a5b43963909",
+    "tarball": "http://registry.npmjs.org/caseless/-/caseless-0.10.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/caseless/-/caseless-0.10.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

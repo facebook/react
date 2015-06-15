@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for {{entity}}</title>
+    <meta charset="utf-8">
+{{#if prettify}}
+    <link rel="stylesheet" href="{{prettify.css}}">
+{{/if}}
+    <link rel="stylesheet" href="{{base.css}}">
+    <style type='text/css'>
+        div.coverage-summary .sorter {
+            background-image: url({{sorter.image}});
+        }
+    </style>
+</head>
+<body>
+<div class="header {{reportClass}}">
+    <h1>Code coverage report for <span class="entity">{{entity}}</span></h1>
+    <h2>
+        {{#with metrics.statements}}
+        Statements: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        {{#with metrics.branches}}
+        Branches: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        {{#with metrics.functions}}
+        Functions: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        {{#with metrics.lines}}
+        Lines: <span class="metric">{{pct}}% <small>({{covered}} / {{total}})</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        {{/with}}
+        Ignored: <span class="metric">{{#show_ignores metrics}}{{/show_ignores}}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    {{{pathHtml}}}
+</div>
+<div class="body">

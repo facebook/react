@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Underscore Test Suite</title>
+  <link rel="stylesheet" href="vendor/qunit.css" type="text/css" media="screen" />
+  <script type="text/javascript" src="vendor/jquery.js"></script>
+  <script type="text/javascript" src="vendor/qunit.js"></script>
+  <script type="text/javascript" src="vendor/jslitmus.js"></script>
+  <script type="text/javascript" src="../underscore.js"></script>
+  <script type="text/javascript" src="../../lib/underscore.string.js"></script>
+  <script type="text/javascript" src="collections.js"></script>
+  <script type="text/javascript" src="arrays.js"></script>
+  <script type="text/javascript" src="functions.js"></script>
+  <script type="text/javascript" src="objects.js"></script>
+  <script type="text/javascript" src="utility.js"></script>
+  <script type="text/javascript" src="chaining.js"></script>
+  <script type="text/javascript" src="speed.js"></script>
+</head>
+<body>
+  <div class="underscore-test">
+    <h1 id="qunit-header">Underscore Test Suite</h1>
+    <h2 id="qunit-banner"></h2>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+    <br />
+    <h1 class="qunit-header">Underscore Speed Suite</h1>
+    <p>
+      A representative sample of the functions are benchmarked here, to provide
+      a sense of how fast they might run in different browsers.
+      Each iteration runs on an array of 1000 elements.<br /><br />
+      For example, the 'intersect' test measures the number of times you can
+      find the intersection of two thousand-element arrays in one second.
+    </p>
+    <br />
+
+    <script type="text/html" id="template">
+      <%
+      if (data) { data += 12345; }; %>
+      <li><%= data %></li>
+    </script>
+  </div>
+</body>
+</html>

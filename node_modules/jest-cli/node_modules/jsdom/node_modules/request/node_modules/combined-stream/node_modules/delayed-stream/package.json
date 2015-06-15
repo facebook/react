@@ -1,0 +1,64 @@
+{
+  "author": {
+    "name": "Felix Geisendörfer",
+    "email": "felix@debuggable.com",
+    "url": "http://debuggable.com/"
+  },
+  "contributors": [
+    {
+      "name": "Mike Atkins",
+      "email": "apeherder@gmail.com"
+    }
+  ],
+  "name": "delayed-stream",
+  "description": "Buffers events from a stream until you are ready to handle them.",
+  "license": "MIT",
+  "version": "1.0.0",
+  "homepage": "https://github.com/felixge/node-delayed-stream",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/felixge/node-delayed-stream.git"
+  },
+  "main": "./lib/delayed_stream",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "fake": "0.2.0",
+    "far": "0.0.1"
+  },
+  "gitHead": "07a9dc99fb8f1a488160026b9ad77493f766fb84",
+  "bugs": {
+    "url": "https://github.com/felixge/node-delayed-stream/issues"
+  },
+  "_id": "delayed-stream@1.0.0",
+  "_shasum": "df3ae199acadfb7d440aaae0b29e2272b24ec619",
+  "_from": "delayed-stream@>=1.0.0 <1.1.0",
+  "_npmVersion": "2.8.3",
+  "_nodeVersion": "1.6.4",
+  "_npmUser": {
+    "name": "apechimp",
+    "email": "apeherder@gmail.com"
+  },
+  "dist": {
+    "shasum": "df3ae199acadfb7d440aaae0b29e2272b24ec619",
+    "tarball": "http://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "felixge",
+      "email": "felix@debuggable.com"
+    },
+    {
+      "name": "apechimp",
+      "email": "apeherder@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

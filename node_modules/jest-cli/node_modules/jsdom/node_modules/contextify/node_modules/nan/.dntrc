@@ -1,0 +1,30 @@
+## DNT config file
+## see https://github.com/rvagg/dnt
+
+NODE_VERSIONS="\
+  master   \
+  v0.11.13 \
+  v0.10.30 \
+  v0.10.29 \
+  v0.10.28 \
+  v0.10.26 \
+  v0.10.25 \
+  v0.10.24 \
+  v0.10.23 \
+  v0.10.22 \
+  v0.10.21 \
+  v0.10.20 \
+  v0.10.19 \
+  v0.8.28  \
+  v0.8.27  \
+  v0.8.26  \
+  v0.8.24  \
+"
+OUTPUT_PREFIX="nan-"
+TEST_CMD="                                                                        \
+  cd /dnt/ &&                                                                     \
+  npm install &&                                                                  \
+  node_modules/.bin/node-gyp --nodedir /usr/src/node/ rebuild --directory test && \
+  node_modules/.bin/tap --gc test/js/*-test.js                                    \
+"
+

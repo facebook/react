@@ -1,0 +1,4 @@
+.idea
+node_modules/
+.*.sw[nmop]
+npm-debug.log

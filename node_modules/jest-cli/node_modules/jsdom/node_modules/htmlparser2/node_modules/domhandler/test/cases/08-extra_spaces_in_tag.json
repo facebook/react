@@ -1,0 +1,20 @@
+{
+  "name": "Extra spaces in tag",
+  "options": {},
+  "html": "<font\t\n size='14' \n>the text</\t\nfont\t \n>",
+  "expected": [
+    {
+      "type": "tag",
+      "name": "font",
+      "attribs": {
+        "size": "14"
+      },
+      "children": [
+        {
+          "data": "the text",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

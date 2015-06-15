@@ -1,0 +1,298 @@
+This library provides a way to read and write binary data.
+
+Node CType is a way to read and write binary data in structured and easy to use
+formats. It's name comes from the header file, though it does not share as much
+with it as it perhaps should.
+
+There are two levels of the API. One is the raw API which everything is built on
+top of, while the other provides a much nicer abstraction and is built entirely
+by using the lower level API. The hope is that the low level API is both clear
+and useful. The low level API gets it's names from stdint.h (a rather
+appropriate source). The lower level API is presented at the end of this
+document.
+
+Standard CType API
+
+The CType interface is presented as a parser object that controls the
+endianness combined with a series of methods to change that value, parse and
+write out buffers, and a way to provide typedefs.  Standard Types
+
+The CType parser supports the following basic types which return Numbers except
+as indicated:
+
+    * int8_t
+    * int16_t
+    * int32_t
+    * int64_t (returns an array where val[0] << 32 + val[1] would be the value)
+    * uint8_t
+    * uint16_t
+    * uint32_t
+    * uint64_t (returns an array where val[0] << 32 + val[1] would be the value)
+    * float
+    * double
+    * char (returns a buffer with just that single character)
+    * char[] (returns an object with the buffer and the number of characters read which is either the total amount requested or until the first 0)
+
+Specifying Structs
+
+The CType parser also supports the notion of structs. A struct is an array of
+JSON objects that defines an order of keys which have types and values. One
+would build a struct to represent a point (x,y) as follows:
+
+[
+    { x: { type: 'int16_t' }},
+    { y: { type: 'int16_t' }}
+]
+
+When this is passed into the read routine, it would read the first two bytes
+(as defined by int16_t) to determine the Number to use for X, and then it would
+read the next two bytes to determine the value of Y. When read this could
+return something like:
+
+{
+    x: 42,
+    y: -23
+}
+
+When someone wants to write values, we use the same format as above, but with
+additional value field:
+
+[
+    { x: { type: 'int16_t', value: 42 }},
+    { y: { type: 'int16_t', value: -23 }}
+]
+
+Now, the structure above may be optionally annotated with offsets. This tells
+us to rather than read continuously we should read the given value at the
+specified offset. If an offset is provided, it is is effectively the equivalent
+of lseek(offset, SEEK_SET). Thus, subsequent values will be read from that
+offset and incremented by the appropriate value. As an example:
+
+[
+    { x: { type: 'int16_t' }},
+    { y: { type: 'int16_t', offset: 20 }},
+    { z: { type: 'int16_t' }}
+]
+
+We would read x from the first starting offset given to us, for the sake of
+example, let's assume that's 0. After reading x, the next offset to read from
+would be 2; however, y specifies an offset, thus we jump directly to that
+offset and read y from byte 20. We would then read z from byte 22.
+
+The same offsets may be used when writing values.
+
+Typedef
+
+The basic set of types while covers the basics, is somewhat limiting. To make
+this richer, there is functionality to typedef something like in C. One can use
+typedef to add a new name to an existing type or to define a name to refer to a
+struct. Thus the following are all examples of a typedef:
+
+typedef('size_t', 'uint32_t');
+typedef('ssize_t', 'int32_t');
+typedef('point_t', [
+    { x: { type: 'int16_t' }},
+    { y: { type: 'int16_t' }}
+]);
+
+Once something has been typedef'd it can be used in any of the definitions
+previously shown.
+
+One cannot remove a typedef once created, this is analogous to C.
+
+The set of defined types can be printed with lstypes. The format of this output
+is subject to change, but likely will look something like:
+
+> lstypes();
+{
+    size_t: 'uint32_t',
+    ssize_t: 'int32_t',
+    point_t: [
+        { x: { type: 'int16_t' }},
+        { y: { type: 'int16_t' }}
+    ]
+}
+
+Specifying arrays
+
+Arrays can be specified by appending []s to a type. Arrays must have the size
+specified. The size must be specified and it can be done in one of two ways:
+
+    * An explicit non-zero integer size
+    * A name of a previously declared variable in the struct whose value is a
+      number.
+
+Note, that when using the name of a variable, it should be the string name for
+the key. This is only valid inside structs and the value must be declared
+before the value with the array. The following are examples:
+
+[
+    { ip_addr4: { type: 'uint8_t[4]' }},
+    { len: { type: 'uint32_t' }},
+    { data: { type: 'uint8_t[len]' }}
+]
+
+Arrays are permitted in typedefs; however, they must have a declared integer
+size. The following are examples of valid and invalid arrays:
+
+typedef('path', 'char[1024]'); /* Good */
+typedef('path', 'char[len]');  /* Bad! */
+
+64 bit values:
+
+Unfortunately Javascript represents values with a double, so you lose precision
+and the ability to represent Integers roughly beyond 2^53. To alleviate this, I
+propose the following for returning 64 bit integers when read:
+
+value[2]: Each entry is a 32 bit number which can be reconstructed to the
+original by the following formula:
+
+value[0] << 32 + value[1] (Note this will not work in Javascript)
+
+CTF JSON data:
+
+node-ctype can also handle JSON data that mathces the format described in the
+documentation of the tool ctf2json. Given the JSON data which specifies type
+information, it will transform that into a parser that understands all of the
+types defined inside of it. This is useful for more complicated structures that
+have a lot of typedefs.
+
+Interface overview
+
+The following is the header-file like interface to the parser object:
+
+/*
+ * Create a new instance of the parser. Each parser has its own store of
+ * typedefs and endianness. Conf is an object with the following values:
+ *
+ *      endian          Either 'big' or 'little' do determine the endianness we
+ *                      want to read from or write to.
+ *
+ */
+function CTypeParser(conf);
+
+/*
+ * Parses the CTF JSON data and creates a parser that understands all of those
+ * types.
+ *
+ *	data		Parsed JSON data that maches that CTF JSON
+ *			specification.
+ *
+ *	conf		The configuration object to create a new CTypeParser
+ *			from.
+ */
+CTypeParser parseCTF(data, conf);
+
+/*
+ * This is what we were born to do. We read the data from a buffer and return it
+ * in an object whose keys match the values from the object.
+ *
+ *      def             The array definition of the data to read in
+ *
+ *      buffer          The buffer to read data from
+ *
+ *      offset          The offset to start writing to
+ *
+ * Returns an object where each key corresponds to an entry in def and the value
+ * is the read value.
+ */
+Object CTypeParser.readData(<Type Definition>, buffer, offset);
+
+/*
+ * This is the second half of what we were born to do, write out the data
+ * itself.
+ *
+ *      def             The array definition of the data to write out with
+ *                      values
+ *
+ *      buffer          The buffer to write to
+ *
+ *      offset          The offset in the buffer to write to
+ */
+void CTypeParser.writeData(<Type Definition>, buffer, offset);
+
+/*
+ * A user has requested to add a type, let us honor their request. Yet, if their
+ * request doth spurn us, send them unto the Hells which Dante describes.
+ *
+ *      name            The string for the type definition we're adding
+ *
+ *      value           Either a string that is a type/array name or an object
+ *                      that describes a struct.
+ */
+void CTypeParser.prototype.typedef(name, value);
+
+Object CTypeParser.prototype.lstypes();
+
+/*
+ * Get the endian value for the current parser
+ */
+String CTypeParser.prototype.getEndian();
+
+/*
+ * Sets the current endian value for the Parser. If the value is not valid,
+ * throws an Error.
+ *
+ *      endian          Either 'big' or 'little' do determine the endianness we
+ *                      want to read from or write to.
+ *
+ */
+void CTypeParser.protoype.setEndian(String);
+
+/*
+ * Attempts to convert an array of two integers returned from rsint64 / ruint64
+ * into an absolute 64 bit number. If however the value would exceed 2^52 this
+ * will instead throw an error. The mantissa in a double is a 52 bit number and
+ * rather than potentially give you a value that is an approximation this will
+ * error. If you would rather an approximation, please see toApprox64.
+ *
+ *	val		An array of two 32-bit integers
+ */
+Number function toAbs64(val)
+
+/*
+ * Will return the 64 bit value as returned in an array from rsint64 / ruint64
+ * to a value as close as it can. Note that Javascript stores all numbers as a
+ * double and the mantissa only has 52 bits. Thus this version may approximate
+ * the value.
+ *
+ *	val		An array of two 32-bit integers
+ */
+Number function toApprox64(val)
+
+Low Level API
+
+The following function are provided at the low level:
+
+Read unsigned integers from a buffer:
+Number ruint8(buffer, endian, offset);
+Number ruint16(buffer, endian, offset);
+Number ruint32(buffer, endian, offset);
+Number[] ruint64(buffer, endian, offset);
+
+Read signed integers from a buffer:
+Number rsint8(buffer, endian, offset);
+Number rsint16(buffer, endian, offset);
+Number rsint32(buffer, endian, offset);
+Number[] rsint64(buffer, endian, offset);
+
+Read floating point numbers from a buffer:
+Number rfloat(buffer, endian, offset);   /* IEEE-754 Single precision */
+Number rdouble(buffer, endian, offset);  /* IEEE-754 Double precision */
+
+Write unsigned integers to a buffer:
+void wuint8(Number, endian, buffer, offset);
+void wuint16(Number, endian, buffer, offset);
+void wuint32(Number, endian, buffer, offset);
+void wuint64(Number[], endian, buffer, offset);
+
+Write signed integers from a buffer:
+void wsint8(Number, endian, buffer, offset);
+void wsint16(Number, endian, buffer, offset);
+void wsint32(Number, endian, buffer, offset);
+void wsint64(Number[], endian, buffer offset);
+
+Write floating point numbers from a buffer:
+void wfloat(Number, buffer, endian, offset);   /* IEEE-754 Single precision */
+void wdouble(Number, buffer, endian, offset);  /* IEEE-754 Double precision */
+

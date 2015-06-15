@@ -1,0 +1,16 @@
+{
+  "name": "leading lt",
+  "options": {
+    "handler": {},
+    "parser": {}
+  },
+  "html": ">a>",
+  "expected": [
+    {
+      "event": "text",
+      "data": [
+        ">a>"
+      ]
+    }
+  ]
+}

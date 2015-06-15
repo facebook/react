@@ -1,0 +1,44 @@
+{
+  "name": "once",
+  "version": "1.3.2",
+  "description": "Run a function exactly one time",
+  "main": "once.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "wrappy": "1"
+  },
+  "devDependencies": {
+    "tap": "~0.3.0"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/once.git"
+  },
+  "keywords": [
+    "once",
+    "function",
+    "one",
+    "single"
+  ],
+  "author": {
+    "name": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/"
+  },
+  "license": "ISC",
+  "readme": "# once\n\nOnly call a function once.\n\n## usage\n\n```javascript\nvar once = require('once')\n\nfunction load (file, cb) {\n  cb = once(cb)\n  loader.load('file')\n  loader.once('load', cb)\n  loader.once('error', cb)\n}\n```\n\nOr add to the Function.prototype in a responsible way:\n\n```javascript\n// only has to be done once\nrequire('once').proto()\n\nfunction load (file, cb) {\n  cb = cb.once()\n  loader.load('file')\n  loader.once('load', cb)\n  loader.once('error', cb)\n}\n```\n\nIronically, the prototype feature makes this module twice as\ncomplicated as necessary.\n\nTo check whether you function has been called, use `fn.called`. Once the\nfunction is called for the first time the return value of the original\nfunction is saved in `fn.value` and subsequent calls will continue to\nreturn this value.\n\n```javascript\nvar once = require('once')\n\nfunction load (cb) {\n  cb = once(cb)\n  var stream = createStream()\n  stream.once('data', cb)\n  stream.once('end', function () {\n    if (!cb.called) cb(new Error('not found'))\n  })\n}\n```\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/isaacs/once/issues"
+  },
+  "homepage": "https://github.com/isaacs/once#readme",
+  "_id": "once@1.3.2",
+  "_shasum": "d8feeca93b039ec1dcdee7741c92bdac5e28081b",
+  "_resolved": "https://registry.npmjs.org/once/-/once-1.3.2.tgz",
+  "_from": "once@>=1.0.0 <2.0.0"
+}

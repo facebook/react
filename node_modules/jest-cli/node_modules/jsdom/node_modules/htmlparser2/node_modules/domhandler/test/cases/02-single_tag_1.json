@@ -1,0 +1,21 @@
+{
+  "name": "Single Tag 1",
+  "options": {},
+  "html": "<br>text</br>",
+  "expected": [
+    {
+      "type": "tag",
+      "name": "br",
+      "attribs": {}
+    },
+    {
+      "data": "text",
+      "type": "text"
+    },
+    {
+      "type": "tag",
+      "name": "br",
+      "attribs": {}
+    }
+  ]
+}

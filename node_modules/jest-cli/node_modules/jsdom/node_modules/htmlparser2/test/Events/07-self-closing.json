@@ -1,0 +1,67 @@
+{
+    "name": "Self-closing tags",
+    "options": {
+        "handler": {
+
+            },
+        "parser": {
+
+            }
+    },
+    "html": "<a href=http://test.com/>Foo</a><hr / >",
+    "expected": [
+		{
+			"event": "opentagname",
+			"data": [
+				"a"
+			]
+		},
+		{
+			"event": "attribute",
+			"data": [
+				"href",
+				"http://test.com/"
+			]
+		},
+		{
+			"event": "opentag",
+			"data": [
+				"a",
+				{
+					"href": "http://test.com/"
+				}
+			]
+		},
+		{
+			"event": "text",
+			"data": [
+				"Foo"
+			]
+		},
+		{
+			"event": "closetag",
+			"data": [
+				"a"
+			]
+		},
+		{
+			"event": "opentagname",
+			"data": [
+				"hr"
+			]
+		},
+		{
+			"event": "opentag",
+			"data": [
+				"hr",
+				{}
+			]
+		},
+		{
+			"event": "closetag",
+			"data": [
+				"hr"
+			]
+		}
+	]
+}

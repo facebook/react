@@ -1,0 +1,77 @@
+{
+  "name": "http-signature",
+  "description": "Reference implementation of Joyent's HTTP Signature scheme.",
+  "version": "0.11.0",
+  "license": "MIT",
+  "author": {
+    "name": "Joyent, Inc"
+  },
+  "contributors": [
+    {
+      "name": "Mark Cavage",
+      "email": "mcavage@gmail.com"
+    },
+    {
+      "name": "David I. Lehn",
+      "email": "dil@lehn.org"
+    },
+    {
+      "name": "Patrick Mooney",
+      "email": "patrick.f.mooney@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/joyent/node-http-signature.git"
+  },
+  "homepage": "https://github.com/joyent/node-http-signature/",
+  "bugs": {
+    "url": "https://github.com/joyent/node-http-signature/issues"
+  },
+  "keywords": [
+    "https",
+    "request"
+  ],
+  "engines": {
+    "node": ">=0.8"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "dependencies": {
+    "assert-plus": "^0.1.5",
+    "asn1": "0.1.11",
+    "ctype": "0.5.3"
+  },
+  "devDependencies": {
+    "node-uuid": "^1.4.1",
+    "tap": "0.4.2"
+  },
+  "_id": "http-signature@0.11.0",
+  "_shasum": "1796cf67a001ad5cd6849dca0991485f09089fe6",
+  "_resolved": "https://registry.npmjs.org/http-signature/-/http-signature-0.11.0.tgz",
+  "_from": "http-signature@>=0.11.0 <0.12.0",
+  "_npmVersion": "2.5.1",
+  "_nodeVersion": "0.10.36",
+  "_npmUser": {
+    "name": "pfmooney",
+    "email": "patrick.f.mooney@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "mcavage",
+      "email": "mcavage@gmail.com"
+    },
+    {
+      "name": "pfmooney",
+      "email": "patrick.f.mooney@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "1796cf67a001ad5cd6849dca0991485f09089fe6",
+    "tarball": "http://registry.npmjs.org/http-signature/-/http-signature-0.11.0.tgz"
+  },
+  "directories": {},
+  "readme": "ERROR: No README data found!"
+}

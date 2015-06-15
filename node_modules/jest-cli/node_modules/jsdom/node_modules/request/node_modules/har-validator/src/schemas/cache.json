@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "beforeRequest": {
+      "$ref": "#cacheEntry"
+    },
+    "afterRequest": {
+      "$ref": "#cacheEntry"
+    },
+    "comment": {
+      "type": "string"
+    }
+  }
+}

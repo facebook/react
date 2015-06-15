@@ -1,0 +1,36 @@
+# CSSOM
+
+CSSOM.js is a CSS parser written in pure JavaScript. It also a partial implementation of [CSS Object Model](http://dev.w3.org/csswg/cssom/). 
+
+    CSSOM.parse("body {color: black}")
+    -> {
+      cssRules: [
+        {
+          selectorText: "body",
+          style: {
+            0: "color",
+            color: "black",
+            length: 1
+          }
+        }
+      ]
+    }
+
+
+## [Parser demo](http://nv.github.com/CSSOM/docs/parse.html)
+
+Works well in Google Chrome 6+, Safari 5+, Firefox 3.6+, Opera 10.63+.
+Doesn't work in IE < 9 because of unsupported getters/setters.
+
+To use CSSOM.js in the browser you might want to build a one-file version with [Jake](http://github.com/mde/jake):
+
+    ➤ jake
+    build/CSSOM.js is done
+
+To use it with Node.js:
+
+    npm install cssom
+
+## [Specs](http://nv.github.com/CSSOM/spec/)
+
+## [Who uses CSSOM.js](https://github.com/NV/CSSOM/wiki/Who-uses-CSSOM.js)

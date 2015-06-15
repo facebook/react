@@ -1,0 +1,47 @@
+{
+  "name": "dom-serializer",
+  "version": "0.1.0",
+  "description": "render dom nodes to string",
+  "author": {
+    "name": "Felix Boehm",
+    "email": "me@feedic.com"
+  },
+  "keywords": [
+    "html",
+    "xml",
+    "render"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cheeriojs/dom-renderer.git"
+  },
+  "main": "./index.js",
+  "files": [
+    "index.js"
+  ],
+  "dependencies": {
+    "domelementtype": "~1.1.1",
+    "entities": "~1.1.1"
+  },
+  "devDependencies": {
+    "cheerio": "*",
+    "expect.js": "~0.3.1",
+    "jshint": "~2.3.0",
+    "lodash": "~2.4.1",
+    "mocha": "*",
+    "xyz": "0.4.x"
+  },
+  "scripts": {
+    "test": "mocha test.js"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cheeriojs/dom-renderer/issues"
+  },
+  "readme": "ERROR: No README data found!",
+  "homepage": "https://github.com/cheeriojs/dom-renderer",
+  "_id": "dom-serializer@0.1.0",
+  "_shasum": "073c697546ce0780ce23be4a28e293e40bc30c82",
+  "_resolved": "https://registry.npmjs.org/dom-serializer/-/dom-serializer-0.1.0.tgz",
+  "_from": "dom-serializer@>=0.0.0 <1.0.0"
+}

@@ -1,0 +1,64 @@
+{
+  "name": "boom",
+  "description": "HTTP-friendly error objects",
+  "version": "2.8.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hapijs/boom.git"
+  },
+  "main": "lib/index.js",
+  "keywords": [
+    "error",
+    "http"
+  ],
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "hoek": "2.x.x"
+  },
+  "devDependencies": {
+    "code": "1.x.x",
+    "lab": "5.x.x"
+  },
+  "scripts": {
+    "test": "lab -a code -t 100",
+    "test-cov-html": "lab -a code -r html -o coverage.html"
+  },
+  "license": "BSD-3-Clause",
+  "gitHead": "43f13bf2d336b35ccbb062b32ba2a17259f6d24c",
+  "bugs": {
+    "url": "https://github.com/hapijs/boom/issues"
+  },
+  "homepage": "https://github.com/hapijs/boom#readme",
+  "_id": "boom@2.8.0",
+  "_shasum": "317bdfd47018fe7dd79b0e9da73efe244119fdf1",
+  "_from": "boom@>=2.0.0 <3.0.0",
+  "_npmVersion": "2.11.1",
+  "_nodeVersion": "0.10.38",
+  "_npmUser": {
+    "name": "arb",
+    "email": "arbretz@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "hueniverse",
+      "email": "eran@hueniverse.com"
+    },
+    {
+      "name": "wyatt",
+      "email": "wpreul@gmail.com"
+    },
+    {
+      "name": "arb",
+      "email": "arbretz@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "317bdfd47018fe7dd79b0e9da73efe244119fdf1",
+    "tarball": "http://registry.npmjs.org/boom/-/boom-2.8.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/boom/-/boom-2.8.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

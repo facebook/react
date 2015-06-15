@@ -1,0 +1,11 @@
+*.coffee
+*.html
+.DS_Store
+.git*
+Cakefile
+documentation/
+examples/
+extras/coffee-script.js
+raw/
+src/
+test/

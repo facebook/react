@@ -1,0 +1,84 @@
+{
+  "name": "mime-types",
+  "description": "The ultimate javascript content-type utility.",
+  "version": "2.0.14",
+  "contributors": [
+    {
+      "name": "Douglas Christopher Wilson",
+      "email": "doug@somethingdoug.com"
+    },
+    {
+      "name": "Jeremiah Senkpiel",
+      "email": "fishrock123@rocketmail.com",
+      "url": "https://searchbeam.jit.su"
+    },
+    {
+      "name": "Jonathan Ong",
+      "email": "me@jongleberry.com",
+      "url": "http://jongleberry.com"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "mime",
+    "types"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jshttp/mime-types.git"
+  },
+  "dependencies": {
+    "mime-db": "~1.12.0"
+  },
+  "devDependencies": {
+    "istanbul": "0.3.9",
+    "mocha": "~1.21.5"
+  },
+  "files": [
+    "HISTORY.md",
+    "LICENSE",
+    "index.js"
+  ],
+  "engines": {
+    "node": ">= 0.6"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec test/test.js",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/test.js",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter dot test/test.js"
+  },
+  "gitHead": "7d53a3351581eb3d7ae1e846ea860037bce6fe3f",
+  "bugs": {
+    "url": "https://github.com/jshttp/mime-types/issues"
+  },
+  "homepage": "https://github.com/jshttp/mime-types",
+  "_id": "mime-types@2.0.14",
+  "_shasum": "310e159db23e077f8bb22b748dabfa4957140aa6",
+  "_from": "mime-types@>=2.0.1 <2.1.0",
+  "_npmVersion": "1.4.28",
+  "_npmUser": {
+    "name": "dougwilson",
+    "email": "doug@somethingdoug.com"
+  },
+  "maintainers": [
+    {
+      "name": "jongleberry",
+      "email": "jonathanrichardong@gmail.com"
+    },
+    {
+      "name": "fishrock123",
+      "email": "fishrock123@rocketmail.com"
+    },
+    {
+      "name": "dougwilson",
+      "email": "doug@somethingdoug.com"
+    }
+  ],
+  "dist": {
+    "shasum": "310e159db23e077f8bb22b748dabfa4957140aa6",
+    "tarball": "http://registry.npmjs.org/mime-types/-/mime-types-2.0.14.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.0.14.tgz",
+  "readme": "ERROR: No README data found!"
+}

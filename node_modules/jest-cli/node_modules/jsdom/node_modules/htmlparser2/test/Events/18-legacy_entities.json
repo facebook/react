@@ -1,0 +1,16 @@
+{
+  "name": "legacy entities",
+  "options": {
+    "handler": {},
+    "parser": {"decodeEntities": true}
+  },
+  "html": "&AMPel&iacutee&ampeer;s&lter",
+  "expected": [
+    {
+      "event": "text",
+      "data": [
+        "&el\u00EDe&eer;s<er"
+      ]
+    }
+  ]
+}

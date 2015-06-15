@@ -1,0 +1,45 @@
+{
+  "env": {
+    "node": true
+  },
+  "rules": {
+    // 2-space indentation
+    "indent": [2, 2],
+    // Disallow semi-colons, unless needed to disambiguate statement
+    "semi": [2, "never"],
+    // Require strings to use single quotes
+    "quotes": [2, "single"],
+    // Require curly braces for all control statements
+    "curly": 2,
+    // Disallow using variables and functions before they've been defined
+    "no-use-before-define": 2,
+    // Allow any case for variable naming
+    "camelcase": 0,
+    // Disallow unused variables, except as function arguments
+    "no-unused-vars": [2, {"args":"none"}],
+    // Allow leading underscores for method names
+    // REASON: we use underscores to denote private methods
+    "no-underscore-dangle": 0,
+    // Allow multi spaces around operators since they are
+    // used for alignment.  This is not consistent in the
+    // code.
+    "no-multi-spaces": 0,
+    // Style rule is: most objects use { beforeColon: false, afterColon: true }, unless aligning which uses:
+    //
+    // {
+    //   beforeColon : true,
+    //   afterColon  : true
+    // }
+    //
+    // eslint can't handle this, so the check is disabled.
+    "key-spacing": 0,
+    // Allow shadowing vars in outer scope (needs discussion)
+    "no-shadow": 0,
+    // Use if () { }
+    //       ^ space
+    "space-after-keywords": [2, "always"],
+    // Use if () { }
+    //          ^ space
+    "space-before-blocks": [2, "always"]
+  }
+}

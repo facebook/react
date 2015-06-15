@@ -1,0 +1,11 @@
+{
+  "name": "Only text",
+  "options": {},
+  "html": "this is the text",
+  "expected": [
+    {
+      "data": "this is the text",
+      "type": "text"
+    }
+  ]
+}

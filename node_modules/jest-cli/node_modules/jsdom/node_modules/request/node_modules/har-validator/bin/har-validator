@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+
+'use strict'
+
+var Promise = require('bluebird')
+
+var chalk = require('chalk')
+var cmd = require('commander')
+var fs = Promise.promisifyAll(require('fs'))
+var path = require('path')
+var pkg = require('../package.json')
+var validate = Promise.promisifyAll(require('..'))
+
+cmd
+  .version(pkg.version)
+  .usage('[options] <files ...>')
+  .option('-s, --schema [name]', 'validate schema name (log, request, response, etc ...)')
+  .parse(process.argv)
+
+if (!cmd.args.length) {
+  cmd.help()
+}
+
+if (!cmd.schema) {
+  cmd.schema = 'har'
+}
+
+cmd.args.map(function (fileName) {
+  var file = chalk.yellow.italic(path.basename(fileName))
+
+  fs.readFileAsync(fileName)
+    .then(JSON.parse)
+    .then(validate[cmd.schema + 'Async'])
+    .then(function () {
+      console.log('%s [%s] is valid', chalk.green('✓'), file)
+    })
+    .catch(SyntaxError, function (e) {
+      console.error('%s [%s] failed to read JSON: %s', chalk.red('✖'), file, chalk.red(e.message))
+    })
+    .catch(function (e) {
+      e.errors.map(function (err) {
+        console.error('%s [%s] failed validation: (%s: %s) %s', chalk.red('✖'), file, chalk.cyan.italic(err.field), chalk.magenta.italic(err.value), chalk.red(err.message))
+      })
+    })
+})

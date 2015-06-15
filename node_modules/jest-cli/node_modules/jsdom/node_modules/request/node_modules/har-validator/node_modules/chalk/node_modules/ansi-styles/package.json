@@ -1,0 +1,71 @@
+{
+  "name": "ansi-styles",
+  "version": "2.0.1",
+  "description": "ANSI escape codes for styling strings in the terminal",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sindresorhus/ansi-styles.git"
+  },
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "http://sindresorhus.com"
+  },
+  "maintainers": [
+    {
+      "name": "Sindre Sorhus",
+      "email": "sindresorhus@gmail.com",
+      "url": "http://sindresorhus.com"
+    },
+    {
+      "name": "Joshua Appelman",
+      "email": "jappelman@xebia.com",
+      "url": "http://jbnicolai.com"
+    }
+  ],
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "ansi",
+    "styles",
+    "color",
+    "colour",
+    "colors",
+    "terminal",
+    "console",
+    "cli",
+    "string",
+    "tty",
+    "escape",
+    "formatting",
+    "rgb",
+    "256",
+    "shell",
+    "xterm",
+    "log",
+    "logging",
+    "command-line",
+    "text"
+  ],
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "readme": "# ansi-styles [![Build Status](https://travis-ci.org/sindresorhus/ansi-styles.svg?branch=master)](https://travis-ci.org/sindresorhus/ansi-styles)\n\n> [ANSI escape codes](http://en.wikipedia.org/wiki/ANSI_escape_code#Colors_and_Styles) for styling strings in the terminal\n\nYou probably want the higher-level [chalk](https://github.com/sindresorhus/chalk) module for styling your strings.\n\n![](screenshot.png)\n\n\n## Install\n\n```sh\n$ npm install --save ansi-styles\n```\n\n\n## Usage\n\n```js\nvar ansi = require('ansi-styles');\n\nconsole.log(ansi.green.open + 'Hello world!' + ansi.green.close);\n```\n\n\n## API\n\nEach style has an `open` and `close` property.\n\n\n## Styles\n\n### Modifiers\n\n- `reset`\n- `bold`\n- `dim`\n- `italic` *(not widely supported)*\n- `underline`\n- `inverse`\n- `hidden`\n- `strikethrough` *(not widely supported)*\n\n### Colors\n\n- `black`\n- `red`\n- `green`\n- `yellow`\n- `blue`\n- `magenta`\n- `cyan`\n- `white`\n- `gray`\n\n### Background colors\n\n- `bgBlack`\n- `bgRed`\n- `bgGreen`\n- `bgYellow`\n- `bgBlue`\n- `bgMagenta`\n- `bgCyan`\n- `bgWhite`\n\n\n## Advanced usage\n\nBy default you get a map of styles, but the styles are also available as groups. They are non-enumerable so they don't show up unless you access them explicitly. This makes it easier to expose only a subset in a higher-level module.\n\n- `ansi.modifiers`\n- `ansi.colors`\n- `ansi.bgColors`\n\n\n###### Example\n\n```js\nconsole.log(ansi.colors.green.open);\n```\n\n\n## License\n\nMIT © [Sindre Sorhus](http://sindresorhus.com)\n",
+  "readmeFilename": "readme.md",
+  "bugs": {
+    "url": "https://github.com/sindresorhus/ansi-styles/issues"
+  },
+  "homepage": "https://github.com/sindresorhus/ansi-styles#readme",
+  "_id": "ansi-styles@2.0.1",
+  "_shasum": "b033f57f93e2d28adeb8bc11138fa13da0fd20a3",
+  "_resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-2.0.1.tgz",
+  "_from": "ansi-styles@>=2.0.1 <3.0.0"
+}

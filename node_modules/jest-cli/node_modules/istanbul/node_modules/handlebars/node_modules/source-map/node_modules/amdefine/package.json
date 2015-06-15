@@ -1,0 +1,46 @@
+{
+  "name": "amdefine",
+  "description": "Provide AMD's define() API for declaring modules in the AMD format",
+  "version": "0.1.1",
+  "homepage": "http://github.com/jrburke/amdefine",
+  "author": {
+    "name": "James Burke",
+    "email": "jrburke@gmail.com",
+    "url": "http://github.com/jrburke"
+  },
+  "license": "BSD-3-Clause AND MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jrburke/amdefine.git"
+  },
+  "main": "./amdefine.js",
+  "engines": {
+    "node": ">=0.4.2"
+  },
+  "gitHead": "fcadcc8080f47084b973bac3b3c4b3dd3e0f957d",
+  "bugs": {
+    "url": "https://github.com/jrburke/amdefine/issues"
+  },
+  "_id": "amdefine@0.1.1",
+  "scripts": {},
+  "_shasum": "b5c75c532052dccd6a39c0064c772c8d57a06cd2",
+  "_from": "amdefine@>=0.0.4",
+  "_npmVersion": "1.4.28",
+  "_npmUser": {
+    "name": "jrburke",
+    "email": "jrburke@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "jrburke",
+      "email": "jrburke@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "b5c75c532052dccd6a39c0064c772c8d57a06cd2",
+    "tarball": "http://registry.npmjs.org/amdefine/-/amdefine-0.1.1.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/amdefine/-/amdefine-0.1.1.tgz",
+  "readme": "ERROR: No README data found!"
+}

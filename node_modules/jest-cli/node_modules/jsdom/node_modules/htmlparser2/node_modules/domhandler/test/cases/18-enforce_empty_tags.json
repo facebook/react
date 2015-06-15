@@ -1,0 +1,16 @@
+{
+  "name": "Enforce empty tags",
+  "options": {},
+  "html": "<link>text</link>",
+  "expected": [
+    {
+      "type": "tag",
+      "name": "link",
+      "attribs": {}
+    },
+    {
+      "data": "text",
+      "type": "text"
+    }
+  ]
+}

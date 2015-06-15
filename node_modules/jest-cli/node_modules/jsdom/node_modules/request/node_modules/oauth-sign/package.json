@@ -1,0 +1,59 @@
+{
+  "author": {
+    "name": "Mikeal Rogers",
+    "email": "mikeal.rogers@gmail.com",
+    "url": "http://www.futurealoof.com"
+  },
+  "name": "oauth-sign",
+  "description": "OAuth 1 signing. Formerly a vendor lib in mikeal/request, now a standalone module.",
+  "version": "0.8.0",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "git+https://github.com/mikeal/oauth-sign.git"
+  },
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "gitHead": "e1f2b42ff039901ce977f8e81918767d97d496b5",
+  "bugs": {
+    "url": "https://github.com/mikeal/oauth-sign/issues"
+  },
+  "homepage": "https://github.com/mikeal/oauth-sign#readme",
+  "_id": "oauth-sign@0.8.0",
+  "_shasum": "938fdc875765ba527137d8aec9d178e24debc553",
+  "_from": "oauth-sign@>=0.8.0 <0.9.0",
+  "_npmVersion": "2.10.1",
+  "_nodeVersion": "0.12.4",
+  "_npmUser": {
+    "name": "simov",
+    "email": "simeonvelichkov@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "mikeal",
+      "email": "mikeal.rogers@gmail.com"
+    },
+    {
+      "name": "nylen",
+      "email": "jnylen@gmail.com"
+    },
+    {
+      "name": "simov",
+      "email": "simeonvelichkov@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "938fdc875765ba527137d8aec9d178e24debc553",
+    "tarball": "http://registry.npmjs.org/oauth-sign/-/oauth-sign-0.8.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/oauth-sign/-/oauth-sign-0.8.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

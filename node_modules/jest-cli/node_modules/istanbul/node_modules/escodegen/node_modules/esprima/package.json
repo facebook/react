@@ -1,0 +1,88 @@
+{
+  "name": "esprima",
+  "description": "ECMAScript parsing infrastructure for multipurpose analysis",
+  "homepage": "http://esprima.org",
+  "main": "esprima.js",
+  "bin": {
+    "esparse": "./bin/esparse.js",
+    "esvalidate": "./bin/esvalidate.js"
+  },
+  "version": "1.2.5",
+  "files": [
+    "bin",
+    "test/run.js",
+    "test/runner.js",
+    "test/test.js",
+    "test/compat.js",
+    "test/reflect.js",
+    "esprima.js"
+  ],
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "author": {
+    "name": "Ariya Hidayat",
+    "email": "ariya.hidayat@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "Ariya Hidayat",
+      "email": "ariya.hidayat@gmail.com",
+      "url": "http://ariya.ofilabs.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ariya/esprima.git"
+  },
+  "bugs": {
+    "url": "http://issues.esprima.org"
+  },
+  "licenses": [
+    {
+      "type": "BSD",
+      "url": "http://github.com/ariya/esprima/raw/master/LICENSE.BSD"
+    }
+  ],
+  "devDependencies": {
+    "jslint": "~0.1.9",
+    "eslint": "~0.4.3",
+    "jscs": "~1.2.4",
+    "istanbul": "~0.2.6",
+    "complexity-report": "~0.6.1",
+    "regenerate": "~0.5.4",
+    "unicode-6.3.0": "~0.1.0",
+    "json-diff": "~0.3.1",
+    "optimist": "~0.6.0"
+  },
+  "keywords": [
+    "ast",
+    "ecmascript",
+    "javascript",
+    "parser",
+    "syntax"
+  ],
+  "scripts": {
+    "generate-regex": "node tools/generate-identifier-regex.js",
+    "test": "npm run-script lint && node test/run.js && npm run-script coverage && npm run-script complexity",
+    "lint": "npm run-script check-version && npm run-script eslint && npm run-script jscs && npm run-script jslint",
+    "check-version": "node tools/check-version.js",
+    "eslint": "node node_modules/eslint/bin/eslint.js esprima.js",
+    "jscs": "node node_modules/jscs/bin/jscs esprima.js",
+    "jslint": "echo Skipping JSLint",
+    "coverage": "npm run-script analyze-coverage && npm run-script check-coverage",
+    "analyze-coverage": "node node_modules/istanbul/lib/cli.js cover test/runner.js",
+    "check-coverage": "node node_modules/istanbul/lib/cli.js check-coverage --statement 100 --branch 100 --function 100",
+    "complexity": "npm run-script analyze-complexity && npm run-script check-complexity",
+    "analyze-complexity": "node tools/list-complexity.js",
+    "check-complexity": "node node_modules/complexity-report/src/cli.js --maxcc 14 --silent -l -w esprima.js",
+    "benchmark": "node test/benchmarks.js",
+    "benchmark-quick": "node test/benchmarks.js quick"
+  },
+  "readme": "**Esprima** ([esprima.org](http://esprima.org), BSD license) is a high performance,\nstandard-compliant [ECMAScript](http://www.ecma-international.org/publications/standards/Ecma-262.htm)\nparser written in ECMAScript (also popularly known as\n[JavaScript](http://en.wikipedia.org/wiki/JavaScript>JavaScript)).\nEsprima is created and maintained by [Ariya Hidayat](http://twitter.com/ariyahidayat),\nwith the help of [many contributors](https://github.com/ariya/esprima/contributors).\n\n### Features\n\n- Full support for ECMAScript 5.1 ([ECMA-262](http://www.ecma-international.org/publications/standards/Ecma-262.htm))\n- Sensible [syntax tree format](http://esprima.org/doc/index.html#ast) compatible with Mozilla\n[Parser AST](https://developer.mozilla.org/en/SpiderMonkey/Parser_API)\n- Optional tracking of syntax node location (index-based and line-column)\n- Heavily tested (> 650 [unit tests](http://esprima.org/test/) with [full code coverage](http://esprima.org/test/coverage.html))\n- [Partial support](http://esprima.org/doc/es6.html) for ECMAScript 6\n\nEsprima serves as a **building block** for some JavaScript\nlanguage tools, from [code instrumentation](http://esprima.org/demo/functiontrace.html)\nto [editor autocompletion](http://esprima.org/demo/autocomplete.html).\n\nEsprima runs on many popular web browsers, as well as other ECMAScript platforms such as\n[Rhino](http://www.mozilla.org/rhino), [Nashorn](http://openjdk.java.net/projects/nashorn/), and [Node.js](https://npmjs.org/package/esprima).\n\nFor more information, check the web site [esprima.org](http://esprima.org).\n",
+  "readmeFilename": "README.md",
+  "_id": "esprima@1.2.5",
+  "_shasum": "0993502feaf668138325756f30f9a51feeec11e9",
+  "_resolved": "https://registry.npmjs.org/esprima/-/esprima-1.2.5.tgz",
+  "_from": "esprima@>=1.2.2 <2.0.0"
+}

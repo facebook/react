@@ -1,0 +1,22 @@
+{
+  "name"      : "Wizzard",
+  "level"     : 17,
+  "sanity"    : null,
+  "inventory" : [
+    {
+      "name"     : "Hat",
+      "features" : [ "magic", "pointed" ],
+      "traits"   : {}
+    },
+    {
+      "name"     : "Staff",
+      "features" : [],
+      "traits"   : { "damage" : 10 }
+    },
+    {
+      "name"     : "Cloak",
+      "features" : [ "old" ],
+      "traits"   : { "defence" : 0, "comfort" : 3 }
+    }
+  ]
+}

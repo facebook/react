@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/" xmlns:ev="http://purl.org/rss/1.0/modules/event/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:syn="http://purl.org/rss/1.0/modules/syndication/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:admin="http://webns.net/mvcb/">
+	<channel rdf:about="http://sfbay.craigslist.org/ccc/">
+		<title>craigslist | all community in SF bay area</title>
+		<link>http://sfbay.craigslist.org/ccc/</link>
+		<description/>
+		<dc:language>en-us</dc:language>
+		<dc:rights>Copyright 2011 craigslist, inc.</dc:rights>
+		<dc:publisher>webmaster@craigslist.org</dc:publisher>
+		<dc:creator>webmaster@craigslist.org</dc:creator>
+		<dc:source>http://sfbay.craigslist.org/ccc//</dc:source>
+		<dc:title>craigslist | all community in SF bay area</dc:title>
+		<dc:type>Collection</dc:type>
+		<syn:updateBase>2011-11-04T09:39:10-07:00</syn:updateBase>
+		<syn:updateFrequency>4</syn:updateFrequency>
+		<syn:updatePeriod>hourly</syn:updatePeriod>
+		<items>
+			<rdf:Seq>
+				<rdf:li rdf:resource="http://sfbay.craigslist.org/sby/muc/2681301534.html"/>
+			</rdf:Seq>
+		</items>
+	</channel>
+	<item rdf:about="http://sfbay.craigslist.org/sby/muc/2681301534.html">
+		<title><![CDATA[ Music Equipment Repair and Consignment ]]></title>
+		<link>
+http://sfbay.craigslist.org/sby/muc/2681301534.html
+</link>
+		<description><![CDATA[
+San Jose Rock Shop offers musical instrument repair and consignment! (408) 215-2065<br> <br> We are pleased to announce our NEW LOCATION: 1199 N 5th st. San Jose, ca 95112. Please call ahead, by appointment only.<br> <br> Recently featured by Metro Newspaper in their 2011 Best of the Silicon Valley edition see it online here:<br> <a href="http://www.metroactive.com/best-of-silicon-valley/2011/music-nightlife/editor-picks.html" rel="nofollow">http://www.metroactive.com/best-of-silicon-valley/2011/music-nightlife/editor-picks.html</a><br> <br> Guitar Set up (acoustic and electronic) $40!<!-- END CLTAGS -->
+]]></description>
+		<dc:date>2011-11-04T09:35:17-07:00</dc:date>
+		<dc:language>en-us</dc:language>
+		<dc:rights>Copyright 2011 craigslist, inc.</dc:rights>
+		<dc:source>
+http://sfbay.craigslist.org/sby/muc/2681301534.html
+</dc:source>
+		<dc:title><![CDATA[ Music Equipment Repair and Consignment ]]></dc:title>
+		<dc:type>text</dc:type>
+		<dcterms:issued>2011-11-04T09:35:17-07:00</dcterms:issued>
+	</item>
+	<item rdf:about="http://sfbay.craigslist.org/eby/rid/2685010755.html">
+		<title><![CDATA[
+Ride Offered - Oakland/BART to LA/SFV - TODAY 3PM 11/04 (oakland north / temescal)
+]]></title>
+		<link>
+http://sfbay.craigslist.org/eby/rid/2685010755.html
+</link>
+		<description><![CDATA[
+Im offering a lift for up to two people from Oakland (or near any BART station in the East Bay/580/880 Corridor, or San Jose/Morgan Hill, Gilroy) to the San Fernando Valley / Los Angeles area. Specifically, Im leaving from Oakland between 2:30 and 3:00pm (this is flexible, but if I leave too late my girlfriend will kill me), and heading to Woodland Hills via the 580, I-5, 405, and 101.<!-- END CLTAGS -->
+]]></description>
+		<dc:date>2011-11-04T09:34:54-07:00</dc:date>
+		<dc:language>en-us</dc:language>
+		<dc:rights>Copyright 2011 craigslist, inc.</dc:rights>
+		<dc:source>
+http://sfbay.craigslist.org/eby/rid/2685010755.html
+</dc:source>
+		<dc:title><![CDATA[
+Ride Offered - Oakland/BART to LA/SFV - TODAY 3PM 11/04 (oakland north / temescal)
+]]></dc:title>
+		<dc:type>text</dc:type>
+		<dcterms:issued>2011-11-04T09:34:54-07:00</dcterms:issued>
+	</item>
+</rdf:RDF>

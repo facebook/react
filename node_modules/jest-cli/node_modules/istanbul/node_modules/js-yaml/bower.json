@@ -1,0 +1,23 @@
+
+{
+  "name": "js-yaml",
+  "main": "dist/js-yaml.js",
+  "homepage": "https://github.com/nodeca/js-yaml",
+  "authors": [ "Dervus Grim <dervus.grim@gmail.com>",
+               "Vitaly Puzrin <vitaly@rcdesign.ru>",
+               "Aleksey V Zapparov <ixti@member.fsf.org>",
+               "Martin Grenfell <martin.grenfell@gmail.com>" ],
+  "description": "YAML 1.2 parser and serializer",
+  "keywords": ["yaml", "parser", "serializer", "pyyaml"],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "benchmark",
+    "bower_components",
+    "test",
+    "Makefile",
+    "index*",
+    "package.json"
+  ]
+}

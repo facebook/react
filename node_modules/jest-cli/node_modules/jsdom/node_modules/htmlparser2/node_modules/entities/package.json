@@ -1,0 +1,66 @@
+{
+  "name": "entities",
+  "version": "1.0.0",
+  "description": "Encode & decode XML/HTML entities with ease",
+  "author": {
+    "name": "Felix Boehm",
+    "email": "me@feedic.com"
+  },
+  "keywords": [
+    "html",
+    "xml",
+    "entity",
+    "encoding"
+  ],
+  "main": "./index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "mocha": "1",
+    "mocha-lcov-reporter": "*",
+    "coveralls": "*",
+    "istanbul": "*",
+    "jshint": "2"
+  },
+  "scripts": {
+    "test": "mocha && npm run lint",
+    "lint": "jshint index.js lib/*.js test/*.js",
+    "lcov": "istanbul cover _mocha --report lcovonly -- -R spec",
+    "coveralls": "npm run lint && npm run lcov && (cat coverage/lcov.info | coveralls || exit 0)"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fb55/node-entities.git"
+  },
+  "license": "BSD-like",
+  "jshintConfig": {
+    "eqeqeq": true,
+    "freeze": true,
+    "latedef": "nofunc",
+    "noarg": true,
+    "nonbsp": true,
+    "quotmark": "double",
+    "undef": true,
+    "unused": true,
+    "trailing": true,
+    "eqnull": true,
+    "proto": true,
+    "smarttabs": true,
+    "node": true,
+    "globals": {
+      "describe": true,
+      "it": true
+    }
+  },
+  "readme": "#entities [![NPM version](http://img.shields.io/npm/v/entities.svg)](https://npmjs.org/package/entities)  [![Downloads](https://img.shields.io/npm/dm/entities.svg)](https://npmjs.org/package/entities) [![Build Status](http://img.shields.io/travis/fb55/node-entities.svg)](http://travis-ci.org/fb55/node-entities) [![Coverage](http://img.shields.io/coveralls/fb55/node-entities.svg)](https://coveralls.io/r/fb55/node-entities)\n\nEn- & decoder for XML/HTML entities.\n\n####Features:\n* Focussed on ___speed___\n* Supports three levels of entities: __XML__, __HTML4__ & __HTML5__\n    * Supports _char code_ entities (eg. `&#x55;`)\n\n##How to…\n\n###…install `entities`\n\n    npm i entities\n\n###…use `entities`\n\n```javascript\n//encoding\nrequire(\"entities\").encode(<str> data[, <int> level]);\n//decoding\nrequire(\"entities\").decode(<str> data[, <int> level]);\n```\n\nThe `level` attribute indicates what level of entities should be decoded (0 = XML, 1 = HTML4 and 2 = HTML5). The default is 0 (read: XML).\n\nThere are also methods to access the level directly. Just append the name of the level to the action and you're ready to go (e.g. `encodeHTML4(data)`, `decodeXML(data)`).\n\n---\n\nLicense: BSD-like\n",
+  "readmeFilename": "readme.md",
+  "bugs": {
+    "url": "https://github.com/fb55/node-entities/issues"
+  },
+  "homepage": "https://github.com/fb55/node-entities",
+  "_id": "entities@1.0.0",
+  "_shasum": "b2987aa3821347fcde642b24fdfc9e4fb712bf26",
+  "_resolved": "https://registry.npmjs.org/entities/-/entities-1.0.0.tgz",
+  "_from": "entities@>=1.0.0 <1.1.0"
+}

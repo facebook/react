@@ -1,0 +1,60 @@
+{
+  "name": "hoek",
+  "description": "General purpose node utilities",
+  "version": "2.14.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hapijs/hoek.git"
+  },
+  "main": "index",
+  "keywords": [
+    "utilities"
+  ],
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "code": "1.x.x",
+    "lab": "5.x.x"
+  },
+  "scripts": {
+    "test": "make test-cov"
+  },
+  "license": "BSD-3-Clause",
+  "gitHead": "e80875a516f4b0eaa757ac4814c4510eebdcf589",
+  "bugs": {
+    "url": "https://github.com/hapijs/hoek/issues"
+  },
+  "homepage": "https://github.com/hapijs/hoek#readme",
+  "_id": "hoek@2.14.0",
+  "_shasum": "81211691f52a5a835ae49edbf1e89c9003476aa4",
+  "_from": "hoek@>=2.0.0 <3.0.0",
+  "_npmVersion": "2.9.0",
+  "_nodeVersion": "0.12.2",
+  "_npmUser": {
+    "name": "nlf",
+    "email": "quitlahok@gmail.com"
+  },
+  "dist": {
+    "shasum": "81211691f52a5a835ae49edbf1e89c9003476aa4",
+    "tarball": "http://registry.npmjs.org/hoek/-/hoek-2.14.0.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "hueniverse",
+      "email": "eran@hueniverse.com"
+    },
+    {
+      "name": "wyatt",
+      "email": "wpreul@gmail.com"
+    },
+    {
+      "name": "nlf",
+      "email": "quitlahok@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/hoek/-/hoek-2.14.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

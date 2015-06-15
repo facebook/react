@@ -1,0 +1,69 @@
+{
+  "name": "concat-map",
+  "description": "concatenative mapdashery",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/node-concat-map.git"
+  },
+  "main": "index.js",
+  "keywords": [
+    "concat",
+    "concatMap",
+    "map",
+    "functional",
+    "higher-order"
+  ],
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "devDependencies": {
+    "tape": "~2.4.0"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "testling": {
+    "files": "test/*.js",
+    "browsers": {
+      "ie": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "ff": [
+        3.5,
+        10,
+        15
+      ],
+      "chrome": [
+        10,
+        22
+      ],
+      "safari": [
+        5.1
+      ],
+      "opera": [
+        12
+      ]
+    }
+  },
+  "readme": "concat-map\n==========\n\nConcatenative mapdashery.\n\n[![browser support](http://ci.testling.com/substack/node-concat-map.png)](http://ci.testling.com/substack/node-concat-map)\n\n[![build status](https://secure.travis-ci.org/substack/node-concat-map.png)](http://travis-ci.org/substack/node-concat-map)\n\nexample\n=======\n\n``` js\nvar concatMap = require('concat-map');\nvar xs = [ 1, 2, 3, 4, 5, 6 ];\nvar ys = concatMap(xs, function (x) {\n    return x % 2 ? [ x - 0.1, x, x + 0.1 ] : [];\n});\nconsole.dir(ys);\n```\n\n***\n\n```\n[ 0.9, 1, 1.1, 2.9, 3, 3.1, 4.9, 5, 5.1 ]\n```\n\nmethods\n=======\n\n``` js\nvar concatMap = require('concat-map')\n```\n\nconcatMap(xs, fn)\n-----------------\n\nReturn an array of concatenated elements by calling `fn(x, i)` for each element\n`x` and each index `i` in the array `xs`.\n\nWhen `fn(x, i)` returns an array, its result will be concatenated with the\nresult array. If `fn(x, i)` returns anything else, that value will be pushed\nonto the end of the result array.\n\ninstall\n=======\n\nWith [npm](http://npmjs.org) do:\n\n```\nnpm install concat-map\n```\n\nlicense\n=======\n\nMIT\n\nnotes\n=====\n\nThis module was written while sitting high above the ground in a tree.\n",
+  "readmeFilename": "README.markdown",
+  "bugs": {
+    "url": "https://github.com/substack/node-concat-map/issues"
+  },
+  "homepage": "https://github.com/substack/node-concat-map#readme",
+  "_id": "concat-map@0.0.1",
+  "_shasum": "d8a96bd77fd68df7793a73036a3ba0d5405d477b",
+  "_resolved": "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz",
+  "_from": "concat-map@0.0.1"
+}

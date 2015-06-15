@@ -1,0 +1,35 @@
+{
+  "name": "inherits",
+  "description": "Browser-friendly inheritance fully compatible with standard node.js inherits()",
+  "version": "2.0.1",
+  "keywords": [
+    "inheritance",
+    "class",
+    "klass",
+    "oop",
+    "object-oriented",
+    "inherits",
+    "browser",
+    "browserify"
+  ],
+  "main": "./inherits.js",
+  "browser": "./inherits_browser.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/inherits.git"
+  },
+  "license": "ISC",
+  "scripts": {
+    "test": "node test"
+  },
+  "readme": "Browser-friendly inheritance fully compatible with standard node.js\n[inherits](http://nodejs.org/api/util.html#util_util_inherits_constructor_superconstructor).\n\nThis package exports standard `inherits` from node.js `util` module in\nnode environment, but also provides alternative browser-friendly\nimplementation through [browser\nfield](https://gist.github.com/shtylman/4339901). Alternative\nimplementation is a literal copy of standard one located in standalone\nmodule to avoid requiring of `util`. It also has a shim for old\nbrowsers with no `Object.create` support.\n\nWhile keeping you sure you are using standard `inherits`\nimplementation in node.js environment, it allows bundlers such as\n[browserify](https://github.com/substack/node-browserify) to not\ninclude full `util` package to your client code if all you need is\njust `inherits` function. It worth, because browser shim for `util`\npackage is large and `inherits` is often the single function you need\nfrom it.\n\nIt's recommended to use this package instead of\n`require('util').inherits` for any code that has chances to be used\nnot only in node.js but in browser too.\n\n## usage\n\n```js\nvar inherits = require('inherits');\n// then use exactly as the standard one\n```\n\n## note on version ~1.0\n\nVersion ~1.0 had completely different motivation and is not compatible\nneither with 2.0 nor with standard node.js `inherits`.\n\nIf you are using version ~1.0 and planning to switch to ~2.0, be\ncareful:\n\n* new version uses `super_` instead of `super` for referencing\n  superclass\n* new version overwrites current prototype while old one preserves any\n  existing fields on it\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/isaacs/inherits/issues"
+  },
+  "homepage": "https://github.com/isaacs/inherits#readme",
+  "_id": "inherits@2.0.1",
+  "_shasum": "b17d08d326b4423e568eff719f91b0b1cbdf69f1",
+  "_resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz",
+  "_from": "inherits@>=2.0.0 <3.0.0"
+}

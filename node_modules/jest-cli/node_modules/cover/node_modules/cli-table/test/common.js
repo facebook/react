@@ -1,0 +1,6 @@
+
+/**
+ * Module dependencies.
+ */
+
+require('should');

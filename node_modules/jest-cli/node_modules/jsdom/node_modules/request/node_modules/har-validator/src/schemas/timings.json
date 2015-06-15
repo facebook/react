@@ -1,0 +1,40 @@
+{
+  "required": [
+    "send",
+    "wait",
+    "receive"
+  ],
+  "properties": {
+    "dns": {
+      "type": "number",
+      "min": -1
+    },
+    "connect": {
+      "type": "number",
+      "min": -1
+    },
+    "blocked": {
+      "type": "number",
+      "min": -1
+    },
+    "send": {
+      "type": "number",
+      "min": -1
+    },
+    "wait": {
+      "type": "number",
+      "min": -1
+    },
+    "receive": {
+      "type": "number",
+      "min": -1
+    },
+    "ssl": {
+      "type": "number",
+      "min": -1
+    },
+    "comment": {
+      "type": "string"
+    }
+  }
+}

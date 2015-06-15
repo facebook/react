@@ -1,0 +1,22 @@
+{
+  "name": "qs",
+  "main": "dist/qs.js",
+  "version": "3.0.0",
+  "homepage": "https://github.com/hapijs/qs",
+  "authors": [
+    "Nathan LaFreniere <quitlahok@gmail.com>"
+  ],
+  "description": "A querystring parser that supports nesting and arrays, with a depth limit",
+  "keywords": [
+    "querystring",
+    "qs"
+  ],
+  "license": "BSD-3-Clause",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

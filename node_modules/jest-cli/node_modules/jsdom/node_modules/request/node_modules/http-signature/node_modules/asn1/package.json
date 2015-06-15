@@ -1,0 +1,45 @@
+{
+  "author": {
+    "name": "Mark Cavage",
+    "email": "mcavage@gmail.com"
+  },
+  "contributors": [
+    {
+      "name": "David Gwynne",
+      "email": "loki@animata.net"
+    },
+    {
+      "name": "Yunong Xiao",
+      "email": "yunong@joyent.com"
+    }
+  ],
+  "name": "asn1",
+  "description": "Contains parsers and serializers for ASN.1 (currently BER only)",
+  "version": "0.1.11",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mcavage/node-asn1.git"
+  },
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tap": "0.1.4"
+  },
+  "scripts": {
+    "pretest": "which gjslint; if [[ \"$?\" = 0 ]] ; then  gjslint --nojsdoc -r lib -r tst; else echo \"Missing gjslint. Skipping lint\"; fi",
+    "test": "tap ./tst"
+  },
+  "readme": "node-asn1 is a library for encoding and decoding ASN.1 datatypes in pure JS.\nCurrently BER encoding is supported; at some point I'll likely have to do DER.\n\n## Usage\n\nMostly, if you're *actually* needing to read and write ASN.1, you probably don't\nneed this readme to explain what and why.  If you have no idea what ASN.1 is,\nsee this: ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc\n\nThe source is pretty much self-explanatory, and has read/write methods for the\ncommon types out there.\n\n### Decoding\n\nThe following reads an ASN.1 sequence with a boolean.\n\n    var Ber = require('asn1').Ber;\n\n    var reader = new Ber.Reader(new Buffer([0x30, 0x03, 0x01, 0x01, 0xff]));\n\n    reader.readSequence();\n    console.log('Sequence len: ' + reader.length);\n    if (reader.peek() === Ber.Boolean)\n      console.log(reader.readBoolean());\n\n### Encoding\n\nThe following generates the same payload as above.\n\n    var Ber = require('asn1').Ber;\n\n    var writer = new Ber.Writer();\n\n    writer.startSequence();\n    writer.writeBoolean(true);\n    writer.endSequence();\n\n    console.log(writer.buffer);\n\n## Installation\n\n    npm install asn1\n\n## License\n\nMIT.\n\n## Bugs\n\nSee <https://github.com/mcavage/node-asn1/issues>.\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/mcavage/node-asn1/issues"
+  },
+  "homepage": "https://github.com/mcavage/node-asn1",
+  "_id": "asn1@0.1.11",
+  "_shasum": "559be18376d08a4ec4dbe80877d27818639b2df7",
+  "_resolved": "https://registry.npmjs.org/asn1/-/asn1-0.1.11.tgz",
+  "_from": "asn1@0.1.11"
+}

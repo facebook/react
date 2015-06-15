@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "optional": true,
+  "required": [
+    "mimeType"
+  ],
+  "properties": {
+    "mimeType": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "params": {
+      "type": "array",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "comment": {
+      "type": "string"
+    }
+  }
+}

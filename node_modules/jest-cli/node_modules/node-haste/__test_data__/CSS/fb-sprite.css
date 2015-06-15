@@ -1,0 +1,25 @@
+/**
+ *  @provides pop-dialog-css
+ *  @permanent
+ */
+
+/* @noflip */
+.pop_topleft {
+  -fb-sprite: url('/images/dialog/large_halo_top_left.png');
+  left: -10px;
+  top: -10px;
+}
+
+/* @noflip */
+.pop_topleft2 {
+  -fb-sprite: url('/images/dialog/large_halo_top_left.png');
+  left: -10px;
+  top: -10px;
+}
+
+/* @noflip */
+.pop_topright {
+  -fb-sprite: url('/images/dialog/large_halo_top_right.png');
+  right: -10px;
+  top: -10px;
+}

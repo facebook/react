@@ -1,0 +1,19 @@
+{
+  "name": "hawk",
+  "repo": "hueniverse/hawk",
+  "description": "HTTP Hawk Authentication Scheme",
+  "version": "1.0.0",
+  "keywords": [
+    "http",
+    "authentication",
+    "scheme",
+    "hawk"
+  ],
+  "dependencies": {},
+  "development": {},
+  "license": "BSD",
+  "main": "lib/browser.js",
+  "scripts": [
+    "lib/browser.js"
+  ]
+}

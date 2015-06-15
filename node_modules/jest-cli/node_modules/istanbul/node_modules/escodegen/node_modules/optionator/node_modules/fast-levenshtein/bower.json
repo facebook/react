@@ -1,0 +1,30 @@
+{
+  "name": "fast-levenshtein",
+  "version": "1.0.6",
+  "homepage": "https://github.com/hiddentao/fast-levenshtein",
+  "authors": [
+    "Ramesh Nair <ram@hiddentao.com>"
+  ],
+  "description": "Efficient implementation of Levenshtein algorithm with asynchronous callback support",
+  "main": "levenshtein.js",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "levenshtein",
+    "distance",
+    "string"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "benchmark",
+    "Gruntfile.js"
+  ]
+}

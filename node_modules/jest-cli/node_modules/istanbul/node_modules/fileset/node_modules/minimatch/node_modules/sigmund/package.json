@@ -1,0 +1,44 @@
+{
+  "name": "sigmund",
+  "version": "1.0.1",
+  "description": "Quick and dirty signatures for Objects.",
+  "main": "sigmund.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tap": "~0.3.0"
+  },
+  "scripts": {
+    "test": "tap test/*.js",
+    "bench": "node bench.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/sigmund.git"
+  },
+  "keywords": [
+    "object",
+    "signature",
+    "key",
+    "data",
+    "psychoanalysis"
+  ],
+  "author": {
+    "name": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/"
+  },
+  "license": "ISC",
+  "readme": "# sigmund\n\nQuick and dirty signatures for Objects.\n\nThis is like a much faster `deepEquals` comparison, which returns a\nstring key suitable for caches and the like.\n\n## Usage\n\n```javascript\nfunction doSomething (someObj) {\n  var key = sigmund(someObj, maxDepth) // max depth defaults to 10\n  var cached = cache.get(key)\n  if (cached) return cached\n\n  var result = expensiveCalculation(someObj)\n  cache.set(key, result)\n  return result\n}\n```\n\nThe resulting key will be as unique and reproducible as calling\n`JSON.stringify` or `util.inspect` on the object, but is much faster.\nIn order to achieve this speed, some differences are glossed over.\nFor example, the object `{0:'foo'}` will be treated identically to the\narray `['foo']`.\n\nAlso, just as there is no way to summon the soul from the scribblings\nof a cocaine-addled psychoanalyst, there is no way to revive the object\nfrom the signature string that sigmund gives you.  In fact, it's\nbarely even readable.\n\nAs with `util.inspect` and `JSON.stringify`, larger objects will\nproduce larger signature strings.\n\nBecause sigmund is a bit less strict than the more thorough\nalternatives, the strings will be shorter, and also there is a\nslightly higher chance for collisions.  For example, these objects\nhave the same signature:\n\n    var obj1 = {a:'b',c:/def/,g:['h','i',{j:'',k:'l'}]}\n    var obj2 = {a:'b',c:'/def/',g:['h','i','{jkl']}\n\nLike a good Freudian, sigmund is most effective when you already have\nsome understanding of what you're looking for.  It can help you help\nyourself, but you must be willing to do some work as well.\n\nCycles are handled, and cyclical objects are silently omitted (though\nthe key is included in the signature output.)\n\nThe second argument is the maximum depth, which defaults to 10,\nbecause that is the maximum object traversal depth covered by most\ninsurance carriers.\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/isaacs/sigmund/issues"
+  },
+  "homepage": "https://github.com/isaacs/sigmund#readme",
+  "_id": "sigmund@1.0.1",
+  "_shasum": "3ff21f198cad2175f9f3b781853fd94d0d19b590",
+  "_resolved": "https://registry.npmjs.org/sigmund/-/sigmund-1.0.1.tgz",
+  "_from": "sigmund@>=1.0.0 <1.1.0"
+}

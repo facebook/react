@@ -1,0 +1,78 @@
+This contains tickets fixed in each version release in reverse chronological
+order. There is one ticket per line. Each commits message has the tickets fixed
+in it. The commit message also has the corresponding github issue. i.e. CTYPE-42
+would be issue 42. Each issue can be found at:
+https://github.com/rmustacc/node-ctype/issues/%d.
+
+v0.5.3
+CTYPE-50 Release 0.5.3
+Contributed by Nick Schonning:
+CTYPE-49 Add repository section to package.json
+Contributed by Jonathan Ong:
+CTYPE-48 Create .npmignore
+
+v0.5.2
+CTYPE-46 Release 0.5.2
+CTYPE-45 error in setEndian logic
+
+v0.5.1
+CTYPE-44 Release 0.5.1
+Contributed by Terin Stock:
+CTYPE-41 CTypeParser.writeStruct should return its offset
+Contributed by Terin Stock:
+CTYPE-42 int64_t returns wrong size
+
+v0.5.0
+CTYPE-40 Release 0.5.0
+CTYPE-39 want > 0.6 engine support
+
+v0.4.0
+CTYPE-37 Release v0.4.0
+CTYPE-6 want additional entry point for write
+CTYPE-20 Add 64-bit int support into core parser
+CTYPE-31 Fix bounds errors node/2129
+CTYPE-33 Update copyright holders
+CTYPE-34 ctf.js confuses sign bit.
+CTYPE-35 Make the README more useful for getting started
+CTYPE-36 want manual page on ctio functions
+
+v0.3.1
+CTYPE-29 Release 0.3.1
+CTYPE-28 Want v0.6 npm support
+
+v0.3.0
+CTYPE-27 Release v0.3.0
+CTYPE-26 Want alternate default char behavior
+
+v0.2.1
+CTYPE-25 Release v0.2.1
+CTYPE-24 Writing structs is busted
+
+v0.2.0:
+CTYPE-23 Release v0.2.0
+CTYPE-21 Add support for CTF JSON data
+CTYPE-22 Add Javascriptlint profile
+CTYPE-15 Pull in ctio updates from node/master
+
+v0.1.0:
+CTYPE-18 Bump version to v0.1.0
+CTYPE-17 Fix nested structures
+CTYPE-16 Remove extraneous logging
+CTYPE-14 toAbs64 and toApprox64 are not exported
+
+v0.0.3:
+CTYPE-12 Bump version to v0.0.3
+CTYPE-11 fix typo in wuint64
+CTYPE-10 Integrate jsstyle
+
+v0.0.2:
+CTYPE-8 dump npm version to v0.0.2
+CTYPE-9 want changelog
+CTYPE-7 fix typo in detypes.
+
+v0.0.1:
+CTYPE-5 Missing from NPM registry
+CTYPE-4 int16_t calls wrong read function
+CTYPE-3 API example types are missing quotes as strings
+CTYPE-2 doc missing 64-bit functions
+CTYPE-1 Need license

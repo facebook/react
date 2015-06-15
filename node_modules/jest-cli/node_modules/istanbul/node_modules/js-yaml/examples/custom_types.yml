@@ -1,0 +1,18 @@
+subject: Custom types in JS-YAML
+spaces:
+- !space
+  height: 1000
+  width: 1000
+  points:
+  - !point [ 10, 43, 23 ]
+  - !point [ 165, 0, 50 ]
+  - !point [ 100, 100, 100 ]
+
+- !space
+  height: 64
+  width: 128
+  points:
+  - !point [ 12, 43, 0 ]
+  - !point [ 1, 4, 90 ]
+
+- !space # An empty space

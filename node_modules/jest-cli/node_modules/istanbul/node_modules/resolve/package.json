@@ -1,0 +1,39 @@
+{
+  "name": "resolve",
+  "description": "resolve like require.resolve() on behalf of files asynchronously and synchronously",
+  "version": "1.1.6",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/node-resolve.git"
+  },
+  "main": "index.js",
+  "keywords": [
+    "resolve",
+    "require",
+    "node",
+    "module"
+  ],
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "devDependencies": {
+    "tape": "^3.5.0",
+    "tap": "0.4.13"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "readme": "# resolve\n\nimplements the [node `require.resolve()`\nalgorithm](http://nodejs.org/docs/v0.4.8/api/all.html#all_Together...)\nsuch that you can `require.resolve()` on behalf of a file asynchronously and\nsynchronously\n\n[![build status](https://secure.travis-ci.org/substack/node-resolve.png)](http://travis-ci.org/substack/node-resolve)\n\n# example\n\nasynchronously resolve:\n\n``` js\nvar resolve = require('resolve');\nresolve('tap', { basedir: __dirname }, function (err, res) {\n    if (err) console.error(err)\n    else console.log(res)\n});\n```\n\n```\n$ node example/async.js\n/home/substack/projects/node-resolve/node_modules/tap/lib/main.js\n```\n\nsynchronously resolve:\n\n``` js\nvar resolve = require('resolve');\nvar res = resolve.sync('tap', { basedir: __dirname });\nconsole.log(res);\n```\n\n```\n$ node example/sync.js\n/home/substack/projects/node-resolve/node_modules/tap/lib/main.js\n```\n\n# methods\n\n``` js\nvar resolve = require('resolve')\n```\n\n## resolve(id, opts={}, cb)\n\nAsynchronously resolve the module path string `id` into `cb(err, res [, pkg])`, where `pkg` (if defined) is the data from `package.json`.\n\noptions are:\n\n* opts.basedir - directory to begin resolving from\n\n* opts.package - `package.json` data applicable to the module being loaded\n\n* opts.extensions - array of file extensions to search in order\n\n* opts.readFile - how to read files asynchronously\n\n* opts.isFile - function to asynchronously test whether a file exists\n\n* opts.packageFilter - transform the parsed package.json contents before looking\nat the \"main\" field\n\n* opts.pathFilter(pkg, path, relativePath) - transform a path within a package\n  * pkg - package data\n  * path - the path being resolved\n  * relativePath - the path relative from the package.json location\n  * returns - a relative path that will be joined from the package.json location\n\n* opts.paths - require.paths array to use if nothing is found on the normal\nnode_modules recursive walk (probably don't use this)\n\n* opts.moduleDirectory - directory (or directories) in which to recursively look for modules. default: `\"node_modules\"`\n\ndefault `opts` values:\n\n``` javascript\n{\n    paths: [],\n    basedir: __dirname,\n    extensions: [ '.js' ],\n    readFile: fs.readFile,\n    isFile: function (file, cb) {\n        fs.stat(file, function (err, stat) {\n            if (err && err.code === 'ENOENT') cb(null, false)\n            else if (err) cb(err)\n            else cb(null, stat.isFile())\n        });\n    },\n    moduleDirectory: 'node_modules'\n}\n```\n\n## resolve.sync(id, opts)\n\nSynchronously resolve the module path string `id`, returning the result and\nthrowing an error when `id` can't be resolved.\n\noptions are:\n\n* opts.basedir - directory to begin resolving from\n\n* opts.extensions - array of file extensions to search in order\n\n* opts.readFile - how to read files synchronously\n\n* opts.isFile - function to synchronously test whether a file exists\n\n* `opts.packageFilter(pkg, pkgfile)` - transform the parsed package.json\n* contents before looking at the \"main\" field\n\n* opts.paths - require.paths array to use if nothing is found on the normal\nnode_modules recursive walk (probably don't use this)\n\n* opts.moduleDirectory - directory (or directories) in which to recursively look for modules. default: `\"node_modules\"`\n\ndefault `opts` values:\n\n``` javascript\n{\n    paths: [],\n    basedir: __dirname,\n    extensions: [ '.js' ],\n    readFileSync: fs.readFileSync,\n    isFile: function (file) {\n        try { return fs.statSync(file).isFile() }\n        catch (e) { return false }\n    },\n    moduleDirectory: 'node_modules'\n}\n````\n\n## resolve.isCore(pkg)\n\nReturn whether a package is in core.\n\n# install\n\nWith [npm](https://npmjs.org) do:\n\n```\nnpm install resolve\n```\n\n# license\n\nMIT\n",
+  "readmeFilename": "readme.markdown",
+  "bugs": {
+    "url": "https://github.com/substack/node-resolve/issues"
+  },
+  "homepage": "https://github.com/substack/node-resolve#readme",
+  "_id": "resolve@1.1.6",
+  "_shasum": "d3492ad054ca800f5befa612e61beac1eec98f8f",
+  "_resolved": "https://registry.npmjs.org/resolve/-/resolve-1.1.6.tgz",
+  "_from": "resolve@>=1.1.0 <1.2.0"
+}

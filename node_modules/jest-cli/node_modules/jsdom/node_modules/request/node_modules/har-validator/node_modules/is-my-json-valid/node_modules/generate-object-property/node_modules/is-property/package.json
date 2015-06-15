@@ -1,0 +1,44 @@
+{
+  "name": "is-property",
+  "version": "1.0.2",
+  "description": "Tests if a JSON property can be accessed using . syntax",
+  "main": "is-property.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tape": "~1.0.4"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mikolalysenko/is-property.git"
+  },
+  "keywords": [
+    "is",
+    "property",
+    "json",
+    "dot",
+    "bracket",
+    ".",
+    "[]"
+  ],
+  "author": {
+    "name": "Mikola Lysenko"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "gitHead": "0a85ea5b6b1264ea1cdecc6e5cf186adbb3ffc50",
+  "bugs": {
+    "url": "https://github.com/mikolalysenko/is-property/issues"
+  },
+  "readme": "is-property\n===========\nTests if a property of a JavaScript object can be accessed using the dot (.) notation or if it must be enclosed in brackets, (ie use x[\" ... \"])\n\nExample\n-------\n\n```javascript\nvar isProperty = require(\"is-property\")\n\nconsole.log(isProperty(\"foo\"))  //Prints true\nconsole.log(isProperty(\"0\"))    //Prints false\n```\n\nInstall\n-------\n\n    npm install is-property\n    \n### `require(\"is-property\")(str)`\nChecks if str is a property\n\n* `str` is a string which we will test if it is a property or not\n\n**Returns** true or false depending if str is a property\n\n## Credits\n(c) 2013 Mikola Lysenko. MIT License",
+  "homepage": "https://github.com/mikolalysenko/is-property",
+  "_id": "is-property@1.0.2",
+  "_shasum": "57fe1c4e48474edd65b09911f26b1cd4095dda84",
+  "_resolved": "https://registry.npmjs.org/is-property/-/is-property-1.0.2.tgz",
+  "_from": "is-property@>=1.0.0 <2.0.0"
+}

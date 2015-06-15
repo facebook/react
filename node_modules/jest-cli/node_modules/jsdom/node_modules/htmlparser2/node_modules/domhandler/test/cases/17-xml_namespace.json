@@ -1,0 +1,18 @@
+{
+  "name": "XML Namespace",
+  "options": {},
+  "html": "<ns:tag>text</ns:tag>",
+  "expected": [
+    {
+      "type": "tag",
+      "name": "ns:tag",
+      "attribs": {},
+      "children": [
+        {
+          "data": "text",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

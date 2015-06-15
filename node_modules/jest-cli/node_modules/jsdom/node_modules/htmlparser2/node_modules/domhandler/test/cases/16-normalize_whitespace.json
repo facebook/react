@@ -1,0 +1,47 @@
+{
+  "name": "Normalize whitespace",
+  "options": {
+    "normalizeWhitespace": true
+  },
+  "html": "Line one\n<br>\t  \r\n\f  <br>\nline two<font><br> x </font>",
+  "expected": [
+    {
+      "data": "Line one ",
+      "type": "text"
+    },
+    {
+      "type": "tag",
+      "name": "br",
+      "attribs": {}
+    },
+    {
+      "data": " ",
+      "type": "text"
+    },
+    {
+      "type": "tag",
+      "name": "br",
+      "attribs": {}
+    },
+    {
+      "data": " line two",
+      "type": "text"
+    },
+    {
+      "type": "tag",
+      "name": "font",
+      "attribs": {},
+      "children": [
+        {
+          "type": "tag",
+          "name": "br",
+          "attribs": {}
+        },
+        {
+          "data": " x ",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

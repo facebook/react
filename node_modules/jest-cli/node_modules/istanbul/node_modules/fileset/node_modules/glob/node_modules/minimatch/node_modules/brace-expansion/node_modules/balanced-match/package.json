@@ -1,0 +1,56 @@
+{
+  "name": "balanced-match",
+  "description": "Match balanced character pairs, like \"{\" and \"}\"",
+  "version": "0.2.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/juliangruber/balanced-match.git"
+  },
+  "homepage": "https://github.com/juliangruber/balanced-match",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tape": "~1.1.1"
+  },
+  "keywords": [
+    "match",
+    "regexp",
+    "test",
+    "balanced",
+    "parse"
+  ],
+  "author": {
+    "name": "Julian Gruber",
+    "email": "mail@juliangruber.com",
+    "url": "http://juliangruber.com"
+  },
+  "license": "MIT",
+  "testling": {
+    "files": "test/*.js",
+    "browsers": [
+      "ie/8..latest",
+      "firefox/20..latest",
+      "firefox/nightly",
+      "chrome/25..latest",
+      "chrome/canary",
+      "opera/12..latest",
+      "opera/next",
+      "safari/5.1..latest",
+      "ipad/6.0..latest",
+      "iphone/6.0..latest",
+      "android-browser/4.2..latest"
+    ]
+  },
+  "readme": "# balanced-match\n\nMatch balanced string pairs, like `{` and `}` or `<b>` and `</b>`.\n\n[![build status](https://secure.travis-ci.org/juliangruber/balanced-match.svg)](http://travis-ci.org/juliangruber/balanced-match)\n[![downloads](https://img.shields.io/npm/dm/balanced-match.svg)](https://www.npmjs.org/package/balanced-match)\n\n[![testling badge](https://ci.testling.com/juliangruber/balanced-match.png)](https://ci.testling.com/juliangruber/balanced-match)\n\n## Example\n\nGet the first matching pair of braces:\n\n```js\nvar balanced = require('balanced-match');\n\nconsole.log(balanced('{', '}', 'pre{in{nested}}post'));\nconsole.log(balanced('{', '}', 'pre{first}between{second}post'));\n```\n\nThe matches are:\n\n```bash\n$ node example.js\n{ start: 3, end: 14, pre: 'pre', body: 'in{nested}', post: 'post' }\n{ start: 3,\n  end: 9,\n  pre: 'pre',\n  body: 'first',\n  post: 'between{second}post' }\n```\n\n## API\n\n### var m = balanced(a, b, str)\n\nFor the first non-nested matching pair of `a` and `b` in `str`, return an\nobject with those keys:\n\n* **start** the index of the first match of `a`\n* **end** the index of the matching `b`\n* **pre** the preamble, `a` and `b` not included\n* **body** the match, `a` and `b` not included\n* **post** the postscript, `a` and `b` not included\n\nIf there's no match, `undefined` will be returned.\n\nIf the `str` contains more `a` than `b` / there are unmatched pairs, the first match that was closed will be used. For example, `{{a}` will match `['{', 'a', '']`.\n\n## Installation\n\nWith [npm](https://npmjs.org) do:\n\n```bash\nnpm install balanced-match\n```\n\n## License\n\n(MIT)\n\nCopyright (c) 2013 Julian Gruber &lt;julian@juliangruber.com&gt;\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/juliangruber/balanced-match/issues"
+  },
+  "_id": "balanced-match@0.2.0",
+  "_shasum": "38f6730c03aab6d5edbb52bd934885e756d71674",
+  "_resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-0.2.0.tgz",
+  "_from": "balanced-match@>=0.2.0 <0.3.0"
+}

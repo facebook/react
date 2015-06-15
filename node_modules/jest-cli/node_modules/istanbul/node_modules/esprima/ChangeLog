@@ -1,0 +1,101 @@
+2015-03-09: Version 2.1.0
+
+      * Support ES6 class (issue 1001)
+      * Support ES6 rest parameter (issue 1011)
+      * Expand the location of property getter, setter, and methods (issue 1029)
+      * Enable TryStatement transition to a single handler (issue 1031)
+      * Support ES6 computed property name (issue 1037)
+      * Tolerate unclosed block comment (issue 1041)
+      * Support ES6 lexical declaration (issue 1065)
+
+2015-02-06: Version 2.0.0
+
+      * Support ES6 arrow function (issue 517)
+      * Support ES6 Unicode code point escape (issue 521)
+      * Improve the speed and accuracy of comment attachment (issue 522)
+      * Support ES6 default parameter (issue 519)
+      * Support ES6 regular expression flags (issue 557)
+      * Fix scanning of implicit octal literals (issue 565)
+      * Fix the handling of automatic semicolon insertion (issue 574)
+      * Support ES6 method definition (issue 620)
+      * Support ES6 octal integer literal (issue 621)
+      * Support ES6 binary integer literal (issue 622)
+      * Support ES6 object literal property value shorthand (issue 624)
+
+2015-03-03: Version 1.2.5
+
+      * Fix scanning of implicit octal literals (issue 565)
+
+2015-02-05: Version 1.2.4
+
+      * Fix parsing of LeftHandSideExpression in ForInStatement (issue 560)
+      * Fix the handling of automatic semicolon insertion (issue 574)
+
+2015-01-18: Version 1.2.3
+
+      * Fix division by this (issue 616)
+
+2014-05-18: Version 1.2.2
+
+      * Fix duplicated tokens when collecting comments (issue 537)
+
+2014-05-04: Version 1.2.1
+
+      * Ensure that Program node may still have leading comments (issue 536)
+
+2014-04-29: Version 1.2.0
+
+      * Fix semicolon handling for expression statement (issue 462, 533)
+      * Disallow escaped characters in regular expression flags (issue 503)
+      * Performance improvement for location tracking (issue 520)
+      * Improve the speed of comment attachment (issue 522)
+
+2014-03-26: Version 1.1.1
+
+      * Fix token handling of forward slash after an array literal (issue 512)
+
+2014-03-23: Version 1.1.0
+
+      * Optionally attach comments to the owning syntax nodes (issue 197)
+      * Simplify binary parsing with stack-based shift reduce (issue 352)
+      * Always include the raw source of literals (issue 376)
+      * Add optional input source information (issue 386)
+      * Tokenizer API for pure lexical scanning (issue 398)
+      * Improve the web site and its online demos (issue 337, 400, 404)
+      * Performance improvement for location tracking (issue 417, 424)
+      * Support HTML comment syntax (issue 451)
+      * Drop support for legacy browsers (issue 474)
+
+2013-08-27: Version 1.0.4
+
+      * Minimize the payload for packages (issue 362)
+      * Fix missing cases on an empty switch statement (issue 436)
+      * Support escaped ] in regexp literal character classes (issue 442)
+      * Tolerate invalid left-hand side expression (issue 130)
+
+2013-05-17: Version 1.0.3
+
+      * Variable declaration needs at least one declarator (issue 391)
+      * Fix benchmark's variance unit conversion (issue 397)
+      * IE < 9: \v should be treated as vertical tab (issue 405)
+      * Unary expressions should always have prefix: true (issue 418)
+      * Catch clause should only accept an identifier (issue 423)
+      * Tolerate setters without parameter (issue 426)
+
+2012-11-02: Version 1.0.2
+
+    Improvement:
+
+      * Fix esvalidate JUnit output upon a syntax error (issue 374)
+
+2012-10-28: Version 1.0.1
+
+    Improvements:
+
+      * esvalidate understands shebang in a Unix shell script (issue 361)
+      * esvalidate treats fatal parsing failure as an error (issue 361)
+      * Reduce Node.js package via .npmignore (issue 362)
+
+2012-10-22: Version 1.0.0
+
+    Initial release.

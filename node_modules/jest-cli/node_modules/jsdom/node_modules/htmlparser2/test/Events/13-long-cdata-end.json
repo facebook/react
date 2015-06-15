@@ -1,0 +1,22 @@
+{
+  "name": "Long CDATA ending",
+  "options": {
+    "handler": {},
+    "parser": {"xmlMode": true}
+  },
+  "html": "<before /><tag><![CDATA[ text ]]]></tag><after />",
+  "expected": [
+  { "event": "opentagname", "data": [ "before" ] },
+  { "event": "opentag",     "data": [ "before", {} ] },
+  { "event": "closetag",    "data": [ "before" ] },
+  { "event": "opentagname", "data": [ "tag" ] },
+  { "event": "opentag",     "data": [ "tag", {} ] },
+  { "event": "cdatastart",  "data": [] },
+  { "event": "text",        "data": [ " text ]" ] },
+  { "event": "cdataend",    "data": [] },
+  { "event": "closetag",    "data": [ "tag" ] },
+  { "event": "opentagname", "data": [ "after" ] },
+  { "event": "opentag",     "data": [ "after", {} ] },
+  { "event": "closetag",    "data": [ "after" ] }
+  ]
+}

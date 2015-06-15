@@ -1,0 +1,197 @@
+---
+# Collection Types #############################################################
+################################################################################
+
+# http://yaml.org/type/map.html -----------------------------------------------#
+
+map:
+  # Unordered set of key: value pairs.
+  Block style: !!map
+    Clark : Evans
+    Ingy  : döt Net
+    Oren  : Ben-Kiki
+  Flow style: !!map { Clark: Evans, Ingy: döt Net, Oren: Ben-Kiki }
+
+# http://yaml.org/type/omap.html ----------------------------------------------#
+
+omap:
+  # Explicitly typed ordered map (dictionary).
+  Bestiary: !!omap
+    - aardvark: African pig-like ant eater. Ugly.
+    - anteater: South-American ant eater. Two species.
+    - anaconda: South-American constrictor snake. Scaly.
+    # Etc.
+  # Flow style
+  Numbers: !!omap [ one: 1, two: 2, three : 3 ]
+
+# http://yaml.org/type/pairs.html ---------------------------------------------#
+
+pairs:
+  # Explicitly typed pairs.
+  Block tasks: !!pairs
+    - meeting: with team.
+    - meeting: with boss.
+    - break: lunch.
+    - meeting: with client.
+  Flow tasks: !!pairs [ meeting: with team, meeting: with boss ]
+
+# http://yaml.org/type/set.html -----------------------------------------------#
+
+set:
+  # Explicitly typed set.
+  baseball players: !!set
+    ? Mark McGwire
+    ? Sammy Sosa
+    ? Ken Griffey
+  # Flow style
+  baseball teams: !!set { Boston Red Sox, Detroit Tigers, New York Yankees }
+
+# http://yaml.org/type/seq.html -----------------------------------------------#
+
+seq:
+  # Ordered sequence of nodes
+  Block style: !!seq
+  - Mercury   # Rotates - no light/dark sides.
+  - Venus     # Deadliest. Aptly named.
+  - Earth     # Mostly dirt.
+  - Mars      # Seems empty.
+  - Jupiter   # The king.
+  - Saturn    # Pretty.
+  - Uranus    # Where the sun hardly shines.
+  - Neptune   # Boring. No rings.
+  - Pluto     # You call this a planet?
+  Flow style: !!seq [ Mercury, Venus, Earth, Mars,      # Rocks
+                      Jupiter, Saturn, Uranus, Neptune, # Gas
+                      Pluto ]                           # Overrated
+
+
+# Scalar Types #################################################################
+################################################################################
+
+# http://yaml.org/type/binary.html --------------------------------------------#
+
+binary:
+  canonical: !!binary "\
+    R0lGODlhDAAMAIQAAP//9/X17unp5WZmZgAAAOfn515eXvPz7Y6OjuDg4J+fn5\
+    OTk6enp56enmlpaWNjY6Ojo4SEhP/++f/++f/++f/++f/++f/++f/++f/++f/+\
+    +f/++f/++f/++f/++f/++SH+Dk1hZGUgd2l0aCBHSU1QACwAAAAADAAMAAAFLC\
+    AgjoEwnuNAFOhpEMTRiggcz4BNJHrv/zCFcLiwMWYNG84BwwEeECcgggoBADs="
+  generic: !!binary |
+    R0lGODlhDAAMAIQAAP//9/X17unp5WZmZgAAAOfn515eXvPz7Y6OjuDg4J+fn5
+    OTk6enp56enmlpaWNjY6Ojo4SEhP/++f/++f/++f/++f/++f/++f/++f/++f/+
+    +f/++f/++f/++f/++f/++SH+Dk1hZGUgd2l0aCBHSU1QACwAAAAADAAMAAAFLC
+    AgjoEwnuNAFOhpEMTRiggcz4BNJHrv/zCFcLiwMWYNG84BwwEeECcgggoBADs=
+  description:
+    The binary value above is a tiny arrow encoded as a gif image.
+
+# http://yaml.org/type/bool.html ----------------------------------------------#
+
+bool:
+  - true
+  - True
+  - TRUE
+  - false
+  - False
+  - FALSE
+
+# http://yaml.org/type/float.html ---------------------------------------------#
+
+float:
+  canonical: 6.8523015e+5
+  exponentioal: 685.230_15e+03
+  fixed: 685_230.15
+  sexagesimal: 190:20:30.15
+  negative infinity: -.inf
+  not a number: .NaN
+
+# http://yaml.org/type/int.html -----------------------------------------------#
+
+int:
+  canonical: 685230
+  decimal: +685_230
+  octal: 02472256
+  hexadecimal: 0x_0A_74_AE
+  binary: 0b1010_0111_0100_1010_1110
+  sexagesimal: 190:20:30
+
+# http://yaml.org/type/merge.html ---------------------------------------------#
+
+merge:
+  - &CENTER { x: 1, y: 2 }
+  - &LEFT { x: 0, y: 2 }
+  - &BIG { r: 10 }
+  - &SMALL { r: 1 }
+  
+  # All the following maps are equal:
+  
+  - # Explicit keys
+    x: 1
+    y: 2
+    r: 10
+    label: nothing
+  
+  - # Merge one map
+    << : *CENTER
+    r: 10
+    label: center
+  
+  - # Merge multiple maps
+    << : [ *CENTER, *BIG ]
+    label: center/big
+  
+  - # Override
+    << : [ *BIG, *LEFT, *SMALL ]
+    x: 1
+    label: big/left/small
+
+# http://yaml.org/type/null.html ----------------------------------------------#
+
+null:
+  # This mapping has four keys,
+  # one has a value.
+  empty:
+  canonical: ~
+  english: null
+  ~: null key
+  # This sequence has five
+  # entries, two have values.
+  sparse:
+    - ~
+    - 2nd entry
+    -
+    - 4th entry
+    - Null
+
+# http://yaml.org/type/str.html -----------------------------------------------#
+
+string: abcd
+
+# http://yaml.org/type/timestamp.html -----------------------------------------#
+
+timestamp:
+  canonical:        2001-12-15T02:59:43.1Z
+  valid iso8601:    2001-12-14t21:59:43.10-05:00
+  space separated:  2001-12-14 21:59:43.10 -5
+  no time zone (Z): 2001-12-15 2:59:43.10
+  date (00:00:00Z): 2002-12-14
+
+
+# JavaScript Specific Types ####################################################
+################################################################################
+
+# https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/RegExp
+
+regexp:
+  simple: !!js/regexp      foobar
+  modifiers: !!js/regexp   /foobar/mi
+
+# https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/undefined
+
+undefined: !!js/undefined ~
+
+# https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function
+
+function: !!js/function >
+  function foobar() {
+    return 'Wow! JS-YAML Rocks!';
+  }

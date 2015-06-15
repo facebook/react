@@ -1,0 +1,57 @@
+{
+  "name": "uglify-js",
+  "description": "JavaScript parser, mangler/compressor and beautifier toolkit",
+  "homepage": "http://lisperator.net/uglifyjs",
+  "main": "tools/node.js",
+  "version": "2.3.6",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "maintainers": [
+    {
+      "name": "caires",
+      "email": "cairesvs@gmail.com"
+    },
+    {
+      "name": "mape",
+      "email": "mape@mape.me"
+    },
+    {
+      "name": "mishoo",
+      "email": "mihai.bazon@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mishoo/UglifyJS2.git"
+  },
+  "dependencies": {
+    "async": "~0.2.6",
+    "source-map": "~0.1.7",
+    "optimist": "~0.3.5"
+  },
+  "bin": {
+    "uglifyjs": "bin/uglifyjs"
+  },
+  "scripts": {
+    "test": "node test/run-tests.js"
+  },
+  "_id": "uglify-js@2.3.6",
+  "dist": {
+    "shasum": "fa0984770b428b7a9b2a8058f46355d14fef211a",
+    "tarball": "http://registry.npmjs.org/uglify-js/-/uglify-js-2.3.6.tgz"
+  },
+  "_from": "uglify-js@>=2.3.0 <2.4.0",
+  "_npmVersion": "1.2.18",
+  "_npmUser": {
+    "name": "mishoo",
+    "email": "mihai.bazon@gmail.com"
+  },
+  "directories": {},
+  "_shasum": "fa0984770b428b7a9b2a8058f46355d14fef211a",
+  "_resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-2.3.6.tgz",
+  "bugs": {
+    "url": "https://github.com/mishoo/UglifyJS2/issues"
+  },
+  "readme": "ERROR: No README data found!"
+}

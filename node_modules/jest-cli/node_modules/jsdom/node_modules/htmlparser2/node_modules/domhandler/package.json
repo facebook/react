@@ -1,0 +1,53 @@
+{
+  "name": "domhandler",
+  "version": "2.3.0",
+  "description": "handler for htmlparser2 that turns pages into a dom",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "mocha -R list && jshint index.js test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fb55/DomHandler.git"
+  },
+  "keywords": [
+    "dom",
+    "htmlparser2"
+  ],
+  "dependencies": {
+    "domelementtype": "1"
+  },
+  "devDependencies": {
+    "htmlparser2": "3.8",
+    "mocha": "1",
+    "jshint": "~2.3.0"
+  },
+  "author": {
+    "name": "Felix Boehm",
+    "email": "me@feedic.com"
+  },
+  "jshintConfig": {
+    "quotmark": "double",
+    "trailing": true,
+    "unused": true,
+    "undef": true,
+    "node": true,
+    "proto": true,
+    "globals": {
+      "it": true
+    }
+  },
+  "readme": "#DOMHandler [![Build Status](https://secure.travis-ci.org/fb55/DomHandler.png)](http://travis-ci.org/fb55/DomHandler)\n\nThe DOM handler (formally known as DefaultHandler) creates a tree containing all nodes of a page. The tree may be manipulated using the DOMUtils library.\n\n##Usage\n```javascript\nvar handler = new DomHandler([ <func> callback(err, dom), ] [ <obj> options ]);\n// var parser = new Parser(handler[, options]);\n```\n\n##Example\n```javascript\nvar htmlparser = require(\"htmlparser2\");\nvar rawHtml = \"Xyz <script language= javascript>var foo = '<<bar>>';< /  script><!--<!-- Waah! -- -->\";\nvar handler = new htmlparser.DomHandler(function (error, dom) {\n    if (error)\n    \t[...do something for errors...]\n    else\n    \t[...parsing done, do something...]\n        console.log(dom);\n});\nvar parser = new htmlparser.Parser(handler);\nparser.write(rawHtml);\nparser.done();\n```\n\nOutput:\n\n```javascript\n[{\n    data: 'Xyz ',\n    type: 'text'\n}, {\n    type: 'script',\n    name: 'script',\n    attribs: {\n    \tlanguage: 'javascript'\n    },\n    children: [{\n    \tdata: 'var foo = \\'<bar>\\';<',\n    \ttype: 'text'\n    }]\n}, {\n    data: '<!-- Waah! -- ',\n    type: 'comment'\n}]\n```\n\n##Option: normalizeWhitespace\nIndicates whether the whitespace in text nodes should be normalized (= all whitespace should be replaced with single spaces). The default value is \"false\". \n\nThe following HTML will be used:\n\n```html\n<font>\n\t<br>this is the text\n<font>\n```\n\n###Example: true\n\n```javascript\n[{\n    type: 'tag',\n    name: 'font',\n    children: [{\n    \tdata: ' ',\n    \ttype: 'text'\n    }, {\n    \ttype: 'tag',\n    \tname: 'br'\n    }, {\n    \tdata: 'this is the text ',\n    \ttype: 'text'\n    }, {\n    \ttype: 'tag',\n    \tname: 'font'\n    }]\n}]\n```\n\n###Example: false\n\n```javascript\n[{\n    type: 'tag',\n    name: 'font',\n    children: [{\n    \tdata: '\\n\\t',\n    \ttype: 'text'\n    }, {\n    \ttype: 'tag',\n    \tname: 'br'\n    }, {\n    \tdata: 'this is the text\\n',\n    \ttype: 'text'\n    }, {\n    \ttype: 'tag',\n    \tname: 'font'\n    }]\n}]\n```\n\n##Option: withStartIndices\nIndicates whether a `startIndex` property will be added to nodes. When the parser is used in a non-streaming fashion, `startIndex` is an integer indicating the position of the start of the node in the document. The default value is \"false\".\n",
+  "readmeFilename": "readme.md",
+  "bugs": {
+    "url": "https://github.com/fb55/DomHandler/issues"
+  },
+  "homepage": "https://github.com/fb55/DomHandler",
+  "_id": "domhandler@2.3.0",
+  "_shasum": "2de59a0822d5027fabff6f032c2b25a2a8abe738",
+  "_resolved": "https://registry.npmjs.org/domhandler/-/domhandler-2.3.0.tgz",
+  "_from": "domhandler@>=2.3.0 <2.4.0"
+}
