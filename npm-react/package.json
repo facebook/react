@@ -10,10 +10,12 @@
   "license": "BSD-3-Clause",
   "files": [
     "addons.js",
-    "react.js",
     "addons/",
     "dist/",
-    "lib/"
+    "dom/",
+    "isomorphic.js",
+    "lib/",
+    "react.js"
   ],
   "main": "react.js",
   "repository": {
