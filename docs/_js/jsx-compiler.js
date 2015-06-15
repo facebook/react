@@ -8,10 +8,6 @@ var HelloMessage = React.createClass({\n\
 React.render(<HelloMessage name=\"John\" />, mountNode);\
 ";
 
-function transformer(code) {
-  return babel.transform(code).code;
-}
-
 var CompilerPlayground = React.createClass({
   render: function() {
     return (
@@ -19,7 +15,6 @@ var CompilerPlayground = React.createClass({
         <ReactPlayground
           codeText={HELLO_COMPONENT}
           renderCode={true}
-          transformer={transformer.bind(null)}
           showCompiledJSTab={false}
           showLineNumbers={true}
         />
