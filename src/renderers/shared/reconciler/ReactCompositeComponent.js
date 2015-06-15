@@ -22,7 +22,6 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactReconciler = require('ReactReconciler');
-var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
@@ -300,25 +299,6 @@ var ReactCompositeComponentMixin = {
     // TODO: inst.props = null;
     // TODO: inst.state = null;
     // TODO: inst.context = null;
-  },
-
-  /**
-   * Schedule a partial update to the props. Only used for internal testing.
-   *
-   * @param {object} partialProps Subset of the next props.
-   * @param {?function} callback Called after props are updated.
-   * @final
-   * @internal
-   */
-  _setPropsInternal: function(partialProps, callback) {
-    // This is a deoptimized path. We optimize for always having an element.
-    // This creates an extra internal element.
-    var element = this._pendingElement || this._currentElement;
-    this._pendingElement = ReactElement.cloneAndReplaceProps(
-      element,
-      assign({}, element.props, partialProps)
-    );
-    ReactUpdates.enqueueUpdate(this, callback);
   },
 
   /**
