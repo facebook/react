@@ -42,12 +42,12 @@ function isAttributeNameSafe(attributeName) {
   return false;
 }
 
-function shouldIgnoreValue(name, value) {
+function shouldIgnoreValue(propertyInfo, value) {
   return value == null ||
-    (DOMProperty.hasBooleanValue[name] && !value) ||
-    (DOMProperty.hasNumericValue[name] && isNaN(value)) ||
-    (DOMProperty.hasPositiveNumericValue[name] && (value < 1)) ||
-    (DOMProperty.hasOverloadedBooleanValue[name] && value === false);
+    (propertyInfo.hasBooleanValue && !value) ||
+    (propertyInfo.hasNumericValue && isNaN(value)) ||
+    (propertyInfo.hasPositiveNumericValue && (value < 1)) ||
+    (propertyInfo.hasOverloadedBooleanValue && value === false);
 }
 
 if (__DEV__) {
@@ -113,14 +113,15 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    if (DOMProperty.isStandardName.hasOwnProperty(name) &&
-        DOMProperty.isStandardName[name]) {
-      if (shouldIgnoreValue(name, value)) {
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      if (shouldIgnoreValue(propertyInfo, value)) {
         return '';
       }
-      var attributeName = DOMProperty.getAttributeName[name];
-      if (DOMProperty.hasBooleanValue[name] ||
-          (DOMProperty.hasOverloadedBooleanValue[name] && value === true)) {
+      var attributeName = propertyInfo.attributeName;
+      if (propertyInfo.hasBooleanValue ||
+          (propertyInfo.hasOverloadedBooleanValue && value === true)) {
         return attributeName + '=""';
       }
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
@@ -157,16 +158,17 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    if (DOMProperty.isStandardName.hasOwnProperty(name) &&
-        DOMProperty.isStandardName[name]) {
-      var mutationMethod = DOMProperty.getMutationMethod[name];
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
         mutationMethod(node, value);
-      } else if (shouldIgnoreValue(name, value)) {
+      } else if (shouldIgnoreValue(propertyInfo, value)) {
         this.deleteValueForProperty(node, name);
-      } else if (DOMProperty.mustUseAttribute[name]) {
-        var attributeName = DOMProperty.getAttributeName[name];
-        var namespace = DOMProperty.getAttributeNamespace[name];
+      } else if (propertyInfo.mustUseAttribute) {
+        var attributeName = propertyInfo.attributeName;
+        var namespace = propertyInfo.attributeNamespace;
         // `setAttribute` with objects becomes only `[object]` in IE8/9,
         // ('' + value) makes it output the correct toString()-value.
         if (namespace) {
@@ -175,10 +177,10 @@ var DOMPropertyOperations = {
           node.setAttribute(attributeName, '' + value);
         }
       } else {
-        var propName = DOMProperty.getPropertyName[name];
+        var propName = propertyInfo.propertyName;
         // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
         // property type before comparing; only `value` does and is string.
-        if (!DOMProperty.hasSideEffects[name] ||
+        if (!propertyInfo.hasSideEffects ||
             ('' + node[propName]) !== ('' + value)) {
           // Contrary to `setAttribute`, object properties are properly
           // `toString`ed by IE8/9.
@@ -210,20 +212,21 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    if (DOMProperty.isStandardName.hasOwnProperty(name) &&
-        DOMProperty.isStandardName[name]) {
-      var mutationMethod = DOMProperty.getMutationMethod[name];
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
         mutationMethod(node, undefined);
-      } else if (DOMProperty.mustUseAttribute[name]) {
-        node.removeAttribute(DOMProperty.getAttributeName[name]);
+      } else if (propertyInfo.mustUseAttribute) {
+        node.removeAttribute(propertyInfo.attributeName);
       } else {
-        var propName = DOMProperty.getPropertyName[name];
+        var propName = propertyInfo.propertyName;
         var defaultValue = DOMProperty.getDefaultValueForProperty(
           node.nodeName,
           propName
         );
-        if (!DOMProperty.hasSideEffects[name] ||
+        if (!propertyInfo.hasSideEffects ||
             ('' + node[propName]) !== defaultValue) {
           node[propName] = defaultValue;
         }

@@ -637,7 +637,7 @@ ReactDOMComponent.Mixin = {
           deleteListener(this._rootNodeID, propKey);
         }
       } else if (
-          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
         BackendIDOperations.deletePropertyByID(
           this._rootNodeID,
@@ -701,7 +701,7 @@ ReactDOMComponent.Mixin = {
           nextProp
         );
       } else if (
-          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
         BackendIDOperations.updatePropertyByID(
           this._rootNodeID,
