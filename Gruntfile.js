@@ -72,6 +72,9 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-tools:release', npmReactToolsTasks.buildRelease);
   grunt.registerTask('npm-react-tools:pack', npmReactToolsTasks.packRelease);
 
+  var npmReactDOMTasks = require('./grunt/tasks/npm-react-dom');
+  grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
+
   var gemReactSourceTasks = require('./grunt/tasks/gem-react-source');
   grunt.registerTask('gem-react-source:release', gemReactSourceTasks.buildRelease);
   grunt.registerTask('gem-react-source:pack', gemReactSourceTasks.packRelease);
@@ -224,6 +227,7 @@ module.exports = function(grunt) {
     'npm-react:pack',
     'npm-react-tools:release',
     'npm-react-tools:pack',
+    'npm-react-dom:pack',
     'compare_size',
   ]);
 

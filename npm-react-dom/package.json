@@ -1,0 +1,21 @@
+{
+  "name": "react-dom",
+  "version": "0.14.0-alpha3",
+  "description": "React package for working with the DOM.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "keywords": [
+    "react"
+  ],
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
+  "dependencies": {
+    "react": "^0.14.0-alpha3"
+  }
+}
