@@ -43,7 +43,7 @@ script:
         popd
       fi
     elif [ "$TEST_TYPE" = jest ]; then
-      ./node_modules/.bin/jest
+      node node_modules/jest-cli/bin/jest.js
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi
