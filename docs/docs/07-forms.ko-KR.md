@@ -28,6 +28,9 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
 
 모든 DOM 이벤트처럼 `onChange` prop은 모든 네이티브 컴포넌트에서 지원되며 일어난(bubbled) 변경 이벤트를 감시하는데 사용할 수 있습니다.
 
+> 주의:
+>
+> `<input>`, `<textarea>`에서는 `onChange`가 DOM의 [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) 이벤트 핸들러와 같은 기능을 제공하므로 일반적인 경우에는 `onChange`를 사용하세요.
 
 ## 제어되는(controlled) 컴포넌트
 
