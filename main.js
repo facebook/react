@@ -1,59 +1,38 @@
+/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
 'use strict';
 
-var visitors = require('./vendor/fbtransform/visitors');
-var transform = require('jstransform').transform;
-var typesSyntax = require('jstransform/visitors/type-syntax');
-var Buffer = require('buffer').Buffer;
+var jstransform = require('jstransform/simple');
+
+function transformWithDetails(code, opts) {
+  opts = opts || {};
+
+  // Copy out the values we need and make sure they are compatible with
+  // jstransform options. Always set react:true.
+  var options = {
+    react: true,
+    harmony: opts.harmony,
+    stripTypes: opts.stripTypes,
+    sourceMapInline: opts.sourceMap,
+    sourceFilename: opts.sourceFilename,
+    es6module: opts.es6module,
+    nonStrictEs6module: opts.nonStrictEs6module,
+    target: opts.target,
+  };
+
+  return jstransform.transform(code, options);
+}
 
 module.exports = {
   transform: function(input, options) {
-    var output = innerTransform(input, options);
-    var result = output.code;
-    if (options && options.sourceMap) {
-      var map = inlineSourceMap(
-        output.sourceMap,
-        input,
-        options.sourceFilename
-      );
-      result += '\n' + map;
-    }
-    return result;
+    return transformWithDetails(input, options).code;
   },
-  transformWithDetails: function(input, options) {
-    var output = innerTransform(input, options);
-    var result = {};
-    result.code = output.code;
-    if (options && options.sourceMap) {
-      result.sourceMap = output.sourceMap.toJSON();
-    }
-    return result;
-  }
+  transformWithDetails: transformWithDetails,
 };
-
-function innerTransform(input, options) {
-  options = options || {};
-
-  var visitorSets = ['react'];
-  if (options.harmony) {
-    visitorSets.push('harmony');
-  }
-  if (options.stripTypes) {
-    // Stripping types needs to happen before the other transforms
-    // unfortunately, due to bad interactions. For example,
-    // es6-rest-param-visitors conflict with stripping rest param type
-    // annotation
-    input = transform(typesSyntax.visitorList, input, options).code;
-  }
-
-  var visitorList = visitors.getVisitorsBySet(visitorSets);
-  return transform(visitorList, input, options);
-}
-
-function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
-  var json = sourceMap.toJSON();
-  json.sources = [sourceFilename];
-  json.sourcesContent = [sourceCode];
-  var base64 = Buffer(JSON.stringify(json)).toString('base64');
-  return '//# sourceMappingURL=data:application/json;base64,' +
-         base64;
-}

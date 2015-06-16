@@ -33,7 +33,7 @@ var Avatar = React.createClass({
 var ProfilePic = React.createClass({
   render: function() {
     return (
-      <img src={'http://graph.facebook.com/' + this.props.username + '/picture'} />
+      <img src={'https://graph.facebook.com/' + this.props.username + '/picture'} />
     );
   }
 });
@@ -41,7 +41,7 @@ var ProfilePic = React.createClass({
 var ProfileLink = React.createClass({
   render: function() {
     return (
-      <a href={'http://www.facebook.com/' + this.props.username}>
+      <a href={'https://www.facebook.com/' + this.props.username}>
         {this.props.username}
       </a>
     );
@@ -171,26 +171,7 @@ var MyComponent = React.createClass({
 });
 ```
 
-You can also key children by passing an object. The object keys will be used as `key` for each value. However it is important to remember that JavaScript does not guarantee the ordering of properties will be preserved. In practice browsers will preserve property order **except** for properties that can be parsed as a 32-bit unsigned integers. Numeric properties will be ordered sequentially and before other properties. If this happens React will render components out of order. This can be avoided by adding a string prefix to the key:
-
-```javascript
-  render: function() {
-    var items = {};
-
-    this.props.results.forEach(function(result) {
-      // If result.id can look like a number (consider short hashes), then
-      // object iteration order is not guaranteed. In this case, we add a prefix
-      // to ensure the keys are strings.
-      items['result-' + result.id] = <li>{result.text}</li>;
-    });
-
-    return (
-      <ol>
-        {items}
-      </ol>
-    );
-  }
-```
+You can also key children by passing a ReactFragment object. See [Keyed Fragments](create-fragment.html) for more details.
 
 ## Data Flow
 
@@ -199,7 +180,7 @@ In React, data flows from owner to owned component through `props` as discussed 
 
 ## A Note on Performance
 
-You may be thinking that it's expensive to react to changing data if there are a large number of nodes under an owner. The good news is that JavaScript is fast and `render()` methods tend to be quite simple, so in most applications this is extremely fast. Additionally, the bottleneck is almost always the DOM mutation and not JS execution and React will optimize this for you using batching and change detection.
+You may be thinking that it's expensive to change data if there are a large number of nodes under an owner. The good news is that JavaScript is fast and `render()` methods tend to be quite simple, so in most applications this is extremely fast. Additionally, the bottleneck is almost always the DOM mutation and not JS execution. React will optimize this for you using batching and change detection.
 
 However, sometimes you really want to have fine-grained control over your performance. In that case, simply override `shouldComponentUpdate()` to return false when you want React to skip processing of a subtree. See [the React reference docs](/react/docs/component-specs.html) for more information.
 

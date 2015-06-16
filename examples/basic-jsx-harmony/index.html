@@ -2,15 +2,15 @@
 <html>
   <head>
     <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
-    <title>Basic Example with JSX with Harmony</title>
+    <title>Basic Example with JSX and ES6 features</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
   <body>
-    <h1>Basic Example with JSX with Harmony</h1>
+    <h1>Basic Example with JSX and ES6 features</h1>
     <div id="container">
       <p>
         To install React, follow the instructions on
-        <a href="http://www.github.com/facebook/react/">GitHub</a>.
+        <a href="https://github.com/facebook/react/">GitHub</a>.
       </p>
       <p>
         If you can see this, React is not working right.
@@ -18,15 +18,15 @@
       </p>
     </div>
     <h4>Example Details</h4>
-    <p>This is written with JSX with Harmony (ES6) syntax and transformed in the browser.<p>
+    <p>This is written with JSX with Harmony (ES6) syntax and transformed in the browser.</p>
     <p>
       Learn more about React at
-      <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
+      <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
     <script src="../../build/react.js"></script>
     <script src="../../build/JSXTransformer.js"></script>
     <script type="text/jsx;harmony=true">
-      var ExampleApplication = React.createClass({
+      class ExampleApplication extends React.Component {
         render() {
           var elapsed = Math.round(this.props.elapsed  / 100);
           var seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0' );
@@ -35,7 +35,7 @@
 
           return <p>{message}</p>;
         }
-      });
+      }
       var start = new Date().getTime();
       setInterval(() => {
         React.render(

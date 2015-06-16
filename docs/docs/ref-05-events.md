@@ -112,10 +112,12 @@ For more information about the onChange event, see [Forms](/react/docs/forms.htm
 Event names:
 
 ```
-onClick onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave
-onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
+onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
+onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
+
+The `onMouseEnter` and `onMouseLeave` events propagate from the component being left to the one being entered instead of ordinary bubbling and do not have a capture phase.
 
 Properties:
 
@@ -138,9 +140,6 @@ boolean shiftKey
 
 
 ### Touch events
-
-To enable touch events, call `React.initializeTouchEvents(true)` before
-rendering any component.
 
 Event names:
 

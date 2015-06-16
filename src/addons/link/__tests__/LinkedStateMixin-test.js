@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -9,20 +9,17 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
-/*jshint evil:true */
 
 describe('LinkedStateMixin', function() {
   var LinkedStateMixin;
   var React;
-  var ReactLink;
   var ReactTestUtils;
 
   beforeEach(function() {
     LinkedStateMixin = require('LinkedStateMixin');
     React = require('React');
-    ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -36,7 +33,7 @@ describe('LinkedStateMixin', function() {
 
       render: function() {
         return <span>value is {this.state.value}</span>;
-      }
+      },
     });
     var component = ReactTestUtils.renderIntoDocument(<Component />);
     var link = component.linkState('value');

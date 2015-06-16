@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -9,7 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 var update = require('update');
 
@@ -42,7 +42,7 @@ describe('update', function() {
     expect(update([1, 4, 3], {$splice: [[1, 1, 2]]})).toEqual([1, 2, 3]);
     expect(update.bind(null, [], {$splice: 1})).toThrow(
       'Invariant Violation: update(): expected spec of $splice to be an ' +
-      'array of arrays; got 1. Did you forget to wrap your parameters in an '+
+      'array of arrays; got 1. Did you forget to wrap your parameters in an ' +
       'array?'
     );
     expect(update.bind(null, [], {$splice: [1]})).toThrow(
@@ -72,7 +72,7 @@ describe('update', function() {
   });
 
   it('should support apply', function() {
-    expect(update(2, {$apply: function(x) { return x * 2; }})).toEqual(4);
+    expect(update(2, {$apply: (x) => x * 2})).toEqual(4);
     expect(update.bind(null, 2, {$apply: 123})).toThrow(
       'Invariant Violation: update(): expected spec of $apply to be a ' +
       'function; got 123.'
@@ -82,7 +82,7 @@ describe('update', function() {
   it('should support deep updates', function() {
     expect(update({a: 'b', c: {d: 'e'}}, {c: {d: {$set: 'f'}}})).toEqual({
       a: 'b',
-      c: {d: 'f'}
+      c: {d: 'f'},
     });
   });
 
@@ -92,5 +92,11 @@ describe('update', function() {
       'that did not contain one of $push, $unshift, $splice, $set, $merge, ' +
       '$apply. Did you forget to include {$set: ...}?'
     );
+  });
+
+  it('should perform safe hasOwnProperty check', function() {
+    expect(update({}, {'hasOwnProperty': {$set: 'a'}})).toEqual({
+      'hasOwnProperty': 'a',
+    });
   });
 });

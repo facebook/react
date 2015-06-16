@@ -1,0 +1,53 @@
+# Map of short name to more information. `name` will be used but if you don't
+# want to use your real name, just use whatever. If url is included, your name
+# will be a link to the provided url.
+billandjing:
+  name: Bill Fisher and Jing Chen
+chenglou:
+  name: Cheng Lou
+  url: https://twitter.com/_chenglou
+Daniel15:
+  name: Daniel Lo Nigro
+  url: http://dan.cx/
+fisherwebdev:
+  name: Bill Fisher
+  url: https://twitter.com/fisherwebdev
+jgebhardt:
+  name: Jonas Gebhardt
+  url: https://twitter.com/jonasgebhardt
+josephsavona:
+  name: Joseph Savona
+  url: https://twitter.com/en_JS
+kmeht:
+  name: Kunal Mehta
+  url: https://github.com/kmeht
+LoukaN:
+  name: Lou Husson
+  url: https://twitter.com/loukan42
+matthewjohnston4:
+  name: Matthew Johnston
+  url: https://github.com/matthewathome
+petehunt:
+  name: Pete Hunt
+  url: https://twitter.com/floydophone
+schrockn:
+  name: Nick Schrock
+  url: https://twitter.com/schrockn
+sebmarkbage:
+  name: Sebastian Markbåge
+  url: https://twitter.com/sebmarkbage
+spicyj:
+  name: Ben Alpert
+  url: http://benalpert.com
+steveluscher:
+  name: Steven Luscher
+  url: https://twitter.com/steveluscher
+vjeux:
+  name: Vjeux
+  url: https://twitter.com/vjeux
+wincent:
+  name: Greg Hurrell
+  url: https://twitter.com/wincent
+zpao:
+  name: Paul O’Shannessy
+  url: https://twitter.com/zpao

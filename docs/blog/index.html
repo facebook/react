@@ -9,12 +9,7 @@ sectionid: blog
   <div class="inner-content">
     {% for page in paginator.posts %}
       <div class="post-list-item">
-        <h1><a href="/react{{ page.url }}">{{ page.title }}</a></h1>
-        <p class="meta">{{ page.date | date: "%B %e, %Y" }} by {{ page.author }}</p>
-        <hr />
-        <div class="post">
-         {{ page.content }}
-        </div>
+        {% include blog_post.html page=page content=page.content%}
       </div>
     {% endfor %}
 

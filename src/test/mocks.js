@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -69,7 +69,7 @@ function makeComponent(metadata) {
 
         instances.push(this);
         calls.push(Array.prototype.slice.call(arguments));
-        if (this instanceof arguments.callee) {
+        if (this instanceof f) {
           // This is probably being called as a constructor
           for (var slot in prototype) {
             // Copy prototype methods to the instance to make
@@ -106,8 +106,8 @@ function makeComponent(metadata) {
         }
 
         // Otherwise use prototype implementation
-        if (returnValue === undefined && arguments.callee._protoImpl) {
-          return arguments.callee._protoImpl.apply(this, arguments);
+        if (returnValue === undefined && f._protoImpl) {
+          return f._protoImpl.apply(this, arguments);
         }
 
         return returnValue;
@@ -116,8 +116,8 @@ function makeComponent(metadata) {
       f._isMockFunction = true;
 
       f.mock = {
-        calls : calls,
-        instances : instances
+        calls: calls,
+        instances: instances
       };
 
       f.mockClear = function() {
@@ -218,7 +218,7 @@ function _getMetadata(component, _refs) {
     return null;
   }
 
-  var metadata = {type : type};
+  var metadata = {type: type};
   if (type == 'constant') {
     metadata.value = component;
     return metadata;

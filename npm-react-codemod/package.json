@@ -1,0 +1,32 @@
+{
+  "name": "react-codemod",
+  "version": "2.0.0",
+  "description": "React codemod scripts",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react"
+  },
+  "scripts": {
+    "build": "rm -rf build; babel transforms/ --out-dir=build/",
+    "test": "jest",
+    "prepublish": "npm run build"
+  },
+  "bin": {
+    "react-codemod": "./react-codemod"
+  },
+  "dependencies": {
+    "jscodeshift": "^0.1.0"
+  },
+  "devDependencies": {
+    "babel": "^4.7.16",
+    "babel-jest": "^4.0.0",
+    "jest-cli": "^0.4.0"
+  },
+  "jest": {
+    "scriptPreprocessor": "./node_modules/babel-jest",
+    "testPathDirs": [
+      "test"
+    ]
+  }
+}

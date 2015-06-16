@@ -1,11 +1,10 @@
-/* jshint evil: true */
-
+/*eslint-disable consistent-return*/
 'use strict';
 
-var grunt = require("grunt");
+var grunt = require('grunt');
 var wd = require('wd');
 
-module.exports = function task(getJSReport){
+module.exports = function task(getJSReport) {
   var config = this.data;
   var taskSucceeded = this.async();
   getJSReport = getJSReport.bind(this, config, wd);
@@ -19,7 +18,7 @@ module.exports = function task(getJSReport){
       desiredCapabilities[key] = config.desiredCapabilities[key];
     });
   }
-  grunt.verbose.writeln("desiredCapabilities", JSON.stringify(desiredCapabilities));
+  grunt.verbose.writeln('desiredCapabilities', JSON.stringify(desiredCapabilities));
 
   var browser = wd.promiseChainRemote(config.webdriver.remote);
 
@@ -38,18 +37,23 @@ module.exports = function task(getJSReport){
     .init(desiredCapabilities)
     .then(config.onStart && config.onStart.bind(config, browser))
     .get(config.url)
-    .then(function(){return browser;})
+    .then(function() {
+      return browser;
+    })
     .then(getJSReport)
-    .then(function(data){ results = data; })
-    .fail(function(error){
+    .then(function(data) {
+      results = data;
+    })
+    .fail(function(error) {
       grunt.log.error(error);
       return browser
         .eval('document.documentElement.innerText || document.documentElement.textContent')
         .then(grunt.verbose.writeln.bind(grunt.verbose))
-        .then(function(){ throw error; })
-      ;
+        .then(function() {
+          throw error;
+        });
     })
-    .finally(function(){
+    .finally(function() {
       if (grunt.option('webdriver-keep-open')) {
         return;
       }

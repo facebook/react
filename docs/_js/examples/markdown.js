@@ -1,12 +1,10 @@
 var MARKDOWN_COMPONENT = `
-var converter = new Showdown.converter();
-
 var MarkdownEditor = React.createClass({
   getInitialState: function() {
     return {value: 'Type some *markdown* here!'};
   },
   handleChange: function() {
-    this.setState({value: this.refs.textarea.getDOMNode().value});
+    this.setState({value: React.findDOMNode(this.refs.textarea).value});
   },
   render: function() {
     return (
@@ -20,7 +18,7 @@ var MarkdownEditor = React.createClass({
         <div
           className="content"
           dangerouslySetInnerHTML={{
-            __html: converter.makeHtml(this.state.value)
+            __html: marked(this.state.value, {sanitize: true})
           }}
         />
       </div>

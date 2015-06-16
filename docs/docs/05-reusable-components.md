@@ -6,7 +6,7 @@ prev: multiple-components.html
 next: transferring-props.html
 ---
 
-When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, fewer bugs, and fewer bytes down the wire.
+When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc.) into reusable components with well-defined interfaces. That way, the next time you need to build some UI, you can write much less code. This means faster development time, fewer bugs, and fewer bytes down the wire.
 
 
 ## Prop Validation
@@ -26,7 +26,7 @@ React.createClass({
     optionalString: React.PropTypes.string,
 
     // Anything that can be rendered: numbers, strings, elements or an array
-    // containing these types.
+    // (or fragment) containing these types.
     optionalNode: React.PropTypes.node,
 
     // A React element.
@@ -100,7 +100,7 @@ The result of `getDefaultProps()` will be cached and used to ensure that `this.p
 
 ## Transferring Props: A Shortcut
 
-A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
+A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
 var CheckLink = React.createClass({
@@ -142,7 +142,7 @@ var MyComponent = React.createClass({
 
 ## Mixins
 
-Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
+Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
 
 One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
@@ -155,7 +155,7 @@ var SetIntervalMixin = {
     this.intervals.push(setInterval.apply(null, arguments));
   },
   componentWillUnmount: function() {
-    this.intervals.map(clearInterval);
+    this.intervals.forEach(clearInterval);
   }
 };
 
@@ -187,3 +187,48 @@ React.render(
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called. Methods defined on mixins run in the order mixins were listed, followed by a method call on the component.
 
+## ES6 Classes
+
+You may also define your React classes as a plain JavaScript class. For example using ES6 class syntax:
+
+```javascript
+class HelloMessage extends React.Component {
+  render() {
+    return <div>Hello {this.props.name}</div>;
+  }
+}
+React.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+The API is similar to `React.createClass` with the exception of `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
+
+Another difference is that `propTypes` and `defaultProps` are defined as properties on the constructor instead of in the class body.
+
+```javascript
+export class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: props.initialCount};
+  }
+  tick() {
+    this.setState({count: this.state.count + 1});
+  }
+  render() {
+    return (
+      <div onClick={this.tick.bind(this)}>
+        Clicks: {this.state.count}
+      </div>
+    );
+  }
+}
+Counter.propTypes = { initialCount: React.PropTypes.number };
+Counter.defaultProps = { initialCount: 0 };
+```
+
+### No Autobinding
+
+Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`.
+
+### No Mixins
+
+Unfortunately ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes. Instead, we're working on making it easier to support such use cases without resorting to mixins.

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -10,9 +10,10 @@
  * @providesModule ReactTransitionChildMapping
  */
 
-"use strict";
+'use strict';
 
 var ReactChildren = require('ReactChildren');
+var ReactFragment = require('ReactFragment');
 
 var ReactTransitionChildMapping = {
   /**
@@ -23,9 +24,12 @@ var ReactTransitionChildMapping = {
    * @return {object} Mapping of key to child
    */
   getChildMapping: function(children) {
-    return ReactChildren.map(children, function(child) {
+    if (!children) {
+      return children;
+    }
+    return ReactFragment.extract(ReactChildren.map(children, function(child) {
       return child;
-    });
+    }));
   },
 
   /**
@@ -93,7 +97,7 @@ var ReactTransitionChildMapping = {
     }
 
     return childMapping;
-  }
+  },
 };
 
 module.exports = ReactTransitionChildMapping;

@@ -30,7 +30,7 @@ thead time title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle defs ellipse g line linearGradient mask path pattern polygon polyline
+circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
 radialGradient rect stop svg text tspan
 ```
 
@@ -53,31 +53,32 @@ These standard attributes are supported:
 
 ```
 accept acceptCharset accessKey action allowFullScreen allowTransparency alt
-async autoComplete autoPlay cellPadding cellSpacing charSet checked classID
-className cols colSpan content contentEditable contextMenu controls coords
-crossOrigin data dateTime defer dir disabled download draggable encType form
-formAction formEncType formMethod formNoValidate formTarget frameBorder height
-hidden href hrefLang htmlFor httpEquiv icon id label lang list loop manifest
-marginHeight marginWidth max maxLength media mediaGroup method min multiple
-muted name noValidate open pattern placeholder poster preload radioGroup
-readOnly rel required role rows rowSpan sandbox scope scrolling seamless
-selected shape size sizes span spellCheck src srcDoc srcSet start step style
-tabIndex target title type useMap value width wmode
+async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet challenge
+checked classID className colSpan cols content contentEditable contextMenu controls
+coords crossOrigin data dateTime defer dir disabled download draggable encType
+form formAction formEncType formMethod formNoValidate formTarget frameBorder
+headers height hidden high href hrefLang htmlFor httpEquiv icon id keyParams keyType
+label lang list loop low manifest marginHeight marginWidth max maxLength media
+mediaGroup method min multiple muted name noValidate open optimum pattern placeholder
+poster preload radioGroup readOnly rel required role rowSpan rows sandbox scope
+scoped scrolling seamless selected shape size sizes span spellCheck src srcDoc
+srcSet start step style tabIndex target title type useMap value width wmode
 ```
 
 In addition, the following non-standard attributes are supported:
 
 - `autoCapitalize autoCorrect` for Mobile Safari.
 - `property` for [Open Graph](http://ogp.me/) meta tags.
-- `itemProp itemScope itemType` for [HTML5 microdata](http://schema.org/docs/gs.html).
+- `itemProp itemScope itemType itemRef itemID` for [HTML5 microdata](http://schema.org/docs/gs.html).
+- `unselectable` for Internet Explorer.
 
 There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting HTML strings into a component.
 
 ### SVG Attributes
 
 ```
-cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
-gradientUnits markerEnd markerMid markerStart offset opacity
+clipPath cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy
+gradientTransform gradientUnits markerEnd markerMid markerStart offset opacity
 patternContentUnits patternUnits points preserveAspectRatio r rx ry
 spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
 strokeOpacity strokeWidth textAnchor transform version viewBox x1 x2 x y1 y2 y

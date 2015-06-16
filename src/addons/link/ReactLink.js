@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 /**
  * ReactLink encapsulates a common pattern in which a component wants to modify
@@ -59,13 +59,13 @@ function createLinkTypeChecker(linkType) {
     value: typeof linkType === 'undefined' ?
       React.PropTypes.any.isRequired :
       linkType.isRequired,
-    requestChange: React.PropTypes.func.isRequired
+    requestChange: React.PropTypes.func.isRequired,
   };
   return React.PropTypes.shape(shapes);
 }
 
 ReactLink.PropTypes = {
-  link: createLinkTypeChecker
+  link: createLinkTypeChecker,
 };
 
 module.exports = ReactLink;

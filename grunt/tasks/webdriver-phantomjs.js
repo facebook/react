@@ -2,17 +2,17 @@
 
 var grunt = require('grunt');
 
-module.exports = function(){
+module.exports = function() {
   var onReadyCallback = this.async();
 
-  var phantomjs = require("phantomjs").path;
-  var child_process = require('child_process');
+  var phantomjs = require('phantomjs').path;
+  var childProcess = require('child_process');
   var config = this.data || {};
 
-  var args = ["--webdriver=" + (config.port || 9515)];
+  var args = ['--webdriver=' + (config.port || 9515)];
   grunt.verbose.writeln('phantomjs START path:%s args:%s', phantomjs, args);
 
-  var child = child_process.spawn(phantomjs, args);
+  var child = childProcess.spawn(phantomjs, args);
   process.on('exit', function() {
     child.kill();
   });
@@ -29,7 +29,7 @@ module.exports = function(){
   });
 
   function verboseWrite(chunk) {
-    if (onReadyCallback && chunk.toString().indexOf('running on port') != -1) {
+    if (onReadyCallback && chunk.toString().indexOf('running on port') !== -1) {
       grunt.verbose.writeln('phantomjs STARTED');
       onReadyCallback();
       onReadyCallback = null;

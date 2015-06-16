@@ -17,8 +17,7 @@ id: home
     <div class="marketing-col">
       <h3>Virtual DOM</h3>
       <p>
-        React uses a <i>virtual DOM</i> diff implementation for ultra-high performance. It can also
-        render on the server using Node.js &mdash; no heavy browser DOM required.
+        React abstracts away the DOM from you, giving a simpler programming model and better performance. React can also render on the server using Node, and it can power native apps using <a href="https://facebook.github.io/react-native/">React Native</a>.
       </p>
     </div>
     <div class="marketing-col">
@@ -73,16 +72,17 @@ id: home
       <h3>A Component Using External Plugins</h3>
       <p>
         React is flexible and provides hooks that allow you to interface with
-        other libraries and frameworks. This example uses Showdown, an external
+        other libraries and frameworks. This example uses **marked**, an external
         Markdown library, to convert the textarea's value in real-time.
       </p>
       <div id="markdownExample"></div>
     </div>
   </div>
-  <script type="text/javascript" src="js/examples/hello.js"></script>
-  <script type="text/javascript" src="js/examples/timer.js"></script>
-  <script type="text/javascript" src="js/examples/todo.js"></script>
-  <script type="text/javascript" src="js/examples/markdown.js"></script>
+  <script type="text/javascript" src="/react/js/marked.min.js"></script>
+  <script type="text/javascript" src="/react/js/examples/hello.js"></script>
+  <script type="text/javascript" src="/react/js/examples/timer.js"></script>
+  <script type="text/javascript" src="/react/js/examples/todo.js"></script>
+  <script type="text/javascript" src="/react/js/examples/markdown.js"></script>
 </section>
 <hr class="home-divider" />
 <section class="home-bottom-section">

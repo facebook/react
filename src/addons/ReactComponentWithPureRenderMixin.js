@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -9,9 +9,9 @@
 * @providesModule ReactComponentWithPureRenderMixin
 */
 
-"use strict";
+'use strict';
 
-var shallowEqual = require('shallowEqual');
+var shallowCompare = require('shallowCompare');
 
 /**
  * If your React component's render function is "pure", e.g. it will render the
@@ -39,9 +39,8 @@ var shallowEqual = require('shallowEqual');
  */
 var ReactComponentWithPureRenderMixin = {
   shouldComponentUpdate: function(nextProps, nextState) {
-    return !shallowEqual(this.props, nextProps) ||
-           !shallowEqual(this.state, nextState);
-  }
+    return shallowCompare(this, nextProps, nextState);
+  },
 };
 
 module.exports = ReactComponentWithPureRenderMixin;

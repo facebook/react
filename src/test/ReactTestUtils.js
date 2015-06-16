@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -9,13 +9,14 @@
  * @providesModule ReactTestUtils
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactElement = require('ReactElement');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -25,6 +26,8 @@ var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
 var assign = require('Object.assign');
+var emptyObject = require('emptyObject');
+var findDOMNode = require('findDOMNode');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -64,7 +67,7 @@ var ReactTestUtils = {
   isDOMComponent: function(inst) {
     // TODO: Fix this heuristic. It's just here because composites can currently
     // pretend to be DOM components.
-    return !!(inst && inst.getDOMNode && inst.tagName);
+    return !!(inst && inst.tagName && inst.getDOMNode);
   },
 
   isDOMComponentElement: function(inst) {
@@ -74,13 +77,23 @@ var ReactTestUtils = {
   },
 
   isCompositeComponent: function(inst) {
+    if (ReactTestUtils.isDOMComponent(inst)) {
+      // Accessing inst.setState warns; just return false as that'll be what
+      // this returns when we have DOM nodes as refs directly
+      return false;
+    }
     return typeof inst.render === 'function' &&
            typeof inst.setState === 'function';
   },
 
   isCompositeComponentWithType: function(inst, type) {
+    var internalInstance = ReactInstanceMap.get(inst);
+    var constructor = internalInstance
+      ._currentElement
+      .type;
+
     return !!(ReactTestUtils.isCompositeComponent(inst) &&
-             (inst.constructor === type));
+             (constructor === type));
   },
 
   isCompositeComponentElement: function(inst) {
@@ -97,8 +110,13 @@ var ReactTestUtils = {
   },
 
   isCompositeComponentElementWithType: function(inst, type) {
+    var internalInstance = ReactInstanceMap.get(inst);
+    var constructor = internalInstance
+      ._currentElement
+      .type;
+
     return !!(ReactTestUtils.isCompositeComponentElement(inst) &&
-             (inst.constructor === type));
+             (constructor === type));
   },
 
   getRenderedChildOfCompositeComponent: function(inst) {
@@ -152,11 +170,14 @@ var ReactTestUtils = {
    */
   scryRenderedDOMComponentsWithClass: function(root, className) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      var instClassName = inst.props.className;
-      return ReactTestUtils.isDOMComponent(inst) && (
-        instClassName &&
-        (' ' + instClassName + ' ').indexOf(' ' + className + ' ') !== -1
-      );
+      if (ReactTestUtils.isDOMComponent(inst)) {
+        var instClassName = React.findDOMNode(inst).className;
+        return (
+          instClassName &&
+          (('' + instClassName).split(/\s+/)).indexOf(className) !== -1
+        );
+      }
+      return false;
     });
   },
 
@@ -170,7 +191,7 @@ var ReactTestUtils = {
     var all =
       ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
     if (all.length !== 1) {
-      throw new Error('Did not find exactly one match '+
+      throw new Error('Did not find exactly one match ' +
         '(found: ' + all.length + ') for class:' + className
       );
     }
@@ -292,7 +313,7 @@ var ReactTestUtils = {
       fakeNativeEvent) {
     ReactTestUtils.simulateNativeEventOnNode(
       topLevelType,
-      comp.getDOMNode(),
+      findDOMNode(comp),
       fakeNativeEvent
     );
   },
@@ -309,66 +330,6 @@ var ReactTestUtils = {
     return new ReactShallowRenderer();
   },
 
-  jasmineMatchers: {
-    /**
-    * Expect function to perform a console.warn.
-    * If `expectation` is a number, we expect the function to make `expectation` calls to warn.
-    * If `expectation` is a string, we expect that string to appear in the warn output.
-    **/
-    toWarn: function(expectation) {
-      var mocks = require('mocks');
-      var warn = console.warn;
-      console.warn = mocks.getMockFunction();
-      try {
-        this.actual();
-        var consoleLog = console.warn.mock.calls;
-        var result = { pass: false };
-        if (typeof expectation === 'number') {
-          result.pass = consoleLog.length === expectation;
-        } else {
-          // TODO: We may want to additionally handle a javascript regex
-          for (var i = 0; i < consoleLog.length; i++) {
-            if (consoleLog[i][0].indexOf(expectation) >= 0) {
-              result.pass = true;
-            }
-          }
-        }
-
-        this.message = function() {
-          if (result.pass) {
-            if (typeof expectation === 'number') {
-              return 'Expected [' + consoleLog + '].length=' +
-                consoleLog.length + ' NOT to equal expectation (' +
-                expectation + ').';
-            }
-            if (typeof expectation === 'string') {
-              return 'Expected [' + consoleLog +
-                '] NOT to contain expectation (' +
-                expectation + ').';
-            }
-          } else {
-            if (typeof expectation === 'number') {
-              return 'Expected [' + consoleLog + '].length=' +
-                consoleLog.length + ' to equal expectation (' +
-                expectation + ').';
-            }
-            if (typeof expectation === 'string') {
-              return 'Expected [' + consoleLog +
-                '] to contain expectation (' +
-                expectation + ').';
-            }
-          }
-          throw new Error('Assert not reached, unknown expectation type: ' + (typeof expectation));
-        };
-
-        return result.pass;
-      }
-      finally {
-        console.warn = warn;
-      }
-    }
-  },
-
   Simulate: null,
   SimulateNative: {}
 };
@@ -381,27 +342,70 @@ var ReactShallowRenderer = function() {
 };
 
 ReactShallowRenderer.prototype.getRenderOutput = function() {
-  return (this._instance && this._instance._renderedComponent) || null;
+  return (
+    (this._instance && this._instance._renderedComponent &&
+     this._instance._renderedComponent._renderedOutput)
+    || null
+  );
 };
 
-var ShallowComponentWrapper = function(inst) {
-  this._instance = inst;
+var NoopInternalComponent = function(element) {
+  this._renderedOutput = element;
+  this._currentElement = element === null || element === false ?
+    ReactEmptyComponent.emptyElement :
+    element;
 };
+
+NoopInternalComponent.prototype = {
+
+  mountComponent: function() {
+  },
+
+  receiveComponent: function(element) {
+    this._renderedOutput = element;
+    this._currentElement = element === null || element === false ?
+      ReactEmptyComponent.emptyElement :
+      element;
+  },
+
+  unmountComponent: function() {
+  }
+
+};
+
+var ShallowComponentWrapper = function() { };
 assign(
   ShallowComponentWrapper.prototype,
-  ReactCompositeComponent.ShallowMixin
+  ReactCompositeComponent.Mixin, {
+    _instantiateReactComponent: function(element) {
+      return new NoopInternalComponent(element);
+    },
+    _replaceNodeWithMarkupByID: function() {},
+    _renderValidatedComponent:
+      ReactCompositeComponent.Mixin.
+        _renderValidatedComponentWithoutOwnerOrContext
+  }
 );
 
 ReactShallowRenderer.prototype.render = function(element, context) {
+  if (!context) {
+    context = emptyObject;
+  }
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
   this._render(element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
 };
 
+ReactShallowRenderer.prototype.unmount = function() {
+  if (this._instance) {
+    this._instance.unmountComponent();
+  }
+};
+
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
   if (!this._instance) {
     var rootID = ReactInstanceHandles.createReactRootID();
-    var instance = new ShallowComponentWrapper(new element.type(element.props));
+    var instance = new ShallowComponentWrapper(element.type);
     instance.construct(element);
 
     instance.mountComponent(rootID, transaction, context);
@@ -424,22 +428,30 @@ function makeSimulator(eventType) {
   return function(domComponentOrNode, eventData) {
     var node;
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
-      node = domComponentOrNode.getDOMNode();
+      node = findDOMNode(domComponentOrNode);
     } else if (domComponentOrNode.tagName) {
       node = domComponentOrNode;
     }
+
+    var dispatchConfig =
+      ReactBrowserEventEmitter.eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
     var event = new SyntheticEvent(
-      ReactBrowserEventEmitter.eventNameDispatchConfigs[eventType],
+      dispatchConfig,
       ReactMount.getID(node),
       fakeNativeEvent
     );
     assign(event, eventData);
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+
+    if (dispatchConfig.phasedRegistrationNames) {
+      EventPropagators.accumulateTwoPhaseDispatches(event);
+    } else {
+      EventPropagators.accumulateDirectDispatches(event);
+    }
 
     ReactUpdates.batchedUpdates(function() {
       EventPluginHub.enqueueEvents(event);

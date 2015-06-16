@@ -7,7 +7,7 @@
 
 @mixin code-typography {
   font-family: 'source-code-pro', Menlo, Consolas, 'Courier New', monospace;
-  font-size: 0.8em;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -76,6 +76,10 @@ li {
   margin-left: 20px;
 }
 
+li + li {
+  margin-top: 10px;
+}
+
 // Make header navigation linkable and on the screen. Used in documentation and
 // blog posts.
 h1, h2, h3, h4, h5, h6 {
@@ -111,25 +115,30 @@ h1, h2, h3, h4, h5, h6 {
     text-decoration: none;
   }
 
-  .nav-site {
+  .nav-site-internal {
+    margin: 0 0 0 20px;
+  }
+
+  .nav-site-external {
     float: right;
     margin: 0;
+  }
 
+  .nav-site {
     li {
       margin: 0;
     }
 
     a {
-      padding: 0 8px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      box-sizing: content-box;
+      padding: 0 10px;
       line-height: $navHeight;
       display: inline-block;
       height: $navHeight;
-      color: $mediumTextColor;
+      color: #ddd;
 
       &:hover {
-        color: $lightTextColor;
+        color: #fff;
       }
 
       &.active {
@@ -154,7 +163,8 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   ul {
-    display: inline;
+    display: inline-block;
+    vertical-align: top;
   }
 
   li {
@@ -416,6 +426,12 @@ section.black content {
     border-left: 5px solid #f7ebc6;
   }
 
+  h2 > code {
+    font-size: inherit;
+    line-height: inherit;
+    color: #555;
+    background-color: rgba(0,0,0,0.04);
+  }
 }
 
 /**
@@ -608,8 +624,8 @@ div.CodeMirror pre, div.CodeMirror-linenumber, code {
   @include code-typography;
 }
 
-div.CodeMirror-linenumber:after {
-  content: '.';
+div.CodeMirror-linenumber {
+  text-align: right;
 }
 
 .CodeMirror, div.CodeMirror-gutters, div.highlight {
@@ -682,6 +698,10 @@ p code {
 .MarkdownEditor textarea {
   width: 100%;
   height: 100px
+}
+
+.MarkdownEditor .content {
+  white-space: pre-wrap;
 }
 
 .hll {
@@ -789,6 +809,7 @@ p code {
 // Twitter embeds. Need to !important because they inline margin on the iframe.
 div[data-twttr-id] iframe {
   margin: 10px auto !important;
+  width: 100% !important;
 }
 
 /* Acknowledgements */

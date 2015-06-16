@@ -1,6 +1,6 @@
 # react
 
-An npm package to get you immediate access to [React](http://facebook.github.io/react/),
+An npm package to get you immediate access to [React](https://facebook.github.io/react/),
 without also requiring the JSX transformer. This is especially useful for cases where you
 want to [`browserify`](https://github.com/substack/node-browserify) your module using
 `React`.
@@ -14,7 +14,10 @@ To use React in production mode, set the environment variable `NODE_ENV` to `pro
 ```js
 var React = require('react');
 
-// You can also access ReactWithAddons.
-var React = require('react/addons');
+// Addons can be accessed individually from the "addons" directory.
+var createFragment = require('react/addons/createFragment');
+var immutabilityHelpers = require('react/addons/update');
+var CSSTransitionGroup = require('react/addons/CSSTransitionGroup');
 ```
 
+For a complete list of addons visit the [addons documentation page](https://facebook.github.io/react/docs/addons.html).

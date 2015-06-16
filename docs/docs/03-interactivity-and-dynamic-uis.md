@@ -40,8 +40,6 @@ React.render(
 
 With React you simply pass your event handler as a camelCased prop similar to how you'd do it in normal HTML. React ensures that all events behave identically in IE8 and above by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with [the W3C spec](http://www.w3.org/TR/DOM-Level-3-Events/), regardless of which browser you're using.
 
-If you'd like to use React on a touch device such as a phone or tablet, simply call `React.initializeTouchEvents(true);` to enable touch event handling.
-
 
 ## Under the Hood: Autobinding and Event Delegation
 
@@ -83,4 +81,4 @@ A common pattern is to create several stateless components that just render data
 
 * **Computed data:** Don't worry about precomputing values based on state — it's easier to ensure that your UI is consistent if you do all computation within `render()`. For example, if you have an array of list items in state and you want to render the count as a string, simply render `this.state.listItems.length + ' list items'` in your `render()` method rather than storing it on state.
 * **React components:** Build them in `render()` based on underlying props and state.
-* **Duplicated data from props:** Try to use props as the source of truth where possible. One valid use to store props in state is to be able to know it's previous values, because props can change over time.
+* **Duplicated data from props:** Try to use props as the source of truth where possible. One valid use to store props in state is to be able to know its previous values, because props can change over time.

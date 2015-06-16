@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014, Facebook, Inc.
+ * Copyright 2013-2015, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -10,7 +10,7 @@
  * @providesModule ReactCSSTransitionGroupChild
  */
 
-"use strict";
+'use strict';
 
 var React = require('React');
 
@@ -18,6 +18,7 @@ var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');
+var warning = require('warning');
 
 // We don't remove the element from the DOM until we receive an animationend or
 // transitionend event. If the user screws up and forgets to add an animation
@@ -31,11 +32,13 @@ var noEventListener = null;
 
 if (__DEV__) {
   noEventListener = function() {
-    console.warn(
+    warning(
+      false,
       'transition(): tried to perform an animation without ' +
       'an animationend or transitionend event after timeout (' +
-      NO_EVENT_TIMEOUT + 'ms). You should either disable this ' +
-      'transition in JS or add a CSS animation/transition.'
+      '%sms). You should either disable this ' +
+      'transition in JS or add a CSS animation/transition.',
+      NO_EVENT_TIMEOUT
     );
   };
 }
@@ -44,7 +47,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   displayName: 'ReactCSSTransitionGroupChild',
 
   transition: function(animationType, finishCallback) {
-    var node = this.getDOMNode();
+    var node = React.findDOMNode(this);
     var className = this.props.name + '-' + animationType;
     var activeClassName = className + '-active';
     var noEventTimeout = null;
@@ -64,7 +67,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
       // Usually this optional callback is used for informing an owner of
       // a leave animation and telling it to remove the child.
-      finishCallback && finishCallback();
+      if (finishCallback) {
+        finishCallback();
+      }
     };
 
     ReactTransitionEvents.addEndEventListener(node, endListener);
@@ -90,7 +95,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   flushClassNameQueue: function() {
     if (this.isMounted()) {
       this.classNameQueue.forEach(
-        CSSCore.addClass.bind(CSSCore, this.getDOMNode())
+        CSSCore.addClass.bind(CSSCore, React.findDOMNode(this))
       );
     }
     this.classNameQueue.length = 0;
@@ -133,7 +138,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
   render: function() {
     return onlyChild(this.props.children);
-  }
+  },
 });
 
 module.exports = ReactCSSTransitionGroupChild;
