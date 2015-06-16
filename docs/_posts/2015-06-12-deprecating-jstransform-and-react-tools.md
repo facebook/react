@@ -21,6 +21,8 @@ We've been working with the Babel team as we started making use of it and we're 
 
 As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork ([esprima-fb](https://github.com/facebook/esprima/)). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parser, we encourage you to look into using one of those.
 
+Alternatively, if you need to parse JSX, take a look at [acorn](https://github.com/marijnh/acorn) parser in combination with [acorn-jsx](https://github.com/RReverser/acorn-jsx) plugin which is used inside of Babel and thus always supports the latest syntax.
+
 ### JSXTransformer
 JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for `<script>` tags with `type="text/jsx"` and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with [a nearly identical tool](https://babeljs.io/docs/usage/browser/), which has already been integrated into [JS Bin](https://jsbin.com/).
 
