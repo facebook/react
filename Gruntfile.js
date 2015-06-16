@@ -89,10 +89,6 @@ module.exports = function(grunt) {
     'build-modules',
     'browserify:addons',
   ]);
-  grunt.registerTask('build:transformer', [
-    'build-modules',
-    'browserify:transformer',
-  ]);
   grunt.registerTask('build:min', [
     'build-modules',
     'version-check',
@@ -121,7 +117,6 @@ module.exports = function(grunt) {
     'build-modules',
     'version-check',
     'browserify:basic',
-    'browserify:transformer',
     'browserify:addons',
     'browserify:min',
     'browserify:addonsMin',
