@@ -6,7 +6,6 @@ sudo: false
 cache:
   directories:
   - docs/vendor/bundle
-  - node_modules
 before_install:
 - |
     if [ "$TEST_TYPE" != build_website ] && \
