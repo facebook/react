@@ -125,6 +125,8 @@
 <p>We&#39;ve been working with the Babel team as we started making use of it and we&#39;re confident that it will be the right tool to use with React.</p>
 <h2><a class="anchor" name="other-deprecations"></a>Other Deprecations <a class="hash-link" href="#other-deprecations">#</a></h2><h3><a class="anchor" name="esprima-fb"></a>esprima-fb <a class="hash-link" href="#esprima-fb">#</a></h3>
 <p>As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork (<a href="https://github.com/facebook/esprima/">esprima-fb</a>). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parser, we encourage you to look into using one of those.</p>
+
+<p>Alternatively, if you need to parse JSX, take a look at <a href="https://github.com/marijnh/acorn">acorn</a> parser in combination with <a href="https://github.com/RReverser/acorn-jsx">acorn-jsx</a> plugin which is used inside of Babel and thus always supports the latest syntax.</p>
 <h3><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h3>
 <p>JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for <code>&lt;script&gt;</code> tags with <code>type=&quot;text/jsx&quot;</code> and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with <a href="https://babeljs.io/docs/usage/browser/">a nearly identical tool</a>, which has already been integrated into <a href="https://jsbin.com/">JS Bin</a>.</p>
 
