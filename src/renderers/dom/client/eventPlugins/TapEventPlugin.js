@@ -101,7 +101,8 @@ var TapEventPlugin = {
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent) {
+      nativeEvent,
+      nativeEventTarget) {
     if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
       return null;
     }
@@ -122,7 +123,8 @@ var TapEventPlugin = {
       event = SyntheticUIEvent.getPooled(
         eventTypes.touchTap,
         topLevelTargetID,
-        nativeEvent
+        nativeEvent,
+        nativeEventTarget
       );
     }
     if (isStartish(topLevelType)) {

@@ -23,6 +23,8 @@ var assign = require('Object.assign');
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
 
+var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
+
 /**
  * Finds the parent React component of `node`.
  *
@@ -60,6 +62,17 @@ PooledClass.addPoolingTo(
 );
 
 function handleTopLevelImpl(bookKeeping) {
+  if (bookKeeping.nativeEvent.path) {
+    // New browsers have a path attribute on native events
+    handleTopLevelWithPath(bookKeeping);
+  } else {
+    // Legacy browsers don't have a path attribute on native events
+    handleTopLevelWithoutPath(bookKeeping);
+  }
+}
+
+// Legacy browsers don't have a path attribute on native events
+function handleTopLevelWithoutPath(bookKeeping) {
   var topLevelTarget = ReactMount.getFirstReactDOM(
     getEventTarget(bookKeeping.nativeEvent)
   ) || window;
@@ -81,8 +94,44 @@ function handleTopLevelImpl(bookKeeping) {
       bookKeeping.topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      bookKeeping.nativeEvent
+      bookKeeping.nativeEvent,
+      getEventTarget(bookKeeping.nativeEvent)
     );
+  }
+}
+
+// New browsers have a path attribute on native events
+function handleTopLevelWithPath(bookKeeping) {
+  var path = bookKeeping.nativeEvent.path;
+  var currentNativeTarget = path[0];
+  for (var i = 0; i < path.length; i++) {
+    var currentPathElement = path[i];
+    var currentPathElemenId = ReactMount.getID(currentPathElement);
+    if (currentPathElement.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE) {
+      currentNativeTarget = path[i + 1];
+    }
+    if (ReactMount.isRenderedByReact(currentPathElement)) {
+      var newRootId = ReactInstanceHandles.getReactRootIDFromNodeID(
+        currentPathElemenId
+      );
+      bookKeeping.ancestors.push(currentPathElement);
+
+      var topLevelTargetID = ReactMount.getID(currentPathElement) || '';
+      ReactEventListener._handleTopLevel(
+        bookKeeping.topLevelType,
+        currentPathElement,
+        topLevelTargetID,
+        bookKeeping.nativeEvent,
+        currentNativeTarget
+      );
+
+      // Jump to the root of this React render tree
+      while (currentPathElemenId !== newRootId) {
+        i++;
+        currentPathElement = path[i];
+        currentPathElemenId = ReactMount.getID(currentPathElement);
+      }
+    }
   }
 }
 

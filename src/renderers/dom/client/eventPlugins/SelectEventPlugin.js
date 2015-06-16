@@ -92,7 +92,7 @@ function getSelection(node) {
  * @param {object} nativeEvent
  * @return {?SyntheticEvent}
  */
-function constructSelectEvent(nativeEvent) {
+function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // Ensure we have the right element, and that the user is not dragging a
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
@@ -111,7 +111,8 @@ function constructSelectEvent(nativeEvent) {
     var syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
       activeElementID,
-      nativeEvent
+      nativeEvent,
+      nativeEventTarget
     );
 
     syntheticEvent.type = 'select';
@@ -155,8 +156,8 @@ var SelectEventPlugin = {
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent) {
-
+      nativeEvent,
+      nativeEventTarget) {
     if (!hasListener) {
       return null;
     }
@@ -185,7 +186,7 @@ var SelectEventPlugin = {
       case topLevelTypes.topContextMenu:
       case topLevelTypes.topMouseUp:
         mouseDown = false;
-        return constructSelectEvent(nativeEvent);
+        return constructSelectEvent(nativeEvent, nativeEventTarget);
 
       // Chrome and IE fire non-standard event when selection is changed (and
       // sometimes when it hasn't).
@@ -196,7 +197,7 @@ var SelectEventPlugin = {
       case topLevelTypes.topSelectionChange:
       case topLevelTypes.topKeyDown:
       case topLevelTypes.topKeyUp:
-        return constructSelectEvent(nativeEvent);
+        return constructSelectEvent(nativeEvent, nativeEventTarget);
     }
 
     return null;

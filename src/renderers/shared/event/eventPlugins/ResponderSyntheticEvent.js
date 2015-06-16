@@ -31,8 +31,8 @@ var ResponderEventInterface = {
  * @param {object} nativeEvent Native event.
  * @extends {SyntheticEvent}
  */
-function ResponderSyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent) {
-  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+function ResponderSyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticEvent.augmentClass(ResponderSyntheticEvent, ResponderEventInterface);

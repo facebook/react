@@ -34,8 +34,8 @@ var ClipboardEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticUIEvent}
  */
-function SyntheticClipboardEvent(dispatchConfig, dispatchMarker, nativeEvent) {
-  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+function SyntheticClipboardEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);

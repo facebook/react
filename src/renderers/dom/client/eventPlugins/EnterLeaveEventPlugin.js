@@ -63,7 +63,8 @@ var EnterLeaveEventPlugin = {
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent) {
+      nativeEvent,
+      nativeEventTarget) {
     if (topLevelType === topLevelTypes.topMouseOver &&
         (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
       return null;
@@ -110,7 +111,8 @@ var EnterLeaveEventPlugin = {
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,
       fromID,
-      nativeEvent
+      nativeEvent,
+      nativeEventTarget
     );
     leave.type = 'mouseleave';
     leave.target = from;
@@ -119,7 +121,8 @@ var EnterLeaveEventPlugin = {
     var enter = SyntheticMouseEvent.getPooled(
       eventTypes.mouseEnter,
       toID,
-      nativeEvent
+      nativeEvent,
+      nativeEventTarget
     );
     enter.type = 'mouseenter';
     enter.target = to;

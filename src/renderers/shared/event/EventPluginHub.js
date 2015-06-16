@@ -230,7 +230,8 @@ var EventPluginHub = {
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent) {
+      nativeEvent,
+      nativeEventTarget) {
     var events;
     var plugins = EventPluginRegistry.plugins;
     for (var i = 0; i < plugins.length; i++) {
@@ -241,7 +242,8 @@ var EventPluginHub = {
           topLevelType,
           topLevelTarget,
           topLevelTargetID,
-          nativeEvent
+          nativeEvent,
+          nativeEventTarget
         );
         if (extractedEvents) {
           events = accumulateInto(events, extractedEvents);

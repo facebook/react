@@ -50,8 +50,8 @@ var WheelEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticMouseEvent}
  */
-function SyntheticWheelEvent(dispatchConfig, dispatchMarker, nativeEvent) {
-  SyntheticMouseEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+function SyntheticWheelEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  SyntheticMouseEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticMouseEvent.augmentClass(SyntheticWheelEvent, WheelEventInterface);

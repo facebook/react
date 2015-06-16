@@ -67,7 +67,7 @@ var antiSubsequence = function(arr, indices) {
  * @param allTouchHandles
  */
 var _touchConfig =
-  function(topType, targetNodeHandle, allTouchHandles, changedIndices) {
+  function(topType, targetNodeHandle, allTouchHandles, changedIndices, eventTarget) {
   var allTouchObjects = allTouchHandles.map(touch);
   var changedTouchObjects = subsequence(allTouchObjects, changedIndices);
   var activeTouchObjects =
@@ -112,7 +112,8 @@ var startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
     topLevelTypes.topTouchStart,
     nodeHandle,
     allTouchHandles,
-    changedIndices
+    changedIndices,
+    nodeHandle
   );
 };
 
@@ -124,7 +125,8 @@ var moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
     topLevelTypes.topTouchMove,
     nodeHandle,
     allTouchHandles,
-    changedIndices
+    changedIndices,
+    nodeHandle
   );
 };
 
@@ -136,7 +138,8 @@ var endConfig = function(nodeHandle, allTouchHandles, changedIndices) {
     topLevelTypes.topTouchEnd,
     nodeHandle,
     allTouchHandles,
-    changedIndices
+    changedIndices,
+    nodeHandle
   );
 };
 
@@ -290,7 +293,8 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
     nativeEventConfig.topLevelType,
     nativeEventConfig.target,
     nativeEventConfig.targetID,
-    nativeEventConfig.nativeEvent
+    nativeEventConfig.nativeEvent,
+    nativeEventConfig.target
   );
 
   // At this point the negotiation events have been dispatched as part of the

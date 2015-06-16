@@ -334,7 +334,8 @@ var SimpleEventPlugin = {
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent) {
+      nativeEvent,
+      nativeEventTarget) {
     var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
@@ -418,7 +419,8 @@ var SimpleEventPlugin = {
     var event = EventConstructor.getPooled(
       dispatchConfig,
       topLevelTargetID,
-      nativeEvent
+      nativeEvent,
+      nativeEventTarget
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);
     return event;
