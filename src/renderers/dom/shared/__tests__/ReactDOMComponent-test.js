@@ -805,12 +805,12 @@ describe('ReactDOMComponent', function() {
     it('warns on invalid nesting at root', () => {
       spyOn(console, 'error');
       var p = document.createElement('p');
-      React.render(<tr />, p);
+      React.render(<span><p /></span>, p);
 
       expect(console.error.calls.length).toBe(1);
       expect(console.error.calls[0].args[0]).toBe(
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-        '<p>. See p > tr.'
+        'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
+        'of <p>. See p > ... > p.'
       );
     });
 

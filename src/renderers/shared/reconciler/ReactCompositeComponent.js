@@ -15,7 +15,6 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNativeComponent = require('ReactNativeComponent');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
@@ -123,9 +122,7 @@ var ReactCompositeComponentMixin = {
     var publicProps = this._processProps(this._currentElement.props);
     var publicContext = this._processContext(context);
 
-    var Component = ReactNativeComponent.getComponentClassForElement(
-      this._currentElement
-    );
+    var Component = this._currentElement.type;
 
     // Initialize the public class
     var inst = new Component(publicProps, publicContext);
@@ -235,8 +232,7 @@ var ReactCompositeComponentMixin = {
     var renderedElement = this._renderValidatedComponent();
 
     this._renderedComponent = this._instantiateReactComponent(
-      renderedElement,
-      this._currentElement.type // The wrapping type
+      renderedElement
     );
 
     var markup = ReactReconciler.mountComponent(
@@ -304,9 +300,7 @@ var ReactCompositeComponentMixin = {
    */
   _maskContext: function(context) {
     var maskedContext = null;
-    var Component = ReactNativeComponent.getComponentClassForElement(
-      this._currentElement
-    );
+    var Component = this._currentElement.type;
     var contextTypes = Component.contextTypes;
     if (!contextTypes) {
       return emptyObject;
@@ -329,9 +323,7 @@ var ReactCompositeComponentMixin = {
   _processContext: function(context) {
     var maskedContext = this._maskContext(context);
     if (__DEV__) {
-      var Component = ReactNativeComponent.getComponentClassForElement(
-        this._currentElement
-      );
+      var Component = this._currentElement.type;
       if (Component.contextTypes) {
         this._checkPropTypes(
           Component.contextTypes,
@@ -349,9 +341,7 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processChildContext: function(currentContext) {
-    var Component = ReactNativeComponent.getComponentClassForElement(
-      this._currentElement
-    );
+    var Component = this._currentElement.type;
     var inst = this._instance;
     var childContext = inst.getChildContext && inst.getChildContext();
     if (childContext) {
@@ -392,9 +382,7 @@ var ReactCompositeComponentMixin = {
    */
   _processProps: function(newProps) {
     if (__DEV__) {
-      var Component = ReactNativeComponent.getComponentClassForElement(
-        this._currentElement
-      );
+      var Component = this._currentElement.type;
       if (Component.propTypes) {
         this._checkPropTypes(
           Component.propTypes,
@@ -695,8 +683,7 @@ var ReactCompositeComponentMixin = {
       ReactReconciler.unmountComponent(prevComponentInstance);
 
       this._renderedComponent = this._instantiateReactComponent(
-        nextRenderedElement,
-        this._currentElement.type
+        nextRenderedElement
       );
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,

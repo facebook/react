@@ -60,11 +60,10 @@ function isInternalComponentType(type) {
  * Given a ReactNode, create an instance that will actually be mounted.
  *
  * @param {ReactNode} node
- * @param {*} parentCompositeType The composite type that resolved this.
  * @return {object} A new instance of the element's constructor.
  * @protected
  */
-function instantiateReactComponent(node, parentCompositeType) {
+function instantiateReactComponent(node) {
   var instance;
 
   if (node === null || node === false) {
@@ -83,12 +82,8 @@ function instantiateReactComponent(node, parentCompositeType) {
     );
 
     // Special case string values
-    if (parentCompositeType === element.type &&
-        typeof element.type === 'string') {
-      // Avoid recursion if the wrapper renders itself.
+    if (typeof element.type === 'string') {
       instance = ReactNativeComponent.createInternalComponent(element);
-      // All native components are currently wrapped in a composite so we're
-      // safe to assume that this is what we should instantiate.
     } else if (isInternalComponentType(element.type)) {
       // This is temporarily available for custom components that are not string
       // represenations. I.e. ART. Once those are updated to use the string

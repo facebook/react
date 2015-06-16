@@ -36,11 +36,6 @@ var ReactNativeComponentInjection = {
   injectComponentClasses: function(componentClasses) {
     assign(tagToComponentClass, componentClasses);
   },
-  // Temporary hack since we expect DOM refs to behave like composites,
-  // for this release.
-  injectAutoWrapper: function(wrapperFactory) {
-    autoGenerateWrapperClass = wrapperFactory;
-  },
 };
 
 /**

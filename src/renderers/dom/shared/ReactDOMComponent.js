@@ -820,6 +820,10 @@ ReactDOMComponent.Mixin = {
     this._wrapperState = null;
   },
 
+  getPublicInstance: function() {
+    return ReactMount.getNode(this._rootNodeID);
+  },
+
 };
 
 ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {

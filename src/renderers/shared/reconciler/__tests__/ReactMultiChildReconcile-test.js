@@ -89,7 +89,6 @@ var FriendsStatusDisplay = React.createClass({
     var statusDisplays =
       ReactInstanceMap.get(this)
       ._renderedComponent
-      ._renderedComponent
       ._renderedChildren;
     for (name in statusDisplays) {
       var child = statusDisplays[name];
