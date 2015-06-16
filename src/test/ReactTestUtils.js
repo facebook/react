@@ -28,6 +28,7 @@ var SyntheticEvent = require('SyntheticEvent');
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
+var invariant = require('invariant');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -159,6 +160,10 @@ var ReactTestUtils = {
     if (!inst) {
       return [];
     }
+    invariant(
+      ReactTestUtils.isCompositeComponent(inst),
+      'findAllInRenderedTree(...): instance must be a composite component'
+    );
     return findAllInRenderedTreeInternal(ReactInstanceMap.get(inst), test);
   },
 

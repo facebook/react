@@ -177,20 +177,28 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div>foo</div>);
   });
 
-  it('Test scryRenderedDOMComponentsWithClass with TextComponent', function() {
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<div>Hello <span>Jim</span></div>);
+  it('can scryRenderedDOMComponentsWithClass with TextComponent', function() {
+    var Wrapper = React.createClass({
+      render: function() {
+        return <div>Hello <span>Jim</span></div>;
+      },
+    });
+    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      'NonExistantClass'
+      'NonExistentClass'
     );
     expect(scryResults.length).toBe(0);
 
   });
 
-  it('Test scryRenderedDOMComponentsWithClass with className contains \\n', function() {
-    var renderedComponent = ReactTestUtils.renderIntoDocument(
-      <div>Hello <span className={'x\ny'}>Jim</span></div>
-    );
+  it('can scryRenderedDOMComponentsWithClass with className contains \\n', function() {
+    var Wrapper = React.createClass({
+      render: function() {
+        return <div>Hello <span className={'x\ny'}>Jim</span></div>;
+      },
+    });
+    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'x'
@@ -199,26 +207,33 @@ describe('ReactTestUtils', function() {
   });
 
   it('traverses children in the correct order', function() {
-    var container = document.createElement('div');
+    var Wrapper = React.createClass({
+      render: function() {
+        return <div>{this.props.children}</div>;
+      },
+    });
 
+    var container = document.createElement('div');
     React.render(
-      <div>
+      <Wrapper>
         {null}
         <div>purple</div>
-      </div>,
+      </Wrapper>,
       container
     );
     var tree = React.render(
-      <div>
+      <Wrapper>
         <div>orange</div>
         <div>purple</div>
-      </div>,
+      </Wrapper>,
       container
     );
 
     var log = [];
     ReactTestUtils.findAllInRenderedTree(tree, function(child) {
-      log.push(React.findDOMNode(child).textContent);
+      if (ReactTestUtils.isDOMComponent(child)) {
+        log.push(React.findDOMNode(child).textContent);
+      }
     });
 
     // Should be document order, not mount order (which would be purple, orange)
