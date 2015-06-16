@@ -52,7 +52,6 @@ after_script:
       curl \
         -F "react=@build/react.js" \
         -F "react.min=@build/react.min.js" \
-        -F "transformer=@build/JSXTransformer.js" \
         -F "react-with-addons=@build/react-with-addons.js" \
         -F "react-with-addons.min=@build/react-with-addons.min.js" \
         -F "npm-react=@build/react.tgz" \

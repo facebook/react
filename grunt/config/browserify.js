@@ -76,22 +76,6 @@ var min = {
   after: [/*derequire,*/ minify, bannerify],
 };
 
-var transformer = {
-  entries:[
-    './vendor/browser-transforms.js',
-  ],
-  outfile: './build/JSXTransformer.js',
-  debug: false,
-  standalone: 'JSXTransformer',
-  transforms: [],
-  // Source-map-generator uses amdefine, which looks at the type of __dereq__.
-  // If it's not a string, it assumes something else (array of strings), but
-  // collapser passes a number; this would throw.
-
-  // plugins: [collapser],
-  after: [derequire, simpleBannerify],
-};
-
 var addons = {
   entries: [
     './build/modules/ReactWithAddons.js',
@@ -138,7 +122,6 @@ var withCodeCoverageLogging = {
 module.exports = {
   basic: basic,
   min: min,
-  transformer: transformer,
   addons: addons,
   addonsMin: addonsMin,
   withCodeCoverageLogging: withCodeCoverageLogging,
