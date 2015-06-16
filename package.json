@@ -75,6 +75,7 @@
     "test": "jest",
     "jest": "jest",
     "lint": "grunt lint",
+    "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "build": "grunt build"
   },
   "jest": {
