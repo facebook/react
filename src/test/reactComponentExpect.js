@@ -16,6 +16,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 
 var assign = require('Object.assign');
+var invariant = require('invariant');
 
 function reactComponentExpect(instance) {
   if (instance instanceof reactComponentExpectInternal) {
@@ -28,6 +29,10 @@ function reactComponentExpect(instance) {
 
   expect(instance).not.toBeNull();
 
+  invariant(
+    ReactTestUtils.isCompositeComponent(instance),
+    'reactComponentExpect(...): instance must be a composite component'
+  );
   var internalInstance = ReactInstanceMap.get(instance);
 
   expect(typeof internalInstance).toBe('object');

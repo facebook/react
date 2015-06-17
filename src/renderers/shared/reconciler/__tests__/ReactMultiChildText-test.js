@@ -17,8 +17,6 @@ var React = require('React');
 var ReactFragment = require('ReactFragment');
 var ReactTestUtils = require('ReactTestUtils');
 
-var reactComponentExpect = require('reactComponentExpect');
-
 var frag = ReactFragment.create;
 
 // Helpers
@@ -42,9 +40,10 @@ var testAllPermutations = function(testCases) {
 };
 
 var expectChildren = function(d, children) {
+  var outerNode = React.findDOMNode(d);
   var textNode;
   if (typeof children === 'string') {
-    textNode = React.findDOMNode(d).firstChild;
+    textNode = outerNode.firstChild;
 
     if (children === '') {
       expect(textNode != null).toBe(false);
@@ -54,32 +53,23 @@ var expectChildren = function(d, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    expect(React.findDOMNode(d).childNodes.length).toBe(children.length);
+    expect(outerNode.childNodes.length).toBe(children.length);
 
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
 
       if (typeof child === 'string') {
-        reactComponentExpect(d)
-          .expectRenderedChildAt(i)
-          .toBeTextComponentWithValue(child);
-
-        textNode = React.findDOMNode(d).childNodes[i].firstChild;
+        textNode = outerNode.childNodes[i].firstChild;
 
         if (child === '') {
-          expect(textNode != null).toBe(false);
+          expect(textNode).toBe(null);
         } else {
-          expect(textNode != null).toBe(true);
+          expect(textNode).not.toBe(null);
           expect(textNode.nodeType).toBe(3);
           expect(textNode.data).toBe('' + child);
         }
       } else {
-        var elementDOMNode = React.findDOMNode(reactComponentExpect(d)
-          .expectRenderedChildAt(i)
-          .toBeComponentOfType('div')
-          .instance()
-        );
-
+        var elementDOMNode = outerNode.childNodes[i];
         expect(elementDOMNode.tagName).toBe('DIV');
       }
     }

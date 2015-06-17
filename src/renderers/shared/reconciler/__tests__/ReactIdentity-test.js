@@ -14,7 +14,6 @@
 var React;
 var ReactFragment;
 var ReactTestUtils;
-var reactComponentExpect;
 var ReactMount;
 
 describe('ReactIdentity', function() {
@@ -24,7 +23,6 @@ describe('ReactIdentity', function() {
     React = require('React');
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
     ReactMount = require('ReactMount');
   });
 
@@ -52,7 +50,7 @@ describe('ReactIdentity', function() {
 
     instance = React.render(instance, document.createElement('div'));
     var node = React.findDOMNode(instance);
-    reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
+    expect(node.childNodes.length).toBe(2);
     checkId(node.childNodes[0], '.0.$first:0');
     checkId(node.childNodes[1], '.0.$second:0');
   });
@@ -68,7 +66,7 @@ describe('ReactIdentity', function() {
 
     instance = React.render(instance, document.createElement('div'));
     var node = React.findDOMNode(instance);
-    reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
+    expect(node.childNodes.length).toBe(4);
     checkId(node.childNodes[0], '.0.$apple');
     checkId(node.childNodes[1], '.0.$banana');
     checkId(node.childNodes[2], '.0.$0');
@@ -92,7 +90,7 @@ describe('ReactIdentity', function() {
 
     instance = React.render(instance, document.createElement('div'));
     var node = React.findDOMNode(instance);
-    reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
+    expect(node.childNodes.length).toBe(3);
 
     checkId(node.childNodes[0], '.0.$wrap1');
     checkId(node.childNodes[0].firstChild, '.0.$wrap1.$squirrel');
