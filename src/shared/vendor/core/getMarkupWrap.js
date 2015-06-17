@@ -65,6 +65,7 @@ var svgElements = [
   'defs',
   'ellipse',
   'g',
+  'image',
   'line',
   'linearGradient',
   'mask',
