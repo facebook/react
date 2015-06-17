@@ -16,7 +16,7 @@
  * Combines multiple className strings into one.
  * http://jsperf.com/joinclasses-args-vs-array
  *
- * @param {...?string} classes
+ * @param {...?string} className
  * @return {string}
  */
 function joinClasses(className/*, ... */) {

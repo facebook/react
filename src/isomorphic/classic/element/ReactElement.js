@@ -63,7 +63,7 @@ var useMutationMembrane = false;
  * Warn for mutations.
  *
  * @internal
- * @param {object} element
+ * @param {object} prototype
  */
 function defineMutationMembrane(prototype) {
   try {

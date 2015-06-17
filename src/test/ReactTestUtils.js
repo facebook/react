@@ -170,7 +170,7 @@ var ReactTestUtils = {
   /**
    * Finds all instance of components in the rendered tree that are DOM
    * components with the class name matching `className`.
-   * @return an array of all the matches.
+   * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, className) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
@@ -206,7 +206,7 @@ var ReactTestUtils = {
   /**
    * Finds all instance of components in the rendered tree that are DOM
    * components with the tag name matching `tagName`.
-   * @return an array of all the matches.
+   * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
@@ -232,7 +232,7 @@ var ReactTestUtils = {
 
   /**
    * Finds all instances of components with type equal to `componentType`.
-   * @return an array of all the matches.
+   * @return {array} an array of all the matches.
    */
   scryRenderedComponentsWithType: function(root, componentType) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
@@ -292,7 +292,7 @@ var ReactTestUtils = {
   /**
    * Simulates a top level event being dispatched from a raw event that occured
    * on an `Element` node.
-   * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`
+   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`
    * @param {!Element} node The dom to simulate an event occurring on.
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
@@ -307,8 +307,8 @@ var ReactTestUtils = {
   /**
    * Simulates a top level event being dispatched from a raw event that occured
    * on the `ReactDOMComponent` `comp`.
-   * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`.
-   * @param comp {!ReactDOMComponent}
+   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`.
+   * @param {!ReactDOMComponent} comp
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateNativeEventOnDOMComponent: function(
@@ -470,7 +470,7 @@ function buildSimulators() {
   var eventType;
   for (eventType in ReactBrowserEventEmitter.eventNameDispatchConfigs) {
     /**
-     * @param {!Element || ReactDOMComponent} domComponentOrNode
+     * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
      */
     ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
@@ -534,7 +534,7 @@ for (eventType in topLevelTypes) {
   var convenienceName = eventType.indexOf('top') === 0 ?
     eventType.charAt(3).toLowerCase() + eventType.substr(4) : eventType;
   /**
-   * @param {!Element || ReactDOMComponent} domComponentOrNode
+   * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
   ReactTestUtils.SimulateNative[convenienceName] =

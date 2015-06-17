@@ -107,13 +107,19 @@ var Mixin = {
   /**
    * Executes the function within a safety window. Use this for the top level
    * methods that result in large amounts of computation/mutations that would
-   * need to be safety checked.
+   * need to be safety checked. The optional arguments helps prevent the need
+   * to bind in many cases.
    *
    * @param {function} method Member of scope to call.
    * @param {Object} scope Scope to invoke from.
-   * @param {Object?=} args... Arguments to pass to the method (optional).
-   *                           Helps prevent need to bind in many cases.
-   * @return Return value from `method`.
+   * @param {Object?=} a Argument to pass to the method.
+   * @param {Object?=} b Argument to pass to the method.
+   * @param {Object?=} c Argument to pass to the method.
+   * @param {Object?=} d Argument to pass to the method.
+   * @param {Object?=} e Argument to pass to the method.
+   * @param {Object?=} f Argument to pass to the method.
+   *
+   * @return {*} Return value from `method`.
    */
   perform: function(method, scope, a, b, c, d, e, f) {
     invariant(

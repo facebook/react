@@ -47,7 +47,7 @@ function forEachSingleChild(traverseContext, child, name) {
  * leaf child.
  *
  * @param {?*} children Children tree container.
- * @param {function(*, int)} forEachFunc.
+ * @param {function(*, int)} forEachFunc
  * @param {*} forEachContext Context for forEachContext.
  */
 function forEachChildren(children, forEachFunc, forEachContext) {
@@ -110,8 +110,8 @@ function mapSingleChildIntoContext(traverseContext, child, name) {
  * previously relying on the fact that we guarded against null children.
  *
  * @param {?*} children Children tree container.
- * @param {function(*, int)} mapFunction.
- * @param {*} mapContext Context for mapFunction.
+ * @param {function(*, int)} func The map function.
+ * @param {*} context Context for mapFunction.
  * @return {object} Object containing the ordered map of results.
  */
 function mapChildren(children, func, context) {

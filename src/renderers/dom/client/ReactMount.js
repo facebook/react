@@ -618,7 +618,7 @@ var ReactMount = {
    * Constructs a component instance of `constructor` with `initialProps` and
    * renders it into a container node identified by supplied `id`.
    *
-   * @param {function} componentConstructor React component constructor
+   * @param {function} constructor React component constructor
    * @param {?object} props Initial props of the component instance.
    * @param {string} id ID of the DOM element to render into.
    * @return {ReactComponent} Component instance rendered in the container node.

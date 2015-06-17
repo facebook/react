@@ -116,7 +116,7 @@ var ReactEventListener = {
    * @param {string} topLevelType Record from `EventConstants`.
    * @param {string} handlerBaseName Event name (e.g. "click").
    * @param {object} handle Element on which to attach listener.
-   * @return {object} An object with a remove function which will forcefully
+   * @return {?object} An object with a remove function which will forcefully
    *                  remove the listener.
    * @internal
    */
@@ -138,7 +138,7 @@ var ReactEventListener = {
    * @param {string} topLevelType Record from `EventConstants`.
    * @param {string} handlerBaseName Event name (e.g. "click").
    * @param {object} handle Element on which to attach listener.
-   * @return {object} An object with a remove function which will forcefully
+   * @return {?object} An object with a remove function which will forcefully
    *                  remove the listener.
    * @internal
    */

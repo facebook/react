@@ -437,7 +437,7 @@ function canTriggerTransfer(topLevelType, topLevelTargetID) {
  * longer any touches that started inside of the current `responderID`.
  *
  * @param {NativeEvent} nativeEvent Native touch end event.
- * @return {bool} Whether or not this touch end event ends the responder.
+ * @return {boolean} Whether or not this touch end event ends the responder.
  */
 function noResponderTouches(nativeEvent) {
   var touches = nativeEvent.touches;

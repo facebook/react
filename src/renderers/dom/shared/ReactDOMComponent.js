@@ -95,6 +95,7 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
 var BackendIDOperations = null;
 
 /**
+ * @param {object} component
  * @param {?object} props
  */
 function assertValidProps(component, props) {

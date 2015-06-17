@@ -60,7 +60,7 @@ function getComponentKey(component, index) {
 /**
  * Escape a component key so that it is safe to use in a reactid.
  *
- * @param {*} key Component key to be escaped.
+ * @param {*} text Component key to be escaped.
  * @return {string} An escaped string.
  */
 function escapeUserProvidedKey(text) {
