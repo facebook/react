@@ -279,4 +279,32 @@ describe('ReactComponent', function() {
     );
   });
 
+  it('throws usefully when rendering badly-typed elements', function() {
+    spyOn(console, 'error');
+
+    var X = undefined;
+    expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrow(
+      'Invariant Violation: Element type is invalid: expected a string (for ' +
+      'built-in components) or a class/function (for composite components) ' +
+      'but got: undefined.'
+    );
+
+    var Y = null;
+    expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrow(
+      'Invariant Violation: Element type is invalid: expected a string (for ' +
+      'built-in components) or a class/function (for composite components) ' +
+      'but got: null.'
+    );
+
+    var Z = {};
+    expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrow(
+      'Invariant Violation: Element type is invalid: expected a string (for ' +
+      'built-in components) or a class/function (for composite components) ' +
+      'but got: object.'
+    );
+
+    // One warning for each element creation
+    expect(console.error.calls.length).toBe(3);
+  });
+
 });
