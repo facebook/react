@@ -3,8 +3,8 @@
 var fs = require('fs');
 var grunt = require('grunt');
 
-var src = 'npm-react/';
-var dest = 'build/npm-react/';
+var src = 'packages/react/';
+var dest = 'build/packages/react/';
 var modSrc = 'build/modules/';
 var lib = dest + 'lib/';
 var dist = dest + 'dist/';
@@ -54,14 +54,14 @@ function packRelease() {
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
-    args: ['pack', 'npm-react'],
+    args: ['pack', 'packages/react'],
     opts: {
       cwd: 'build/',
     },
   };
   grunt.util.spawn(spawnCmd, function() {
     var buildSrc = 'build/react-' + grunt.config.data.pkg.version + '.tgz';
-    var buildDest = 'build/react.tgz';
+    var buildDest = 'build/packages/react.tgz';
     fs.rename(buildSrc, buildDest, done);
   });
 }
