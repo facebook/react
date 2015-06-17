@@ -11,33 +11,38 @@
 
 'use strict';
 
-var React = require('React');
-var reactComponentExpect = require('reactComponentExpect');
+var React;
+var ReactTestUtils;
 
-var TestComponent = React.createClass({
-  render: function() {
-    return (
-      <div>
-        {this.props.destroy ? null :
-          <div ref="theInnerDiv">
-            Lets try to destroy this.
-          </div>
-        }
-      </div>
-    );
-  },
-});
+var TestComponent;
 
 describe('refs-destruction', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
+
+    React = require('React');
+    ReactTestUtils = require('ReactTestUtils');
+
+    TestComponent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            {this.props.destroy ? null :
+              <div ref="theInnerDiv">
+                Lets try to destroy this.
+              </div>
+            }
+          </div>
+        );
+      },
+    });
   });
 
   it('should remove refs when destroying the parent', function() {
     var container = document.createElement('div');
     var testInstance = React.render(<TestComponent />, container);
-    reactComponentExpect(testInstance.refs.theInnerDiv)
-        .toBeDOMComponentWithTag('div');
+    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
+      .toBe(true);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
     React.unmountComponentAtNode(container);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
@@ -46,8 +51,8 @@ describe('refs-destruction', function() {
   it('should remove refs when destroying the child', function() {
     var container = document.createElement('div');
     var testInstance = React.render(<TestComponent />, container);
-    reactComponentExpect(testInstance.refs.theInnerDiv)
-        .toBeDOMComponentWithTag('div');
+    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
+      .toBe(true);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
     React.render(<TestComponent destroy={true} />, container);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);

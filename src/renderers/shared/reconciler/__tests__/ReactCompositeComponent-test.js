@@ -132,11 +132,11 @@ describe('ReactCompositeComponent', function() {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('a');
+    expect(React.findDOMNode(instance.refs.x).tagName).toBe('A');
     instance._toggleActivatedState();
-    reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('b');
+    expect(React.findDOMNode(instance.refs.x).tagName).toBe('B');
     instance._toggleActivatedState();
-    reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('a');
+    expect(React.findDOMNode(instance.refs.x).tagName).toBe('A');
   });
 
   it('should not cache old DOM nodes when switching constructors', function() {
