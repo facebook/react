@@ -111,7 +111,7 @@ React を [browserify](http://browserify.org/) や [webpack](https://webpack.git
 
 ## 次にすること
 
-[チュートリアル](/react/docs/tutorial.html) や、スターターキットの `examples` ディレクトリに入っている他の例を読んでみてください。
+[チュートリアル](/react/docs/tutorial-ja-JP.html) や、スターターキットの `examples` ディレクトリに入っている他の例を読んでみてください。
 
 また、[ワークフロー、UIコンポーネント、ルーティング、データマネジメントなど](https://github.com/facebook/react/wiki/Complementary-Tools)の方面で貢献しているコミュニティの wiki もあります。
 
