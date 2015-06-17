@@ -6,6 +6,8 @@ var grunt = require('grunt');
 var rootIDs = [
   'React',
   'ReactWithAddons',
+  // deprecated is used in the npm package but not anywhere else, so build it.
+  'deprecated',
 ];
 
 var normal = {
