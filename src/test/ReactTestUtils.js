@@ -28,6 +28,7 @@ var SyntheticEvent = require('SyntheticEvent');
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
+var invariant = require('invariant');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -36,6 +37,34 @@ function Event(suffix) {}
 /**
  * @class ReactTestUtils
  */
+
+function findAllInRenderedTreeInternal(inst, test) {
+  if (!inst || !inst.getPublicInstance) {
+    return [];
+  }
+  var publicInst = inst.getPublicInstance()
+  var ret = test(publicInst) ? [publicInst] : [];
+  if (ReactTestUtils.isDOMComponent(publicInst)) {
+    var renderedChildren = inst._renderedComponent._renderedChildren;
+    var key;
+    for (key in renderedChildren) {
+      if (!renderedChildren.hasOwnProperty(key)) {
+        continue;
+      }
+      ret = ret.concat(
+        findAllInRenderedTreeInternal(
+          renderedChildren[key],
+          test
+        )
+      );
+    }
+  } else if (ReactTestUtils.isCompositeComponent(publicInst)) {
+    ret = ret.concat(
+      findAllInRenderedTreeInternal(inst._renderedComponent, test)
+    );
+  }
+  return ret;
+}
 
 /**
  * Todo: Support the entire DOM.scry query syntax. For now, these simple
@@ -131,36 +160,11 @@ var ReactTestUtils = {
     if (!inst) {
       return [];
     }
-    var ret = test(inst) ? [inst] : [];
-    if (ReactTestUtils.isDOMComponent(inst)) {
-      var internalInstance = ReactInstanceMap.get(inst);
-      var renderedChildren = internalInstance
-        ._renderedComponent
-        ._renderedChildren;
-      var key;
-      for (key in renderedChildren) {
-        if (!renderedChildren.hasOwnProperty(key)) {
-          continue;
-        }
-        if (!renderedChildren[key].getPublicInstance) {
-          continue;
-        }
-        ret = ret.concat(
-          ReactTestUtils.findAllInRenderedTree(
-            renderedChildren[key].getPublicInstance(),
-            test
-          )
-        );
-      }
-    } else if (ReactTestUtils.isCompositeComponent(inst)) {
-      ret = ret.concat(
-        ReactTestUtils.findAllInRenderedTree(
-          ReactTestUtils.getRenderedChildOfCompositeComponent(inst),
-          test
-        )
-      );
-    }
-    return ret;
+    invariant(
+      ReactTestUtils.isCompositeComponent(inst),
+      'findAllInRenderedTree(...): instance must be a composite component'
+    );
+    return findAllInRenderedTreeInternal(ReactInstanceMap.get(inst), test);
   },
 
   /**

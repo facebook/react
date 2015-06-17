@@ -73,23 +73,20 @@ describe('ReactMockedComponent', function() {
       },
 
       render: function() {
-        return <AutoMockedComponent prop={this.state.foo} />;
+        return <div><AutoMockedComponent prop={this.state.foo} /></div>;
       },
 
     });
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
-    instance.update();
-  });
 
-  it('should find an implicitly mocked component in the tree', function() {
-    var instance = ReactTestUtils.renderIntoDocument(
-      <div><span><AutoMockedComponent prop="1" /></span></div>
-    );
+    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+
     var found = ReactTestUtils.findRenderedComponentWithType(
       instance,
       AutoMockedComponent
     );
     expect(typeof found).toBe('object');
+
+    instance.update();
   });
 
   it('has custom methods on the implicitly mocked component', () => {
@@ -113,23 +110,19 @@ describe('ReactMockedComponent', function() {
       },
 
       render: function() {
-        return <MockedComponent prop={this.state.foo} />;
+        return <div><MockedComponent prop={this.state.foo} /></div>;
       },
 
     });
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
-    instance.update();
-  });
 
-  it('should find an explicitly mocked component in the tree', function() {
-    var instance = ReactTestUtils.renderIntoDocument(
-      <div><span><MockedComponent prop="1" /></span></div>
-    );
     var found = ReactTestUtils.findRenderedComponentWithType(
       instance,
       MockedComponent
     );
     expect(typeof found).toBe('object');
+
+    instance.update();
   });
 
   it('has custom methods on the explicitly mocked component', () => {
