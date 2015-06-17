@@ -30,7 +30,7 @@ thead time title tr track u ul var video wbr
 다음의 SVG 엘리먼트가 지원됩니다.
 
 ```
-circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
+circle clipPath defs ellipse g image line linearGradient mask path pattern polygon polyline
 radialGradient rect stop svg text tspan
 ```
 
