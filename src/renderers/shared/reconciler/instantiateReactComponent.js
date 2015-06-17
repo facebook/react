@@ -30,6 +30,16 @@ assign(
   }
 );
 
+function getDeclarationErrorAddendum(owner) {
+  if (owner) {
+    var name = owner.getName();
+    if (name) {
+      return ' Check the render method of `' + name + '`.';
+    }
+  }
+  return '';
+}
+
 /**
  * Check if the type reference is a known internal type. I.e. not a user
  * provided composite type.
@@ -63,13 +73,14 @@ function instantiateReactComponent(node, parentCompositeType) {
 
   if (typeof node === 'object') {
     var element = node;
-    if (__DEV__) {
-      warning(
-        element && (typeof element.type === 'function' ||
-                    typeof element.type === 'string'),
-        'Only functions or strings can be mounted as React components.'
-      );
-    }
+    invariant(
+      element && (typeof element.type === 'function' ||
+                  typeof element.type === 'string'),
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: %s.%s',
+      element.type == null ? element.type : typeof element.type,
+      getDeclarationErrorAddendum(element._owner)
+    );
 
     // Special case string values
     if (parentCompositeType === element.type &&

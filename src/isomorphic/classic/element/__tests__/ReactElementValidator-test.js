@@ -327,16 +327,17 @@ describe('ReactElementValidator', function() {
     });
     expect(function() {
       ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
-    }).toThrow();
-    expect(console.error.calls.length).toBe(2);
+    }).toThrow(
+      'Invariant Violation: Element type is invalid: expected a string (for ' +
+      'built-in components) or a class/function (for composite components) ' +
+      'but got: null. Check the render method of `ParentComp`.'
+    );
+    expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components). Check the render method of ' +
       '`ParentComp`.'
-    );
-    expect(console.error.calls[1].args[0]).toBe(
-      'Warning: Only functions or strings can be mounted as React components.'
     );
   });
 
