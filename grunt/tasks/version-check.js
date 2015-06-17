@@ -11,10 +11,10 @@ module.exports = function() {
   var pkgVersion = grunt.config.data.pkg.version;
 
   var versions = {
-    'npm-react/package.json':
-      grunt.file.readJSON('./npm-react/package.json').version,
-    'npm-react-dom/package.json':
-      grunt.file.readJSON('./npm-react-dom/package.json').version,
+    'packages/react/package.json':
+      grunt.file.readJSON('./packages/react/package.json').version,
+    'packages/react-dom/package.json':
+      grunt.file.readJSON('./packages/react-dom/package.json').version,
     'src/React.js': reactVersionExp.exec(grunt.file.read('./src/React.js'))[1],
   };
 

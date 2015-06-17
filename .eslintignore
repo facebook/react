@@ -19,7 +19,7 @@ examples/
 # Ignore built files.
 build/
 # react-codemod
-npm-react-codemod/test/
-npm-react-codemod/scripts/
-npm-react-codemod/build/
-npm-react-codemod/node_modules/
+packages/react-codemod/test/
+packages/react-codemod/scripts/
+packages/react-codemod/build/
+packages/react-codemod/node_modules/

@@ -7,11 +7,11 @@ function packRelease() {
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
-    args: ['pack', 'npm-react-dom'],
+    args: ['pack', 'packages/react-dom'],
   };
   grunt.util.spawn(spawnCmd, function() {
     var buildSrc = 'react-dom-' + grunt.config.data.pkg.version + '.tgz';
-    var buildDest = 'build/react-dom.tgz';
+    var buildDest = 'build/packages/react-dom.tgz';
     fs.rename(buildSrc, buildDest, done);
   });
 }
