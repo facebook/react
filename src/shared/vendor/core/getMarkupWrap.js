@@ -25,24 +25,8 @@ var dummyNode =
  *
  * In IE8, certain elements cannot render alone, so wrap all elements ('*').
  */
-var shouldWrap = {
-  // Force wrapping for SVG elements because if they get created inside a <div>,
-  // they will be initialized in the wrong namespace (and will not display).
-  'circle': true,
-  'clipPath': true,
-  'defs': true,
-  'ellipse': true,
-  'g': true,
-  'line': true,
-  'linearGradient': true,
-  'path': true,
-  'polygon': true,
-  'polyline': true,
-  'radialGradient': true,
-  'rect': true,
-  'stop': true,
-  'text': true
-};
+
+var shouldWrap = {};
 
 var selectWrap = [1, '<select multiple="true">', '</select>'];
 var tableWrap = [1, '<table>', '</table>'];
@@ -70,22 +54,35 @@ var markupWrap = {
 
   'td': trWrap,
   'th': trWrap,
-
-  'circle': svgWrap,
-  'clipPath': svgWrap,
-  'defs': svgWrap,
-  'ellipse': svgWrap,
-  'g': svgWrap,
-  'line': svgWrap,
-  'linearGradient': svgWrap,
-  'path': svgWrap,
-  'polygon': svgWrap,
-  'polyline': svgWrap,
-  'radialGradient': svgWrap,
-  'rect': svgWrap,
-  'stop': svgWrap,
-  'text': svgWrap
 };
+
+// Initilize the SVG elements since we know they'll always need to be wrapped
+// consistently. If they are created inside a <div> they will be initialized in
+// the wrong namespace (and will not display).
+var svgElements = [
+  'circle',
+  'clipPath',
+  'defs',
+  'ellipse',
+  'g',
+  'image',
+  'line',
+  'linearGradient',
+  'mask',
+  'path',
+  'pattern',
+  'polygon',
+  'polyline',
+  'radialGradient',
+  'rect',
+  'stop',
+  'text',
+  'tspan',
+];
+svgElements.forEach((nodeName) => {
+  markupWrap[nodeName] = svgWrap;
+  shouldWrap[nodeName] = true;
+});
 
 /**
  * Gets the markup wrap configuration for the supplied `nodeName`.
