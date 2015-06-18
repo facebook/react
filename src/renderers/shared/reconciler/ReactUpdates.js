@@ -19,7 +19,6 @@ var Transaction = require('Transaction');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
-var warning = require('warning');
 
 var dirtyComponents = [];
 var asapCallbackQueue = CallbackQueue.getPooled();
