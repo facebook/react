@@ -61,10 +61,6 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
     return null;
   }
 
-  if (internalInstance === ReactLifeCycle.currentlyUnmountingInstance) {
-    return null;
-  }
-
   return internalInstance;
 }
 

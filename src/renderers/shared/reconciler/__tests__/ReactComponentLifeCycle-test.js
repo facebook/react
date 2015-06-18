@@ -89,10 +89,6 @@ var CompositeComponentLifeCycle = keyMirror({
    * receiving new props.
    */
   MOUNTING: null,
-  /**
-   * Unmounted components are inactive and cannot receive new props.
-   */
-  UNMOUNTING: null,
 });
 
 function getCompositeLifeCycle(instance) {
@@ -102,9 +98,6 @@ function getCompositeLifeCycle(instance) {
   }
   if (ReactLifeCycle.currentlyMountingInstance === internalInstance) {
     return CompositeComponentLifeCycle.MOUNTING;
-  }
-  if (ReactLifeCycle.currentlyUnmountingInstance === internalInstance) {
-    return CompositeComponentLifeCycle.UNMOUNTING;
   }
   return null;
 }

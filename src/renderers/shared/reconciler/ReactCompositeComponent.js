@@ -265,19 +265,15 @@ var ReactCompositeComponentMixin = {
     var inst = this._instance;
 
     if (inst.componentWillUnmount) {
-      var previouslyUnmounting = ReactLifeCycle.currentlyUnmountingInstance;
-      ReactLifeCycle.currentlyUnmountingInstance = this;
-      try {
-        inst.componentWillUnmount();
-      } finally {
-        ReactLifeCycle.currentlyUnmountingInstance = previouslyUnmounting;
-      }
+      inst.componentWillUnmount();
     }
 
     ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
 
     // Reset pending fields
+    // Even if this component is scheduled for another update in ReactUpdates,
+    // it would still be ignored because these fields are reset.
     this._pendingStateQueue = null;
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
