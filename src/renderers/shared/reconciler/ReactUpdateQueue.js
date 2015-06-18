@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactLifeCycle = require('ReactLifeCycle');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -89,7 +88,10 @@ var ReactUpdateQueue = {
     }
     var internalInstance = ReactInstanceMap.get(publicInstance);
     if (internalInstance) {
-      return internalInstance !== ReactLifeCycle.currentlyMountingInstance;
+      // During componentWillMount and render this will still be null but after
+      // that will always render to something. At least for now. So we can use
+      // this hack.
+      return !!internalInstance._renderedComponent;
     } else {
       return false;
     }

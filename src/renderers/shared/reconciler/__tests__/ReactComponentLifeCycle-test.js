@@ -14,7 +14,6 @@
 var keyMirror = require('keyMirror');
 
 var React;
-var ReactLifeCycle;
 var ReactInstanceMap;
 var ReactTestUtils;
 
@@ -80,28 +79,6 @@ var ComponentLifeCycle = keyMirror({
   UNMOUNTED: null,
 });
 
-/**
- * Composite components can also be in one of these life cycles.
- */
-var CompositeComponentLifeCycle = keyMirror({
-  /**
-   * Mounted components have a DOM node representation and are capable of
-   * receiving new props.
-   */
-  MOUNTING: null,
-});
-
-function getCompositeLifeCycle(instance) {
-  var internalInstance = ReactInstanceMap.get(instance);
-  if (!internalInstance) {
-    return null;
-  }
-  if (ReactLifeCycle.currentlyMountingInstance === internalInstance) {
-    return CompositeComponentLifeCycle.MOUNTING;
-  }
-  return null;
-}
-
 function getLifeCycleState(instance) {
   var internalInstance = ReactInstanceMap.get(instance);
   // Once a component gets mounted, it has an internal instance, once it
@@ -123,7 +100,6 @@ describe('ReactComponentLifeCycle', function() {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    ReactLifeCycle = require('ReactLifeCycle');
     ReactInstanceMap = require('ReactInstanceMap');
   });
 
@@ -335,8 +311,6 @@ describe('ReactComponentLifeCycle', function() {
         this._testJournal.returnedFromGetInitialState = clone(initState);
         this._testJournal.lifeCycleAtStartOfGetInitialState =
           getLifeCycleState(this);
-        this._testJournal.compositeLifeCycleAtStartOfGetInitialState =
-          getCompositeLifeCycle(this);
         return initState;
       },
 
@@ -344,8 +318,6 @@ describe('ReactComponentLifeCycle', function() {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillMount =
           getLifeCycleState(this);
-        this._testJournal.compositeLifeCycleAtStartOfWillMount =
-          getCompositeLifeCycle(this);
         this.state.hasWillMountCompleted = true;
       },
 
@@ -361,8 +333,6 @@ describe('ReactComponentLifeCycle', function() {
         if (isInitialRender) {
           this._testJournal.stateInInitialRender = clone(this.state);
           this._testJournal.lifeCycleInInitialRender = getLifeCycleState(this);
-          this._testJournal.compositeLifeCycleInInitialRender =
-            getCompositeLifeCycle(this);
         } else {
           this._testJournal.stateInLaterRender = clone(this.state);
           this._testJournal.lifeCycleInLaterRender = getLifeCycleState(this);
@@ -396,8 +366,6 @@ describe('ReactComponentLifeCycle', function() {
     );
     expect(instance._testJournal.lifeCycleAtStartOfGetInitialState)
       .toBe(ComponentLifeCycle.UNMOUNTED);
-    expect(instance._testJournal.compositeLifeCycleAtStartOfGetInitialState)
-      .toBe(null);
 
     // componentWillMount
     expect(instance._testJournal.stateAtStartOfWillMount).toEqual(
@@ -405,8 +373,6 @@ describe('ReactComponentLifeCycle', function() {
     );
     expect(instance._testJournal.lifeCycleAtStartOfWillMount)
       .toBe(ComponentLifeCycle.MOUNTED);
-    expect(instance._testJournal.compositeLifeCycleAtStartOfWillMount)
-      .toBe(CompositeComponentLifeCycle.MOUNTING);
 
     // componentDidMount
     expect(instance._testJournal.stateAtStartOfDidMount)
@@ -420,9 +386,6 @@ describe('ReactComponentLifeCycle', function() {
       .toEqual(INIT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInInitialRender).toBe(
       ComponentLifeCycle.MOUNTED
-    );
-    expect(instance._testJournal.compositeLifeCycleInInitialRender).toBe(
-      CompositeComponentLifeCycle.MOUNTING
     );
 
     expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
