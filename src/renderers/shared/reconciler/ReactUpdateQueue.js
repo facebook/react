@@ -22,13 +22,7 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 function enqueueUpdate(internalInstance) {
-  if (internalInstance !== ReactLifeCycle.currentlyMountingInstance) {
-    // If we're in a componentWillMount handler, don't enqueue a rerender
-    // because ReactUpdates assumes we're in a browser context (which is
-    // wrong for server rendering) and we're about to do a render anyway.
-    // See bug in #1740.
-    ReactUpdates.enqueueUpdate(internalInstance);
-  }
+  ReactUpdates.enqueueUpdate(internalInstance);
 }
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {

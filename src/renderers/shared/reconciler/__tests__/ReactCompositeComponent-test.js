@@ -351,12 +351,14 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
 
     var renderedState = -1;
+    var renderPasses = 0;
 
     var Component = React.createClass({
       getInitialState: function() {
         return {value: 0};
       },
       render: function() {
+        renderPasses++;
         renderedState = this.state.value;
         if (this.state.value === 0) {
           this.setState({ value: 1 });
@@ -376,11 +378,12 @@ describe('ReactCompositeComponent', function() {
       'function of props and state.'
     );
 
-    // The setState call is queued but the result isn't immediately available
-    // during this pass. It is queued up but not flushed. The behavior is more
-    // or less undefined.
-    expect(renderedState).toBe(0);
-    expect(instance.state.value).toBe(0);
+    // The setState call is queued and then executed as a second pass. This
+    // behavior is undefined though so we're free to change it to suit the
+    // implementation details.
+    expect(renderPasses).toBe(2);
+    expect(renderedState).toBe(1);
+    expect(instance.state.value).toBe(1);
 
     // Forcing a rerender anywhere will cause the update to happen.
     var instance2 = React.render(<Component prop={123} />, container);
