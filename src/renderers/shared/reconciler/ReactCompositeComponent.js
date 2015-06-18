@@ -99,7 +99,7 @@ var ReactCompositeComponentMixin = {
 
     this._context = null;
     this._mountOrder = 0;
-    this._isTopLevel = false;
+    this._topLevelWrapper = null;
 
     // See ReactUpdates and ReactUpdateQueue.
     this._pendingCallbacks = null;
@@ -277,6 +277,7 @@ var ReactCompositeComponentMixin = {
     // longer accessible.
     this._context = null;
     this._rootNodeID = null;
+    this._topLevelWrapper = null;
 
     // Delete the reference from the instance to this internal representation
     // which allow the internals to be properly cleaned up even if the user

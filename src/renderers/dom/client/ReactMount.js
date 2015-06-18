@@ -274,11 +274,7 @@ function mountComponentIntoNode(
   var markup = ReactReconciler.mountComponent(
     componentInstance, rootID, transaction, context
   );
-  if (typeof componentInstance._renderedComponent._currentElement.type ===
-      'function') {
-    // hax
-    componentInstance._renderedComponent._isTopLevel = true;
-  }
+  componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
 }
 

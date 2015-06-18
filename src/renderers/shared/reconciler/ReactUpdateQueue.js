@@ -245,13 +245,16 @@ var ReactUpdateQueue = {
       publicInstance,
       'setProps'
     );
-
     if (!internalInstance) {
       return;
     }
+    ReactUpdateQueue.enqueueSetPropsInternal(internalInstance, partialProps);
+  },
 
+  enqueueSetPropsInternal: function(internalInstance, partialProps) {
+    var topLevelWrapper = internalInstance._topLevelWrapper;
     invariant(
-      internalInstance._isTopLevel,
+      topLevelWrapper,
       'setProps(...): You called `setProps` on a ' +
       'component with a parent. This is an anti-pattern since props will ' +
       'get reactively updated when rendered. Instead, change the owner\'s ' +
@@ -261,15 +264,16 @@ var ReactUpdateQueue = {
 
     // Merge with the pending element if it exists, otherwise with existing
     // element props.
-    var element = internalInstance._pendingElement ||
-                  internalInstance._currentElement;
+    var wrapElement = topLevelWrapper._pendingElement ||
+                      topLevelWrapper._currentElement;
+    var element = wrapElement.props;
     var props = assign({}, element.props, partialProps);
-    internalInstance._pendingElement = ReactElement.cloneAndReplaceProps(
-      element,
-      props
+    topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
+      wrapElement,
+      ReactElement.cloneAndReplaceProps(element, props)
     );
 
-    enqueueUpdate(internalInstance);
+    enqueueUpdate(topLevelWrapper);
   },
 
   /**
@@ -284,13 +288,16 @@ var ReactUpdateQueue = {
       publicInstance,
       'replaceProps'
     );
-
     if (!internalInstance) {
       return;
     }
+    ReactUpdateQueue.enqueueReplacePropsInternal(internalInstance, props);
+  },
 
+  enqueueReplacePropsInternal: function(internalInstance, props) {
+    var topLevelWrapper = internalInstance._topLevelWrapper;
     invariant(
-      internalInstance._isTopLevel,
+      topLevelWrapper,
       'replaceProps(...): You called `replaceProps` on a ' +
       'component with a parent. This is an anti-pattern since props will ' +
       'get reactively updated when rendered. Instead, change the owner\'s ' +
@@ -300,14 +307,15 @@ var ReactUpdateQueue = {
 
     // Merge with the pending element if it exists, otherwise with existing
     // element props.
-    var element = internalInstance._pendingElement ||
-                  internalInstance._currentElement;
-    internalInstance._pendingElement = ReactElement.cloneAndReplaceProps(
-      element,
-      props
+    var wrapElement = topLevelWrapper._pendingElement ||
+                      topLevelWrapper._currentElement;
+    var element = wrapElement.props;
+    topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
+      wrapElement,
+      ReactElement.cloneAndReplaceProps(element, props)
     );
 
-    enqueueUpdate(internalInstance);
+    enqueueUpdate(topLevelWrapper);
   },
 
   enqueueElementInternal: function(internalInstance, newElement) {
