@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactRef = require('ReactRef');
-var ReactElementValidator = require('ReactElementValidator');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -36,11 +35,6 @@ var ReactReconciler = {
    */
   mountComponent: function(internalInstance, rootID, transaction, context) {
     var markup = internalInstance.mountComponent(rootID, transaction, context);
-    if (__DEV__) {
-      ReactElementValidator.checkAndWarnForMutatedProps(
-        internalInstance._currentElement
-      );
-    }
     if (internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
@@ -81,10 +75,6 @@ var ReactReconciler = {
       // it's possible for an element created outside a composite to be
       // deeply mutated and reused.
       return;
-    }
-
-    if (__DEV__) {
-      ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
     }
 
     var refsChanged = ReactRef.shouldUpdateRefs(
