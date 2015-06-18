@@ -11,11 +11,14 @@
  */
 'use strict';
 
+var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
+var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
+var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -33,6 +36,8 @@ function renderToString(element) {
 
   var transaction;
   try {
+    ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
+
     var id = ReactInstanceHandles.createReactRootID();
     transaction = ReactServerRenderingTransaction.getPooled(false);
 
@@ -44,6 +49,9 @@ function renderToString(element) {
     }, null);
   } finally {
     ReactServerRenderingTransaction.release(transaction);
+    // Revert to the DOM batching strategy since these two renderers
+    // currently share these stateful modules.
+    ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
   }
 }
 
@@ -60,6 +68,8 @@ function renderToStaticMarkup(element) {
 
   var transaction;
   try {
+    ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
+
     var id = ReactInstanceHandles.createReactRootID();
     transaction = ReactServerRenderingTransaction.getPooled(true);
 
@@ -69,6 +79,9 @@ function renderToStaticMarkup(element) {
     }, null);
   } finally {
     ReactServerRenderingTransaction.release(transaction);
+    // Revert to the DOM batching strategy since these two renderers
+    // currently share these stateful modules.
+    ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
   }
 }
 
