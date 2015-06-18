@@ -117,8 +117,7 @@ var ReactUpdateQueue = {
     // behavior we have in other enqueue* methods.
     // We also need to ignore callbacks in componentWillMount. See
     // enqueueUpdates.
-    if (!internalInstance ||
-        internalInstance === ReactLifeCycle.currentlyMountingInstance) {
+    if (!internalInstance) {
       return null;
     }
 
