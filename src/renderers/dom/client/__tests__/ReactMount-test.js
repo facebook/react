@@ -20,7 +20,7 @@ describe('ReactMount', function() {
   var WebComponents = WebComponents;
 
   try {
-    if (WebComponents === undefined && jest !== undefined) {
+    if (WebComponents === undefined && typeof jest !== 'undefined') {
       WebComponents = require('WebComponents');
     }
   } catch(e) {
