@@ -257,6 +257,32 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
+  it('should correctly determine if a null component is mounted', function() {
+    spyOn(console, 'error');
+    var Component = React.createClass({
+      componentWillMount: function() {
+        expect(this.isMounted()).toBeFalsy();
+      },
+      componentDidMount: function() {
+        expect(this.isMounted()).toBeTruthy();
+      },
+      render: function() {
+        expect(this.isMounted()).toBeFalsy();
+        return null;
+      },
+    });
+
+    var element = <Component />;
+
+    var instance = ReactTestUtils.renderIntoDocument(element);
+    expect(instance.isMounted()).toBeTruthy();
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Component is accessing isMounted inside its render()'
+    );
+  });
+
   it('isMounted should return false when unmounted', function () {
     var Component = React.createClass({
       render: function() {

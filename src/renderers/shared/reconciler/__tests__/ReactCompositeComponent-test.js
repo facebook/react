@@ -286,11 +286,14 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
+    var renders = 0;
+
     var Component = React.createClass({
       getInitialState: function() {
         return {value: 0};
       },
       render: function() {
+        renders++;
         return <div />;
       },
     });
@@ -299,12 +302,20 @@ describe('ReactCompositeComponent', function() {
     expect(instance.setState).not.toBeDefined();
 
     instance = React.render(instance, container);
+
+    expect(renders).toBe(1);
+
     instance.setState({value: 1});
 
     expect(console.error.calls.length).toBe(0);
 
+    expect(renders).toBe(2);
+
     React.unmountComponentAtNode(container);
     instance.setState({value: 2});
+
+    expect(renders).toBe(2);
+
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
