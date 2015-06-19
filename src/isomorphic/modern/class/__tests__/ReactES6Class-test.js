@@ -16,6 +16,10 @@ var React;
 describe('ReactES6Class', function() {
 
   var container;
+  var freeze = function(expectation) {
+    Object.freeze(expectation);
+    return expectation;
+  };
   var Inner;
   var attachedListener = null;
   var renderedName = null;
@@ -288,10 +292,10 @@ describe('ReactES6Class', function() {
     lifeCycles = []; // reset
     test(<Foo value="bar" />, 'SPAN', 'bar');
     expect(lifeCycles).toEqual([
-      'receive-props', {value: 'bar'},
-      'should-update', {value: 'bar'}, {},
-      'will-update', {value: 'bar'}, {},
-      'did-update', {value: 'foo'}, {},
+      'receive-props', freeze({value: 'bar'}),
+      'should-update', freeze({value: 'bar'}), {},
+      'will-update', freeze({value: 'bar'}), {},
+      'did-update', freeze({value: 'foo'}), {},
     ]);
     lifeCycles = []; // reset
     React.unmountComponentAtNode(container);

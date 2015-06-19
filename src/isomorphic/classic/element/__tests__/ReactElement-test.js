@@ -37,7 +37,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('allows a string to be passed as the type', function() {
@@ -45,7 +47,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('returns an immutable element', function() {
@@ -70,7 +74,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    expect(element.props).toEqual({foo:'56'});
+    var expectation = {foo:'56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('coerces the key to a string', function() {
@@ -81,7 +87,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({foo:'56'});
+    var expectation = {foo:'56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('preserves the owner on the element', function() {
@@ -243,84 +251,42 @@ describe('ReactElement', function() {
     expect(inst2.props.prop).toBe(null);
   });
 
-  it('warns when changing a prop after element creation', function() {
-    spyOn(console, 'error');
+  it('throws when changing a prop (in dev) after element creation', function() {
     var Outer = React.createClass({
       render: function() {
         var el = <div className="moo" />;
 
-        // This assignment warns but should still work for now.
-        el.props.className = 'quack';
-        expect(el.props.className).toBe('quack');
+        expect(function() {
+          el.props.className = 'quack';
+        }).toThrow();
+        expect(el.props.className).toBe('moo');
 
         return el;
       },
     });
     var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
-    expect(React.findDOMNode(outer).className).toBe('quack');
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Don\'t set .props.className of the React component <div />.'
-    );
-    expect(console.error.argsForCall[0][0]).toContain(
-      'The element was created by Outer.'
-    );
-
-    console.error.reset();
-
-    // This also warns (just once per key/type pair)
-    outer.props.color = 'green';
-    outer.forceUpdate();
-    outer.props.color = 'purple';
-    outer.forceUpdate();
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Don\'t set .props.color of the React component <Outer />.'
-    );
+    expect(React.findDOMNode(outer).className).toBe('moo');
   });
 
-  it('warns when adding a prop after element creation', function() {
-    spyOn(console, 'error');
+  it('throws when adding a prop (in dev) after element creation', function() {
     var container = document.createElement('div');
     var Outer = React.createClass({
       getDefaultProps: () => ({sound: 'meow'}),
       render: function() {
         var el = <div>{this.props.sound}</div>;
 
-        // This assignment doesn't warn immediately (because we can't) but it
-        // warns upon mount.
-        el.props.className = 'quack';
-        expect(el.props.className).toBe('quack');
+        expect(function() {
+          el.props.className = 'quack';
+        }).toThrow();
+
+        expect(el.props.className).toBe(undefined);
 
         return el;
       },
     });
     var outer = React.render(<Outer />, container);
     expect(React.findDOMNode(outer).textContent).toBe('meow');
-    expect(React.findDOMNode(outer).className).toBe('quack');
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Don\'t set .props.className of the React component <div />.'
-    );
-    expect(console.error.argsForCall[0][0]).toContain(
-      'The element was created by Outer.'
-    );
-
-    console.error.reset();
-
-    var newOuterEl = <Outer />;
-    newOuterEl.props.sound = 'oink';
-    outer = React.render(newOuterEl, container);
-    expect(React.findDOMNode(outer).textContent).toBe('oink');
-    expect(React.findDOMNode(outer).className).toBe('quack');
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Don\'t set .props.sound of the React component <Outer />.'
-    );
+    expect(React.findDOMNode(outer).className).toBe('');
   });
 
   it('does not warn for NaN props', function() {

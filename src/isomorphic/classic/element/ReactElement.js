@@ -14,70 +14,11 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
-var warning = require('warning');
 
 var RESERVED_PROPS = {
   key: true,
   ref: true,
 };
-
-/**
- * Warn for mutations.
- *
- * @internal
- * @param {object} object
- * @param {string} key
- */
-function defineWarningProperty(object, key) {
-  Object.defineProperty(object, key, {
-
-    configurable: false,
-    enumerable: true,
-
-    get: function() {
-      if (!this._store) {
-        return null;
-      }
-      return this._store[key];
-    },
-
-    set: function(value) {
-      warning(
-        false,
-        'Don\'t set the %s property of the React element. Instead, ' +
-        'specify the correct value when initially creating the element.',
-        key
-      );
-      this._store[key] = value;
-    },
-
-  });
-}
-
-/**
- * This is updated to true if the membrane is successfully created.
- */
-var useMutationMembrane = false;
-
-/**
- * Warn for mutations.
- *
- * @internal
- * @param {object} prototype
- */
-function defineMutationMembrane(prototype) {
-  try {
-    var pseudoFrozenProperties = {
-      props: true,
-    };
-    for (var key in pseudoFrozenProperties) {
-      defineWarningProperty(prototype, key);
-    }
-    useMutationMembrane = true;
-  } catch (x) {
-    // IE will fail on defineProperty
-  }
-}
 
 /**
  * Base constructor for all React elements. This is only used to make this
@@ -100,11 +41,11 @@ var ReactElement = function(type, key, ref, owner, props) {
   this._owner = owner;
 
   if (__DEV__) {
-    // The validation flag and props are currently mutative. We put them on
+    // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
-    this._store = {props: props, originalProps: assign({}, props)};
+    this._store = {};
 
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
@@ -115,21 +56,15 @@ var ReactElement = function(type, key, ref, owner, props) {
         configurable: false,
         enumerable: false,
         writable: true,
+        value: false,
       });
     } catch (x) {
+      this._store.validated = false;
     }
-    this._store.validated = false;
-
-    // We're not allowed to set props directly on the object so we early
-    // return and rely on the prototype membrane to forward to the backing
-    // store.
-    if (useMutationMembrane) {
-      Object.freeze(this);
-      return;
-    }
+    this.props = props;
+    Object.freeze(this.props);
+    Object.freeze(this);
   }
-
-  this.props = props;
 };
 
 // We intentionally don't expose the function on the constructor property.
@@ -137,10 +72,6 @@ var ReactElement = function(type, key, ref, owner, props) {
 ReactElement.prototype = {
   _isReactElement: true,
 };
-
-if (__DEV__) {
-  defineMutationMembrane(ReactElement.prototype);
-}
 
 ReactElement.createElement = function(type, config, children) {
   var propName;
@@ -219,6 +150,7 @@ ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
     // If the key on the original is valid, then the clone is valid
     newElement._store.validated = oldElement._store.validated;
   }
+
   return newElement;
 };
 
