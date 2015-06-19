@@ -20,6 +20,7 @@ var ReactNativeComponent = require('ReactNativeComponent');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactPureFunction = require('ReactPureFunction');
 var ReactReconciler = require('ReactReconciler');
 
 var assign = require('Object.assign');
@@ -743,11 +744,17 @@ var ReactCompositeComponentMixin = {
   _renderValidatedComponent: function() {
     var renderedComponent;
     ReactCurrentOwner.current = this;
+    if (__DEV__) {
+      ReactPureFunction.isPureScope = true;
+    }
     try {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
     } finally {
       ReactCurrentOwner.current = null;
+      if (__DEV__) {
+        ReactPureFunction.isPureScope = false;
+      }
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate

@@ -253,7 +253,7 @@ describe('ReactComponentLifeCycle', function() {
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'Component is accessing isMounted inside its render()'
+      'Do not access isMounted inside of the render() function'
     );
   });
 
@@ -320,7 +320,7 @@ describe('ReactComponentLifeCycle', function() {
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'Component is accessing getDOMNode or findDOMNode inside its render()'
+      'Do not access getDOMNode or findDOMNode inside of render()'
     );
   });
 

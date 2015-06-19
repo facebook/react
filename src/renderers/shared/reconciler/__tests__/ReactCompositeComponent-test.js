@@ -14,7 +14,7 @@
 var ChildUpdates;
 var MorphingComponent;
 var React;
-var ReactCurrentOwner;
+var ReactPureFunction;
 var ReactMount;
 var ReactPropTypes;
 var ReactServerRendering;
@@ -31,7 +31,7 @@ describe('ReactCompositeComponent', function() {
 
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
-    ReactCurrentOwner = require('ReactCurrentOwner');
+    ReactPureFunction = require('ReactPureFunction');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
     ReactMount = require('ReactMount');
@@ -384,7 +384,7 @@ describe('ReactCompositeComponent', function() {
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: setState(...): Cannot update during an existing state ' +
+      'Warning: Cannot setState during an existing state ' +
       'transition (such as within `render`). Render methods should be a pure ' +
       'function of props and state.'
     );
@@ -472,18 +472,19 @@ describe('ReactCompositeComponent', function() {
   it('should cleanup even if render() fatals', function() {
     var BadComponent = React.createClass({
       render: function() {
+        expect(ReactPureFunction.isPureScope).toBe(true);
         throw new Error();
       },
     });
     var instance = <BadComponent />;
 
-    expect(ReactCurrentOwner.current).toBe(null);
+    expect(ReactPureFunction.isPureScope).toBe(false);
 
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
 
-    expect(ReactCurrentOwner.current).toBe(null);
+    expect(ReactPureFunction.isPureScope).toBe(false);
   });
 
   it('should call componentWillUnmount before unmounting', function() {
@@ -797,10 +798,10 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils.renderIntoDocument(<Outer />);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: _renderNewRootComponent(): Render methods should ' +
-      'be a pure function of props and state; triggering nested component ' +
-      'updates from render is not allowed. If necessary, trigger nested ' +
-      'updates in componentDidUpdate. Check the render method of Outer.'
+      'Warning: Do not render new trees within render(). Render methods ' +
+      'should be a pure function of props and state; triggering nested ' +
+      'component updates from render is not allowed. If necessary, trigger ' +
+      'nested updates in componentDidUpdate.'
     );
   });
 
