@@ -396,6 +396,9 @@ describe('ReactCompositeComponent', function() {
     expect(renderedState).toBe(1);
     expect(instance.state.value).toBe(1);
 
+    // Should've only warned once
+    expect(console.error.calls.length).toBe(1);
+
     // Forcing a rerender anywhere will cause the update to happen.
     var instance2 = React.render(<Component prop={123} />, container);
     expect(instance).toBe(instance2);

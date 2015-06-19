@@ -23,12 +23,22 @@ var warning = require('warning');
 var ReactPureFunction = {};
 
 if (__DEV__) {
+  var warningDedupeMap = {};
   ReactPureFunction.assertSideEffect = function(message) {
-    warning(
-      !ReactPureFunction.isPureScope,
-      message
-    );
-  }
+    if (ReactPureFunction.isPureScope) {
+      // As a heuristic we can use half the stack size for deduping errors.
+      // This ensures that we don't warn too much for similar callsites.
+      var warningKey = new Error().stack;
+      warningKey = warningKey.substr(0, Math.floor(warningKey.length / 2));
+      if (!warningDedupeMap[warningKey]) {
+        warningDedupeMap[warningKey] = true;
+        warning(
+          false,
+          message
+        );
+      }
+    }
+  };
   ReactPureFunction.isPureScope = false;
 }
 
