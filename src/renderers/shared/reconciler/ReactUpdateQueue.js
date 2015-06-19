@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactLifeCycle = require('ReactLifeCycle');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -22,23 +21,19 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 function enqueueUpdate(internalInstance) {
-  if (internalInstance !== ReactLifeCycle.currentlyMountingInstance) {
-    // If we're in a componentWillMount handler, don't enqueue a rerender
-    // because ReactUpdates assumes we're in a browser context (which is
-    // wrong for server rendering) and we're about to do a render anyway.
-    // See bug in #1740.
-    ReactUpdates.enqueueUpdate(internalInstance);
-  }
+  ReactUpdates.enqueueUpdate(internalInstance);
 }
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
-  warning(
-    ReactCurrentOwner.current == null,
-    '%s(...): Cannot update during an existing state transition ' +
-    '(such as within `render`). Render methods should be a pure function ' +
-    'of props and state.',
-    callerName
-  );
+  if (__DEV__) {
+    warning(
+      ReactCurrentOwner.current == null,
+      '%s(...): Cannot update during an existing state transition ' +
+      '(such as within `render`). Render methods should be a pure function ' +
+      'of props and state.',
+      callerName
+    );
+  }
 
   var internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
@@ -56,10 +51,6 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
         publicInstance.constructor.displayName
       );
     }
-    return null;
-  }
-
-  if (internalInstance === ReactLifeCycle.currentlyUnmountingInstance) {
     return null;
   }
 
@@ -97,7 +88,10 @@ var ReactUpdateQueue = {
     }
     var internalInstance = ReactInstanceMap.get(publicInstance);
     if (internalInstance) {
-      return internalInstance !== ReactLifeCycle.currentlyMountingInstance;
+      // During componentWillMount and render this will still be null but after
+      // that will always render to something. At least for now. So we can use
+      // this hack.
+      return !!internalInstance._renderedComponent;
     } else {
       return false;
     }
@@ -125,8 +119,7 @@ var ReactUpdateQueue = {
     // behavior we have in other enqueue* methods.
     // We also need to ignore callbacks in componentWillMount. See
     // enqueueUpdates.
-    if (!internalInstance ||
-        internalInstance === ReactLifeCycle.currentlyMountingInstance) {
+    if (!internalInstance) {
       return null;
     }
 

@@ -147,7 +147,7 @@ describe('ReactCompositeComponent-state', function() {
 
     React.unmountComponentAtNode(container);
 
-    expect(stateListener.mock.calls).toEqual([
+    expect(stateListener.mock.calls.join('\n')).toEqual([
       // there is no state when getInitialState() is called
       ['getInitialState', null],
       ['componentWillMount-start', 'red'],
@@ -173,6 +173,8 @@ describe('ReactCompositeComponent-state', function() {
       ['render', 'yellow'],
       ['componentDidUpdate-currentState', 'yellow'],
       ['componentDidUpdate-prevState', 'orange'],
+      ['setState-sunrise', 'yellow'],
+      ['setState-orange', 'yellow'],
       ['setState-yellow', 'yellow'],
       ['initial-callback', 'yellow'],
       ['componentWillReceiveProps-start', 'yellow'],
@@ -210,7 +212,7 @@ describe('ReactCompositeComponent-state', function() {
       // unmountComponent()
       // state is available within `componentWillUnmount()`
       ['componentWillUnmount', 'blue'],
-    ]);
+    ].join('\n'));
   });
 
   it('should batch unmounts', function() {

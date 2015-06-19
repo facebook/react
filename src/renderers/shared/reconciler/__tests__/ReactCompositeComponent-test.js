@@ -286,11 +286,14 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
+    var renders = 0;
+
     var Component = React.createClass({
       getInitialState: function() {
         return {value: 0};
       },
       render: function() {
+        renders++;
         return <div />;
       },
     });
@@ -299,12 +302,20 @@ describe('ReactCompositeComponent', function() {
     expect(instance.setState).not.toBeDefined();
 
     instance = React.render(instance, container);
+
+    expect(renders).toBe(1);
+
     instance.setState({value: 1});
 
     expect(console.error.calls.length).toBe(0);
 
+    expect(renders).toBe(2);
+
     React.unmountComponentAtNode(container);
     instance.setState({value: 2});
+
+    expect(renders).toBe(2);
+
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
@@ -351,12 +362,14 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
 
     var renderedState = -1;
+    var renderPasses = 0;
 
     var Component = React.createClass({
       getInitialState: function() {
         return {value: 0};
       },
       render: function() {
+        renderPasses++;
         renderedState = this.state.value;
         if (this.state.value === 0) {
           this.setState({ value: 1 });
@@ -376,11 +389,12 @@ describe('ReactCompositeComponent', function() {
       'function of props and state.'
     );
 
-    // The setState call is queued but the result isn't immediately available
-    // during this pass. It is queued up but not flushed. The behavior is more
-    // or less undefined.
-    expect(renderedState).toBe(0);
-    expect(instance.state.value).toBe(0);
+    // The setState call is queued and then executed as a second pass. This
+    // behavior is undefined though so we're free to change it to suit the
+    // implementation details.
+    expect(renderPasses).toBe(2);
+    expect(renderedState).toBe(1);
+    expect(instance.state.value).toBe(1);
 
     // Forcing a rerender anywhere will cause the update to happen.
     var instance2 = React.render(<Component prop={123} />, container);
