@@ -12,6 +12,7 @@
 'use strict';
 
 var EventConstants = require('EventConstants');
+var ReactErrorUtils = require('ReactErrorUtils');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -108,7 +109,9 @@ function forEachEventDispatch(event, cb) {
  */
 function executeDispatch(event, listener, domID) {
   event.currentTarget = injection.Mount.getNode(domID);
-  var returnValue = listener(event, domID);
+  var type = event.type || 'unknown-event';
+  var returnValue =
+    ReactErrorUtils.invokeGuardedCallback(type, listener, event, domID);
   event.currentTarget = null;
   return returnValue;
 }

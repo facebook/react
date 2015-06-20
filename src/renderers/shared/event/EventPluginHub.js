@@ -13,6 +13,7 @@
 
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
+var ReactErrorUtils = require('ReactErrorUtils');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
@@ -282,6 +283,8 @@ var EventPluginHub = {
       'processEventQueue(): Additional events were enqueued while processing ' +
       'an event queue. Support for this has not yet been implemented.'
     );
+    // This would be a good time to rethrow if any of the event handlers threw.
+    ReactErrorUtils.rethrowCaughtError();
   },
 
   /**

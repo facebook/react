@@ -161,6 +161,34 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
   });
 
+  it('should continue bubbling if an error is thrown', function() {
+    ReactBrowserEventEmitter.putListener(
+      getID(CHILD),
+      ON_CLICK_KEY,
+      recordID.bind(null, getID(CHILD))
+    );
+    ReactBrowserEventEmitter.putListener(
+      getID(PARENT),
+      ON_CLICK_KEY,
+      function() {
+        recordID(getID(PARENT));
+        throw new Error('Handler interrupted');
+      }
+    );
+    ReactBrowserEventEmitter.putListener(
+      getID(GRANDPARENT),
+      ON_CLICK_KEY,
+      recordID.bind(null, getID(GRANDPARENT))
+    );
+    expect(function() {
+      ReactTestUtils.Simulate.click(CHILD);
+    }).toThrow();
+    expect(idCallOrder.length).toBe(3);
+    expect(idCallOrder[0]).toBe(getID(CHILD));
+    expect(idCallOrder[1]).toBe(getID(PARENT));
+    expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
+  });
+
   it('should set currentTarget', function() {
     ReactBrowserEventEmitter.putListener(
       getID(CHILD),
