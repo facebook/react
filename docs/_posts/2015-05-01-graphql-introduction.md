@@ -71,7 +71,7 @@ Obviously GraphQL is not the first system to manage client-server interactions. 
 
 REST an acronym for Representational State Transfer, which is an architectural style rather than a formal protocol. There is actually much debate about what exactly REST is and is not. We wish to avoid such debates. We are interested in the typical attributes of systems that *self-identify* as REST, rather than systems which are formally REST.
 
-Objects in a typical REST system are addressable by URI and interacted with using verbs in the HTTP protocol. An HTTP GET to a particular URI fetches and object and returns a server-specified set of fields. An HTTP PUT edits an object; an HTTP DELETE deletes an object; and so on.
+Objects in a typical REST system are addressable by URI and interacted with using verbs in the HTTP protocol. An HTTP GET to a particular URI fetches an object and returns a server-specified set of fields. An HTTP PUT edits an object; an HTTP DELETE deletes an object; and so on.
 
 We believe there are a number of weakness in typical REST systems, ones that are particularly problematic in mobile applications:
 
