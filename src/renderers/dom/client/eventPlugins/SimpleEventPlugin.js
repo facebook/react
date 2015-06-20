@@ -13,7 +13,6 @@
 
 var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
-var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var ReactMount = require('ReactMount');
 var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
@@ -30,7 +29,6 @@ var emptyFunction = require('emptyFunction');
 var getEventCharCode = require('getEventCharCode');
 var invariant = require('invariant');
 var keyOf = require('keyOf');
-var warning = require('warning');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -451,30 +449,6 @@ var onClickListeners = {};
 var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
-
-  /**
-   * Same as the default implementation, except cancels the event when return
-   * value is false. This behavior will be disabled in a future release.
-   *
-   * @param {object} event Event to be dispatched.
-   * @param {function} listener Application-level callback.
-   * @param {string} domID DOM ID to pass to the callback.
-   */
-  executeDispatch: function(event, listener, domID) {
-    var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
-
-    warning(
-      typeof returnValue !== 'boolean',
-      'Returning `false` from an event handler is deprecated and will be ' +
-      'ignored in a future release. Instead, manually call ' +
-      'e.stopPropagation() or e.preventDefault(), as appropriate.'
-    );
-
-    if (returnValue === false) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-  },
 
   /**
    * @param {string} topLevelType Record from `EventConstants`.
