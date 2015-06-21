@@ -22,6 +22,7 @@ var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 
 var findDOMNode = require('findDOMNode');
+var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
 ReactDefaultInjection.inject();
@@ -34,6 +35,7 @@ var React = {
   findDOMNode: findDOMNode,
   render: render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
+  _renderSubtreeIntoContainer: renderSubtreeIntoContainer,
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.
