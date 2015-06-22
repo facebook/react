@@ -30,7 +30,7 @@ function deprecated(fnName, newModule, ctx, fn) {
     var newFn = function() {
       warning(
         warned,
-        '`require("react").%s` is deprecated. Please use `require("%s").%s` ' +
+        '`require' + '("react").%s` is deprecated. Please use `require' + '("%s").%s` ' +
         'instead.',
         fnName,
         newModule,
