@@ -552,10 +552,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should warn when defined method componentDidUnmount', function() {
-    var container = document.createElement('div');
-    document.body.appendChild(container);
-
+  it('should warn when componentDidUnmount method is defined', function() {
     var Component = React.createClass({
       componentDidUnmount: function() {
       },
@@ -565,17 +562,13 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var instance = <Component />;
-
-    instance = React.render(instance, container);
-    expect(console.error.calls.length).toBe(0);
-
-    React.unmountComponentAtNode(container);
+    ReactTestUtils.renderIntoDocument(<Component />);
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: componentDidUnmount was defined on Component. But there is no such ' +
-      'lifecycle method. Use componentWillUnmount instead.'
+      'Warning: Component has a method called ' +
+      'componentDidUnmount(). But there is no such lifecycle method. ' +
+      'Did you mean componentWillUnmount()?'
     );
   });
 

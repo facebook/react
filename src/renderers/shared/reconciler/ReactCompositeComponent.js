@@ -195,6 +195,13 @@ var ReactCompositeComponentMixin = {
         (this.getName() || 'A component')
       );
       warning(
+        typeof inst.componentDidUnmount !== 'function',
+        '%s has a method called ' +
+        'componentDidUnmount(). But there is no such lifecycle method. ' +
+        'Did you mean componentWillUnmount()?',
+        this.getName() || 'A component'
+      );
+      warning(
         typeof inst.componentWillRecieveProps !== 'function',
         '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
@@ -256,14 +263,6 @@ var ReactCompositeComponentMixin = {
 
     if (inst.componentWillUnmount) {
       inst.componentWillUnmount();
-    }
-    if (__DEV__) {
-      warning(
-        typeof inst.componentDidUnmount !== 'function',
-        'componentDidUnmount was defined on %s. But there is no such ' +
-        'lifecycle method. Use componentWillUnmount instead.',
-        this.getName() || 'ReactCompositeComponent'
-      );
     }
 
     ReactReconciler.unmountComponent(this._renderedComponent);
