@@ -257,6 +257,14 @@ var ReactCompositeComponentMixin = {
     if (inst.componentWillUnmount) {
       inst.componentWillUnmount();
     }
+    if (__DEV__) {
+      warning(
+        typeof inst.componentDidUnmount !== 'function',
+        'componentDidUnmount was defined on %s. But there is no such ' +
+        'lifecycle method. Use componentWillUnmount instead.',
+        this.getName() || 'ReactCompositeComponent'
+      );
+    }
 
     ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;

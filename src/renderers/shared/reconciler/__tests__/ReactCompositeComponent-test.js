@@ -552,6 +552,33 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should warn when defined method componentDidUnmount', function() {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+
+    var Component = React.createClass({
+      componentDidUnmount: function() {
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var instance = <Component />;
+
+    instance = React.render(instance, container);
+    expect(console.error.calls.length).toBe(0);
+
+    React.unmountComponentAtNode(container);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: componentDidUnmount was defined on Component. But there is no such ' +
+      'lifecycle method. Use componentWillUnmount instead.'
+    );
+  });
+
   it('should pass context to children when not owner', function() {
     var Parent = React.createClass({
       render: function() {
