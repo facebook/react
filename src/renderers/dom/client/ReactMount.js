@@ -596,39 +596,6 @@ var ReactMount = {
   },
 
   /**
-   * Constructs a component instance of `constructor` with `initialProps` and
-   * renders it into the supplied `container`.
-   *
-   * @param {function} constructor React component constructor.
-   * @param {?object} props Initial props of the component instance.
-   * @param {DOMElement} container DOM element to render into.
-   * @return {ReactComponent} Component instance rendered in `container`.
-   */
-  constructAndRenderComponent: function(constructor, props, container) {
-    var element = ReactElement.createElement(constructor, props);
-    return ReactMount.render(element, container);
-  },
-
-  /**
-   * Constructs a component instance of `constructor` with `initialProps` and
-   * renders it into a container node identified by supplied `id`.
-   *
-   * @param {function} constructor React component constructor
-   * @param {?object} props Initial props of the component instance.
-   * @param {string} id ID of the DOM element to render into.
-   * @return {ReactComponent} Component instance rendered in the container node.
-   */
-  constructAndRenderComponentByID: function(constructor, props, id) {
-    var domNode = document.getElementById(id);
-    invariant(
-      domNode,
-      'Tried to get element with id of "%s" but it is not present on the page.',
-      id
-    );
-    return ReactMount.constructAndRenderComponent(constructor, props, domNode);
-  },
-
-  /**
    * Registers a container node into which React components will be rendered.
    * This also creates the "reactRoot" ID that will be assigned to the element
    * rendered within.
