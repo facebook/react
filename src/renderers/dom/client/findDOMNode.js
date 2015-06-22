@@ -17,7 +17,6 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 
 var invariant = require('invariant');
-var isNode = require('isNode');
 var warning = require('warning');
 
 /**
@@ -45,7 +44,7 @@ function findDOMNode(componentOrElement) {
   if (componentOrElement == null) {
     return null;
   }
-  if (isNode(componentOrElement)) {
+  if (componentOrElement.nodeType === 1) {
     return componentOrElement;
   }
   if (ReactInstanceMap.has(componentOrElement)) {

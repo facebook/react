@@ -85,7 +85,7 @@ assign(reactComponentExpectInternal.prototype, {
     // change soon.
     this.toBeDOMComponent();
     var renderedChildren =
-      this._instance._renderedComponent._renderedChildren || {};
+      this._instance._renderedChildren || {};
     for (var name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
@@ -101,7 +101,7 @@ assign(reactComponentExpectInternal.prototype, {
 
   toBeDOMComponentWithChildCount: function(count) {
     this.toBeDOMComponent();
-    var renderedChildren = this._instance._renderedComponent._renderedChildren;
+    var renderedChildren = this._instance._renderedChildren;
     expect(renderedChildren).toBeTruthy();
     expect(Object.keys(renderedChildren).length).toBe(count);
     return this;
@@ -109,7 +109,7 @@ assign(reactComponentExpectInternal.prototype, {
 
   toBeDOMComponentWithNoChildren: function() {
     this.toBeDOMComponent();
-    expect(this._instance._renderedComponent._renderedChildren).toBeFalsy();
+    expect(this._instance._renderedChildren).toBeFalsy();
     return this;
   },
 

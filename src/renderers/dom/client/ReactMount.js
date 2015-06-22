@@ -274,7 +274,7 @@ function mountComponentIntoNode(
   var markup = ReactReconciler.mountComponent(
     componentInstance, rootID, transaction, context
   );
-  componentInstance._isTopLevel = true;
+  componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
 }
 
@@ -327,6 +327,17 @@ function unmountComponentFromNode(instance, container) {
     container.removeChild(container.lastChild);
   }
 }
+
+/**
+ * Temporary (?) hack so that we can store all top-level pending updates on
+ * composites instead of having to worry about different types of components
+ * here.
+ */
+var TopLevelWrapper = function() {};
+TopLevelWrapper.prototype.render = function() {
+  // this.props is actually a ReactElement
+  return this.props;
+};
 
 /**
  * Mounting is the process of initializing a React component by creating its
@@ -522,17 +533,26 @@ var ReactMount = {
       'for your app.'
     );
 
+    var nextWrappedElement = new ReactElement(
+      TopLevelWrapper,
+      null,
+      null,
+      null,
+      nextElement
+    );
+
     var prevComponent = instancesByReactRootID[getReactRootID(container)];
 
     if (prevComponent) {
-      var prevElement = prevComponent._currentElement;
+      var prevWrappedElement = prevComponent._currentElement;
+      var prevElement = prevWrappedElement.props;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         return ReactMount._updateRootComponent(
           prevComponent,
-          nextElement,
+          nextWrappedElement,
           container,
           callback
-        ).getPublicInstance();
+        )._renderedComponent.getPublicInstance();
       } else {
         ReactMount.unmountComponentAtNode(container);
       }
@@ -563,7 +583,7 @@ var ReactMount = {
 
     var shouldReuseMarkup = containerHasReactMarkup && !prevComponent;
     var component = ReactMount._renderNewRootComponent(
-      nextElement,
+      nextWrappedElement,
       container,
       shouldReuseMarkup,
       parentComponent != null ?
@@ -571,7 +591,7 @@ var ReactMount = {
           parentComponent._reactInternalInstance._context
         ) :
         emptyObject
-    ).getPublicInstance();
+    )._renderedComponent.getPublicInstance();
     if (callback) {
       callback.call(component);
     }

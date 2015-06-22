@@ -45,7 +45,7 @@ function findAllInRenderedTreeInternal(inst, test) {
   var publicInst = inst.getPublicInstance()
   var ret = test(publicInst) ? [publicInst] : [];
   if (ReactTestUtils.isDOMComponent(publicInst)) {
-    var renderedChildren = inst._renderedComponent._renderedChildren;
+    var renderedChildren = inst._renderedChildren;
     var key;
     for (key in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(key)) {
@@ -96,7 +96,7 @@ var ReactTestUtils = {
   isDOMComponent: function(inst) {
     // TODO: Fix this heuristic. It's just here because composites can currently
     // pretend to be DOM components.
-    return !!(inst && inst.tagName && inst.getDOMNode);
+    return !!(inst && inst.nodeType === 1 && inst.tagName);
   },
 
   isDOMComponentElement: function(inst) {
@@ -116,13 +116,15 @@ var ReactTestUtils = {
   },
 
   isCompositeComponentWithType: function(inst, type) {
+    if (!ReactTestUtils.isCompositeComponent(inst)) {
+      return false;
+    }
     var internalInstance = ReactInstanceMap.get(inst);
     var constructor = internalInstance
       ._currentElement
       .type;
 
-    return !!(ReactTestUtils.isCompositeComponent(inst) &&
-             (constructor === type));
+    return (constructor === type);
   },
 
   isCompositeComponentElement: function(inst) {
@@ -256,7 +258,8 @@ var ReactTestUtils = {
     );
     if (all.length !== 1) {
       throw new Error(
-        'Did not find exactly one match for componentType:' + componentType
+        'Did not find exactly one match for componentType:' + componentType +
+        ' (found ' + all.length + ')'
       );
     }
     return all[0];

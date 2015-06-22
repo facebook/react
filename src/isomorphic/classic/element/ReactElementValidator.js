@@ -23,7 +23,6 @@ var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactNativeComponent = require('ReactNativeComponent');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
@@ -293,18 +292,10 @@ function checkPropTypes(componentName, propTypes, props, location) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  if (!(typeof element.type === 'string' ||
-      typeof element.type === 'function')) {
-    // This has already warned. Don't throw.
+  var componentClass = element.type;
+  if (typeof componentClass !== 'function') {
     return;
   }
-  // Extract the component class from the element. Converts string types
-  // to a composite class which may have propTypes.
-  // TODO: Validating a string's propTypes is not decoupled from the
-  // rendering target which is problematic.
-  var componentClass = ReactNativeComponent.getComponentClassForElement(
-    element
-  );
   var name = componentClass.displayName || componentClass.name;
   if (componentClass.propTypes) {
     checkPropTypes(

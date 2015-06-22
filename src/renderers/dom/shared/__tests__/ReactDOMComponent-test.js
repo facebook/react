@@ -805,12 +805,12 @@ describe('ReactDOMComponent', function() {
     it('warns on invalid nesting at root', () => {
       spyOn(console, 'error');
       var p = document.createElement('p');
-      React.render(<tr />, p);
+      React.render(<span><p /></span>, p);
 
       expect(console.error.calls.length).toBe(1);
       expect(console.error.calls[0].args[0]).toBe(
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-        '<p>. See p > tr.'
+        'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
+        'of <p>. See p > ... > p.'
       );
     });
 
@@ -921,29 +921,76 @@ describe('ReactDOMComponent', function() {
 
     it('warns when accessing properties on DOM components', function() {
       spyOn(console, 'error');
+      var innerDiv;
       var Animal = React.createClass({
         render: function() {
           return <div ref="div">iguana</div>;
         },
         componentDidMount: function() {
+          innerDiv = this.refs.div;
+
           void this.refs.div.props;
-          void this.refs.div.setProps;
+          this.refs.div.setState();
+          expect(this.refs.div.getDOMNode()).toBe(this.refs.div);
+          expect(this.refs.div.isMounted()).toBe(true);
         },
       });
-      ReactTestUtils.renderIntoDocument(<Animal />);
+      var container = document.createElement('div');
+      React.render(<Animal />, container);
+      React.unmountComponentAtNode(container);
+      expect(innerDiv.isMounted()).toBe(false);
+
+      expect(console.error.calls.length).toBe(5);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: ReactDOMComponent: Do not access .props of a DOM ' +
+        'node; instead, recreate the props as `render` did originally or ' +
+        'read the DOM properties/attributes directly from this node (e.g., ' +
+        'this.refs.box.className). This DOM node was rendered by `Animal`.'
+      );
+      expect(console.error.calls[1].args[0]).toBe(
+        'Warning: ReactDOMComponent: Do not access .setState(), ' +
+        '.replaceState(), or .forceUpdate() of a DOM node. This is a no-op. ' +
+        'This DOM node was rendered by `Animal`.'
+      );
+      expect(console.error.calls[2].args[0]).toBe(
+        'Warning: ReactDOMComponent: Do not access .getDOMNode() of a DOM ' +
+        'node; instead, use the node directly. This DOM node was ' +
+        'rendered by `Animal`.'
+      );
+      expect(console.error.calls[3].args[0]).toBe(
+        'Warning: ReactDOMComponent: Do not access .isMounted() of a DOM ' +
+        'node. This DOM node was rendered by `Animal`.'
+      );
+      expect(console.error.calls[4].args[0]).toContain('isMounted');
+    });
+
+    it('handles legacy setProps and replaceProps', function() {
+      spyOn(console, 'error');
+      var node = ReactTestUtils.renderIntoDocument(<div>rhinoceros</div>);
+
+      node.setProps({className: 'herbiverous'});
+      expect(node.className).toBe('herbiverous');
+      expect(node.textContent).toBe('rhinoceros');
+
+      node.replaceProps({className: 'invisible rhino'});
+      expect(node.className).toBe('invisible rhino');
+      expect(node.textContent).toBe('');
 
       expect(console.error.calls.length).toBe(2);
       expect(console.error.calls[0].args[0]).toBe(
-        'Warning: ReactDOMComponent.props: Do not access .props of a DOM ' +
-        'component directly; instead, recreate the props as `render` did ' +
-        'originally or use React.findDOMNode and read the DOM ' +
-        'properties/attributes directly. This DOM component was rendered ' +
-        'by `Animal`.'
+        'Warning: ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
+        'Instead, call React.render again at the top level.'
       );
       expect(console.error.calls[1].args[0]).toBe(
-        'Warning: ReactDOMComponent.setProps(): Do not access .setProps() of ' +
-        'a DOM component. This DOM component was rendered by `Animal`.'
+        'Warning: ReactDOMComponent: Do not access .replaceProps() of a DOM ' +
+        'node. Instead, call React.render again at the top level.'
       );
+    });
+
+    it('does not touch ref-less nodes', function() {
+      var node = ReactTestUtils.renderIntoDocument(<div><span /></div>);
+      expect(typeof node.getDOMNode).toBe('function');
+      expect(typeof node.firstChild.getDOMNode).toBe('undefined');
     });
   });
 
