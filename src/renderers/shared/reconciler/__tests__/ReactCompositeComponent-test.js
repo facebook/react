@@ -552,6 +552,26 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should warn when componentDidUnmount method is defined', function() {
+    var Component = React.createClass({
+      componentDidUnmount: function() {
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Component has a method called ' +
+      'componentDidUnmount(). But there is no such lifecycle method. ' +
+      'Did you mean componentWillUnmount()?'
+    );
+  });
+
   it('should pass context to children when not owner', function() {
     var Parent = React.createClass({
       render: function() {
