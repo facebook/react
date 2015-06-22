@@ -123,11 +123,6 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 * `String.prototype.split`
 * `String.prototype.trim`
 
-`es5-sham.js`, also from [kriskowal's es5-shim](https://github.com/es-shims/es5-shim), provides the following that React needs:
-
-* `Object.create`
-* `Object.freeze`
-
 The unminified build of React needs the following from [paulmillr's console-polyfill](https://github.com/paulmillr/console-polyfill).
 
 * `console.*`

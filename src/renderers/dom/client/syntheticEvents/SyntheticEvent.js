@@ -15,6 +15,7 @@
 var PooledClass = require('PooledClass');
 
 var assign = require('Object.assign');
+var create = require('Object.create');
 var emptyFunction = require('emptyFunction');
 var getEventTarget = require('getEventTarget');
 
@@ -148,7 +149,7 @@ SyntheticEvent.Interface = EventInterface;
 SyntheticEvent.augmentClass = function(Class, Interface) {
   var Super = this;
 
-  var prototype = Object.create(Super.prototype);
+  var prototype = create(Super.prototype);
   assign(prototype, Class.prototype);
   Class.prototype = prototype;
   Class.prototype.constructor = Class;
