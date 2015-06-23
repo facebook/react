@@ -52,17 +52,6 @@ if (__DEV__) {
   var ExecutionEnvironment = require('ExecutionEnvironment');
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
-    // If we're in Chrome, look for the devtools marker and provide a download
-    // link if not installed.
-    if (navigator.userAgent.indexOf('Chrome') > -1) {
-      if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
-        console.debug(
-          'Download the React DevTools for a better development experience: ' +
-          'https://fb.me/react-devtools'
-        );
-      }
-    }
-
     // If we're in IE8, check to see if we are in combatibility mode and provide
     // information on preventing compatibility mode
     var ieCompatibilityMode =
