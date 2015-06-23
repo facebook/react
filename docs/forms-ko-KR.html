@@ -427,6 +427,12 @@
 </ul>
 
 <p>모든 DOM 이벤트처럼 <code>onChange</code> prop은 모든 네이티브 컴포넌트에서 지원되며 일어난(bubbled) 변경 이벤트를 감시하는데 사용할 수 있습니다.</p>
+
+<blockquote>
+<p>주의:</p>
+
+<p><code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>에서는 <code>onChange</code>가 DOM의 <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> 이벤트 핸들러와 같은 기능을 제공하므로 일반적인 경우에는 <code>onChange</code>를 사용하세요.</p>
+</blockquote>
 <h2><a class="anchor" name="controlled-"></a>제어되는(controlled) 컴포넌트 <a class="hash-link" href="#controlled-">#</a></h2>
 <p><code>value</code>가 설정된 <code>&lt;input&gt;</code>은 <em>제어되는</em> 컴포넌트입니다. 제어되는 <code>&lt;input&gt;</code>에서, 렌더 엘리먼트의 값은 항상 <code>value</code> prop을 반영합니다. 예를 들어,</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
