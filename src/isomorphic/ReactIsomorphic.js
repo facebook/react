@@ -59,6 +59,17 @@ var React = {
     return mixin;
   },
 
+  // Function for adding mixins to Component
+  enhance: function enhance(ComposedComponent, mixins) {
+    return mixins.reduce((ComposedComponent, Mixin) => {
+      return class extends Mixin {
+        render() {
+          return <ComposedComponent {...this.props} {...this.state} />;
+        }
+      }
+    }, ComposedComponent);
+  },
+
   // This looks DOM specific but these are actually isomorphic helpers
   // since they are just generating DOM strings.
   DOM: ReactDOM,
