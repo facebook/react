@@ -438,7 +438,7 @@ function isCustomComponent(tagName, props) {
  */
 function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
-  this._tag = tag;
+  this._tag = tag.toLowerCase();
   this._renderedChildren = null;
   this._previousStyle = null;
   this._previousStyleCopy = null;
@@ -533,7 +533,7 @@ ReactDOMComponent.Mixin = {
     if (!tagContent && omittedCloseTags[this._tag]) {
       return tagOpen + '/>';
     }
-    return tagOpen + '>' + tagContent + '</' + this._tag + '>';
+    return tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
   },
 
   /**
@@ -550,7 +550,7 @@ ReactDOMComponent.Mixin = {
    * @return {string} Markup of opening tag.
    */
   _createOpenTagMarkupAndPutListeners: function(transaction, props) {
-    var ret = '<' + this._tag;
+    var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
