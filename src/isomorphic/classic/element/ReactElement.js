@@ -40,6 +40,8 @@ var ReactElement = function(type, key, ref, owner, props) {
   // Record the component responsible for creating this element.
   this._owner = owner;
 
+  this.props = props;
+
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
@@ -61,7 +63,6 @@ var ReactElement = function(type, key, ref, owner, props) {
     } catch (x) {
       this._store.validated = false;
     }
-    this.props = props;
     Object.freeze(this.props);
     Object.freeze(this);
   }
