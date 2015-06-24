@@ -22,7 +22,7 @@ var SEPARATOR_LENGTH = SEPARATOR.length;
 /**
  * Maximum depth of traversals before we consider the possibility of a bad ID.
  */
-var MAX_TREE_DEPTH = 100;
+var MAX_TREE_DEPTH = 10000;
 
 /**
  * Creates a DOM ID prefix to use when mounting React components.
