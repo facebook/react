@@ -11,10 +11,12 @@
 
 "use strict";
 
+var freeze = require('Object.freeze');
+
 var emptyObject = {};
 
 if (__DEV__) {
-  Object.freeze(emptyObject);
+  freeze(emptyObject);
 }
 
 module.exports = emptyObject;

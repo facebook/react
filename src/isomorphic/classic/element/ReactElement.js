@@ -14,6 +14,7 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
+var freeze = require('Object.freeze');
 
 var RESERVED_PROPS = {
   key: true,
@@ -62,8 +63,8 @@ var ReactElement = function(type, key, ref, owner, props) {
       this._store.validated = false;
     }
     this.props = props;
-    Object.freeze(this.props);
-    Object.freeze(this);
+    freeze(this.props);
+    freeze(this);
   }
 };
 
