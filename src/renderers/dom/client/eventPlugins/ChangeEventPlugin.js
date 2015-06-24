@@ -362,6 +362,7 @@ var ChangeEventPlugin = {
           targetID,
           nativeEvent
         );
+        event.type = 'change';
         EventPropagators.accumulateTwoPhaseDispatches(event);
         return event;
       }
