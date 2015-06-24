@@ -11,22 +11,10 @@
 
 'use strict';
 
-var mocks = require('mocks');
 var React = require('React');
+var ReactTestUtils = require('ReactTestUtils');
 
 describe('ChangeEventPlugin', function() {
-  var container;
-
-  beforeEach(function() {
-    container = document.createElement('div');
-    document.body.appendChild(container);
-  });
-
-  afterEach(function() {
-    React.unmountComponentAtNode(container);
-    document.body.removeChild(container);
-  });
-
   it('should fire change for checkbox input', function() {
     var called = 0;
 
@@ -35,10 +23,8 @@ describe('ChangeEventPlugin', function() {
       expect(e.type).toBe('change');
     }
 
-    var input = React.render(<input type="checkbox" onChange={cb}/>, container);
-    console.log(input);
-    console.log(React.findDOMNode(input));
-    React.findDOMNode(input).click();
+    var input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
+    ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
   });
 });
