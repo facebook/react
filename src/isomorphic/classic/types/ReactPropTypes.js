@@ -349,12 +349,22 @@ function isNode(propValue) {
 
       var iteratorFn = getIteratorFn(propValue);
       if (iteratorFn) {
+        var iterator = iteratorFn.call(propValue);
+        var step;
         if (iteratorFn !== propValue.entries) {
-          var iterator = iteratorFn.call(propValue);
-          var step;
           while (!(step = iterator.next()).done) {
             if (!isNode(step.value)) {
               return false;
+            }
+          }
+        } else {
+          // Iterator will provide entry [k,v] tuples rather than values.
+          while (!(step = iterator.next()).done) {
+            var entry = step.value;
+            if (entry) {
+              if (!isNode(entry[1])) {
+                return false;
+              }
             }
           }
         }

@@ -421,6 +421,23 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.node, iterable);
     });
 
+    it('should not warn for entry iterables', function() {
+      var iterable = {
+        '@@iterator': function() {
+          var i = 0;
+          return {
+            next: function() {
+              var done = ++i > 2;
+              return {value: done ? undefined : ['#' + i, <MyComponent />], done: done};
+            },
+          };
+        },
+      };
+      iterable.entries = iterable['@@iterator'];
+
+      typeCheckPass(PropTypes.node, iterable);
+    });
+
     it('should not warn for null/undefined if not required', function() {
       typeCheckPass(PropTypes.node, null);
       typeCheckPass(PropTypes.node, undefined);
