@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Getting Started | React</title>
+  <title>データを表示する | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Getting Started | React">
+  <meta property="og:title" content="データを表示する | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/getting-started.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/displaying-data-ja-JP.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -69,7 +69,7 @@
       <ul>
         
           <li>
-            <a href="/react/docs/getting-started.html" class="active">Getting Started</a>
+            <a href="/react/docs/getting-started.html">Getting Started</a>
             
           </li>
         
@@ -399,96 +399,111 @@
 
   <div class="inner-content">
     <h1>
-      Getting Started
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/getting-started.md" target="_blank">Edit on GitHub</a>
+      データを表示する
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02-displaying-data.ja-JP.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="jsfiddle"></a>JSFiddle <a class="hash-link" href="#jsfiddle">#</a></h2>
-<p>The easiest way to start hacking on React is using the following JSFiddle Hello World examples:</p>
-
-<ul>
-<li><strong><a href="https://jsfiddle.net/reactjs/69z2wepo/">React JSFiddle</a></strong></li>
-<li><a href="https://jsfiddle.net/reactjs/5vjqabv3/">React JSFiddle without JSX</a></li>
-</ul>
-<h2><a class="anchor" name="starter-kit"></a>Starter Kit <a class="hash-link" href="#starter-kit">#</a></h2>
-<p>Download the starter kit to get started.</p>
-
-<div class="buttons-unit downloads">
-  <a href="/react/downloads/react-0.13.3.zip" class="button">
-    Download Starter Kit 0.13.3
-  </a>
-</div>
-
-<p>In the root directory of the starter kit, create a <code>helloworld.html</code> with the following contents.</p>
+    <p>UIについて、最も基本的なことは、いくつかのデータを表示することです。Reactはデータを表示し、変更された時にはインターフェースを最新の状態に自動的に保つことが簡単にできるようになっています。</p>
+<h2><a class="anchor" name=""></a>はじめに <a class="hash-link" href="#">#</a></h2>
+<p>本当に単純な例を見てみましょう。<code>hello-react.html</code> ファイルを以下のようなコードで作成してください。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/JSXTransformer.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/JSXTransformer-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
     <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
-      <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
-        <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-      <span class="p">);</span>
+
+      <span class="c1">// ** コードをここに書きます！ **</span>
+
     <span class="nt">&lt;/script&gt;</span>
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
-<p>The XML syntax inside of JavaScript is called JSX; check out the <a href="/react/docs/jsx-in-depth.html">JSX syntax</a> to learn more about it. In order to translate it to vanilla JavaScript we use <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> and include <code>JSXTransformer.js</code> to actually perform the transformation in the browser.</p>
-<h3><a class="anchor" name="separate-file"></a>Separate File <a class="hash-link" href="#separate-file">#</a></h3>
-<p>Your React JSX code can live in a separate file. Create the following <code>src/helloworld.js</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>Then reference it from <code>helloworld.html</code>:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div><h3><a class="anchor" name="offline-transform"></a>Offline Transform <a class="hash-link" href="#offline-transform">#</a></h3>
-<p>First install the command-line tools (requires <a href="https://www.npmjs.com/">npm</a>):</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install -g react-tools
-</code></pre></div>
-<p>Then, translate your <code>src/helloworld.js</code> file to plain JavaScript:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">jsx --watch src/ build/
-</code></pre></div>
-<p>The file <code>build/helloworld.js</code> is autogenerated whenever you make a change.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-<span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello, world!&#39;</span><span class="p">),</span>
-</span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>Update your HTML file as below:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;html&gt;</span>
-  <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">    <span class="c">&lt;!-- No need for JSXTransformer! --&gt;</span>
-</span>  <span class="nt">&lt;/head&gt;</span>
-  <span class="nt">&lt;body&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-<span class="hll">    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span>  <span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
-</code></pre></div><h2><a class="anchor" name="want-commonjs"></a>Want CommonJS? <a class="hash-link" href="#want-commonjs">#</a></h2>
-<p>If you want to use React with <a href="http://browserify.org/">browserify</a>, <a href="https://webpack.github.io/">webpack</a>, or another CommonJS-compatible module system, just use the <a href="https://www.npmjs.com/package/react"><code>react</code> npm package</a>. In addition, the <code>jsx</code> build tool can be integrated into most packaging systems (not just CommonJS) quite easily.</p>
-<h2><a class="anchor" name="next-steps"></a>Next Steps <a class="hash-link" href="#next-steps">#</a></h2>
-<p>Check out <a href="/react/docs/tutorial.html">the tutorial</a> and the other examples in the starter kit&#39;s <code>examples</code> directory to learn more. </p>
+<p>このドキュメントの中では、JavaScriptのコードにのみフォーカスします。そして、それが上のようなテンプレートに挿入されていると考えます。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">HelloWorld</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
+        <span class="nx">Hello</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name here&quot;</span> <span class="o">/&gt;!</span>
+        <span class="nx">It</span> <span class="nx">is</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">toTimeString</span><span class="p">()}</span>
+      <span class="o">&lt;</span><span class="err">/p&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
 
-<p>We also have a wiki where the community contributes with <a href="https://github.com/facebook/react/wiki/Complementary-Tools">workflows, UI-components, routing, data management etc.</a></p>
+<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">HelloWorld</span> <span class="nx">date</span><span class="o">=</span><span class="p">{</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()}</span> <span class="o">/&gt;</span><span class="p">,</span>
+    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+  <span class="p">);</span>
+<span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
+</code></pre></div><h2><a class="anchor" name=""></a>リアクティブなアップデート <a class="hash-link" href="#">#</a></h2>
+<p><code>hello-react.html</code> をウェブブラウザで開き、テキストフィールドにあなたの名前を入力してください。ReactはUIのうち、時間の文字列しか変更しないことに注意してください。あなたがテキストフィールドに入力したものは残っています。あなたはそういったコードを書いていないのにも関わらずです。Reactはあなたのことを理解しており、正しいことを行います。</p>
 
-<p>Good luck, and welcome!</p>
+<p>このことについて私たちが理解できる方法は、Reactは必要になるまで、DOMの操作を行わないということです。 <strong>Reactは、DOMの変化を表現し、あなたにもっとも効率的なDOMの変化を見積もるために早い、内部のモックのDOMを使っています。</strong></p>
 
+<p>このコンポーネントのインプットは <code>props</code> と呼ばれるものです。&quot;properties&quot; の省略形です。それらはJSXシンタックスの中でアトリビュートとして渡されます。それらはコンポーネントの中で不変と考えるべきで、 <strong><code>this.props</code> と書かないようにしてください</strong></p>
+<h2><a class="anchor" name=""></a>コンポーネントは関数のようなものです。 <a class="hash-link" href="#">#</a></h2>
+<p>Reactのコンポーネントはとても単純です。それらは <code>props</code> や <code>state</code>　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの下では、コンポーネントは簡単に理解することができます。</p>
+
+<blockquote>
+<p>注意:</p>
+
+<p><strong>1つの制限</strong>: Reactのコンポーネントは単一の最上位のノードだけをレンダリングします。複数のノードをリターンしたい場合は、単一の最上位のもので <em>ラップする必要があります</em> 。</p>
+</blockquote>
+<h2><a class="anchor" name="jsx"></a>JSXシンタックス <a class="hash-link" href="#jsx">#</a></h2>
+<p>私たちは関心を分離する正しい方法は「テンプレート」と「ディスプレイロジック」ではなくコンポーネントであると強く考えています。ビューを生成するマークアップとコードは密接につながっていると考えています。加えて、ディスプレイロジックはとても複雑になりえますし、ビューを表現するのにテンプレート言語を使うことはとてもややこしくなりえます。</p>
+
+<p>私たちは、この問題の最適解は、UIを構築するのにリアルなプログラミング言語の表現力の全てを使うことができるように、JavaScriptのコードからHTMLやコンポーネントのツリーを直接生成することだと発見しました。</p>
+
+<p>上記のことを簡単に行うために、私たちはReactのツリーノードを構築するためのとても単純で、 <strong>オプショナルな</strong> HTMLに似たシンタックスを加えました。</p>
+
+<p><strong>JSXはHTMLのシンタックスを使ってJavaScriptのオブジェクトを構築するのを可能にします。</strong> 純粋にJavaScriptを使ってReactでリンクを構築するには、以下のように書きます。</p>
+
+<p><code>React.createElement(&#39;a&#39;, {href: &#39;https://facebook.github.io/react/&#39;}, &#39;Hello!&#39;)</code></p>
+
+<p>JSXでは、以下のように変換されます。</p>
+
+<p><code>&lt;a href=&quot;https://facebook.github.io/react/&quot;&gt;Hello!&lt;/a&gt;</code></p>
+
+<p>以上のようなことで、Reactのアプリを作成するのは簡単になりましたし、デザイナーはこのシンタックスを好むようになると発見しました。しかし、人は自分自身のワークフローを持っているものです。 <strong>JSXはReactを使う際に必ずしも必要ではありません。</strong></p>
+
+<p>JSXはとても小さいです。さらに学ぶためには、<a href="/react/docs/jsx-in-depth-ja-JP.html">JSXの深層</a>を参照ください。または、<a href="/react/jsx-compiler.html">ライブJSXコンパイラー</a>で変換の動作を確認してください。</p>
+
+<p>JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては<a href="/react/docs/jsx-gotchas.html">JSXの理解</a> をご覧ください。</p>
+
+<p>The easiest way to get started with JSX is to use the in-browser <code>JSXTransformer</code>. We strongly recommend that you don&#39;t use this in production. You can precompile your code using our command-line <a href="https://www.npmjs.com/package/react-tools">react-tools</a> package.
+JSXを初めて使う際に最も簡単なのは、ブラウザで <code>JSXTransformer</code> を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの<a href="https://www.npmjs.com/package/react-tools">react-tools</a>パッケージを使うことでプリコンパイルできます。</p>
+<h2><a class="anchor" name="jsxreact"></a>JSXを使わないReact <a class="hash-link" href="#jsxreact">#</a></h2>
+<p>JSXは完全にオプションです。Reactと一緒にJSXを使う必要はありません。<code>React.createElement</code> を使って、ただのJavaScriptでReactの要素を作ることもできます。それは、タグの名前やコンポーネント、プロパティのオブジェクト、いくつかのオプションの子要素をとります。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">child2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Second Text Content&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child1</span><span class="p">,</span> <span class="nx">child2</span><span class="p">);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+</code></pre></div>
+<p>便利に書くために、カスタムコンポーネントで要素を作るために簡略した記法でファクトリー関数を作ることができます。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Factory</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">ComponentClass</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">Factory</span><span class="p">({</span> <span class="nx">custom</span><span class="o">:</span> <span class="s1">&#39;prop&#39;</span> <span class="p">});</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+</code></pre></div>
+<p>Reactはすでに、共通なHTMLのタグについてはビルトインの関数を持っています。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span>
+             <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">li</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">)</span>
+           <span class="p">);</span>
+</code></pre></div>
 
     <div class="docs-prevnext">
       
+        <a class="docs-prev" href="/react/docs/why-react-ja-JP.html">&larr; Prev</a>
       
-        <a class="docs-next" href="/react/docs/tutorial.html">Next &rarr;</a>
+      
+        <a class="docs-next" href="/react/docs/jsx-in-depth-ja-JP.html">Next &rarr;</a>
       
     </div>
   </div>
