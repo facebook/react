@@ -286,6 +286,7 @@ describe('traverseAllChildren', function() {
   });
 
   it('should be called for each child in an iterable without keys', function() {
+    spyOn(console, 'error');
     var threeDivIterable = {
       '@@iterator': function() {
         var i = 0;
@@ -332,6 +333,8 @@ describe('traverseAllChildren', function() {
       '.2'
     );
 
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child in an iterable with keys', function() {

@@ -311,13 +311,12 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
-    var warn = jest.genMockFn();
-    console.error = warn;
+    spyOn(console, 'error');
 
     expect(() => React.render(React.createElement(Empty), container)).toThrow();
 
-    expect(warn.mock.calls.length).toBe(1);
-    expect(warn.mock.calls[0][0]).toBe(
+    expect((<any>console.error).argsForCall.length).toBe(1);
+    expect((<any>console.error).argsForCall[0][0]).toBe(
       'Warning: Empty(...): ' +
       'No `render` method found on the returned component instance: you may ' +
       'have forgotten to define `render` in your component or you may have ' +
@@ -434,38 +433,36 @@ describe('ReactTypeScriptClass', function() {
 
   it('warns when classic properties are defined on the instance, ' +
      'but does not invoke them.', function() {
-    var warn = jest.genMockFn();
-    console.error = warn;
+    spyOn(console, 'error');
     getInitialStateWasCalled = false;
     getDefaultPropsWasCalled = false;
     test(React.createElement(ClassicProperties), 'SPAN', 'foo');
     expect(getInitialStateWasCalled).toBe(false);
     expect(getDefaultPropsWasCalled).toBe(false);
-    expect(warn.mock.calls.length).toBe(4);
-    expect(warn.mock.calls[0][0]).toContain(
+    expect((<any>console.error).argsForCall.length).toBe(4);
+    expect((<any>console.error).argsForCall[0][0]).toContain(
       'getInitialState was defined on ClassicProperties, ' +
       'a plain JavaScript class.'
     );
-    expect(warn.mock.calls[1][0]).toContain(
+    expect((<any>console.error).argsForCall[1][0]).toContain(
       'getDefaultProps was defined on ClassicProperties, ' +
       'a plain JavaScript class.'
     );
-    expect(warn.mock.calls[2][0]).toContain(
+    expect((<any>console.error).argsForCall[2][0]).toContain(
       'propTypes was defined as an instance property on ClassicProperties.'
     );
-    expect(warn.mock.calls[3][0]).toContain(
+    expect((<any>console.error).argsForCall[3][0]).toContain(
       'contextTypes was defined as an instance property on ClassicProperties.'
     );
   });
 
   it('should warn when misspelling shouldComponentUpdate', function() {
-    var warn = jest.genMockFn();
-    console.error = warn;
+    spyOn(console, 'error');
 
     test(React.createElement(MisspelledComponent1), 'SPAN', 'foo');
 
-    expect(warn.mock.calls.length).toBe(1);
-    expect(warn.mock.calls[0][0]).toBe(
+    expect((<any>console.error).argsForCall.length).toBe(1);
+    expect((<any>console.error).argsForCall[0][0]).toBe(
       'Warning: ' +
       'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
       'you mean shouldComponentUpdate()? The name is phrased as a question ' +
@@ -474,13 +471,12 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('should warn when misspelling componentWillReceiveProps', function() {
-    var warn = jest.genMockFn();
-    console.error = warn;
+    spyOn(console, 'error');
 
     test(React.createElement(MisspelledComponent2), 'SPAN', 'foo');
 
-    expect(warn.mock.calls.length).toBe(1);
-    expect(warn.mock.calls[0][0]).toBe(
+    expect((<any>console.error).argsForCall.length).toBe(1);
+    expect((<any>console.error).argsForCall[0][0]).toBe(
       'Warning: ' +
       'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
       'Did you mean componentWillReceiveProps()?'
@@ -488,8 +484,7 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('should throw AND warn when trying to access classic APIs', function() {
-    var warn = jest.genMockFn();
-    console.error = warn;
+    spyOn(console, 'error');
     var instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV','foo'
@@ -499,20 +494,20 @@ describe('ReactTypeScriptClass', function() {
     expect(() => instance.isMounted()).toThrow();
     expect(() => instance.setProps({ name: 'bar' })).toThrow();
     expect(() => instance.replaceProps({ name: 'bar' })).toThrow();
-    expect(warn.mock.calls.length).toBe(5);
-    expect(warn.mock.calls[0][0]).toContain(
+    expect((<any>console.error).argsForCall.length).toBe(5);
+    expect((<any>console.error).argsForCall[0][0]).toContain(
       'getDOMNode(...) is deprecated in plain JavaScript React classes'
     );
-    expect(warn.mock.calls[1][0]).toContain(
+    expect((<any>console.error).argsForCall[1][0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     );
-    expect(warn.mock.calls[2][0]).toContain(
+    expect((<any>console.error).argsForCall[2][0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     );
-    expect(warn.mock.calls[3][0]).toContain(
+    expect((<any>console.error).argsForCall[3][0]).toContain(
       'setProps(...) is deprecated in plain JavaScript React classes'
     );
-    expect(warn.mock.calls[4][0]).toContain(
+    expect((<any>console.error).argsForCall[4][0]).toContain(
       'replaceProps(...) is deprecated in plain JavaScript React classes'
     );
   });

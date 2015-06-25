@@ -15,7 +15,6 @@ var React;
 var ReactTestUtils;
 
 var mocks;
-var warn;
 
 describe('ReactTestUtils', function() {
 
@@ -24,13 +23,6 @@ describe('ReactTestUtils', function() {
 
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-
-    warn = console.error;
-    console.error = mocks.getMockFunction();
-  });
-
-  afterEach(function() {
-    console.error = warn;
   });
 
   it('should have shallow rendering', function() {

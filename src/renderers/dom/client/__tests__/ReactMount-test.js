@@ -124,24 +124,23 @@ describe('ReactMount', function() {
     var container = document.createElement('container');
     container.innerHTML = React.renderToString(<div />) + ' ';
 
-    console.error = mocks.getMockFunction();
+    spyOn(console, 'error');
     ReactMount.render(<div />, container);
-    expect(console.error.mock.calls.length).toBe(1);
+    expect(console.error.calls.length).toBe(1);
 
     container.innerHTML = ' ' + React.renderToString(<div />);
 
-    console.error = mocks.getMockFunction();
     ReactMount.render(<div />, container);
-    expect(console.error.mock.calls.length).toBe(1);
+    expect(console.error.calls.length).toBe(2);
   });
 
   it('should not warn if mounting into non-empty node', function() {
     var container = document.createElement('container');
     container.innerHTML = '<div></div>';
 
-    console.error = mocks.getMockFunction();
+    spyOn(console, 'error');
     ReactMount.render(<div />, container);
-    expect(console.error.mock.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(0);
   });
 
   it('should warn when mounting into document.body', function () {
