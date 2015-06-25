@@ -90,10 +90,6 @@ module.exports = function(grunt) {
     'jsx:normal',
     'browserify:addons',
   ]);
-  grunt.registerTask('build:transformer', [
-    'jsx:normal',
-    'browserify:transformer',
-  ]);
   grunt.registerTask('build:min', [
     'jsx:normal',
     'version-check',
@@ -219,7 +215,6 @@ module.exports = function(grunt) {
     'jsx:normal',
     'version-check',
     'browserify:basic',
-    'browserify:transformer',
     'browserify:addons',
     'browserify:min',
     'browserify:addonsMin',
