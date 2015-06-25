@@ -30,20 +30,25 @@ var invariant = require('invariant');
  *   Output: {key1: key1, key2: key2}
  *
  * @param {object} obj
+ * @param {string} prefix
  * @return {object}
  */
-var keyMirror = function(obj) {
+var keyMirror = function(obj, prefix = '') {
   var ret = {};
   var key;
   invariant(
     obj instanceof Object && !Array.isArray(obj),
     'keyMirror(...): Argument must be an object.'
   );
+  invariant(
+    typeof prefix === 'string',
+    'keyMirror(...): Prefix must be a string.'
+  );
   for (key in obj) {
     if (!obj.hasOwnProperty(key)) {
       continue;
     }
-    ret[key] = key;
+    ret[key] = prefix + key;
   }
   return ret;
 };
