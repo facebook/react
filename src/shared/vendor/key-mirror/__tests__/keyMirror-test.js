@@ -32,6 +32,23 @@ describe('keyMirror', function() {
     expect('qux' in mirror).toBe(true);
     expect(mirror.qux).toBe('qux');
   });
+  
+  it('should create an object with prefixed values matching keys provided when a prefix argument is supplied', function() {
+    var mirror = keyMirror({
+      foo: null,
+      bar: true,
+      "baz": {some: "object"},
+      qux: undefined
+    }, 'foo_');
+    expect('foo' in mirror).toBe(true);
+    expect(mirror.foo).toBe('foo_foo');
+    expect('bar' in mirror).toBe(true);
+    expect(mirror.bar).toBe('foo_bar');
+    expect('baz' in mirror).toBe(true);
+    expect(mirror.baz).toBe('foo_baz');
+    expect('qux' in mirror).toBe(true);
+    expect(mirror.qux).toBe('foo_qux');
+  });
 
   it('should not use properties from prototypes', function() {
     function Klass() {
@@ -51,6 +68,14 @@ describe('keyMirror', function() {
   it('should throw when a non-object argument is used', function() {
     [null, undefined, 0, 7, ['uno'], true, "string"].forEach(function(testVal) {
       expect(keyMirror.bind(null, testVal)).toThrow();
+    });
+  });
+  
+  it('should throw when a non-string prefix argument is used', function() {
+    [null, undefined, 0, 7, ['uno'], true, "string"].forEach(function(testVal) {
+      expect(keyMirror.bind(null, testVal, 1)).toThrow();
+      expect(keyMirror.bind(null, testVal, [])).toThrow();
+      expect(keyMirror.bind(null, testVal, {})).toThrow();
     });
   });
 
