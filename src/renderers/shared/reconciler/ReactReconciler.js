@@ -66,7 +66,7 @@ var ReactReconciler = {
   ) {
     var prevElement = internalInstance._currentElement;
 
-    if (nextElement === prevElement && nextElement._owner != null) {
+    //if (nextElement === prevElement && nextElement._owner != null) {
       // Since elements are immutable after the owner is rendered,
       // we can do a cheap identity compare here to determine if this is a
       // superfluous reconcile. It's possible for state to be mutable but such
@@ -74,8 +74,8 @@ var ReactReconciler = {
       // the element. We explicitly check for the existence of an owner since
       // it's possible for an element created outside a composite to be
       // deeply mutated and reused.
-      return;
-    }
+    //  return;
+    //}
 
     var refsChanged = ReactRef.shouldUpdateRefs(
       prevElement,
