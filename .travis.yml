@@ -54,7 +54,6 @@ script:
           -F "react-with-addons.min=@build/react-with-addons.min.js" \
           -F "npm-react=@build/packages/react.tgz" \
           -F "npm-react-dom=@build/packages/react-dom.tgz" \
-          -F "npm-react-codemod=@build/packages/react-codemod.tgz" \
           -F "commit=$TRAVIS_COMMIT" \
           -F "date=`git log --format='%ct' -1`" \
           -F "pull_request=$TRAVIS_PULL_REQUEST" \
