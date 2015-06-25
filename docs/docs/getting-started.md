@@ -107,7 +107,7 @@ Update your HTML file as below:
 
 ## Want CommonJS?
 
-If you want to use React with [browserify](http://browserify.org/), [webpack](https://webpack.github.io/), or another CommonJS-compatible module system, just use the [`react` npm package](https://www.npmjs.com/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
+If you want to use React with [browserify](http://browserify.org/), [webpack](https://webpack.github.io/), [JSPM](http://jspm.io/) or another CommonJS-compatible module system, just use the [`react` npm package](https://www.npmjs.com/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
 
 ## Next Steps
 
