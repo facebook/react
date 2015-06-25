@@ -523,12 +523,12 @@ var ReactCompositeComponentMixin = {
     var nextProps;
 
     // Distinguish between a props update versus a simple state update
-    if (prevParentElement === nextParentElement) {
-      nextContext = inst.context;
+    // if (prevParentElement === nextParentElement) {
+    //  nextContext = inst.context;
       // Skip checking prop types again -- we don't read inst.props to avoid
       // warning for DOM component props in this upgrade
-      nextProps = nextParentElement.props;
-    } else {
+    //  nextProps = nextParentElement.props;
+    //} else {
       nextContext = this._processContext(nextUnmaskedContext);
       nextProps = this._processProps(nextParentElement.props);
 
@@ -539,7 +539,7 @@ var ReactCompositeComponentMixin = {
       if (inst.componentWillReceiveProps) {
         inst.componentWillReceiveProps(nextProps, nextContext);
       }
-    }
+    // }
 
     var nextState = this._processPendingState(nextProps, nextContext);
 
