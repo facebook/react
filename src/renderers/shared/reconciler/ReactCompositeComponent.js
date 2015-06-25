@@ -519,19 +519,18 @@ var ReactCompositeComponentMixin = {
   ) {
     var inst = this._instance;
 
-    var nextContext;
+    var nextContext = this._context === nextUnmaskedContext ?
+      inst.context :
+      this._processContext(nextUnmaskedContext);
     var nextProps;
 
     // Distinguish between a props update versus a simple state update
     if (prevParentElement === nextParentElement) {
-      nextContext = inst.context;
       // Skip checking prop types again -- we don't read inst.props to avoid
       // warning for DOM component props in this upgrade
       nextProps = nextParentElement.props;
     } else {
-      nextContext = this._processContext(nextUnmaskedContext);
       nextProps = this._processProps(nextParentElement.props);
-
       // An update here will schedule an update but immediately set
       // _pendingStateQueue which will ensure that any state updates gets
       // immediately reconciled instead of waiting for the next batch.

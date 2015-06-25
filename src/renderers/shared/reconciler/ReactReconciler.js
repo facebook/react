@@ -65,8 +65,10 @@ var ReactReconciler = {
     internalInstance, nextElement, transaction, context
   ) {
     var prevElement = internalInstance._currentElement;
-
-    if (nextElement === prevElement && nextElement._owner != null) {
+    if (nextElement === prevElement &&
+        nextElement._owner != null
+        // TODO: Shouldn't we need to do this: `&& context === internalInstance._context`
+      ) {
       // Since elements are immutable after the owner is rendered,
       // we can do a cheap identity compare here to determine if this is a
       // superfluous reconcile. It's possible for state to be mutable but such
@@ -74,6 +76,9 @@ var ReactReconciler = {
       // the element. We explicitly check for the existence of an owner since
       // it's possible for an element created outside a composite to be
       // deeply mutated and reused.
+
+      // TODO: Bailing out early is just a perf optimization right?
+      // TODO: Removing the return statement should affect correctness?
       return;
     }
 
