@@ -29,6 +29,7 @@ React를 시작하는 가장 빠른 방법은 다음의 Hello World JSFiddle 예
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
   </head>

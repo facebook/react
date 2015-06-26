@@ -29,6 +29,7 @@ redirect_from: "docs/index-zh-CN.html"
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
   </head>
