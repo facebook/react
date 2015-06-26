@@ -14,7 +14,8 @@
         this.setState({clickCount: ++selfClickNumber});
       },
       render: function () {
-        return React.DOM.h2({onClick: this.handleClick}, 'Count number: '+this.state.clickCount);
+        return React.DOM.h2({onClick: this.handleClick},
+          'Click me! Number of clicks: '+this.state.clickCount);
       }
     });
     </script>
