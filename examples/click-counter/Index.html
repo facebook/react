@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>React click conter example</title>
+    <script src="https://fb.me/react-with-addons-0.13.3.js"></script>
+    <script type="text/javascript">
+    var Counter = React.createClass({
+      getInitialState: function() {
+        return { clickCount: 0 };
+      },
+      handleClick: function() {
+        var selfClickNumber = this.state.clickCount;
+        this.setState({clickCount: ++selfClickNumber});
+      },
+      render: function () {
+        return React.DOM.h2({onClick: this.handleClick}, 'Count number: '+this.state.clickCount);
+      }
+    });
+    </script>
+  </head>
+  <body>
+    <div id="message" align="center"></div>
+
+    <script type="text/javascript">
+      React.render(
+        React.createElement(Counter),
+        document.getElementById('message')
+      );
+    </script>
+  </body>
+</html>
