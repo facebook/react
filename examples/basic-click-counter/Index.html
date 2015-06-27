@@ -6,12 +6,13 @@
     <script src="../../build/react.js"></script>
     <script type="text/javascript">
     var Counter = React.createClass({
-      getInitialState: function() {
+      getInitialState: function () {
         return { clickCount: 0 };
       },
-      handleClick: function() {
-        var selfClickNumber = this.state.clickCount;
-        this.setState({clickCount: ++selfClickNumber});
+      handleClick: function () {
+        this.setState(function(state) {
+          return {clickCount: state.clickCount + 1};
+        });
       },
       render: function () {
         return React.DOM.h2({onClick: this.handleClick},
