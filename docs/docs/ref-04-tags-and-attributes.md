@@ -63,7 +63,7 @@ maxLength media mediaGroup method min multiple muted name noValidate open
 optimum pattern placeholder poster preload radioGroup readOnly rel required role
 rowSpan rows sandbox scope scoped scrolling seamless selected shape size sizes
 span spellCheck src srcDoc srcSet start step style tabIndex target title type
-useMap value width wmode
+useMap value width wmode wrap
 ```
 
 In addition, the following non-standard attributes are supported:
