@@ -419,7 +419,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Bad: It displays &quot;First &amp;middot; Second&quot;</span>
 <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div>
-<p>There are various ways to work-around this issue. The easiest one is to write unicode character directly in Javascript. You need to make sure that the file is saved as UTF-8 and that the proper UTF-8 directives are set so the browser will display it correctly.</p>
+<p>There are various ways to work-around this issue. The easiest one is to write unicode character directly in JavaScript. You need to make sure that the file is saved as UTF-8 and that the proper UTF-8 directives are set so the browser will display it correctly.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First · Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div>
 <p>A safer alternative is to find the <a href="http://www.fileformat.info/info/unicode/char/b7/index.htm">unicode number corresponding to the entity</a> and use it inside of a JavaScript string.</p>
