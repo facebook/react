@@ -62,7 +62,7 @@ label lang list loop low manifest marginHeight marginWidth max maxLength media
 mediaGroup method min multiple muted name noValidate open optimum pattern placeholder
 poster preload radioGroup readOnly rel required role rowSpan rows sandbox scope
 scoped scrolling seamless selected shape size sizes span spellCheck src srcDoc
-srcSet start step style tabIndex target title type useMap value width wmode
+srcSet start step style tabIndex target title type useMap value width wmode wrap
 ```
 
 덧붙여, 이런 비표준 어트리뷰트도 지원됩니다.
