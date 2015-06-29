@@ -22,13 +22,10 @@ var ReactTestUtils;
 var ReactUpdates;
 
 var reactComponentExpect;
-var mocks;
 
 describe('ReactCompositeComponent', function() {
 
   beforeEach(function() {
-    mocks = require('mocks');
-
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
@@ -71,7 +68,6 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    console.error = mocks.getMockFunction();
     spyOn(console, 'error');
   });
 
