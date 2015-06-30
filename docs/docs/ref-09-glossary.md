@@ -119,7 +119,7 @@ OR using JSX:
 var element = <MyComponent />;
 ```
 
-When this is passed to `React.render`, React will call the constructor for you and create a `ReactComponent`, which returned.
+When this is passed to `React.render`, React will call the constructor for you and create a `ReactComponent`, which is returned.
 
 ```javascript
 var component = React.render(element, document.getElementById('example'));
