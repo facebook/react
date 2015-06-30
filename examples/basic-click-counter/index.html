@@ -4,7 +4,8 @@
     <title>React click conter example</title>
     <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
     <script src="../../build/react.js"></script>
-    <script type="text/javascript">
+    <script src="../../build/JSXTransformer.js"></script>
+    <script type="text/jsx">
     var Counter = React.createClass({
       getInitialState: function () {
         return { clickCount: 0 };
@@ -15,8 +16,7 @@
         });
       },
       render: function () {
-        return React.DOM.h2({onClick: this.handleClick},
-          'Click me! Number of clicks: '+this.state.clickCount);
+        return (<h2 onClick={this.handleClick}>Click me! Number of clicks: {this.state.clickCount}</h2>);
       }
     });
     </script>
@@ -24,9 +24,8 @@
   <body>
     <div id="message" align="center"></div>
 
-    <script type="text/javascript">
-      React.render(
-        React.createElement(Counter),
+    <script type="text/jsx">
+      React.render(<Counter />,
         document.getElementById('message')
       );
     </script>
