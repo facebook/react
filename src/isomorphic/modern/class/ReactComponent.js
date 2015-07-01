@@ -11,17 +11,22 @@
 
 'use strict';
 
-var ReactUpdateQueue = require('ReactUpdateQueue');
+var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
+var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
 
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactComponent(props, context) {
+function ReactComponent(props, context, updater) {
   this.props = props;
   this.context = context;
+  this.refs = emptyObject;
+  // We initialize the default updater but the real one gets injected by the
+  // renderer.
+  this.updater = updater || ReactNoopUpdateQueue;
 }
 
 /**
@@ -64,9 +69,9 @@ ReactComponent.prototype.setState = function(partialState, callback) {
       'instead, use forceUpdate().'
     );
   }
-  ReactUpdateQueue.enqueueSetState(this, partialState);
+  this.updater.enqueueSetState(this, partialState);
   if (callback) {
-    ReactUpdateQueue.enqueueCallback(this, callback);
+    this.updater.enqueueCallback(this, callback);
   }
 };
 
@@ -85,9 +90,9 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponent.prototype.forceUpdate = function(callback) {
-  ReactUpdateQueue.enqueueForceUpdate(this);
+  this.updater.enqueueForceUpdate(this);
   if (callback) {
-    ReactUpdateQueue.enqueueCallback(this, callback);
+    this.updater.enqueueCallback(this, callback);
   }
 };
 

@@ -16,9 +16,10 @@ var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactUpdateQueue = require('ReactUpdateQueue');
+var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
 var assign = require('Object.assign');
+var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
@@ -712,9 +713,9 @@ var ReactClassMixin = {
    * type signature and the only use case for this, is to avoid that.
    */
   replaceState: function(newState, callback) {
-    ReactUpdateQueue.enqueueReplaceState(this, newState);
+    this.updater.enqueueReplaceState(this, newState);
     if (callback) {
-      ReactUpdateQueue.enqueueCallback(this, callback);
+      this.updater.enqueueCallback(this, callback);
     }
   },
 
@@ -725,7 +726,7 @@ var ReactClassMixin = {
    * @final
    */
   isMounted: function() {
-    return ReactUpdateQueue.isMounted(this);
+    return this.updater.isMounted(this);
   },
 
   /**
@@ -738,9 +739,9 @@ var ReactClassMixin = {
    * @deprecated
    */
   setProps: function(partialProps, callback) {
-    ReactUpdateQueue.enqueueSetProps(this, partialProps);
+    this.updater.enqueueSetProps(this, partialProps);
     if (callback) {
-      ReactUpdateQueue.enqueueCallback(this, callback);
+      this.updater.enqueueCallback(this, callback);
     }
   },
 
@@ -754,9 +755,9 @@ var ReactClassMixin = {
    * @deprecated
    */
   replaceProps: function(newProps, callback) {
-    ReactUpdateQueue.enqueueReplaceProps(this, newProps);
+    this.updater.enqueueReplaceProps(this, newProps);
     if (callback) {
-      ReactUpdateQueue.enqueueCallback(this, callback);
+      this.updater.enqueueCallback(this, callback);
     }
   },
 };
@@ -783,7 +784,7 @@ var ReactClass = {
    * @public
    */
   createClass: function(spec) {
-    var Constructor = function(props, context) {
+    var Constructor = function(props, context, updater) {
       // This constructor is overridden by mocks. The argument is used
       // by mocks to assert on what gets mounted.
 
@@ -802,6 +803,9 @@ var ReactClass = {
 
       this.props = props;
       this.context = context;
+      this.refs = emptyObject;
+      this.updater = updater || ReactNoopUpdateQueue;
+
       this.state = null;
 
       // ReactClasses doesn't have constructors. Instead, they use the

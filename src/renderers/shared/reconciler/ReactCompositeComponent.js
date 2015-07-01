@@ -19,6 +19,7 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactReconciler = require('ReactReconciler');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
@@ -125,7 +126,7 @@ var ReactCompositeComponentMixin = {
     var Component = this._currentElement.type;
 
     // Initialize the public class
-    var inst = new Component(publicProps, publicContext);
+    var inst = new Component(publicProps, publicContext, ReactUpdateQueue);
 
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
@@ -145,6 +146,7 @@ var ReactCompositeComponentMixin = {
     inst.props = publicProps;
     inst.context = publicContext;
     inst.refs = emptyObject;
+    inst.updater = ReactUpdateQueue;
 
     this._instance = inst;
 
