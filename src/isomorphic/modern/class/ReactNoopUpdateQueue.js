@@ -98,29 +98,6 @@ var ReactNoopUpdateQueue = {
   enqueueSetState: function(publicInstance, partialState) {
     warnTDZ(publicInstance, 'setState');
   },
-
-  /**
-   * Sets a subset of the props.
-   *
-   * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} partialProps Subset of the next props.
-   * @internal
-   */
-  enqueueSetProps: function(publicInstance, partialProps) {
-    warnTDZ(publicInstance, 'setProps');
-  },
-
-  /**
-   * Replaces all of the props.
-   *
-   * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} props New props.
-   * @internal
-   */
-  enqueueReplaceProps: function(publicInstance, props) {
-    warnTDZ(publicInstance, 'replaceProps');
-  },
-
 };
 
 module.exports = ReactNoopUpdateQueue;

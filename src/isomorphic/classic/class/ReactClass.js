@@ -728,38 +728,6 @@ var ReactClassMixin = {
   isMounted: function() {
     return this.updater.isMounted(this);
   },
-
-  /**
-   * Sets a subset of the props.
-   *
-   * @param {object} partialProps Subset of the next props.
-   * @param {?function} callback Called after props are updated.
-   * @final
-   * @public
-   * @deprecated
-   */
-  setProps: function(partialProps, callback) {
-    this.updater.enqueueSetProps(this, partialProps);
-    if (callback) {
-      this.updater.enqueueCallback(this, callback);
-    }
-  },
-
-  /**
-   * Replace all the props.
-   *
-   * @param {object} newProps Subset of the next props.
-   * @param {?function} callback Called after props are updated.
-   * @final
-   * @public
-   * @deprecated
-   */
-  replaceProps: function(newProps, callback) {
-    this.updater.enqueueReplaceProps(this, newProps);
-    if (callback) {
-      this.updater.enqueueCallback(this, callback);
-    }
-  },
 };
 
 var ReactClassComponent = function() {};

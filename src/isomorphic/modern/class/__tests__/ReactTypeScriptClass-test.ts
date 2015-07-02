@@ -492,9 +492,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() => instance.getDOMNode()).toThrow();
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
-    expect(() => instance.setProps({ name: 'bar' })).toThrow();
-    expect(() => instance.replaceProps({ name: 'bar' })).toThrow();
-    expect((<any>console.error).argsForCall.length).toBe(5);
+    expect((<any>console.error).argsForCall.length).toBe(3);
     expect((<any>console.error).argsForCall[0][0]).toContain(
       'getDOMNode(...) is deprecated in plain JavaScript React classes'
     );
@@ -503,12 +501,6 @@ describe('ReactTypeScriptClass', function() {
     );
     expect((<any>console.error).argsForCall[2][0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
-    );
-    expect((<any>console.error).argsForCall[3][0]).toContain(
-      'setProps(...) is deprecated in plain JavaScript React classes'
-    );
-    expect((<any>console.error).argsForCall[4][0]).toContain(
-      'replaceProps(...) is deprecated in plain JavaScript React classes'
     );
   });
 
