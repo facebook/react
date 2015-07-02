@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Basic Example with Click Counter</title>
+    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <script src="../../build/react.js"></script>
+    <script src="../../build/JSXTransformer.js"></script>
+    <script type="text/jsx">
+    var Counter = React.createClass({
+      getInitialState: function () {
+        return { clickCount: 0 };
+      },
+      handleClick: function () {
+        this.setState(function(state) {
+          return {clickCount: state.clickCount + 1};
+        });
+      },
+      render: function () {
+        return (<h2 onClick={this.handleClick}>Click me! Number of clicks: {this.state.clickCount}</h2>);
+      }
+    });
+    </script>
+  </head>
+  <body>
+    <div id="message" align="center"></div>
+
+    <script type="text/jsx">
+      React.render(<Counter />,
+        document.getElementById('message')
+      );
+    </script>
+  </body>
+</html>
