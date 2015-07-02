@@ -12,8 +12,8 @@
  */
 /* jshint browser: true */
 /* jslint evil: true */
-/*eslint-disable no-eval */
-/*eslint-disable block-scoped-var */
+/* eslint-disable no-eval */
+/* eslint-disable block-scoped-var */
 
 'use strict';
 
