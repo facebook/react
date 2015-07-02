@@ -30,7 +30,6 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
-var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -127,44 +126,6 @@ function legacySetStateEtc() {
       '.forceUpdate() of a DOM node. This is a no-op.%s',
       getDeclarationErrorAddendum(component)
     );
-  }
-}
-
-function legacySetProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
-  if (__DEV__) {
-    warning(
-      false,
-      'ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
-      'Instead, call React.render again at the top level.%s',
-      getDeclarationErrorAddendum(component)
-    );
-  }
-  if (!component) {
-    return;
-  }
-  ReactUpdateQueue.enqueueSetPropsInternal(component, partialProps);
-  if (callback) {
-    ReactUpdateQueue.enqueueCallbackInternal(component, callback);
-  }
-}
-
-function legacyReplaceProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
-  if (__DEV__) {
-    warning(
-      false,
-      'ReactDOMComponent: Do not access .replaceProps() of a DOM node. ' +
-      'Instead, call React.render again at the top level.%s',
-      getDeclarationErrorAddendum(component)
-    );
-  }
-  if (!component) {
-    return;
-  }
-  ReactUpdateQueue.enqueueReplacePropsInternal(component, partialProps);
-  if (callback) {
-    ReactUpdateQueue.enqueueCallbackInternal(component, callback);
   }
 }
 
@@ -958,8 +919,6 @@ ReactDOMComponent.Mixin = {
       node.setState = legacySetStateEtc;
       node.replaceState = legacySetStateEtc;
       node.forceUpdate = legacySetStateEtc;
-      node.setProps = legacySetProps;
-      node.replaceProps = legacyReplaceProps;
 
       if (__DEV__) {
         if (canDefineProperty) {
