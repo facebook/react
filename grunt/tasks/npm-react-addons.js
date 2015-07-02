@@ -22,11 +22,6 @@ var addons = {
     module: 'ReactTransitionGroup',
     name: 'transition-group',
   },
-  batchedUpdates: {
-    module: 'ReactUpdates',
-    method: 'batchedUpdates',
-    name: 'batched-updates',
-  },
   cloneWithProps: {
     module: 'cloneWithProps',
     name: 'clone-with-props',
@@ -61,7 +56,9 @@ function generateSource(info) {
 
 function buildReleases() {
   var pkgTemplate = grunt.file.readJSON('./packages/react-addons/package.json');
-  // var done = this.async();
+  var license = grunt.file.read('./LICENSE');
+  var patents = grunt.file.read('./PATENTS');
+
   Object.keys(addons).map(function(k) {
     var info = addons[k];
     var pkgName = 'react-addons-' + info.name;
@@ -73,10 +70,16 @@ function buildReleases() {
     grunt.file.mkdir(destDir);
     fs.writeFileSync(path.join(destDir, 'index.js'), generateSource(info));
     fs.writeFileSync(path.join(destDir, 'package.json'), JSON.stringify(pkgData, null, 2));
-
-    // TODO: Make a readme. Consider using a template and sticking it in the original source directory. Also, maybe a license, patents file.
+    fs.writeFileSync(path.join(destDir, 'LICENSE'), license);
+    fs.writeFileSync(path.join(destDir, 'PATENTS'), patents);
+    fs.writeFileSync(
+      path.join(destDir, 'README.md'),
+      '# ' + pkgName + '\n\n' +
+      'This package provides the React ' + k + ' add-on. See ' +
+      'http://facebook.github.io/react/docs/addons.html for more information.\n'
+    );
   });
-  // done();
+
 }
 
 function packReleases() {

@@ -53,6 +53,7 @@
     "gzip-js": "~0.3.2",
     "jasmine-tapreporter": "~0.2.2",
     "jest-cli": "^0.4.13",
+    "object-assign": "^3.0.0",
     "optimist": "^0.6.1",
     "phantomjs": "^1.9.17",
     "platform": "^1.1.0",
