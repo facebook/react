@@ -605,6 +605,67 @@ describe('ReactCompositeComponent', function() {
     expect(React.findDOMNode(component).innerHTML).toBe('bar');
   });
 
+  it('should pass context when re-rendered for static child', function() {
+    var parentInstance = null;
+    var childInstance = null;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string,
+        flag: ReactPropTypes.bool,
+      },
+
+      getChildContext: function() {
+        return {
+          foo: 'bar',
+          flag: this.state.flag,
+        };
+      },
+
+      getInitialState: function() {
+        return {
+          flag: false,
+        };
+      },
+
+      render: function() {
+        return React.Children.only(this.props.children);
+      },
+    });
+
+    var Middle = React.createClass({
+      render: function() {
+        return this.props.children;
+      },
+    });
+
+    var Child = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string,
+        flag: ReactPropTypes.bool,
+      },
+
+      render: function() {
+        childInstance = this;
+        return <span>Child</span>;
+      },
+    });
+
+    parentInstance = ReactTestUtils.renderIntoDocument(
+      <Parent><Middle><Child /></Middle></Parent>
+    );
+
+    expect(parentInstance.state.flag).toBe(false);
+    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: false});
+
+    parentInstance.setState({flag: true});
+    expect(parentInstance.state.flag).toBe(true);
+
+    expect(console.error.argsForCall.length).toBe(0);
+
+    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
+  });
+
   it('should pass context transitively', function() {
     var childInstance = null;
     var grandchildInstance = null;

@@ -347,14 +347,14 @@ describe('ReactUpdates', function() {
 
       render: function() {
         numMiddleRenders++;
-        return <div>{this.props.children}</div>;
+        return React.Children.only(this.props.children);
       },
     });
 
     var Bottom = React.createClass({
       render: function() {
         numBottomRenders++;
-        return <span />;
+        return null;
       },
     });
 
@@ -463,7 +463,6 @@ describe('ReactUpdates', function() {
 
       expectUpdates(desiredWillUpdates, desiredDidUpdates);
     }
-
     testUpdates(
       [root.refs.switcher.refs.box, root.refs.switcher],
       // Owner-child relationships have inverse will and did

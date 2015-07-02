@@ -29,23 +29,54 @@
     <script src="../../build/react.js"></script>
     <script src="../../build/JSXTransformer.js"></script>
     <script type="text/jsx">
-      var ExampleApplication = React.createClass({
-        render: function() {
-          var elapsed = Math.round(this.props.elapsed  / 100);
-          var seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0' );
-          var message =
-            'React has been successfully running for ' + seconds + ' seconds.';
 
-          return <p>{message}</p>;
-        }
+var Top = React.createClass({
+  childContextTypes: {
+    now: React.PropTypes.any
+  },
+ 
+  getChildContext: function() {
+    return {
+      now: this.state.now
+    };
+  },
+ 
+  getInitialState: function() {
+    return {
+      now: Date.now()
+    };
+  },
+ 
+  componentDidMount: function() {
+    setInterval(function() {
+      this.setState({
+        now: Date.now()
       });
-      var start = new Date().getTime();
-      setInterval(function() {
-        React.render(
-          <ExampleApplication elapsed={new Date().getTime() - start} />,
-          document.getElementById('container')
-        );
-      }, 50);
+    }.bind(this), 500);
+  },
+ 
+  render: function() {
+    return (
+      <div>
+        <h1>{this.state.now}</h1>
+        <Child />{this.props.children}
+      </div>
+    );
+  }
+});
+ 
+var Child = React.createClass({
+  contextTypes: {
+    now: React.PropTypes.any
+  },
+ 
+  render: function() {
+    // I never update
+    return <h2>{this.context.now}</h2>;
+  }
+});
+ 
+React.render(<Top><Child/></Top>, document.getElementById('container'));
     </script>
   </body>
 </html>
