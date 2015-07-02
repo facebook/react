@@ -48,7 +48,8 @@ describe('EnterLeaveEventPlugin', function() {
       topLevelTypes.topMouseOver,
       div,
       ReactMount.getID(div),
-      {target: div}
+      {target: div},
+      div
     );
     expect(extracted.length).toBe(2);
 

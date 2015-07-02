@@ -20,7 +20,8 @@ describe('SyntheticWheelEvent', function() {
     SyntheticWheelEvent = require('SyntheticWheelEvent');
 
     createEvent = function(nativeEvent) {
-      return SyntheticWheelEvent.getPooled({}, '', nativeEvent);
+      var target = require('getEventTarget')(nativeEvent);
+      return SyntheticWheelEvent.getPooled({}, '', nativeEvent, target);
     };
   });
 

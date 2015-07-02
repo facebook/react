@@ -32,8 +32,9 @@ var InputEventInterface = {
 function SyntheticInputEvent(
   dispatchConfig,
   dispatchMarker,
-  nativeEvent) {
-  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+  nativeEvent,
+  nativeEventTarget) {
+  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticEvent.augmentClass(

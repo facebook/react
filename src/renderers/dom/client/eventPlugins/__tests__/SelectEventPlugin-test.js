@@ -30,7 +30,8 @@ describe('SelectEventPlugin', function() {
       topLevelEvent,
       node,
       ReactMount.getID(node),
-      {target: node}
+      {target: node},
+      node
     );
   }
 

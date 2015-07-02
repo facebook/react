@@ -325,7 +325,8 @@ to return true:wantsResponderID|                            |
 function setResponderAndExtractTransfer(
     topLevelType,
     topLevelTargetID,
-    nativeEvent) {
+    nativeEvent,
+    nativeEventTarget) {
   var shouldSetEventType =
     isStartish(topLevelType) ? eventTypes.startShouldSetResponder :
     isMoveish(topLevelType) ? eventTypes.moveShouldSetResponder :
@@ -346,7 +347,8 @@ function setResponderAndExtractTransfer(
   var shouldSetEvent = ResponderSyntheticEvent.getPooled(
     shouldSetEventType,
     bubbleShouldSetFrom,
-    nativeEvent
+    nativeEvent,
+    nativeEventTarget
   );
   shouldSetEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
   if (skipOverBubbleShouldSetFrom) {
@@ -366,7 +368,8 @@ function setResponderAndExtractTransfer(
   var grantEvent = ResponderSyntheticEvent.getPooled(
     eventTypes.responderGrant,
     wantsResponderID,
-    nativeEvent
+    nativeEvent,
+    nativeEventTarget
   );
   grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
@@ -376,7 +379,8 @@ function setResponderAndExtractTransfer(
     var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
       eventTypes.responderTerminationRequest,
       responderID,
-      nativeEvent
+      nativeEvent,
+      nativeEventTarget
     );
     terminationRequestEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
     EventPropagators.accumulateDirectDispatches(terminationRequestEvent);
@@ -391,7 +395,8 @@ function setResponderAndExtractTransfer(
       var terminateEvent = ResponderSyntheticEvent.getPooled(
         terminateType,
         responderID,
-        nativeEvent
+        nativeEvent,
+        nativeEventTarget
       );
       terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(terminateEvent);
@@ -401,7 +406,8 @@ function setResponderAndExtractTransfer(
       var rejectEvent = ResponderSyntheticEvent.getPooled(
         eventTypes.responderReject,
         wantsResponderID,
-        nativeEvent
+        nativeEvent,
+        nativeEventTarget
       );
       rejectEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(rejectEvent);
@@ -487,8 +493,8 @@ var ResponderEventPlugin = {
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent) {
-
+      nativeEvent,
+      nativeEventTarget) {
     if (isStartish(topLevelType)) {
       trackedTouchCount += 1;
     } else if (isEndish(topLevelType)) {
@@ -499,10 +505,14 @@ var ResponderEventPlugin = {
       );
     }
 
-    ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent);
+    ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent, nativeEventTarget);
 
     var extracted = canTriggerTransfer(topLevelType, topLevelTargetID) ?
-      setResponderAndExtractTransfer(topLevelType, topLevelTargetID, nativeEvent) :
+      setResponderAndExtractTransfer(
+        topLevelType,
+        topLevelTargetID,
+        nativeEvent,
+        nativeEventTarget) :
       null;
     // Responder may or may not have transfered on a new touch start/move.
     // Regardless, whoever is the responder after any potential transfer, we
@@ -525,7 +535,12 @@ var ResponderEventPlugin = {
 
     if (incrementalTouch) {
       var gesture =
-        ResponderSyntheticEvent.getPooled(incrementalTouch, responderID, nativeEvent);
+        ResponderSyntheticEvent.getPooled(
+          incrementalTouch,
+          responderID,
+          nativeEvent,
+          nativeEventTarget
+        );
       gesture.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(gesture);
       extracted = accumulate(extracted, gesture);
@@ -545,7 +560,7 @@ var ResponderEventPlugin = {
       null;
     if (finalTouch) {
       var finalEvent =
-        ResponderSyntheticEvent.getPooled(finalTouch, responderID, nativeEvent);
+        ResponderSyntheticEvent.getPooled(finalTouch, responderID, nativeEvent, nativeEventTarget);
       finalEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(finalEvent);
       extracted = accumulate(extracted, finalEvent);

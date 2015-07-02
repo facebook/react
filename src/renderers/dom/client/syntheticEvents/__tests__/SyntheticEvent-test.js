@@ -20,7 +20,8 @@ describe('SyntheticEvent', function() {
     SyntheticEvent = require('SyntheticEvent');
 
     createEvent = function(nativeEvent) {
-      return SyntheticEvent.getPooled({}, '', nativeEvent);
+      var target = require('getEventTarget')(nativeEvent);
+      return SyntheticEvent.getPooled({}, '', nativeEvent, target);
     };
   });
 

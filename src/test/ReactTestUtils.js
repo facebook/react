@@ -450,7 +450,8 @@ function makeSimulator(eventType) {
     var event = new SyntheticEvent(
       dispatchConfig,
       ReactMount.getID(node),
-      fakeNativeEvent
+      fakeNativeEvent,
+      node
     );
     assign(event, eventData);
 
