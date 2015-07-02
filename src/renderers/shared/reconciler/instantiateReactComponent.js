@@ -127,7 +127,7 @@ function isInternalComponentType(type) {
  * @param {function} type
  * @return {boolean} Returns true if this is a stateless function type.
  */
-function isPropablyStatelessComponentType(type) {
+function isProbablyStatelessComponentType(type) {
   return (
     typeof type === 'function' &&
     (typeof type.prototype === 'undefined' ||
