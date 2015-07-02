@@ -20,6 +20,7 @@ var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
+var ReactUpdates = require('ReactUpdates');
 
 var findDOMNode = require('findDOMNode');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
@@ -33,7 +34,11 @@ var React = {
   findDOMNode: findDOMNode,
   render: render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
-  _renderSubtreeIntoContainer: renderSubtreeIntoContainer,
+
+  /* eslint-disable camelcase */
+  unstable_batchedUpdates: ReactUpdates.batchedUpdates,
+  unstable_renderSubtreeIntoContainer: renderSubtreeIntoContainer,
+  /* eslint-enable camelcase */
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.

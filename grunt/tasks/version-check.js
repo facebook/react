@@ -10,11 +10,15 @@ var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
 module.exports = function() {
   var pkgVersion = grunt.config.data.pkg.version;
 
+  var addonsData = grunt.file.readJSON('./packages/react-addons/package.json');
   var versions = {
     'packages/react/package.json':
       grunt.file.readJSON('./packages/react/package.json').version,
     'packages/react-dom/package.json':
       grunt.file.readJSON('./packages/react-dom/package.json').version,
+    'packages/react-addons/package.json (version)': addonsData.version,
+    // Get the "version" without the range bit
+    'packages/react-addons/package.json (react dependency)': addonsData.peerDependencies.react.slice(1),
     'src/React.js': reactVersionExp.exec(grunt.file.read('./src/React.js'))[1],
   };
 
