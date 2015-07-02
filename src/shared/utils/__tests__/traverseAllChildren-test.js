@@ -16,6 +16,7 @@ describe('traverseAllChildren', function() {
   var React;
   var ReactFragment;
   beforeEach(function() {
+    require('mock-modules').dumpCache();
     traverseAllChildren = require('traverseAllChildren');
     React = require('React');
     ReactFragment = require('ReactFragment');
