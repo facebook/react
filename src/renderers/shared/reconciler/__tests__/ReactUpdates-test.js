@@ -100,12 +100,14 @@ describe('ReactUpdates', function() {
     expect(instance.state.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
+      instance.setProps({x: 1});
       instance.setState({y: 2});
       expect(instance.props.x).toBe(0);
       expect(instance.state.y).toBe(0);
       expect(updateCount).toBe(0);
     });
 
+    expect(instance.props.x).toBe(1);
     expect(instance.state.y).toBe(2);
     expect(updateCount).toBe(1);
   });

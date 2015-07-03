@@ -442,6 +442,46 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
+  it('should throw when calling setProps() on an owned component', function() {
+    /**
+     * calls setProps in an componentDidMount.
+     */
+    var Inner = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+    var PropsUpdaterInOnDOMReady = React.createClass({
+      componentDidMount: function() {
+        this.refs.theSimpleComponent.setProps({
+          className: this.props.valueToUseInOnDOMReady,
+        });
+      },
+      render: function() {
+        return (
+          <Inner
+            className={this.props.valueToUseInitially}
+            ref="theSimpleComponent"
+          />
+        );
+      },
+    });
+    var instance =
+      <PropsUpdaterInOnDOMReady
+        valueToUseInitially="hello"
+        valueToUseInOnDOMReady="goodbye"
+      />;
+    expect(function() {
+      instance = ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow(
+      'Invariant Violation: setProps(...): You called `setProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will get ' +
+      'reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
+    );
+  });
+
   it('should not throw when updating an auxiliary component', function() {
     var Tooltip = React.createClass({
       render: function() {
@@ -472,18 +512,24 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var container = document.createElement('div');
-    React.render(
-      <Component text="uno" tooltipText="one" />,
-      container
+    var instance = ReactTestUtils.renderIntoDocument(
+      <Component text="uno" tooltipText="one" />
     );
 
     // Since `instance` is a root component, we can set its props. This also
     // makes Tooltip rerender the tooltip component, which shouldn't throw.
-    React.render(
-      <Component text="dos" tooltipText="two" />,
-      container
-    );
+    instance.setProps({text: 'dos', tooltipText: 'two'});
+  });
+
+  it('should not allow setProps() called on an unmounted element',
+     function() {
+    var PropsToUpdate = React.createClass({
+      render: function() {
+        return <div className={this.props.value} ref="theSimpleComponent" />;
+      },
+    });
+    var instance = <PropsToUpdate value="hello" />;
+    expect(instance.setProps).not.toBeDefined();
   });
 
   it('should allow state updates in componentDidMount', function() {
@@ -549,7 +595,7 @@ describe('ReactComponentLifeCycle', function() {
 
     var container = document.createElement('div');
     log = [];
-    React.render(<Outer x={17} />, container);
+    var instance = React.render(<Outer x={17} />, container);
     expect(log).toEqual([
       'outer componentWillMount',
       'inner componentWillMount',
@@ -558,7 +604,7 @@ describe('ReactComponentLifeCycle', function() {
     ]);
 
     log = [];
-    React.render(<Outer x={42} />, container);
+    instance.setProps({x: 42});
     expect(log).toEqual([
       'outer componentWillReceiveProps',
       'outer shouldComponentUpdate',

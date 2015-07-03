@@ -12,9 +12,11 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -106,7 +108,7 @@ var ReactUpdateQueue = {
   enqueueCallback: function(publicInstance, callback) {
     invariant(
       typeof callback === 'function',
-      'enqueueCallback(...): You called ' +
+      'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
       '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
       'isn\'t callable.'
     );
@@ -136,7 +138,7 @@ var ReactUpdateQueue = {
   enqueueCallbackInternal: function(internalInstance, callback) {
     invariant(
       typeof callback === 'function',
-      'enqueueCallback(...): You called ' +
+      'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
       '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
       'isn\'t callable.'
     );
@@ -229,6 +231,91 @@ var ReactUpdateQueue = {
     queue.push(partialState);
 
     enqueueUpdate(internalInstance);
+  },
+
+  /**
+   * Sets a subset of the props.
+   *
+   * @param {ReactClass} publicInstance The instance that should rerender.
+   * @param {object} partialProps Subset of the next props.
+   * @internal
+   */
+  enqueueSetProps: function(publicInstance, partialProps) {
+    var internalInstance = getInternalInstanceReadyForUpdate(
+      publicInstance,
+      'setProps'
+    );
+    if (!internalInstance) {
+      return;
+    }
+    ReactUpdateQueue.enqueueSetPropsInternal(internalInstance, partialProps);
+  },
+
+  enqueueSetPropsInternal: function(internalInstance, partialProps) {
+    var topLevelWrapper = internalInstance._topLevelWrapper;
+    invariant(
+      topLevelWrapper,
+      'setProps(...): You called `setProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will ' +
+      'get reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
+    );
+
+    // Merge with the pending element if it exists, otherwise with existing
+    // element props.
+    var wrapElement = topLevelWrapper._pendingElement ||
+                      topLevelWrapper._currentElement;
+    var element = wrapElement.props;
+    var props = assign({}, element.props, partialProps);
+    topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
+      wrapElement,
+      ReactElement.cloneAndReplaceProps(element, props)
+    );
+
+    enqueueUpdate(topLevelWrapper);
+  },
+
+  /**
+   * Replaces all of the props.
+   *
+   * @param {ReactClass} publicInstance The instance that should rerender.
+   * @param {object} props New props.
+   * @internal
+   */
+  enqueueReplaceProps: function(publicInstance, props) {
+    var internalInstance = getInternalInstanceReadyForUpdate(
+      publicInstance,
+      'replaceProps'
+    );
+    if (!internalInstance) {
+      return;
+    }
+    ReactUpdateQueue.enqueueReplacePropsInternal(internalInstance, props);
+  },
+
+  enqueueReplacePropsInternal: function(internalInstance, props) {
+    var topLevelWrapper = internalInstance._topLevelWrapper;
+    invariant(
+      topLevelWrapper,
+      'replaceProps(...): You called `replaceProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will ' +
+      'get reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
+    );
+
+    // Merge with the pending element if it exists, otherwise with existing
+    // element props.
+    var wrapElement = topLevelWrapper._pendingElement ||
+                      topLevelWrapper._currentElement;
+    var element = wrapElement.props;
+    topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
+      wrapElement,
+      ReactElement.cloneAndReplaceProps(element, props)
+    );
+
+    enqueueUpdate(topLevelWrapper);
   },
 
   enqueueElementInternal: function(internalInstance, newElement) {

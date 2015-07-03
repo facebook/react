@@ -138,9 +138,8 @@ describe('ReactCompositeComponent-state', function() {
         this.peekAtState('initial-callback');
       }
     );
-    React.render(
-      <TestComponent stateListener={stateListener} nextColor="green" />,
-      container,
+    instance.setProps(
+      {nextColor: 'green'},
       instance.peekAtCallback('setProps')
     );
     instance.setFavoriteColor('blue');

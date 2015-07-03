@@ -974,6 +974,29 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls[4].args[0]).toContain('isMounted');
     });
 
+    it('handles legacy setProps and replaceProps', function() {
+      spyOn(console, 'error');
+      var node = ReactTestUtils.renderIntoDocument(<div>rhinoceros</div>);
+
+      node.setProps({className: 'herbiverous'});
+      expect(node.className).toBe('herbiverous');
+      expect(node.textContent).toBe('rhinoceros');
+
+      node.replaceProps({className: 'invisible rhino'});
+      expect(node.className).toBe('invisible rhino');
+      expect(node.textContent).toBe('');
+
+      expect(console.error.calls.length).toBe(2);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
+        'Instead, call React.render again at the top level.'
+      );
+      expect(console.error.calls[1].args[0]).toBe(
+        'Warning: ReactDOMComponent: Do not access .replaceProps() of a DOM ' +
+        'node. Instead, call React.render again at the top level.'
+      );
+    });
+
     it('does not touch ref-less nodes', function() {
       var node = ReactTestUtils.renderIntoDocument(<div><span /></div>);
       expect(typeof node.getDOMNode).toBe('function');

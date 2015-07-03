@@ -121,9 +121,9 @@ describe('ReactContextValidator', function() {
       },
     });
 
-    var container = document.createElement('div');
-    React.render(<Parent foo="abc" />, container);
-    React.render(<Parent foo="def" />, container);
+    var instance = <Parent foo="abc" />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance.replaceProps({foo: 'def'});
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});

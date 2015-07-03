@@ -138,7 +138,10 @@ describe('ReactCompositeComponent', function() {
   it('should not cache old DOM nodes when switching constructors', function() {
     var instance = <ChildUpdates renderAnchor={true} anchorClassOn={false}/>;
     instance = ReactTestUtils.renderIntoDocument(instance);
+    instance.setProps({anchorClassOn: true});  // Warm any cache
+    instance.setProps({renderAnchor: false});  // Clear out the anchor
     // rerender
+    instance.setProps({renderAnchor: true, anchorClassOn: false});
     var anchor = instance.getAnchor();
     var actualDOMAnchorNode = React.findDOMNode(anchor);
     expect(actualDOMAnchorNode.className).toBe('');
@@ -394,6 +397,72 @@ describe('ReactCompositeComponent', function() {
     expect(instance).toBe(instance2);
     expect(renderedState).toBe(1);
     expect(instance2.state.value).toBe(1);
+  });
+
+  it('should not allow `setProps` on unmounted components', function() {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+
+    var Component = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var instance = <Component />;
+    expect(instance.setProps).not.toBeDefined();
+
+    instance = React.render(instance, container);
+    expect(function() {
+      instance.setProps({value: 1});
+    }).not.toThrow();
+    expect(console.error.calls.length).toBe(0);
+
+    React.unmountComponentAtNode(container);
+    expect(function() {
+      instance.setProps({value: 2});
+    }).not.toThrow();
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: setProps(...): Can only update a mounted or ' +
+      'mounting component. This usually means you called setProps() on an ' +
+      'unmounted component. This is a no-op. Please check the code for the ' +
+      'Component component.'
+    );
+  });
+
+  it('should only allow `setProps` on top-level components', function() {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+
+    var innerInstance;
+
+    var Inner = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+    var Component = React.createClass({
+      render: function() {
+        return <div><Inner ref="inner" /></div>;
+      },
+      componentDidMount: function() {
+        innerInstance = this.refs.inner;
+      },
+    });
+    React.render(<Component />, container);
+
+    expect(innerInstance).not.toBe(undefined);
+    expect(function() {
+      innerInstance.setProps({value: 1});
+    }).toThrow(
+      'Invariant Violation: setProps(...): You called `setProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will get ' +
+      'reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
+    );
   });
 
   it('should cleanup even if render() fatals', function() {
@@ -866,8 +935,7 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var container = document.createElement('div');
-    var comp = React.render(<Component flipped={false} />, container);
+    var comp = ReactTestUtils.renderIntoDocument(<Component flipped={false} />);
     expect(React.findDOMNode(comp.refs.static0).textContent).toBe('A');
     expect(React.findDOMNode(comp.refs.static1).textContent).toBe('B');
 
@@ -878,7 +946,7 @@ describe('ReactCompositeComponent', function() {
 
     // When flipping the order, the refs should update even though the actual
     // contents do not
-    React.render(<Component flipped={true} />, container);
+    comp.setProps({flipped: true});
     expect(React.findDOMNode(comp.refs.static0).textContent).toBe('B');
     expect(React.findDOMNode(comp.refs.static1).textContent).toBe('A');
 
