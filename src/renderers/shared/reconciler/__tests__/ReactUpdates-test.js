@@ -101,7 +101,7 @@ describe('ReactUpdates', function() {
     expect(instance.state.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
-      React.render(<Component x={1} />, container)
+      React.render(<Component x={1} />, container);
       instance.setState({y: 2});
       expect(instance.props.x).toBe(0);
       expect(instance.state.y).toBe(0);
