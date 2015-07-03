@@ -471,6 +471,7 @@ describe('ReactComponentLifeCycle', function() {
         valueToUseInitially="hello"
         valueToUseInOnDOMReady="goodbye"
       />;
+    spyOn(console, 'error');
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
@@ -480,6 +481,7 @@ describe('ReactComponentLifeCycle', function() {
       '`render` method to pass the correct value as props to the component ' +
       'where it is created.'
     );
+    expect(console.error.calls.length).toBe(1);  // setProps deprecated
   });
 
   it('should not throw when updating an auxiliary component', function() {

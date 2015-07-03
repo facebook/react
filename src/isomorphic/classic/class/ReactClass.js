@@ -55,6 +55,18 @@ var SpecPolicy = keyMirror({
 
 var injectedMixins = [];
 
+var warnedSetProps = false;
+function warnSetProps() {
+  if (!warnedSetProps) {
+    warnedSetProps = true;
+    warning(
+      false,
+      'setProps(...) and replaceProps(...) are deprecated. ' +
+      'Instead, call React.render again at the top level.'
+    );
+  }
+}
+
 /**
  * Composite components are higher-level components that compose other composite
  * or native components.
@@ -739,6 +751,9 @@ var ReactClassMixin = {
    * @deprecated
    */
   setProps: function(partialProps, callback) {
+    if (__DEV__) {
+      warnSetProps();
+    }
     this.updater.enqueueSetProps(this, partialProps);
     if (callback) {
       this.updater.enqueueCallback(this, callback);
@@ -755,6 +770,9 @@ var ReactClassMixin = {
    * @deprecated
    */
   replaceProps: function(newProps, callback) {
+    if (__DEV__) {
+      warnSetProps();
+    }
     this.updater.enqueueReplaceProps(this, newProps);
     if (callback) {
       this.updater.enqueueCallback(this, callback);

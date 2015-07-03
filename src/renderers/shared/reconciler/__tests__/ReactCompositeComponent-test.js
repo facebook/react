@@ -416,15 +416,15 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance.setProps({value: 1});
     }).not.toThrow();
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(1);  // setProps deprecated
 
     React.unmountComponentAtNode(container);
     expect(function() {
       instance.setProps({value: 2});
     }).not.toThrow();
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(2);
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: setProps(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setProps() on an ' +
       'unmounted component. This is a no-op. Please check the code for the ' +

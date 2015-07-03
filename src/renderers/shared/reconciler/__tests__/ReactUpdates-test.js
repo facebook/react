@@ -95,12 +95,13 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component x={0} />);
+    var container = document.createElement('div');
+    var instance = React.render(<Component x={0} />, container);
     expect(instance.props.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
-      instance.setProps({x: 1});
+      React.render(<Component x={1} />, container)
       instance.setState({y: 2});
       expect(instance.props.x).toBe(0);
       expect(instance.state.y).toBe(0);
