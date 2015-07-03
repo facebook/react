@@ -15,7 +15,6 @@ require('mock-modules');
 
 var React = require('React');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactTestUtils = require('ReactTestUtils');
 var ReactMount = require('ReactMount');
 
 var mapObject = require('mapObject');
@@ -212,15 +211,20 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
  */
 function testPropsSequence(sequence) {
   var i;
-  var parentInstance = ReactTestUtils.renderIntoDocument(
-    <FriendsStatusDisplay {...sequence[0]} />
+  var container = document.createElement('div');
+  var parentInstance = React.render(
+    <FriendsStatusDisplay {...sequence[0]} />,
+    container
   );
   var statusDisplays = parentInstance.getStatusDisplays();
   var lastInternalStates = getInteralStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
   for (i = 1; i < sequence.length; i++) {
-    parentInstance.replaceProps(sequence[i]);
+    React.render(
+      <FriendsStatusDisplay {...sequence[i]} />,
+      container
+    );
     statusDisplays = parentInstance.getStatusDisplays();
     verifyStatuses(statusDisplays, sequence[i]);
     verifyStatesPreserved(lastInternalStates, statusDisplays);
@@ -243,19 +247,27 @@ describe('ReactMultiChildReconcile', function() {
       },
     };
 
-    var parentInstance = ReactTestUtils.renderIntoDocument(
-      <FriendsStatusDisplay {...props} />
+    var container = document.createElement('div');
+    var parentInstance = React.render(
+      <FriendsStatusDisplay {...props} />,
+      container
     );
     var statusDisplays = parentInstance.getStatusDisplays();
     var startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    parentInstance.replaceProps({usernameToStatus: {} });
+    React.render(
+      <FriendsStatusDisplay />,
+      container
+    );
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
     // Now reset the props that cause there to be a child
-    parentInstance.replaceProps(props);
+    React.render(
+      <FriendsStatusDisplay {...props} />,
+      container
+    );
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeTruthy();
     expect(statusDisplays.jcw.getInternalState())

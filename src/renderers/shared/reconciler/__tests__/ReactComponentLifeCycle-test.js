@@ -512,24 +512,18 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
-      <Component text="uno" tooltipText="one" />
+    var container = document.createElement('div');
+    React.render(
+      <Component text="uno" tooltipText="one" />,
+      container
     );
 
     // Since `instance` is a root component, we can set its props. This also
     // makes Tooltip rerender the tooltip component, which shouldn't throw.
-    instance.setProps({text: 'dos', tooltipText: 'two'});
-  });
-
-  it('should not allow setProps() called on an unmounted element',
-     function() {
-    var PropsToUpdate = React.createClass({
-      render: function() {
-        return <div className={this.props.value} ref="theSimpleComponent" />;
-      },
-    });
-    var instance = <PropsToUpdate value="hello" />;
-    expect(instance.setProps).not.toBeDefined();
+    React.render(
+      <Component text="dos" tooltipText="two" />,
+      container
+    );
   });
 
   it('should allow state updates in componentDidMount', function() {
@@ -595,7 +589,7 @@ describe('ReactComponentLifeCycle', function() {
 
     var container = document.createElement('div');
     log = [];
-    var instance = React.render(<Outer x={17} />, container);
+    React.render(<Outer x={17} />, container);
     expect(log).toEqual([
       'outer componentWillMount',
       'inner componentWillMount',
@@ -604,7 +598,7 @@ describe('ReactComponentLifeCycle', function() {
     ]);
 
     log = [];
-    instance.setProps({x: 42});
+    React.render(<Outer x={42} />, container);
     expect(log).toEqual([
       'outer componentWillReceiveProps',
       'outer shouldComponentUpdate',
