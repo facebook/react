@@ -36,8 +36,8 @@ var addons = {
     name: 'shallow-compare',
   },
   updates: {
-    module: 'updates',
-    name: 'updates',
+    module: 'update',
+    name: 'update',
   },
 };
 
