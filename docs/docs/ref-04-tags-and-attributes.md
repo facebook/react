@@ -57,12 +57,13 @@ async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet challenge
 checked classID className colSpan cols content contentEditable contextMenu controls
 coords crossOrigin data dateTime defer dir disabled download draggable encType
 form formAction formEncType formMethod formNoValidate formTarget frameBorder
-headers height hidden high href hrefLang htmlFor httpEquiv icon id keyParams keyType
-label lang list loop low manifest marginHeight marginWidth max maxLength media
-mediaGroup method min multiple muted name noValidate open optimum pattern placeholder
-poster preload radioGroup readOnly rel required role rowSpan rows sandbox scope
-scoped scrolling seamless selected shape size sizes span spellCheck src srcDoc
-srcSet start step style tabIndex target title type useMap value width wmode
+headers height hidden high href hrefLang htmlFor httpEquiv icon id inputMode
+keyParams keyType label lang list loop low manifest marginHeight marginWidth max
+maxLength media mediaGroup method min multiple muted name noValidate open
+optimum pattern placeholder poster preload radioGroup readOnly rel required role
+rowSpan rows sandbox scope scoped scrolling seamless selected shape size sizes
+span spellCheck src srcDoc srcSet start step style tabIndex target title type
+useMap value width wmode
 ```
 
 In addition, the following non-standard attributes are supported:
