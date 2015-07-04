@@ -26,7 +26,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Hello React!</title>
     <script src="build/react.js"></script>
