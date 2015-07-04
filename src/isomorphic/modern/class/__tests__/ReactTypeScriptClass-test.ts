@@ -24,7 +24,7 @@ class Inner extends React.Component {
     renderedName = this.props.name;
     return React.createElement('div', { className: this.props.name });
   }
-};
+}
 
 function test(element, expectedTag, expectedClassName) {
   var instance = React.render(element, container);
@@ -83,11 +83,11 @@ class StateBasedOnContext extends React.Component {
   static contextTypes = {
     tag: React.PropTypes.string,
     className: React.PropTypes.string
-  }
+  };
   state = {
     tag: this.context.tag,
     className: this.context.className
-  }
+  };
   render() {
     var Tag = this.state.tag;
     return React.createElement(Tag, {className: this.state.className});
@@ -98,7 +98,7 @@ class ProvideChildContextTypes extends React.Component {
   static childContextTypes = {
     tag: React.PropTypes.string,
     className: React.PropTypes.string
-  }
+  };
   getChildContext() {
     return { tag: 'span', className: 'foo' };
   }
@@ -112,7 +112,7 @@ var renderCount = 0;
 class RenderOnce extends React.Component {
   state = {
     bar: this.props.initialValue
-  }
+  };
   componentWillMount() {
     this.setState({ bar: 'bar' });
   }
@@ -124,19 +124,19 @@ class RenderOnce extends React.Component {
 
 // it should throw with non-object in the initial state property
 class ArrayState {
-  state = ['an array']
+  state = ['an array'];
   render() {
     return React.createElement('span');
   }
 }
 class StringState {
-  state = 'a string'
+  state = 'a string';
   render() {
     return React.createElement('span');
   }
 }
 class NumberState {
-  state = 1234
+  state = 1234;
   render() {
     return React.createElement('span');
   }
@@ -144,7 +144,7 @@ class NumberState {
 
 // it should render with null in the initial state property
 class NullState extends React.Component {
-  state = null
+  state = null;
   render() {
     return React.createElement('span');
   }
@@ -154,10 +154,10 @@ class NullState extends React.Component {
 class BoundEventHandler extends React.Component {
   state = {
     bar: this.props.initialValue
-  }
+  };
   handleClick = () => {
     this.setState({ bar: 'bar' });
-  }
+  };
   render() {
     return (
       React.createElement(Inner, {
@@ -172,7 +172,7 @@ class BoundEventHandler extends React.Component {
 class UnboundEventHandler extends React.Component {
   state = {
     bar: this.props.initialValue
-  }
+  };
   handleClick() {
     this.setState({ bar: 'bar' });
   }
@@ -185,7 +185,7 @@ class UnboundEventHandler extends React.Component {
 
 // it renders using forceUpdate even when there is no state
 class ForceUpdateWithNoState extends React.Component {
-  mutativeValue : string = this.props.initialValue
+  mutativeValue : string = this.props.initialValue;
   handleClick() {
     this.mutativeValue = 'bar';
     this.forceUpdate();
@@ -203,8 +203,8 @@ class ForceUpdateWithNoState extends React.Component {
 // it will call all the normal life cycle methods
 var lifeCycles = [];
 class NormalLifeCycles {
-  props : any
-  state = {}
+  props : any;
+  state = {};
   componentWillMount() {
     lifeCycles.push('will-mount');
   }
