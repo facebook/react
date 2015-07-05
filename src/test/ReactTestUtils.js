@@ -42,7 +42,7 @@ function findAllInRenderedTreeInternal(inst, test) {
   if (!inst || !inst.getPublicInstance) {
     return [];
   }
-  var publicInst = inst.getPublicInstance()
+  var publicInst = inst.getPublicInstance();
   var ret = test(publicInst) ? [publicInst] : [];
   if (ReactTestUtils.isDOMComponent(publicInst)) {
     var renderedChildren = inst._renderedChildren;
