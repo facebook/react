@@ -52,7 +52,7 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your fa
 </html>
 ```
 
-For the remainder of this tutorial, we'll be writing our JavaScript code in this script tag.
+For the remainder of this tutorial, we'll be writing our JavaScript code in this script tag. Follow your progress by opening your index.html file in your browser after each addition.
 
 > Note:
 >
