@@ -374,7 +374,7 @@ var CommentBox = React.createClass({
 `getInitialState()` executes exactly once during the lifecycle of the component and sets up the initial state of the component.
 
 #### Updating state
-When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example, we will use a static JSON file to keep things simple:
+When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example we will keep things simple by creating a static JSON file public/comments.json containing the array of comments:
 
 ```javascript
 // tutorial13.json
