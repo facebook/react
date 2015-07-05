@@ -74,7 +74,8 @@ function manualDispatchChangeEvent(nativeEvent) {
   var event = SyntheticEvent.getPooled(
     eventTypes.change,
     activeElementID,
-    nativeEvent
+    nativeEvent,
+    nativeEvent.target
   );
   EventPropagators.accumulateTwoPhaseDispatches(event);
 
@@ -330,7 +331,8 @@ var ChangeEventPlugin = {
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent) {
+      nativeEvent,
+      nativeEventTarget) {
 
     var getTargetIDFunc, handleEventFunc;
     if (shouldUseChangeEvent(topLevelTarget)) {
@@ -360,7 +362,8 @@ var ChangeEventPlugin = {
         var event = SyntheticEvent.getPooled(
           eventTypes.change,
           targetID,
-          nativeEvent
+          nativeEvent,
+          nativeEventTarget
         );
         event.type = 'change';
         EventPropagators.accumulateTwoPhaseDispatches(event);
