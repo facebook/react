@@ -105,7 +105,7 @@ Using form components such as `<input>` in React presents a challenge that is ab
   <input type="text" name="title" value="Untitled" />
 ```
 
-This renders an input *initialized* with the value, `Untitled`. When the user updates the input, the node's value *property* will change. However, `node.getAttribute('value')` will still return the value used at initialization time, `Untitled`.
+This renders an input *initialized* with the value, `Untitled`. When the user updates the input, the node's `value` *property* will change. However, `node.getAttribute('value')` will still return the value used at initialization time, `Untitled`.
 
 Unlike HTML, React components must represent the state of the view at any point in time and not only at initialization time. For example, in React:
 
