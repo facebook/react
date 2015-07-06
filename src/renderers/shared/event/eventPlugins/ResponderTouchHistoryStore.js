@@ -150,16 +150,17 @@ var recordEndTouchData = function(touch) {
 var ResponderTouchHistoryStore = {
   recordTouchTrack: function(topLevelType, nativeEvent) {
     var touchBank = touchHistory.touchBank;
+    var changedTouches = Array.prototype.slice.call(nativeEvent.changedTouches);
     if (isMoveish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordMoveTouchData);
+      changedTouches.forEach(recordMoveTouchData);
     } else if (isStartish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordStartTouchData);
+      changedTouches.forEach(recordStartTouchData);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
         touchHistory.indexOfSingleActiveTouch = nativeEvent.touches[0].identifier;
       }
     } else if (isEndish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordEndTouchData);
+      changedTouches.forEach(recordEndTouchData);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
         for (var i = 0; i < touchBank.length; i++) {
