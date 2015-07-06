@@ -147,10 +147,16 @@ var recordEndTouchData = function(touch) {
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 };
 
+var augmentTimestamp = function(timestamp, touch) {
+  touch.timestamp = timestamp;
+};
+
 var ResponderTouchHistoryStore = {
   recordTouchTrack: function(topLevelType, nativeEvent) {
     var touchBank = touchHistory.touchBank;
+    var timestamp = nativeEvent.timestamp || nativeEvent.timeStamp;
     var changedTouches = Array.prototype.slice.call(nativeEvent.changedTouches);
+    changedTouches.forEach(augmentTimestamp.bind(null, timestamp));
     if (isMoveish(topLevelType)) {
       changedTouches.forEach(recordMoveTouchData);
     } else if (isStartish(topLevelType)) {
