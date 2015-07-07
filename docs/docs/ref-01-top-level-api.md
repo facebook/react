@@ -88,10 +88,14 @@ If the ReactElement was previously rendered into `container`, this will perform 
 If the optional callback is provided, it will be executed after the component is rendered or updated.
 
 > Note:
+> 
+> `React.render()` controls the contents of the container node you pass in*. Any existing DOM elements
+> inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient 
+> updates.
 >
-> `React.render()` replaces the contents of the container node you
-> pass in. In the future, it may be possible to insert a component to an
-> existing DOM node without overwriting the existing children.
+> \* `React.render()` does not modify the container node (only modifies the children of the container). In
+> the future, it may be possible to insert a component to an existing DOM node without overwriting 
+> the existing children.
 
 
 ### React.unmountComponentAtNode
