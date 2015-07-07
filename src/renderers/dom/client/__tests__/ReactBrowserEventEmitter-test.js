@@ -426,6 +426,38 @@ describe('ReactBrowserEventEmitter', function() {
     }
   });
 
+  it('should set target on change plugin events', function() {
+    ReactBrowserEventEmitter.putListener(
+      getID(CHILD),
+      ON_CHANGE_KEY,
+      function(event) {
+        recordID(getID(CHILD));
+        expect(event.target).toBe(CHILD);
+      }
+    );
+    ReactBrowserEventEmitter.putListener(
+      getID(PARENT),
+      ON_CHANGE_KEY,
+      function(event) {
+        recordID(getID(PARENT));
+        expect(event.target).toBe(CHILD);
+      }
+    );
+    ReactBrowserEventEmitter.putListener(
+      getID(GRANDPARENT),
+      ON_CHANGE_KEY,
+      function(event) {
+        recordID(getID(GRANDPARENT));
+        expect(event.target).toBe(CHILD);
+      }
+    );
+    ReactTestUtils.SimulateNative.input(CHILD);
+    expect(idCallOrder.length).toBe(3);
+    expect(idCallOrder[0]).toBe(getID(CHILD));
+    expect(idCallOrder[1]).toBe(getID(CHILD));
+    expect(idCallOrder[2]).toBe(getID(CHILD));
+  });
+
   it('should bubble onTouchTap', function() {
     ReactBrowserEventEmitter.putListener(
       getID(CHILD),
