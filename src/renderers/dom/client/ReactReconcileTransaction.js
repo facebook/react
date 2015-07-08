@@ -17,6 +17,7 @@ var PooledClass = require('PooledClass');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
 var Transaction = require('Transaction');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var assign = require('Object.assign');
 
@@ -25,6 +26,10 @@ var assign = require('Object.assign');
  * input) is not disturbed by performing the transaction.
  */
 var SELECTION_RESTORATION = {
+  /**
+   * @param {boolean} The dependence of this wrapper on the presence of the DOM.
+   */
+  requiresDOM: true,
   /**
    * @return {Selection} Selection information.
    */
@@ -86,11 +91,11 @@ var ON_DOM_READY_QUEUEING = {
  * being member methods, but with an implied ordering while being isolated from
  * each other.
  */
-var TRANSACTION_WRAPPERS = [
+var TRANSACTION_WRAPPERS = ExecutionEnvironment.filter([
   SELECTION_RESTORATION,
   EVENT_SUPPRESSION,
   ON_DOM_READY_QUEUEING,
-];
+]);
 
 /**
  * Currently:
