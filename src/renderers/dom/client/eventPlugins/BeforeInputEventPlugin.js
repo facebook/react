@@ -237,7 +237,8 @@ function extractCompositionEvent(
   topLevelType,
   topLevelTarget,
   topLevelTargetID,
-  nativeEvent
+  nativeEvent,
+  nativeEventTarget
 ) {
   var eventType;
   var fallbackData;
@@ -271,7 +272,8 @@ function extractCompositionEvent(
   var event = SyntheticCompositionEvent.getPooled(
     eventType,
     topLevelTargetID,
-    nativeEvent
+    nativeEvent,
+    nativeEventTarget
   );
 
   if (fallbackData) {
@@ -411,7 +413,8 @@ function extractBeforeInputEvent(
   topLevelType,
   topLevelTarget,
   topLevelTargetID,
-  nativeEvent
+  nativeEvent,
+  nativeEventTarget
 ) {
   var chars;
 
@@ -430,7 +433,8 @@ function extractBeforeInputEvent(
   var event = SyntheticInputEvent.getPooled(
     eventTypes.beforeInput,
     topLevelTargetID,
-    nativeEvent
+    nativeEvent,
+    nativeEventTarget
   );
 
   event.data = chars;
@@ -472,20 +476,23 @@ var BeforeInputEventPlugin = {
     topLevelType,
     topLevelTarget,
     topLevelTargetID,
-    nativeEvent
+    nativeEvent,
+    nativeEventTarget
   ) {
     return [
       extractCompositionEvent(
         topLevelType,
         topLevelTarget,
         topLevelTargetID,
-        nativeEvent
+        nativeEvent,
+        nativeEventTarget
       ),
       extractBeforeInputEvent(
         topLevelType,
         topLevelTarget,
         topLevelTargetID,
-        nativeEvent
+        nativeEvent,
+        nativeEventTarget
       ),
     ];
   },

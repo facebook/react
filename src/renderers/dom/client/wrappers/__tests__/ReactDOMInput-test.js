@@ -16,12 +16,14 @@ var emptyFunction = require('emptyFunction');
 var mocks = require('mocks');
 
 describe('ReactDOMInput', function() {
+  var EventConstants;
   var React;
   var ReactLink;
   var ReactTestUtils;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    EventConstants = require('EventConstants');
     React = require('React');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
@@ -132,6 +134,30 @@ describe('ReactDOMInput', function() {
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
     expect(node.value).toBe('0');
+  });
+
+  it('should have the correct target value', function() {
+    var handled = false;
+    var handler = function(event) {
+      expect(event.target.nodeName).toBe('INPUT');
+      handled = true;
+    };
+    var stub = <input type="text" value={0} onChange={handler} />;
+    var container = document.createElement('div');
+    var node = React.render(stub, container);
+
+    node.value = 'giraffe';
+
+    var fakeNativeEvent = new function() {};
+    fakeNativeEvent.target = node;
+    fakeNativeEvent.path = [node, container];
+    ReactTestUtils.simulateNativeEventOnNode(
+      EventConstants.topLevelTypes.topInput,
+      node,
+      fakeNativeEvent
+    );
+
+    expect(handled).toBe(true);
   });
 
   it('should not set a value for submit buttons unnecessarily', function() {
