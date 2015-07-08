@@ -88,7 +88,7 @@ React.render(
 );
 ```
 
-Note that native HTML element names start with a lowercase letter, while custom React classes names begin with an uppercase letter.
+Note that native HTML element names start with a lowercase letter, while custom React class names begin with an uppercase letter.
 
 #### JSX Syntax
 
