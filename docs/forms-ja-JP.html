@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Forms | React</title>
+  <title>フォーム | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Forms | React">
+  <meta property="og:title" content="フォーム | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/forms.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/forms-ja-JP.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -399,47 +399,46 @@
 
   <div class="inner-content">
     <h1>
-      Forms
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/07-forms.md" target="_blank">Edit on GitHub</a>
+      フォーム
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/07-forms.ja-JP.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>Form components such as <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;option&gt;</code> differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.</p>
+    <p><code>&lt;input&gt;</code> や <code>&lt;textarea&gt;</code> や <code>&lt;option&gt;</code> のようなフォームのコンポーネントはユーザの入力によって変化しうるので、他のネイティブのコンポーネントとは異なります。以下のコンポーネントは、ユーザの入力に返答することにおいて、フォームを操作することを簡単にするインターフェースを提供します。</p>
 
-<p>For information on events on <code>&lt;form&gt;</code> see <a href="/react/docs/events.html#form-events">Form Events</a>.</p>
-<h2><a class="anchor" name="interactive-props"></a>Interactive Props <a class="hash-link" href="#interactive-props">#</a></h2>
-<p>Form components support a few props that are affected via user interactions:</p>
-
-<ul>
-<li><code>value</code>, supported by <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code> components.</li>
-<li><code>checked</code>, supported by <code>&lt;input&gt;</code> components of type <code>checkbox</code> or <code>radio</code>.</li>
-<li><code>selected</code>, supported by <code>&lt;option&gt;</code> components.</li>
-</ul>
-
-<p>In HTML, the value of <code>&lt;textarea&gt;</code> is set via children. In React, you should use <code>value</code> instead.</p>
-
-<p>Form components allow listening for changes by setting a callback to the <code>onChange</code> prop. The <code>onChange</code> prop works across browsers to fire in response to user interactions when:</p>
+<p><code>&lt;form&gt;</code> のイベントについての情報は、<a href="/react/docs/events.html#form-events">フォームのイベント</a>をご覧ください。</p>
+<h2><a class="anchor" name="props"></a>双方向のprops <a class="hash-link" href="#props">#</a></h2>
+<p>以下のように、フォームのコンポーネントはユーザの入力に影響されるいくつかのpropsをサポートしています。</p>
 
 <ul>
-<li>The <code>value</code> of <code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code> changes.</li>
-<li>The <code>checked</code> state of <code>&lt;input&gt;</code> changes.</li>
-<li>The <code>selected</code> state of <code>&lt;option&gt;</code> changes.</li>
+<li><code>value</code> は <code>&lt;input&gt;</code> と <code>&lt;textarea&gt;</code> コンポーネントにサポートされています。</li>
+<li><code>checked</code> は <code>&lt;input&gt;</code> コンポーネントの <code>checkbox</code> か <code>radio</code> タイプにサポートされています。</li>
+<li><code>selected</code> は <code>&lt;option&gt;</code> コンポーネントにサポートされています。</li>
 </ul>
 
-<p>Like all DOM events, the <code>onChange</code> prop is supported on all native components and can be used to listen to bubbled change events.</p>
+<p>HTMLでは、 <code>&lt;textarea&gt;</code> の値は子要素によってセットされます。Reactでは、 <code>value</code> を代わりに使うべきです。</p>
+
+<p>フォームコンポーネントは <code>onChange</code> propにコールバックをセットすることで変更を検知することを可能にします。<code>onChange</code> propはブラウザ上で、ユーザの入力に返答する際に発火するために動きます。それは以下のようなタイミングです。</p>
+
+<ul>
+<li><code>&lt;input&gt;</code> か <code>&lt;textarea&gt;</code> の <code>value</code> が変わる時。</li>
+<li><code>&lt;input&gt;</code> の <code>checked</code> ステータスが変わる時。</li>
+<li><code>&lt;option&gt;</code> の <code>selected</code> ステータスが変わる時。</li>
+</ul>
+
+<p>全てのDOMのイベントのように、 <code>onChange</code> propは全てのネイティブのコンポーネントにサポートされており、何度も発生するチェンジイベントを検知するのに使われることもあります。</p>
 
 <blockquote>
-<p>Note:</p>
-
-<p>For <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code>, <code>onChange</code> supersedes — and should generally be used instead of — the DOM&#39;s built-in <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> event handler.</p>
+<p>注意:
+<code>&lt;input&gt;</code> と <code>&lt;textarea&gt;</code> にとって、 <code>onChange</code> は DOMのビルトインの <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> イベントハンドラの代替のものです。そして、一般的に、代わりに使われています。</p>
 </blockquote>
-<h2><a class="anchor" name="controlled-components"></a>Controlled Components <a class="hash-link" href="#controlled-components">#</a></h2>
-<p>An <code>&lt;input&gt;</code> with <code>value</code> set is a <em>controlled</em> component. In a controlled <code>&lt;input&gt;</code>, the value of the rendered element will always reflect the <code>value</code> prop. For example:</p>
+<h2><a class="anchor" name=""></a>制御されたコンポーネント <a class="hash-link" href="#">#</a></h2>
+<p><code>&lt;input&gt;</code> と <code>value</code> のセットは <em>制御された</em> コンポーネントです。制御された <code>&lt;input&gt;</code> では、レンダリングされた要素の値は、常に <code>value</code> propを反映します。例えば、</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>This will render an input that always has a value of <code>Hello!</code>. Any user input will have no effect on the rendered element because React has declared the value to be <code>Hello!</code>. If you wanted to update the value in response to user input, you could use the <code>onChange</code> event:</p>
+<p>上記は、常に <code>Hello!</code> という値を持つinputをレンダリングするでしょう。ユーザのinputはレンダリングされた要素に何も影響を与えないでしょう。なぜなら、Reactが、値が <code>Hello!</code> になるように宣言しているからです。ユーザのinputに返答する形で値を更新したいなら、以下のように <code>onChange</code> イベントが使用できます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -451,72 +450,71 @@
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>In this example, we are simply accepting the newest value provided by the user and updating the <code>value</code> prop of the <code>&lt;input&gt;</code> component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:</p>
+<p>この例では、ユーザから提供された、最新の値を単純に受け入れ <code>&lt;input&gt;</code> コンポーネントの <code>value</code> propを更新します。 このパターンはユーザの入力に返答したり、バリデーションしたりするインターフェースを実行することを簡単にします。例えば、</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">)});</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>This would accept user input but truncate the value to the first 140 characters.</p>
-<h2><a class="anchor" name="uncontrolled-components"></a>Uncontrolled Components <a class="hash-link" href="#uncontrolled-components">#</a></h2>
-<p>An <code>&lt;input&gt;</code> that does not supply a <code>value</code> (or sets it to <code>null</code>) is an <em>uncontrolled</em> component. In an uncontrolled <code>&lt;input&gt;</code>, the value of the rendered element will reflect the user&#39;s input. For example:</p>
+<p>上記はユーザのinputを受け入れますが、値を最初の140字に切り取ります。</p>
+<h2><a class="anchor" name=""></a>制御されないコンポーネント <a class="hash-link" href="#">#</a></h2>
+<p><code>value</code> を与えられていない（もしくは <code>null</code> がセットされている） <code>&lt;input&gt;</code> は <em>制御されない</em> コンポーネントです。制御されない <code>&lt;input&gt;</code> では、レンダリングされた要素の値はユーザのinputを反映します。例えば、</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>This will render an input that starts off with an empty value. Any user input will be immediately reflected by the rendered element. If you wanted to listen to updates to the value, you could use the <code>onChange</code> event just like you can with controlled components.</p>
+<p>上記は、空の値で最初は始まるinputをレンダリングします。どのようなユーザのinputも即座にレンダリングされた要素によって反映されます。値の更新を検知したいなら、 <code>onChange</code> イベントを、制御されたコンポーネントと同様に使用することができます。</p>
 
-<p>If you want to initialize the component with a non-empty value, you can supply a <code>defaultValue</code> prop. For example:</p>
+<p>コンポーネントを空ではない値で初期化したいなら、 <code>defaultValue</code> propを提供することができます。例えば、</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>This example will function much like the <strong>Controlled Components</strong> example above.</p>
+<p>この例は、上記の <strong>制御されたコンポーネント</strong> の例と同じように動くでしょう。</p>
 
-<p>Likewise, <code>&lt;input&gt;</code> supports <code>defaultChecked</code> and <code>&lt;select&gt;</code> supports <code>defaultValue</code>.</p>
-<h2><a class="anchor" name="advanced-topics"></a>Advanced Topics <a class="hash-link" href="#advanced-topics">#</a></h2><h3><a class="anchor" name="why-controlled-components"></a>Why Controlled Components? <a class="hash-link" href="#why-controlled-components">#</a></h3>
-<p>Using form components such as <code>&lt;input&gt;</code> in React presents a challenge that is absent when writing traditional form HTML. For example, in HTML:</p>
+<p>同様に、 <code>&lt;input&gt;</code> は <code>defaultChecked</code> をサポートし、 <code>&lt;select&gt;</code> は <code>defaultValue</code> をサポートします。</p>
+<h2><a class="anchor" name=""></a>高度なトピック <a class="hash-link" href="#">#</a></h2><h3><a class="anchor" name=""></a>なぜコントロールされたコンポーネントを使うのでしょうか？ <a class="hash-link" href="#">#</a></h3>
+<p><code>&lt;input&gt;</code> のようなフォームのコンポーネントをReactで使うことは、伝統的なHTMLのフォームを書いた時には無視される表現であることを表します。例えば、HTMLでは、</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
-<p>This renders an input <em>initialized</em> with the value, <code>Untitled</code>. When the user updates the input, the node&#39;s <code>value</code> <em>property</em> will change. However, <code>node.getAttribute(&#39;value&#39;)</code> will still return the value used at initialization time, <code>Untitled</code>.</p>
+<p>上記は、 <code>Untitled</code> という値で <em>初期化</em> されたinputをレンダリングします。ユーザがinputを更新する時、ノードの <code>value</code> <em>プロパティ</em> が変更されるでしょう。しかし、 <code>node.getAttribute(&#39;value&#39;)</code> は初期化の際に使用された値である <code>Untitled</code> をまだリターンします。</p>
 
-<p>Unlike HTML, React components must represent the state of the view at any point in time and not only at initialization time. For example, in React:</p>
+<p>HTMLと違って、Reactのコンポーネントは初期化の時だけではなく、いつでもビューのステータスを再度表示しなくてはなりません。例えば、Reactでは、</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;title&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Untitled&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>Since this method describes the view at any point in time, the value of the text input should <em>always</em> be <code>Untitled</code>.</p>
-<h3><a class="anchor" name="why-textarea-value"></a>Why Textarea Value? <a class="hash-link" href="#why-textarea-value">#</a></h3>
-<p>In HTML, the value of <code>&lt;textarea&gt;</code> is usually set using its children:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- counterexample: DO NOT DO THIS! --&gt;</span>
+<p>このメソッドがいつでもビューを描画するので、次のテキストの入力の値は <em>常に</em> <code>Untitled</code> になります。</p>
+<h3><a class="anchor" name=""></a>なぜテキストエリアの値を使うのでしょうか？ <a class="hash-link" href="#">#</a></h3>
+<p>HTMLでは、 <code>&lt;textarea&gt;</code> の値は普通、以下のようにその子要素を使うことでセットされます。</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 反例: このようにはしないでください！ --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>This is the description.<span class="nt">&lt;/textarea&gt;</span>
 </code></pre></div>
-<p>For HTML, this easily allows developers to supply multiline values. However, since React is JavaScript, we do not have string limitations and can use <code>\n</code> if we want newlines. In a world where we have <code>value</code> and <code>defaultValue</code>, it is ambiguous what role children play. For this reason, you should not use children when setting <code>&lt;textarea&gt;</code> values:</p>
+<p>HTMLでは、開発者は簡単に複数行に渡る値を提供できます。しかし、ReactがJavaScriptであるので、文字列の制限を私たちは持っておらず、改行をしたい場合は <code>\n</code> を使えます。 <code>value</code> と <code>defaultValue</code> を私たちが持っている世界では、子要素が果たす役割は曖昧になっています。この理由から、以下のように <code>&lt;textarea&gt;</code> の値をセットする際には子要素を使うべきではありません。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;This is a description.&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
-<p>If you <em>do</em> decide to use children, they will behave like <code>defaultValue</code>.</p>
-<h3><a class="anchor" name="why-select-value"></a>Why Select Value? <a class="hash-link" href="#why-select-value">#</a></h3>
-<p>The selected <code>&lt;option&gt;</code> in an HTML <code>&lt;select&gt;</code> is normally specified through that option&#39;s <code>selected</code> attribute. In React, in order to make components easier to manipulate, the following format is adopted instead:</p>
+<p>子要素を使うことを <em>決めた</em> 場合は、 <code>defaultValue</code> と同様の動きをします。</p>
+<h3><a class="anchor" name=""></a>なぜセレクトバリューを使うのでしょうか？ <a class="hash-link" href="#">#</a></h3>
+<p>HTMLの <code>&lt;select&gt;</code> の選択された <code>&lt;option&gt;</code> は、普通はオプションの <code>selected</code> 属性によって指定されます。Reactでは、コンポーネントの操作を簡単にするために、以下のようなフォーマットが代わりに適用されます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Cranberry</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
   <span class="o">&lt;</span><span class="err">/select&gt;</span>
 </code></pre></div>
-<p>To make an uncontrolled component, <code>defaultValue</code> is used instead.</p>
+<p>制御されないコンポーネントを作成するために、 <code>defaultValue</code> が代わりに使われます。</p>
 
 <blockquote>
-<p>Note:</p>
-
-<p>You can pass an array into the <code>value</code> attribute, allowing you to select multiple options in a <code>select</code> tag: <code>&lt;select multiple={true} value={[&#39;B&#39;, &#39;C&#39;]}&gt;</code>.</p>
+<p>注意:
+配列を <code>value</code> 属性の中に渡すことができます。これで、以下のように、 <code>select</code> タグの中で複数のオプションを選択することができます。 <code>&lt;select multiple={true} value={[&#39;B&#39;, &#39;C&#39;]}&gt;</code></p>
 </blockquote>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/transferring-props.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/transferring-props-ja-JP.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/working-with-the-browser.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/working-with-the-browser-ja-JP.html">Next &rarr;</a>
       
     </div>
   </div>

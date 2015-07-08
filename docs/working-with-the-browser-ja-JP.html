@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Working With the Browser | React</title>
+  <title>ブラウザと動くこと | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Working With the Browser | React">
+  <meta property="og:title" content="ブラウザと動くこと | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/working-with-the-browser.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/working-with-the-browser-ja-JP.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -399,36 +399,35 @@
 
   <div class="inner-content">
     <h1>
-      Working With the Browser
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/08-working-with-the-browser.md" target="_blank">Edit on GitHub</a>
+      ブラウザと動くこと
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/08-working-with-the-browser.ja-JP.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>React provides powerful abstractions that free you from touching the DOM directly in most cases, but sometimes you simply need to access the underlying API, perhaps to work with a third-party library or existing code.</p>
-<h2><a class="anchor" name="the-virtual-dom"></a>The Virtual DOM <a class="hash-link" href="#the-virtual-dom">#</a></h2>
-<p>React is so fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. <code>render()</code> methods return a <em>description</em> of the DOM, and React can diff this description with the in-memory representation to compute the fastest way to update the browser.</p>
+    <p>Reactはほとんどのケースで、DOMを直接触ることからあなたを解放するパワフルな抽象性を提供します。しかし、単純に根本的なAPIにアクセスする必要がある場合もあります。サードパーティのライブラリや現存するコードと動かす必要があるかもしれません。</p>
+<h2><a class="anchor" name="dom"></a>仮想DOM <a class="hash-link" href="#dom">#</a></h2>
+<p>ReactはDOMと直接対話を行わないため、とても速いです。Reactは速いメモリ上のDOMの表現を持っています。 <code>render()</code> メソッドはDOMの <em>記述</em> をリターンします。Reactはこの記述とメモリ上の表現のdiffをとることができ、ブラウザを更新する最速の方法を計算することができます。</p>
 
-<p>Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and efficiently across browsers. You can even use some HTML5 events in IE8!</p>
+<p>加えて、Reactはブラウザ依存があるにも関わらず、W3Cの使用に則っていると保証されているイベントオブジェクトのような、完全に合成されたイベントシステムを実行します。HTML5のイベントをIE8で使うこともできます！</p>
 
-<p>Most of the time you should stay within React&#39;s &quot;faked browser&quot; world since it&#39;s more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.</p>
-<h2><a class="anchor" name="refs-and-finddomnode"></a>Refs and findDOMNode() <a class="hash-link" href="#refs-and-finddomnode">#</a></h2>
-<p>To interact with the browser, you&#39;ll need a reference to a DOM node. React has a <code>React.findDOMNode(component)</code> function which you can call to get a reference to the component&#39;s DOM node.</p>
+<p>パフォーマンスが優れており、簡単であると思われるので、ほとんどの場合、Reactの「偽のブラウザ」を使うべきです。しかし、jQueryプラグインのようなサードパーティのライブラリと動かすかもしれません。基本的なAPIに単純にアクセスする必要がある時もあります。Reactは基本的なDOMのAPIを直接使うための脱出口を提供しています。</p>
+<h2><a class="anchor" name="finddomnode"></a>参照とfindDOMNode() <a class="hash-link" href="#finddomnode">#</a></h2>
+<p>ブラウザと相互に影響するために、DOMノードへの参照が必要になるでしょう。ReactはコンポーネントのDOMノードへの参照を得ることができる <code>React.findDOMNode(component)</code> 関数を持っています。</p>
 
 <blockquote>
-<p>Note:</p>
-
-<p><code>findDOMNode()</code> only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling <code>findDOMNode()</code> in <code>render()</code> on a component that has yet to be created) an exception will be thrown.</p>
+<p>注意:
+<code>findDOMNode()</code> はマウントされたコンポーネントの上でのみ動きます（これは、DOMに配置されたコンポーネントという意味です）。まだマウントされていない（まだ作成されていないコンポーネントの上で <code>render()</code> の <code>findDOMNode()</code> を呼ぶようなものです）コンポーネントの上でこれを呼ぼうとした場合、例外がスローされます。</p>
 </blockquote>
 
-<p>In order to get a reference to a React component, you can either use <code>this</code> to get the current React component, or you can use refs to refer to a component you own. They work like this:</p>
+<p>Reactのコンポーネントへの参照を得るためには、現在のReactコンポーネントを得るために <code>this</code> を使ったり、あなたがオーナーのコンポーネントを表す参照を使ったりできます。それらは、以下のように動きます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Explicitly focus the text input using the raw DOM API.</span>
+    <span class="c1">// 生のDOMのAPIを使ってテキスト入力に明確にフォーカスします。</span>
     <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myTextInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// The ref attribute adds a reference to the component to</span>
-    <span class="c1">// this.refs when the component is mounted.</span>
+    <span class="c1">// この参照属性はコンポーネントがマウントされた時に、 </span>
+    <span class="c1">// this.refs のコンポーネントへの参照を追加します。</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;myTextInput&quot;</span> <span class="o">/&gt;</span>
@@ -446,48 +445,48 @@
   <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="more-about-refs"></a>More About Refs <a class="hash-link" href="#more-about-refs">#</a></h2>
-<p>To learn more about refs, including ways to use them effectively, see our <a href="/react/docs/more-about-refs.html">more about refs</a> documentation.</p>
-<h2><a class="anchor" name="component-lifecycle"></a>Component Lifecycle <a class="hash-link" href="#component-lifecycle">#</a></h2>
-<p>Components have three main parts of their lifecycle:</p>
+</code></pre></div><h2><a class="anchor" name=""></a>参照に関しての詳細 <a class="hash-link" href="#">#</a></h2>
+<p>参照に関して、詳細に学ぶためと、効率的にそれらを使う方法については、<a href="/react/docs/more-about-refs.html">参照に関しての詳細</a>ドキュメントを読んでください。</p>
+<h2><a class="anchor" name=""></a>コンポーネントライフサイクル <a class="hash-link" href="#">#</a></h2>
+<p>コンポーネントは以下のように、ライフサイクルの3つのパートを持っています</p>
 
 <ul>
-<li><strong>Mounting:</strong> A component is being inserted into the DOM.</li>
-<li><strong>Updating:</strong> A component is being re-rendered to determine if the DOM should be updated.</li>
-<li><strong>Unmounting:</strong> A component is being removed from the DOM.</li>
+<li><strong>マウンティング:</strong> コンポーネントはDOMにインサートされます。</li>
+<li><strong>アップデーティング:</strong> DOMがアップデートする必要があるとき、コンポーネントを決定するために再度レンダリングされます。</li>
+<li>* <strong>アンマウンティング:</strong> コンポーネントはDOMから削除されます。</li>
 </ul>
 
-<p>React provides lifecycle methods that you can specify to hook into this process. We provide <strong>will</strong> methods, which are called right before something happens, and <strong>did</strong> methods which are called right after something happens.</p>
-<h3><a class="anchor" name="mounting"></a>Mounting <a class="hash-link" href="#mounting">#</a></h3>
+<p>Reactは上記のプロセスになるように指定できるライフサイクルメソッドを提供します。私たちは何かが起こる直前に呼ばれる <strong>未来の</strong> メソッドと何かが起こった直後に呼ばれる <strong>過去の</strong> メソッドを使うことができます。</p>
+<h3><a class="anchor" name=""></a>マウンティング <a class="hash-link" href="#">#</a></h3>
 <ul>
-<li><code>getInitialState(): object</code> is invoked before a component is mounted. Stateful components should implement this and return the initial state data.</li>
-<li><code>componentWillMount()</code> is invoked immediately before mounting occurs.</li>
-<li><code>componentDidMount()</code> is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.</li>
+<li><code>getInitialState(): object</code> はコンポーネントがマウントされる前に実行されます。ステートフルなコンポーネントはこのメソッドをインプリメントする必要があり、最初のstateのデータをリターンする必要があります。</li>
+<li><code>componentWillMount()</code> はマウンティングが起きる直前に実行されます。</li>
+<li><code>componentDidMount()</code> はマウンティングが起きた直後に実行されます。DOMノードを必要とする初期化はここで行われるべきです。</li>
 </ul>
-<h3><a class="anchor" name="updating"></a>Updating <a class="hash-link" href="#updating">#</a></h3>
+<h3><a class="anchor" name=""></a>アップデーティング <a class="hash-link" href="#">#</a></h3>
 <ul>
-<li><code>componentWillReceiveProps(object nextProps)</code> is invoked when a mounted component receives new props. This method should be used to compare <code>this.props</code> and <code>nextProps</code> to perform state transitions using <code>this.setState()</code>.</li>
-<li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> is invoked when a component decides whether any changes warrant an update to the DOM. Implement this as an optimization to compare <code>this.props</code> with <code>nextProps</code> and <code>this.state</code> with <code>nextState</code> and return <code>false</code> if React should skip updating.</li>
-<li><code>componentWillUpdate(object nextProps, object nextState)</code> is invoked immediately before updating occurs. You cannot call <code>this.setState()</code> here.</li>
-<li><code>componentDidUpdate(object prevProps, object prevState)</code> is invoked immediately after updating occurs.</li>
+<li><code>componentWillReceiveProps(object nextProps)</code> はマウントされたコンポーネントが新しいpropsを受け取ったときに実行されます。このメソッドは <code>this.setState()</code> を使ったstateの変更を実行するために <code>this.props</code> と <code>nextProps</code> とを比較するのに使われるべきです。</li>
+<li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> は何かしらの変更がDOMをアップデートしなければいけないかどうかコンポーネントが決めるときに実行されます。このメソッドを <code>this.props</code> と <code>nextProps</code> そして <code>this.state</code> と <code>nextState</code> の比較の最適化のために実行してください。そして、Reactがアップデートをスキップするべきときには <code>false</code> を返してください。</li>
+<li><code>componentWillUpdate(object nextProps, object nextState)</code> はアップデーティングが発生する直前に実行されます。ここで <code>this.setState()</code> を呼ぶことはできません。</li>
+<li><code>componentDidUpdate(object prevProps, object prevState)</code> はアップデーティングが発生した直後に実行されます。</li>
 </ul>
-<h3><a class="anchor" name="unmounting"></a>Unmounting <a class="hash-link" href="#unmounting">#</a></h3>
+<h3><a class="anchor" name=""></a>アンマウンティング <a class="hash-link" href="#">#</a></h3>
 <ul>
-<li><code>componentWillUnmount()</code> is invoked immediately before a component is unmounted and destroyed. Cleanup should go here.</li>
+<li><code>componentWillUnmount()</code> はコンポーネントがアンマウントされ、削除される直前に実行されます。クリーンアップはここで行われるべきです。</li>
 </ul>
-<h3><a class="anchor" name="mounted-methods"></a>Mounted Methods <a class="hash-link" href="#mounted-methods">#</a></h3>
-<p><em>Mounted</em> composite components also support the following methods:</p>
+<h3><a class="anchor" name=""></a>マウントのメソッド <a class="hash-link" href="#">#</a></h3>
+<p><em>マウントされた</em> 複合的なコンポーネントも以下のようなメソッドをサポートします。</p>
 
 <ul>
-<li><code>findDOMNode(): DOMElement</code> can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.</li>
-<li><code>forceUpdate()</code> can be invoked on any mounted component when you know that some deeper aspect of the component&#39;s state has changed without using <code>this.setState()</code>.</li>
+<li><code>findDOMNode(): DOMElement</code> はレンダリングされたDOMノードへの参照を得るために、どのマウントされたコンポーネントの上でも実行されます。</li>
+<li><code>forceUpdate()</code> は <code>this.setState()</code> を使うことなくコンポーネントのstateが変更された際にさらにその詳細について知るときにどのマウントされたコンポーネントの上でも実行されます。</li>
 </ul>
-<h2><a class="anchor" name="browser-support-and-polyfills"></a>Browser Support and Polyfills <a class="hash-link" href="#browser-support-and-polyfills">#</a></h2>
-<p>At Facebook, we support older browsers, including IE8. We&#39;ve had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don&#39;t have a bunch of hacks scattered throughout our codebase and we can still expect our code to &quot;just work&quot;. For example, instead of seeing <code>+new Date()</code>, we can just write <code>Date.now()</code>. Since the open source React is the same as what we use internally, we&#39;ve carried over this philosophy of using forward thinking JS.</p>
+<h2><a class="anchor" name=""></a>ブラウザのサポートとポリフィル <a class="hash-link" href="#">#</a></h2>
+<p>Facebookでは、IE8を含む古いブラウザをサポートしています。私たちは将来に向けたJSを書くことができるように、長い間ポリフィルを使ってきました。これは、私たちのコードベースにたくさんの処理が散らばり、「ただ動くだけの」コードであることを予想することしかできないことを意味します。例えば、 <code>+new Date()</code> を見る代わりに、  <code>Date.now()</code> と記述しています。オープンソースであるReactを私たちは内部で使っているので、将来に向けたJSを使うという哲学を持ち越しています。</p>
 
-<p>In addition to that philosophy, we&#39;ve also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there&#39;s a good chance you&#39;d be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you&#39;re already using something like <a href="https://github.com/es-shims/es5-shim">es5-shim</a>.</p>
-<h3><a class="anchor" name="polyfills-needed-to-support-older-browsers"></a>Polyfills Needed to Support Older Browsers <a class="hash-link" href="#polyfills-needed-to-support-older-browsers">#</a></h3>
-<p><code>es5-shim.js</code> from <a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a> provides the following that React needs:</p>
+<p>この哲学に加えて、私たちはJSのライブラリの作者として、ライブラリの一部としてポリフィルを含めるべきではないというスタンスをとっています。全てのライブラリがこのようなことを行ったなら、死んだコードの大きな塊になりうる同じポリフィルを何度も記述しなくてもよくなるでしょう。あなたのプロダクトが古いブラウザをサポートする必要があるなら、<a href="https://github.com/es-shims/es5-shim">es5-shim</a>のようなものを使うことにチャンスがあるでしょう。</p>
+<h3><a class="anchor" name=""></a>ポリフィルは古いブラウザをサポートする必要があります <a class="hash-link" href="#">#</a></h3>
+<p><a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a> の <code>es5-shim.js</code> はReactが必要とする以下のようなものを提供します。</p>
 
 <ul>
 <li><code>Array.isArray</code></li>
@@ -502,35 +501,34 @@
 <li><code>String.prototype.trim</code></li>
 </ul>
 
-<p><code>es5-sham.js</code>, also from <a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a>, provides the following that React needs:</p>
+<p><a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a>の <code>es5-sham.js</code> もまたReactが必要とする以下のようなものを提供します。</p>
 
 <ul>
 <li><code>Object.create</code></li>
 <li><code>Object.freeze</code></li>
 </ul>
 
-<p>The unminified build of React needs the following from <a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>.</p>
+<p>小さくされていないReactのビルドは<a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>にある以下のようなものを必要とします。</p>
 
 <ul>
 <li><code>console.*</code></li>
 </ul>
 
-<p>When using HTML5 elements in IE8 including <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;header&gt;</code>, and <code>&lt;footer&gt;</code>, it&#39;s also necessary to include <a href="https://github.com/aFarkas/html5shiv">html5shiv</a> or a similar script.</p>
-<h3><a class="anchor" name="cross-browser-issues"></a>Cross-browser Issues <a class="hash-link" href="#cross-browser-issues">#</a></h3>
-<p>Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn&#39;t find a workaround for.</p>
-<h4><a class="anchor" name="onscroll-event-on-ie8"></a>onScroll event on IE8 <a class="hash-link" href="#onscroll-event-on-ie8">#</a></h4>
-<p>On IE8 the <code>onScroll</code> event doesn&#39;t bubble and IE8 doesn&#39;t have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
-Currently a handler to this event is ignored on IE8.</p>
+<p><code>&lt;section&gt;</code> 、 <code>&lt;article&gt;</code> 、 <code>&lt;nav&gt;</code> 、 <code>&lt;header&gt;</code> 、 <code>&lt;footer&gt;</code> を含むHTML5の要素をIE8で使うときには、<a href="https://github.com/aFarkas/html5shiv">html5shiv</a>か、似たようなスクリプトをインクルードする必要があります。</p>
+<h3><a class="anchor" name=""></a>クロスブラウザの問題 <a class="hash-link" href="#">#</a></h3>
+<p>Reactはブラウザ間の違いを抽象化することにおいてとても優れていますが、一時的な解決ができない、制限や独特な動作をするブラウザもあります。</p>
+<h4><a class="anchor" name="ie8onscroll"></a>IE8のonScrollイベント <a class="hash-link" href="#ie8onscroll">#</a></h4>
+<p>IE8では <code>onScroll</code> イベントは発火せず、イベントのフェーズをキャプチャするハンドラを定義するAPIを持っていません。それは、Reactがそれらのイベントを検知する方法が無いということを意味します。現状、IE8ではこのイベントは無視されています。</p>
 
-<p>See the <a href="https://github.com/facebook/react/issues/631">onScroll doesn&#39;t work in IE8</a> GitHub issue for more information.</p>
+<p>詳細な情報については、GitHubのイシューである<a href="https://github.com/facebook/react/issues/631">onScrollがIE8で動かない</a>を参照してください。</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/forms.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/forms-ja-JP.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/more-about-refs.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/more-about-refs-ja-JP.html">Next &rarr;</a>
       
     </div>
   </div>
