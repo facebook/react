@@ -26,6 +26,7 @@ var reactComponentExpect;
 describe('ReactCompositeComponent', function() {
 
   beforeEach(function() {
+    require('mock-modules').dumpCache();
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
