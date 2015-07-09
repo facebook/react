@@ -29,6 +29,7 @@ redirect_from: "docs/index-zh-CN.html"
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
@@ -94,6 +95,7 @@ React.render(
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <!-- 不需要 JSXTransformer！ -->

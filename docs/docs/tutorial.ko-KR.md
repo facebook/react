@@ -39,6 +39,7 @@ next: thinking-in-react-ko-KR.html
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
@@ -222,6 +223,7 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
 ```html{7}
 <!-- index.html -->
 <head>
+  <meta charset="UTF-8" />
   <title>Hello React</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>

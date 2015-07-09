@@ -39,6 +39,7 @@ next: thinking-in-react-ja-JP.html
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
@@ -219,6 +220,7 @@ Markdown はインラインでテキストをフォーマットする簡単な�
 ```html{7}
 <!-- index.html -->
 <head>
+  <meta charset="UTF-8" />
   <title>Hello React</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>

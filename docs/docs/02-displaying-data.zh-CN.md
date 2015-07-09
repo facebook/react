@@ -18,6 +18,7 @@ next: jsx-in-depth-zh-CN.html
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
     <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
@@ -80,7 +81,7 @@ React 组件非常简单。你可以认为它们就是简单的函数，接受 `
 
 我们得出解决这个问题最好的方案是通过 JavaScript 直接生成模板，这样你就可以用一个真正语言的所有表达能力去构建用户界面。为了使这变得更简单，我们做了一个非常简单、**可选**类似 HTML 语法 ，通过函数调用即可生成模板的编译器，称为 JSX。
 
-**JSX 让你可以用 HTML 语法去写 JavaScript 函数调用** 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： 
+**JSX 让你可以用 HTML 语法去写 JavaScript 函数调用** 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写：
 
 `React.createElement('a', {href: 'https://facebook.github.io/react/'}, 'Hello React!')`。
 

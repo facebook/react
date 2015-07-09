@@ -38,6 +38,7 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your fa
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
@@ -220,6 +221,7 @@ First, add the third-party library **marked** to your application. This is a Jav
 ```html{7}
 <!-- index.html -->
 <head>
+  <meta charset="UTF-8" />
   <title>Hello React</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
