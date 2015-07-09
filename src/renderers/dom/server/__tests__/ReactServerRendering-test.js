@@ -67,6 +67,16 @@ describe('ReactServerRendering', function() {
       );
     });
 
+    it('should generate simple markup for attribute with `>` symbol', function() {
+      var response = ReactServerRendering.renderToString(
+        <img data-attr=">" />
+      );
+      expect(response).toMatch(
+        '<img data-attr="&gt;" ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
+      );
+    });
+
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
       var cb = mocks.getMockFunction();
