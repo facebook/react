@@ -30,6 +30,26 @@ describe('cloneWithProps', function() {
     onlyChild = require('onlyChild');
     cloneWithProps = require('cloneWithProps');
     emptyObject = require('emptyObject');
+    spyOn(console, 'error');
+  });
+
+  it('should warn once because it is deprecated', function() {
+    var Parent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            {cloneWithProps(onlyChild(this.props.children), {})}
+          </div>
+        );
+      },
+    });
+    ReactTestUtils.renderIntoDocument(<Parent><div /></Parent>);
+    ReactTestUtils.renderIntoDocument(<Parent><div /></Parent>);
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'cloneWithProps(...) is deprecated. ' +
+      'Please use React.cloneElement instead.'
+    );
   });
 
   it('should clone a DOM component with new props', function() {
@@ -80,8 +100,6 @@ describe('cloneWithProps', function() {
   });
 
   it('should warn when cloning with refs', function() {
-    spyOn(console, 'error');
-
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><div ref="yolo" /></Parent>;
@@ -99,7 +117,7 @@ describe('cloneWithProps', function() {
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs).toBe(emptyObject);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(2);
   });
 
   it('should transfer the key property', function() {
