@@ -884,15 +884,16 @@ var ReactMount = {
         // will have occurred which will not be present in `markup`. Here,
         // insert markup into a <div> or <iframe> depending on the container
         // type to perform the same normalizations before comparing.
+        var normalizer, normalizedMarkup;
         if (container.nodeType === ELEMENT_NODE_TYPE) {
-          var normalizer = document.createElement('div');
+          normalizer = document.createElement('div');
           normalizer.innerHTML = markup;
-          var normalizedMarkup = normalizer.innerHTML;
+          normalizedMarkup = normalizer.innerHTML;
         } else {
-          var normalizer = document.createElement('iframe');
+          normalizer = document.createElement('iframe');
           document.body.appendChild(normalizer);
           normalizer.contentDocument.write(markup);
-          var normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
+          normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
         }
 
         var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);

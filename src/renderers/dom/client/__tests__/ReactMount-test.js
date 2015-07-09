@@ -16,7 +16,6 @@ var mocks = require('mocks');
 describe('ReactMount', function() {
   var React = require('React');
   var ReactMount = require('ReactMount');
-  var ReactMarkupChecksum = require('ReactMarkupChecksum');
   var ReactTestUtils = require('ReactTestUtils');
   var WebComponents = WebComponents;
 
@@ -170,7 +169,7 @@ describe('ReactMount', function() {
     expect(console.error.calls[0].args[0]).toContain(
       ' (client)  html entity: &amp; client text</div>\n' +
       ' (server)  html entity: &amp; server text</div>'
-    )
+    );
   });
 
   if (WebComponents !== undefined) {
