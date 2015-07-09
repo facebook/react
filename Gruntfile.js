@@ -114,7 +114,7 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('build:test', [
     'delete-build-modules',
-    'test:eslint-rules',
+    // 'test:eslint-rules',
     'jsx:test',
     'version-check',
     'populist:test',
