@@ -880,9 +880,13 @@ var ReactMount = {
           checksum
         );
 
-        var diffIndex = firstDifferenceIndex(markup, rootMarkup);
+        var normalizer = document.createElement('div');
+        normalizer.innerHTML = markup;
+        var normalizedMarkup = normalizer.innerHTML;
+
+        var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
         var difference = ' (client) ' +
-          markup.substring(diffIndex - 20, diffIndex + 20) +
+          normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
           '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
         invariant(

@@ -16,6 +16,7 @@ var mocks = require('mocks');
 describe('ReactMount', function() {
   var React = require('React');
   var ReactMount = require('ReactMount');
+  var ReactMarkupChecksum = require('ReactMarkupChecksum');
   var ReactTestUtils = require('ReactTestUtils');
   var WebComponents = WebComponents;
 
@@ -154,6 +155,22 @@ describe('ReactMount', function() {
     expect(console.error.calls[0].args[0]).toContain(
       'Rendering components directly into document.body is discouraged'
     );
+  });
+
+  it('should account for escaping on a checksum mismatch', function () {
+    var div = document.createElement('div');
+    var markup = React.renderToString(
+      <div>This markup contains an html entity: &amp; server text</div>);
+    div.innerHTML = markup;
+
+    spyOn(console, 'error');
+    React.render(
+      <div>This markup contains an html entity: &amp; client text</div>, div);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain(
+      ' (client)  html entity: &amp; client text</div>\n' +
+      ' (server)  html entity: &amp; server text</div>'
+    )
   });
 
   if (WebComponents !== undefined) {
