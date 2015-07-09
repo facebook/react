@@ -25,6 +25,7 @@ var emptyObject;
 describe('cloneWithProps', function() {
 
   beforeEach(function() {
+    require('mock-modules').dumpCache();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     onlyChild = require('onlyChild');
