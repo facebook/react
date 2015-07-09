@@ -114,7 +114,6 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('build:test', [
     'delete-build-modules',
-    'test:eslint-rules',
     'jsx:test',
     'version-check',
     'populist:test',
@@ -132,8 +131,6 @@ module.exports = function(grunt) {
   grunt.registerTask('webdriver-phantomjs', require('./grunt/tasks/webdriver-phantomjs'));
 
   grunt.registerTask('coverage:parse', require('./grunt/tasks/coverage-parse'));
-
-  grunt.registerTask('test:eslint-rules', require('./grunt/tasks/test-eslint-rules'));
 
   grunt.registerTask('test:webdriver:phantomjs', [
     'connect',

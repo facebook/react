@@ -95,7 +95,8 @@
       "/.module-cache/"
     ],
     "testPathDirs": [
-      "<rootDir>/src"
+      "<rootDir>/src",
+      "<rootDir>/eslint-rules"
     ],
     "unmockedModulePathPatterns": [
       ""
