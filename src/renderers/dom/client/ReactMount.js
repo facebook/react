@@ -880,20 +880,24 @@ var ReactMount = {
           checksum
         );
 
-        // because rootMarkup is retrieved from the DOM, various normalizations
-        // will have occurred which will not be present in `markup`. Here,
-        // insert markup into a <div> or <iframe> depending on the container
-        // type to perform the same normalizations before comparing.
-        var normalizer, normalizedMarkup;
-        if (container.nodeType === ELEMENT_NODE_TYPE) {
-          normalizer = document.createElement('div');
-          normalizer.innerHTML = markup;
-          normalizedMarkup = normalizer.innerHTML;
-        } else {
-          normalizer = document.createElement('iframe');
-          document.body.appendChild(normalizer);
-          normalizer.contentDocument.write(markup);
-          normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
+        var normalizedMarkup = markup;
+        if (__DEV__) {
+          // because rootMarkup is retrieved from the DOM, various normalizations
+          // will have occurred which will not be present in `markup`. Here,
+          // insert markup into a <div> or <iframe> depending on the container
+          // type to perform the same normalizations before comparing.
+          var normalizer;
+          if (container.nodeType === ELEMENT_NODE_TYPE) {
+            normalizer = document.createElement('div');
+            normalizer.innerHTML = markup;
+            normalizedMarkup = normalizer.innerHTML;
+          } else {
+            normalizer = document.createElement('iframe');
+            document.body.appendChild(normalizer);
+            normalizer.contentDocument.write(markup);
+            normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
+            document.body.removeChild(normalizer);
+          }
         }
 
         var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
