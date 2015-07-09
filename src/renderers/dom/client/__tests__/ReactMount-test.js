@@ -159,16 +159,18 @@ describe('ReactMount', function() {
   it('should account for escaping on a checksum mismatch', function () {
     var div = document.createElement('div');
     var markup = React.renderToString(
-      <div>This markup contains an html entity: &amp; server text</div>);
+      <div>This markup contains an nbsp entity: &nbsp; server text</div>);
     div.innerHTML = markup;
 
     spyOn(console, 'error');
     React.render(
-      <div>This markup contains an html entity: &amp; client text</div>, div);
+      <div>This markup contains an nbsp entity: &nbsp; client text</div>,
+      div
+    );
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
-      ' (client)  html entity: &amp; client text</div>\n' +
-      ' (server)  html entity: &amp; server text</div>'
+      ' (client) nbsp entity: &nbsp; client text</div>\n' +
+      ' (server) nbsp entity: &nbsp; server text</div>'
     );
   });
 
