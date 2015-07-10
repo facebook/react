@@ -92,7 +92,7 @@ React.render(
 
 最後に HTML ファイルを以下のように書き換えましょう。
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>

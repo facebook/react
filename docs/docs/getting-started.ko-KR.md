@@ -90,7 +90,7 @@ React.render(
 
 아래의 내용대로 HTML 파일을 업데이트합니다:
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>

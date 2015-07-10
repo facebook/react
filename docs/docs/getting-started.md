@@ -91,7 +91,7 @@ React.render(
 
 Update your HTML file as below:
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>
