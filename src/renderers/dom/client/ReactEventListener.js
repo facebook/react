@@ -106,13 +106,13 @@ function handleTopLevelWithPath(bookKeeping) {
   var currentNativeTarget = path[0];
   for (var i = 0; i < path.length; i++) {
     var currentPathElement = path[i];
-    var currentPathElemenID = ReactMount.getID(currentPathElement);
+    var currentPathElementID = ReactMount.getID(currentPathElement);
     if (currentPathElement.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE) {
       currentNativeTarget = path[i + 1];
     }
     if (ReactMount.isRenderedByReact(currentPathElement)) {
       var newRootID = ReactInstanceHandles.getReactRootIDFromNodeID(
-        currentPathElemenID
+        currentPathElementID
       );
       bookKeeping.ancestors.push(currentPathElement);
 
@@ -126,10 +126,10 @@ function handleTopLevelWithPath(bookKeeping) {
       );
 
       // Jump to the root of this React render tree
-      while (currentPathElemenID !== newRootID) {
+      while (currentPathElementID !== newRootID) {
         i++;
         currentPathElement = path[i];
-        currentPathElemenID = ReactMount.getID(currentPathElement);
+        currentPathElementID = ReactMount.getID(currentPathElement);
       }
     }
   }
