@@ -189,21 +189,21 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
   var containerNode = React.findDOMNode(parentInstance);
   var statusDisplayNodes = containerNode.childNodes;
   var i;
-  var orderedDomIds = [];
+  var orderedDomIDs = [];
   for (i = 0; i < statusDisplayNodes.length; i++) {
-    orderedDomIds.push(ReactMount.getID(statusDisplayNodes[i]));
+    orderedDomIDs.push(ReactMount.getID(statusDisplayNodes[i]));
   }
 
-  var orderedLogicalIds = [];
+  var orderedLogicalIDs = [];
   var username;
   for (username in statusDisplays) {
     if (!statusDisplays.hasOwnProperty(username)) {
       continue;
     }
     var statusDisplay = statusDisplays[username];
-    orderedLogicalIds.push(ReactInstanceMap.get(statusDisplay)._rootNodeID);
+    orderedLogicalIDs.push(ReactInstanceMap.get(statusDisplay)._rootNodeID);
   }
-  expect(orderedDomIds).toEqual(orderedLogicalIds);
+  expect(orderedDomIDs).toEqual(orderedLogicalIDs);
 }
 
 /**
