@@ -17,6 +17,7 @@ UIについて、最も基本的なことは、いくつかのデータを表示
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
     <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
