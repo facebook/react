@@ -29,6 +29,7 @@ redirect_from: "docs/index-zh-CN.html"
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
@@ -90,10 +91,11 @@ React.render(
 
 对照下面更新你的 HTML 代码
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <!-- 不需要 JSXTransformer！ -->

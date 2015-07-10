@@ -29,6 +29,7 @@ React でのハッキングを始めるにあたり、一番簡単なものと�
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
@@ -91,10 +92,11 @@ React.render(
 
 最後に HTML ファイルを以下のように書き換えましょう。
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <!-- JSXTransformer は必要ありません！ -->

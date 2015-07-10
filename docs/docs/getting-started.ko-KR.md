@@ -29,6 +29,7 @@ React를 시작하는 가장 빠른 방법은 다음의 Hello World JSFiddle 예
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
@@ -89,10 +90,11 @@ React.render(
 
 아래의 내용대로 HTML 파일을 업데이트합니다:
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <!-- JSXTransformer는 이제 불필요합니다! -->
