@@ -126,7 +126,7 @@ function handleTopLevelWithPath(bookKeeping) {
       );
 
       // Jump to the root of this React render tree
-      while (currentPathElementID !== newRootID) {
+      while (currentPathElementID !== newRootID) {
         i++;
         currentPathElement = path[i];
         currentPathElementID = ReactMount.getID(currentPathElement);
