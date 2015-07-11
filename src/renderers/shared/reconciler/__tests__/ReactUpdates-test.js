@@ -433,10 +433,15 @@ describe('ReactUpdates', function() {
     root = ReactTestUtils.renderIntoDocument(root);
 
     function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
-      expect(willUpdates).toEqual(desiredWillUpdates);
-      expect(didUpdates).toEqual(desiredDidUpdates);
-      willUpdates.length = 0;
-      didUpdates.length = 0;
+      var i;
+      for (i = 0; i < desiredWillUpdates; i++) {
+        expect(willUpdates).toContain(desiredWillUpdates[i]);
+      }
+      for (i = 0; i < desiredDidUpdates; i++) {
+        expect(didUpdates).toContain(desiredDidUpdates[i]);
+      }
+      willUpdates = [];
+      didUpdates = [];
     }
 
     function triggerUpdate(c) {

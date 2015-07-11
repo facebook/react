@@ -667,6 +667,68 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
   });
 
+  it('should pass context when re-rendered for static child within a composite component', function() {
+    var Parent = React.createClass({
+      childContextTypes: {
+        flag: ReactPropTypes.bool,
+      },
+
+      getChildContext() {
+        return {
+          flag: this.state.flag,
+        };
+      },
+
+      getInitialState: function() {
+        return {
+          flag: true,
+        };
+      },
+
+      render() {
+        return <div>{this.props.children}</div>;
+      },
+
+    });
+
+    var Child = React.createClass({
+      contextTypes: {
+        flag: ReactPropTypes.bool,
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var Wrapper = React.createClass({
+      render() {
+        return (
+          <Parent ref="parent">
+            <Child ref="child" />
+          </Parent>
+        );
+      },
+    });
+
+
+    var wrapper = ReactTestUtils.renderIntoDocument(
+      <Wrapper />
+    );
+
+    expect(wrapper.refs.parent.state.flag).toEqual(true);
+    reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: true});
+
+    // We update <Parent /> while <Child /> is still a static prop relative to this update
+    wrapper.refs.parent.setState({flag: false});
+
+    expect(console.error.argsForCall.length).toBe(0);
+
+    expect(wrapper.refs.parent.state.flag).toEqual(false);
+    reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: false});
+
+  });
+
   it('should pass context transitively', function() {
     var childInstance = null;
     var grandchildInstance = null;
