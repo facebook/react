@@ -4,6 +4,7 @@ require('yaml')
 
 desc "generate js from jsx"
 task :js do
+  system "cp ../node_modules/babel/node_modules/babel-core/browser.min.js ./js/babel-browser.min.js"
   system "../node_modules/.bin/babel _js --out-dir=js"
 end
 
