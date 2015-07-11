@@ -6,7 +6,7 @@ prev: more-about-refs-ja-JP.html
 next: addons-ja-JP.html
 ---
 
-全てのプロジェクトがJavaScriptをビルドたりデプロイするのに様々なシステムを使用しています。私たちはReactをできるだけ環境不問にしようとしています。
+全てのプロジェクトがJavaScriptをビルドしたりデプロイするのに様々なシステムを使用しています。私たちはReactをできるだけ環境不問にしようとしています。
 
 ## React
 
