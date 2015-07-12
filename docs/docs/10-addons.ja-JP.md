@@ -19,6 +19,6 @@ next: animation-ja-JP.html
 - [`TestUtils`](test-utils-ja-JP.html)はテストケースを記述する単純なヘルパーです（縮小されていないビルドのみ）。
 - [`Perf`](perf-ja-JP.html)はパフォーマンスを測り、どこを最適化するかのヒントを与えます。
 
-アドオンを使うには、共通の `react.js` を使うよりも `react-with-addons.js` （とその縮小されたもの）を使ってください。
+アドオンを使うには、共通の `react.js` を使うよりも `react-with-addons.js` （とその縮小されたもの）を使ってください。
 
 npmからReactのパッケージを使う際には、Reactと全てのアドオンを使うために `require('react')` を使う代わりに、単純に `require('react/addons')` を使ってください。
