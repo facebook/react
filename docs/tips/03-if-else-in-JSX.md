@@ -33,23 +33,23 @@ That's not valid JS. You probably want to make use of a ternary expression:
 React.render(<div id={condition ? 'msg' : ''}>Hello World!</div>, mountNode);
 ```
 
-If a ternary expression isn't robust enough, you can use `if` statements to determine which
-components should be used.
+You can also use ternary expression to determine which tags or components should be used.
 
-```js
-var loginButton;
-if (loggedIn) {
-  loginButton = <LogoutButton />;
-} else {
-  loginButton = <LoginButton />;
-}
+
+var loginInformation = isLoggedIn ? (
+    <cite>Hello!</cite>
+) : (
+    <strong>Log in, please...</strong>
+);
+
+var signupButton = isLoggedIn ? null : <SignUpButton/>;
 
 return (
   <nav>
-    <Home />
-    {loginButton}
+    {loginInformation}
+    {signupButton}
   </nav>
-)
+);
 ```
 
 Try using it today with the [JSX compiler](/react/jsx-compiler.html).
