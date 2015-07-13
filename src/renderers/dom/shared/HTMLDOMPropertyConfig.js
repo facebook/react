@@ -103,6 +103,7 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: null,
     icon: null,
     id: MUST_USE_PROPERTY,
+    inputMode: MUST_USE_ATTRIBUTE,
     is: MUST_USE_ATTRIBUTE,
     keyParams: MUST_USE_ATTRIBUTE,
     keyType: MUST_USE_ATTRIBUTE,
@@ -183,6 +184,9 @@ var HTMLDOMPropertyConfig = {
     itemRef: MUST_USE_ATTRIBUTE,
     // property is supported for OpenGraph in meta tags.
     property: null,
+    // IE-only attribute that specifies security restrictions on an iframe
+    // as an alternative to the sandbox attribute on IE<10
+    security: MUST_USE_ATTRIBUTE,
     // IE-only attribute that controls focus behavior
     unselectable: MUST_USE_ATTRIBUTE,
   },

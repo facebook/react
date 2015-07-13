@@ -16,15 +16,14 @@ var PooledClass = require('PooledClass');
 
 var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
-var getEventTarget = require('getEventTarget');
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var EventInterface = {
+  path: null,
   type: null,
-  target: getEventTarget,
   // currentTarget is set when dispatching; no use in copying it here
   currentTarget: emptyFunction.thatReturnsNull,
   eventPhase: null,
@@ -54,10 +53,12 @@ var EventInterface = {
  * @param {string} dispatchMarker Marker identifying the event target.
  * @param {object} nativeEvent Native browser event.
  */
-function SyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent) {
+function SyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
   this.dispatchConfig = dispatchConfig;
   this.dispatchMarker = dispatchMarker;
   this.nativeEvent = nativeEvent;
+  this.target = nativeEventTarget;
+  this.currentTarget = nativeEventTarget;
 
   var Interface = this.constructor.Interface;
   for (var propName in Interface) {
@@ -156,9 +157,9 @@ SyntheticEvent.augmentClass = function(Class, Interface) {
   Class.Interface = assign({}, Super.Interface, Interface);
   Class.augmentClass = Super.augmentClass;
 
-  PooledClass.addPoolingTo(Class, PooledClass.threeArgumentPooler);
+  PooledClass.addPoolingTo(Class, PooledClass.fourArgumentPooler);
 };
 
-PooledClass.addPoolingTo(SyntheticEvent, PooledClass.threeArgumentPooler);
+PooledClass.addPoolingTo(SyntheticEvent, PooledClass.fourArgumentPooler);
 
 module.exports = SyntheticEvent;

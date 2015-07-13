@@ -38,10 +38,11 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your fa
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
-    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -52,7 +53,7 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your fa
 </html>
 ```
 
-For the remainder of this tutorial, we'll be writing our JavaScript code in this script tag.
+For the remainder of this tutorial, we'll be writing our JavaScript code in this script tag. Follow your progress by opening your index.html file in your browser after each addition.
 
 > Note:
 >
@@ -88,7 +89,7 @@ React.render(
 );
 ```
 
-Note that native HTML element names start with a lowercase letter, while custom React classes names begin with an uppercase letter.
+Note that native HTML element names start with a lowercase letter, while custom React class names begin with an uppercase letter.
 
 #### JSX Syntax
 
@@ -217,13 +218,14 @@ Markdown is a simple way to format your text inline. For example, surrounding te
 
 First, add the third-party library **marked** to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):
 
-```html{7}
+```html{8}
 <!-- index.html -->
 <head>
+  <meta charset="UTF-8" />
   <title>Hello React</title>
-  <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-  <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
@@ -374,7 +376,7 @@ var CommentBox = React.createClass({
 `getInitialState()` executes exactly once during the lifecycle of the component and sets up the initial state of the component.
 
 #### Updating state
-When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example, we will use a static JSON file to keep things simple:
+When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example we will keep things simple by creating a static JSON file `public/comments.json` containing the array of comments:
 
 ```javascript
 // tutorial13.json

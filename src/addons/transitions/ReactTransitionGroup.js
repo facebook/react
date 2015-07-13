@@ -15,7 +15,6 @@ var React = require('React');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var assign = require('Object.assign');
-var cloneWithProps = require('cloneWithProps');
 var emptyFunction = require('emptyFunction');
 
 var ReactTransitionGroup = React.createClass({
@@ -213,7 +212,7 @@ var ReactTransitionGroup = React.createClass({
         // already been removed. In case you need this behavior you can provide
         // a childFactory function to wrap every child, even the ones that are
         // leaving.
-        childrenToRender.push(cloneWithProps(
+        childrenToRender.push(React.cloneElement(
           this.props.childFactory(child),
           {ref: key, key: key}
         ));

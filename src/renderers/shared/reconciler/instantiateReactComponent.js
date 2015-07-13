@@ -30,6 +30,16 @@ assign(
   }
 );
 
+function getDeclarationErrorAddendum(owner) {
+  if (owner) {
+    var name = owner.getName();
+    if (name) {
+      return ' Check the render method of `' + name + '`.';
+    }
+  }
+  return '';
+}
+
 /**
  * Check if the type reference is a known internal type. I.e. not a user
  * provided composite type.
@@ -50,11 +60,10 @@ function isInternalComponentType(type) {
  * Given a ReactNode, create an instance that will actually be mounted.
  *
  * @param {ReactNode} node
- * @param {*} parentCompositeType The composite type that resolved this.
  * @return {object} A new instance of the element's constructor.
  * @protected
  */
-function instantiateReactComponent(node, parentCompositeType) {
+function instantiateReactComponent(node) {
   var instance;
 
   if (node === null || node === false) {
@@ -63,21 +72,18 @@ function instantiateReactComponent(node, parentCompositeType) {
 
   if (typeof node === 'object') {
     var element = node;
-    if (__DEV__) {
-      warning(
-        element && (typeof element.type === 'function' ||
-                    typeof element.type === 'string'),
-        'Only functions or strings can be mounted as React components.'
-      );
-    }
+    invariant(
+      element && (typeof element.type === 'function' ||
+                  typeof element.type === 'string'),
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: %s.%s',
+      element.type == null ? element.type : typeof element.type,
+      getDeclarationErrorAddendum(element._owner)
+    );
 
     // Special case string values
-    if (parentCompositeType === element.type &&
-        typeof element.type === 'string') {
-      // Avoid recursion if the wrapper renders itself.
+    if (typeof element.type === 'string') {
       instance = ReactNativeComponent.createInternalComponent(element);
-      // All native components are currently wrapped in a composite so we're
-      // safe to assume that this is what we should instantiate.
     } else if (isInternalComponentType(element.type)) {
       // This is temporarily available for custom components that are not string
       // represenations. I.e. ART. Once those are updated to use the string

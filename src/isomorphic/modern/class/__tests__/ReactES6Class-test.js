@@ -16,6 +16,10 @@ var React;
 describe('ReactES6Class', function() {
 
   var container;
+  var freeze = function(expectation) {
+    Object.freeze(expectation);
+    return expectation;
+  };
   var Inner;
   var attachedListener = null;
   var renderedName = null;
@@ -51,8 +55,18 @@ describe('ReactES6Class', function() {
   });
 
   it('throws if no render function is defined', function() {
+    spyOn(console, 'error');
     class Foo extends React.Component { }
     expect(() => React.render(<Foo />, container)).toThrow();
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toBe(
+      'Warning: Foo(...): ' +
+      'No `render` method found on the returned component instance: you may ' +
+      'have forgotten to define `render` in your component or you may have ' +
+      'accidentally tried to render an element whose type is a function that ' +
+      'isn\'t a React component.'
+    );
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -288,10 +302,10 @@ describe('ReactES6Class', function() {
     lifeCycles = []; // reset
     test(<Foo value="bar" />, 'SPAN', 'bar');
     expect(lifeCycles).toEqual([
-      'receive-props', {value: 'bar'},
-      'should-update', {value: 'bar'}, {},
-      'will-update', {value: 'bar'}, {},
-      'did-update', {value: 'foo'}, {},
+      'receive-props', freeze({value: 'bar'}),
+      'should-update', freeze({value: 'bar'}), {},
+      'will-update', freeze({value: 'bar'}), {},
+      'did-update', freeze({value: 'foo'}), {},
     ]);
     lifeCycles = []; // reset
     React.unmountComponentAtNode(container);

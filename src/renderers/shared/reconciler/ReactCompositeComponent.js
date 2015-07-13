@@ -14,15 +14,12 @@
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactLifeCycle = require('ReactLifeCycle');
-var ReactNativeComponent = require('ReactNativeComponent');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactReconciler = require('ReactReconciler');
-var ReactUpdates = require('ReactUpdates');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
@@ -103,7 +100,7 @@ var ReactCompositeComponentMixin = {
 
     this._context = null;
     this._mountOrder = 0;
-    this._isTopLevel = false;
+    this._topLevelWrapper = null;
 
     // See ReactUpdates and ReactUpdateQueue.
     this._pendingCallbacks = null;
@@ -126,12 +123,10 @@ var ReactCompositeComponentMixin = {
     var publicProps = this._processProps(this._currentElement.props);
     var publicContext = this._processContext(context);
 
-    var Component = ReactNativeComponent.getComponentClassForElement(
-      this._currentElement
-    );
+    var Component = this._currentElement.type;
 
     // Initialize the public class
-    var inst = new Component(publicProps, publicContext);
+    var inst = new Component(publicProps, publicContext, ReactUpdateQueue);
 
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
@@ -151,6 +146,7 @@ var ReactCompositeComponentMixin = {
     inst.props = publicProps;
     inst.context = publicContext;
     inst.refs = emptyObject;
+    inst.updater = ReactUpdateQueue;
 
     this._instance = inst;
 
@@ -198,6 +194,13 @@ var ReactCompositeComponentMixin = {
         (this.getName() || 'A component')
       );
       warning(
+        typeof inst.componentDidUnmount !== 'function',
+        '%s has a method called ' +
+        'componentDidUnmount(). But there is no such lifecycle method. ' +
+        'Did you mean componentWillUnmount()?',
+        this.getName() || 'A component'
+      );
+      warning(
         typeof inst.componentWillRecieveProps !== 'function',
         '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
@@ -219,28 +222,19 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
-    var renderedElement;
-
-    var previouslyMounting = ReactLifeCycle.currentlyMountingInstance;
-    ReactLifeCycle.currentlyMountingInstance = this;
-    try {
-      if (inst.componentWillMount) {
-        inst.componentWillMount();
-        // When mounting, calls to `setState` by `componentWillMount` will set
-        // `this._pendingStateQueue` without triggering a re-render.
-        if (this._pendingStateQueue) {
-          inst.state = this._processPendingState(inst.props, inst.context);
-        }
+    if (inst.componentWillMount) {
+      inst.componentWillMount();
+      // When mounting, calls to `setState` by `componentWillMount` will set
+      // `this._pendingStateQueue` without triggering a re-render.
+      if (this._pendingStateQueue) {
+        inst.state = this._processPendingState(inst.props, inst.context);
       }
-
-      renderedElement = this._renderValidatedComponent();
-    } finally {
-      ReactLifeCycle.currentlyMountingInstance = previouslyMounting;
     }
 
+    var renderedElement = this._renderValidatedComponent();
+
     this._renderedComponent = this._instantiateReactComponent(
-      renderedElement,
-      this._currentElement.type // The wrapping type
+      renderedElement
     );
 
     var markup = ReactReconciler.mountComponent(
@@ -266,19 +260,15 @@ var ReactCompositeComponentMixin = {
     var inst = this._instance;
 
     if (inst.componentWillUnmount) {
-      var previouslyUnmounting = ReactLifeCycle.currentlyUnmountingInstance;
-      ReactLifeCycle.currentlyUnmountingInstance = this;
-      try {
-        inst.componentWillUnmount();
-      } finally {
-        ReactLifeCycle.currentlyUnmountingInstance = previouslyUnmounting;
-      }
+      inst.componentWillUnmount();
     }
 
     ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
 
     // Reset pending fields
+    // Even if this component is scheduled for another update in ReactUpdates,
+    // it would still be ignored because these fields are reset.
     this._pendingStateQueue = null;
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
@@ -289,6 +279,7 @@ var ReactCompositeComponentMixin = {
     // longer accessible.
     this._context = null;
     this._rootNodeID = null;
+    this._topLevelWrapper = null;
 
     // Delete the reference from the instance to this internal representation
     // which allow the internals to be properly cleaned up even if the user
@@ -303,25 +294,6 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Schedule a partial update to the props. Only used for internal testing.
-   *
-   * @param {object} partialProps Subset of the next props.
-   * @param {?function} callback Called after props are updated.
-   * @final
-   * @internal
-   */
-  _setPropsInternal: function(partialProps, callback) {
-    // This is a deoptimized path. We optimize for always having an element.
-    // This creates an extra internal element.
-    var element = this._pendingElement || this._currentElement;
-    this._pendingElement = ReactElement.cloneAndReplaceProps(
-      element,
-      assign({}, element.props, partialProps)
-    );
-    ReactUpdates.enqueueUpdate(this, callback);
-  },
-
-  /**
    * Filters the context object to only contain keys specified in
    * `contextTypes`
    *
@@ -331,9 +303,7 @@ var ReactCompositeComponentMixin = {
    */
   _maskContext: function(context) {
     var maskedContext = null;
-    var Component = ReactNativeComponent.getComponentClassForElement(
-      this._currentElement
-    );
+    var Component = this._currentElement.type;
     var contextTypes = Component.contextTypes;
     if (!contextTypes) {
       return emptyObject;
@@ -356,9 +326,7 @@ var ReactCompositeComponentMixin = {
   _processContext: function(context) {
     var maskedContext = this._maskContext(context);
     if (__DEV__) {
-      var Component = ReactNativeComponent.getComponentClassForElement(
-        this._currentElement
-      );
+      var Component = this._currentElement.type;
       if (Component.contextTypes) {
         this._checkPropTypes(
           Component.contextTypes,
@@ -376,9 +344,7 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processChildContext: function(currentContext) {
-    var Component = ReactNativeComponent.getComponentClassForElement(
-      this._currentElement
-    );
+    var Component = this._currentElement.type;
     var inst = this._instance;
     var childContext = inst.getChildContext && inst.getChildContext();
     if (childContext) {
@@ -419,9 +385,7 @@ var ReactCompositeComponentMixin = {
    */
   _processProps: function(newProps) {
     if (__DEV__) {
-      var Component = ReactNativeComponent.getComponentClassForElement(
-        this._currentElement
-      );
+      var Component = this._currentElement.type;
       if (Component.propTypes) {
         this._checkPropTypes(
           Component.propTypes,
@@ -523,12 +487,6 @@ var ReactCompositeComponentMixin = {
     }
 
     if (this._pendingStateQueue !== null || this._pendingForceUpdate) {
-      if (__DEV__) {
-        ReactElementValidator.checkAndWarnForMutatedProps(
-          this._currentElement
-        );
-      }
-
       this.updateComponent(
         transaction,
         this._currentElement,
@@ -563,19 +521,18 @@ var ReactCompositeComponentMixin = {
   ) {
     var inst = this._instance;
 
-    var nextContext;
+    var nextContext = this._context === nextUnmaskedContext ?
+      inst.context :
+      this._processContext(nextUnmaskedContext);
     var nextProps;
 
     // Distinguish between a props update versus a simple state update
     if (prevParentElement === nextParentElement) {
-      nextContext = inst.context;
       // Skip checking prop types again -- we don't read inst.props to avoid
       // warning for DOM component props in this upgrade
       nextProps = nextParentElement.props;
     } else {
-      nextContext = this._processContext(nextUnmaskedContext);
       nextProps = this._processProps(nextParentElement.props);
-
       // An update here will schedule an update but immediately set
       // _pendingStateQueue which will ensure that any state updates gets
       // immediately reconciled instead of waiting for the next batch.
@@ -728,8 +685,7 @@ var ReactCompositeComponentMixin = {
       ReactReconciler.unmountComponent(prevComponentInstance);
 
       this._renderedComponent = this._instantiateReactComponent(
-        nextRenderedElement,
-        this._currentElement.type
+        nextRenderedElement
       );
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,

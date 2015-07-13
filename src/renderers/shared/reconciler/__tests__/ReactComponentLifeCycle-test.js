@@ -14,7 +14,6 @@
 var keyMirror = require('keyMirror');
 
 var React;
-var ReactLifeCycle;
 var ReactInstanceMap;
 var ReactTestUtils;
 
@@ -80,35 +79,6 @@ var ComponentLifeCycle = keyMirror({
   UNMOUNTED: null,
 });
 
-/**
- * Composite components can also be in one of these life cycles.
- */
-var CompositeComponentLifeCycle = keyMirror({
-  /**
-   * Mounted components have a DOM node representation and are capable of
-   * receiving new props.
-   */
-  MOUNTING: null,
-  /**
-   * Unmounted components are inactive and cannot receive new props.
-   */
-  UNMOUNTING: null,
-});
-
-function getCompositeLifeCycle(instance) {
-  var internalInstance = ReactInstanceMap.get(instance);
-  if (!internalInstance) {
-    return null;
-  }
-  if (ReactLifeCycle.currentlyMountingInstance === internalInstance) {
-    return CompositeComponentLifeCycle.MOUNTING;
-  }
-  if (ReactLifeCycle.currentlyUnmountingInstance === internalInstance) {
-    return CompositeComponentLifeCycle.UNMOUNTING;
-  }
-  return null;
-}
-
 function getLifeCycleState(instance) {
   var internalInstance = ReactInstanceMap.get(instance);
   // Once a component gets mounted, it has an internal instance, once it
@@ -130,7 +100,6 @@ describe('ReactComponentLifeCycle', function() {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    ReactLifeCycle = require('ReactLifeCycle');
     ReactInstanceMap = require('ReactInstanceMap');
   });
 
@@ -288,6 +257,32 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
+  it('should correctly determine if a null component is mounted', function() {
+    spyOn(console, 'error');
+    var Component = React.createClass({
+      componentWillMount: function() {
+        expect(this.isMounted()).toBeFalsy();
+      },
+      componentDidMount: function() {
+        expect(this.isMounted()).toBeTruthy();
+      },
+      render: function() {
+        expect(this.isMounted()).toBeFalsy();
+        return null;
+      },
+    });
+
+    var element = <Component />;
+
+    var instance = ReactTestUtils.renderIntoDocument(element);
+    expect(instance.isMounted()).toBeTruthy();
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Component is accessing isMounted inside its render()'
+    );
+  });
+
   it('isMounted should return false when unmounted', function () {
     var Component = React.createClass({
       render: function() {
@@ -342,8 +337,6 @@ describe('ReactComponentLifeCycle', function() {
         this._testJournal.returnedFromGetInitialState = clone(initState);
         this._testJournal.lifeCycleAtStartOfGetInitialState =
           getLifeCycleState(this);
-        this._testJournal.compositeLifeCycleAtStartOfGetInitialState =
-          getCompositeLifeCycle(this);
         return initState;
       },
 
@@ -351,8 +344,6 @@ describe('ReactComponentLifeCycle', function() {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillMount =
           getLifeCycleState(this);
-        this._testJournal.compositeLifeCycleAtStartOfWillMount =
-          getCompositeLifeCycle(this);
         this.state.hasWillMountCompleted = true;
       },
 
@@ -368,8 +359,6 @@ describe('ReactComponentLifeCycle', function() {
         if (isInitialRender) {
           this._testJournal.stateInInitialRender = clone(this.state);
           this._testJournal.lifeCycleInInitialRender = getLifeCycleState(this);
-          this._testJournal.compositeLifeCycleInInitialRender =
-            getCompositeLifeCycle(this);
         } else {
           this._testJournal.stateInLaterRender = clone(this.state);
           this._testJournal.lifeCycleInLaterRender = getLifeCycleState(this);
@@ -403,8 +392,6 @@ describe('ReactComponentLifeCycle', function() {
     );
     expect(instance._testJournal.lifeCycleAtStartOfGetInitialState)
       .toBe(ComponentLifeCycle.UNMOUNTED);
-    expect(instance._testJournal.compositeLifeCycleAtStartOfGetInitialState)
-      .toBe(null);
 
     // componentWillMount
     expect(instance._testJournal.stateAtStartOfWillMount).toEqual(
@@ -412,8 +399,6 @@ describe('ReactComponentLifeCycle', function() {
     );
     expect(instance._testJournal.lifeCycleAtStartOfWillMount)
       .toBe(ComponentLifeCycle.MOUNTED);
-    expect(instance._testJournal.compositeLifeCycleAtStartOfWillMount)
-      .toBe(CompositeComponentLifeCycle.MOUNTING);
 
     // componentDidMount
     expect(instance._testJournal.stateAtStartOfDidMount)
@@ -427,9 +412,6 @@ describe('ReactComponentLifeCycle', function() {
       .toEqual(INIT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInInitialRender).toBe(
       ComponentLifeCycle.MOUNTED
-    );
-    expect(instance._testJournal.compositeLifeCycleInInitialRender).toBe(
-      CompositeComponentLifeCycle.MOUNTING
     );
 
     expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
@@ -489,6 +471,7 @@ describe('ReactComponentLifeCycle', function() {
         valueToUseInitially="hello"
         valueToUseInOnDOMReady="goodbye"
       />;
+    spyOn(console, 'error');
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
@@ -498,6 +481,7 @@ describe('ReactComponentLifeCycle', function() {
       '`render` method to pass the correct value as props to the component ' +
       'where it is created.'
     );
+    expect(console.error.calls.length).toBe(1);  // setProps deprecated
   });
 
   it('should not throw when updating an auxiliary component', function() {
@@ -530,24 +514,18 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
-      <Component text="uno" tooltipText="one" />
+    var container = document.createElement('div');
+    React.render(
+      <Component text="uno" tooltipText="one" />,
+      container
     );
 
     // Since `instance` is a root component, we can set its props. This also
     // makes Tooltip rerender the tooltip component, which shouldn't throw.
-    instance.setProps({text: 'dos', tooltipText: 'two'});
-  });
-
-  it('should not allow setProps() called on an unmounted element',
-     function() {
-    var PropsToUpdate = React.createClass({
-      render: function() {
-        return <div className={this.props.value} ref="theSimpleComponent" />;
-      },
-    });
-    var instance = <PropsToUpdate value="hello" />;
-    expect(instance.setProps).not.toBeDefined();
+    React.render(
+      <Component text="dos" tooltipText="two" />,
+      container
+    );
   });
 
   it('should allow state updates in componentDidMount', function() {
@@ -613,7 +591,7 @@ describe('ReactComponentLifeCycle', function() {
 
     var container = document.createElement('div');
     log = [];
-    var instance = React.render(<Outer x={17} />, container);
+    React.render(<Outer x={17} />, container);
     expect(log).toEqual([
       'outer componentWillMount',
       'inner componentWillMount',
@@ -622,7 +600,7 @@ describe('ReactComponentLifeCycle', function() {
     ]);
 
     log = [];
-    instance.setProps({x: 42});
+    React.render(<Outer x={42} />, container);
     expect(log).toEqual([
       'outer componentWillReceiveProps',
       'outer shouldComponentUpdate',

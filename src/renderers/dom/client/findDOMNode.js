@@ -17,14 +17,13 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 
 var invariant = require('invariant');
-var isNode = require('isNode');
 var warning = require('warning');
 
 /**
  * Returns the DOM node rendered by this element.
  *
  * @param {ReactComponent|DOMElement} componentOrElement
- * @return {DOMElement} The root node of this element.
+ * @return {?DOMElement} The root node of this element.
  */
 function findDOMNode(componentOrElement) {
   if (__DEV__) {
@@ -45,7 +44,7 @@ function findDOMNode(componentOrElement) {
   if (componentOrElement == null) {
     return null;
   }
-  if (isNode(componentOrElement)) {
+  if (componentOrElement.nodeType === 1) {
     return componentOrElement;
   }
   if (ReactInstanceMap.has(componentOrElement)) {

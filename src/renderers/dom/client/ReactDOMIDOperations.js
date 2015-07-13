@@ -22,7 +22,7 @@ var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
 
 /**
- * Errors for properties that should not be updated with `updatePropertyById()`.
+ * Errors for properties that should not be updated with `updatePropertyByID()`.
  *
  * @type {object}
  * @private

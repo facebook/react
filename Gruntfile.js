@@ -77,6 +77,10 @@ module.exports = function(grunt) {
   var npmReactDOMTasks = require('./grunt/tasks/npm-react-dom');
   grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
 
+  var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
+  grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
+  grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
+
   var gemReactSourceTasks = require('./grunt/tasks/gem-react-source');
   grunt.registerTask('gem-react-source:release', gemReactSourceTasks.buildRelease);
   grunt.registerTask('gem-react-source:pack', gemReactSourceTasks.packRelease);
@@ -112,7 +116,6 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('build:test', [
     'delete-build-modules',
-    'test:eslint-rules',
     'jsx:test',
     'version-check',
     'populist:test',
@@ -130,8 +133,6 @@ module.exports = function(grunt) {
   grunt.registerTask('webdriver-phantomjs', require('./grunt/tasks/webdriver-phantomjs'));
 
   grunt.registerTask('coverage:parse', require('./grunt/tasks/coverage-parse'));
-
-  grunt.registerTask('test:eslint-rules', require('./grunt/tasks/test-eslint-rules'));
 
   grunt.registerTask('test:webdriver:phantomjs', [
     'connect',
@@ -230,6 +231,8 @@ module.exports = function(grunt) {
     'npm-react-tools:release',
     'npm-react-tools:pack',
     'npm-react-dom:pack',
+    'npm-react-addons:release',
+    'npm-react-addons:pack',
     'compare_size',
   ]);
 

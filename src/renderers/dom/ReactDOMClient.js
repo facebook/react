@@ -20,8 +20,10 @@ var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
+var ReactUpdates = require('ReactUpdates');
 
 var findDOMNode = require('findDOMNode');
+var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
 ReactDefaultInjection.inject();
@@ -29,11 +31,14 @@ ReactDefaultInjection.inject();
 var render = ReactPerf.measure('React', 'render', ReactMount.render);
 
 var React = {
-  constructAndRenderComponent: ReactMount.constructAndRenderComponent,
-  constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   findDOMNode: findDOMNode,
   render: render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
+
+  /* eslint-disable camelcase */
+  unstable_batchedUpdates: ReactUpdates.batchedUpdates,
+  unstable_renderSubtreeIntoContainer: renderSubtreeIntoContainer,
+  /* eslint-enable camelcase */
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.

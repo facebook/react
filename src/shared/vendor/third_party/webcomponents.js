@@ -6374,4 +6374,6 @@ CustomElements.addModule(function(scope) {
   window.Platform = scope;
 })(window.WebComponents);
 
-module.exports = window.WebComponents;
+if (typeof exports !== 'undefined') {
+  module.exports = window.WebComponents;
+}

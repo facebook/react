@@ -267,16 +267,49 @@ describe('ReactComponent', function() {
   it('warns when calling getDOMNode', function() {
     spyOn(console, 'error');
 
+    var Potato = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
     var container = document.createElement('div');
-    var instance = React.render(<div />, container);
+    var instance = React.render(<Potato />, container);
 
     instance.getDOMNode();
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
-      'DIV.getDOMNode(...) is deprecated. Please use ' +
+      'Potato.getDOMNode(...) is deprecated. Please use ' +
       'React.findDOMNode(instance) instead.'
     );
+  });
+
+  it('throws usefully when rendering badly-typed elements', function() {
+    spyOn(console, 'error');
+
+    var X = undefined;
+    expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrow(
+      'Invariant Violation: Element type is invalid: expected a string (for ' +
+      'built-in components) or a class/function (for composite components) ' +
+      'but got: undefined.'
+    );
+
+    var Y = null;
+    expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrow(
+      'Invariant Violation: Element type is invalid: expected a string (for ' +
+      'built-in components) or a class/function (for composite components) ' +
+      'but got: null.'
+    );
+
+    var Z = {};
+    expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrow(
+      'Invariant Violation: Element type is invalid: expected a string (for ' +
+      'built-in components) or a class/function (for composite components) ' +
+      'but got: object.'
+    );
+
+    // One warning for each element creation
+    expect(console.error.calls.length).toBe(3);
   });
 
 });

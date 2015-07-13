@@ -15,7 +15,6 @@ var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -275,7 +274,7 @@ function mountComponentIntoNode(
   var markup = ReactReconciler.mountComponent(
     componentInstance, rootID, transaction, context
   );
-  componentInstance._isTopLevel = true;
+  componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
 }
 
@@ -330,6 +329,17 @@ function unmountComponentFromNode(instance, container) {
 }
 
 /**
+ * Temporary (?) hack so that we can store all top-level pending updates on
+ * composites instead of having to worry about different types of components
+ * here.
+ */
+var TopLevelWrapper = function() {};
+TopLevelWrapper.prototype.render = function() {
+  // this.props is actually a ReactElement
+  return this.props;
+};
+
+/**
  * Mounting is the process of initializing a React component by creating its
  * representative DOM elements and inserting them into a supplied `container`.
  * Any prior content inside `container` is destroyed in the process.
@@ -375,10 +385,6 @@ var ReactMount = {
       nextElement,
       container,
       callback) {
-    if (__DEV__) {
-      ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
-    }
-
     ReactMount.scrollMonitor(container, function() {
       ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement);
       if (callback) {
@@ -519,7 +525,8 @@ var ReactMount = {
     );
 
     warning(
-      container && container.tagName && container.tagName.toUpperCase() !== 'BODY',
+      !container || !container.tagName ||
+      container.tagName.toUpperCase() !== 'BODY',
       'render(): Rendering components directly into document.body is ' +
       'discouraged, since its children are often manipulated by third-party ' +
       'scripts and browser extensions. This may lead to subtle ' +
@@ -527,17 +534,26 @@ var ReactMount = {
       'for your app.'
     );
 
+    var nextWrappedElement = new ReactElement(
+      TopLevelWrapper,
+      null,
+      null,
+      null,
+      nextElement
+    );
+
     var prevComponent = instancesByReactRootID[getReactRootID(container)];
 
     if (prevComponent) {
-      var prevElement = prevComponent._currentElement;
+      var prevWrappedElement = prevComponent._currentElement;
+      var prevElement = prevWrappedElement.props;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         return ReactMount._updateRootComponent(
           prevComponent,
-          nextElement,
+          nextWrappedElement,
           container,
           callback
-        ).getPublicInstance();
+        )._renderedComponent.getPublicInstance();
       } else {
         ReactMount.unmountComponentAtNode(container);
       }
@@ -568,7 +584,7 @@ var ReactMount = {
 
     var shouldReuseMarkup = containerHasReactMarkup && !prevComponent;
     var component = ReactMount._renderNewRootComponent(
-      nextElement,
+      nextWrappedElement,
       container,
       shouldReuseMarkup,
       parentComponent != null ?
@@ -576,7 +592,7 @@ var ReactMount = {
           parentComponent._reactInternalInstance._context
         ) :
         emptyObject
-    ).getPublicInstance();
+    )._renderedComponent.getPublicInstance();
     if (callback) {
       callback.call(component);
     }
@@ -598,39 +614,6 @@ var ReactMount = {
    */
   render: function(nextElement, container, callback) {
     return ReactMount._renderSubtreeIntoContainer(null, nextElement, container, callback);
-  },
-
-  /**
-   * Constructs a component instance of `constructor` with `initialProps` and
-   * renders it into the supplied `container`.
-   *
-   * @param {function} constructor React component constructor.
-   * @param {?object} props Initial props of the component instance.
-   * @param {DOMElement} container DOM element to render into.
-   * @return {ReactComponent} Component instance rendered in `container`.
-   */
-  constructAndRenderComponent: function(constructor, props, container) {
-    var element = ReactElement.createElement(constructor, props);
-    return ReactMount.render(element, container);
-  },
-
-  /**
-   * Constructs a component instance of `constructor` with `initialProps` and
-   * renders it into a container node identified by supplied `id`.
-   *
-   * @param {function} componentConstructor React component constructor
-   * @param {?object} props Initial props of the component instance.
-   * @param {string} id ID of the DOM element to render into.
-   * @return {ReactComponent} Component instance rendered in the container node.
-   */
-  constructAndRenderComponentByID: function(constructor, props, id) {
-    var domNode = document.getElementById(id);
-    invariant(
-      domNode,
-      'Tried to get element with id of "%s" but it is not present on the page.',
-      id
-    );
-    return ReactMount.constructAndRenderComponent(constructor, props, domNode);
   },
 
   /**
@@ -897,9 +880,29 @@ var ReactMount = {
           checksum
         );
 
-        var diffIndex = firstDifferenceIndex(markup, rootMarkup);
+        var normalizedMarkup = markup;
+        if (__DEV__) {
+          // because rootMarkup is retrieved from the DOM, various normalizations
+          // will have occurred which will not be present in `markup`. Here,
+          // insert markup into a <div> or <iframe> depending on the container
+          // type to perform the same normalizations before comparing.
+          var normalizer;
+          if (container.nodeType === ELEMENT_NODE_TYPE) {
+            normalizer = document.createElement('div');
+            normalizer.innerHTML = markup;
+            normalizedMarkup = normalizer.innerHTML;
+          } else {
+            normalizer = document.createElement('iframe');
+            document.body.appendChild(normalizer);
+            normalizer.contentDocument.write(markup);
+            normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
+            document.body.removeChild(normalizer);
+          }
+        }
+
+        var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
         var difference = ' (client) ' +
-          markup.substring(diffIndex - 20, diffIndex + 20) +
+          normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
           '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
         invariant(

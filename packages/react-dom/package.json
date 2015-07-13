@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "0.14.0-alpha3",
+  "version": "0.14.0-beta1",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": {
@@ -16,6 +16,6 @@
   },
   "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
   "dependencies": {
-    "react": "^0.14.0-alpha3"
+    "react": "^0.14.0-beta1"
   }
 }

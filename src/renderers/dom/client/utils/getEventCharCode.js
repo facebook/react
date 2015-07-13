@@ -20,7 +20,7 @@
  * presumably because it does not produce a tab-character in browsers.
  *
  * @param {object} nativeEvent Native browser event.
- * @return {string} Normalized `charCode` property.
+ * @return {number} Normalized `charCode` property.
  */
 function getEventCharCode(nativeEvent) {
   var charCode;

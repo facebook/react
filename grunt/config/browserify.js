@@ -56,7 +56,7 @@ var basic = {
   outfile: './build/react.js',
   debug: false,
   standalone: 'React',
-  transforms: [envify({NODE_ENV: 'development'})],
+  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'development'})],
   plugins: [collapser],
   after: [derequire, simpleBannerify],
 };
@@ -68,7 +68,7 @@ var min = {
   outfile: './build/react.min.js',
   debug: false,
   standalone: 'React',
-  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'production'}), uglifyify],
   plugins: [collapser],
   // No need to derequire because the minifier will mangle
   // the "require" calls.
@@ -100,7 +100,7 @@ var addons = {
   debug: false,
   standalone: 'React',
   packageName: 'React (with addons)',
-  transforms: [envify({NODE_ENV: 'development'})],
+  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'development'})],
   plugins: [collapser],
   after: [derequire, simpleBannerify],
 };
@@ -113,7 +113,7 @@ var addonsMin = {
   debug: false,
   standalone: 'React',
   packageName: 'React (with addons)',
-  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'production'}), uglifyify],
   plugins: [collapser],
   // No need to derequire because the minifier will mangle
   // the "require" calls.
@@ -129,7 +129,7 @@ var withCodeCoverageLogging = {
   debug: true,
   standalone: 'React',
   transforms: [
-    envify({NODE_ENV: 'development'}),
+    envify({NODE_ENV: process.env.NODE_ENV || 'development'}),
     require('coverify'),
   ],
   plugins: [collapser],

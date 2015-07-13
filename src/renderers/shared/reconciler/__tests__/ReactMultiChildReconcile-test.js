@@ -15,7 +15,6 @@ require('mock-modules');
 
 var React = require('React');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactTestUtils = require('ReactTestUtils');
 var ReactMount = require('ReactMount');
 
 var mapObject = require('mapObject');
@@ -88,7 +87,6 @@ var FriendsStatusDisplay = React.createClass({
     // implementation details.
     var statusDisplays =
       ReactInstanceMap.get(this)
-      ._renderedComponent
       ._renderedComponent
       ._renderedChildren;
     for (name in statusDisplays) {
@@ -191,21 +189,21 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
   var containerNode = React.findDOMNode(parentInstance);
   var statusDisplayNodes = containerNode.childNodes;
   var i;
-  var orderedDomIds = [];
+  var orderedDomIDs = [];
   for (i = 0; i < statusDisplayNodes.length; i++) {
-    orderedDomIds.push(ReactMount.getID(statusDisplayNodes[i]));
+    orderedDomIDs.push(ReactMount.getID(statusDisplayNodes[i]));
   }
 
-  var orderedLogicalIds = [];
+  var orderedLogicalIDs = [];
   var username;
   for (username in statusDisplays) {
     if (!statusDisplays.hasOwnProperty(username)) {
       continue;
     }
     var statusDisplay = statusDisplays[username];
-    orderedLogicalIds.push(ReactInstanceMap.get(statusDisplay)._rootNodeID);
+    orderedLogicalIDs.push(ReactInstanceMap.get(statusDisplay)._rootNodeID);
   }
-  expect(orderedDomIds).toEqual(orderedLogicalIds);
+  expect(orderedDomIDs).toEqual(orderedLogicalIDs);
 }
 
 /**
@@ -213,15 +211,20 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
  */
 function testPropsSequence(sequence) {
   var i;
-  var parentInstance = ReactTestUtils.renderIntoDocument(
-    <FriendsStatusDisplay {...sequence[0]} />
+  var container = document.createElement('div');
+  var parentInstance = React.render(
+    <FriendsStatusDisplay {...sequence[0]} />,
+    container
   );
   var statusDisplays = parentInstance.getStatusDisplays();
   var lastInternalStates = getInteralStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
   for (i = 1; i < sequence.length; i++) {
-    parentInstance.replaceProps(sequence[i]);
+    React.render(
+      <FriendsStatusDisplay {...sequence[i]} />,
+      container
+    );
     statusDisplays = parentInstance.getStatusDisplays();
     verifyStatuses(statusDisplays, sequence[i]);
     verifyStatesPreserved(lastInternalStates, statusDisplays);
@@ -244,19 +247,27 @@ describe('ReactMultiChildReconcile', function() {
       },
     };
 
-    var parentInstance = ReactTestUtils.renderIntoDocument(
-      <FriendsStatusDisplay {...props} />
+    var container = document.createElement('div');
+    var parentInstance = React.render(
+      <FriendsStatusDisplay {...props} />,
+      container
     );
     var statusDisplays = parentInstance.getStatusDisplays();
     var startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    parentInstance.replaceProps({usernameToStatus: {} });
+    React.render(
+      <FriendsStatusDisplay />,
+      container
+    );
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
     // Now reset the props that cause there to be a child
-    parentInstance.replaceProps(props);
+    React.render(
+      <FriendsStatusDisplay {...props} />,
+      container
+    );
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeTruthy();
     expect(statusDisplays.jcw.getInternalState())

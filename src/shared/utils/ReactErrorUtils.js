@@ -10,7 +10,7 @@
  * @typechecks
  */
 
-"use strict";
+'use strict';
 
 var ReactErrorUtils = {
   /**
@@ -24,7 +24,7 @@ var ReactErrorUtils = {
    */
   guard: function(func, name) {
     return func;
-  }
+  },
 };
 
 module.exports = ReactErrorUtils;

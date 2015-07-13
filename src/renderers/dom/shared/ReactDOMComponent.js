@@ -30,6 +30,7 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -50,6 +51,122 @@ var CONTENT_TYPES = {'string': true, 'number': true};
 var STYLE = keyOf({style: null});
 
 var ELEMENT_NODE_TYPE = 1;
+
+var canDefineProperty = false;
+try {
+  Object.defineProperty({}, 'test', {get: function() {}});
+  canDefineProperty = true;
+} catch (e) {
+}
+
+function getDeclarationErrorAddendum(internalInstance) {
+  if (internalInstance) {
+    var owner = internalInstance._currentElement._owner || null;
+    if (owner) {
+      var name = owner.getName();
+      if (name) {
+        return ' This DOM node was rendered by `' + name + '`.';
+      }
+    }
+  }
+  return '';
+}
+
+var legacyPropsDescriptor;
+if (__DEV__) {
+  legacyPropsDescriptor = {
+    props: {
+      enumerable: false,
+      get: function() {
+        var component = this._reactInternalComponent;
+        warning(
+          false,
+          'ReactDOMComponent: Do not access .props of a DOM node; instead, ' +
+          'recreate the props as `render` did originally or read the DOM ' +
+          'properties/attributes directly from this node (e.g., ' +
+          'this.refs.box.className).%s',
+          getDeclarationErrorAddendum(component)
+        );
+        return component._currentElement.props;
+      },
+    },
+  };
+}
+
+function legacyGetDOMNode() {
+  if (__DEV__) {
+    var component = this._reactInternalComponent;
+    warning(
+      false,
+      'ReactDOMComponent: Do not access .getDOMNode() of a DOM node; ' +
+      'instead, use the node directly.%s',
+      getDeclarationErrorAddendum(component)
+    );
+  }
+  return this;
+}
+
+function legacyIsMounted() {
+  var component = this._reactInternalComponent;
+  if (__DEV__) {
+    warning(
+      false,
+      'ReactDOMComponent: Do not access .isMounted() of a DOM node.%s',
+      getDeclarationErrorAddendum(component)
+    );
+  }
+  return !!component;
+}
+
+function legacySetStateEtc() {
+  if (__DEV__) {
+    var component = this._reactInternalComponent;
+    warning(
+      false,
+      'ReactDOMComponent: Do not access .setState(), .replaceState(), or ' +
+      '.forceUpdate() of a DOM node. This is a no-op.%s',
+      getDeclarationErrorAddendum(component)
+    );
+  }
+}
+
+function legacySetProps(partialProps, callback) {
+  var component = this._reactInternalComponent;
+  if (__DEV__) {
+    warning(
+      false,
+      'ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
+      'Instead, call React.render again at the top level.%s',
+      getDeclarationErrorAddendum(component)
+    );
+  }
+  if (!component) {
+    return;
+  }
+  ReactUpdateQueue.enqueueSetPropsInternal(component, partialProps);
+  if (callback) {
+    ReactUpdateQueue.enqueueCallbackInternal(component, callback);
+  }
+}
+
+function legacyReplaceProps(partialProps, callback) {
+  var component = this._reactInternalComponent;
+  if (__DEV__) {
+    warning(
+      false,
+      'ReactDOMComponent: Do not access .replaceProps() of a DOM node. ' +
+      'Instead, call React.render again at the top level.%s',
+      getDeclarationErrorAddendum(component)
+    );
+  }
+  if (!component) {
+    return;
+  }
+  ReactUpdateQueue.enqueueReplacePropsInternal(component, partialProps);
+  if (callback) {
+    ReactUpdateQueue.enqueueCallbackInternal(component, callback);
+  }
+}
 
 var styleMutationWarning = {};
 
@@ -95,6 +212,7 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
 var BackendIDOperations = null;
 
 /**
+ * @param {object} component
  * @param {?object} props
  */
 function assertValidProps(component, props) {
@@ -320,12 +438,14 @@ function isCustomComponent(tagName, props) {
  */
 function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
-  this._tag = tag;
+  this._tag = tag.toLowerCase();
   this._renderedChildren = null;
   this._previousStyle = null;
   this._previousStyleCopy = null;
   this._rootNodeID = null;
   this._wrapperState = null;
+  this._topLevelWrapper = null;
+  this._nodeWithLegacyProperties = null;
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';
@@ -413,7 +533,7 @@ ReactDOMComponent.Mixin = {
     if (!tagContent && omittedCloseTags[this._tag]) {
       return tagOpen + '/>';
     }
-    return tagOpen + '>' + tagContent + '</' + this._tag + '>';
+    return tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
   },
 
   /**
@@ -430,7 +550,7 @@ ReactDOMComponent.Mixin = {
    * @return {string} Markup of opening tag.
    */
   _createOpenTagMarkupAndPutListeners: function(transaction, props) {
-    var ret = '<' + this._tag;
+    var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
@@ -588,6 +708,10 @@ ReactDOMComponent.Mixin = {
       processChildContext(context, this)
     );
 
+    if (!canDefineProperty && this._nodeWithLegacyProperties) {
+      this._nodeWithLegacyProperties.props = nextProps;
+    }
+
     if (this._tag === 'select') {
       // <select> value update needs to occur after <option> children
       // reconciliation
@@ -637,7 +761,7 @@ ReactDOMComponent.Mixin = {
           deleteListener(this._rootNodeID, propKey);
         }
       } else if (
-          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
         BackendIDOperations.deletePropertyByID(
           this._rootNodeID,
@@ -701,7 +825,7 @@ ReactDOMComponent.Mixin = {
           nextProp
         );
       } else if (
-          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
         BackendIDOperations.updatePropertyByID(
           this._rootNodeID,
@@ -817,6 +941,41 @@ ReactDOMComponent.Mixin = {
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
     this._wrapperState = null;
+    if (this._nodeWithLegacyProperties) {
+      var node = this._nodeWithLegacyProperties;
+      node._reactInternalComponent = null;
+      this._nodeWithLegacyProperties = null;
+    }
+  },
+
+  getPublicInstance: function() {
+    if (!this._nodeWithLegacyProperties) {
+      var node = ReactMount.getNode(this._rootNodeID);
+
+      node._reactInternalComponent = this;
+      node.getDOMNode = legacyGetDOMNode;
+      node.isMounted = legacyIsMounted;
+      node.setState = legacySetStateEtc;
+      node.replaceState = legacySetStateEtc;
+      node.forceUpdate = legacySetStateEtc;
+      node.setProps = legacySetProps;
+      node.replaceProps = legacyReplaceProps;
+
+      if (__DEV__) {
+        if (canDefineProperty) {
+          Object.defineProperties(node, legacyPropsDescriptor);
+        } else {
+          // updateComponent will update this property on subsequent renders
+          node.props = this._currentElement.props;
+        }
+      } else {
+        // updateComponent will update this property on subsequent renders
+        node.props = this._currentElement.props;
+      }
+
+      this._nodeWithLegacyProperties = node;
+    }
+    return this._nodeWithLegacyProperties;
   },
 
 };

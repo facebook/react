@@ -28,6 +28,8 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
+    <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
   </head>
@@ -62,6 +64,8 @@ Then reference it from `helloworld.html`:
 <script type="text/jsx" src="src/helloworld.js"></script>
 ```
 
+Note that some browsers (Chrome, e.g.) will fail to load the file unless it's served via HTTP.
+
 ### Offline Transform
 
 First install the command-line tools (requires [npm](https://www.npmjs.com/)):
@@ -89,10 +93,11 @@ React.render(
 
 Update your HTML file as below:
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <!-- No need for JSXTransformer! -->
@@ -110,7 +115,7 @@ If you want to use React with [browserify](http://browserify.org/), [webpack](ht
 
 ## Next Steps
 
-Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the starter kit's `examples` directory to learn more. 
+Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the starter kit's `examples` directory to learn more.
 
 We also have a wiki where the community contributes with [workflows, UI-components, routing, data management etc.](https://github.com/facebook/react/wiki/Complementary-Tools)
 

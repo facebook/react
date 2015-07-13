@@ -20,6 +20,8 @@ var warning = require('warning');
 
 var CHILDREN_PROP = keyOf({children: null});
 
+var didDeprecatedWarn = false;
+
 /**
  * Sometimes you want to change the props of a child passed to you. Usually
  * this is to add a CSS class.
@@ -28,9 +30,16 @@ var CHILDREN_PROP = keyOf({children: null});
  * @param {object} props props you'd like to modify. className and style will be
  * merged automatically.
  * @return {ReactElement} a clone of child with props merged in.
+ * @deprecated
  */
 function cloneWithProps(child, props) {
   if (__DEV__) {
+    warning(
+      didDeprecatedWarn,
+      'cloneWithProps(...) is deprecated. ' +
+      'Please use React.cloneElement instead.'
+    );
+    didDeprecatedWarn = true;
     warning(
       !child.ref,
       'You are calling cloneWithProps() on a child with a ref. This is ' +

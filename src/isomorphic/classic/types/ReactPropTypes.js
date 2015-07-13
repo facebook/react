@@ -16,6 +16,7 @@ var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var emptyFunction = require('emptyFunction');
+var getIteratorFn = require('getIteratorFn');
 
 /**
  * Collection of methods that allow declaration and validation of props that are
@@ -345,12 +346,37 @@ function isNode(propValue) {
       if (propValue === null || ReactElement.isValidElement(propValue)) {
         return true;
       }
-      propValue = ReactFragment.extractIfFragment(propValue);
-      for (var k in propValue) {
-        if (!isNode(propValue[k])) {
-          return false;
+
+      var iteratorFn = getIteratorFn(propValue);
+      if (iteratorFn) {
+        var iterator = iteratorFn.call(propValue);
+        var step;
+        if (iteratorFn !== propValue.entries) {
+          while (!(step = iterator.next()).done) {
+            if (!isNode(step.value)) {
+              return false;
+            }
+          }
+        } else {
+          // Iterator will provide entry [k,v] tuples rather than values.
+          while (!(step = iterator.next()).done) {
+            var entry = step.value;
+            if (entry) {
+              if (!isNode(entry[1])) {
+                return false;
+              }
+            }
+          }
+        }
+      } else {
+        propValue = ReactFragment.extractIfFragment(propValue);
+        for (var k in propValue) {
+          if (!isNode(propValue[k])) {
+            return false;
+          }
         }
       }
+
       return true;
     default:
       return false;

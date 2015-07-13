@@ -10,5 +10,5 @@ id: jsx-compiler
     is desugared into native JavaScript.
   </p>
   <div id="jsxCompiler"></div>
-  <script type="text/javascript" src="js/jsx-compiler.js"></script>
+  <script src="js/jsx-compiler.js"></script>
 </div>

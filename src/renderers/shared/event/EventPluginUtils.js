@@ -102,8 +102,8 @@ function forEachEventDispatch(event, cb) {
 
 /**
  * Default implementation of PluginModule.executeDispatch().
- * @param {SyntheticEvent} SyntheticEvent to handle
- * @param {function} Application-level callback
+ * @param {SyntheticEvent} event SyntheticEvent to handle
+ * @param {function} listener Application-level callback
  * @param {string} domID DOM id to pass to the callback.
  */
 function executeDispatch(event, listener, domID) {
@@ -126,8 +126,8 @@ function executeDispatchesInOrder(event, cb) {
  * Standard/simple iteration through an event's collected dispatches, but stops
  * at the first dispatch execution returning true, and returns that id.
  *
- * @return id of the first dispatch execution who's listener returns true, or
- * null if no listener returned true.
+ * @return {?string} id of the first dispatch execution who's listener returns
+ * true, or null if no listener returned true.
  */
 function executeDispatchesInOrderStopAtTrueImpl(event) {
   var dispatchListeners = event._dispatchListeners;
@@ -170,7 +170,7 @@ function executeDispatchesInOrderStopAtTrue(event) {
  * return values at each dispatch execution, but it does tend to make sense when
  * dealing with "direct" dispatches.
  *
- * @return The return value of executing the single dispatch.
+ * @return {*} The return value of executing the single dispatch.
  */
 function executeDirectDispatch(event) {
   if (__DEV__) {
@@ -192,7 +192,7 @@ function executeDirectDispatch(event) {
 
 /**
  * @param {SyntheticEvent} event
- * @return {bool} True iff number of dispatches accumulated is greater than 0.
+ * @return {boolean} True iff number of dispatches accumulated is greater than 0.
  */
 function hasDispatches(event) {
   return !!event._dispatchListeners;

@@ -22,9 +22,11 @@ var ReactMarkupChecksum = {
    */
   addChecksumToMarkup: function(markup) {
     var checksum = adler32(markup);
+
+    // Add checksum (handle both parent tags and self-closing tags)
     return markup.replace(
-      '>',
-      ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="' + checksum + '">'
+      /\/?>/,
+      ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="' + checksum + '"$&'
     );
   },
 

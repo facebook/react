@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactRef = require('ReactRef');
-var ReactElementValidator = require('ReactElementValidator');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -36,11 +35,6 @@ var ReactReconciler = {
    */
   mountComponent: function(internalInstance, rootID, transaction, context) {
     var markup = internalInstance.mountComponent(rootID, transaction, context);
-    if (__DEV__) {
-      ReactElementValidator.checkAndWarnForMutatedProps(
-        internalInstance._currentElement
-      );
-    }
     if (internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
@@ -71,8 +65,10 @@ var ReactReconciler = {
     internalInstance, nextElement, transaction, context
   ) {
     var prevElement = internalInstance._currentElement;
-
-    if (nextElement === prevElement && nextElement._owner != null) {
+    if (nextElement === prevElement &&
+        nextElement._owner != null
+        // TODO: Shouldn't we need to do this: `&& context === internalInstance._context`
+      ) {
       // Since elements are immutable after the owner is rendered,
       // we can do a cheap identity compare here to determine if this is a
       // superfluous reconcile. It's possible for state to be mutable but such
@@ -80,11 +76,10 @@ var ReactReconciler = {
       // the element. We explicitly check for the existence of an owner since
       // it's possible for an element created outside a composite to be
       // deeply mutated and reused.
-      return;
-    }
 
-    if (__DEV__) {
-      ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
+      // TODO: Bailing out early is just a perf optimization right?
+      // TODO: Removing the return statement should affect correctness?
+      return;
     }
 
     var refsChanged = ReactRef.shouldUpdateRefs(

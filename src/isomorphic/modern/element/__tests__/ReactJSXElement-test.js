@@ -34,7 +34,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe(Component);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('allows a lower-case to be passed as the string type', function() {
@@ -42,7 +44,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('allows a string to be passed as the type', function() {
@@ -51,7 +55,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('returns an immutable element', function() {
@@ -72,7 +78,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    expect(element.props).toEqual({foo:'56'});
+    var expectation = {foo:'56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('coerces the key to a string', function() {
@@ -80,7 +88,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({foo:'56'});
+    var expectation = {foo:'56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('merges JSX children onto the children prop', function() {

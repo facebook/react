@@ -22,13 +22,11 @@ var ReactTestUtils;
 var ReactUpdates;
 
 var reactComponentExpect;
-var mocks;
 
 describe('ReactCompositeComponent', function() {
 
   beforeEach(function() {
-    mocks = require('mocks');
-
+    require('mock-modules').dumpCache();
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
@@ -71,7 +69,6 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    console.error = mocks.getMockFunction();
     spyOn(console, 'error');
   });
 
@@ -132,11 +129,11 @@ describe('ReactCompositeComponent', function() {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('a');
+    expect(React.findDOMNode(instance.refs.x).tagName).toBe('A');
     instance._toggleActivatedState();
-    reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('b');
+    expect(React.findDOMNode(instance.refs.x).tagName).toBe('B');
     instance._toggleActivatedState();
-    reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('a');
+    expect(React.findDOMNode(instance.refs.x).tagName).toBe('A');
   });
 
   it('should not cache old DOM nodes when switching constructors', function() {
@@ -286,11 +283,14 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
+    var renders = 0;
+
     var Component = React.createClass({
       getInitialState: function() {
         return {value: 0};
       },
       render: function() {
+        renders++;
         return <div />;
       },
     });
@@ -299,12 +299,20 @@ describe('ReactCompositeComponent', function() {
     expect(instance.setState).not.toBeDefined();
 
     instance = React.render(instance, container);
+
+    expect(renders).toBe(1);
+
     instance.setState({value: 1});
 
     expect(console.error.calls.length).toBe(0);
 
+    expect(renders).toBe(2);
+
     React.unmountComponentAtNode(container);
     instance.setState({value: 2});
+
+    expect(renders).toBe(2);
+
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
@@ -351,12 +359,14 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
 
     var renderedState = -1;
+    var renderPasses = 0;
 
     var Component = React.createClass({
       getInitialState: function() {
         return {value: 0};
       },
       render: function() {
+        renderPasses++;
         renderedState = this.state.value;
         if (this.state.value === 0) {
           this.setState({ value: 1 });
@@ -376,11 +386,12 @@ describe('ReactCompositeComponent', function() {
       'function of props and state.'
     );
 
-    // The setState call is queued but the result isn't immediately available
-    // during this pass. It is queued up but not flushed. The behavior is more
-    // or less undefined.
-    expect(renderedState).toBe(0);
-    expect(instance.state.value).toBe(0);
+    // The setState call is queued and then executed as a second pass. This
+    // behavior is undefined though so we're free to change it to suit the
+    // implementation details.
+    expect(renderPasses).toBe(2);
+    expect(renderedState).toBe(1);
+    expect(instance.state.value).toBe(1);
 
     // Forcing a rerender anywhere will cause the update to happen.
     var instance2 = React.render(<Component prop={123} />, container);
@@ -406,15 +417,15 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance.setProps({value: 1});
     }).not.toThrow();
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(1);  // setProps deprecated
 
     React.unmountComponentAtNode(container);
     expect(function() {
       instance.setProps({value: 2});
     }).not.toThrow();
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(2);
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: setProps(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setProps() on an ' +
       'unmounted component. This is a no-op. Please check the code for the ' +
@@ -538,6 +549,26 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should warn when componentDidUnmount method is defined', function() {
+    var Component = React.createClass({
+      componentDidUnmount: function() {
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Component has a method called ' +
+      'componentDidUnmount(). But there is no such lifecycle method. ' +
+      'Did you mean componentWillUnmount()?'
+    );
+  });
+
   it('should pass context to children when not owner', function() {
     var Parent = React.createClass({
       render: function() {
@@ -573,6 +604,67 @@ describe('ReactCompositeComponent', function() {
 
     var component = ReactTestUtils.renderIntoDocument(<Parent />);
     expect(React.findDOMNode(component).innerHTML).toBe('bar');
+  });
+
+  it('should pass context when re-rendered for static child', function() {
+    var parentInstance = null;
+    var childInstance = null;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string,
+        flag: ReactPropTypes.bool,
+      },
+
+      getChildContext: function() {
+        return {
+          foo: 'bar',
+          flag: this.state.flag,
+        };
+      },
+
+      getInitialState: function() {
+        return {
+          flag: false,
+        };
+      },
+
+      render: function() {
+        return React.Children.only(this.props.children);
+      },
+    });
+
+    var Middle = React.createClass({
+      render: function() {
+        return this.props.children;
+      },
+    });
+
+    var Child = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string,
+        flag: ReactPropTypes.bool,
+      },
+
+      render: function() {
+        childInstance = this;
+        return <span>Child</span>;
+      },
+    });
+
+    parentInstance = ReactTestUtils.renderIntoDocument(
+      <Parent><Middle><Child /></Middle></Parent>
+    );
+
+    expect(parentInstance.state.flag).toBe(false);
+    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: false});
+
+    parentInstance.setState({flag: true});
+    expect(parentInstance.state.flag).toBe(true);
+
+    expect(console.error.argsForCall.length).toBe(0);
+
+    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
   });
 
   it('should pass context transitively', function() {
@@ -844,7 +936,8 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var comp = ReactTestUtils.renderIntoDocument(<Component flipped={false} />);
+    var container = document.createElement('div');
+    var comp = React.render(<Component flipped={false} />, container);
     expect(React.findDOMNode(comp.refs.static0).textContent).toBe('A');
     expect(React.findDOMNode(comp.refs.static1).textContent).toBe('B');
 
@@ -855,7 +948,7 @@ describe('ReactCompositeComponent', function() {
 
     // When flipping the order, the refs should update even though the actual
     // contents do not
-    comp.setProps({flipped: true});
+    React.render(<Component flipped={true} />, container);
     expect(React.findDOMNode(comp.refs.static0).textContent).toBe('B');
     expect(React.findDOMNode(comp.refs.static1).textContent).toBe('A');
 

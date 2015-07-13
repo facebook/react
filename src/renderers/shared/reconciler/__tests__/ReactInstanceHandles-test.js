@@ -12,7 +12,6 @@
 'use strict';
 
 var React = require('React');
-var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 var ReactMount = require('ReactMount');
 
@@ -63,11 +62,11 @@ describe('ReactInstanceHandles', function() {
     });
   }
 
-  function getNodeID(instance) {
-    if (instance === null) {
+  function getNodeID(el) {
+    if (el === null) {
       return '';
     }
-    return ReactInstanceMap.get(instance)._rootNodeID;
+    return el.getAttribute('data-reactid');
   }
 
   beforeEach(function() {
@@ -389,8 +388,8 @@ describe('ReactInstanceHandles', function() {
         // Common ancestor with grandparent is the grandparent.
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,
-          two: parent.refs.P_P1_C1,
-          com: parent.refs.P_P1_C1,
+          two: parent.refs.P_P1,
+          com: parent.refs.P_P1,
         },
         // Grantparent across subcomponent boundaries.
         {

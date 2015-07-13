@@ -95,12 +95,13 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component x={0} />);
+    var container = document.createElement('div');
+    var instance = React.render(<Component x={0} />, container);
     expect(instance.props.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
-      instance.setProps({x: 1});
+      React.render(<Component x={1} />, container);
       instance.setState({y: 2});
       expect(instance.props.x).toBe(0);
       expect(instance.state.y).toBe(0);
@@ -347,14 +348,14 @@ describe('ReactUpdates', function() {
 
       render: function() {
         numMiddleRenders++;
-        return <div>{this.props.children}</div>;
+        return React.Children.only(this.props.children);
       },
     });
 
     var Bottom = React.createClass({
       render: function() {
         numBottomRenders++;
-        return <span />;
+        return null;
       },
     });
 
@@ -463,7 +464,6 @@ describe('ReactUpdates', function() {
 
       expectUpdates(desiredWillUpdates, desiredDidUpdates);
     }
-
     testUpdates(
       [root.refs.switcher.refs.box, root.refs.switcher],
       // Owner-child relationships have inverse will and did
