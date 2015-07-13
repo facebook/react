@@ -64,6 +64,8 @@ Then reference it from `helloworld.html`:
 <script type="text/jsx" src="src/helloworld.js"></script>
 ```
 
+Note that some browsers (Chrome, e.g.) will fail to load the file unless it's served via HTTP.
+
 ### Offline Transform
 
 First install the command-line tools (requires [npm](https://www.npmjs.com/)):
