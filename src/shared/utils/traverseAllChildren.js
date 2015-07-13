@@ -119,14 +119,12 @@ function traverseAllChildrenImpl(
   var child;
   var nextName;
   var subtreeCount = 0; // Count of children found in the current subtree.
+  var nextNamePrefix = nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR;
 
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
       child = children[i];
-      nextName = (
-        (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
-        getComponentKey(child, i)
-      );
+      nextName = nextNamePrefix + getComponentKey(child, i);
       subtreeCount += traverseAllChildrenImpl(
         child,
         nextName,
@@ -143,10 +141,7 @@ function traverseAllChildrenImpl(
         var ii = 0;
         while (!(step = iterator.next()).done) {
           child = step.value;
-          nextName = (
-            (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
-            getComponentKey(child, ii++)
-          );
+          nextName = nextNamePrefix + getComponentKey(child, ii++);
           subtreeCount += traverseAllChildrenImpl(
             child,
             nextName,
@@ -170,7 +165,7 @@ function traverseAllChildrenImpl(
           if (entry) {
             child = entry[1];
             nextName = (
-              (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
+              nextNamePrefix +
               wrapUserProvidedKey(entry[0]) + SUBSEPARATOR +
               getComponentKey(child, 0)
             );
@@ -194,7 +189,7 @@ function traverseAllChildrenImpl(
         if (fragment.hasOwnProperty(key)) {
           child = fragment[key];
           nextName = (
-            (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
+            nextNamePrefix +
             wrapUserProvidedKey(key) + SUBSEPARATOR +
             getComponentKey(child, 0)
           );
