@@ -1,1 +1,0 @@
-exports.y = 2;

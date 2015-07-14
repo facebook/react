@@ -1,8 +1,0 @@
-/**
- * @provides plain-css
- * @css bar
- * @option no-browser-specific-css
- */
-.dummy {
-  font-size: 3px;
-}

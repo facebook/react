@@ -1,9 +1,0 @@
-/**
- * @provides special-css
- * @css bar
- * @nonblocking
- * @nopackage
- */
-.dummy {
-  font-size: 3px;
-}

@@ -1,4 +1,0 @@
-Copyright 2012 Michael Hart (michael.hart.au@gmail.com)
-
-This project is free software released under the MIT license:
-http://www.opensource.org/licenses/mit-license.php

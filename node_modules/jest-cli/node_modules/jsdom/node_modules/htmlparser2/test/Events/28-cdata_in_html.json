@@ -1,9 +1,0 @@
-{
-  "name": "CDATA in HTML",
-  "options": {},
-  "html": "<![CDATA[ foo ]]>",
-  "expected": [
-    { "event": "comment",     "data": [ "[CDATA[ foo ]]" ] },
-    { "event": "commentend",  "data": [] }
-  ]
-}

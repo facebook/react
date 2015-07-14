@@ -1,1 +1,0 @@
-exports.x = 1;

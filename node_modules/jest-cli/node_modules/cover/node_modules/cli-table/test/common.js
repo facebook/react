@@ -1,6 +1,0 @@
-
-/**
- * Module dependencies.
- */
-
-require('should');

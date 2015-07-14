@@ -1,9 +1,0 @@
-.DS_Store
-
-#ignore node_modules, as the node project is not "deployed" per se: http://www.mikealrogers.com/posts/nodemodules-in-git.html
-/node_modules
-
-/dist
-/generated
-
-.sass-cache
