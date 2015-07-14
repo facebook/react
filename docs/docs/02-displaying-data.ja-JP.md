@@ -80,7 +80,7 @@ Reactのコンポーネントはとても単純です。それらは `props` や
 
 上記のことを簡単に行うために、私たちはReactのツリーノードを構築するためのとても単純で、 **オプショナルな** HTMLに似たシンタックスを加えました。
 
-**JSXはHTMLのシンタックスを使ってJavaScriptのオブジェクトを構築するのを可能にします。** 純粋にJavaScriptを使ってReactでリンクを構築するには、以下のように書きます。
+**JSXはHTMLのシンタックスを使ってJavaScriptのオブジェクトを構築するのを可能にします。** 純粋にJavaScriptを使ってReactでリンクを構築するには、以下のように書きます。
 
 `React.createElement('a', {href: 'https://facebook.github.io/react/'}, 'Hello!')`
 
