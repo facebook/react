@@ -7,7 +7,7 @@ cache:
   directories:
   - docs/vendor/bundle
 install:
-  npm install -g npm@3
+  npm install -g npm@3 && npm install
 script:
   npm test
 env:
