@@ -42,7 +42,7 @@ script:
         popd
       fi
     elif [ "$TEST_TYPE" = jest ]; then
-      node node_modules/jest-cli/bin/jest.js
+      node node_modules/jest-cli/bin/jest.js ReactCompositeComponent
     elif [ "$TEST_TYPE" = build ]; then
       if [ "$SERVER" ]; then
         set -e
