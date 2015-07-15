@@ -91,7 +91,7 @@
     ],
     "persistModuleRegistryBetweenSpecs": true,
     "modulePathIgnorePatterns": [
-      "/build/",
+      "/react/build/",
       "/node_modules/",
       "/.module-cache/"
     ],
