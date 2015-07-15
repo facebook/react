@@ -51,7 +51,7 @@
     "grunt-contrib-connect": "~0.6.0",
     "gzip-js": "~0.3.2",
     "jasmine-tapreporter": "~0.2.2",
-    "jest-cli": "facebook/jest#0.5.x",
+    "jest-cli": "^0.4.15",
     "object-assign": "^3.0.0",
     "optimist": "^0.6.1",
     "phantomjs": "^1.9.17",
