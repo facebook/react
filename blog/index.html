@@ -149,6 +149,8 @@
 <p>For now, please use the same version of <code>react</code> and <code>react-dom</code> in your apps to avoid versioning problems -- but we plan to remove this requirement later. (This release includes the old methods in the <code>react</code> package with a deprecation warning, but they&#39;ll be removed completely in 0.15.)</p>
 <h2><a class="anchor" name="dom-node-refs"></a>DOM node refs <a class="hash-link" href="#dom-node-refs">#</a></h2>
 <p>The other big change we&#39;re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a <code>ref</code> to a DOM component and realized that the only useful thing you can do with it is call <code>this.refs.giraffe.getDOMNode()</code> to get the underlying DOM node. In this release, <code>this.refs.giraffe</code> <em>is</em> the actual DOM node.</p>
+
+<p>Refs to custom component classes work exactly as before.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">Zoo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -167,7 +169,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>This change also applies to the return result of <code>ReactDOM.render</code> when passing a DOM node as the top component. References to custom component classes work exactly as before.</p>
+<p>This change also applies to the return result of <code>ReactDOM.render</code> when passing a DOM node as the top component. As with refs, this change does not affect custom components (eg. <code>&lt;MyFancyMenu&gt;</code> or <code>&lt;MyContextProvider&gt;</code>), which remain unaffected by this change.</p>
 
 <p>Along with this change, we&#39;re also replacing <code>component.getDOMNode()</code> with <code>ReactDOM.findDOMNode(component)</code>. The <code>findDOMNode</code> method drills down to find which DOM node was rendered by a component, but it returns its argument when passed a DOM node so it&#39;s safe to call on a DOM component too. We introduced this function quietly in the last release, but now we&#39;re deprecating <code>.getDOMNode()</code> completely: it should be easy to change all existing calls in your code to be <code>ReactDOM.findDOMNode</code>. We also have an <a href="https://www.npmjs.com/package/react-codemod">automated codemod script</a> to help you with this transition. Note that the <code>findDOMNode</code> calls are unnecessary when you already have a DOM component ref (as in the example above), so you can (and should) skip them in most cases going forward.</p>
 
