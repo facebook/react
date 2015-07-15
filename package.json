@@ -90,6 +90,11 @@
       "<rootDir>/src"
     ],
     "persistModuleRegistryBetweenSpecs": true,
+    "modulePathIgnorePatterns": [
+      "/build/",
+      "/node_modules/",
+      "/.module-cache/"
+    ],
     "unmockedModulePathPatterns": [
       ""
     ]
