@@ -39,6 +39,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('lint', ['eslint']);
 
+  grunt.registerTask('jest', require('./grunt/tasks/jest'));
+
   grunt.registerTask(
     'download-previous-version',
     require('./grunt/tasks/download-previous-version.js')
