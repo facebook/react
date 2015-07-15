@@ -79,27 +79,6 @@
     "build": "grunt build"
   },
   "jest": {
-    "rootDir": "",
-    "scriptPreprocessor": "jest/preprocessor.js",
-    "persistModuleRegistryBetweenSpecs": true,
-    "testFileExtensions": [
-      "js",
-      "coffee",
-      "ts"
-    ],
-    "modulePathIgnorePatterns": [
-      "/build/",
-      "/node_modules/",
-      "/.module-cache/"
-    ],
-    "globals": {
-      "__DEV__": true
-    },
-    "testPathDirs": [
-      "<rootDir>/src"
-    ],
-    "unmockedModulePathPatterns": [
-      ""
-    ]
+    "rootDir": "src"
   }
 }
