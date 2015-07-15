@@ -89,6 +89,7 @@
     "testPathDirs": [
       "<rootDir>/src"
     ],
+    "persistModuleRegistryBetweenSpecs": true,
     "unmockedModulePathPatterns": [
       ""
     ]
