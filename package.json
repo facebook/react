@@ -81,6 +81,11 @@
   "jest": {
     "rootDir": "",
     "scriptPreprocessor": "jest/preprocessor.js",
+    "testFileExtensions": [
+      "js",
+      "coffee",
+      "ts"
+    ],
     "testPathDirs": [
       "<rootDir>/src"
     ]
