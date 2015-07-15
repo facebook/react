@@ -79,6 +79,9 @@
     "build": "grunt build"
   },
   "jest": {
-    "rootDir": "src"
+    "rootDir": "",
+    "testPathDirs": [
+      "<rootDir>/src"
+    ]
   }
 }
