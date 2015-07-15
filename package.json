@@ -88,6 +88,9 @@
     ],
     "testPathDirs": [
       "<rootDir>/src"
+    ],
+    "unmockedModulePathPatterns": [
+      ""
     ]
   }
 }
