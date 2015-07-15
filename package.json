@@ -80,6 +80,7 @@
   },
   "jest": {
     "rootDir": "",
+    "scriptPreprocessor": "jest/preprocessor.js",
     "testPathDirs": [
       "<rootDir>/src"
     ]
