@@ -1,8 +1,0 @@
-globals:
-  harness: true
-
-rules:
-  strict: false
-  no-undef: false
-  no-unused-vars: false
-  block-scoped-var: false

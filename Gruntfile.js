@@ -6,9 +6,6 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     jsx: require('./grunt/config/jsx'),
     browserify: require('./grunt/config/browserify'),
-    populist: require('./grunt/config/populist')(grunt),
-    connect: require('./grunt/config/server')(grunt),
-    'webdriver-jasmine': require('./grunt/config/webdriver-jasmine'),
     npm: require('./grunt/config/npm'),
     clean: [
       './build',
@@ -39,11 +36,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('lint', ['eslint']);
 
-  grunt.registerTask(
-    'download-previous-version',
-    require('./grunt/tasks/download-previous-version.js')
-  );
-
   grunt.registerTask('delete-build-modules', function() {
     if (grunt.file.exists('build/modules')) {
       grunt.file.delete('build/modules');
@@ -55,12 +47,6 @@ module.exports = function(grunt) {
 
   // Our own browserify-based tasks to build a single JS file build.
   grunt.registerMultiTask('browserify', require('./grunt/tasks/browserify'));
-
-  grunt.registerMultiTask('populist', require('./grunt/tasks/populist'));
-
-  grunt.registerTask('sauce-tunnel', require('./grunt/tasks/sauce-tunnel'));
-
-  grunt.registerMultiTask('webdriver-jasmine', require('./grunt/tasks/webdriver-jasmine'));
 
   grunt.registerMultiTask('npm', require('./grunt/tasks/npm'));
 
@@ -107,17 +93,6 @@ module.exports = function(grunt) {
     'jsx:normal',
     'browserify:addonsMin',
   ]);
-  grunt.registerTask('build:withCodeCoverageLogging', [
-    'jsx:normal',
-    'version-check',
-    'browserify:withCodeCoverageLogging',
-  ]);
-  grunt.registerTask('build:test', [
-    'delete-build-modules',
-    'jsx:test',
-    'version-check',
-    'populist:test',
-  ]);
   grunt.registerTask('build:npm-react', [
     'version-check',
     'jsx:normal',
@@ -128,89 +103,10 @@ module.exports = function(grunt) {
     'gem-react-source:release',
   ]);
 
-  grunt.registerTask('webdriver-phantomjs', require('./grunt/tasks/webdriver-phantomjs'));
-
-  grunt.registerTask('coverage:parse', require('./grunt/tasks/coverage-parse'));
-
-  grunt.registerTask('test:webdriver:phantomjs', [
-    'connect',
-    'webdriver-phantomjs',
-    'webdriver-jasmine:local',
-  ]);
-
-  grunt.registerTask('test:full', [
-    'build:test',
-    'build:basic',
-
-    'connect',
-    'webdriver-phantomjs',
-    'webdriver-jasmine:local',
-
-    'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_android',
-    'webdriver-jasmine:saucelabs_firefox',
-    'webdriver-jasmine:saucelabs_chrome',
-  ]);
-
-  grunt.registerTask('test:webdriver:saucelabs', [
-    'build:test',
-    'build:basic',
-
-    'connect',
-    'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_' + (process.env.BROWSER_NAME || 'ie8'),
-  ]);
-
-  grunt.registerTask('test:webdriver:saucelabs:modern', [
-    'build:test',
-    'build:basic',
-
-    'connect',
-    'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_android',
-    'webdriver-jasmine:saucelabs_firefox',
-    'webdriver-jasmine:saucelabs_chrome',
-    'webdriver-jasmine:saucelabs_ie11',
-  ]);
-
-  grunt.registerTask('test:webdriver:saucelabs:ie', [
-    'build:test',
-    'build:basic',
-
-    'connect',
-    'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_ie8',
-    'webdriver-jasmine:saucelabs_ie9',
-    'webdriver-jasmine:saucelabs_ie10',
-    'webdriver-jasmine:saucelabs_ie11',
-  ]);
-
-  grunt.registerTask('test:webdriver:saucelabs:ios', [
-    'build:test',
-    'build:basic',
-
-    'connect',
-    'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_ios6_1',
-    'webdriver-jasmine:saucelabs_ios5_1',
-    'webdriver-jasmine:saucelabs_ios4',
-  ]);
-
-  grunt.registerTask('test:coverage', [
-    'build:withCodeCoverageLogging',
-    'test:webdriver:phantomjs',
-    'coverage:parse',
-  ]);
   grunt.registerTask('fasttest', function() {
     grunt.task.run('test');
   });
-  grunt.registerTask('test', function() {
-    if (grunt.option('debug')) {
-      grunt.task.run('build:test', 'connect:server:keepalive');
-    } else {
-      grunt.task.run('build:test', 'test:webdriver:phantomjs');
-    }
-  });
+  grunt.registerTask('test', ['jest']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
