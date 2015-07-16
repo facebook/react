@@ -34,7 +34,7 @@ describe('ReactTestUtils', function() {
             <span className="child2" />
           </div>
         );
-      }
+      },
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
@@ -45,7 +45,7 @@ describe('ReactTestUtils', function() {
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
       <span className="child1" />,
-      <span className="child2" />
+      <span className="child2" />,
     ]);
   });
 
@@ -56,7 +56,7 @@ describe('ReactTestUtils', function() {
       render: function() {
         return <div />;
       },
-      componentWillUnmount
+      componentWillUnmount,
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
@@ -70,7 +70,7 @@ describe('ReactTestUtils', function() {
     var SomeComponent = React.createClass({
       render: function() {
         return null;
-      }
+      },
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
@@ -111,7 +111,7 @@ describe('ReactTestUtils', function() {
             </div>
           );
         }
-      }
+      },
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
@@ -120,7 +120,7 @@ describe('ReactTestUtils', function() {
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
       <span className="child1" />,
-      <span className="child2" />
+      <span className="child2" />,
     ]);
 
     shallowRenderer.render(<SomeComponent aNew="prop" />);
@@ -163,7 +163,7 @@ describe('ReactTestUtils', function() {
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SimpleComponent />, {
-        name: "foo",
+        name: 'foo',
     });
     var result = shallowRenderer.getRenderOutput();
     expect(result).toEqual(<div>foo</div>);
@@ -236,7 +236,7 @@ describe('ReactTestUtils', function() {
     var Foo = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
 
     class Bar extends React.Component {
@@ -270,15 +270,15 @@ describe('ReactTestUtils', function() {
       'input',
       'option',
       'select',
-      'textarea'
+      'textarea',
     ];
 
     injectedDOMComponents.forEach(function(type) {
-      var component = ReactTestUtils.renderIntoDocument(
+      var testComponent = ReactTestUtils.renderIntoDocument(
         React.createElement(type)
       );
-      expect(component.tagName).toBe(type.toUpperCase());
-      expect(ReactTestUtils.isDOMComponent(component)).toBe(true);
+      expect(testComponent.tagName).toBe(type.toUpperCase());
+      expect(ReactTestUtils.isDOMComponent(testComponent)).toBe(true);
     });
 
     // Full-page components (html, head, body) can't be rendered into a div
@@ -295,7 +295,7 @@ describe('ReactTestUtils', function() {
             </body>
           </html>
         );
-      }
+      },
     });
 
     var markup = React.renderToString(<Root />);

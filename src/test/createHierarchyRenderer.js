@@ -9,6 +9,8 @@
  * @providesModule createHierarchyRenderer
  */
 
+'use strict';
+
 var React = require('React');
 
 /**
@@ -53,15 +55,15 @@ var React = require('React');
 function createHierarchyRenderer(...renderMethods) {
   var instances;
   var Components = renderMethods.reduceRight(
-    function(Components, renderMethod, depth) {
+    function(ComponentsAccumulator, renderMethod, depth) {
       var Component = React.createClass({
         displayName: renderMethod.name,
         render: function() {
           instances[depth].push(this);
-          return renderMethod.apply(this, Components);
-        }
+          return renderMethod.apply(this, ComponentsAccumulator);
+        },
       });
-      return [Component].concat(Components);
+      return [Component].concat(ComponentsAccumulator);
     },
     []
   );
