@@ -91,7 +91,7 @@ If you want to initialize the component with a non-empty value, you can supply a
   }
 ```
 
-This example will function much like the **Controlled Components** example above.  *Note:* the `defaultValue` prop is only applied when the component mounts for the first time.  If you need to programatically set the initial value of an input as a result of an asynchronous function call, for example, you will have to pass in that initial value with the `value` prop instead.
+This example will function much like the **Controlled Components** example above.  *Note:* the defaultValue prop is only applied when the component mounts for the first time. If you need to programmatically update the value after initial mount, you will need to use a controlled component (see section on controlled components).
 
 Likewise, `<input>` supports `defaultChecked` and `<select>` supports `defaultValue`.
 
