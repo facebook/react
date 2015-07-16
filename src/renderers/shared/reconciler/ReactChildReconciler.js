@@ -17,6 +17,25 @@ var ReactReconciler = require('ReactReconciler');
 var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+var traverseAllChildren = require('traverseAllChildren');
+var warning = require('warning');
+
+function instantiateChild(childInstances, child, name) {
+  // We found a component instance.
+  var keyUnique = (childInstances[name] === undefined);
+  if (__DEV__) {
+    warning(
+      keyUnique,
+      'flattenChildren(...): Encountered two children with the same key, ' +
+      '`%s`. Child keys must be unique; when two children share a key, only ' +
+      'the first child will be used.',
+      name
+    );
+  }
+  if (child != null && keyUnique) {
+    childInstances[name] = instantiateReactComponent(child, null);
+  }
+}
 
 /**
  * ReactChildReconciler provides helpers for initializing or updating a set of
@@ -24,7 +43,6 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
  * does diffed reordering and insertion.
  */
 var ReactChildReconciler = {
-
   /**
    * Generates a "mount image" for each of the supplied children. In the case
    * of `ReactDOMComponent`, a mount image is a string of markup.
@@ -34,17 +52,12 @@ var ReactChildReconciler = {
    * @internal
    */
   instantiateChildren: function(nestedChildNodes, transaction, context) {
-    var children = flattenChildren(nestedChildNodes);
-    for (var name in children) {
-      if (children.hasOwnProperty(name)) {
-        var child = children[name];
-        // The rendered children must be turned into instances as they're
-        // mounted.
-        var childInstance = instantiateReactComponent(child, null);
-        children[name] = childInstance;
-      }
+    if (nestedChildNodes == null) {
+      return null;
     }
-    return children;
+    var childInstances = {};
+    traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
+    return childInstances;
   },
 
   /**
