@@ -66,12 +66,10 @@ script:
     fi
 env:
   matrix:
-  - TEST_TYPE=test
   - TEST_TYPE=build
   - TEST_TYPE=jest
   - TEST_TYPE=lint
   - TEST_TYPE=build_website
-  - TEST_TYPE=test:webdriver:saucelabs:modern
   global:
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
@@ -81,15 +79,6 @@ env:
   - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
 matrix:
   fast_finish: true
-  allow_failures:
-    - env: TEST_TYPE=test:coverage
-    - env: TEST_TYPE=test:webdriver:saucelabs:modern
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
-    - env: TEST_TYPE=test:webdriver:saucelabs:ios
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=safari
 notifications:
   irc:
     use_notice: true

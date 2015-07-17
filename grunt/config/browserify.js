@@ -121,25 +121,10 @@ var addonsMin = {
   after: [/*derequire,*/ minify, bannerify],
 };
 
-var withCodeCoverageLogging = {
-  entries: [
-    './build/modules/React.js',
-  ],
-  outfile: './build/react.js',
-  debug: true,
-  standalone: 'React',
-  transforms: [
-    envify({NODE_ENV: process.env.NODE_ENV || 'development'}),
-    require('coverify'),
-  ],
-  plugins: [collapser],
-};
-
 module.exports = {
   basic: basic,
   min: min,
   transformer: transformer,
   addons: addons,
   addonsMin: addonsMin,
-  withCodeCoverageLogging: withCodeCoverageLogging,
 };
