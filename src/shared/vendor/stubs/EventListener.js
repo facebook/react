@@ -59,7 +59,14 @@ var EventListener = {
    * @return {object} Object with a `remove` method.
    */
   capture: function(target, eventType, callback) {
-    if (!target.addEventListener) {
+    if (target.addEventListener) {
+      target.addEventListener(eventType, callback, true);
+      return {
+        remove: function () {
+          target.removeEventListener(eventType, callback, true);
+        }
+      };
+    } else {
       if (__DEV__) {
         console.error(
           'Attempted to listen to events during the capture phase on a ' +
@@ -69,13 +76,6 @@ var EventListener = {
       }
       return {
         remove: emptyFunction
-      };
-    } else {
-      target.addEventListener(eventType, callback, true);
-      return {
-        remove: function() {
-          target.removeEventListener(eventType, callback, true);
-        }
       };
     }
   },

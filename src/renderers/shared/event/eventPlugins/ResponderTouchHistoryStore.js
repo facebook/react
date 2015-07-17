@@ -105,10 +105,10 @@ var recordStartTouchData = function(touch) {
   if (__DEV__) {
     validateTouch(touch);
   }
-  if (!touchTrack) {
-    touchBank[touch.identifier] = initializeTouchData(touch);
-  } else {
+  if (touchTrack) {
     reinitializeTouchTrack(touchTrack, touch);
+  } else {
+    touchBank[touch.identifier] = initializeTouchData(touch);
   }
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 };

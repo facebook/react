@@ -84,10 +84,10 @@ var Mixin = {
    */
   reinitializeTransaction: function() {
     this.transactionWrappers = this.getTransactionWrappers();
-    if (!this.wrapperInitData) {
-      this.wrapperInitData = [];
-    } else {
+    if (this.wrapperInitData) {
       this.wrapperInitData.length = 0;
+    } else {
+      this.wrapperInitData = [];
     }
     this._isInTransaction = false;
   },
