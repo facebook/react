@@ -11,11 +11,11 @@ var IS_MOBILE = (
 var CodeMirrorEditor = React.createClass({
   propTypes: {
     lineNumbers: React.PropTypes.bool,
-    onChange: React.PropTypes.func
+    onChange: React.PropTypes.func,
   },
   getDefaultProps: function() {
     return {
-      lineNumbers: false
+      lineNumbers: false,
     };
   },
   componentDidMount: function() {
@@ -28,7 +28,7 @@ var CodeMirrorEditor = React.createClass({
       smartIndent: false,  // javascript mode does bad things with jsx indents
       matchBrackets: true,
       theme: 'solarized-light',
-      readOnly: this.props.readOnly
+      readOnly: this.props.readOnly,
     });
     this.editor.on('change', this.handleChange);
   },
@@ -60,7 +60,7 @@ var CodeMirrorEditor = React.createClass({
         {editor}
       </div>
     );
-  }
+  },
 });
 
 var selfCleaningTimeout = {
@@ -71,7 +71,7 @@ var selfCleaningTimeout = {
   setTimeout: function() {
     clearTimeout(this.timeoutID);
     this.timeoutID = setTimeout.apply(null, arguments);
-  }
+  },
 };
 
 var ReactPlayground = React.createClass({
@@ -85,7 +85,7 @@ var ReactPlayground = React.createClass({
     renderCode: React.PropTypes.bool,
     showCompiledJSTab: React.PropTypes.bool,
     showLineNumbers: React.PropTypes.bool,
-    editorTabTitle: React.PropTypes.string
+    editorTabTitle: React.PropTypes.string,
   },
 
   getDefaultProps: function() {
@@ -95,7 +95,7 @@ var ReactPlayground = React.createClass({
       },
       editorTabTitle: 'Live JSX Editor',
       showCompiledJSTab: true,
-      showLineNumbers: false
+      showLineNumbers: false,
     };
   },
 
@@ -218,5 +218,5 @@ var ReactPlayground = React.createClass({
         );
       }, 500);
     }
-  }
+  },
 });
