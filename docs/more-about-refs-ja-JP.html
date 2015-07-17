@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>More About Refs | React</title>
+  <title>参照についての詳細 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="More About Refs | React">
+  <meta property="og:title" content="参照についての詳細 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/more-about-refs.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/more-about-refs-ja-JP.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -399,14 +399,14 @@
 
   <div class="inner-content">
     <h1>
-      More About Refs
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/08.1-more-about-refs.md" target="_blank">Edit on GitHub</a>
+      参照についての詳細
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/08.1-more-about-refs.ja-JP.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>After returning the structure of your UI from the render method, you may find yourself wanting to &quot;reach out&quot; and invoke methods on component instances returned from render. Often, doing something like this isn&#39;t necessary for making data flow through your application, because the Reactive data flow always ensures that the most recent <code>props</code> are sent to each child that is output from <code>render()</code>. However, there are a few cases where it still might be necessary or beneficial.</p>
+    <p>renderメソッドからUIの構成をリターンした後、あなたは「リーチアウト」を見て、renderから返ってきたコンポーネントのインスタンスの上でメソッドを実行するでしょう。多くの場合、アプリケーションにおいて、データフローを作成することは必要ではありません。リアクティブなデータフローは常に最新の <code>props</code> が <code>render()</code> から出力されたそれぞれの子要素に送られたことを保証するからです。しかし、まだ必要であったり、利益をもたらすケースもあります。</p>
 
-<p>Consider the case, when you wish to tell an <code>&lt;input /&gt;</code> element (that exists within your instances sub-hierarchy) to focus after you update its value to be the empty string, <code>&#39;&#39;</code>.</p>
+<p><code>&#39;&#39;</code> という空の文字列でその値をアップデートした後にフォーカスするということを <code>&lt;input /&gt;</code> 要素（インスタンスのサブ階層に存在します）に伝えたいという場合を考えましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
@@ -415,8 +415,8 @@
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">clearAndFocusInput</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span> <span class="c1">// Clear the input</span>
-      <span class="c1">// We wish to focus the &lt;input /&gt; now!</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span> <span class="c1">// inputをクリアします</span>
+      <span class="c1">// ここで、&lt;input /&gt; にフォーカスさせたいです！</span>
     <span class="p">},</span>
     <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">(</span>
@@ -433,19 +433,18 @@
     <span class="p">}</span>
   <span class="p">});</span>
 </code></pre></div>
-<p>Notice how, in this example, we want to &quot;tell&quot; the input something - something that it cannot infer from its props over time. In this case we want to &quot;tell&quot; it that it should now become focused. However, there are some challenges. What is returned from <code>render()</code> is not your actual composition of &quot;child&quot; components, but rather it is a <em>description</em> of the children at a particular instance in time - a snapshot.</p>
+<p>この例では、どうにかしてinputに何かを「伝え」たいということに着目してください。何かというのは、propsから推測できるものではありません。このケースでは、inputが今フォーカスされるべきであるということを「伝え」たいのです。しかし、いくつか問題があります。<code>render()</code> で返されるものは実際の「子供の」要素ではありません。しかし、特別なインスタンスにおいて子要素の <em>説明</em> を行うよりかは、スナップショットを見ていったほうがいいでしょう。</p>
 
 <blockquote>
-<p>Note:</p>
-
-<p>Remember, what you return from <code>render()</code> is not your <em>actual</em> rendered children instances. What you return from <code>render()</code> is merely a <em>description</em> of the children instances in your component&#39;s sub-hierarchy at a particular moment in time.</p>
+<p>注意:
+<code>render()</code> からリターンされるものは <em>実際に</em> レンダリングされた子要素のインスタンスではないと覚えておいてください。 <code>render()</code> からリターンされるものは、ある特定の時点においてのコンポーネントの副階層にある単なる子要素のインスタンスの <em>説明</em> に過ぎません。</p>
 </blockquote>
 
-<p>This means that you should never &quot;hold onto&quot; something that you return from <code>render()</code> and then expect it to be anything meaningful.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="c1">// counterexample: DO NOT DO THIS!</span>
+<p>これは、 <code>render()</code> からリターンされる何かを「保持し続ける」ことはできないことを意味します。そして、それは何かしら意味のあることであると予測できます。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="c1">// 反例: このようには記述しないでください！</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">myInput</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="o">/&gt;</span><span class="p">;</span>          <span class="c1">// I&#39;m going to try to call methods on this</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">rememberThisInput</span> <span class="o">=</span> <span class="nx">myInput</span><span class="p">;</span> <span class="c1">// input at some point in the future! YAY!</span>
+    <span class="kd">var</span> <span class="nx">myInput</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="o">/&gt;</span><span class="p">;</span>          <span class="c1">// このinputの上にあるメソッドを未来のいつかの</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rememberThisInput</span> <span class="o">=</span> <span class="nx">myInput</span><span class="p">;</span> <span class="c1">// タイミングで呼ぼうとしています！いえいっ！</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">...</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -454,31 +453,31 @@
     <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>In this counterexample, the <code>&lt;input /&gt;</code> is merely a <em>description</em> of an <code>&lt;input /&gt;</code>. This description is used to create a <em>real</em> <strong>backing instance</strong> for the <code>&lt;input /&gt;</code>.</p>
+<p>この反例では、 <code>&lt;input /&gt;</code> は単に <code>&lt;input /&gt;</code> の <em>説明</em> に過ぎず、この説明は <code>&lt;input /&gt;</code> の <em>現実の</em>  <strong>バッキングインスタンス</strong> を作るために使われます。</p>
 
-<p>So how do we talk to the <em>real</em> backing instance of the input?</p>
-<h2><a class="anchor" name="the-ref-string-attribute"></a>The ref String Attribute <a class="hash-link" href="#the-ref-string-attribute">#</a></h2>
-<p>React supports a very special property that you can attach to any component that is output from <code>render()</code>. This special property allows you to refer to the corresponding <strong>backing instance</strong> of anything returned from <code>render()</code>. It is always guaranteed to be the proper instance, at any point in time.</p>
+<p>では、inputの <em>現実の</em> バッキングインスタンスについて、どのように話していきましょうか？</p>
+<h2><a class="anchor" name=""></a>参照の文字列属性 <a class="hash-link" href="#">#</a></h2>
+<p>Reactは <code>render()</code> からの出力であるコンポーネントであれば何でもアタッチできるとても特別なプロパティをサポートしています。この特別なプロパティは <code>render()</code> からのリターンである <strong>バッキングインスタンス</strong> に対応したものに参照することを許可します。これはどのタイミングにおいても、固有のインスタンスであることを保証されています。</p>
 
-<p>It&#39;s as simple as:</p>
+<p>これは以下のように単純です。</p>
 
 <ol>
-<li>Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</li>
+<li>以下のように、 <code>render</code> からのリターンであれば何でも <code>ref</code> 属性をアサインする。</li>
 </ol>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
 <ol>
-<li>In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</li>
+<li>いくつかの他のコードは（一般的にイベントハンドラのコード）、以下にあるように <code>this.refs</code> を通して <strong>バッキングインスタンス</strong> にアクセスします。</li>
 </ol>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
 </code></pre></div>
-<p>You can access the component&#39;s DOM node directly by calling <code>React.findDOMNode(this.refs.myInput)</code>.</p>
-<h2><a class="anchor" name="the-ref-callback-attribute"></a>The ref Callback Attribute <a class="hash-link" href="#the-ref-callback-attribute">#</a></h2>
-<p>The <code>ref</code> attribute can be a callback function instead of a name.  This callback will be executed immediately after the component is mounted.  The referenced component will be passed in as a parameter, and the callback function may use the component immediately, or save the reference for future use (or both).</p>
+<p><code>React.findDOMNode(this.refs.myInput)</code> を呼ぶことで、コンポーネントのDOMノードに直接アクセスできる。</p>
+<h2><a class="anchor" name=""></a>参照のコールバック属性 <a class="hash-link" href="#">#</a></h2>
+<p><code>ref</code> 属性は名前の代わりのコールバック関数になり得ます。このコールバックはコンポーネントがマウントされた直後に実行されます。参照されたコンポーネントはパラメータとして渡され、コールバック関数はコンポーネントを即座に使用するか、または将来使用するために参照を保存します（またはその両方を行います）。</p>
 
-<p>It&#39;s as simple as assigning a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>
+<p>これは、以下のように、 <code>render</code> でリターンされてきたものに <code>ref</code> 属性をアサインするのと同じくらい簡単です。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span> <span class="na">React</span><span class="err">.</span><span class="na">findDOMNode</span><span class="err">(</span><span class="na">component</span><span class="err">).</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
-</code></pre></div><h2><a class="anchor" name="completing-the-example"></a>Completing the Example <a class="hash-link" href="#completing-the-example">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</code></pre></div><h2><a class="anchor" name=""></a>完全な例 <a class="hash-link" href="#">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="p">},</span>
@@ -486,10 +485,10 @@
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">clearAndFocusInput</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="c1">// Clear the input</span>
+      <span class="c1">// inputをクリアする</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// This code executes after the component is re-rendered</span>
-        <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// Boom! Focused!</span>
+        <span class="c1">// このコードはコンポーネントが再度レンダリングされた後に実行されます。</span>
+        <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// どーん！フォーカスされました！</span>
       <span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -508,29 +507,29 @@
     <span class="p">}</span>
   <span class="p">});</span>
 </code></pre></div>
-<p>In this example, our render function returns a description of an <code>&lt;input /&gt;</code> instance. But the true instance is accessed via <code>this.refs.theInput</code>. As long as a child component with <code>ref=&quot;theInput&quot;</code> is returned from <code>render</code>, <code>this.refs.theInput</code> will access the proper instance. This even works on higher level (non-DOM) components such as <code>&lt;Typeahead ref=&quot;myTypeahead&quot; /&gt;</code>.</p>
-<h2><a class="anchor" name="summary"></a>Summary <a class="hash-link" href="#summary">#</a></h2>
-<p>Refs are a great way to send a message to a particular child instance in a way that would be inconvenient to do via streaming Reactive <code>props</code> and <code>state</code>. They should, however, not be your go-to abstraction for flowing data through your application. By default, use the Reactive data flow and save <code>ref</code>s for use cases that are inherently non-reactive.</p>
-<h3><a class="anchor" name="benefits"></a>Benefits: <a class="hash-link" href="#benefits">#</a></h3>
+<p>この例では、レンダリング関数は <code>&lt;input /&gt;</code> インスタンスの説明をリターンします。しかし、実際のインスタンスは <code>this.refs.theInput</code> を通してアクセスされます。 <code>ref=&quot;theInput&quot;</code> を持つ子要素のコンポーネントが <code>render</code> からリターンされる限り、 <code>this.refs.theInput</code> は固有のインスタンスにアクセスするでしょう。これは <code>&lt;Typeahead ref=&quot;myTypeahead&quot; /&gt;</code> のような高階層の（DOMでない）コンポーネントでも同様に動きます。</p>
+<h2><a class="anchor" name=""></a>要約 <a class="hash-link" href="#">#</a></h2>
+<p>リアクティブな <code>props</code> と <code>state</code> を通してのストリーミングのアクセスは便利とは言えないため、参照は特定の子要素のインスタンスにメッセージを送るための素晴らしい方法です。しかし、それらは、アプリケーションを通したデータフローの抽象化につながるわけではありません。デフォルトで、リアクティブなデータフローを使ってください。そして、ユースケースのために <code>ref</code> を保存するのは本質的にはリアクティブではありません。</p>
+<h3><a class="anchor" name=""></a>利益: <a class="hash-link" href="#">#</a></h3>
 <ul>
-<li>You can define any public method on your component classes (such as a reset method on a Typeahead) and call those public methods through refs (such as <code>this.refs.myTypeahead.reset()</code>).</li>
-<li>Performing DOM measurements almost always requires reaching out to a &quot;native&quot; component such as <code>&lt;input /&gt;</code> and accessing its underlying DOM node via <code>React.findDOMNode(this.refs.myInput)</code>. Refs are one of the only practical ways of doing this reliably.</li>
-<li>Refs are automatically managed for you! If that child is destroyed, its ref is also destroyed for you. No worrying about memory here (unless you do something crazy to retain a reference yourself).</li>
+<li>コンポーネントクラス（例えば、Typeaheadのリセットメソッドのようなもの）にパブリックなメソッドを定義できる。また、参照（例えば、 <code>this.refs.myTypeahead.reset()</code> のように）を通してそれらのパブリックなメソッドを呼べる。</li>
+<li>DOMの計測を行うことは大体いつも <code>&lt;input /&gt;</code> のような「ネイティブの」コンポーネントや <code>React.findDOMNode(this.refs.myInput)</code> を通した根本のDOMノードにアクセスすることを必要とします。参照は、こういったことを期待通りに行う唯一の実用的な方法です。</li>
+<li>参照は自動的に管理されます！もし子要素が削除されたら、その参照もまた削除されます。メモリに関しての心配は要りません（あなた自身が参照を維持するために何かおかしなことを行っていなければ）。</li>
 </ul>
-<h3><a class="anchor" name="cautions"></a>Cautions: <a class="hash-link" href="#cautions">#</a></h3>
+<h3><a class="anchor" name=""></a>警告: <a class="hash-link" href="#">#</a></h3>
 <ul>
-<li><em>Never</em> access refs inside of any component&#39;s render method - or while any component&#39;s render method is even running anywhere in the call stack.</li>
-<li>If you want to preserve Google Closure Compiler Crushing resilience, make sure to never access as a property what was specified as a string. This means you must access using <code>this.refs[&#39;myRefString&#39;]</code> if your ref was defined as <code>ref=&quot;myRefString&quot;</code>.</li>
-<li>If you have not programmed several apps with React, your first inclination is usually going to be to try to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where <code>state</code> should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy. Placing the state there often eliminates any desire to use <code>ref</code>s to &quot;make things happen&quot; – instead, the data flow will usually accomplish your goal.</li>
+<li><em>決して</em> コンポーネントのレンダリングメソッドの中の参照にアクセスしてはいけません。たとえコンポーネントのレンダリングメソッドのいずれかがコールスタックの中のどこかで動いているとしても。</li>
+<li>もしGoogle Closure Compilerのクラッシュからの回復を守りたいなら、文字列として指定されたプロパティとしてアクセスしてはいけないことに気をつけてください。これは、 <code>ref=&quot;myRefString&quot;</code> として参照が定義されている場合は、 <code>this.refs[&#39;myRefString&#39;]</code> を使ってアクセスしなければいけないことを意味します。</li>
+<li>まだReactでプログラムを書いたことがない場合は、アプリケーションで「何かを起こす」ために参照を使おうとするでしょう。もしそのケースだった場合は、時間をかけて <code>state</code> がコンポーネントの階層のどこで保持されるべきか批評的に考えてください。多くの場合は、そのstateを「保持する」ための固有の場所が階層の高いレベルにあることがクリアになります。そのstateをその場所に配置することはよく「何かを起こす」ために <code>ref</code> を使うための願望を排除します。代わりに、データフローは普通、目標を達成します。</li>
 </ul>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/working-with-the-browser.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/working-with-the-browser-ja-JP.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/tooling-integration.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/tooling-integration-ja-JP.html">Next &rarr;</a>
       
     </div>
   </div>

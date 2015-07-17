@@ -417,8 +417,7 @@
 <p>That&#39;s not valid JS. You probably want to make use of a ternary expression:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="nx">condition</span> <span class="o">?</span> <span class="s1">&#39;msg&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
 </code></pre></div>
-<p>If a ternary expression isn&#39;t robust enough, you can use <code>if</code> statements to determine which
-components should be used.</p>
+<p>If a ternary expression isn&#39;t robust enough, you can use <code>if</code> statements outside of your JSX to determine which components should be used:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">loginButton</span><span class="p">;</span>
 <span class="k">if</span> <span class="p">(</span><span class="nx">loggedIn</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">loginButton</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">LogoutButton</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -431,8 +430,34 @@ components should be used.</p>
     <span class="o">&lt;</span><span class="nx">Home</span> <span class="o">/&gt;</span>
     <span class="p">{</span><span class="nx">loginButton</span><span class="p">}</span>
   <span class="o">&lt;</span><span class="err">/nav&gt;</span>
-<span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
+<p>Or if you prefer a more &quot;inline&quot; aesthetic, define <a href="https://en.wikipedia.org/wiki/Immediately-invoked_function_expression">immediately-invoked function expressions</a> <em>inside</em> your JSX:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">return</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">section</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Color</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+    <span class="o">&lt;</span><span class="nx">h3</span><span class="o">&gt;</span><span class="nx">Name</span><span class="o">&lt;</span><span class="err">/h3&gt;</span>
+    <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">color</span> <span class="o">||</span> <span class="s2">&quot;white&quot;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+    <span class="o">&lt;</span><span class="nx">h3</span><span class="o">&gt;</span><span class="nx">Hex</span><span class="o">&lt;</span><span class="err">/h3&gt;</span>
+    <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
+      <span class="p">{()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">color</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">case</span> <span class="s2">&quot;red&quot;</span><span class="o">:</span>   <span class="k">return</span> <span class="s2">&quot;#FF0000&quot;</span><span class="p">;</span>
+          <span class="k">case</span> <span class="s2">&quot;green&quot;</span><span class="o">:</span> <span class="k">return</span> <span class="s2">&quot;#00FF00&quot;</span><span class="p">;</span>
+          <span class="k">case</span> <span class="s2">&quot;blue&quot;</span><span class="o">:</span>  <span class="k">return</span> <span class="s2">&quot;#0000FF&quot;</span><span class="p">;</span>
+          <span class="k">default</span><span class="o">:</span>      <span class="k">return</span> <span class="s2">&quot;#FFFFFF&quot;</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="p">}()}</span>
+    <span class="o">&lt;</span><span class="err">/p&gt;</span>
+  <span class="o">&lt;</span><span class="err">/section&gt;</span>
+<span class="p">);</span>
+</code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>In the example above, an ES6 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow function</a> is utilized to lexically bind the value of <code>this</code>.</p>
+</blockquote>
+
 <p>Try using it today with the <a href="/react/jsx-compiler.html">JSX compiler</a>.</p>
 
 

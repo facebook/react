@@ -410,6 +410,7 @@
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/JSXTransformer-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
@@ -443,7 +444,7 @@
   <span class="p">);</span>
 <span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name=""></a>リアクティブなアップデート <a class="hash-link" href="#">#</a></h2>
-<p><code>hello-react.html</code> をウェブブラウザで開き、テキストフィールドにあなたの名前を入力してください。ReactはUIのうち、時間の文字列しか変更しないことに注意してください。あなたがテキストフィールドに入力したものは残っています。あなたはそういったコードを書いていないのにも関わらずです。Reactはあなたのことを理解しており、正しいことを行います。</p>
+<p><code>hello-react.html</code> をウェブブラウザで開き、テキストフィールドにあなたの名前を入力してください。ReactはUIのうち、時間の文字列しか変更しないことに注意してください。あなたがテキストフィールドに入力したものは残っています。あなたはそういったコードを書いていないのにも関わらずです。Reactはあなたのことを理解しており、正しいことを行います。</p>
 
 <p>このことについて私たちが理解できる方法は、Reactは必要になるまで、DOMの操作を行わないということです。 <strong>Reactは、DOMの変化を表現し、あなたにもっとも効率的なDOMの変化を見積もるために早い、内部のモックのDOMを使っています。</strong></p>
 
@@ -463,7 +464,7 @@
 
 <p>上記のことを簡単に行うために、私たちはReactのツリーノードを構築するためのとても単純で、 <strong>オプショナルな</strong> HTMLに似たシンタックスを加えました。</p>
 
-<p><strong>JSXはHTMLのシンタックスを使ってJavaScriptのオブジェクトを構築するのを可能にします。</strong> 純粋にJavaScriptを使ってReactでリンクを構築するには、以下のように書きます。</p>
+<p><strong>JSXはHTMLのシンタックスを使ってJavaScriptのオブジェクトを構築するのを可能にします。</strong> 純粋にJavaScriptを使ってReactでリンクを構築するには、以下のように書きます。</p>
 
 <p><code>React.createElement(&#39;a&#39;, {href: &#39;https://facebook.github.io/react/&#39;}, &#39;Hello!&#39;)</code></p>
 

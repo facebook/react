@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>显示数据 | React</title>
+  <title>クラス名の操作 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="显示数据 | React">
+  <meta property="og:title" content="クラス名の操作 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/displaying-data-zh-CN.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/class-name-manipulation-ja-JP.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -200,7 +200,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
+                    <a href="/react/docs/class-name-manipulation.html" class="active">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -399,108 +399,65 @@
 
   <div class="inner-content">
     <h1>
-      显示数据
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02-displaying-data.zh-CN.md" target="_blank">Edit on GitHub</a>
+      クラス名の操作
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.3-class-name-manipulation.ja-JP.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>用户界面能做的最基础的事就是显示一些数据。React 让显示数据变得简单，当数据变化的时候，用户界面会自动同步更新。</p>
-<h2><a class="anchor" name=""></a>开始 <a class="hash-link" href="#">#</a></h2>
-<p>让我们看一个非常简单的例子。新建一个名为 <code>hello-react.html</code> 的文件，代码内容如下：</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;html&gt;</span>
-  <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/JSXTransformer-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;/head&gt;</span>
-  <span class="nt">&lt;body&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
-
-      <span class="c1">// ** 在这里替换成你的代码 **</span>
-
-    <span class="nt">&lt;/script&gt;</span>
-  <span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
-</code></pre></div>
-<p>在接下去的文档中，我们只关注 JavaScript 代码，假设我们把代码插入到上面那个模板中。用下面的代码替换掉上面用来占位的注释。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">HelloWorld</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
-        <span class="nx">Hello</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name here&quot;</span> <span class="o">/&gt;!</span>
-        <span class="nx">It</span> <span class="nx">is</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">toTimeString</span><span class="p">()}</span>
-      <span class="o">&lt;</span><span class="err">/p&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">HelloWorld</span> <span class="nx">date</span><span class="o">=</span><span class="p">{</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()}</span> <span class="o">/&gt;</span><span class="p">,</span>
-    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-  <span class="p">);</span>
-<span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="-reactive-updates"></a>被动更新 (Reactive Updates) <a class="hash-link" href="#-reactive-updates">#</a></h2>
-<p>在浏览器中打开 <code>hello-react.html</code> ，在输入框输入你的名字。你会发现 React 在用户界面中只改变了时间， 任何你在输入框输入的内容一直保留着，即使你没有写任何代码来完成这个功能。React 为你解决了这个问题，做了正确的事。</p>
-
-<p>我们想到的方法是除非不得不操作 DOM ，React 是不会去操作 DOM 的。<strong>它用一种更快的内置仿造的 DOM 来操作差异，为你计算出出效率最高的 DOM 改变</strong>。</p>
-
-<p>对这个组件的输入称为 <code>props</code> - &quot;properties&quot;的缩写。得益于 JSX 语法，它们通过参数传递。你必须知道在组件里，这些属性是不可改变的，也就是说 <strong><code>this.props</code> 是只读的</strong>。</p>
-<h2><a class="anchor" name=""></a>组件就像是函数 <a class="hash-link" href="#">#</a></h2>
-<p>React 组件非常简单。你可以认为它们就是简单的函数，接受 <code>props</code> 和 <code>state</code> (后面会讨论) 作为参数，然后渲染出 HTML。正是应为它们是这么的简单，这使得它们非常容易理解。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p><strong>只有一个限制</strong>: React 组件只能渲染单个根节点。如果你想要返回多个节点，它们<em>必须</em>被包含在同一个节点里。</p>
+    <blockquote>
+<p>注意:
+このモジュールは現在<a href="https://github.com/JedWatson/classnames">JedWatson/classnames</a>に独立して存在しており、Reactは変更を検知していません。したがって、こちらは将来削除される予定です。</p>
 </blockquote>
-<h2><a class="anchor" name="jsx-"></a>JSX 语法 <a class="hash-link" href="#jsx-">#</a></h2>
-<p>我们坚信组件是正确方法去做关注分离，而不是通过“模板”和“展示逻辑”。我们认为标签和生成它的代码是紧密相连的。此外，展示逻辑通常是很复杂的，通过模板语言实现这些逻辑会产生大量代码。</p>
 
-<p>我们得出解决这个问题最好的方案是通过 JavaScript 直接生成模板，这样你就可以用一个真正语言的所有表达能力去构建用户界面。为了使这变得更简单，我们做了一个非常简单、<strong>可选</strong>类似 HTML 语法 ，通过函数调用即可生成模板的编译器，称为 JSX。</p>
+<p><code>classSet()</code> はDOMの <code>class</code> 文字列を簡単に操作するすっきりとしたユーティリティです。</p>
 
-<p><strong>JSX 让你可以用 HTML 语法去写 JavaScript 函数调用</strong> 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写：</p>
-
-<p><code>React.createElement(&#39;a&#39;, {href: &#39;https://facebook.github.io/react/&#39;}, &#39;Hello React!&#39;)</code>。</p>
-
-<p>通过 JSX 这就变成了</p>
-
-<p><code>&lt;a href=&quot;https://facebook.github.io/react/&quot;&gt;Hello React!&lt;/a&gt;</code>。</p>
-
-<p>我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以<strong>JSX 不是必须用的。</strong></p>
-
-<p>JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性。想要了解更多，请看 <a href="/react/docs/jsx-in-depth-zh-CN.html">深入理解 JSX</a>。或者直接使用<a href="/react/jsx-compiler.html">在线 JSX 编译器</a>观察变化过程。</p>
-
-<p>JSX 类似于 HTML，但不是完全一样。参考 <a href="/react/docs/jsx-gotchas-zh-CN.html">JSX 陷阱</a> 学习关键区别。</p>
-
-<p>最简单开始学习 JSX 的方法就是使用浏览器端的 <code>JSXTransformer</code>。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 <a href="https://www.npmjs.com/package/react-tools">react-tools</a> 包来预编译你的代码。</p>
-<h2><a class="anchor" name="-jsx--react"></a>没有 JSX 的 React <a class="hash-link" href="#-jsx--react">#</a></h2>
-<p>你完全可以选择是否使用 JSX，并不是 React 必须的。你可以通过 <code>React.createElement</code> 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，每三个是子节点。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<p>以下は、 <code>classSet()</code> を使用しない共通なシナリオと解決策です。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// `&lt;Message /&gt;` などの中のReactコンポーネント</span>
+<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">classString</span> <span class="o">=</span> <span class="s1">&#39;message&#39;</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isImportant</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">classString</span> <span class="o">+=</span> <span class="s1">&#39; message-important&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isRead</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">classString</span> <span class="o">+=</span> <span class="s1">&#39; message-read&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="c1">// &#39;message message-important message-read&#39;</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">classString</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Great</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">ll</span> <span class="nx">be</span> <span class="nx">there</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>方便起见，你可以创建基于自定义组件的速记工厂方法。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Factory</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">ComponentClass</span><span class="p">);</span>
-<span class="p">...</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">Factory</span><span class="p">({</span> <span class="nx">custom</span><span class="o">:</span> <span class="s1">&#39;prop&#39;</span> <span class="p">});</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<p>上記は、クラス名を文字列として渡しているので、面倒で、読みにくく、エラーが発生しやすくなります。以下のように、 <code>classSet()</code> を使用するとこの問題が解決します。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">cx</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">classSet</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">classes</span> <span class="o">=</span> <span class="nx">cx</span><span class="p">({</span>
+    <span class="s1">&#39;message&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="s1">&#39;message-important&#39;</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isImportant</span><span class="p">,</span>
+    <span class="s1">&#39;message-read&#39;</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isRead</span>
+  <span class="p">});</span>
+  <span class="c1">// 同様に最終的には文字列になりますが、クリアにはなります</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">classes</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Great</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">ll</span> <span class="nx">be</span> <span class="nx">there</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>React 已经为 HTML 标签提供内置工厂方法。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">li</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">)</span>
-<span class="p">);</span>
+<p><code>classSet()</code> を使用する際には、キーと、必要であったり、必要でないCSSのクラス名をオブジェクトとして渡してください。値が真であるものはキーとなり、最終的には文字列の一部になります。</p>
+
+<p><code>classSet()</code> もまた、以下のように連結した文字列の引数としてクラス名を渡します。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">cx</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">classSet</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">importantModifier</span> <span class="o">=</span> <span class="s1">&#39;message-important&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">readModifier</span> <span class="o">=</span> <span class="s1">&#39;message-read&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">classes</span> <span class="o">=</span> <span class="nx">cx</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">importantModifier</span><span class="p">,</span> <span class="nx">readModifier</span><span class="p">);</span>
+  <span class="c1">// 最終的な文字列は &#39;message message-important message-read&#39;</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">classes</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Great</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">ll</span> <span class="nx">be</span> <span class="nx">there</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
 </code></pre></div>
+<p>文字列の連結を手で書くのはやめましょう！</p>
+
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/why-react-zh-CN.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/two-way-binding-helpers-ja-JP.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/jsx-in-depth-zh-CN.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/test-utils-ja-JP.html">Next &rarr;</a>
       
     </div>
   </div>
