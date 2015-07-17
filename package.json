@@ -29,7 +29,7 @@
     "jstransform": "^11.0.0"
   },
   "devDependencies": {
-    "babel": "^5.5.5",
+    "babel": "^5.6.0",
     "babel-eslint": "^3.1.14",
     "benchmark": "^1.0.0",
     "browserify": "^9.0.3",
@@ -63,6 +63,7 @@
     "typescript": "^1.4.0",
     "uglify-js": "^2.4.23",
     "uglifyify": "^3.0.1",
+    "umd": "^3.0.1",
     "wd": "~0.2.6"
   },
   "engines": {
