@@ -151,7 +151,8 @@ var MyComponent = React.createClass({
     );
   }
 });
-
+```
+```javascript
 // Correct :)
 var ListItemWrapper = React.createClass({
   render: function() {
