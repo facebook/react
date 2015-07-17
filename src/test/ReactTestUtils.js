@@ -410,7 +410,9 @@ ReactShallowRenderer.prototype.unmount = function() {
 };
 
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
-  if (!this._instance) {
+  if (this._instance) {
+    this._instance.receiveComponent(element, transaction, context);
+  } else {
     var rootID = ReactInstanceHandles.createReactRootID();
     var instance = new ShallowComponentWrapper(element.type);
     instance.construct(element);
@@ -418,8 +420,6 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
     instance.mountComponent(rootID, transaction, context);
 
     this._instance = instance;
-  } else {
-    this._instance.receiveComponent(element, transaction, context);
   }
 };
 
