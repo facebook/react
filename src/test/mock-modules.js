@@ -9,7 +9,7 @@
  * @providesModule mock-modules
  */
 
-var mocks = require("mocks");
+var mocks = require('mocks');
 var exportsRegistry = {};
 var hasOwn = exportsRegistry.hasOwnProperty;
 var explicitMockMap = {};
@@ -55,7 +55,7 @@ function resetEntry(id) {
 }
 
 exports.dumpCache = function() {
-  require("mocks").clear();
+  require('mocks').clear();
 
   // Deleting module.exports will cause the module to be lazily
   // reevaluated the next time it is required.
@@ -117,7 +117,7 @@ function doMock(id) {
   return exports;
 }
 
-var global = Function("return this")();
+var global = Function('return this')();
 require('test/mock-timers').installMockTimers(global);
 
 // Exported names are different for backwards compatibility.
