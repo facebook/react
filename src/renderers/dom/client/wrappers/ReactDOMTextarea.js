@@ -92,17 +92,14 @@ var ReactDOMTextarea = {
 
       defaultValue = '' + children;
     }
-    if (defaultValue == null) {
-      defaultValue = '';
-    }
-    var value = LinkedValueUtils.getValue(props);
+    var value = LinkedValueUtils.getValue(props) || defaultValue || '';
 
     inst._wrapperState = {
       // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
-      // The initial value can be a boolean or object so that's why it's
-      // forced to be a string.
-      initialValue: '' + (value != null ? value : defaultValue),
+      // The current value or default value can be a boolean or object so
+      // that's why final value is forced to be a string.
+      initialValue: '' + value,
       onChange: _handleChange.bind(inst),
     };
   },
