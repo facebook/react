@@ -218,7 +218,7 @@ assign(reactComponentExpectInternal.prototype, {
         .toEqual(contextNameToExpectedValue[contextName]);
     }
     return this;
-  }
+  },
 });
 
 module.exports = reactComponentExpect;

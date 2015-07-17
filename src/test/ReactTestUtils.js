@@ -279,7 +279,7 @@ var ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
-    mockTagName = mockTagName || module.mockTagName || "div";
+    mockTagName = mockTagName || module.mockTagName || 'div';
 
     module.prototype.render.mockImplementation(function() {
       return React.createElement(
@@ -328,8 +328,8 @@ var ReactTestUtils = {
   nativeTouchData: function(x, y) {
     return {
       touches: [
-        {pageX: x, pageY: y}
-      ]
+        {pageX: x, pageY: y},
+      ],
     };
   },
 
@@ -338,7 +338,7 @@ var ReactTestUtils = {
   },
 
   Simulate: null,
-  SimulateNative: {}
+  SimulateNative: {},
 };
 
 /**
@@ -376,7 +376,7 @@ NoopInternalComponent.prototype = {
   },
 
   unmountComponent: function() {
-  }
+  },
 
 };
 
@@ -389,8 +389,8 @@ assign(
     },
     _replaceNodeWithMarkupByID: function() {},
     _renderValidatedComponent:
-      ReactCompositeComponent.Mixin.
-        _renderValidatedComponentWithoutOwnerOrContext
+      ReactCompositeComponent.Mixin
+        ._renderValidatedComponentWithoutOwnerOrContext,
   }
 );
 
@@ -521,7 +521,7 @@ function makeNativeSimulator(eventType) {
         domComponentOrNode,
         fakeNativeEvent
       );
-    } else if (!!domComponentOrNode.tagName) {
+    } else if (domComponentOrNode.tagName) {
       // Will allow on actual dom nodes.
       ReactTestUtils.simulateNativeEventOnNode(
         eventType,
@@ -532,8 +532,7 @@ function makeNativeSimulator(eventType) {
   };
 }
 
-var eventType;
-for (eventType in topLevelTypes) {
+Object.keys(topLevelTypes).forEach(function(eventType) {
   // Event type is stored as 'topClick' - we transform that to 'click'
   var convenienceName = eventType.indexOf('top') === 0 ?
     eventType.charAt(3).toLowerCase() + eventType.substr(4) : eventType;
@@ -543,6 +542,6 @@ for (eventType in topLevelTypes) {
    */
   ReactTestUtils.SimulateNative[convenienceName] =
     makeNativeSimulator(eventType);
-}
+});
 
 module.exports = ReactTestUtils;

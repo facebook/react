@@ -32,7 +32,7 @@ describe('reactComponentExpect', function() {
             {'This is text'}
           </div>
         );
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);

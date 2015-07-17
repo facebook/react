@@ -1,7 +1,5 @@
 # We can probably lint these later but not important at this point
 src/shared/vendor
-# This should be enabled but that folder has too much in it that doesn't belong
-src/test
 # But not in docs/_js/examples/*
 docs/_js/*.js
 docs/js/

@@ -81,8 +81,8 @@ var ReactPerf = {
      */
     injectMeasure: function(measure) {
       ReactPerf.storedMeasure = measure;
-    }
-  }
+    },
+  },
 };
 
 /**

@@ -9,6 +9,8 @@
  * @providesModule ReactDefaultPerfAnalysis
  */
 
+'use strict';
+
 var assign = require('Object.assign');
 
 // Don't try to save users less than 1.2ms (a number I made up)
@@ -23,7 +25,7 @@ var DOM_OPERATION_TYPES = {
   'deletePropertyByID': 'delete attribute',
   'updateStylesByID': 'update styles',
   'updateInnerHTMLByID': 'set innerHTML',
-  'dangerouslyReplaceNodeWithMarkupByID': 'replace'
+  'dangerouslyReplaceNodeWithMarkupByID': 'replace',
 };
 
 function getTotalTime(measurements) {
@@ -41,20 +43,17 @@ function getTotalTime(measurements) {
 
 function getDOMSummary(measurements) {
   var items = [];
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
-    var id;
-
-    for (id in measurement.writes) {
+  measurements.forEach(function(measurement) {
+    Object.keys(measurement.writes).forEach(function(id) {
       measurement.writes[id].forEach(function(write) {
         items.push({
           id: id,
           type: DOM_OPERATION_TYPES[write.type] || write.type,
-          args: write.args
+          args: write.args,
         });
       });
-    }
-  }
+    });
+  });
   return items;
 }
 
@@ -78,7 +77,7 @@ function getExclusiveSummary(measurements) {
         inclusive: 0,
         exclusive: 0,
         render: 0,
-        count: 0
+        count: 0,
       };
       if (measurement.render[id]) {
         candidates[displayName].render += measurement.render[id];
@@ -142,7 +141,7 @@ function getInclusiveSummary(measurements, onlyClean) {
       candidates[inclusiveKey] = candidates[inclusiveKey] || {
         componentName: inclusiveKey,
         time: 0,
-        count: 0
+        count: 0,
       };
 
       if (measurement.inclusive[id]) {
@@ -198,7 +197,7 @@ var ReactDefaultPerfAnalysis = {
   getExclusiveSummary: getExclusiveSummary,
   getInclusiveSummary: getInclusiveSummary,
   getDOMSummary: getDOMSummary,
-  getTotalTime: getTotalTime
+  getTotalTime: getTotalTime,
 };
 
 module.exports = ReactDefaultPerfAnalysis;
