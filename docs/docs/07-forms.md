@@ -81,7 +81,7 @@ An `<input>` that does not supply a `value` (or sets it to `null`) is an *uncont
 
 This will render an input that starts off with an empty value. Any user input will be immediately reflected by the rendered element. If you wanted to listen to updates to the value, you could use the `onChange` event just like you can with controlled components.
 
-###Default Value
+### Default Value
 
 If you want to initialize the component with a non-empty value, you can supply a `defaultValue` prop. For example:
 
@@ -91,9 +91,13 @@ If you want to initialize the component with a non-empty value, you can supply a
   }
 ```
 
-This example will function much like the **Controlled Components** example above.  *Note:* the defaultValue prop is only applied when the component mounts for the first time. If you need to programmatically update the value after initial mount, you will need to use a controlled component (see section on controlled components).
+This example will function much like the **Controlled Components** example above.
 
 Likewise, `<input>` supports `defaultChecked` and `<select>` supports `defaultValue`.
+
+> Note:
+>
+> The `defaultValue` and `defaultChecked` props are only used during initial render. If you need to update the value in a subsequent render, you will need to use a [controlled component](#controlled-components).
 
 
 ## Advanced Topics
