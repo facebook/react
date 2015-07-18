@@ -219,7 +219,7 @@ var ReactMultiChild = {
         // TODO: The setTextContent operation should be enough
         for (var name in prevChildren) {
           if (prevChildren.hasOwnProperty(name)) {
-            this._unmountChildByName(prevChildren[name], name);
+            this._unmountChild(prevChildren[name]);
           }
         }
         // Set new text content.
@@ -240,15 +240,15 @@ var ReactMultiChild = {
     /**
      * Updates the rendered children with new children.
      *
-     * @param {?object} nextNestedChildren Nested child maps.
+     * @param {?object} nextNestedChildrenElements Nested child element maps.
      * @param {ReactReconcileTransaction} transaction
      * @internal
      */
-    updateChildren: function(nextNestedChildren, transaction, context) {
+    updateChildren: function(nextNestedChildrenElements, transaction, context) {
       updateDepth++;
       var errorThrown = true;
       try {
-        this._updateChildren(nextNestedChildren, transaction, context);
+        this._updateChildren(nextNestedChildrenElements, transaction, context);
         errorThrown = false;
       } finally {
         updateDepth--;
@@ -267,15 +267,15 @@ var ReactMultiChild = {
      * Improve performance by isolating this hot code path from the try/catch
      * block in `updateChildren`.
      *
-     * @param {?object} nextNestedChildren Nested child maps.
+     * @param {?object} nextNestedChildrenElements Nested child element maps.
      * @param {ReactReconcileTransaction} transaction
      * @final
      * @protected
      */
-    _updateChildren: function(nextNestedChildren, transaction, context) {
+    _updateChildren: function(nextNestedChildrenElements, transaction, context) {
       var prevChildren = this._renderedChildren;
       var nextChildren = ReactChildReconciler.updateChildren(
-        prevChildren, nextNestedChildren, transaction, context
+        prevChildren, nextNestedChildrenElements, transaction, context
       );
       this._renderedChildren = nextChildren;
       if (!nextChildren && !prevChildren) {
@@ -300,7 +300,7 @@ var ReactMultiChild = {
           if (prevChild) {
             // Update `lastIndex` before `_mountIndex` gets unset by unmounting.
             lastIndex = Math.max(prevChild._mountIndex, lastIndex);
-            this._unmountChildByName(prevChild, name);
+            this._unmountChild(prevChild);
           }
           // The child must be instantiated before it's mounted.
           this._mountChildByNameAtIndex(
@@ -313,7 +313,7 @@ var ReactMultiChild = {
       for (name in prevChildren) {
         if (prevChildren.hasOwnProperty(name) &&
             !(nextChildren && nextChildren.hasOwnProperty(name))) {
-          this._unmountChildByName(prevChildren[name], name);
+          this._unmountChild(prevChildren[name]);
         }
       }
     },
@@ -408,15 +408,14 @@ var ReactMultiChild = {
     },
 
     /**
-     * Unmounts a rendered child by name.
+     * Unmounts a rendered child.
      *
      * NOTE: This is part of `updateChildren` and is here for readability.
      *
      * @param {ReactComponent} child Component to unmount.
-     * @param {string} name Name of the child in `this._renderedChildren`.
      * @private
      */
-    _unmountChildByName: function(child, name) {
+    _unmountChild: function(child) {
       this.removeChild(child);
       child._mountIndex = null;
     },
