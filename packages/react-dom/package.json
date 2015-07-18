@@ -16,6 +16,7 @@
   },
   "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
   "dependencies": {
+    "fbjs": "0.1.0-alpha.0",
     "react": "^0.14.0-beta1"
   }
 }

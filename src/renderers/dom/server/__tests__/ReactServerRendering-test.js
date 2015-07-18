@@ -11,13 +11,6 @@
 
 'use strict';
 
-require('mock-modules')
-  .dontMock('ExecutionEnvironment')
-  .dontMock('React')
-  .dontMock('ReactServerRendering')
-  .dontMock('ReactTestUtils')
-  .dontMock('ReactMarkupChecksum');
-
 var mocks = require('mocks');
 
 var ExecutionEnvironment;

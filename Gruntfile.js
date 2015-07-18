@@ -1,5 +1,8 @@
 'use strict';
 
+var assign = require('object-assign');
+var path = require('path');
+
 module.exports = function(grunt) {
 
   grunt.initConfig({
@@ -21,6 +24,21 @@ module.exports = function(grunt) {
 
   grunt.config.set('compress', require('./grunt/config/compress'));
 
+  function spawnGulp(args, opts, done) {
+    grunt.util.spawn({
+      // This could be more flexible (require.resolve & lookup bin in package)
+      // but if it breaks we'll fix it then.
+      cmd: path.join('node_modules', '.bin', 'gulpp'),
+      args: args,
+      opts: assign({stdio: 'inherit'}, opts),
+    }, function(err, result, code) {
+      if (err) {
+        grunt.fail.fatal('Something went wrong running gulp: ', result);
+      }
+      done(code === 0);
+    });
+  }
+
   Object.keys(grunt.file.readJSON('package.json').devDependencies)
     .filter(function(npmTaskName) {
       return npmTaskName.indexOf('grunt-') === 0;
@@ -37,9 +55,8 @@ module.exports = function(grunt) {
   grunt.registerTask('lint', ['eslint']);
 
   grunt.registerTask('delete-build-modules', function() {
-    if (grunt.file.exists('build/modules')) {
-      grunt.file.delete('build/modules');
-    }
+    // Use gulp here
+    spawnGulp(['react:clean'], null, this.async());
   });
 
   // Register jsx:normal and :release tasks.
@@ -68,30 +85,30 @@ module.exports = function(grunt) {
   grunt.registerTask('version-check', require('./grunt/tasks/version-check'));
 
   grunt.registerTask('build:basic', [
-    'jsx:normal',
+    'build-modules',
     'version-check',
     'browserify:basic',
   ]);
   grunt.registerTask('build:addons', [
-    'jsx:normal',
+    'build-modules',
     'browserify:addons',
   ]);
   grunt.registerTask('build:transformer', [
-    'jsx:normal',
+    'build-modules',
     'browserify:transformer',
   ]);
   grunt.registerTask('build:min', [
-    'jsx:normal',
+    'build-modules',
     'version-check',
     'browserify:min',
   ]);
   grunt.registerTask('build:addons-min', [
-    'jsx:normal',
+    'build-modules',
     'browserify:addonsMin',
   ]);
   grunt.registerTask('build:npm-react', [
     'version-check',
-    'jsx:normal',
+    'build-modules',
     'npm-react:release',
   ]);
 
@@ -102,10 +119,10 @@ module.exports = function(grunt) {
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
-  // in order so we can take advantage of that and only run jsx:normal once.
+  // in order so we can take advantage of that and only run build-modules once.
   grunt.registerTask('build', [
     'delete-build-modules',
-    'jsx:normal',
+    'build-modules',
     'version-check',
     'browserify:basic',
     'browserify:transformer',
@@ -140,6 +157,10 @@ module.exports = function(grunt) {
     'release:docs',
     'release:msg',
   ]);
+
+  grunt.registerTask('build-modules', function() {
+    spawnGulp(['react:modules'], null, this.async());
+  });
 
   // The default task - build - to keep setup easy.
   grunt.registerTask('default', ['build']);

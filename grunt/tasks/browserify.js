@@ -15,15 +15,18 @@ module.exports = function() {
   config.transforms = config.transforms || [];
   config.plugins = config.plugins || [];
   config.after = config.after || [];
+  config.paths = config.paths || [];
 
   // create the bundle we'll work with
   var entries = grunt.file.expand(config.entries);
+  var paths = grunt.file.expand(config.paths);
 
   // Extract other options
   var options = {
     entries: entries,
     debug: config.debug, // sourcemaps
     standalone: config.standalone, // global
+    paths: paths,
   };
 
   var bundle = browserify(options);

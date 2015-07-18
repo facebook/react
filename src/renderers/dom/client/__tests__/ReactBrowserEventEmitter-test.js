@@ -11,17 +11,6 @@
 
 'use strict';
 
-require('mock-modules')
-    .dontMock('EventPluginHub')
-    .dontMock('ReactMount')
-    .dontMock('ReactBrowserEventEmitter')
-    .dontMock('ReactInstanceHandles')
-    .dontMock('EventPluginHub')
-    .dontMock('TapEventPlugin')
-    .dontMock('TouchEventUtils')
-    .dontMock('keyOf');
-
-
 var keyOf = require('keyOf');
 var mocks = require('mocks');
 

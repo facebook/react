@@ -35,23 +35,31 @@
     "browserify": "^9.0.3",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
+    "del": "^1.2.0",
     "derequire": "^2.0.0",
     "envify": "^3.0.0",
     "eslint": "^0.24.1",
     "eslint-plugin-react": "^2.5.0",
     "eslint-plugin-react-internal": "file:eslint-rules",
     "eslint-tester": "^0.7.0",
+    "fbjs": "^0.1.0-alpha.0",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
     "grunt-compare-size": "^0.4.0",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-compress": "^0.13.0",
     "grunt-jest": "^0.1.3",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.1.0",
+    "gulp-flatten": "^0.1.0",
+    "gulp-util": "^3.0.5",
     "gzip-js": "~0.3.2",
     "jest-cli": "^0.4.13",
     "object-assign": "^3.0.0",
     "optimist": "^0.6.1",
     "platform": "^1.1.0",
+    "run-sequence": "^1.1.0",
+    "through2": "^2.0.0",
     "tmp": "~0.0.18",
     "typescript": "~1.4.0",
     "uglify-js": "^2.4.23",
@@ -66,21 +74,20 @@
   },
   "scripts": {
     "build": "grunt build",
-    "jest": "jest",
+    "jest": "test",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
-    "test": "jest"
+    "test": "NODE_ENV=test jest"
   },
   "jest": {
     "modulePathIgnorePatterns": [
       "/.module-cache/",
-      "/node_modules/",
       "/react/build/"
     ],
     "persistModuleRegistryBetweenSpecs": true,
     "rootDir": "",
-    "scriptPreprocessor": "jest/preprocessor.js",
-    "setupEnvScriptFile": "jest/environment.js",
+    "scriptPreprocessor": "scripts/jest/preprocessor.js",
+    "setupEnvScriptFile": "scripts/jest/environment.js",
     "testFileExtensions": [
       "coffee",
       "js",
@@ -88,7 +95,8 @@
     ],
     "testPathDirs": [
       "<rootDir>/eslint-rules",
-      "<rootDir>/src"
+      "<rootDir>/src",
+      "node_modules/fbjs"
     ],
     "unmockedModulePathPatterns": [
       ""
