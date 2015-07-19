@@ -581,7 +581,7 @@
 
 ### JSX
 
-* Improved compatability with other coding styles (specifically, multiple assignments with a single `var`).
+* Improved compatibility with other coding styles (specifically, multiple assignments with a single `var`).
 
 ### react-tools
 
