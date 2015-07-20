@@ -132,7 +132,6 @@ function msg() {
     '* put files on CDN',
     '* push changes to git repositories',
     '* publish npm module (`npm publish .`)',
-    '* publish gem (`gem push react-source-' + VERSION + '.gem`)',
     '* announce it on FB/Twitter/mailing list',
   ].forEach(function(ln) {
     grunt.log.writeln(ln);

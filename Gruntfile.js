@@ -65,10 +65,6 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
   grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
 
-  var gemReactSourceTasks = require('./grunt/tasks/gem-react-source');
-  grunt.registerTask('gem-react-source:release', gemReactSourceTasks.buildRelease);
-  grunt.registerTask('gem-react-source:pack', gemReactSourceTasks.packRelease);
-
   grunt.registerTask('version-check', require('./grunt/tasks/version-check'));
 
   grunt.registerTask('build:basic', [
@@ -97,10 +93,6 @@ module.exports = function(grunt) {
     'version-check',
     'jsx:normal',
     'npm-react:release',
-  ]);
-  grunt.registerTask('build:gem-react-source', [
-    'build',
-    'gem-react-source:release',
   ]);
 
   grunt.registerTask('fasttest', function() {
@@ -142,8 +134,6 @@ module.exports = function(grunt) {
     'release:setup',
     'clean',
     'build',
-    'gem-react-source:release',
-    'gem-react-source:pack',
     'release:bower',
     'release:starter',
     'compress',
