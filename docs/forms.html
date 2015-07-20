@@ -493,7 +493,7 @@
 <p>Since this method describes the view at any point in time, the value of the text input should <em>always</em> be <code>Untitled</code>.</p>
 <h3><a class="anchor" name="why-textarea-value"></a>Why Textarea Value? <a class="hash-link" href="#why-textarea-value">#</a></h3>
 <p>In HTML, the value of <code>&lt;textarea&gt;</code> is usually set using its children:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- counterexample: DO NOT DO THIS! --&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- antipattern: DO NOT DO THIS! --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>This is the description.<span class="nt">&lt;/textarea&gt;</span>
 </code></pre></div>
 <p>For HTML, this easily allows developers to supply multiline values. However, since React is JavaScript, we do not have string limitations and can use <code>\n</code> if we want newlines. In a world where we have <code>value</code> and <code>defaultValue</code>, it is ambiguous what role children play. For this reason, you should not use children when setting <code>&lt;textarea&gt;</code> values:</p>

@@ -442,7 +442,7 @@
 </blockquote>
 
 <p>This means that you should never &quot;hold onto&quot; something that you return from <code>render()</code> and then expect it to be anything meaningful.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="c1">// counterexample: DO NOT DO THIS!</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="c1">// antipattern: This won&#39;t work.</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">myInput</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="o">/&gt;</span><span class="p">;</span>          <span class="c1">// I&#39;m going to try to call methods on this</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">rememberThisInput</span> <span class="o">=</span> <span class="nx">myInput</span><span class="p">;</span> <span class="c1">// input at some point in the future! YAY!</span>
@@ -454,7 +454,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>In this counterexample, the <code>&lt;input /&gt;</code> is merely a <em>description</em> of an <code>&lt;input /&gt;</code>. This description is used to create a <em>real</em> <strong>backing instance</strong> for the <code>&lt;input /&gt;</code>.</p>
+<p>In this example, the <code>&lt;input /&gt;</code> is merely a <em>description</em> of an <code>&lt;input /&gt;</code>. This description is used to create a <em>real</em> <strong>backing instance</strong> for the <code>&lt;input /&gt;</code>.</p>
 
 <p>So how do we talk to the <em>real</em> backing instance of the input?</p>
 <h2><a class="anchor" name="the-ref-string-attribute"></a>The ref String Attribute <a class="hash-link" href="#the-ref-string-attribute">#</a></h2>
