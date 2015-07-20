@@ -37,7 +37,7 @@
     "coffee-script": "^1.8.0",
     "derequire": "^2.0.0",
     "envify": "^3.0.0",
-    "eslint": "^0.22.1",
+    "eslint": "^0.24.1",
     "eslint-plugin-react": "^2.5.0",
     "eslint-plugin-react-internal": "file:eslint-rules",
     "eslint-tester": "^0.7.0",
