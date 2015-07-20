@@ -34,7 +34,7 @@ Like all DOM events, the `onChange` prop is supported on all native components a
 
 ## Controlled Components
 
-An `<input>` with `value` set is a *controlled* component. In a controlled `<input>`, the value of the rendered element will always reflect the `value` prop. For example:
+A **controlled** `<input>` has a `value` prop. Rendering a controlled `<input>` will reflect the value of the `value` prop.
 
 ```javascript
   render: function() {
@@ -42,7 +42,7 @@ An `<input>` with `value` set is a *controlled* component. In a controlled `<inp
   }
 ```
 
-This will render an input that always has a value of `Hello!`. Any user input will have no effect on the rendered element because React has declared the value to be `Hello!`. If you wanted to update the value in response to user input, you could use the `onChange` event:
+User input will have no effect on the rendered element because React has declared the value to be `Hello!`. To update the value in response to user input, you could use the `onChange` event:
 
 ```javascript
   getInitialState: function() {
@@ -52,12 +52,17 @@ This will render an input that always has a value of `Hello!`. Any user input wi
     this.setState({value: event.target.value});
   },
   render: function() {
-    var value = this.state.value;
-    return <input type="text" value={value} onChange={this.handleChange} />;
+    return (
+      <input
+        type="text"
+        value={this.state.value}
+        onChange={this.handleChange}
+      />
+    );
   }
 ```
 
-In this example, we are simply accepting the newest value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
+In this example, we are accepting the value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
 
 ```javascript
   handleChange: function(event) {
@@ -65,7 +70,9 @@ In this example, we are simply accepting the newest value provided by the user a
   }
 ```
 
-This would accept user input but truncate the value to the first 140 characters.
+This would accept user input and truncate the value to the first 140 characters.
+
+A **Controlled** component maintains its own internal state; the component renders purely based on props.
 
 ### Potential Issues With Checkboxes and Radio Buttons
 
@@ -73,7 +80,7 @@ Be aware that, in an attempt to normalize change handling for checkbox and radio
 
 ## Uncontrolled Components
 
-An `<input>` that does not supply a `value` (or sets it to `null`) is an *uncontrolled* component. In an uncontrolled `<input>`, the value of the rendered element will reflect the user's input. For example:
+An `<input>` without a `value` property is an *uncontrolled* component:
 
 ```javascript
   render: function() {
@@ -82,6 +89,8 @@ An `<input>` that does not supply a `value` (or sets it to `null`) is an *uncont
 ```
 
 This will render an input that starts off with an empty value. Any user input will be immediately reflected by the rendered element. If you wanted to listen to updates to the value, you could use the `onChange` event just like you can with controlled components.
+
+An **uncontrolled** component maintains its own internal state.
 
 ### Default Value
 
