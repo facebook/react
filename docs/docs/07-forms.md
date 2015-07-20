@@ -129,7 +129,7 @@ Since this method describes the view at any point in time, the value of the text
 In HTML, the value of `<textarea>` is usually set using its children:
 
 ```html
-  <!-- counterexample: DO NOT DO THIS! -->
+  <!-- antipattern: DO NOT DO THIS! -->
   <textarea name="description">This is the description.</textarea>
 ```
 
