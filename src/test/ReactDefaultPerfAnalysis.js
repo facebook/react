@@ -20,11 +20,11 @@ var DOM_OPERATION_TYPES = {
   INSERT_MARKUP: 'set innerHTML',
   MOVE_EXISTING: 'move',
   REMOVE_NODE: 'remove',
+  SET_MARKUP: 'set innerHTML',
   TEXT_CONTENT: 'set textContent',
   'updatePropertyByID': 'update attribute',
   'deletePropertyByID': 'delete attribute',
   'updateStylesByID': 'update styles',
-  'updateInnerHTMLByID': 'set innerHTML',
   'dangerouslyReplaceNodeWithMarkupByID': 'replace',
 };
 

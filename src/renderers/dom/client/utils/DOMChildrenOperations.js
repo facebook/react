@@ -15,6 +15,7 @@
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
+var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 var invariant = require('invariant');
 
@@ -123,10 +124,16 @@ var DOMChildrenOperations = {
             update.toIndex
           );
           break;
+        case ReactMultiChildUpdateTypes.SET_MARKUP:
+          setInnerHTML(
+            update.parentNode,
+            update.content
+          );
+          break;
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
           setTextContent(
             update.parentNode,
-            update.textContent
+            update.content
           );
           break;
         case ReactMultiChildUpdateTypes.REMOVE_NODE:

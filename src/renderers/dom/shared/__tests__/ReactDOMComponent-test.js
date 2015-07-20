@@ -309,6 +309,30 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.innerHTML).toEqual('adieu');
     });
 
+    it('should transition from innerHTML to children in nested el', function() {
+      var container = document.createElement('div');
+      React.render(
+        <div><div dangerouslySetInnerHTML={{__html: 'bonjour'}} /></div>,
+        container
+      );
+
+      expect(container.textContent).toEqual('bonjour');
+      React.render(<div><div><span>adieu</span></div></div>, container);
+      expect(container.textContent).toEqual('adieu');
+    });
+
+    it('should transition from children to innerHTML in nested el', function() {
+      var container = document.createElement('div');
+      React.render(<div><div><span>adieu</span></div></div>, container);
+
+      expect(container.textContent).toEqual('adieu');
+      React.render(
+        <div><div dangerouslySetInnerHTML={{__html: 'bonjour'}} /></div>,
+        container
+      );
+      expect(container.textContent).toEqual('bonjour');
+    });
+
     it('should not incur unnecessary DOM mutations', function() {
       var container = document.createElement('div');
       React.render(<div value="" />, container);

@@ -15,6 +15,7 @@ describe('ReactDOMIDOperations', function() {
   var DOMPropertyOperations = require('DOMPropertyOperations');
   var ReactDOMIDOperations = require('ReactDOMIDOperations');
   var ReactMount = require('ReactMount');
+  var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
   var keyOf = require('keyOf');
 
   it('should disallow updating special properties', function() {
@@ -44,9 +45,17 @@ describe('ReactDOMIDOperations', function() {
 
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 
-    ReactDOMIDOperations.updateInnerHTMLByID(
-      'testID',
-      html
+    ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
+      [{
+        parentID: 'testID',
+        parentNode: null,
+        type: ReactMultiChildUpdateTypes.SET_MARKUP,
+        markupIndex: null,
+        content: html,
+        fromIndex: null,
+        toIndex: null,
+      }],
+      []
     );
 
     expect(

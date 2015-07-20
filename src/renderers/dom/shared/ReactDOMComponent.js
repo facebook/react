@@ -884,10 +884,7 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        BackendIDOperations.updateInnerHTMLByID(
-          this._rootNodeID,
-          nextHtml
-        );
+        this.updateMarkup('' + nextHtml);
       }
     } else if (nextChildren != null) {
       this.updateChildren(nextChildren, transaction, context);

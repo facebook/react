@@ -53,14 +53,14 @@ var markupQueue = [];
  * @param {number} toIndex Destination index.
  * @private
  */
-function enqueueMarkup(parentID, markup, toIndex) {
+function enqueueInsertMarkup(parentID, markup, toIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
     parentID: parentID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
     markupIndex: markupQueue.push(markup) - 1,
-    textContent: null,
+    content: null,
     fromIndex: null,
     toIndex: toIndex,
   });
@@ -81,7 +81,7 @@ function enqueueMove(parentID, fromIndex, toIndex) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
     markupIndex: null,
-    textContent: null,
+    content: null,
     fromIndex: fromIndex,
     toIndex: toIndex,
   });
@@ -101,8 +101,28 @@ function enqueueRemove(parentID, fromIndex) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.REMOVE_NODE,
     markupIndex: null,
-    textContent: null,
+    content: null,
     fromIndex: fromIndex,
+    toIndex: null,
+  });
+}
+
+/**
+ * Enqueues setting the markup of a node.
+ *
+ * @param {string} parentID ID of the parent component.
+ * @param {string} markup Markup that renders into an element.
+ * @private
+ */
+function enqueueSetMarkup(parentID, markup) {
+  // NOTE: Null values reduce hidden classes.
+  updateQueue.push({
+    parentID: parentID,
+    parentNode: null,
+    type: ReactMultiChildUpdateTypes.SET_MARKUP,
+    markupIndex: null,
+    content: markup,
+    fromIndex: null,
     toIndex: null,
   });
 }
@@ -121,7 +141,7 @@ function enqueueTextContent(parentID, textContent) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
     markupIndex: null,
-    textContent: textContent,
+    content: textContent,
     fromIndex: null,
     toIndex: null,
   });
@@ -224,6 +244,38 @@ var ReactMultiChild = {
         }
         // Set new text content.
         this.setTextContent(nextContent);
+        errorThrown = false;
+      } finally {
+        updateDepth--;
+        if (!updateDepth) {
+          if (errorThrown) {
+            clearQueue();
+          } else {
+            processQueue();
+          }
+        }
+      }
+    },
+
+    /**
+     * Replaces any rendered children with a markup string.
+     *
+     * @param {string} nextMarkup String of markup.
+     * @internal
+     */
+    updateMarkup: function(nextMarkup) {
+      updateDepth++;
+      var errorThrown = true;
+      try {
+        var prevChildren = this._renderedChildren;
+        // Remove any rendered children.
+        ReactChildReconciler.unmountChildren(prevChildren);
+        for (var name in prevChildren) {
+          if (prevChildren.hasOwnProperty(name)) {
+            this._unmountChildByName(prevChildren[name], name);
+          }
+        }
+        this.setMarkup(nextMarkup);
         errorThrown = false;
       } finally {
         updateDepth--;
@@ -355,7 +407,7 @@ var ReactMultiChild = {
      * @protected
      */
     createChild: function(child, mountImage) {
-      enqueueMarkup(this._rootNodeID, mountImage, child._mountIndex);
+      enqueueInsertMarkup(this._rootNodeID, mountImage, child._mountIndex);
     },
 
     /**
@@ -376,6 +428,16 @@ var ReactMultiChild = {
      */
     setTextContent: function(textContent) {
       enqueueTextContent(this._rootNodeID, textContent);
+    },
+
+    /**
+     * Sets this markup string.
+     *
+     * @param {string} markup Markup to set.
+     * @protected
+     */
+    setMarkup: function(markup) {
+      enqueueSetMarkup(this._rootNodeID, markup);
     },
 
     /**
