@@ -131,13 +131,13 @@ React.createClass({
 
 ## 구원자 Immutable-js
 
-[Immutable-js](https://github.com/facebook/immutable-js)는 Lee Byron이 만들고 Facebook이 오픈소스화 한 Javascript 컬렉션 라이브러리입니다. 이는 *구조의 공유(structural sharing)*를 통해 *불변의 영속적인(immutable persistent)* 컬렉션을 제공합니다. 이러한 속성이 무엇을 의미하는지 살펴보죠:
+[Immutable-js](https://github.com/facebook/immutable-js)는 Lee Byron이 만들고 Facebook이 오픈소스화 한 JavaScript 컬렉션 라이브러리입니다. 이는 *구조의 공유(structural sharing)*를 통해 *불변의 영속적인(immutable persistent)* 컬렉션을 제공합니다. 이러한 속성이 무엇을 의미하는지 살펴보죠:
 
 * *불변성(Immutable)*: 컬렉션이 한번 생성되면, 이 후 다른 시점에 변경될 수 없습니다.
 * *영속성(Persistent)*: 새로운 컬렉션이 이전의 컬렉션이나 셋(set) 같은 뮤테이션(mutation)에서 생성될 수 있습니다. 기존의 컬렉션은 새로운 컬렉션이 생성된 후에도 여전히 유효합니다.
 * *구조의 공유(Structural Sharing)*: 새로운 컬렉션은 가능한 한 원래의 컬렉션과 같은 구조를 사용해 생성됩니다. 공간 효율성과 적절한 성능을 위해 복사를 최소화합니다.
 
-불변성은 변경의 추적을 비용을 줄여줍니다; 변경은 항상 새로운 객체에만 발생하기 때문에 객체에 대한 참조가 변경될 때만 확인하면 됩니다. 예를 들어 일반적인 JavaScript 코드에서는:
+불변성은 변경의 추적을 비용을 줄여줍니다; 변경은 항상 새로운 객체에만 발생하기 때문에 객체에 대한 참조가 변경될 때만 확인하면 됩니다. 예를 들어 일반적인 이 JavaScript 코드에서는:
 
 ```javascript
 var x = { foo: "bar" };

@@ -33,7 +33,7 @@ React.createElement("div", {id: if (condition) { 'msg' }}, "Hello World!");
 React.render(<div id={condition ? 'msg' : ''}>Hello World!</div>, mountNode);
 ```
 
-삼항 연산자가 충분하지 않다면 `if` 문을 사용해 어떤 컴포넌트가 사용될 지 결정할 수 있습니다.
+삼항 연산자가 충분하지 않다면 JSX구문 밖에서 `if` 문을 사용해 어떤 컴포넌트가 사용될 지 결정할 수 있습니다.
 
 ```js
 var loginButton;
@@ -48,7 +48,34 @@ return (
     <Home />
     {loginButton}
   </nav>
-)
+);
 ```
+
+"inline"을 좀더 선호한다면, JSX _안에_ [즉시 평가되는 함수 표현식](https://en.wikipedia.org/wiki/Immediately-invoked_function_expression)을 선언하세요.
+
+```js
+return (
+  <section>
+    <h1>Color</h1>
+    <h3>Name</h3>
+    <p>{this.state.color || "white"}</p>
+    <h3>Hex</h3>
+    <p>
+      {() => {
+        switch (this.state.color) {
+          case "red":   return "#FF0000";
+          case "green": return "#00FF00";
+          case "blue":  return "#0000FF";
+          default:      return "#FFFFFF";
+        }
+      }()}
+    </p>
+  </section>
+);
+```
+
+> 주의:
+>
+> 위의 예제에 있는 ES6 [화살표 함수](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)는 `this`의 값을 구문적으로 바인드하기위해 사용되었습니다.
 
 [JSX 컴파일러](/react/jsx-compiler.html)로 지금 바로 사용해보세요.

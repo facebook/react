@@ -83,7 +83,7 @@ React는 이 프로세스에 훅을 지정할 수 있는 생명주기 메소드�
 ### Updating
 
 * `componentWillReceiveProps(object nextProps)`는 마운트된 컴포넌트가 새로운 props을 받을 때 호출됩니다. 이 메소드는 `this.props`와 `nextProps`을 비교하여 `this.setState()`를 사용해 상태 변환을 수행하는데 사용되야 합니다.
-* `shouldComponentUpdate(object nextProps, object nextState): boolean`는 컴포넌트가 어떤 변경이 DOM의 업데이트를 보증하는지 결정해야 할 때 호출됩니다. 최적화하려면, React가 업데이트를 무시해야할 때 `this.props`와 `nextProps`를, `this.state`와 `nextState`를 비교해 false를 리턴하면 됩니다. 
+* `shouldComponentUpdate(object nextProps, object nextState): boolean`는 컴포넌트가 어떤 변경이 DOM의 업데이트를 보증하는지 결정해야 할 때 호출됩니다. 최적화하려면, React가 업데이트를 무시해야할 때 `this.props`와 `nextProps`를, `this.state`와 `nextState`를 비교해 `false`를 리턴하면 됩니다.
 * `componentWillUpdate(object nextProps, object nextState)`는 업데이트가 발생하기 직전에 호출됩니다. 이 시점에는 `this.setState()`를 호출할 수 없습니다.
 * `componentDidUpdate(object prevProps, object prevState)`는 업데이트가 발생한 후 즉시 호출됩니다.
 
