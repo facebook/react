@@ -13,6 +13,8 @@
 
 var adler32 = require('adler32');
 
+var TAG_END = /\/?>/;
+
 var ReactMarkupChecksum = {
   CHECKSUM_ATTR_NAME: 'data-react-checksum',
 
@@ -25,7 +27,7 @@ var ReactMarkupChecksum = {
 
     // Add checksum (handle both parent tags and self-closing tags)
     return markup.replace(
-      /\/?>/,
+      TAG_END,
       ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="' + checksum + '"$&'
     );
   },
