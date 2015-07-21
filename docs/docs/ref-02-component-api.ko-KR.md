@@ -67,11 +67,11 @@ replaceState(object nextState[, function callback])
 forceUpdate([function callback])
 ```
 
-`render()` 메소드가 `this.props`나 `this.state`가 아닌 다른 곳에서 데이터를 읽어오는 경우 `forceUpdate()`를 호출하여 React가 `render()`를 다시 실행하도록 만들 수 있습니다. `this.state`를 직접 변경하는 경우에도 `forceUpdate()`를 호출해야 합니다.
+기본적으로, 컴포넌트의 state나 props가 변경되면, 컴포넌트는 다시 렌더됩니다. 하지만 이런 변경이 묵시적이거나(예를들어 객체의 변경 없이 깊이 있는 데이터만 변경된 경우) `render()` 함수가 다른 값에 의존하는 경우, `forceUpdate()`를 호출해 React에게 `render()`를 다시 실행할 필요가 있다고 알릴 수 있습니다.
 
 `forceUpdate()`를 호출하면 `shouldComponentUpdate()`를 생략하고 해당 컴포넌트 `render()` 함수가 호출됩니다. 각 자식 컴포넌트에 대해서는 `shouldComponentUpdate()`를 포함해 보통 라이프 사이클 메서드를 호출합니다. React는 마크업이 변경된 경우에만 DOM을 업데이트합니다.
 
-특별한 경우가 아니면 `forceUpdate()`는 되도록 피하시고 `render()`에서는 `this.props`와 `this.state`에서만 읽어오세요. 그렇게 하는 것이 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.
+특별한 경우가 아니면 `forceUpdate()`는 되도록 피하시고 `render()`에서는 `this.props`와 `this.state`에서만 읽어오세요. 그렇게 하는 것이 컴포넌트를 "순수"하게 하고 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.
 
 
 ### getDOMNode
@@ -110,11 +110,11 @@ setProps(object nextProps[, function callback])
 
 외부 JavaScript 애플리케이션과 연동하는 경우 `React.render()`로 렌더링된 React 컴포넌트에 변경을 알리고 싶을 때가 있습니다.
 
-최상위 컴포넌트를 업데이트할 때 `React.render()`를 같은 노드에 다시 호출하는 것이 바람직한 방법이지만, `setProps()`를 호출해서 props를 바꾸고 재렌더링을 발생시킬 수 있습니다. 콜백 함수를 추가로 넘기면 `setProps`가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.
+최상위 컴포넌트에서 `setProps()`를 호출하면 프로퍼티를 변경하고 렌더를 다시 발생합니다. 거기에 콜백 함수를 넘기면 `setProps`가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.
 
 > 주의:
 >
-> 가능하다면 `React.render()`를 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)
+> 가능하다면 이것 대신 `React.render()`를 같은 노드에서 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)
 >
 > 이 메소드는 최상위 컴포넌트에만 호출 가능합니다. 다시 말해, `React.render()`에 바로 넘긴 컴포넌트에서만 사용할 수 있고 자식에서는 불가능합니다. 자식 컴포넌트에 `setProps()`를 사용하고 싶다면, 그 대신 반응적인 업데이트의 장점을 활용하여 `render()` 안에서 자식 컴포넌트를 만들 때 새로운 prop을 넘기세요.
 >
