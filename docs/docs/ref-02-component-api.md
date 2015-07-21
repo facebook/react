@@ -66,11 +66,11 @@ Like `setState()` but deletes any pre-existing state keys that are not in nextSt
 forceUpdate([function callback])
 ```
 
-If your `render()` method reads from something other than `this.props` or `this.state`, you'll need to tell React when it needs to re-run `render()` by calling `forceUpdate()`. You'll also need to call `forceUpdate()` if you mutate `this.state` directly.
+By default, when your component's state or props change, your component will re-render. However, if these change implicitly (eg: data deep within an object changes without changing the object itself) or if your `render()` method depends on some other data, you can tell React that it needs to re-run `render()` by calling `forceUpdate()`.
 
 Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. This will trigger the normal lifecycle methods for child components, including the `shouldComponentUpdate()` method of each child. React will still only update the DOM if the markup changes.
 
-Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your application much simpler and more efficient.
+Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your component "pure" and your application much simpler and more efficient.
 
 
 ### getDOMNode
@@ -109,11 +109,11 @@ setProps(object nextProps[, function callback])
 
 When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.render()`.
 
-Though calling `React.render()` again on the same node is the preferred way to update a root-level component, you can also call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
+Calling `setProps()` on a root-level component will change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
 
 > Note:
 >
-> When possible, the declarative approach of calling `React.render()` again is preferred; it tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
+> When possible, the declarative approach of calling `React.render()` again on the same node is preferred instead. It tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
 >
 > This method can only be called on a root-level component. That is, it's only available on the component passed directly to `React.render()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
 >
