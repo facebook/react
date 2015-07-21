@@ -29,7 +29,8 @@
     "jstransform": "^11.0.0"
   },
   "devDependencies": {
-    "babel": "^5.5.5",
+    "babel": "~5.6.23",
+    "babel-core": "~5.6.20",
     "babel-eslint": "^3.1.14",
     "benchmark": "^1.0.0",
     "browserify": "^9.0.3",
