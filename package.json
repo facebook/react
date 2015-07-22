@@ -3,8 +3,8 @@
   "description": "A set of complementary tools to React, including the JSX transformer.",
   "version": "0.14.0-beta1",
   "keywords": [
-    "react",
     "jsx",
+    "react",
     "transformer",
     "view"
   ],
@@ -12,8 +12,8 @@
   "bugs": "https://github.com/facebook/react/issues",
   "license": "BSD-3-Clause",
   "files": [
-    "main.js",
     "bin/jsx",
+    "main.js",
     "src/"
   ],
   "main": "main.js",
@@ -54,7 +54,7 @@
     "optimist": "^0.6.1",
     "platform": "^1.1.0",
     "tmp": "~0.0.18",
-    "typescript": "^1.4.0",
+    "typescript": "^1.5.3",
     "uglify-js": "^2.4.23",
     "uglifyify": "^3.0.1"
   },
@@ -66,30 +66,30 @@
     "version": 7
   },
   "scripts": {
-    "test": "jest",
+    "build": "grunt build",
     "jest": "jest",
-    "lint": "grunt lint",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
-    "build": "grunt build"
+    "lint": "grunt lint",
+    "test": "jest"
   },
   "jest": {
+    "modulePathIgnorePatterns": [
+      "/.module-cache/",
+      "/node_modules/",
+      "/react/build/"
+    ],
+    "persistModuleRegistryBetweenSpecs": true,
     "rootDir": "",
     "scriptPreprocessor": "jest/preprocessor.js",
     "setupEnvScriptFile": "jest/environment.js",
-    "persistModuleRegistryBetweenSpecs": true,
     "testFileExtensions": [
-      "js",
       "coffee",
+      "js",
       "ts"
     ],
-    "modulePathIgnorePatterns": [
-      "/react/build/",
-      "/node_modules/",
-      "/.module-cache/"
-    ],
     "testPathDirs": [
-      "<rootDir>/src",
-      "<rootDir>/eslint-rules"
+      "<rootDir>/eslint-rules",
+      "<rootDir>/src"
     ],
     "unmockedModulePathPatterns": [
       ""
