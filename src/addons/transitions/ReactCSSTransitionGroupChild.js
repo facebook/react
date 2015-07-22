@@ -88,9 +88,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
     // Need to do this to actually trigger a transition.
     if ( REQUEST_ANIMATION_FRAME ) {
-        REQUEST_ANIMATION_FRAME(this.queueClass.bind(this, activeClassName));
+      REQUEST_ANIMATION_FRAME(this.queueClass.bind(this, activeClassName));
     } else {
-        this.queueClass(activeClassName);
+      this.queueClass(activeClassName);
     }
 
     if (__DEV__) {
