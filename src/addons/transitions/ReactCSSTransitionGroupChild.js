@@ -85,7 +85,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
     CSSCore.addClass(node, className);
 
     // Need to do this to actually trigger a transition.
-    this.queueClass(activeClassName);
+    window.requestAnimationFrame(this.queueClass.bind(this, activeClassName));
 
     if (__DEV__) {
       noEventTimeout = setTimeout(noEventListener, NO_EVENT_TIMEOUT);
