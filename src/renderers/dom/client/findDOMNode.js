@@ -12,7 +12,7 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactPureFunction = require('ReactPureFunction');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 
@@ -27,19 +27,13 @@ var warning = require('warning');
  */
 function findDOMNode(componentOrElement) {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
-    if (owner !== null) {
-      warning(
-        owner._warnedAboutRefsInRender,
-        '%s is accessing getDOMNode or findDOMNode inside its render(). ' +
-        'render() should be a pure function of props and state. It should ' +
-        'never access something that requires stale data from the previous ' +
-        'render, such as refs. Move this logic to componentDidMount and ' +
-        'componentDidUpdate instead.',
-        owner.getName() || 'A component'
-      );
-      owner._warnedAboutRefsInRender = true;
-    }
+    ReactPureFunction.assertSideEffect(
+      'Do not access getDOMNode or findDOMNode inside of render(). ' +
+      'render() should be a pure function of props and state. It should ' +
+      'never access something that requires stale data from the previous ' +
+      'render, such as refs. Move this logic to componentDidMount and ' +
+      'componentDidUpdate instead.'
+    );
   }
   if (componentOrElement == null) {
     return null;

@@ -59,7 +59,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('warns for keys for arrays of elements with owner info', function() {
+  it('warns for keys for arrays of elements passed from an owner', function() {
     spyOn(console, 'error');
 
     class InnerComponent {
@@ -83,8 +83,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop. ' +
-      'Check the render method of InnerComponent. ' +
-      'It was passed a child from ComponentWrapper. '
+      'Check the render method of InnerComponent. '
     );
   });
 

@@ -13,7 +13,6 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -47,7 +46,10 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-    CurrentOwner: ReactCurrentOwner,
+    // We want to stop tracking owner. We'll leave that responsibility to
+    // the devtools. TODO: Expose before/after render hooks that enable the
+    // devtools this capability.
+    CurrentOwner: { current: null},
     InstanceHandles: ReactInstanceHandles,
     Mount: ReactMount,
     Reconciler: ReactReconciler,

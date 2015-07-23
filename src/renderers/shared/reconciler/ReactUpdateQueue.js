@@ -11,9 +11,9 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactPureFunction = require('ReactPureFunction');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
@@ -26,12 +26,10 @@ function enqueueUpdate(internalInstance) {
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   if (__DEV__) {
-    warning(
-      ReactCurrentOwner.current == null,
-      '%s(...): Cannot update during an existing state transition ' +
-      '(such as within `render`). Render methods should be a pure function ' +
-      'of props and state.',
-      callerName
+    ReactPureFunction.assertSideEffect(
+      'Cannot ' + callerName + ' during an existing state transition (such ' +
+      'as within `render`). Render methods should be a pure function of ' +
+      'props and state.'
     );
   }
 
@@ -72,19 +70,13 @@ var ReactUpdateQueue = {
    */
   isMounted: function(publicInstance) {
     if (__DEV__) {
-      var owner = ReactCurrentOwner.current;
-      if (owner !== null) {
-        warning(
-          owner._warnedAboutRefsInRender,
-          '%s is accessing isMounted inside its render() function. ' +
-          'render() should be a pure function of props and state. It should ' +
-          'never access something that requires stale data from the previous ' +
-          'render, such as refs. Move this logic to componentDidMount and ' +
-          'componentDidUpdate instead.',
-          owner.getName() || 'A component'
-        );
-        owner._warnedAboutRefsInRender = true;
-      }
+      ReactPureFunction.assertSideEffect(
+        'Do not access isMounted inside of the render() function. ' +
+        'render() should be a pure function of props and state. It should ' +
+        'never access something that requires stale data from the previous ' +
+        'render, such as refs. Move this logic to componentDidMount and ' +
+        'componentDidUpdate instead.'
+      );
     }
     var internalInstance = ReactInstanceMap.get(publicInstance);
     if (internalInstance) {

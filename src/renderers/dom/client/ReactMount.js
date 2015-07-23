@@ -13,7 +13,6 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -21,6 +20,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
+var ReactPureFunction = require('ReactPureFunction');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 
@@ -441,15 +441,14 @@ var ReactMount = {
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
     // verify that that's the case.
-    warning(
-      ReactCurrentOwner.current == null,
-      '_renderNewRootComponent(): Render methods should be a pure function ' +
-      'of props and state; triggering nested component updates from ' +
-      'render is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate. Check the render method of %s.',
-      ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
-        'ReactCompositeComponent'
-    );
+    if (__DEV__) {
+      ReactPureFunction.assertSideEffect(
+        'Do not render new trees within render(). Render methods should be a ' +
+        'pure function of props and state; triggering nested component ' +
+        'updates from render is not allowed. If necessary, trigger nested ' +
+        'updates in componentDidUpdate.'
+      );
+    }
 
     var componentInstance = instantiateReactComponent(nextElement, null);
     var reactRootID = ReactMount._registerComponent(
@@ -650,15 +649,14 @@ var ReactMount = {
     // _renderValidatedComponent) assume that calls to render aren't nested;
     // verify that that's the case. (Strictly speaking, unmounting won't cause a
     // render but we still don't expect to be in a render call here.)
-    warning(
-      ReactCurrentOwner.current == null,
-      'unmountComponentAtNode(): Render methods should be a pure function ' +
-      'of props and state; triggering nested component updates from render ' +
-      'is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate. Check the render method of %s.',
-      ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
-        'ReactCompositeComponent'
-    );
+    if (__DEV__) {
+      ReactPureFunction.assertSideEffect(
+        'Do not call unmountComponentAtNode() inside of render(). Render' +
+        'should be a pure function of props and state; triggering nested ' +
+        'component updates from render is not allowed. If necessary, trigger ' +
+        'nested updates in componentDidUpdate.'
+      );
+    }
 
     invariant(
       container && (

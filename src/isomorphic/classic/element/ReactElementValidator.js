@@ -104,9 +104,8 @@ function validateExplicitKey(element, parentType) {
   warning(
     false,
     'Each child in an array or iterator should have a unique "key" prop.' +
-    '%s%s%s',
+    '%s%s',
     addenda.parentOrOwner || '',
-    addenda.childOwner || '',
     addenda.url || ''
   );
 }
@@ -169,19 +168,7 @@ function getAddendaForKeyUse(messageType, element, parentType) {
       parentName ? ` Check the React.render call using <${parentName}>.` :
       null,
     url: ' See https://fb.me/react-warning-keys for more information.',
-    childOwner: null,
   };
-
-  // Usually the current owner is the offender, but if it accepts children as a
-  // property, it may be the creator of the child that's responsible for
-  // assigning it a key.
-  if (element &&
-      element._owner &&
-      element._owner !== ReactCurrentOwner.current) {
-    // Give the component that originally created this child.
-    addenda.childOwner =
-      ` It was passed a child from ${getName(element._owner)}.`;
-  }
 
   return addenda;
 }
