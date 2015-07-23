@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOM
+ * @providesModule ReactDOMFactories
  * @typechecks static-only
  */
 
@@ -36,7 +36,7 @@ function createDOMFactory(tag) {
  *
  * @public
  */
-var ReactDOM = mapObject({
+var ReactDOMFactories = mapObject({
   a: 'a',
   abbr: 'abbr',
   address: 'address',
@@ -174,4 +174,4 @@ var ReactDOM = mapObject({
 
 }, createDOMFactory);
 
-module.exports = ReactDOM;
+module.exports = ReactDOMFactories;

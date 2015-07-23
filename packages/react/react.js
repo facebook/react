@@ -8,7 +8,7 @@ var deprecated = require('./lib/deprecated');
 // We want to warn once when any of these methods are used.
 if (process.env.NODE_ENV !== 'production') {
   var deprecations = {
-    // ReactDOMClient
+    // ReactDOM
     findDOMNode: deprecated(
       'findDOMNode',
       'react-dom',

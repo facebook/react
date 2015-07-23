@@ -1,1 +1,1 @@
-module.exports = require('react/lib/ReactDOMClient');
+module.exports = require('react/lib/ReactDOM');
