@@ -62,7 +62,7 @@ PooledClass.addPoolingTo(
 );
 
 function handleTopLevelImpl(bookKeeping) {
-  if (bookKeeping.nativeEvent.path) {
+  if (bookKeeping.nativeEvent.path && bookKeeping.nativeEvent.path.length > 1) {
     // New browsers have a path attribute on native events
     handleTopLevelWithPath(bookKeeping);
   } else {
