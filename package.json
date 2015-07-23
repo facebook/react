@@ -53,7 +53,7 @@
     "optimist": "^0.6.1",
     "platform": "^1.1.0",
     "tmp": "~0.0.18",
-    "typescript": "^1.4.0",
+    "typescript": "~1.4.0",
     "uglify-js": "^2.4.23",
     "uglifyify": "^3.0.1"
   },
