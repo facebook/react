@@ -15,6 +15,7 @@
  * CSS properties which accept numbers but are not in units of "px".
  */
 var isUnitlessNumber = {
+  animationIterationCount: true,
   boxFlex: true,
   boxFlexGroup: true,
   columnCount: true,
