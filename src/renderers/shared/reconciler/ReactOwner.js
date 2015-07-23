@@ -70,11 +70,10 @@ var ReactOwner = {
   addComponentAsRefTo: function(component, ref, owner) {
     invariant(
       ReactOwner.isValidOwner(owner),
-      'addComponentAsRefTo(...): Only a ReactOwner can have refs. This ' +
-      'usually means that you\'re trying to add a ref to a component that ' +
-      'doesn\'t have an owner (that is, was not created inside of another ' +
-      'component\'s `render` method). Try rendering this component inside of ' +
-      'a new top-level component which will hold the ref.'
+      'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
+      'be adding a ref to a component that was not created inside a component\'s ' +
+      '`render` method, or you have multiple copies of React loaded ' +
+      '(details: https://fb.me/react-refs-must-have-owner).'
     );
     owner.attachRef(ref, component);
   },
@@ -91,11 +90,10 @@ var ReactOwner = {
   removeComponentAsRefFrom: function(component, ref, owner) {
     invariant(
       ReactOwner.isValidOwner(owner),
-      'removeComponentAsRefFrom(...): Only a ReactOwner can have refs. This ' +
-      'usually means that you\'re trying to remove a ref from a component that ' +
-      'doesn\'t have an owner (that is, was not created inside of another ' +
-      'component\'s `render` method). Try rendering this component inside of ' +
-      'a new top-level component which will hold the ref.'
+      'removeComponentAsRefFrom(...): Only a ReactOwner can have refs. You might ' +
+      'be removing a ref to a component that was not created inside a component\'s ' +
+      '`render` method, or you have multiple copies of React loaded ' +
+      '(details: https://fb.me/react-refs-must-have-owner).'
     );
     // Check that `component` is still the current ref because we do not want to
     // detach the ref if another component stole it.
