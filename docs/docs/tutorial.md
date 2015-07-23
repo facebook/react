@@ -31,7 +31,7 @@ To get started using the tutorial, just start editing `public/index.html`.
 
 ### Getting started
 
-For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:
+For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up `public/index.html` in your favorite editor, which should contain the following:
 
 ```html
 <!-- index.html -->
