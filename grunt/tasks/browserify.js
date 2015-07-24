@@ -13,23 +13,31 @@ module.exports = function() {
   // grunt.config.requires('outfile');
   // grunt.config.requires('entries');
   config.transforms = config.transforms || [];
+  config.globalTransforms = config.globalTransforms || [];
   config.plugins = config.plugins || [];
   config.after = config.after || [];
+  config.paths = config.paths || [];
 
   // create the bundle we'll work with
   var entries = grunt.file.expand(config.entries);
+  var paths = grunt.file.expand(config.paths);
 
   // Extract other options
   var options = {
     entries: entries,
     debug: config.debug, // sourcemaps
     standalone: config.standalone, // global
+    paths: paths,
   };
 
   var bundle = browserify(options);
 
   config.transforms.forEach(function(transform) {
     bundle.transform({}, transform);
+  });
+
+  config.globalTransforms.forEach(function(transform) {
+    bundle.transform({global: true}, transform);
   });
 
   config.plugins.forEach(bundle.plugin, bundle);

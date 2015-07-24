@@ -9,6 +9,9 @@ var uglifyify = require('uglifyify');
 var derequire = require('derequire');
 var collapser = require('bundle-collapser/plugin');
 
+var envifyDev = envify({NODE_ENV: process.env.NODE_ENV || 'development'});
+var envifyProd = envify({NODE_ENV: process.env.NODE_ENV || 'production'});
+
 var SIMPLE_TEMPLATE =
 '/**\n\
  * @PACKAGE@ v@VERSION@\n\
@@ -56,7 +59,8 @@ var basic = {
   outfile: './build/react.js',
   debug: false,
   standalone: 'React',
-  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'development'})],
+  // Apply as global transform so that we also envify fbjs and any other deps
+  globalTransforms: [envifyDev],
   plugins: [collapser],
   after: [derequire, simpleBannerify],
 };
@@ -68,7 +72,10 @@ var min = {
   outfile: './build/react.min.js',
   debug: false,
   standalone: 'React',
-  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'production'}), uglifyify],
+  // Envify twice. The first ensures that when we uglifyify, we have the right
+  // conditions to exclude requires. The global transform runs on deps.
+  transforms: [envifyProd, uglifyify],
+  globalTransforms: [envifyProd],
   plugins: [collapser],
   // No need to derequire because the minifier will mangle
   // the "require" calls.
@@ -100,7 +107,7 @@ var addons = {
   debug: false,
   standalone: 'React',
   packageName: 'React (with addons)',
-  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'development'})],
+  globalTransforms: [envifyDev],
   plugins: [collapser],
   after: [derequire, simpleBannerify],
 };
@@ -113,7 +120,8 @@ var addonsMin = {
   debug: false,
   standalone: 'React',
   packageName: 'React (with addons)',
-  transforms: [envify({NODE_ENV: process.env.NODE_ENV || 'production'}), uglifyify],
+  transforms: [envifyProd, uglifyify],
+  globalTransforms: [envifyProd],
   plugins: [collapser],
   // No need to derequire because the minifier will mangle
   // the "require" calls.

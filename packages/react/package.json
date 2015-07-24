@@ -24,7 +24,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "envify": "^3.0.0"
+    "envify": "^3.0.0",
+    "fbjs": "0.1.0-alpha.0"
   },
   "browserify": {
     "transform": [

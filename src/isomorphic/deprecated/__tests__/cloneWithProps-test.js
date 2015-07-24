@@ -11,10 +11,6 @@
 
 'use strict';
 
-require('mock-modules')
-  .dontMock('cloneWithProps')
-  .dontMock('emptyObject');
-
 var React;
 var ReactTestUtils;
 

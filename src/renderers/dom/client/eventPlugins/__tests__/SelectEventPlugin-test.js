@@ -11,16 +11,11 @@
 
 'use strict';
 
-var mockModules = require('mock-modules');
-mockModules.mock('getActiveElement');
-
 var EventConstants;
 var React;
 var ReactMount;
 var ReactTestUtils;
 var SelectEventPlugin;
-
-var getActiveElement;
 
 var topLevelTypes;
 
@@ -36,15 +31,11 @@ describe('SelectEventPlugin', function() {
   }
 
   beforeEach(function() {
-    mockModules.dumpCache();
-
     EventConstants = require('EventConstants');
     React = require('React');
     ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
-
-    getActiveElement = require('getActiveElement');
 
     topLevelTypes = EventConstants.topLevelTypes;
   });
@@ -58,7 +49,7 @@ describe('SelectEventPlugin', function() {
 
     var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
     var node = React.findDOMNode(rendered);
-    getActiveElement.mockReturnValue(node);
+    node.focus();
 
     var mousedown = extract(node, topLevelTypes.topMouseDown);
     expect(mousedown).toBe(null);
@@ -85,7 +76,7 @@ describe('SelectEventPlugin', function() {
 
     node.selectionStart = 0;
     node.selectionEnd = 0;
-    getActiveElement.mockReturnValue(node);
+    node.focus();
 
     var focus = extract(node, topLevelTypes.topFocus);
     expect(focus).toBe(null);
