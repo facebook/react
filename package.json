@@ -48,7 +48,6 @@
     "grunt-compare-size": "^0.4.0",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-compress": "^0.13.0",
-    "grunt-jest": "^0.1.3",
     "gulp": "^3.9.0",
     "gulp-babel": "^5.1.0",
     "gulp-flatten": "^0.1.0",
