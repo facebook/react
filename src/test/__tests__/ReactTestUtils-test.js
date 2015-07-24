@@ -309,4 +309,39 @@ describe('ReactTestUtils', function() {
     expect(ReactTestUtils.isDOMComponent(component.refs.head)).toBe(true);
     expect(ReactTestUtils.isDOMComponent(component.refs.body)).toBe(true);
   });
+
+  it('should change the value of an input field', function() {
+    var handler = jasmine.createSpy('spy');
+    var container = document.createElement('div');
+    var instance = React.render(<input type="text" onChange={handler} />, container);
+
+    var node = React.findDOMNode(instance);
+    node.value = 'giraffe';
+    ReactTestUtils.Simulate.change(node);
+
+    expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
+  });
+
+  it('should change the value of an input field in a component', function() {
+    var SomeComponent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <input type="text" ref="input" onChange={this.props.handleChange} />
+          </div>
+        );
+      },
+    });
+
+    var handler = jasmine.createSpy('spy');
+    var container = document.createElement('div');
+    var instance = React.render(<SomeComponent handleChange={handler} />, container);
+
+    var node = React.findDOMNode(instance.refs.input);
+    node.value = 'zebra';
+    ReactTestUtils.Simulate.change(node);
+
+    expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
+  });
+
 });
