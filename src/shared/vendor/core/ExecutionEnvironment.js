@@ -19,6 +19,20 @@ var canUseDOM = !!(
   window.document.createElement
 );
 
+var canUseWrapper = function(wrapper) {
+  var requiresDOM = !!(wrapper && wrapper.requiresDOM);
+  return (!requiresDOM || canUseDOM);
+};
+
+var filter = function(wrappers) {
+  var selectedWrappers = [];
+  for (var i = 0, len = wrappers.length; i < len; i++) {
+    if (canUseWrapper(wrappers[i]))
+      selectedWrappers.push(wrappers[i]);
+  }
+  return selectedWrappers;
+};
+
 /**
  * Simple, lightweight module assisting with the detection and context of
  * Worker. Helps avoid circular dependencies and allows code to reason about
@@ -36,7 +50,9 @@ var ExecutionEnvironment = {
 
   canUseViewport: canUseDOM && !!window.screen,
 
-  isInWorker: !canUseDOM // For now, this is true - might change in the future.
+  isInWorker: !canUseDOM, // For now, this is true - might change in the future.
+
+  filter: filter,
 
 };
 
