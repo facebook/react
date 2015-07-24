@@ -28,7 +28,7 @@ module.exports = function(grunt) {
     grunt.util.spawn({
       // This could be more flexible (require.resolve & lookup bin in package)
       // but if it breaks we'll fix it then.
-      cmd: path.join('node_modules', '.bin', 'gulpp'),
+      cmd: path.join('node_modules', '.bin', 'gulp'),
       args: args,
       opts: assign({stdio: 'inherit'}, opts),
     }, function(err, result, code) {
