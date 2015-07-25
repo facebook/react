@@ -10,7 +10,7 @@ next: complementary-tools-ko-KR.html
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
-"페이스북과 인스타그램에서, 우리는 React 를 이용해 웹에서 벌어질 수 있는 한계를 뛰어넘으려 노력하고 있습니다. 저는 프레임워크에 대한 짤막한 소개로 시작해서, 논쟁이 벌어질 수 있는 다음의 세가지 주제로 넘어갈겁니다. 템플릿의 개념을 버리고 Javascript 를 이용해 View 를 구축하기, 자료가 변할때 전체 어플리케이션을 다시 그리기(“re-rendering”), 그리고 DOM과 events의 경량화된 구현 입니다." -- [Pete Hunt](http://www.petehunt.net/)
+"페이스북과 인스타그램에서, 우리는 React 를 이용해 웹에서 벌어질 수 있는 한계를 뛰어넘으려 노력하고 있습니다. 저는 프레임워크에 대한 짤막한 소개로 시작해서, 논쟁이 벌어질 수 있는 다음의 세가지 주제로 넘어갈겁니다. 템플릿의 개념을 버리고 JavaScript 를 이용해 View 를 구축하기, 자료가 변할때 전체 어플리케이션을 다시 그리기(“re-rendering”), 그리고 DOM과 events의 경량화된 구현 입니다." -- [Pete Hunt](http://www.petehunt.net/)
 
 * * *
 
@@ -31,7 +31,7 @@ next: complementary-tools-ko-KR.html
 
 ### Going big with React
 
-"이 발표에서, 이 모든 JS 프레임워크가 다음을 약속하는것처럼 보입니다: 꺠끗한 구현들, 빠른 코드 디자인, 완전한 수행. 그런데 당신이 Javascript 스트레스 테스트를 할때, 어떤 일이 발생합니까? 혹은 6MB의 코드를 던지면 무슨일이 발생합니까? 이번에는 높은 스트레스 환경에서 React가 어떻게 작동하는지, 그리고 이것이 우리 팀이 방대한 크기의 코드를 안전하게 구성하는데 어떻게 도움이 되어줄지를 조사해 볼겁니다."
+"이 발표에서, 이 모든 JS 프레임워크가 다음을 약속하는것처럼 보입니다: 깨끗한 구현들, 빠른 코드 디자인, 완전한 수행. 그런데 당신이 JavaScript 스트레스 테스트를 할때, 어떤 일이 발생합니까? 혹은 6MB의 코드를 던지면 무슨일이 발생합니까? 이번에는 높은 스트레스 환경에서 React가 어떻게 작동하는지, 그리고 이것이 우리 팀이 방대한 크기의 코드를 안전하게 구성하는데 어떻게 도움이 되어줄지를 조사해 볼겁니다."
 [![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)
 
 * * *
@@ -72,7 +72,7 @@ CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barcze
 
 ### JavaScript Jabber
 
-Javascript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walke](https://github.com/jordwalke)가 React에 대해서 이야기했습니다.
+JavaScript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walke](https://github.com/jordwalke)가 React에 대해서 이야기했습니다.
 
 <figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
 

@@ -65,7 +65,7 @@ React.render(
 <script type="text/jsx" src="src/helloworld.js"></script>
 ```
 
-크롬 같은 몇몇 브라우저에서는 HTTP을 통해 제공되는 파일이 아니면 로드에 실패하므로 주의하세요.
+크롬 같은 몇몇 브라우저에서는 HTTP를 통해 제공되는 파일이 아니면 로드에 실패하므로 주의하세요.
 
 ### 오프라인 변환
 
