@@ -32,7 +32,7 @@ next: thinking-in-react-ko-KR.html
 
 ### 시작하기
 
-이 튜토리얼에서는 CDN에 있는 미리 빌드된 JavaScript 파일들을 사용합니다. 선호하는 에디터를 열어, 새로운 HTML 문서를 만드세요:
+이 튜토리얼에서는 CDN에 있는 미리 빌드된 JavaScript 파일들을 사용합니다. 선호하는 에디터에서 `public/index.html`을 열어, 아래의 내용을 채우세요:
 
 ```html
 <!-- index.html -->
