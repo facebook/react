@@ -447,7 +447,7 @@
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
-<p>다음 진행을 위해, 위의 스크립트 태그안에 JavaScript 코드를 작성합니다.</p>
+<p>다음 진행을 위해, 위의 스크립트 태그안에 JavaScript 코드를 작성합니다. 각 단계를 추가한 다음 index.html 파일을 브라우저에서 열어서 진행을 확인하세요.</p>
 
 <blockquote>
 <p>주의:</p>
@@ -706,7 +706,7 @@
 </code></pre></div>
 <p><code>getInitialState()</code> 는 컴포넌트의 생명주기동안 한 번만 실행되며 컴포넌트의 초기 state를 설정합니다.</p>
 <h3><a class="anchor" name="state-"></a>state 업데이트하기 <a class="hash-link" href="#state-">#</a></h3>
-<p>컴포넌트의 최초 생성 시에, 서버에서 GET 방식으로 JSON을 넘겨받아 최신의 데이터가 state에 반영되길 원했습니다. 실제 애플리케이션에선 이것이 동적인 엔드포인트이지만, 이 예제에서는 정적 JSON 파일을 사용해서 간단하게 만들어보겠습니다.</p>
+<p>컴포넌트의 최초 생성 시에, 서버에서 GET 방식으로 JSON을 넘겨받아 최신의 데이터가 state에 반영되길 원했습니다. 실제 애플리케이션에선 이것이 동적인 엔드포인트이지만, 이 예제에서는 단순히하기 위해 comments의 배열이 담긴 정적 JSON 파일 <code>public/comments.json</code>을 사용하겠습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.json</span>
 <span class="p">[</span>
   <span class="p">{</span><span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="o">:</span> <span class="s2">&quot;댓글입니다&quot;</span><span class="p">},</span>

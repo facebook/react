@@ -468,7 +468,7 @@
 <h3><a class="anchor" name="updating"></a>Updating <a class="hash-link" href="#updating">#</a></h3>
 <ul>
 <li><code>componentWillReceiveProps(object nextProps)</code>는 마운트된 컴포넌트가 새로운 props을 받을 때 호출됩니다. 이 메소드는 <code>this.props</code>와 <code>nextProps</code>을 비교하여 <code>this.setState()</code>를 사용해 상태 변환을 수행하는데 사용되야 합니다.</li>
-<li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code>는 컴포넌트가 어떤 변경이 DOM의 업데이트를 보증하는지 결정해야 할 때 호출됩니다. 최적화하려면, React가 업데이트를 무시해야할 때 <code>this.props</code>와 <code>nextProps</code>를, <code>this.state</code>와 <code>nextState</code>를 비교해 false를 리턴하면 됩니다. </li>
+<li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code>는 컴포넌트가 어떤 변경이 DOM의 업데이트를 보증하는지 결정해야 할 때 호출됩니다. 최적화하려면, React가 업데이트를 무시해야할 때 <code>this.props</code>와 <code>nextProps</code>를, <code>this.state</code>와 <code>nextState</code>를 비교해 <code>false</code>를 리턴하면 됩니다.</li>
 <li><code>componentWillUpdate(object nextProps, object nextState)</code>는 업데이트가 발생하기 직전에 호출됩니다. 이 시점에는 <code>this.setState()</code>를 호출할 수 없습니다.</li>
 <li><code>componentDidUpdate(object prevProps, object prevState)</code>는 업데이트가 발생한 후 즉시 호출됩니다.</li>
 </ul>

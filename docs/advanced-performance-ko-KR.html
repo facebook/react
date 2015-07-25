@@ -500,7 +500,7 @@
 
 <p>그에따라 prop의 변경을 놓치게 되어 다시 렌더링하는 프로세스가 중단되고, UI는 <code>&#39;bar&#39;</code>에서 <code>&#39;barbar&#39;</code>로 업데이트되지 않습니다.</p>
 <h2><a class="anchor" name="-immutable-js"></a>구원자 Immutable-js <a class="hash-link" href="#-immutable-js">#</a></h2>
-<p><a href="https://github.com/facebook/immutable-js">Immutable-js</a>는 Lee Byron이 만들고 Facebook이 오픈소스화 한 Javascript 컬렉션 라이브러리입니다. 이는 <em>구조의 공유(structural sharing)</em>를 통해 <em>불변의 영속적인(immutable persistent)</em> 컬렉션을 제공합니다. 이러한 속성이 무엇을 의미하는지 살펴보죠:</p>
+<p><a href="https://github.com/facebook/immutable-js">Immutable-js</a>는 Lee Byron이 만들고 Facebook이 오픈소스화 한 JavaScript 컬렉션 라이브러리입니다. 이는 <em>구조의 공유(structural sharing)</em>를 통해 <em>불변의 영속적인(immutable persistent)</em> 컬렉션을 제공합니다. 이러한 속성이 무엇을 의미하는지 살펴보죠:</p>
 
 <ul>
 <li><em>불변성(Immutable)</em>: 컬렉션이 한번 생성되면, 이 후 다른 시점에 변경될 수 없습니다.</li>
@@ -508,7 +508,7 @@
 <li><em>구조의 공유(Structural Sharing)</em>: 새로운 컬렉션은 가능한 한 원래의 컬렉션과 같은 구조를 사용해 생성됩니다. 공간 효율성과 적절한 성능을 위해 복사를 최소화합니다.</li>
 </ul>
 
-<p>불변성은 변경의 추적을 비용을 줄여줍니다; 변경은 항상 새로운 객체에만 발생하기 때문에 객체에 대한 참조가 변경될 때만 확인하면 됩니다. 예를 들어 일반적인 JavaScript 코드에서는:</p>
+<p>불변성은 변경의 추적을 비용을 줄여줍니다; 변경은 항상 새로운 객체에만 발생하기 때문에 객체에 대한 참조가 변경될 때만 확인하면 됩니다. 예를 들어 일반적인 이 JavaScript 코드에서는:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s2">&quot;bar&quot;</span> <span class="p">};</span>
 <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
 <span class="nx">y</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="s2">&quot;baz&quot;</span><span class="p">;</span>

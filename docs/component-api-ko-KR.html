@@ -444,11 +444,11 @@
 </blockquote>
 <h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
-<p><code>render()</code> 메소드가 <code>this.props</code>나 <code>this.state</code>가 아닌 다른 곳에서 데이터를 읽어오는 경우 <code>forceUpdate()</code>를 호출하여 React가 <code>render()</code>를 다시 실행하도록 만들 수 있습니다. <code>this.state</code>를 직접 변경하는 경우에도 <code>forceUpdate()</code>를 호출해야 합니다.</p>
+<p>기본적으로, 컴포넌트의 state나 props가 변경되면, 컴포넌트는 다시 렌더됩니다. 하지만 이런 변경이 묵시적이거나(예를들어 객체의 변경 없이 깊이 있는 데이터만 변경된 경우) <code>render()</code> 함수가 다른 값에 의존하는 경우, <code>forceUpdate()</code>를 호출해 React에게 <code>render()</code>를 다시 실행할 필요가 있다고 알릴 수 있습니다.</p>
 
 <p><code>forceUpdate()</code>를 호출하면 <code>shouldComponentUpdate()</code>를 생략하고 해당 컴포넌트 <code>render()</code> 함수가 호출됩니다. 각 자식 컴포넌트에 대해서는 <code>shouldComponentUpdate()</code>를 포함해 보통 라이프 사이클 메서드를 호출합니다. React는 마크업이 변경된 경우에만 DOM을 업데이트합니다.</p>
 
-<p>특별한 경우가 아니면 <code>forceUpdate()</code>는 되도록 피하시고 <code>render()</code>에서는 <code>this.props</code>와 <code>this.state</code>에서만 읽어오세요. 그렇게 하는 것이 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.</p>
+<p>특별한 경우가 아니면 <code>forceUpdate()</code>는 되도록 피하시고 <code>render()</code>에서는 <code>this.props</code>와 <code>this.state</code>에서만 읽어오세요. 그렇게 하는 것이 컴포넌트를 &quot;순수&quot;하게 하고 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.</p>
 <h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
 </code></pre></div>
 <p>이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. <code>render</code>가 <code>null</code>이나 <code>false</code>를 리턴하였다면 <code>this.getDOMNode()</code>는 <code>null</code>을 리턴합니다.</p>
@@ -473,12 +473,12 @@
 </code></pre></div>
 <p>외부 JavaScript 애플리케이션과 연동하는 경우 <code>React.render()</code>로 렌더링된 React 컴포넌트에 변경을 알리고 싶을 때가 있습니다.</p>
 
-<p>최상위 컴포넌트를 업데이트할 때 <code>React.render()</code>를 같은 노드에 다시 호출하는 것이 바람직한 방법이지만, <code>setProps()</code>를 호출해서 props를 바꾸고 재렌더링을 발생시킬 수 있습니다. 콜백 함수를 추가로 넘기면 <code>setProps</code>가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.</p>
+<p>최상위 컴포넌트에서 <code>setProps()</code>를 호출하면 프로퍼티를 변경하고 렌더를 다시 발생합니다. 거기에 콜백 함수를 넘기면 <code>setProps</code>가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.</p>
 
 <blockquote>
 <p>주의:</p>
 
-<p>가능하다면 <code>React.render()</code>를 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)</p>
+<p>가능하다면 이것 대신 <code>React.render()</code>를 같은 노드에서 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)</p>
 
 <p>이 메소드는 최상위 컴포넌트에만 호출 가능합니다. 다시 말해, <code>React.render()</code>에 바로 넘긴 컴포넌트에서만 사용할 수 있고 자식에서는 불가능합니다. 자식 컴포넌트에 <code>setProps()</code>를 사용하고 싶다면, 그 대신 반응적인 업데이트의 장점을 활용하여 <code>render()</code> 안에서 자식 컴포넌트를 만들 때 새로운 prop을 넘기세요.</p>
 

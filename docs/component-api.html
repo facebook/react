@@ -444,11 +444,11 @@
 </blockquote>
 <h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
-<p>If your <code>render()</code> method reads from something other than <code>this.props</code> or <code>this.state</code>, you&#39;ll need to tell React when it needs to re-run <code>render()</code> by calling <code>forceUpdate()</code>. You&#39;ll also need to call <code>forceUpdate()</code> if you mutate <code>this.state</code> directly.</p>
+<p>By default, when your component&#39;s state or props change, your component will re-render. However, if these change implicitly (eg: data deep within an object changes without changing the object itself) or if your <code>render()</code> method depends on some other data, you can tell React that it needs to re-run <code>render()</code> by calling <code>forceUpdate()</code>.</p>
 
 <p>Calling <code>forceUpdate()</code> will cause <code>render()</code> to be called on the component, skipping <code>shouldComponentUpdate()</code>. This will trigger the normal lifecycle methods for child components, including the <code>shouldComponentUpdate()</code> method of each child. React will still only update the DOM if the markup changes.</p>
 
-<p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your application much simpler and more efficient.</p>
+<p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your component &quot;pure&quot; and your application much simpler and more efficient.</p>
 <h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
 </code></pre></div>
 <p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>this.getDOMNode()</code> returns <code>null</code>.</p>
@@ -473,12 +473,12 @@
 </code></pre></div>
 <p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>React.render()</code>.</p>
 
-<p>Though calling <code>React.render()</code> again on the same node is the preferred way to update a root-level component, you can also call <code>setProps()</code> to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
+<p>Calling <code>setProps()</code> on a root-level component will change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
 
 <blockquote>
 <p>Note:</p>
 
-<p>When possible, the declarative approach of calling <code>React.render()</code> again is preferred; it tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
+<p>When possible, the declarative approach of calling <code>React.render()</code> again on the same node is preferred instead. It tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
 
 <p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>React.render()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
 

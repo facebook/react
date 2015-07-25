@@ -457,21 +457,21 @@
 <p>이 클래스들은 CSS 애니메이션이나 트랜지션을 일으키는데 사용할 수 있습니다. 예를 들어, 이 CSS를 넣은 후 아이템을 추가해 보세요.</p>
 <div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-enter</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="nc">.example-enter.example-enter-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p><code>ReactCSSTransitionGroup</code>에서 아이템을 제거하려해도 DOM에는 남게 됩니다. 만약 애드온을 React의 최소화하지 않은 빌드와 사용한다면, 애니메이션이나 트랜지션이 일어나는 것을 예상하고 있었다는 React의 경고를 보게 될 것입니다. 그게 바로 <code>ReactCSSTransitionGroup</code>가 DOM 엘리먼트를 애니메이션이 끝날 때까지 페이지에 남겨두는 이유입니다. 이 CSS를 넣어보세요.</p>
 <div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-leave</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="---"></a>처음 마운트에서 애니메이션 하기 <a class="hash-link" href="#---">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code>은 컴포넌트를 처음 마운트할 때 추가 트렌지션 단계를 추가하기 위해, 선택적인 prop <code>transitionAppear</code>를 제공합니다. 일반적으로 처음 마운트할 때 트렌지션 단계를 넣지 않기 때문에 <code>transitionAppear</code>의 기본 값은 <code>false</code>입니다. 뒤의 예제는 <code>transitionAppear</code> prop에 <code>true</code> 값을 넘기고 있습니다.</p>

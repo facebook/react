@@ -433,6 +433,8 @@
 
 <p><code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>에서는 <code>onChange</code>가 DOM의 <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> 이벤트 핸들러와 같은 기능을 제공하므로 일반적인 경우에는 <code>onChange</code>를 사용하세요.</p>
 </blockquote>
+
+<p><a name="controlled-components"></a></p>
 <h2><a class="anchor" name="controlled-"></a>제어되는(controlled) 컴포넌트 <a class="hash-link" href="#controlled-">#</a></h2>
 <p><code>value</code>가 설정된 <code>&lt;input&gt;</code>은 <em>제어되는</em> 컴포넌트입니다. 제어되는 <code>&lt;input&gt;</code>에서, 렌더 엘리먼트의 값은 항상 <code>value</code> prop을 반영합니다. 예를 들어,</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -464,7 +466,7 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>이것은 빈 값으로 시작되는 input을 렌더합니다. 임의의 사용자 입력은 즉시 렌더된 엘리먼트에 반영됩니다. 값의 업데이트를 감시하길 원한다면, 제어되는 컴포넌트처럼 <code>onChange</code> 이벤트를 사용할 수 있습니다.</p>
-
+<h3><a class="anchor" name="-"></a>기본 값 <a class="hash-link" href="#-">#</a></h3>
 <p>비어 있지 않은 값으로 초기화하길 원한다면, <code>defaultValue</code> prop로 할 수 있습니다. 예를 들어,</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -473,11 +475,17 @@
 <p>이 예제는 위에있는 <strong>제어되는 컴포넌트</strong>에 더 가깝게 동작할 것입니다.</p>
 
 <p>마찬가지로, <code>&lt;input&gt;</code>은 <code>defaultChecked</code>를 지원하고 <code>&lt;select&gt;</code>는 <code>defaultValue</code>를 지원합니다.</p>
+
+<blockquote>
+<p>주의:</p>
+
+<p><code>defaultValue</code>, <code>defaultChecked</code> prop은 최초 렌더에서만 사용됩니다. 뒤에 일어나는 렌더에서 값을 업데이트할 필요가 있다면,  <a href="#controlled-components">제어되는(controlled) 컴포넌트</a>를 사용하셔야 합니다.</p>
+</blockquote>
 <h2><a class="anchor" name="-"></a>심화 주제 <a class="hash-link" href="#-">#</a></h2><h3><a class="anchor" name="--"></a>왜 제어되는 컴포넌트인가요? <a class="hash-link" href="#--">#</a></h3>
 <p>React에서 <code>&lt;input&gt;</code>같은 폼 컴포넌트를 사용하면, 전통적인 폼 HTML을 쓸 때에는 없던 어려운 문제가 있습니다. 예를 들어 HTML에서</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
-<p>이렇게 하면 input은 <code>Untitled</code> 값으로 <em>초기화</em> 됩니다. 사용자가 input을 업데이트할 때, 노드의 value <em>프로퍼티</em>가 변경될 것입니다. 하지만, <code>node.getAttribute(&#39;value&#39;)</code>은 여전히 초기화 때 사용했던 값인 <code>Untitled</code>를 리턴합니다.</p>
+<p>이렇게 하면 input은 <code>Untitled</code> 값으로 <em>초기화</em> 됩니다. 사용자가 input을 업데이트할 때, 노드의 <code>value</code> <em>프로퍼티</em>가 변경될 것입니다. 하지만, <code>node.getAttribute(&#39;value&#39;)</code>은 여전히 초기화 때 사용했던 값인 <code>Untitled</code>를 리턴합니다.</p>
 
 <p>HTML과 다르게, React 컴포넌트는 초기화 시점 뿐만 아니라, 어떤 시점이라도 반드시 뷰의 state를 나타내야 합니다. 예를 들어 React에서</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -487,7 +495,7 @@
 <p>이 메소드가 어떤 시점에도 뷰를 기술하기 때문에, 텍스트 input의 값은 <em>언제나</em> <code>Untitled</code>입니다.</p>
 <h3><a class="anchor" name="-textarea-value-"></a>왜 Textarea에 value를 사용하나요? <a class="hash-link" href="#-textarea-value-">#</a></h3>
 <p>HTML에서, <code>&lt;textarea&gt;</code>의 값은 보통 그것의 자식들로 설정됩니다.</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 반례: 이렇게 하지 마세요! --&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 안티패턴: 이렇게 하지 마세요! --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>이것은 설명입니다.<span class="nt">&lt;/textarea&gt;</span>
 </code></pre></div>
 <p>HTML에서는 이렇게 하면 여러 줄의 값을 쉽게 개발자가 넣을 수 있게 합니다. 하지만, React는 JavaScript기 때문에, 우리는 문자열 제한이 없고 개행이 필요하면 <code>\n</code>을 사용할 수 있습니다. 이 곳에서는 <code>value</code>와 <code>defaultValue</code>가 있고, 그것이 자식들의 역할을 모호하게 합니다. 이런 이유로, <code>&lt;textarea&gt;</code>의 값을 설정할 때에는 자식들을 사용하지 않아야 합니다.</p>
