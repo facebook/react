@@ -73,7 +73,6 @@
   },
   "scripts": {
     "build": "grunt build",
-    "jest": "test",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
     "test": "NODE_ENV=test jest"
