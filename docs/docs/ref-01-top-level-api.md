@@ -89,7 +89,7 @@ If the optional callback is provided, it will be executed after the component is
 
 > Note:
 >
-> `React.render()` controls the contents of the container node you pass in*. Any existing DOM elements
+> `React.render()` controls the contents of the container node you pass in. Any existing DOM elements
 > inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient
 > updates.
 >
