@@ -14,9 +14,17 @@ var addons = {
     module: 'LinkedStateMixin',
     name: 'linked-state-mixin',
   },
+  Perf: {
+    module: 'ReactDefaultPerf',
+    name: 'perf',
+  },
   PureRenderMixin: {
     module: 'ReactComponentWithPureRenderMixin',
     name: 'pure-render-mixin',
+  },
+  TestUtils: {
+    module: 'ReactTestUtils',
+    name: 'test-utils',
   },
   TransitionGroup: {
     module: 'ReactTransitionGroup',
