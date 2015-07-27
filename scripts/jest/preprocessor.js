@@ -16,7 +16,7 @@ var ts = tsPreprocessor(defaultLibraries);
 // We should consider consuming this from a built fbjs module from npm.
 var moduleMap = require('fbjs/module-map');
 var babelPluginDEV = require('fbjs/scripts/babel/dev-expression');
-var babelPluginRequires = require('fbjs/scripts/babel/rewrite-requires');
+var babelPluginModules = require('fbjs/scripts/babel/rewrite-modules');
 
 module.exports = {
   process: function(src, path) {
@@ -37,7 +37,7 @@ module.exports = {
         optional: [
           'es7.trailingFunctionCommas',
         ],
-        plugins: [babelPluginDEV, babelPluginRequires],
+        plugins: [babelPluginDEV, babelPluginModules],
         ignore: ['third_party'],
         filename: path,
         retainLines: true,
