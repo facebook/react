@@ -141,7 +141,7 @@ Verifies the object is a ReactElement.
 ```javascript
 DOMElement findDOMNode(ReactComponent component)
 ```
-If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `findDOMNode` returns `null`.
+If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `findDOMNode` returns `null`. `findDOMNode` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet, or has been unmounted, an exception will be thrown.
 
 
 ### React.DOM
