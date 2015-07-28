@@ -29,7 +29,8 @@ var transform = function(code, options, excludes) {
 
 describe('react jsx module', function() {
 
-  it('should transpile to createClass and export module as default', function() {
+  it('should transpile to createClass and export module as default',
+    function() {
     var code = [
       '<!doctype jsx>',
       '<ReactClass name="Whateva" export="default">',
@@ -142,13 +143,16 @@ describe('react jsx module', function() {
       '  componentWillUnmount: function componentWillUnmount(){',
       '      delete this.unmounting;',
       '    }',
-      '  shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState){',
+      '  shouldComponentUpdate: function '+
+        'shouldComponentUpdate(nextProps, nextState){',
       '      return this.mounting === false;',
       '    }',
-      '  componentWillUpdate: function componentWillUpdate(nextProps, nextState){',
+      '  componentWillUpdate: function '+
+        'componentWillUpdate(nextProps, nextState){',
       '      return this.mounting === false;',
       '    }',
-      '  componentDidUpdate: function componentDidUpdate(prevProps, prevState){',
+      '  componentDidUpdate: function '+
+        'componentDidUpdate(prevProps, prevState){',
       '      return this.mounting === false;',
       '    }',
       '  render: function render() {',
@@ -165,7 +169,9 @@ describe('react jsx module', function() {
 //    var code = [
 //      '<!doctype jsx>',
 //      '<ReactClass name="Whateva" export="default">',
-//      '  <div onClick={this.clickHandler} onMouseOver={mouseOverHandler}>X</div>',
+//      '  <div onClick={this.clickHandler} onMouseOver={mouseOverHandler}>
+//      '     X',
+//      '  </div>',
 //      '  <script>',
 //      '    var x=1;',
 //      '    function getInitialState(){',
@@ -205,5 +211,5 @@ describe('react jsx module', function() {
 //    expect(transform(code).code).toEqual(expected);
 //  });
 //
-  // TODO mix-ins, static methods, componentWillReceiveProps, componentWillReceiveProps, componentWillUpdate
+  // TODO mix-ins, static methods
 });

@@ -57,8 +57,7 @@ function throwError(node, error) {
 
 
 function checkReactMethod(stmt) {
-  if (stmt.type === Syntax.FunctionDeclaration)
-  {
+  if (stmt.type === Syntax.FunctionDeclaration) {
     switch (stmt.id.name) {
     case 'getInitialState':
     case 'getDefaultProps':
@@ -75,7 +74,7 @@ function checkReactMethod(stmt) {
       if (stmt.params.length !== 2 ||
         stmt.params[0].name !== 'nextProps' ||
         stmt.params[1].name !== 'nextState') {
-        throwError(stmt, 'Expected '+stmt.id.name+'(nextProps, nextState)');
+        throwError(stmt, 'Expected ' + stmt.id.name + '(nextProps, nextState)');
       }
       break;
     case 'componentDidUpdate':
@@ -127,7 +126,7 @@ function visitReactJSXClassDeclaration(traverse, node, path, state) {
     if (stmt.type === 'FunctionDeclaration') {
       checkReactMethod(stmt);
       utils.move(stmt.range[0], state);
-      utils.append('\n  '+stmt.id.name+': ', state);
+      utils.append('\n  ' + stmt.id.name + ': ', state);
     }
     traverse(stmt, path, state);
   });
@@ -189,6 +188,6 @@ visitReactJSXClassDeclaration.test = function(node, path, state) {
 
 exports.visitorList = [
   visitReactJSXModuleDeclaration,
-  visitReactJSXClassDeclaration,
+  visitReactJSXClassDeclaration
   // TODO  visitReactJSXScriptContainer - non-javascripts (like css/less)
 ];
