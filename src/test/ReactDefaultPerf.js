@@ -142,6 +142,7 @@ var ReactDefaultPerf = {
       var rv;
       var start;
 
+      // TODO: nested ifs hard to read. split into functions?
       if (fnName === '_renderNewRootComponent' ||
           fnName === 'flushBatchedUpdates') {
         // A "measurement" is a set of metrics recorded for each flush. We want
@@ -152,6 +153,7 @@ var ReactDefaultPerf = {
           exclusive: {},
           inclusive: {},
           render: {},
+          lifecycle: {},
           counts: {},
           writes: {},
           displayNames: {},
@@ -254,6 +256,12 @@ var ReactDefaultPerf = {
         };
 
         return rv;
+      } else if (moduleName === 'ReactClass') {
+
+        var rootNodeID = args[0];
+        var count = entry.lifecycle[fnName].count ? entry.lifecycle[fnName] : 1;
+
+        addValue(entry.lifecycle[fnName], rootNodeID, count);
       } else {
         return func.apply(this, args);
       }
