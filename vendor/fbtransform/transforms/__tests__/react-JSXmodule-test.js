@@ -77,7 +77,7 @@ describe('react jsx module', function() {
       '    return React.createElement("div", null, "Y");',
       '  }',
       '});',
-      'export Whateva2;',
+      'export Whateva2;'
     ].join('\n');
 
     expect(transform(code).code).toEqual(expected);
