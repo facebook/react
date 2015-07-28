@@ -1,6 +1,68 @@
 # [React](https://facebook.github.io/react/) [![Build Status](https://travis-ci.org/facebook/react.svg?branch=0.13-stable)](https://travis-ci.org/facebook/react)
 
-React is a JavaScript library for building user interfaces.
+React is a JavaScript library for building user interfaces. This is a fork for propose JSX modules like this:
+
+```html
+<!DOCTYPE JSX>
+
+<ReactClass name="Timer">
+  <div>Seconds Elapsed: {secondsElapsed}</div>
+
+  <script>
+    function getInitialState() {
+      return { secondsElapsed = 0 };
+    }
+    function tick(){
+      this.setState({secondsElapsed: secondsElapsed + 1});
+    }
+    function componentDidMount() {
+      this.interval = setInterval(this.tick, 1000);
+    }
+    function componentWillUnmount() {
+      clearInterval(this.interval);
+    }
+  </script>
+</ReactClass>
+
+React.render(<Timer />, mountNode);
+```
+
+=== 
+Why
+* Better look and feel (I think so)
+* Better compatibility with IDE's, linters...
+* 100% compatible with React legacy code
+
+=== 
+Done
+* Enabling tag `<!DOCTYPE JSX>`. I don't like it, and maybe it's not necessary because JSXModule just works when JSX is as statement (not expression), but i'm worry with legacy code.
+* Parser for script, link and style tags.
+* visitors for jstransform
+* visitors for react
+* the code above works well
+
+=== 
+Todo
+* avoid this from all know (class internals) identifiers
+> how detect setState when invoking methods? (like push, shift, splice...)
+* Transform css script into javascript objects.
+> Rename css classes to allow local scope
+> autoprex vendor tags
+** I18N
+** Docs
+
+===
+Repositories:
+https://github.com/thr0w/esprima
+https://github.com/thr0w/jstransform
+https://github.com/thr0w/react
+
+===
+References:
+* https://muut.com/riotjs/
+* https://github.com/undoZen/htmlxify
+
+===
 
 * **Just the UI:** Lots of people use React as the V in MVC. Since React makes no assumptions about the rest of your technology stack, it's easy to try it out on a small feature in an existing project.
 * **Virtual DOM:** React abstracts away the DOM from you, giving a simpler programming model and better performance. React can also render on the server using Node, and it can power native apps using [React Native](https://facebook.github.io/react-native/).
