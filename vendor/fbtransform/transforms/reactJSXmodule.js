@@ -67,10 +67,10 @@ function visitReactJSXClassDeclaration(traverse, node, path, state) {
     className: node.className
   });
 
-  utils.append('var ' + state.className.name+ ' = React.createClass({', state);
+  utils.append('var ' + state.className.name + ' = React.createClass({', state);
 
   utils.move(node.className.range[0], state);
-  utils.append('\n  displayName: "'+state.className.name+'",', state);
+  utils.append('\n  displayName: "' + state.className.name + '",', state);
 
   utils.append('\n  render: function() {\n    return ', state);
 
@@ -82,40 +82,39 @@ function visitReactJSXClassDeclaration(traverse, node, path, state) {
   utils.move(node.range[1], state);
   utils.append('\n});', state);
 
-  var error, export_class=true;
+  var error, exportClass = true;
   node.attributes.forEach(function(attr) {
     switch (attr.name.name) {
     case 'export':
-       switch (attr.value.value) {
-       case 'false':
-         export_class = false;
-         break;
-       case 'default':
-         export_class = 'default';
-         break;
-       case 'true':
-         break;
-       default:
-         error = 'Invalid value for export attribute';
-         break;
-       }
-       break;
+      switch (attr.value.value) {
+      case 'false':
+        exportClass = false;
+        break;
+      case 'default':
+        exportClass = 'default';
+        break;
+      case 'true':
+        break;
+      default:
+        error = 'Invalid value for export attribute';
+        break;
+      }
+      break;
     default:
-      error = 'Invalid attribute '+attr.name.name;
+      error = 'Invalid attribute ' + attr.name.name;
       break;
     }
   });
 
   if (error) {
-    throw new Error(error +'. (line: ' +
+    throw new Error(error + '. (line: ' +
       node.loc.start.line + ', col: ' + node.loc.start.column + ')'
     );
   }
-  if (export_class === 'default') {
-    utils.append('\nexport default '+state.className.name+';', state);
-  }
-  else if (export_class === true) {
-    utils.append('\nexport '+state.className.name+';', state);
+  if (exportClass === 'default') {
+    utils.append('\nexport default ' + state.className.name + ';', state);
+  } else if (exportClass === true) {
+    utils.append('\nexport ' + state.className.name + ';', state);
   }
 
   return false;
@@ -127,7 +126,10 @@ visitReactJSXModuleDeclaration.test = function(node, path, state) {
 };
 
 visitReactJSXClassDeclaration.test = function(node, path, state) {
-  return node.type === Syntax.JSXClassDeclaration && node.superClass.name === 'ReactClass';
+  return (
+    node.type === Syntax.JSXClassDeclaration &&
+    node.superClass.name === 'ReactClass'
+  );
 };
 
 exports.visitorList = [
