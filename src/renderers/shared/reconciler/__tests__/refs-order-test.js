@@ -29,7 +29,7 @@ describe('refs-attach-order', function() {
       },
       render: function() {
         return <a />;
-      }
+      },
     });
     var Parent = React.createClass({
       getParentNode: function() {
@@ -37,7 +37,7 @@ describe('refs-attach-order', function() {
       },
       render: function() {
         return <div ref="parent"><Child target={this.getParentNode}/></div>;
-      }
+      },
     });
 
     React.render(<Parent />, container);
