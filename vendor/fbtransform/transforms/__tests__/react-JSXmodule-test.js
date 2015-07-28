@@ -143,15 +143,15 @@ describe('react jsx module', function() {
       '  componentWillUnmount: function componentWillUnmount(){',
       '      delete this.unmounting;',
       '    }',
-      '  shouldComponentUpdate: function '+
+      '  shouldComponentUpdate: function ' +
         'shouldComponentUpdate(nextProps, nextState){',
       '      return this.mounting === false;',
       '    }',
-      '  componentWillUpdate: function '+
+      '  componentWillUpdate: function ' +
         'componentWillUpdate(nextProps, nextState){',
       '      return this.mounting === false;',
       '    }',
-      '  componentDidUpdate: function '+
+      '  componentDidUpdate: function ' +
         'componentDidUpdate(prevProps, prevState){',
       '      return this.mounting === false;',
       '    }',
