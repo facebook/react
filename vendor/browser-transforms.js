@@ -287,27 +287,63 @@ function loadScripts(scripts) {
  * @internal
  */
 function runScripts() {
-  var scripts = document.getElementsByTagName('script');
 
-  // Array.prototype.slice cannot be used on NodeList on IE8
-  var jsxScripts = [];
-  for (var i = 0; i < scripts.length; i++) {
-    if (/^text\/jsx(;|$)/.test(scripts.item(i).type)) {
-      jsxScripts.push(scripts.item(i));
+  processScripts(document);
+
+  var imports = document.getElementsByTagName('link');
+
+  if (imports.length) {
+
+    for (var i = 0; i < imports.length; i++) {
+
+      if (imports[i].getAttribute('rel').toLowerCase() !== 'import') {
+        continue;
+      }
+
+      if (imports[i].import) {
+        processScripts(imports[i].import);
+      } else {
+        imports[i].addEventListener('load', processDeferredScripts);
+      }
+
     }
+
   }
 
-  if (jsxScripts.length < 1) {
-    return;
+  function processDeferredScripts() {
+
+    if (this.import) {
+      processScripts(this.import);
+    }
+
   }
 
-  console.warn(
-    'You are using the in-browser JSX transformer. Be sure to precompile ' +
-    'your JSX for production - ' +
-    'http://facebook.github.io/react/docs/tooling-integration.html#jsx'
-  );
+  function processScripts(documentScope) {
 
-  loadScripts(jsxScripts);
+    var scripts = documentScope.getElementsByTagName('script');
+
+    // Array.prototype.slice cannot be used on NodeList on IE8
+    var jsxScripts = [];
+    for (var j = 0; j < scripts.length; j++) {
+      if (/^text\/jsx(;|$)/.test(scripts.item(j).type)) {
+        jsxScripts.push(scripts.item(j));
+      }
+    }
+
+    if (jsxScripts.length < 1) {
+      return;
+    }
+
+    console.warn(
+      'You are using the in-browser JSX transformer. Be sure to precompile ' +
+      'your JSX for production - ' +
+      'http://facebook.github.io/react/docs/tooling-integration.html#jsx'
+    );
+
+    loadScripts(jsxScripts);
+
+  }
+
 }
 
 // Listen for load event if we're in a browser and then kick off finding and
