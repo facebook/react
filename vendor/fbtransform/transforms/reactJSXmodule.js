@@ -12,7 +12,7 @@
 var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
-/**
+/*
  * Transforms the following:
  *
  * <!doctype jsx>
@@ -32,6 +32,11 @@ var utils = require('jstransform/src/utils');
  *
  */
 
+
+/**
+ * Transforms imports:
+ */
+
 function visitReactJSXModuleDeclaration(traverse, node, path, state) {
 
   utils.append('"use strict";', state);
@@ -42,10 +47,36 @@ function visitReactJSXModuleDeclaration(traverse, node, path, state) {
 
 }
 
+function throwError(node, error)
+{
+  throw new Error(error + '. (line: ' +
+    node.loc.start.line + ', col: ' + node.loc.start.column + ')'
+  );
+}
+
+
+function checkReactMethod(stmt)
+{
+    if (stmt.type===Syntax.FunctionDeclaration)
+    {
+      switch (stmt.id.name) {
+      case 'getInitialState':
+      case 'getDefaultProps':
+      case 'propTypes':
+      case 'componentWillMount':
+      case 'componentDidMount':
+      case 'componentWillUnmount':
+        if (stmt.params.length !== 0)
+          throwError(stmt, 'Unexpected argument');
+        return true;
+      }
+    }
+    return false;
+}
+
 /**
  * Transforms the following:
  *
- * <!doctype jsx>
  * <ReactClass MyComponent>'
  *   <ELEMENTS...>
  *   <SCRIPTS...>
@@ -72,7 +103,16 @@ function visitReactJSXClassDeclaration(traverse, node, path, state) {
   utils.move(node.className.range[0], state);
   utils.append('\n  displayName: "' + state.className.name + '",', state);
 
-  utils.append('\n  render: function() {\n    return ', state);
+  node.body.forEach(function(stmt) {
+    if (stmt.type === 'FunctionDeclaration') {
+      checkReactMethod(stmt);
+      utils.move(stmt.range[0], state);
+      utils.append('\n  '+stmt.id.name+': ', state);
+    }
+    traverse(stmt, path, state);
+  });
+
+  utils.append('\n  render: function render() {\n    return ', state);
 
   utils.move(node.render.range[0], state);
   traverse(node.render, path, state);
@@ -82,7 +122,7 @@ function visitReactJSXClassDeclaration(traverse, node, path, state) {
   utils.move(node.range[1], state);
   utils.append('\n});', state);
 
-  var error, exportClass = true;
+  var exportClass = true;
   node.attributes.forEach(function(attr) {
     switch (attr.name.name) {
     case 'export':
@@ -96,21 +136,16 @@ function visitReactJSXClassDeclaration(traverse, node, path, state) {
       case 'true':
         break;
       default:
-        error = 'Invalid value for export attribute';
+        throwError(node, 'Invalid value for export attribute');
         break;
       }
       break;
     default:
-      error = 'Invalid attribute ' + attr.name.name;
+      throwError(node, 'Invalid attribute ' + attr.name.name);
       break;
     }
   });
 
-  if (error) {
-    throw new Error(error + '. (line: ' +
-      node.loc.start.line + ', col: ' + node.loc.start.column + ')'
-    );
-  }
   if (exportClass === 'default') {
     utils.append('\nexport default ' + state.className.name + ';', state);
   } else if (exportClass === true) {
@@ -134,5 +169,6 @@ visitReactJSXClassDeclaration.test = function(node, path, state) {
 
 exports.visitorList = [
   visitReactJSXModuleDeclaration,
-  visitReactJSXClassDeclaration
+  visitReactJSXClassDeclaration,
+  // TODO  visitReactJSXScriptContainer - non-javascripts (like css/less)
 ];
