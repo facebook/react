@@ -35,11 +35,29 @@ var ON_DOM_READY_QUEUEING = {
 };
 
 /**
+ * Provides a queue for collecting refs attach during the the transaction.
+ */
+var ON_REFS_READY_QUEUEING = {
+  /**
+   * Initializes the internal refs attach queue.
+   */
+  initialize: function() {
+    this.reactRefsReady.reset();
+  },
+
+  /**
+   * After DOM is flushed, attach all refs.
+   */
+  close: emptyFunction,
+};
+
+/**
  * Executed within the scope of the `Transaction` instance. Consider these as
  * being member methods, but with an implied ordering while being isolated from
  * each other.
  */
 var TRANSACTION_WRAPPERS = [
+  ON_REFS_READY_QUEUEING,
   ON_DOM_READY_QUEUEING,
 ];
 
@@ -51,6 +69,7 @@ function ReactServerRenderingTransaction(renderToStaticMarkup) {
   this.reinitializeTransaction();
   this.renderToStaticMarkup = renderToStaticMarkup;
   this.reactMountReady = CallbackQueue.getPooled(null);
+  this.reactRefsReady = CallbackQueue.getPooled(null);
 }
 
 var Mixin = {
@@ -69,6 +88,13 @@ var Mixin = {
    */
   getReactMountReady: function() {
     return this.reactMountReady;
+  },
+
+  /**
+   * @return {object} The queue to collect refs attach.
+   */
+  getReactRefsReady: function() {
+    return this.reactRefsReady;
   },
 
   /**
