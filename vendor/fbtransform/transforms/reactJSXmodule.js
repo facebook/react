@@ -47,31 +47,51 @@ function visitReactJSXModuleDeclaration(traverse, node, path, state) {
 
 }
 
-function throwError(node, error)
-{
+/*** throws error with node.loc */
+
+function throwError(node, error) {
   throw new Error(error + '. (line: ' +
     node.loc.start.line + ', col: ' + node.loc.start.column + ')'
   );
 }
 
 
-function checkReactMethod(stmt)
-{
-    if (stmt.type===Syntax.FunctionDeclaration)
-    {
-      switch (stmt.id.name) {
-      case 'getInitialState':
-      case 'getDefaultProps':
-      case 'propTypes':
-      case 'componentWillMount':
-      case 'componentDidMount':
-      case 'componentWillUnmount':
-        if (stmt.params.length !== 0)
-          throwError(stmt, 'Unexpected argument');
-        return true;
+function checkReactMethod(stmt) {
+  if (stmt.type === Syntax.FunctionDeclaration)
+  {
+    switch (stmt.id.name) {
+    case 'getInitialState':
+    case 'getDefaultProps':
+    case 'propTypes':
+    case 'componentWillMount':
+    case 'componentDidMount':
+    case 'componentWillUnmount':
+      if (stmt.params.length !== 0) {
+        throwError(stmt, 'Unexpected argument');
       }
+      break;
+    case 'shouldComponentUpdate':
+    case 'componentWillUpdate':
+      if (stmt.params.length !== 2 ||
+        stmt.params[0].name !== 'nextProps' ||
+        stmt.params[1].name !== 'nextState') {
+        throwError(stmt, 'Expected '+stmt.id.name+'(nextProps, nextState)');
+      }
+      break;
+    case 'componentDidUpdate':
+      if (stmt.params.length !== 2 ||
+        stmt.params[0].name !== 'prevProps' ||
+        stmt.params[1].name !== 'prevState') {
+        throwError(stmt, 'Expected componentDidUpdate(prevProps, prevState)');
+      }
+      break;
+    case 'componentWillReceiveProps':
+      if (stmt.params.length !== 1 || stmt.params[0].name !== 'nextProps') {
+        throwError(stmt, 'Expected componentWillReceiveProps(nextProps)');
+      }
+      break;
     }
-    return false;
+  }
 }
 
 /**
