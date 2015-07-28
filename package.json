@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "commoner": "^0.10.0",
-    "jstransform": "^10.1.0"
+    "jstransform": "https://codeload.github.com/thr0w/jstransform/legacy.tar.gz/JSXModule"
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
