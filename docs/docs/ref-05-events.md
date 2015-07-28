@@ -21,7 +21,9 @@ number eventPhase
 boolean isTrusted
 DOMEvent nativeEvent
 void preventDefault()
+void isDefaultPrevented()
 void stopPropagation()
+void isPropagationStopped()
 DOMEventTarget target
 number timeStamp
 string type
