@@ -15,7 +15,7 @@ var flatten = require('gulp-flatten');
 var del = require('del');
 
 var babelPluginDEV = require('fbjs/scripts/babel/dev-expression');
-var babelPluginRequires = require('fbjs/scripts/babel/rewrite-requires');
+var babelPluginModules = require('fbjs/scripts/babel/rewrite-modules');
 
 var paths = {
   react: {
@@ -36,7 +36,7 @@ var babelOpts = {
   optional: [
     'es7.trailingFunctionCommas',
   ],
-  plugins: [babelPluginDEV, babelPluginRequires],
+  plugins: [babelPluginDEV, babelPluginModules],
   ignore: ['third_party'],
   _moduleMap: require('fbjs/module-map'),
 };

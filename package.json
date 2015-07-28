@@ -42,7 +42,7 @@
     "eslint-plugin-react": "^2.5.0",
     "eslint-plugin-react-internal": "file:eslint-rules",
     "eslint-tester": "^0.7.0",
-    "fbjs": "^0.1.0-alpha.0",
+    "fbjs": "0.1.0-alpha.3",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
     "grunt-compare-size": "^0.4.0",
@@ -73,7 +73,6 @@
   },
   "scripts": {
     "build": "grunt build",
-    "jest": "test",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
     "test": "NODE_ENV=test jest"

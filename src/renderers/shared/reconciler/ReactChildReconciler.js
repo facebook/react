@@ -64,7 +64,7 @@ var ReactChildReconciler = {
    * Updates the rendered children and returns a new set of children.
    *
    * @param {?object} prevChildren Previously initialized set of children.
-   * @param {?object} nextNestedChildNodes Nested child maps.
+   * @param {?object} nextNestedChildrenElements Nested child element maps.
    * @param {ReactReconcileTransaction} transaction
    * @param {object} context
    * @return {?object} A new set of child instances.
@@ -72,7 +72,7 @@ var ReactChildReconciler = {
    */
   updateChildren: function(
     prevChildren,
-    nextNestedChildNodes,
+    nextNestedChildrenElements,
     transaction,
     context) {
     // We currently don't have a way to track moves here but if we use iterators
@@ -80,7 +80,7 @@ var ReactChildReconciler = {
     // moved.
     // TODO: If nothing has changed, return the prevChildren object so that we
     // can quickly bailout if nothing has changed.
-    var nextChildren = flattenChildren(nextNestedChildNodes);
+    var nextChildren = flattenChildren(nextNestedChildrenElements);
     if (!nextChildren && !prevChildren) {
       return null;
     }
