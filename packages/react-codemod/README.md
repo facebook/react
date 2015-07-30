@@ -1,13 +1,15 @@
 ## react-codemod
 
-This repository contains a collection of codemod scripts based on
+This repository contains a collection of codemod scripts based for use with
 [JSCodeshift](https://github.com/facebook/jscodeshift) that help update React
 APIs.
 
 ### Setup & Run
 
-  * `npm install -g react-codemod`
-  * `react-codemod <codemod-script> <file>`
+  * `npm install -g jscodeshift`
+  * `git clone https://github.com/facebook/react.git` or download a zip file
+    from `https://github.com/facebook/react/archive/master.zip`
+  * `jscodeshift -t <codemod-script> <file>`
   * Use the `-d` option for a dry-run and use `-p` to print the output
     for comparison
 
@@ -20,7 +22,7 @@ update calls on the component instance or its refs. You can use this script to
 update most calls to `getDOMNode` and then manually go through the remaining
 calls.
 
-  * `react-codemod findDOMNode <file>`
+  * `jscodeshift -t react/packages/react-codemod/transforms/findDOMNode.js <file>`
 
 `pure-render-mixin` removes `PureRenderMixin` and inlines
 `shouldComponentUpdate` so that the ES6 class transform can pick up the React
@@ -28,7 +30,7 @@ component and turn it into an ES6 class. NOTE: This currently only works if you
 are using the master version (>0.13.1) of React as it is using
 `React.addons.shallowCompare`
 
- * `react-codemod pure-render-mixin <file>`
+ * `jscodeshift -t react/packages/react-codemod/transforms/pure-render-mixin.js <file>`
  * If `--mixin-name=<name>` is specified it will look for the specified name
    instead of `PureRenderMixin`. Note that it is not possible to use a
    namespaced name for the mixin. `mixins: [React.addons.PureRenderMixin]` will
@@ -36,7 +38,7 @@ are using the master version (>0.13.1) of React as it is using
 
 `class` transforms `React.createClass` calls into ES6 classes.
 
-  * `react-codemod class <file>`
+  * `jscodeshift -t react/packages/react-codemod/transforms/class.js <file>`
   * If `--no-super-class=true` is specified it will not extend
     `React.Component` if `setState` and `forceUpdate` aren't being called in a
     class. We do recommend always extending from `React.Component`, especially
@@ -97,4 +99,4 @@ The constructor logic is as follows:
 Options to [recast](https://github.com/benjamn/recast)'s printer can be provided
 through the `printOptions` command line argument
 
- * `react-codemod class <file> --printOptions='{"quote":"double"}'`
+ * `jscodeshift -t transform.js <file> --printOptions='{"quote":"double"}'`

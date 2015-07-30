@@ -222,7 +222,7 @@ function updateReactCreateClassToES6(file, api, options) {
   // Boom!
   const createMethodDefinition = fn =>
     withComments(j.methodDefinition(
-      '',
+      'method',
       fn.key,
       fn.value
     ), fn);
@@ -495,7 +495,7 @@ function updateReactCreateClassToES6(file, api, options) {
     ) > 0;
 
     if (didTransform) {
-      return root.toSource(printOptions) + '\n';
+      return root.toSource(printOptions);
     }
   }
 

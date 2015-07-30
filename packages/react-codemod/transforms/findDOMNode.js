@@ -133,7 +133,7 @@ function getDOMNodeToFindDOMNode(file, api, options) {
       .size() > 0;
 
     if (didTransform) {
-      return root.toSource(printOptions) + '\n';
+      return root.toSource(printOptions);
     }
   }
 
