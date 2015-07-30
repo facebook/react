@@ -195,3 +195,11 @@ Number deltaX
 Number deltaY
 Number deltaZ
 ```
+
+### Media Events
+
+Event names:
+
+```
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+```

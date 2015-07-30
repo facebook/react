@@ -301,6 +301,34 @@ function putListener() {
   );
 }
 
+// There are so many media events, it makes sense to just
+// maintain a list rather than create a `trapBubbledEvent` for each
+var mediaEvents = {
+  topAbort: 'abort',
+  topCanPlay: 'canplay',
+  topCanPlayThrough: 'canplaythrough',
+  topDurationChange: 'durationchange',
+  topEmptied: 'emptied',
+  topEnded: 'ended',
+  topError: 'error',
+  topLoadedData: 'loadeddata',
+  topLoadedMetadata: 'loadedmetadata',
+  topLoadStart: 'loadstart',
+  topOnEncrypted: 'onencrypted',
+  topPause: 'pause',
+  topPlay: 'play',
+  topPlaying: 'playing',
+  topProgress: 'progress',
+  topRateChange: 'ratechange',
+  topSeeked: 'seeked',
+  topSeeking: 'seeking',
+  topStalled: 'stalled',
+  topSuspend: 'suspend',
+  topTimeUpdate: 'timeupdate',
+  topVolumeChange: 'volumechange',
+  topWaiting: 'waiting',
+};
+
 function trapBubbledEventsLocal() {
   var inst = this;
   // If a component renders to null or if another component fatals and causes
@@ -321,6 +349,24 @@ function trapBubbledEventsLocal() {
           node
         ),
       ];
+      break;
+    case 'video':
+    case 'audio':
+
+      inst._wrapperState.listeners = [];
+      // create listener for each media event
+      for (var event in mediaEvents) {
+        if (mediaEvents.hasOwnProperty(event)) {
+          inst._wrapperState.listeners.push(
+            ReactBrowserEventEmitter.trapBubbledEvent(
+              EventConstants.topLevelTypes[event],
+              mediaEvents[event],
+              node
+            )
+          );
+        }
+      }
+
       break;
     case 'img':
       inst._wrapperState.listeners = [
@@ -475,6 +521,8 @@ ReactDOMComponent.Mixin = {
       case 'iframe':
       case 'img':
       case 'form':
+      case 'video':
+      case 'audio':
         this._wrapperState = {
           listeners: null,
         };
@@ -902,6 +950,8 @@ ReactDOMComponent.Mixin = {
       case 'iframe':
       case 'img':
       case 'form':
+      case 'video':
+      case 'audio':
         var listeners = this._wrapperState.listeners;
         if (listeners) {
           for (var i = 0; i < listeners.length; i++) {
