@@ -60,7 +60,7 @@ The process to build `react.js` is built entirely on top of node.js, using many 
 
 #### Prerequisites
 
-* You have `node` installed at v0.10.0+ (it might work at lower versions, we just haven't tested).
+* You have `node` installed at v0.10.0+ (it might work at lower versions, we just haven't tested) and `npm` at v2.0.0+.
 * You are familiar with `npm` and know whether or not you need to use `sudo` when installing packages globally.
 * You are familiar with `git`.
 
@@ -107,4 +107,4 @@ Examples provided in this repository and in the documentation are [separately li
 There's only so much we can cram in here. To read more about the community and guidelines for submitting pull requests, please read the [Contributing document](CONTRIBUTING.md).
 
 ## Troubleshooting
-See the [Troubleshooting Guide](https://github.com/facebook/react/wiki/Troubleshooting) 
+See the [Troubleshooting Guide](https://github.com/facebook/react/wiki/Troubleshooting)

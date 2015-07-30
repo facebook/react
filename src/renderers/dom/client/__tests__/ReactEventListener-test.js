@@ -36,6 +36,26 @@ describe('ReactEventListener', function() {
     ReactEventListener._handleTopLevel = handleTopLevel;
   });
 
+  it('should dispatch events from outside React tree', function() {
+    var otherNode = document.createElement('h1');
+    var component = ReactMount.render(<div />, document.createElement('div'));
+    expect(handleTopLevel.mock.calls.length).toBe(0);
+    ReactEventListener.dispatchEvent(
+      'topMouseOut',
+      {
+        type: 'mouseout',
+        fromElement: otherNode,
+        target: otherNode,
+        srcElement: otherNode,
+        toElement: React.findDOMNode(component),
+        relatedTarget: React.findDOMNode(component),
+        view: window,
+        path: [otherNode, otherNode],
+      },
+    );
+    expect(handleTopLevel.mock.calls.length).toBe(1);
+  });
+
   describe('Propagation', function() {
     it('should propagate events one level down', function() {
       var childContainer = document.createElement('div');

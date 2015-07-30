@@ -21,7 +21,9 @@ number eventPhase
 boolean isTrusted
 DOMEvent nativeEvent
 void preventDefault()
+void isDefaultPrevented()
 void stopPropagation()
+void isPropagationStopped()
 DOMEventTarget target
 number timeStamp
 string type
@@ -192,4 +194,12 @@ Number deltaMode
 Number deltaX
 Number deltaY
 Number deltaZ
+```
+
+### Media Events
+
+Event names:
+
+```
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
 ```

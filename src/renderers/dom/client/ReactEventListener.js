@@ -104,6 +104,7 @@ function handleTopLevelWithoutPath(bookKeeping) {
 function handleTopLevelWithPath(bookKeeping) {
   var path = bookKeeping.nativeEvent.path;
   var currentNativeTarget = path[0];
+  var eventsFired = 0;
   for (var i = 0; i < path.length; i++) {
     var currentPathElement = path[i];
     var currentPathElementID = ReactMount.getID(currentPathElement);
@@ -117,6 +118,7 @@ function handleTopLevelWithPath(bookKeeping) {
       bookKeeping.ancestors.push(currentPathElement);
 
       var topLevelTargetID = ReactMount.getID(currentPathElement) || '';
+      eventsFired++;
       ReactEventListener._handleTopLevel(
         bookKeeping.topLevelType,
         currentPathElement,
@@ -132,6 +134,15 @@ function handleTopLevelWithPath(bookKeeping) {
         currentPathElementID = ReactMount.getID(currentPathElement);
       }
     }
+  }
+  if (eventsFired === 0) {
+    ReactEventListener._handleTopLevel(
+      bookKeeping.topLevelType,
+      window,
+      '',
+      bookKeeping.nativeEvent,
+      getEventTarget(bookKeeping.nativeEvent)
+    );
   }
 }
 
