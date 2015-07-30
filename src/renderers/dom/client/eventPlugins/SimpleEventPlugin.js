@@ -35,10 +35,28 @@ var warning = require('warning');
 var topLevelTypes = EventConstants.topLevelTypes;
 
 var eventTypes = {
+  abort: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onAbort: true}),
+      captured: keyOf({onAbortCapture: true}),
+    },
+  },
   blur: {
     phasedRegistrationNames: {
       bubbled: keyOf({onBlur: true}),
       captured: keyOf({onBlurCapture: true}),
+    },
+  },
+  canPlay: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onCanPlay: true}),
+      captured: keyOf({onCanPlayCapture: true}),
+    },
+  },
+  canPlayThrough: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onCanPlayThrough: true}),
+      captured: keyOf({onCanPlayThroughCapture: true}),
     },
   },
   click: {
@@ -119,6 +137,30 @@ var eventTypes = {
       captured: keyOf({onDropCapture: true}),
     },
   },
+  durationChange: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDurationChange: true}),
+      captured: keyOf({onDurationChangeCapture: true}),
+    },
+  },
+  emptied: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onEmptied: true}),
+      captured: keyOf({onEmptiedCapture: true}),
+    },
+  },
+  ended: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onEnded: true}),
+      captured: keyOf({onEndedCapture: true}),
+    },
+  },
+  error: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onError: true}),
+      captured: keyOf({onErrorCapture: true}),
+    },
+  },
   focus: {
     phasedRegistrationNames: {
       bubbled: keyOf({onFocus: true}),
@@ -155,10 +197,22 @@ var eventTypes = {
       captured: keyOf({onLoadCapture: true}),
     },
   },
-  error: {
+  loadedData: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onError: true}),
-      captured: keyOf({onErrorCapture: true}),
+      bubbled: keyOf({onLoadedData: true}),
+      captured: keyOf({onLoadedDataCapture: true}),
+    },
+  },
+  loadedMetadata: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onLoadedMetadata: true}),
+      captured: keyOf({onLoadedMetadataCapture: true}),
+    },
+  },
+  loadStart: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onLoadStart: true}),
+      captured: keyOf({onLoadStartCapture: true}),
     },
   },
   // Note: We do not allow listening to mouseOver events. Instead, use the
@@ -193,10 +247,46 @@ var eventTypes = {
       captured: keyOf({onMouseUpCapture: true}),
     },
   },
+  onEncrypted: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onEncrypted: true}),
+      captured: keyOf({onEncryptedCapture: true}),
+    },
+  },
   paste: {
     phasedRegistrationNames: {
       bubbled: keyOf({onPaste: true}),
       captured: keyOf({onPasteCapture: true}),
+    },
+  },
+  pause: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPause: true}),
+      captured: keyOf({onPauseCapture: true}),
+    },
+  },
+  play: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPlay: true}),
+      captured: keyOf({onPlayCapture: true}),
+    },
+  },
+  playing: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPlaying: true}),
+      captured: keyOf({onPlayingCapture: true}),
+    },
+  },
+  progress: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onProgress: true}),
+      captured: keyOf({onProgressCapture: true}),
+    },
+  },
+  rateChange: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onRateChange: true}),
+      captured: keyOf({onRateChangeCapture: true}),
     },
   },
   reset: {
@@ -211,10 +301,40 @@ var eventTypes = {
       captured: keyOf({onScrollCapture: true}),
     },
   },
+  seeked: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onSeeked: true}),
+      captured: keyOf({onSeekedCapture: true}),
+    },
+  },
+  seeking: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onSeeking: true}),
+      captured: keyOf({onSeekingCapture: true}),
+    },
+  },
+  stalled: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onStalled: true}),
+      captured: keyOf({onStalledCapture: true}),
+    },
+  },
   submit: {
     phasedRegistrationNames: {
       bubbled: keyOf({onSubmit: true}),
       captured: keyOf({onSubmitCapture: true}),
+    },
+  },
+  suspend: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onSuspend: true}),
+      captured: keyOf({onSuspendCapture: true}),
+    },
+  },
+  timeUpdate: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTimeUpdate: true}),
+      captured: keyOf({onTimeUpdateCapture: true}),
     },
   },
   touchCancel: {
@@ -241,6 +361,18 @@ var eventTypes = {
       captured: keyOf({onTouchStartCapture: true}),
     },
   },
+  volumeChange: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onVolumeChange: true}),
+      captured: keyOf({onVolumeChangeCapture: true}),
+    },
+  },
+  waiting: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onWaiting: true}),
+      captured: keyOf({onWaitingCapture: true}),
+    },
+  },
   wheel: {
     phasedRegistrationNames: {
       bubbled: keyOf({onWheel: true}),
@@ -250,41 +382,63 @@ var eventTypes = {
 };
 
 var topLevelEventsToDispatchConfig = {
-  topBlur:        eventTypes.blur,
-  topClick:       eventTypes.click,
-  topContextMenu: eventTypes.contextMenu,
-  topCopy:        eventTypes.copy,
-  topCut:         eventTypes.cut,
-  topDoubleClick: eventTypes.doubleClick,
-  topDrag:        eventTypes.drag,
-  topDragEnd:     eventTypes.dragEnd,
-  topDragEnter:   eventTypes.dragEnter,
-  topDragExit:    eventTypes.dragExit,
-  topDragLeave:   eventTypes.dragLeave,
-  topDragOver:    eventTypes.dragOver,
-  topDragStart:   eventTypes.dragStart,
-  topDrop:        eventTypes.drop,
-  topError:       eventTypes.error,
-  topFocus:       eventTypes.focus,
-  topInput:       eventTypes.input,
-  topKeyDown:     eventTypes.keyDown,
-  topKeyPress:    eventTypes.keyPress,
-  topKeyUp:       eventTypes.keyUp,
-  topLoad:        eventTypes.load,
-  topMouseDown:   eventTypes.mouseDown,
-  topMouseMove:   eventTypes.mouseMove,
-  topMouseOut:    eventTypes.mouseOut,
-  topMouseOver:   eventTypes.mouseOver,
-  topMouseUp:     eventTypes.mouseUp,
-  topPaste:       eventTypes.paste,
-  topReset:       eventTypes.reset,
-  topScroll:      eventTypes.scroll,
-  topSubmit:      eventTypes.submit,
-  topTouchCancel: eventTypes.touchCancel,
-  topTouchEnd:    eventTypes.touchEnd,
-  topTouchMove:   eventTypes.touchMove,
-  topTouchStart:  eventTypes.touchStart,
-  topWheel:       eventTypes.wheel,
+  topAbort:           eventTypes.abort,
+  topBlur:            eventTypes.blur,
+  topCanPlay:         eventTypes.canPlay,
+  topCanPlayThrough:  eventTypes.canPlayThrough,
+  topClick:           eventTypes.click,
+  topContextMenu:     eventTypes.contextMenu,
+  topCopy:            eventTypes.copy,
+  topCut:             eventTypes.cut,
+  topDoubleClick:     eventTypes.doubleClick,
+  topDrag:            eventTypes.drag,
+  topDragEnd:         eventTypes.dragEnd,
+  topDragEnter:       eventTypes.dragEnter,
+  topDragExit:        eventTypes.dragExit,
+  topDragLeave:       eventTypes.dragLeave,
+  topDragOver:        eventTypes.dragOver,
+  topDragStart:       eventTypes.dragStart,
+  topDrop:            eventTypes.drop,
+  topDurationChange:  eventTypes.durationChange,
+  topEmptied:         eventTypes.emptied,
+  topEnded:           eventTypes.ended,
+  topError:           eventTypes.error,
+  topFocus:           eventTypes.focus,
+  topInput:           eventTypes.input,
+  topKeyDown:         eventTypes.keyDown,
+  topKeyPress:        eventTypes.keyPress,
+  topKeyUp:           eventTypes.keyUp,
+  topLoad:            eventTypes.load,
+  topLoadedData:      eventTypes.loadedData,
+  topLoadedMetadata:  eventTypes.loadedMetadata,
+  topLoadStart:       eventTypes.loadStart,
+  topMouseDown:       eventTypes.mouseDown,
+  topMouseMove:       eventTypes.mouseMove,
+  topMouseOut:        eventTypes.mouseOut,
+  topMouseOver:       eventTypes.mouseOver,
+  topMouseUp:         eventTypes.mouseUp,
+  topOnEncrypted:     eventTypes.onEncrypted,
+  topPause:           eventTypes.pause,
+  topPaste:           eventTypes.paste,
+  topPlay:            eventTypes.play,
+  topPlaying:         eventTypes.playing,
+  topProgress:        eventTypes.progress,
+  topRateChange:      eventTypes.rateChange,
+  topReset:           eventTypes.reset,
+  topSeeked:          eventTypes.seeked,
+  topSeeking:         eventTypes.seeking,
+  topScroll:          eventTypes.scroll,
+  topStalled:         eventTypes.stalled,
+  topSubmit:          eventTypes.submit,
+  topSuspend:         eventTypes.suspend,
+  topTimeUpdate:      eventTypes.timeUpdate,
+  topTouchCancel:     eventTypes.touchCancel,
+  topTouchEnd:        eventTypes.touchEnd,
+  topTouchMove:       eventTypes.touchMove,
+  topTouchStart:      eventTypes.touchStart,
+  topVolumeChange:    eventTypes.volumeChange,
+  topWaiting:         eventTypes.waiting,
+  topWheel:           eventTypes.wheel,
 };
 
 for (var type in topLevelEventsToDispatchConfig) {
@@ -342,11 +496,33 @@ var SimpleEventPlugin = {
     }
     var EventConstructor;
     switch (topLevelType) {
+      case topLevelTypes.topAbort:
+      case topLevelTypes.topCanPlay:
+      case topLevelTypes.topCanPlayThrough:
+      case topLevelTypes.topDurationChange:
+      case topLevelTypes.topEmptied:
+      case topLevelTypes.topEnded:
+      case topLevelTypes.topError:
       case topLevelTypes.topInput:
       case topLevelTypes.topLoad:
-      case topLevelTypes.topError:
+      case topLevelTypes.topLoadedData:
+      case topLevelTypes.topLoadedMetadata:
+      case topLevelTypes.topLoadStart:
+      case topLevelTypes.topOnEncrypted:
+      case topLevelTypes.topPause:
+      case topLevelTypes.topPlay:
+      case topLevelTypes.topPlaying:
+      case topLevelTypes.topProgress:
+      case topLevelTypes.topRateChange:
       case topLevelTypes.topReset:
+      case topLevelTypes.topSeeked:
+      case topLevelTypes.topSeeking:
+      case topLevelTypes.topStalled:
       case topLevelTypes.topSubmit:
+      case topLevelTypes.topSuspend:
+      case topLevelTypes.topTimeUpdate:
+      case topLevelTypes.topVolumeChange:
+      case topLevelTypes.topWaiting:
         // HTML Events
         // @see http://www.w3.org/TR/html5/index.html#events-0
         EventConstructor = SyntheticEvent;
