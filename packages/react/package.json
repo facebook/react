@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "envify": "^3.0.0",
-    "fbjs": "0.1.0-alpha.0"
+    "fbjs": "0.1.0-alpha.4"
   },
   "browserify": {
     "transform": [
