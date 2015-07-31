@@ -1,7 +1,0 @@
-#!/bin/bash
-
-DIR=$(npm root -g)/react-codemod
-TRANSFORM=$1
-shift
-
-$DIR/node_modules/.bin/jscodeshift -t $DIR/build/$TRANSFORM.js $@

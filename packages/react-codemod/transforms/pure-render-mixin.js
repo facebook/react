@@ -177,7 +177,7 @@ function removePureRenderMixin(file, api, options) {
 
     if (didTransform) {
       deletePureRenderMixin(root);
-      return root.toSource(printOptions) + '\n';
+      return root.toSource(printOptions);
     }
   }
 
