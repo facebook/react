@@ -263,11 +263,12 @@ function assertValidProps(component, props) {
   }
   invariant(
     props.style == null || typeof props.style === 'object',
-    '%s. A component inside its render method has incorrect inline style syntax.' +
+    'Invariant Violation: A component inside its render method has incorrect inline style syntax.' +
      ' The `style` prop expects a mapping from style properties to values, ' +
     'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
-    'using JSX.',
-     getDeclarationErrorAddendum(component));
+    'using JSX. %s',
+     getDeclarationErrorAddendum(component)
+  );
 }
 
 function enqueuePutListener(id, registrationName, listener, transaction) {
