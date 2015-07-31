@@ -263,7 +263,7 @@ function assertValidProps(component, props) {
   }
   invariant(
     props.style == null || typeof props.style === 'object',
-    ' A component inside its render method has incorrect inline style syntax.' +
+    'A component inside its render method has incorrect inline style syntax.' +
      ' The `style` prop expects a mapping from style properties to values, ' +
     'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
     'using JSX. %s',
