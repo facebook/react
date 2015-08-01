@@ -149,6 +149,12 @@ var eventTypes = {
       captured: keyOf({onEmptiedCapture: true}),
     },
   },
+  encrypted: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onEncrypted: true}),
+      captured: keyOf({onEncryptedCapture: true}),
+    },
+  },
   ended: {
     phasedRegistrationNames: {
       bubbled: keyOf({onEnded: true}),
@@ -245,12 +251,6 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseUp: true}),
       captured: keyOf({onMouseUpCapture: true}),
-    },
-  },
-  onEncrypted: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onEncrypted: true}),
-      captured: keyOf({onEncryptedCapture: true}),
     },
   },
   paste: {
@@ -401,6 +401,7 @@ var topLevelEventsToDispatchConfig = {
   topDrop:            eventTypes.drop,
   topDurationChange:  eventTypes.durationChange,
   topEmptied:         eventTypes.emptied,
+  topEncrypted:       eventTypes.encrypted,
   topEnded:           eventTypes.ended,
   topError:           eventTypes.error,
   topFocus:           eventTypes.focus,
@@ -417,7 +418,6 @@ var topLevelEventsToDispatchConfig = {
   topMouseOut:        eventTypes.mouseOut,
   topMouseOver:       eventTypes.mouseOver,
   topMouseUp:         eventTypes.mouseUp,
-  topOnEncrypted:     eventTypes.onEncrypted,
   topPause:           eventTypes.pause,
   topPaste:           eventTypes.paste,
   topPlay:            eventTypes.play,
@@ -501,6 +501,7 @@ var SimpleEventPlugin = {
       case topLevelTypes.topCanPlayThrough:
       case topLevelTypes.topDurationChange:
       case topLevelTypes.topEmptied:
+      case topLevelTypes.topEncrypted:
       case topLevelTypes.topEnded:
       case topLevelTypes.topError:
       case topLevelTypes.topInput:
@@ -508,7 +509,6 @@ var SimpleEventPlugin = {
       case topLevelTypes.topLoadedData:
       case topLevelTypes.topLoadedMetadata:
       case topLevelTypes.topLoadStart:
-      case topLevelTypes.topOnEncrypted:
       case topLevelTypes.topPause:
       case topLevelTypes.topPlay:
       case topLevelTypes.topPlaying:
