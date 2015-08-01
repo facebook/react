@@ -905,11 +905,12 @@ var ReactClass = {
       }
       else {
         if (__DEV__) {
-          // hijack the supplied method and wrap it with Perf
-          Constructor.prototype[methodName] = ReactPerf.measure(
-            'ReactClass',
+          // spec is the user-defined component
+          // hijack the defined lifecycle methods and wrap with Perf
+          spec[methodName] = ReactPerf.measure(
+            spec.displayName,
             methodName,
-            Constructor.prototype[methodName]
+            spec[methodName]
           );
         }
       }
