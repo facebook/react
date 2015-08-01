@@ -902,8 +902,7 @@ var ReactClass = {
     for (var methodName in ReactClassInterface) {
       if (!Constructor.prototype[methodName]) {
         Constructor.prototype[methodName] = null;
-      }
-      else {
+      } else {
         if (__DEV__) {
           // spec is the user-defined component
           // hijack the defined lifecycle methods and wrap with Perf
