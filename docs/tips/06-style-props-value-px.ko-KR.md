@@ -20,6 +20,7 @@ React.render(<div style={divStyle}>Hello World!</div>, mountNode);
 
 - `boxFlex`
 - `boxFlexGroup`
+- `boxOrdinalGroup`
 - `columnCount`
 - `fillOpacity`
 - `flex`
@@ -27,6 +28,7 @@ React.render(<div style={divStyle}>Hello World!</div>, mountNode);
 - `flexPositive`
 - `flexShrink`
 - `flexNegative`
+- `flexOrder`
 - `fontWeight`
 - `lineClamp`
 - `lineHeight`
