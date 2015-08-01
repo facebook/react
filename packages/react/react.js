@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 'use strict';
 
 var React = require('./lib/React');
