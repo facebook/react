@@ -1,4 +1,4 @@
-var warning = require('./lib/warning');
+var warning = require('fbjs/lib/warning');
 warning(
   false,
   // Require examples in this string must be split to prevent React's
