@@ -28,7 +28,6 @@ var TICK = 17;
 var NO_EVENT_TIMEOUT = 5000;
 
 var noEventListener = null;
-var noEventTimeout = null;
 
 if (__DEV__) {
   noEventListener = function() {
@@ -59,14 +58,14 @@ var ReactCSSTransitionGroupChild = React.createClass({
     var className = this.props.name[animationType] || this.props.name + '-' + animationType;
     var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
 
-    var noEventTimeout = null;
+    this.noEventTimeout = null;
 
     var endListener = function(e) {
       if (e && e.target !== node) {
         return;
       }
       if (__DEV__) {
-        clearTimeout(noEventTimeout);
+        clearTimeout(this.noEventTimeout);
       }
 
       CSSCore.removeClass(node, className);
@@ -89,7 +88,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
     this.queueClass(activeClassName);
 
     if (__DEV__) {
-      noEventTimeout = setTimeout(noEventListener, NO_EVENT_TIMEOUT);
+      this.noEventTimeout = setTimeout(noEventListener, NO_EVENT_TIMEOUT);
     }
   },
 
@@ -120,7 +119,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
       clearTimeout(this.timeout);
     }
     if (__DEV__) {
-      clearTimeout(noEventTimeout);
+      if (this.noEventTimeout) {
+        clearTimeout(this.noEventTimeout);
+      }
     }
   },
 
