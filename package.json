@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "0.14.0-beta2",
+  "version": "0.14.0-beta3",
   "devDependencies": {
     "babel": "^5.8.3",
     "babel-eslint": "^3.1.25",
