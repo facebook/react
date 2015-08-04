@@ -22,6 +22,7 @@ var ReactUpdates = require('ReactUpdates');
 var assign = require('Object.assign');
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+var invariant = require('invariant');
 
 var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
@@ -130,6 +131,12 @@ function handleTopLevelWithPath(bookKeeping) {
       // Jump to the root of this React render tree
       while (currentPathElementID !== newRootID) {
         i++;
+        invariant(
+          i < path.length,
+          'Expected to find another React root ' +
+          'before reaching end of event path (%s).',
+          path
+        );
         currentPathElement = path[i];
         currentPathElementID = ReactMount.getID(currentPathElement);
       }
