@@ -86,8 +86,6 @@ We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete lis
 grunt test
 # Build and run tests in your browser
 grunt test --debug
-# For speed, you can use fasttest and add --filter to only run one test
-grunt fasttest --filter=ReactIdentity
 # Lint the code with ESLint
 grunt lint
 # Wipe out build directory
