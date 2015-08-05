@@ -108,9 +108,6 @@ module.exports = function(grunt) {
     'npm-react:release',
   ]);
 
-  grunt.registerTask('fasttest', function() {
-    grunt.task.run('test');
-  });
   grunt.registerTask('test', ['jest']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
