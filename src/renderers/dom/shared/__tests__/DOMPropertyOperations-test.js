@@ -224,6 +224,15 @@ describe('DOMPropertyOperations', function() {
         .toEqual(['http://www.w3.org/1999/xlink', 'xlink:href', 'about:blank']);
     });
 
+    it('should set values as boolean properties', function() {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', 'disabled');
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', true);
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', false);
+      expect(stubNode.getAttribute('disabled')).toBe(null);
+    });
+
     it('should convert attribute values to string first', function() {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.

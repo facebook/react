@@ -173,6 +173,9 @@ var DOMPropertyOperations = {
         // ('' + value) makes it output the correct toString()-value.
         if (namespace) {
           node.setAttributeNS(namespace, attributeName, '' + value);
+        } else if (propertyInfo.hasBooleanValue ||
+                   (propertyInfo.hasOverloadedBooleanValue && value === true)) {
+          node.setAttribute(attributeName, '');
         } else {
           node.setAttribute(attributeName, '' + value);
         }
