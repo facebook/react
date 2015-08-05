@@ -29,9 +29,29 @@ describe('ReactCSSTransitionGroup', function() {
     spyOn(console, 'error');
   });
 
-  it('should warn after time with no transitionend', function() {
+  it('should warn if timeouts aren\'t specified', function() {
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={true}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+
+    // Warning about the missing transitionLeaveTimeout prop
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should clean-up silently after the timeout elapses', function() {
     var a = ReactDOM.render(
-      <ReactCSSTransitionGroup transitionName="yolo">
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeaveTimeout={200}
+      >
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
@@ -41,7 +61,11 @@ describe('ReactCSSTransitionGroup', function() {
     setTimeout.mock.calls.length = 0;
 
     ReactDOM.render(
-      <ReactCSSTransitionGroup transitionName="yolo">
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeaveTimeout={200}
+      >
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
       container
@@ -53,14 +77,18 @@ describe('ReactCSSTransitionGroup', function() {
     // For some reason jst is adding extra setTimeout()s and grunt test isn't,
     // so we need to do this disgusting hack.
     for (var i = 0; i < setTimeout.mock.calls.length; i++) {
-      if (setTimeout.mock.calls[i][1] === 5000) {
+      if (setTimeout.mock.calls[i][1] === 200) {
         setTimeout.mock.calls[i][0]();
         break;
       }
     }
 
-    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
-    expect(console.error.argsForCall.length).toBe(1);
+    // No warnings
+    expect(console.error.argsForCall.length).toBe(0);
+
+    // The leaving child has been removed
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
   });
 
   it('should keep both sets of DOM nodes around', function() {
@@ -170,5 +198,4 @@ describe('ReactCSSTransitionGroup', function() {
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
   });
-
 });
