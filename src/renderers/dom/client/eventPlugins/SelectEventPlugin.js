@@ -13,6 +13,7 @@
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -22,6 +23,12 @@ var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
 
 var topLevelTypes = EventConstants.topLevelTypes;
+
+var skipSelectionChangeEvent = (
+  ExecutionEnvironment.canUseDOM &&
+  'documentMode' in document &&
+  document.documentMode <= 11
+);
 
 var eventTypes = {
   select: {
@@ -189,12 +196,19 @@ var SelectEventPlugin = {
         return constructSelectEvent(nativeEvent, nativeEventTarget);
 
       // Chrome and IE fire non-standard event when selection is changed (and
-      // sometimes when it hasn't).
+      // sometimes when it hasn't). IE's event fires out of order with respect
+      // to key and input events on deletion, so we discard it.
+      //
       // Firefox doesn't support selectionchange, so check selection status
       // after each key entry. The selection changes after keydown and before
       // keyup, but we check on keydown as well in the case of holding down a
       // key, when multiple keydown events are fired but only one keyup is.
+      // This is also our approach for IE handling, for the reason above.
       case topLevelTypes.topSelectionChange:
+        if (skipSelectionChangeEvent) {
+          break;
+        }
+        // falls through
       case topLevelTypes.topKeyDown:
       case topLevelTypes.topKeyUp:
         return constructSelectEvent(nativeEvent, nativeEventTarget);
