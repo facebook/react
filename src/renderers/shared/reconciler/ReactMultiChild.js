@@ -19,6 +19,8 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 
+var flattenChildren = require('flattenChildren');
+
 /**
  * Updating children of a component may trigger recursive updates. The depth is
  * used to batch recursive updates to render markup more efficiently.
@@ -209,20 +211,23 @@ var ReactMultiChild = {
     },
 
     _reconcilerUpdateChildren: function(prevChildren, nextNestedChildrenElements, transaction, context) {
+      var nextChildren;
       if (__DEV__) {
         if (this._currentElement) {
           try {
             ReactCurrentOwner.current = this._currentElement._owner;
-            return ReactChildReconciler.updateChildren(
-              prevChildren, nextNestedChildrenElements, transaction, context
-            );
+            nextChildren = flattenChildren(nextNestedChildrenElements);
           } finally {
             ReactCurrentOwner.current = null;
           }
+          return ReactChildReconciler.updateChildren(
+            prevChildren, nextChildren, transaction, context
+          );
         }
       }
+      nextChildren = flattenChildren(nextNestedChildrenElements);
       return ReactChildReconciler.updateChildren(
-        prevChildren, nextNestedChildrenElements, transaction, context
+        prevChildren, nextChildren, transaction, context
       );
     },
 

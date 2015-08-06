@@ -14,7 +14,6 @@
 
 var ReactReconciler = require('ReactReconciler');
 
-var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseAllChildren = require('traverseAllChildren');
@@ -64,7 +63,7 @@ var ReactChildReconciler = {
    * Updates the rendered children and returns a new set of children.
    *
    * @param {?object} prevChildren Previously initialized set of children.
-   * @param {?object} nextNestedChildrenElements Nested child element maps.
+   * @param {?object} nextChildren Flat child element maps.
    * @param {ReactReconcileTransaction} transaction
    * @param {object} context
    * @return {?object} A new set of child instances.
@@ -72,7 +71,7 @@ var ReactChildReconciler = {
    */
   updateChildren: function(
     prevChildren,
-    nextNestedChildrenElements,
+    nextChildren,
     transaction,
     context) {
     // We currently don't have a way to track moves here but if we use iterators
@@ -80,7 +79,6 @@ var ReactChildReconciler = {
     // moved.
     // TODO: If nothing has changed, return the prevChildren object so that we
     // can quickly bailout if nothing has changed.
-    var nextChildren = flattenChildren(nextNestedChildrenElements);
     if (!nextChildren && !prevChildren) {
       return null;
     }
