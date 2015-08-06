@@ -18,6 +18,7 @@ React.render(<div style={divStyle}>Hello World!</div>, mountNode);
 
 개발 하다보면 CSS 속성들이 단위 없이 그대로 유지되어야 할 때가 있을 겁니다. 아래의 프로퍼티들은 자동으로 "px"가 붙지 않는 속성 리스트 입니다:
 
+- `animationIterationCount`
 - `boxFlex`
 - `boxFlexGroup`
 - `boxOrdinalGroup`
@@ -35,7 +36,10 @@ React.render(<div style={divStyle}>Hello World!</div>, mountNode);
 - `opacity`
 - `order`
 - `orphans`
+- `stopOpacity`
+- `strokeDashoffset`
 - `strokeOpacity`
+- `strokeWidth`
 - `tabSize`
 - `widows`
 - `zIndex`

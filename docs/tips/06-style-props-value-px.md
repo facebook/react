@@ -18,6 +18,7 @@ See [Inline Styles](/react/tips/inline-styles.html) for more info.
 
 Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of properties that won't get the automatic "px" suffix:
 
+- `animationIterationCount`
 - `boxFlex`
 - `boxFlexGroup`
 - `boxOrdinalGroup`
@@ -35,7 +36,10 @@ Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of pr
 - `opacity`
 - `order`
 - `orphans`
+- `stopOpacity`
+- `strokeDashoffset`
 - `strokeOpacity`
+- `strokeWidth`
 - `tabSize`
 - `widows`
 - `zIndex`
