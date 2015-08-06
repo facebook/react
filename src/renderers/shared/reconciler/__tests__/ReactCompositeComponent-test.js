@@ -1092,4 +1092,38 @@ describe('ReactCompositeComponent', function() {
     expect(moo.state.amIImmutable).toBe(undefined);
   });
 
+  it('should not warn about unmounting during unmounting', function() {
+    var container = document.createElement('div');
+    var layer = document.createElement('div');
+
+    var Component = React.createClass({
+      componentWillMount: function() {
+        React.render(<div />, layer);
+      },
+
+      componentWillUnmount: function() {
+        React.unmountComponentAtNode(layer);
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var Outer = React.createClass({
+      render: function() {
+        return <div>{this.props.children}</div>;
+      },
+    });
+
+    React.render(<Outer><Component /></Outer>, container);
+
+    expect(console.error.calls.length).toBe(0);
+
+    React.render(<Outer />, container);
+
+    expect(console.error.calls.length).toBe(0);
+  });
+
+
 });
