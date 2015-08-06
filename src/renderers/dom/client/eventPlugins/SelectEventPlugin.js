@@ -208,6 +208,7 @@ var SelectEventPlugin = {
         if (skipSelectionChangeEvent) {
           break;
         }
+        // falls through
       case topLevelTypes.topKeyDown:
       case topLevelTypes.topKeyUp:
         return constructSelectEvent(nativeEvent, nativeEventTarget);
