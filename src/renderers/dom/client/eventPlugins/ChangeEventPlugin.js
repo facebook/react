@@ -18,6 +18,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
+var getEventTarget = require('getEventTarget');
 var isEventSupported = require('isEventSupported');
 var isTextInputElement = require('isTextInputElement');
 var keyOf = require('keyOf');
@@ -75,7 +76,7 @@ function manualDispatchChangeEvent(nativeEvent) {
     eventTypes.change,
     activeElementID,
     nativeEvent,
-    nativeEvent.target
+    getEventTarget(nativeEvent)
   );
   EventPropagators.accumulateTwoPhaseDispatches(event);
 
