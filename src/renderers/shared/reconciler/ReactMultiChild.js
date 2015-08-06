@@ -15,6 +15,7 @@
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 
@@ -189,6 +190,42 @@ var ReactMultiChild = {
    */
   Mixin: {
 
+    _reconcilerInstantiateChildren: function(nestedChildren, transaction, context) {
+      if (__DEV__) {
+        if (this._currentElement) {
+          try {
+            ReactCurrentOwner.current = this._currentElement._owner;
+            return ReactChildReconciler.instantiateChildren(
+              nestedChildren, transaction, context
+            );
+          } finally {
+            ReactCurrentOwner.current = null;
+          }
+        }
+      }
+      return ReactChildReconciler.instantiateChildren(
+        nestedChildren, transaction, context
+      );
+    },
+
+    _reconcilerUpdateChildren: function(prevChildren, nextNestedChildrenElements, transaction, context) {
+      if (__DEV__) {
+        if (this._currentElement) {
+          try {
+            ReactCurrentOwner.current = this._currentElement._owner;
+            return ReactChildReconciler.updateChildren(
+              prevChildren, nextNestedChildrenElements, transaction, context
+            );
+          } finally {
+            ReactCurrentOwner.current = null;
+          }
+        }
+      }
+      return ReactChildReconciler.updateChildren(
+        prevChildren, nextNestedChildrenElements, transaction, context
+      );
+    },
+
     /**
      * Generates a "mount image" for each of the supplied children. In the case
      * of `ReactDOMComponent`, a mount image is a string of markup.
@@ -198,7 +235,7 @@ var ReactMultiChild = {
      * @internal
      */
     mountChildren: function(nestedChildren, transaction, context) {
-      var children = ReactChildReconciler.instantiateChildren(
+      var children = this._reconcilerInstantiateChildren(
         nestedChildren, transaction, context
       );
       this._renderedChildren = children;
@@ -326,7 +363,7 @@ var ReactMultiChild = {
      */
     _updateChildren: function(nextNestedChildrenElements, transaction, context) {
       var prevChildren = this._renderedChildren;
-      var nextChildren = ReactChildReconciler.updateChildren(
+      var nextChildren = this._reconcilerUpdateChildren(
         prevChildren, nextNestedChildrenElements, transaction, context
       );
       this._renderedChildren = nextChildren;

@@ -58,6 +58,27 @@ describe('ReactFragment', function() {
     );
   });
 
+  it('should warn if a plain object even if it is in an owner', function() {
+    spyOn(console, 'error');
+    class Foo {
+      render() {
+        var children = {
+          a: <span />,
+          b: <span />,
+          c: <span />,
+        };
+        return <div>{[children]}</div>;
+      }
+    }
+    expect(console.error.calls.length).toBe(0);
+    var container = document.createElement('div');
+    React.render(<Foo />, container);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain(
+      'Any use of a keyed object'
+    );
+  });
+
   it('should warn if accessing any property on a fragment', function() {
     spyOn(console, 'error');
     var children = {
