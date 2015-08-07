@@ -28,6 +28,7 @@ function reactComponentExpect(instance) {
   }
 
   expect(instance).not.toBeNull();
+  expect(instance).not.toBeUndefined();
 
   invariant(
     ReactTestUtils.isCompositeComponent(instance),
