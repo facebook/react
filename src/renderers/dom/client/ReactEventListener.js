@@ -62,13 +62,18 @@ PooledClass.addPoolingTo(
 );
 
 function handleTopLevelImpl(bookKeeping) {
-  if (bookKeeping.nativeEvent.path && bookKeeping.nativeEvent.path.length > 1) {
-    // New browsers have a path attribute on native events
-    handleTopLevelWithPath(bookKeeping);
-  } else {
-    // Legacy browsers don't have a path attribute on native events
-    handleTopLevelWithoutPath(bookKeeping);
-  }
+  // TODO: Re-enable event.path handling
+  //
+  // if (bookKeeping.nativeEvent.path && bookKeeping.nativeEvent.path.length > 1) {
+  //   // New browsers have a path attribute on native events
+  //   handleTopLevelWithPath(bookKeeping);
+  // } else {
+  //   // Legacy browsers don't have a path attribute on native events
+  //   handleTopLevelWithoutPath(bookKeeping);
+  // }
+
+  void handleTopLevelWithPath;  // temporarily unused
+  handleTopLevelWithoutPath(bookKeeping);
 }
 
 // Legacy browsers don't have a path attribute on native events
