@@ -83,13 +83,17 @@ if (__DEV__) {
 
   var issuedWarnings = {};
 
-  var didWarnForFragment = function(fragment) {
-    // We use the keys and the type of the value as a heuristic to dedupe the
-    // warning to avoid spamming too much.
+  var getFragmentKeyString = function(fragment) {
     var fragmentCacheKey = '';
     for (var key in fragment) {
       fragmentCacheKey += key + ':' + (typeof fragment[key]) + ',';
     }
+    return fragmentCacheKey;
+  };
+
+  var didWarnForFragment = function(fragmentCacheKey) {
+    // We use the keys and the type of the value as a heuristic to dedupe the
+    // warning to avoid spamming too much.
     var alreadyWarnedOnce = !!issuedWarnings[fragmentCacheKey];
     issuedWarnings[fragmentCacheKey] = true;
     return alreadyWarnedOnce;
@@ -143,11 +147,13 @@ var ReactFragment = {
     if (__DEV__) {
       if (canWarnForReactFragment) {
         if (!fragment[fragmentKey]) {
+          var fragmentKeys = getFragmentKeyString(fragment);
           warning(
-            didWarnForFragment(fragment),
+            didWarnForFragment(fragmentKeys),
             'Any use of a keyed object should be wrapped in ' +
             'React.addons.createFragment(object) before being passed as a ' +
-            'child.'
+            'child. {%s}',
+            fragmentKeys
           );
           return fragment;
         }
