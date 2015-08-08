@@ -32,6 +32,9 @@ describe('ReactFragment', function() {
     expect(console.error.calls[0].args[0]).toContain(
       'Any use of a keyed object'
     );
+    expect(console.error.calls[0].args[0]).toContain(
+      '{x:object,y:object,}'
+    );
     // Only warn once for the same set of children
     var sameChildren = {
       x: <span />,
@@ -55,6 +58,9 @@ describe('ReactFragment', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
       'Any use of a keyed object'
+    );
+    expect(console.error.calls[0].args[0]).toContain(
+      '{x:object,y:object,z:object,}'
     );
   });
 
