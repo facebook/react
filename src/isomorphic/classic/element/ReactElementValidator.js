@@ -50,37 +50,6 @@ var loggedTypeFailures = {};
 var NUMERIC_PROPERTY_REGEX = /^\d+$/;
 
 /**
- * Gets the instance's name for use in warnings.
- *
- * @internal
- * @return {?string} Display name or undefined
- */
-function getName(instance) {
-  var publicInstance = instance && instance.getPublicInstance();
-  if (!publicInstance) {
-    return undefined;
-  }
-  var constructor = publicInstance.constructor;
-  if (!constructor) {
-    return undefined;
-  }
-  return constructor.displayName || constructor.name || undefined;
-}
-
-/**
- * Gets the current owner's displayName for use in warnings.
- *
- * @internal
- * @return {?string} Display name or undefined
- */
-function getCurrentOwnerDisplayName() {
-  var current = ReactCurrentOwner.current;
-  return (
-    current && getName(current) || undefined
-  );
-}
-
-/**
  * Warn if the element doesn't have an explicit key assigned to it.
  * This element is in an array. The array could grow and shrink or be
  * reordered. All children that haven't already been validated are required to
@@ -150,24 +119,25 @@ function validatePropertyKey(name, element, parentType) {
  * if the warning has already been shown before (and shouldn't be shown again).
  */
 function getAddendaForKeyUse(messageType, element, parentType) {
-  var ownerName = getCurrentOwnerDisplayName();
-  var parentName = typeof parentType === 'string' ?
-    parentType : parentType.displayName || parentType.name;
+  var addendum = getDeclarationErrorAddendum();
+  if (!addendum) {
+    var parentName = typeof parentType === 'string' ?
+      parentType : parentType.displayName || parentType.name;
+    if (parentName) {
+      addendum = ` Check the React.render call using <${parentName}>.`;
+    }
+  }
 
-  var useName = ownerName || parentName;
   var memoizer = ownerHasKeyUseWarning[messageType] || (
     ownerHasKeyUseWarning[messageType] = {}
   );
-  if (memoizer[useName]) {
+  if (memoizer[addendum]) {
     return null;
   }
-  memoizer[useName] = true;
+  memoizer[addendum] = true;
 
   var addenda = {
-    parentOrOwner:
-      ownerName ? ` Check the render method of ${ownerName}.` :
-      parentName ? ` Check the React.render call using <${parentName}>.` :
-      null,
+    parentOrOwner: addendum,
     url: ' See https://fb.me/react-warning-keys for more information.',
     childOwner: null,
   };
@@ -180,7 +150,7 @@ function getAddendaForKeyUse(messageType, element, parentType) {
       element._owner !== ReactCurrentOwner.current) {
     // Give the component that originally created this child.
     addenda.childOwner =
-      ` It was passed a child from ${getName(element._owner)}.`;
+      ` It was passed a child from ${element._owner.getName()}.`;
   }
 
   return addenda;

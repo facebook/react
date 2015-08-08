@@ -77,7 +77,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop. ' +
-      'Check the render method of InnerClass. ' +
+      'Check the render method of `InnerClass`. ' +
       'It was passed a child from ComponentWrapper. '
     );
   });
