@@ -478,9 +478,9 @@ describe('ReactDOMComponent', function() {
 
     it('should not duplicate uppercased selfclosing tags', function() {
       var Container = React.createClass({
-          render: function() {
-            return React.createElement('BR', null);
-          },
+        render: function() {
+          return React.createElement('BR', null);
+        },
       });
       var returnedValue = React.renderToString(<Container/>);
       expect(returnedValue).not.toContain('</BR>');

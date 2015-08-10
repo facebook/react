@@ -224,6 +224,7 @@ describe('ReactComponent', function() {
     log.push('start unmount');
     React.unmountComponentAtNode(el);
 
+    /* eslint-disable indent */
     expect(log).toEqual([
       'start mount',
         'inner 1 render',
@@ -251,6 +252,7 @@ describe('ReactComponent', function() {
         'ref 2 got null',
         'inner 2 componentWillUnmount',
     ]);
+    /* eslint-enable indent */
   });
 
   it('fires the callback after a component is rendered', function() {

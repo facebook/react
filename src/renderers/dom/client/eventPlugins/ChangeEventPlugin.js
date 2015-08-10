@@ -115,17 +115,19 @@ function stopWatchingForChangeEventIE8() {
 }
 
 function getTargetIDForChangeEvent(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID) {
+  topLevelType,
+  topLevelTarget,
+  topLevelTargetID
+) {
   if (topLevelType === topLevelTypes.topChange) {
     return topLevelTargetID;
   }
 }
 function handleEventsForChangeEventIE8(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID) {
+  topLevelType,
+  topLevelTarget,
+  topLevelTargetID
+) {
   if (topLevelType === topLevelTypes.topFocus) {
     // stopWatching() should be a noop here but we call it just in case we
     // missed a blur event somehow.
@@ -222,9 +224,10 @@ function handlePropertyChange(nativeEvent) {
  * If a `change` event should be fired, returns the target's ID.
  */
 function getTargetIDForInputEvent(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID) {
+  topLevelType,
+  topLevelTarget,
+  topLevelTargetID
+) {
   if (topLevelType === topLevelTypes.topInput) {
     // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
     // what we want so fall through here and trigger an abstract event
@@ -234,9 +237,10 @@ function getTargetIDForInputEvent(
 
 // For IE8 and IE9.
 function handleEventsForInputEventIE(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID) {
+  topLevelType,
+  topLevelTarget,
+  topLevelTargetID
+) {
   if (topLevelType === topLevelTypes.topFocus) {
     // In IE8, we can capture almost all .value changes by adding a
     // propertychange handler and looking for events with propertyName
@@ -260,9 +264,10 @@ function handleEventsForInputEventIE(
 
 // For IE8 and IE9.
 function getTargetIDForInputEventIE(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID) {
+  topLevelType,
+  topLevelTarget,
+  topLevelTargetID
+) {
   if (topLevelType === topLevelTypes.topSelectionChange ||
       topLevelType === topLevelTypes.topKeyUp ||
       topLevelType === topLevelTypes.topKeyDown) {
@@ -298,9 +303,10 @@ function shouldUseClickEvent(elem) {
 }
 
 function getTargetIDForClickEvent(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID) {
+  topLevelType,
+  topLevelTarget,
+  topLevelTargetID
+) {
   if (topLevelType === topLevelTypes.topClick) {
     return topLevelTargetID;
   }

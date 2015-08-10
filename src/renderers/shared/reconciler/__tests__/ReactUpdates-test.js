@@ -409,7 +409,7 @@ describe('ReactUpdates', function() {
               ref="switcherDiv"
               style={{
                 display: this.state.tabKey === child.key ? '' : 'none',
-            }}>
+              }}>
               {child}
             </div>
           </Box>
@@ -601,6 +601,7 @@ describe('ReactUpdates', function() {
       });
     });
 
+    /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
         'Inner-render-0-0',
@@ -627,6 +628,7 @@ describe('ReactUpdates', function() {
           'Inner-callback-2',
       'Outer-callback-2',
     ]);
+    /* eslint-enable indent */
   });
 
   it('should flush updates in the correct order across roots', function() {

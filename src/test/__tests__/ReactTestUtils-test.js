@@ -163,7 +163,7 @@ describe('ReactTestUtils', function() {
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SimpleComponent />, {
-        name: 'foo',
+      name: 'foo',
     });
     var result = shallowRenderer.getRenderOutput();
     expect(result).toEqual(<div>foo</div>);

@@ -33,7 +33,8 @@ function SyntheticInputEvent(
   dispatchConfig,
   dispatchMarker,
   nativeEvent,
-  nativeEventTarget) {
+  nativeEventTarget
+) {
   SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 

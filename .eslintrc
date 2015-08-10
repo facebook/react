@@ -27,10 +27,10 @@ globals:
 rules:
   # ERRORS
   space-before-blocks: 2
-  indent: [2, 2, indentSwitchCase: true]
+  indent: [2, 2, {SwitchCase: 1}]
   brace-style: 2
   space-after-keywords: 2
-  strict: 2
+  strict: [2, global]
   comma-dangle: [2, always-multiline]
   # Make this a warning for now. We do this in a few places so we might need to
   # disable

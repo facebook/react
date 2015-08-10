@@ -323,10 +323,11 @@ to return true:wantsResponderID|                            |
  * @return {*} An accumulation of synthetic events.
  */
 function setResponderAndExtractTransfer(
-    topLevelType,
-    topLevelTargetID,
-    nativeEvent,
-    nativeEventTarget) {
+  topLevelType,
+  topLevelTargetID,
+  nativeEvent,
+  nativeEventTarget
+) {
   var shouldSetEventType =
     isStartish(topLevelType) ? eventTypes.startShouldSetResponder :
     isMoveish(topLevelType) ? eventTypes.moveShouldSetResponder :
