@@ -539,6 +539,8 @@ var ReactMount = {
       null,
       null,
       null,
+      null,
+      null,
       nextElement
     );
 
