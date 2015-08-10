@@ -18,6 +18,8 @@ var assign = require('Object.assign');
 var RESERVED_PROPS = {
   key: true,
   ref: true,
+  __self: true,
+  __source: true,
 };
 
 /**
@@ -27,15 +29,24 @@ var RESERVED_PROPS = {
  * @param {*} type
  * @param {*} key
  * @param {string|object} ref
+ * @param {*} self A *temporary* helper to detect places where `this` is
+ * different from the `owner` when React.createElement is called, so that we
+ * can warn. We want to get rid of owner and replace string `ref`s with arrow
+ * functions, and as long as `this` and owner are the same, there will be no
+ * change in behavior.
+ * @param {*} source An annotation object (added by a transpiler or otherwise)
+ * indicating filename, line number, and/or other information.
  * @param {*} owner
  * @param {*} props
  * @internal
  */
-var ReactElement = function(type, key, ref, owner, props) {
+var ReactElement = function(type, key, ref, self, source, owner, props) {
   // Built-in properties that belong on the element
   this.type = type;
   this.key = key;
   this.ref = ref;
+  this.self = self;
+  this.source = source;
 
   // Record the component responsible for creating this element.
   this._owner = owner;
@@ -82,10 +93,14 @@ ReactElement.createElement = function(type, config, children) {
 
   var key = null;
   var ref = null;
+  var self = null;
+  var source = null;
 
   if (config != null) {
     ref = config.ref === undefined ? null : config.ref;
     key = config.key === undefined ? null : '' + config.key;
+    self = config.__self === undefined ? null : config.__self;
+    source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (config.hasOwnProperty(propName) &&
@@ -122,6 +137,8 @@ ReactElement.createElement = function(type, config, children) {
     type,
     key,
     ref,
+    self,
+    source,
     ReactCurrentOwner.current,
     props
   );
@@ -143,6 +160,8 @@ ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
     oldElement.type,
     oldElement.key,
     oldElement.ref,
+    oldElement.self,
+    oldElement.source,
     oldElement._owner,
     newProps
   );
@@ -164,6 +183,8 @@ ReactElement.cloneElement = function(element, config, children) {
   // Reserved names are extracted
   var key = element.key;
   var ref = element.ref;
+  var self = element.__self;
+  var source = element.__source;
 
   // Owner will be preserved, unless ref is overridden
   var owner = element._owner;
@@ -203,6 +224,8 @@ ReactElement.cloneElement = function(element, config, children) {
     element.type,
     key,
     ref,
+    self,
+    source,
     owner,
     props
   );
