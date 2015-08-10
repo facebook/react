@@ -983,19 +983,6 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
-  it('should warn when using non-React functions in JSX', function() {
-    function NotAComponent() {
-      return [<div />, <div />];
-    }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();  // has no method 'render'
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'NotAComponent(...): No `render` method found'
-    );
-  });
-
   it('context should be passed down from the parent', function() {
     var Parent = React.createClass({
       childContextTypes: {

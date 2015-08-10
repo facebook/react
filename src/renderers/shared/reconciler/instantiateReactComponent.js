@@ -15,6 +15,7 @@
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
+var ReactStatelessComponent = require('ReactStatelessComponent');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
@@ -29,6 +30,80 @@ assign(
     _instantiateReactComponent: instantiateReactComponent,
   }
 );
+var ReactStatelessOrCompositeComponentWrapper = function() { };
+assign(
+  ReactStatelessOrCompositeComponentWrapper.prototype,
+  ReactCompositeComponent.Mixin,
+  {
+    _instantiateReactComponent: instantiateReactComponent,
+
+    construct: function(element) {
+      ReactCompositeComponent.Mixin.construct.call(this, element);
+      this._stateless = false;
+    },
+
+    mountComponent: function(rootID, transaction, context) {
+      // Will return false if element isn't composite
+      var result = ReactCompositeComponent.Mixin.mountComponent.call(this, rootID, transaction, context);
+
+      if (!result) {
+        this._stateless = true;
+        // Will throw error if element isn't stateless
+        result = ReactStatelessComponent.Mixin.mountComponent.call(this, rootID, transaction, context);
+      }
+
+      return result;
+    },
+
+    receiveComponent: function(nextElement, transaction, nextContext) {
+      if (this._stateless) {
+        return ReactStatelessComponent.Mixin.receiveComponent.call(this, nextElement, transaction, nextContext);
+      } else {
+        return ReactCompositeComponent.Mixin.receiveComponent.call(this, nextElement, transaction, nextContext);
+      }
+    },
+
+    unmountComponent: function() {
+      if (this._stateless) {
+        return ReactStatelessComponent.Mixin.unmountComponent.call(this);
+      } else {
+        return ReactCompositeComponent.Mixin.unmountComponent.call(this);
+      }
+    },
+
+    performUpdateIfNecessary: function(transaction) {
+      if (this._stateless) {
+        return ReactStatelessComponent.Mixin.performUpdateIfNecessary.call(this, transaction);
+      } else {
+        return ReactCompositeComponent.Mixin.performUpdateIfNecessary.call(this, transaction);
+      }
+    },
+
+    getName: function() {
+      if (this._stateless) {
+        return ReactStatelessComponent.Mixin.getName.call(this);
+      } else {
+        return ReactCompositeComponent.Mixin.getName.call(this);
+      }
+    },
+
+    updateComponent: function(a, b, c, d, e) {
+      if (this._stateless) {
+        return ReactStatelessComponent.Mixin.updateComponent.call(this, a, b, c, d, e);
+      } else {
+        return ReactCompositeComponent.Mixin.updateComponent.call(this, a, b, c, d, e);
+      }
+    },
+
+    _renderValidatedComponent: function() {
+      if (this._stateless) {
+        return ReactStatelessComponent.Mixin._renderValidatedComponent.call(this);
+      } else {
+        return ReactCompositeComponent.Mixin._renderValidatedComponent.call(this);
+      }
+    },
+  }
+)
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
@@ -53,6 +128,20 @@ function isInternalComponentType(type) {
     typeof type.prototype !== 'undefined' &&
     typeof type.prototype.mountComponent === 'function' &&
     typeof type.prototype.receiveComponent === 'function'
+  );
+}
+
+/**
+ * Check if the type reference is a stateless function type.
+ *
+ * @param {function} type
+ * @return {boolean} Returns true if this is a stateless function type.
+ */
+function isProbablyStatelessComponentType(type) {
+  return (
+    typeof type === 'function' &&
+    (typeof type.prototype === 'undefined' ||
+     typeof type.prototype.render !== 'function')
   );
 }
 
@@ -89,6 +178,8 @@ function instantiateReactComponent(node) {
       // represenations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
       instance = new element.type(element);
+    } else if (isPropablyStatelessComponentType(element.type)) {
+      instance = new ReactStatelessOrCompositeComponentWrapper();
     } else {
       instance = new ReactCompositeComponentWrapper();
     }
