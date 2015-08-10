@@ -12,12 +12,14 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactFragment;
 
 describe('ReactFragment', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
   });
 
@@ -54,7 +56,7 @@ describe('ReactFragment', function() {
     var element = <div>{[children]}</div>;
     expect(console.error.calls.length).toBe(0);
     var container = document.createElement('div');
-    React.render(element, container);
+    ReactDOM.render(element, container);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
       'Any use of a keyed object'
@@ -78,7 +80,7 @@ describe('ReactFragment', function() {
     }
     expect(console.error.calls.length).toBe(0);
     var container = document.createElement('div');
-    React.render(<Foo />, container);
+    ReactDOM.render(<Foo />, container);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
       'Any use of a keyed object'

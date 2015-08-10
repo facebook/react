@@ -14,6 +14,7 @@
 var ChildUpdates;
 var MorphingComponent;
 var React;
+var ReactDOM;
 var ReactCurrentOwner;
 var ReactMount;
 var ReactPropTypes;
@@ -29,6 +30,7 @@ describe('ReactCompositeComponent', function() {
     require('mock-modules').dumpCache();
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
@@ -107,7 +109,7 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     container.innerHTML = markup;
 
-    React.render(<Parent />, container);
+    ReactDOM.render(<Parent />, container);
     expect(console.error).not.toHaveBeenCalled();
   });
 
@@ -129,11 +131,11 @@ describe('ReactCompositeComponent', function() {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    expect(React.findDOMNode(instance.refs.x).tagName).toBe('A');
+    expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('A');
     instance._toggleActivatedState();
-    expect(React.findDOMNode(instance.refs.x).tagName).toBe('B');
+    expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('B');
     instance._toggleActivatedState();
-    expect(React.findDOMNode(instance.refs.x).tagName).toBe('A');
+    expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('A');
   });
 
   it('should not cache old DOM nodes when switching constructors', function() {
@@ -144,7 +146,7 @@ describe('ReactCompositeComponent', function() {
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
     var anchor = instance.getAnchor();
-    var actualDOMAnchorNode = React.findDOMNode(anchor);
+    var actualDOMAnchorNode = ReactDOM.findDOMNode(anchor);
     expect(actualDOMAnchorNode.className).toBe('');
     expect(actualDOMAnchorNode).toBe(anchor.getDOMNode());
   });
@@ -262,12 +264,12 @@ describe('ReactCompositeComponent', function() {
     var instance = <Component />;
     expect(instance.forceUpdate).not.toBeDefined();
 
-    instance = React.render(instance, container);
+    instance = ReactDOM.render(instance, container);
     instance.forceUpdate();
 
     expect(console.error.calls.length).toBe(0);
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
 
     instance.forceUpdate();
     expect(console.error.calls.length).toBe(1);
@@ -298,7 +300,7 @@ describe('ReactCompositeComponent', function() {
     var instance = <Component />;
     expect(instance.setState).not.toBeDefined();
 
-    instance = React.render(instance, container);
+    instance = ReactDOM.render(instance, container);
 
     expect(renders).toBe(1);
 
@@ -308,7 +310,7 @@ describe('ReactCompositeComponent', function() {
 
     expect(renders).toBe(2);
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     instance.setState({value: 2});
 
     expect(renders).toBe(2);
@@ -344,12 +346,12 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
 
     instance.setState({value: 1});
     expect(console.error.calls.length).toBe(0);
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(console.error.calls.length).toBe(0);
     expect(cbCalled).toBe(false);
   });
@@ -377,7 +379,7 @@ describe('ReactCompositeComponent', function() {
 
     expect(console.error.calls.length).toBe(0);
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
@@ -394,7 +396,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.state.value).toBe(1);
 
     // Forcing a rerender anywhere will cause the update to happen.
-    var instance2 = React.render(<Component prop={123} />, container);
+    var instance2 = ReactDOM.render(<Component prop={123} />, container);
     expect(instance).toBe(instance2);
     expect(renderedState).toBe(1);
     expect(instance2.state.value).toBe(1);
@@ -413,13 +415,13 @@ describe('ReactCompositeComponent', function() {
     var instance = <Component />;
     expect(instance.setProps).not.toBeDefined();
 
-    instance = React.render(instance, container);
+    instance = ReactDOM.render(instance, container);
     expect(function() {
       instance.setProps({value: 1});
     }).not.toThrow();
     expect(console.error.calls.length).toBe(1);  // setProps deprecated
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(function() {
       instance.setProps({value: 2});
     }).not.toThrow();
@@ -452,7 +454,7 @@ describe('ReactCompositeComponent', function() {
         innerInstance = this.refs.inner;
       },
     });
-    React.render(<Component />, container);
+    ReactDOM.render(<Component />, container);
 
     expect(innerInstance).not.toBe(undefined);
     expect(function() {
@@ -513,8 +515,8 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    React.render(<Component />, container);
-    React.unmountComponentAtNode(container);
+    ReactDOM.render(<Component />, container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(innerUnmounted).toBe(true);
 
     // The text and both <div /> elements and their wrappers each call
@@ -603,7 +605,7 @@ describe('ReactCompositeComponent', function() {
     });
 
     var component = ReactTestUtils.renderIntoDocument(<Parent />);
-    expect(React.findDOMNode(component).innerHTML).toBe('bar');
+    expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
   });
 
   it('should pass context when re-rendered for static child', function() {
@@ -848,13 +850,13 @@ describe('ReactCompositeComponent', function() {
     });
 
     var div = document.createElement('div');
-    React.render(<Parent cntxt="noise" />, div);
+    ReactDOM.render(<Parent cntxt="noise" />, div);
     expect(div.children[0].innerHTML).toBe('noise');
     div.children[0].innerHTML = 'aliens';
     div.children[0].id = 'aliens';
     expect(div.children[0].innerHTML).toBe('aliens');
     expect(div.children[0].id).toBe('aliens');
-    React.render(<Parent cntxt="bar" />, div);
+    ReactDOM.render(<Parent cntxt="bar" />, div);
     expect(div.children[0].innerHTML).toBe('bar');
     expect(div.children[0].id).toBe('aliens');
   });
@@ -899,10 +901,10 @@ describe('ReactCompositeComponent', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.render(<Component update={0} />, container);
+    var instance = ReactDOM.render(<Component update={0} />, container);
     expect(renders).toBe(1);
     expect(instance.state.updated).toBe(false);
-    React.render(<Component update={1} />, container);
+    ReactDOM.render(<Component update={1} />, container);
     expect(renders).toBe(2);
     expect(instance.state.updated).toBe(true);
   });
@@ -937,24 +939,24 @@ describe('ReactCompositeComponent', function() {
     });
 
     var container = document.createElement('div');
-    var comp = React.render(<Component flipped={false} />, container);
-    expect(React.findDOMNode(comp.refs.static0).textContent).toBe('A');
-    expect(React.findDOMNode(comp.refs.static1).textContent).toBe('B');
+    var comp = ReactDOM.render(<Component flipped={false} />, container);
+    expect(ReactDOM.findDOMNode(comp.refs.static0).textContent).toBe('A');
+    expect(ReactDOM.findDOMNode(comp.refs.static1).textContent).toBe('B');
 
-    expect(React.findDOMNode(comp.refs.static0))
+    expect(ReactDOM.findDOMNode(comp.refs.static0))
       .toBe(comp.refs.static0.getDOMNode());
-    expect(React.findDOMNode(comp.refs.static1))
+    expect(ReactDOM.findDOMNode(comp.refs.static1))
       .toBe(comp.refs.static1.getDOMNode());
 
     // When flipping the order, the refs should update even though the actual
     // contents do not
-    React.render(<Component flipped={true} />, container);
-    expect(React.findDOMNode(comp.refs.static0).textContent).toBe('B');
-    expect(React.findDOMNode(comp.refs.static1).textContent).toBe('A');
+    ReactDOM.render(<Component flipped={true} />, container);
+    expect(ReactDOM.findDOMNode(comp.refs.static0).textContent).toBe('B');
+    expect(ReactDOM.findDOMNode(comp.refs.static1).textContent).toBe('A');
 
-    expect(React.findDOMNode(comp.refs.static0))
+    expect(ReactDOM.findDOMNode(comp.refs.static0))
       .toBe(comp.refs.static0.getDOMNode());
-    expect(React.findDOMNode(comp.refs.static1))
+    expect(ReactDOM.findDOMNode(comp.refs.static1))
       .toBe(comp.refs.static1.getDOMNode());
   });
 
@@ -963,11 +965,11 @@ describe('ReactCompositeComponent', function() {
     var b = null;
     var Component = React.createClass({
       componentDidMount: function() {
-        a = React.findDOMNode(this);
+        a = ReactDOM.findDOMNode(this);
         expect(a).toBe(this.getDOMNode());
       },
       componentWillUnmount: function() {
-        b = React.findDOMNode(this);
+        b = ReactDOM.findDOMNode(this);
         expect(b).toBe(this.getDOMNode());
       },
       render: function() {
@@ -976,8 +978,8 @@ describe('ReactCompositeComponent', function() {
     });
     var container = document.createElement('div');
     expect(a).toBe(container.firstChild);
-    React.render(<Component />, container);
-    React.unmountComponentAtNode(container);
+    ReactDOM.render(<Component />, container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(a).toBe(b);
   });
 
@@ -1022,7 +1024,7 @@ describe('ReactCompositeComponent', function() {
     });
 
     var div = document.createElement('div');
-    React.render(<Parent><Component /></Parent>, div);
+    ReactDOM.render(<Parent><Component /></Parent>, div);
 
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -1098,11 +1100,11 @@ describe('ReactCompositeComponent', function() {
 
     var Component = React.createClass({
       componentWillMount: function() {
-        React.render(<div />, layer);
+        ReactDOM.render(<div />, layer);
       },
 
       componentWillUnmount: function() {
-        React.unmountComponentAtNode(layer);
+        ReactDOM.unmountComponentAtNode(layer);
       },
 
       render: function() {
@@ -1116,11 +1118,11 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    React.render(<Outer><Component /></Outer>, container);
+    ReactDOM.render(<Outer><Component /></Outer>, container);
 
     expect(console.error.calls.length).toBe(0);
 
-    React.render(<Outer />, container);
+    ReactDOM.render(<Outer />, container);
 
     expect(console.error.calls.length).toBe(0);
   });

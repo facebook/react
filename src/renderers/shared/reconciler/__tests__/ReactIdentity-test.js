@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactFragment;
 var ReactTestUtils;
 var ReactMount;
@@ -21,6 +22,7 @@ describe('ReactIdentity', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
     ReactMount = require('ReactMount');
@@ -48,8 +50,8 @@ describe('ReactIdentity', function() {
         })}
       </div>;
 
-    instance = React.render(instance, document.createElement('div'));
-    var node = React.findDOMNode(instance);
+    instance = ReactDOM.render(instance, document.createElement('div'));
+    var node = ReactDOM.findDOMNode(instance);
     expect(node.childNodes.length).toBe(2);
     checkID(node.childNodes[0], '.0.$first:0');
     checkID(node.childNodes[1], '.0.$second:0');
@@ -64,8 +66,8 @@ describe('ReactIdentity', function() {
         <div key={123} />
       </div>;
 
-    instance = React.render(instance, document.createElement('div'));
-    var node = React.findDOMNode(instance);
+    instance = ReactDOM.render(instance, document.createElement('div'));
+    var node = ReactDOM.findDOMNode(instance);
     expect(node.childNodes.length).toBe(4);
     checkID(node.childNodes[0], '.0.$apple');
     checkID(node.childNodes[1], '.0.$banana');
@@ -88,8 +90,8 @@ describe('ReactIdentity', function() {
         <Wrapper><span key="chipmunk" /></Wrapper>
       </div>;
 
-    instance = React.render(instance, document.createElement('div'));
-    var node = React.findDOMNode(instance);
+    instance = ReactDOM.render(instance, document.createElement('div'));
+    var node = ReactDOM.findDOMNode(instance);
     expect(node.childNodes.length).toBe(3);
 
     checkID(node.childNodes[0], '.0.$wrap1');
@@ -115,17 +117,17 @@ describe('ReactIdentity', function() {
 
     });
 
-    var instance = React.render(<Wrapper />, container);
+    var instance = ReactDOM.render(<Wrapper />, container);
     var span1 = instance.refs.span1;
     var span2 = instance.refs.span2;
 
-    expect(React.findDOMNode(span1)).not.toBe(null);
-    expect(React.findDOMNode(span2)).not.toBe(null);
+    expect(ReactDOM.findDOMNode(span1)).not.toBe(null);
+    expect(ReactDOM.findDOMNode(span2)).not.toBe(null);
 
     key = key.replace(/=/g, '=0');
 
-    checkID(React.findDOMNode(span1), '.0.$' + key);
-    checkID(React.findDOMNode(span2), '.0.1:$' + key + ':0');
+    checkID(ReactDOM.findDOMNode(span1), '.0.$' + key);
+    checkID(ReactDOM.findDOMNode(span2), '.0.1:$' + key + ':0');
   }
 
   it('should allow any character as a key, in a detached parent', function() {
@@ -294,13 +296,13 @@ describe('ReactIdentity', function() {
 
     var wrapped = <TestContainer first={instance0} second={instance1} />;
 
-    wrapped = React.render(wrapped, document.createElement('div'));
+    wrapped = ReactDOM.render(wrapped, document.createElement('div'));
 
-    var beforeID = ReactMount.getID(React.findDOMNode(wrapped).firstChild);
+    var beforeID = ReactMount.getID(ReactDOM.findDOMNode(wrapped).firstChild);
 
     wrapped.swap();
 
-    var afterID = ReactMount.getID(React.findDOMNode(wrapped).firstChild);
+    var afterID = ReactMount.getID(ReactDOM.findDOMNode(wrapped).firstChild);
 
     expect(beforeID).not.toEqual(afterID);
 

@@ -14,12 +14,14 @@
 var mocks = require('mocks');
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactClass-spec', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     spyOn(console, 'error');
   });
@@ -311,7 +313,7 @@ describe('ReactClass-spec', function() {
     });
 
     var container = document.createElement('div');
-    React.render(<Outer />, container);
+    ReactDOM.render(<Outer />, container);
     expect(container.firstChild.className).toBe('foo');
   });
 
@@ -372,7 +374,7 @@ describe('ReactClass-spec', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.render(<MyComponent />, container);
+    var instance = ReactDOM.render(<MyComponent />, container);
 
     instance.getDOMNode();
 

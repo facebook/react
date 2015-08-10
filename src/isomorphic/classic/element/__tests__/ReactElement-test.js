@@ -15,6 +15,7 @@
 // classic JS without JSX.
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactElement', function() {
@@ -24,6 +25,7 @@ describe('ReactElement', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
       render: function() {
@@ -220,13 +222,13 @@ describe('ReactElement', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.render(
+    var instance = ReactDOM.render(
       React.createElement(Component, {fruit: 'mango'}),
       container
     );
     expect(instance.props.fruit).toBe('mango');
 
-    React.render(React.createElement(Component), container);
+    ReactDOM.render(React.createElement(Component), container);
     expect(instance.props.fruit).toBe('persimmon');
   });
 
@@ -265,7 +267,7 @@ describe('ReactElement', function() {
       },
     });
     var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
-    expect(React.findDOMNode(outer).className).toBe('moo');
+    expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
   });
 
   it('throws when adding a prop (in dev) after element creation', function() {
@@ -284,9 +286,9 @@ describe('ReactElement', function() {
         return el;
       },
     });
-    var outer = React.render(<Outer />, container);
-    expect(React.findDOMNode(outer).textContent).toBe('meow');
-    expect(React.findDOMNode(outer).className).toBe('');
+    var outer = ReactDOM.render(<Outer />, container);
+    expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
+    expect(ReactDOM.findDOMNode(outer).className).toBe('');
   });
 
   it('does not warn for NaN props', function() {

@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTransitionGroup;
 
 // Most of the real functionality is covered in other unit tests, this just
@@ -21,6 +22,7 @@ describe('ReactTransitionGroup', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTransitionGroup = require('ReactTransitionGroup');
 
     container = document.createElement('div');
@@ -76,7 +78,7 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount', 'willAppear', 'didAppear']);
 
     log = [];
@@ -133,7 +135,7 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
@@ -193,7 +195,7 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
@@ -250,7 +252,7 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount0']);
     log = [];
 

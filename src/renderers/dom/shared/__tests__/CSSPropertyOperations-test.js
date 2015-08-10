@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 
 describe('CSSPropertyOperations', function() {
   var CSSPropertyOperations;
@@ -91,7 +92,7 @@ describe('CSSPropertyOperations', function() {
     };
     var div = <div style={styles} />;
     var root = document.createElement('div');
-    div = React.render(div, root);
+    div = ReactDOM.render(div, root);
     expect(/style=".*"/.test(root.innerHTML)).toBe(true);
   });
 
@@ -102,7 +103,7 @@ describe('CSSPropertyOperations', function() {
     };
     var div = <div style={styles} />;
     var root = document.createElement('div');
-    React.render(div, root);
+    ReactDOM.render(div, root);
     expect(/style=".*"/.test(root.innerHTML)).toBe(false);
   });
 
@@ -126,8 +127,8 @@ describe('CSSPropertyOperations', function() {
       '-webkit-transform': 'translate3d(0, 0, 0)',
     };
 
-    React.render(<div />, root);
-    React.render(<div style={styles} />, root);
+    ReactDOM.render(<div />, root);
+    ReactDOM.render(<div style={styles} />, root);
 
     expect(console.error.argsForCall.length).toBe(2);
     expect(console.error.argsForCall[0][0]).toContain('msTransform');

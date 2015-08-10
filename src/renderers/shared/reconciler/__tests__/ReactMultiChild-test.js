@@ -16,9 +16,12 @@ var mocks = require('mocks');
 describe('ReactMultiChild', function() {
   var React;
 
+  var ReactDOM;
+
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
+    ReactDOM = require('ReactDOM');
   });
 
   describe('reconciliation', function() {
@@ -42,13 +45,13 @@ describe('ReactMultiChild', function() {
       expect(mockUpdate.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(<div><MockComponent /></div>, container);
+      ReactDOM.render(<div><MockComponent /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUpdate.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(<div><MockComponent /></div>, container);
+      ReactDOM.render(<div><MockComponent /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUpdate.mock.calls.length).toBe(1);
@@ -72,12 +75,12 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(<div><MockComponent /></div>, container);
+      ReactDOM.render(<div><MockComponent /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(<div><span /></div>, container);
+      ReactDOM.render(<div><span /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(1);
@@ -106,12 +109,12 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(<WrapperComponent />, container);
+      ReactDOM.render(<WrapperComponent />, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(
+      ReactDOM.render(
         <WrapperComponent><MockComponent /></WrapperComponent>,
         container
       );
@@ -137,12 +140,12 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(<div><MockComponent key="A" /></div>, container);
+      ReactDOM.render(<div><MockComponent key="A" /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.render(<div><MockComponent key="B" /></div>, container);
+      ReactDOM.render(<div><MockComponent key="B" /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(2);
       expect(mockUnmount.mock.calls.length).toBe(1);
@@ -172,7 +175,7 @@ describe('ReactMultiChild', function() {
     it('should only set `innerHTML` once on update', function() {
       var container = document.createElement('div');
 
-      React.render(
+      ReactDOM.render(
         <div>
           <p><span /></p>
           <p><span /></p>
@@ -181,7 +184,7 @@ describe('ReactMultiChild', function() {
         container
       );
       // Warm the cache used by `getMarkupWrap`.
-      React.render(
+      ReactDOM.render(
         <div>
           <p><span /><span /></p>
           <p><span /><span /></p>
@@ -192,7 +195,7 @@ describe('ReactMultiChild', function() {
       expect(setInnerHTML).toHaveBeenCalled();
       var callCountOnMount = setInnerHTML.calls.length;
 
-      React.render(
+      ReactDOM.render(
         <div>
           <p><span /><span /><span /></p>
           <p><span /><span /><span /></p>

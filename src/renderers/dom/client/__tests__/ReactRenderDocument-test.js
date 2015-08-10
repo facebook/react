@@ -12,6 +12,8 @@
 'use strict';
 
 var React;
+var ReactDOM;
+var ReactDOMServer;
 var ReactInstanceMap;
 var ReactMount;
 
@@ -31,6 +33,8 @@ describe('rendering React components at document', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactMount = require('ReactMount');
     getTestDocument = require('getTestDocument');
@@ -56,9 +60,9 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = React.renderToString(<Root />);
+    var markup = ReactDOMServer.renderToString(<Root />);
     testDocument = getTestDocument(markup);
-    var component = React.render(<Root />, testDocument);
+    var component = ReactDOM.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     // TODO: This is a bad test. I have no idea what this is testing.
@@ -85,13 +89,13 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = React.renderToString(<Root />);
+    var markup = ReactDOMServer.renderToString(<Root />);
     testDocument = getTestDocument(markup);
-    React.render(<Root />, testDocument);
+    ReactDOM.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     expect(function() {
-      React.unmountComponentAtNode(testDocument);
+      ReactDOM.unmountComponentAtNode(testDocument);
     }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -130,16 +134,16 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = React.renderToString(<Component />);
+    var markup = ReactDOMServer.renderToString(<Component />);
     testDocument = getTestDocument(markup);
 
-    React.render(<Component />, testDocument);
+    ReactDOM.render(<Component />, testDocument);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     // Reactive update
     expect(function() {
-      React.render(<Component2 />, testDocument);
+      ReactDOM.render(<Component2 />, testDocument);
     }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -163,12 +167,12 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = React.renderToString(
+    var markup = ReactDOMServer.renderToString(
       <Component text="Hello world" />
     );
     testDocument = getTestDocument(markup);
 
-    React.render(<Component text="Hello world" />, testDocument);
+    ReactDOM.render(<Component text="Hello world" />, testDocument);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
@@ -191,14 +195,14 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = React.renderToString(
+    var markup = ReactDOMServer.renderToString(
       <Component text="Goodbye world" />
     );
     testDocument = getTestDocument(markup);
 
     expect(function() {
       // Notice the text is different!
-      React.render(<Component text="Hello world" />, testDocument);
+      ReactDOM.render(<Component text="Hello world" />, testDocument);
     }).toThrow(
       'Invariant Violation: ' +
       'You\'re trying to render a component to the document using ' +
@@ -235,7 +239,7 @@ describe('rendering React components at document', function() {
     });
 
     expect(function() {
-      React.render(<Component />, container);
+      ReactDOM.render(<Component />, container);
     }).toThrow(
       'Invariant Violation: You\'re trying to render a component to the ' +
       'document but you didn\'t use server rendering. We can\'t do this ' +
@@ -255,10 +259,10 @@ describe('rendering React components at document', function() {
         </body>
       </html>;
 
-    var markup = React.renderToString(tree);
+    var markup = ReactDOMServer.renderToString(tree);
     testDocument = getTestDocument(markup);
-    var component = React.render(tree, testDocument);
+    var component = ReactDOM.render(tree, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
-    expect(React.findDOMNode(component).tagName).toBe('HTML');
+    expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
   });
 });

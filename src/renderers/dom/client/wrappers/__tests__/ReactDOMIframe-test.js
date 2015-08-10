@@ -13,10 +13,12 @@
 
 describe('ReactDOMIframe', function() {
   var React;
+  var ReactDOM;
   var ReactTestUtils;
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -28,7 +30,7 @@ describe('ReactDOMIframe', function() {
     var loadEvent = document.createEvent('Event');
     loadEvent.initEvent('load', false, false);
 
-    React.findDOMNode(iframe).dispatchEvent(loadEvent);
+    ReactDOM.findDOMNode(iframe).dispatchEvent(loadEvent);
 
     expect(onLoadSpy).toHaveBeenCalled();
   });

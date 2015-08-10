@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactEmptyComponent;
 var ReactTestUtils;
 var TogglingComponent;
@@ -23,6 +24,7 @@ describe('ReactEmptyComponent', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactEmptyComponent = require('ReactEmptyComponent');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -33,11 +35,11 @@ describe('ReactEmptyComponent', function() {
         return {component: this.props.firstComponent};
       },
       componentDidMount: function() {
-        console.log(React.findDOMNode(this));
+        console.log(ReactDOM.findDOMNode(this));
         this.setState({component: this.props.secondComponent});
       },
       componentDidUpdate: function() {
-        console.log(React.findDOMNode(this));
+        console.log(ReactDOM.findDOMNode(this));
       },
       render: function() {
         var Component = this.state.component;
@@ -188,13 +190,13 @@ describe('ReactEmptyComponent', function() {
       componentDidMount: function() {
         // Make sure the DOM node resolves properly even if we're replacing a
         // `null` component
-        expect(React.findDOMNode(this)).not.toBe(null);
+        expect(ReactDOM.findDOMNode(this)).not.toBe(null);
         assertions++;
       },
       componentWillUnmount: function() {
         // Even though we're getting replaced by `null`, we haven't been
         // replaced yet!
-        expect(React.findDOMNode(this)).not.toBe(null);
+        expect(ReactDOM.findDOMNode(this)).not.toBe(null);
         assertions++;
       },
     });
@@ -208,16 +210,16 @@ describe('ReactEmptyComponent', function() {
     var component;
 
     // Render the <Inner /> component...
-    component = React.render(<Wrapper showInner={true} />, el);
-    expect(React.findDOMNode(component)).not.toBe(null);
+    component = ReactDOM.render(<Wrapper showInner={true} />, el);
+    expect(ReactDOM.findDOMNode(component)).not.toBe(null);
 
     // Switch to null...
-    component = React.render(<Wrapper showInner={false} />, el);
-    expect(React.findDOMNode(component)).toBe(null);
+    component = ReactDOM.render(<Wrapper showInner={false} />, el);
+    expect(ReactDOM.findDOMNode(component)).toBe(null);
 
     // ...then switch back.
-    component = React.render(<Wrapper showInner={true} />, el);
-    expect(React.findDOMNode(component)).not.toBe(null);
+    component = ReactDOM.render(<Wrapper showInner={true} />, el);
+    expect(ReactDOM.findDOMNode(component)).not.toBe(null);
 
     expect(assertions).toBe(3);
   });
@@ -226,7 +228,7 @@ describe('ReactEmptyComponent', function() {
     // TODO: This should actually work since `null` is a valid ReactNode
     var div = document.createElement('div');
     expect(function() {
-      React.render(null, div);
+      ReactDOM.render(null, div);
     }).toThrow(
       'Invariant Violation: React.render(): Invalid component element.'
     );

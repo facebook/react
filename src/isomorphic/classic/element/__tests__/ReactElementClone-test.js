@@ -14,12 +14,14 @@
 require('mock-modules');
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactElementClone', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -39,7 +41,7 @@ describe('ReactElementClone', function() {
       },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should clone a composite component with new props', function() {
@@ -63,7 +65,7 @@ describe('ReactElementClone', function() {
       },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should keep the original ref if it is not overridden', function() {

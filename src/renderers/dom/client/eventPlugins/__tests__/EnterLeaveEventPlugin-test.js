@@ -14,6 +14,7 @@
 var EnterLeaveEventPlugin;
 var EventConstants;
 var React;
+var ReactDOM;
 var ReactMount;
 
 var topLevelTypes;
@@ -25,6 +26,7 @@ describe('EnterLeaveEventPlugin', function() {
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     EventConstants = require('EventConstants');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactMount = require('ReactMount');
 
     topLevelTypes = EventConstants.topLevelTypes;
@@ -41,8 +43,8 @@ describe('EnterLeaveEventPlugin', function() {
     );
     iframeDocument.close();
 
-    var component = React.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
-    var div = React.findDOMNode(component);
+    var component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
+    var div = ReactDOM.findDOMNode(component);
 
     var extracted = EnterLeaveEventPlugin.extractEvents(
       topLevelTypes.topMouseOver,
