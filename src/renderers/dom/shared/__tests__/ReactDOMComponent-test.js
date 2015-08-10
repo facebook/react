@@ -15,14 +15,17 @@ var assign = require('Object.assign');
 var mocks = require('mocks');
 
 describe('ReactDOMComponent', function() {
+  var React;
+
+  beforeEach(function() {
+    require('mock-modules').dumpCache();
+    React = require('React');
+  });
 
   describe('updateDOM', function() {
-    var React;
     var ReactTestUtils;
 
     beforeEach(function() {
-      require('mock-modules').dumpCache();
-      React = require('React');
       ReactTestUtils = require('ReactTestUtils');
     });
 
@@ -371,8 +374,6 @@ describe('ReactDOMComponent', function() {
     }
 
     beforeEach(function() {
-      require('mock-modules').dumpCache();
-
       var ReactDefaultInjection = require('ReactDefaultInjection');
       ReactDefaultInjection.inject();
 
@@ -425,8 +426,6 @@ describe('ReactDOMComponent', function() {
     }
 
     beforeEach(function() {
-      require('mock-modules').dumpCache();
-
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
@@ -462,14 +461,9 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('mountComponent', function() {
-    var React;
     var mountComponent;
 
     beforeEach(function() {
-      require('mock-modules').dumpCache();
-
-      React = require('React');
-
       mountComponent = function(props) {
         var container = document.createElement('div');
         React.render(<div {...props} />, container);
@@ -657,11 +651,9 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('updateComponent', function() {
-    var React;
     var container;
 
     beforeEach(function() {
-      React = require('React');
       container = document.createElement('div');
     });
 
@@ -744,7 +736,6 @@ describe('ReactDOMComponent', function() {
 
   describe('unmountComponent', function() {
     it('should clean up listeners', function() {
-      var React = require('React');
       var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
       var ReactMount = require('ReactMount');
 
@@ -780,7 +771,6 @@ describe('ReactDOMComponent', function() {
       var isEventSupported = require('isEventSupported');
       isEventSupported.mockReturnValueOnce(false);
 
-      var React = require('React');
       var ReactTestUtils = require('ReactTestUtils');
 
       spyOn(console, 'error');
@@ -794,7 +784,6 @@ describe('ReactDOMComponent', function() {
 
   describe('tag sanitization', function() {
     it('should throw when an invalid tag name is used', () => {
-      var React = require('React');
       var ReactTestUtils = require('ReactTestUtils');
       var hackzor = React.createElement('script tag');
       expect(
@@ -805,7 +794,6 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should throw when an attack vector is used', () => {
-      var React = require('React');
       var ReactTestUtils = require('ReactTestUtils');
       var hackzor = React.createElement('div><img /><div');
       expect(
@@ -817,11 +805,9 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('nesting validation', function() {
-    var React;
     var ReactTestUtils;
 
     beforeEach(function() {
-      React = require('React');
       ReactTestUtils = require('ReactTestUtils');
     });
 
@@ -945,11 +931,9 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('DOM nodes as refs', function() {
-    var React;
     var ReactTestUtils;
 
     beforeEach(function() {
-      React = require('React');
       ReactTestUtils = require('ReactTestUtils');
     });
 

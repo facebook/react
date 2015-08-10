@@ -279,7 +279,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
 
-    expect(React.render.bind(React, instance, node)).not.toThrow();
+    expect(() => React.render(instance, node)).not.toThrow();
 
     instance =
       <input
@@ -288,10 +288,10 @@ describe('ReactDOMInput', function() {
         value="test"
         onChange={emptyFunction}
       />;
-    expect(React.render.bind(React, instance, node)).toThrow();
+    expect(() => React.render(instance, node)).toThrow();
 
     instance = <input type="text" valueLink={link} onChange={emptyFunction} />;
-    expect(React.render.bind(React, instance, node)).toThrow();
+    expect(() => React.render(instance, node)).toThrow();
 
   });
 
@@ -353,7 +353,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    expect(React.render.bind(React, instance, node)).not.toThrow();
+    expect(() => React.render(instance, node)).not.toThrow();
 
     instance =
       <input
@@ -362,11 +362,11 @@ describe('ReactDOMInput', function() {
         checked="false"
         onChange={emptyFunction}
       />;
-    expect(React.render.bind(React, instance, node)).toThrow();
+    expect(() => React.render(instance, node)).toThrow();
 
     instance =
       <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
-    expect(React.render.bind(React, instance, node)).toThrow();
+    expect(() => React.render(instance, node)).toThrow();
 
   });
 
@@ -375,13 +375,13 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    expect(React.render.bind(React, instance, node)).not.toThrow();
+    expect(() => React.render(instance, node)).not.toThrow();
 
     instance = <input type="checkbox" valueLink={link} />;
-    expect(React.render.bind(React, instance, node)).not.toThrow();
+    expect(() => React.render(instance, node)).not.toThrow();
 
     instance =
       <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
-    expect(React.render.bind(React, instance, node)).toThrow();
+    expect(() => React.render(instance, node)).toThrow();
   });
 });
