@@ -13,6 +13,7 @@
 
 var EventConstants;
 var React;
+var ReactDOM;
 var ReactMount;
 var ReactTestUtils;
 var SelectEventPlugin;
@@ -33,6 +34,7 @@ describe('SelectEventPlugin', function() {
   beforeEach(function() {
     EventConstants = require('EventConstants');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
@@ -48,7 +50,7 @@ describe('SelectEventPlugin', function() {
     });
 
     var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
-    var node = React.findDOMNode(rendered);
+    var node = ReactDOM.findDOMNode(rendered);
     node.focus();
 
     var mousedown = extract(node, topLevelTypes.topMouseDown);
@@ -72,7 +74,7 @@ describe('SelectEventPlugin', function() {
     var rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />
     );
-    var node = React.findDOMNode(rendered);
+    var node = ReactDOM.findDOMNode(rendered);
 
     node.selectionStart = 0;
     node.selectionEnd = 0;

@@ -18,6 +18,7 @@ var mocks = require('mocks');
 describe('ReactDOMInput', function() {
   var EventConstants;
   var React;
+  var ReactDOM;
   var ReactLink;
   var ReactTestUtils;
 
@@ -25,6 +26,7 @@ describe('ReactDOMInput', function() {
     require('mock-modules').dumpCache();
     EventConstants = require('EventConstants');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
     spyOn(console, 'error');
@@ -33,7 +35,7 @@ describe('ReactDOMInput', function() {
   it('should display `defaultValue` of number 0', function() {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = React.findDOMNode(stub);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('0');
   });
@@ -41,7 +43,7 @@ describe('ReactDOMInput', function() {
   it('should display "true" for `defaultValue` of `true`', function() {
     var stub = <input type="text" defaultValue={true} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = React.findDOMNode(stub);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('true');
   });
@@ -49,7 +51,7 @@ describe('ReactDOMInput', function() {
   it('should display "false" for `defaultValue` of `false`', function() {
     var stub = <input type="text" defaultValue={false} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = React.findDOMNode(stub);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('false');
   });
@@ -63,7 +65,7 @@ describe('ReactDOMInput', function() {
 
     var stub = <input type="text" defaultValue={objToString} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = React.findDOMNode(stub);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('foobar');
   });
@@ -71,7 +73,7 @@ describe('ReactDOMInput', function() {
   it('should display `value` of number 0', function() {
     var stub = <input type="text" value={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = React.findDOMNode(stub);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('0');
   });
@@ -79,12 +81,12 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `true`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = React.render(stub, container);
-    var node = React.findDOMNode(stub);
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('yolo');
 
-    stub = React.render(
+    stub = ReactDOM.render(
       <input type="text" value={true} onChange={emptyFunction} />,
       container
     );
@@ -94,12 +96,12 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `false`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = React.render(stub, container);
-    var node = React.findDOMNode(stub);
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('yolo');
 
-    stub = React.render(
+    stub = ReactDOM.render(
       <input type="text" value={false} onChange={emptyFunction} />,
       container
     );
@@ -109,8 +111,8 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `objToString`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="foo" onChange={emptyFunction} />;
-    stub = React.render(stub, container);
-    var node = React.findDOMNode(stub);
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('foo');
 
@@ -119,7 +121,7 @@ describe('ReactDOMInput', function() {
         return 'foobar';
       },
     };
-    stub = React.render(
+    stub = ReactDOM.render(
       <input type="text" value={objToString} onChange={emptyFunction} />,
       container
     );
@@ -129,7 +131,7 @@ describe('ReactDOMInput', function() {
   it('should properly control a value of number `0`', function() {
     var stub = <input type="text" value={0} onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = React.findDOMNode(stub);
+    var node = ReactDOM.findDOMNode(stub);
 
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
@@ -144,7 +146,7 @@ describe('ReactDOMInput', function() {
     };
     var stub = <input type="text" value={0} onChange={handler} />;
     var container = document.createElement('div');
-    var node = React.render(stub, container);
+    var node = ReactDOM.render(stub, container);
 
     node.value = 'giraffe';
 
@@ -163,7 +165,7 @@ describe('ReactDOMInput', function() {
   it('should not set a value for submit buttons unnecessarily', function() {
     var stub = <input type="submit" />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = React.findDOMNode(stub);
+    var node = ReactDOM.findDOMNode(stub);
 
     // The value shouldn't be '', or else the button will have no text; it
     // should have the default "Submit" or "Submit Query" label. Most browsers
@@ -208,9 +210,9 @@ describe('ReactDOMInput', function() {
     });
 
     var stub = ReactTestUtils.renderIntoDocument(<RadioGroup />);
-    var aNode = React.findDOMNode(stub.refs.a);
-    var bNode = React.findDOMNode(stub.refs.b);
-    var cNode = React.findDOMNode(stub.refs.c);
+    var aNode = ReactDOM.findDOMNode(stub.refs.a);
+    var bNode = ReactDOM.findDOMNode(stub.refs.b);
+    var cNode = ReactDOM.findDOMNode(stub.refs.c);
 
     expect(aNode.checked).toBe(true);
     expect(bNode.checked).toBe(false);
@@ -238,12 +240,12 @@ describe('ReactDOMInput', function() {
 
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    expect(React.findDOMNode(instance).value).toBe('yolo');
+    expect(ReactDOM.findDOMNode(instance).value).toBe('yolo');
     expect(link.value).toBe('yolo');
     expect(link.requestChange.mock.calls.length).toBe(0);
 
-    React.findDOMNode(instance).value = 'test';
-    ReactTestUtils.Simulate.change(React.findDOMNode(instance));
+    ReactDOM.findDOMNode(instance).value = 'test';
+    ReactTestUtils.Simulate.change(ReactDOM.findDOMNode(instance));
 
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual('test');
@@ -279,7 +281,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
 
-    expect(() => React.render(instance, node)).not.toThrow();
+    expect(() => ReactDOM.render(instance, node)).not.toThrow();
 
     instance =
       <input
@@ -288,10 +290,10 @@ describe('ReactDOMInput', function() {
         value="test"
         onChange={emptyFunction}
       />;
-    expect(() => React.render(instance, node)).toThrow();
+    expect(() => ReactDOM.render(instance, node)).toThrow();
 
     instance = <input type="text" valueLink={link} onChange={emptyFunction} />;
-    expect(() => React.render(instance, node)).toThrow();
+    expect(() => ReactDOM.render(instance, node)).toThrow();
 
   });
 
@@ -301,12 +303,12 @@ describe('ReactDOMInput', function() {
 
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    expect(React.findDOMNode(instance).checked).toBe(true);
+    expect(ReactDOM.findDOMNode(instance).checked).toBe(true);
     expect(link.value).toBe(true);
     expect(link.requestChange.mock.calls.length).toBe(0);
 
-    React.findDOMNode(instance).checked = false;
-    ReactTestUtils.Simulate.change(React.findDOMNode(instance));
+    ReactDOM.findDOMNode(instance).checked = false;
+    ReactTestUtils.Simulate.change(ReactDOM.findDOMNode(instance));
 
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual(false);
@@ -315,7 +317,7 @@ describe('ReactDOMInput', function() {
   it('should warn with checked and no onChange handler', function() {
     var node = document.createElement('div');
     var link = new ReactLink(true, mocks.getMockFunction());
-    React.render(<input type="checkbox" checkedLink={link} />, node);
+    ReactDOM.render(<input type="checkbox" checkedLink={link} />, node);
     expect(console.error.argsForCall.length).toBe(0);
 
     ReactTestUtils.renderIntoDocument(
@@ -353,7 +355,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    expect(() => React.render(instance, node)).not.toThrow();
+    expect(() => ReactDOM.render(instance, node)).not.toThrow();
 
     instance =
       <input
@@ -362,11 +364,11 @@ describe('ReactDOMInput', function() {
         checked="false"
         onChange={emptyFunction}
       />;
-    expect(() => React.render(instance, node)).toThrow();
+    expect(() => ReactDOM.render(instance, node)).toThrow();
 
     instance =
       <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
-    expect(() => React.render(instance, node)).toThrow();
+    expect(() => ReactDOM.render(instance, node)).toThrow();
 
   });
 
@@ -375,13 +377,13 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    expect(() => React.render(instance, node)).not.toThrow();
+    expect(() => ReactDOM.render(instance, node)).not.toThrow();
 
     instance = <input type="checkbox" valueLink={link} />;
-    expect(() => React.render(instance, node)).not.toThrow();
+    expect(() => ReactDOM.render(instance, node)).not.toThrow();
 
     instance =
       <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
-    expect(() => React.render(instance, node)).toThrow();
+    expect(() => ReactDOM.render(instance, node)).toThrow();
   });
 });

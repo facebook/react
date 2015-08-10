@@ -15,6 +15,7 @@
 // classic JS without JSX.
 
 var React;
+var ReactDOM;
 var ReactFragment;
 var ReactTestUtils;
 
@@ -25,6 +26,7 @@ describe('ReactElementValidator', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
@@ -486,7 +488,7 @@ describe('ReactElementValidator', function() {
         return <div />;
       },
       componentDidMount: function() {
-        React.findDOMNode(this).appendChild(this.props.children);
+        ReactDOM.findDOMNode(this).appendChild(this.props.children);
       },
     });
 

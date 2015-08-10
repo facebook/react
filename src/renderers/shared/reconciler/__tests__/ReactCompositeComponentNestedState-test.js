@@ -14,12 +14,14 @@
 var mocks = require('mocks');
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -92,7 +94,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
 
     var logger = mocks.getMockFunction();
 
-    void React.render(
+    void ReactDOM.render(
       <ParentComponent logger={logger} />,
       container
     );

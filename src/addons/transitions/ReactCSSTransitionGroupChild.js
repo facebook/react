@@ -13,6 +13,7 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
@@ -47,7 +48,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   displayName: 'ReactCSSTransitionGroupChild',
 
   transition: function(animationType, finishCallback) {
-    var node = React.findDOMNode(this);
+    var node = ReactDOM.findDOMNode(this);
 
     if (!node) {
       if (finishCallback) {
@@ -104,7 +105,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   flushClassNameQueue: function() {
     if (this.isMounted()) {
       this.classNameQueue.forEach(
-        CSSCore.addClass.bind(CSSCore, React.findDOMNode(this))
+        CSSCore.addClass.bind(CSSCore, ReactDOM.findDOMNode(this))
       );
     }
     this.classNameQueue.length = 0;

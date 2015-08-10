@@ -12,11 +12,12 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 
 describe('findDOMNode', function() {
   it('findDOMNode should return null if passed null', function() {
-    expect(React.findDOMNode(null)).toBe(null);
+    expect(ReactDOM.findDOMNode(null)).toBe(null);
   });
 
   it('findDOMNode should find dom element', function() {
@@ -27,15 +28,15 @@ describe('findDOMNode', function() {
     });
 
     var myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
-    var myDiv = React.findDOMNode(myNode);
-    var mySameDiv = React.findDOMNode(myDiv);
+    var myDiv = ReactDOM.findDOMNode(myNode);
+    var mySameDiv = ReactDOM.findDOMNode(myDiv);
     expect(myDiv.tagName).toBe('DIV');
     expect(mySameDiv).toBe(myDiv);
   });
 
   it('findDOMNode should reject random objects', function() {
     expect(function() {
-      React.findDOMNode({foo: 'bar'});
+      ReactDOM.findDOMNode({foo: 'bar'});
     })
       .toThrow('Invariant Violation: Element appears to be neither ' +
         'ReactComponent nor DOMNode (keys: foo)'
@@ -44,7 +45,7 @@ describe('findDOMNode', function() {
 
   it('findDOMNode should reject unmounted objects with render func', function() {
     expect(function() {
-      React.findDOMNode({render: function() {}});
+      ReactDOM.findDOMNode({render: function() {}});
     })
       .toThrow('Invariant Violation: Component (with keys: render) ' +
         'contains `render` method but is not mounted in the DOM'

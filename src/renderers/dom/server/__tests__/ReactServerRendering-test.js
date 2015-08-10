@@ -15,6 +15,7 @@ var mocks = require('mocks');
 
 var ExecutionEnvironment;
 var React;
+var ReactDOM;
 var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
@@ -26,6 +27,7 @@ describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -185,20 +187,20 @@ describe('ReactServerRendering', function() {
       });
 
       var element = document.createElement('div');
-      React.render(<TestComponent />, element);
+      ReactDOM.render(<TestComponent />, element);
 
       var lastMarkup = element.innerHTML;
 
       // Exercise the update path. Markup should not change,
       // but some lifecycle methods should be run again.
-      React.render(<TestComponent name="x" />, element);
+      ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(1);
 
       // Unmount and remount. We should get another mount event and
       // we should get different markup, as the IDs are unique each time.
-      React.unmountComponentAtNode(element);
+      ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
-      React.render(<TestComponent name="x" />, element);
+      ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(2);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -206,7 +208,7 @@ describe('ReactServerRendering', function() {
       // we used server rendering. We should mount again, but the markup should
       // be unchanged. We will append a sentinel at the end of innerHTML to be
       // sure that innerHTML was not changed.
-      React.unmountComponentAtNode(element);
+      ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
 
       ExecutionEnvironment.canUseDOM = false;
@@ -216,16 +218,16 @@ describe('ReactServerRendering', function() {
       ExecutionEnvironment.canUseDOM = true;
       element.innerHTML = lastMarkup;
 
-      React.render(<TestComponent name="x" />, element);
+      ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
       expect(element.innerHTML).toBe(lastMarkup);
-      React.unmountComponentAtNode(element);
+      ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
 
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
-      var instance = React.render(<TestComponent name="y" />, element);
+      var instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expect(console.error.argsForCall.length).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -233,7 +235,7 @@ describe('ReactServerRendering', function() {
 
       // Ensure the events system works
       expect(numClicks).toEqual(0);
-      ReactTestUtils.Simulate.click(React.findDOMNode(instance.refs.span));
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
       expect(numClicks).toEqual(1);
     });
 

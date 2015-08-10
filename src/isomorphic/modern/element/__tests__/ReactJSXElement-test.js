@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactJSXElement', function() {
@@ -21,6 +22,7 @@ describe('ReactJSXElement', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     Component = class {
       render() {
@@ -161,13 +163,13 @@ describe('ReactJSXElement', function() {
     Component.defaultProps = {fruit: 'persimmon'};
 
     var container = document.createElement('div');
-    var instance = React.render(
+    var instance = ReactDOM.render(
       <Component fruit="mango" />,
       container
     );
     expect(instance.props.fruit).toBe('mango');
 
-    React.render(<Component />, container);
+    ReactDOM.render(<Component />, container);
     expect(instance.props.fruit).toBe('persimmon');
   });
 

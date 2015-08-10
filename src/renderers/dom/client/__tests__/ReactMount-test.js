@@ -15,6 +15,8 @@ var mocks = require('mocks');
 
 describe('ReactMount', function() {
   var React = require('React');
+  var ReactDOM = require('ReactDOM');
+  var ReactDOMServer = require('ReactDOMServer');
   var ReactMount = require('ReactMount');
   var ReactTestUtils = require('ReactTestUtils');
   var WebComponents = WebComponents;
@@ -33,7 +35,7 @@ describe('ReactMount', function() {
     it('throws when given a non-node', function() {
       var nodeArray = document.getElementsByTagName('div');
       expect(function() {
-        React.unmountComponentAtNode(nodeArray);
+        ReactDOM.unmountComponentAtNode(nodeArray);
       }).toThrow(
         'Invariant Violation: unmountComponentAtNode(...): Target container ' +
         'is not a DOM element.'
@@ -114,21 +116,21 @@ describe('ReactMount', function() {
 
   it('should reuse markup if rendering to the same target twice', function() {
     var container = document.createElement('container');
-    var instance1 = React.render(<div />, container);
-    var instance2 = React.render(<div />, container);
+    var instance1 = ReactDOM.render(<div />, container);
+    var instance2 = ReactDOM.render(<div />, container);
 
     expect(instance1 === instance2).toBe(true);
   });
 
   it('should warn if mounting into dirty rendered markup', function() {
     var container = document.createElement('container');
-    container.innerHTML = React.renderToString(<div />) + ' ';
+    container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
     spyOn(console, 'error');
     ReactMount.render(<div />, container);
     expect(console.error.calls.length).toBe(1);
 
-    container.innerHTML = ' ' + React.renderToString(<div />);
+    container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
     ReactMount.render(<div />, container);
     expect(console.error.calls.length).toBe(2);
@@ -158,12 +160,12 @@ describe('ReactMount', function() {
 
   it('should account for escaping on a checksum mismatch', function () {
     var div = document.createElement('div');
-    var markup = React.renderToString(
+    var markup = ReactDOMServer.renderToString(
       <div>This markup contains an nbsp entity: &nbsp; server text</div>);
     div.innerHTML = markup;
 
     spyOn(console, 'error');
-    React.render(
+    ReactDOM.render(
       <div>This markup contains an nbsp entity: &nbsp; client text</div>,
       div
     );
@@ -182,15 +184,15 @@ describe('ReactMount', function() {
         createdCallback: {
           value: function() {
             shadowRoot = this.createShadowRoot();
-            React.render(<div>Hi, from within a WC!</div>, shadowRoot);
+            ReactDOM.render(<div>Hi, from within a WC!</div>, shadowRoot);
             expect(shadowRoot.firstChild.tagName).toBe('DIV');
-            React.render(<span>Hi, from within a WC!</span>, shadowRoot);
+            ReactDOM.render(<span>Hi, from within a WC!</span>, shadowRoot);
             expect(shadowRoot.firstChild.tagName).toBe('SPAN');
           },
         },
       });
       proto.unmount = function() {
-        React.unmountComponentAtNode(shadowRoot);
+        ReactDOM.unmountComponentAtNode(shadowRoot);
       };
       document.registerElement('x-foo', {prototype: proto});
       var element = document.createElement('x-foo');

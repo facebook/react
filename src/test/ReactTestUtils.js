@@ -15,6 +15,7 @@ var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -79,7 +80,7 @@ var ReactTestUtils = {
     // clean up, so we're going to stop honoring the name of this method
     // (and probably rename it eventually) if no problems arise.
     // document.documentElement.appendChild(div);
-    return React.render(instance, div);
+    return ReactDOM.render(instance, div);
   },
 
   isElement: function(element) {
@@ -177,7 +178,7 @@ var ReactTestUtils = {
   scryRenderedDOMComponentsWithClass: function(root, className) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
-        var instClassName = React.findDOMNode(inst).className;
+        var instClassName = ReactDOM.findDOMNode(inst).className;
         return (
           instClassName &&
           (('' + instClassName).split(/\s+/)).indexOf(className) !== -1

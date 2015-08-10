@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactCSSTransitionGroup;
 
 // Most of the real functionality is covered in other unit tests, this just
@@ -21,6 +22,7 @@ describe('ReactCSSTransitionGroup', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 
     container = document.createElement('div');
@@ -28,25 +30,25 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should warn after time with no transitionend', function() {
-    var a = React.render(
+    var a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(1);
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
 
     setTimeout.mock.calls.length = 0;
 
-    React.render(
+    ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(2);
-    expect(React.findDOMNode(a).childNodes[0].id).toBe('two');
-    expect(React.findDOMNode(a).childNodes[1].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
+    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('one');
 
     // For some reason jst is adding extra setTimeout()s and grunt test isn't,
     // so we need to do this disgusting hack.
@@ -57,31 +59,31 @@ describe('ReactCSSTransitionGroup', function() {
       }
     }
 
-    expect(React.findDOMNode(a).childNodes.length).toBe(2);
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
     expect(console.error.argsForCall.length).toBe(1);
   });
 
   it('should keep both sets of DOM nodes around', function() {
-    var a = React.render(
+    var a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(1);
-    React.render(
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(2);
-    expect(React.findDOMNode(a).childNodes[0].id).toBe('two');
-    expect(React.findDOMNode(a).childNodes[1].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
+    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('one');
   });
 
   it('should switch transitionLeave from false to true', function() {
-    var a = React.render(
+    var a = ReactDOM.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
@@ -90,8 +92,8 @@ describe('ReactCSSTransitionGroup', function() {
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(1);
-    React.render(
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    ReactDOM.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
@@ -100,8 +102,8 @@ describe('ReactCSSTransitionGroup', function() {
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(1);
-    React.render(
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    ReactDOM.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
@@ -110,20 +112,20 @@ describe('ReactCSSTransitionGroup', function() {
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(2);
-    expect(React.findDOMNode(a).childNodes[0].id).toBe('three');
-    expect(React.findDOMNode(a).childNodes[1].id).toBe('two');
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('three');
+    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('two');
   });
 
   it('should work with no children', function() {
-    React.render(
+    ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo" />,
       container
     );
   });
 
   it('should work with a null child', function() {
-    React.render(
+    ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {[null]}
       </ReactCSSTransitionGroup>,
@@ -132,14 +134,14 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should transition from one to null', function() {
-    var a = React.render(
+    var a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(1);
-    React.render(
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {null}
       </ReactCSSTransitionGroup>,
@@ -147,26 +149,26 @@ describe('ReactCSSTransitionGroup', function() {
     );
     // (Here, we expect the original child to stick around but test that no
     // exception is thrown)
-    expect(React.findDOMNode(a).childNodes.length).toBe(1);
-    expect(React.findDOMNode(a).childNodes[0].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
   });
 
   it('should transition from false to one', function() {
-    var a = React.render(
+    var a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {false}
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(0);
-    React.render(
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(0);
+    ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(React.findDOMNode(a).childNodes.length).toBe(1);
-    expect(React.findDOMNode(a).childNodes[0].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
   });
 
 });

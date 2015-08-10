@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 
 describe('ReactMount', function() {
   it('should destroy a react root upon request', function() {
@@ -24,7 +25,7 @@ describe('ReactMount', function() {
     );
     var firstRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(firstRootDiv);
-    React.render(instanceOne, firstRootDiv);
+    ReactDOM.render(instanceOne, firstRootDiv);
 
     var instanceTwo = (
       <div className="secondReactDiv">
@@ -32,16 +33,16 @@ describe('ReactMount', function() {
     );
     var secondRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(secondRootDiv);
-    React.render(instanceTwo, secondRootDiv);
+    ReactDOM.render(instanceTwo, secondRootDiv);
 
     // Test that two react roots are rendered in isolation
     expect(firstRootDiv.firstChild.className).toBe('firstReactDiv');
     expect(secondRootDiv.firstChild.className).toBe('secondReactDiv');
 
     // Test that after unmounting each, they are no longer in the document.
-    React.unmountComponentAtNode(firstRootDiv);
+    ReactDOM.unmountComponentAtNode(firstRootDiv);
     expect(firstRootDiv.firstChild).toBeNull();
-    React.unmountComponentAtNode(secondRootDiv);
+    ReactDOM.unmountComponentAtNode(secondRootDiv);
     expect(secondRootDiv.firstChild).toBeNull();
   });
 });

@@ -12,6 +12,8 @@
 'use strict';
 
 var React;
+var ReactDOM;
+var ReactDOMServer;
 var ReactTestUtils;
 
 var mocks;
@@ -22,6 +24,8 @@ describe('ReactTestUtils', function() {
     mocks = require('mocks');
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -206,14 +210,14 @@ describe('ReactTestUtils', function() {
     });
 
     var container = document.createElement('div');
-    React.render(
+    ReactDOM.render(
       <Wrapper>
         {null}
         <div>purple</div>
       </Wrapper>,
       container
     );
-    var tree = React.render(
+    var tree = ReactDOM.render(
       <Wrapper>
         <div>orange</div>
         <div>purple</div>
@@ -224,7 +228,7 @@ describe('ReactTestUtils', function() {
     var log = [];
     ReactTestUtils.findAllInRenderedTree(tree, function(child) {
       if (ReactTestUtils.isDOMComponent(child)) {
-        log.push(React.findDOMNode(child).textContent);
+        log.push(ReactDOM.findDOMNode(child).textContent);
       }
     });
 
@@ -298,9 +302,9 @@ describe('ReactTestUtils', function() {
       },
     });
 
-    var markup = React.renderToString(<Root />);
+    var markup = ReactDOMServer.renderToString(<Root />);
     var testDocument = getTestDocument(markup);
-    var component = React.render(<Root />, testDocument);
+    var component = ReactDOM.render(<Root />, testDocument);
 
     expect(component.refs.html.tagName).toBe('HTML');
     expect(component.refs.head.tagName).toBe('HEAD');

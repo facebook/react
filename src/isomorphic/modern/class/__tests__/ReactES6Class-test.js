@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 
 describe('ReactES6Class', function() {
 
@@ -26,6 +27,7 @@ describe('ReactES6Class', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     container = document.createElement('div');
     attachedListener = null;
     renderedName = null;
@@ -42,7 +44,7 @@ describe('ReactES6Class', function() {
   });
 
   function test(element, expectedTag, expectedClassName) {
-    var instance = React.render(element, container);
+    var instance = ReactDOM.render(element, container);
     expect(container.firstChild).not.toBeNull();
     expect(container.firstChild.tagName).toBe(expectedTag);
     expect(container.firstChild.className).toBe(expectedClassName);
@@ -57,7 +59,7 @@ describe('ReactES6Class', function() {
   it('throws if no render function is defined', function() {
     spyOn(console, 'error');
     class Foo extends React.Component { }
-    expect(() => React.render(<Foo />, container)).toThrow();
+    expect(() => ReactDOM.render(<Foo />, container)).toThrow();
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toBe(
@@ -308,7 +310,7 @@ describe('ReactES6Class', function() {
       'did-update', freeze({value: 'foo'}), {},
     ]);
     lifeCycles = []; // reset
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(lifeCycles).toEqual([
       'will-unmount',
     ]);
@@ -456,7 +458,7 @@ describe('ReactES6Class', function() {
 
   it('supports drilling through to the DOM using findDOMNode', function() {
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    var node = React.findDOMNode(instance);
+    var node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
 

@@ -12,34 +12,38 @@
 'use strict';
 
 var React;
+var ReactDOM;
+var ReactDOMServer;
 
 describe('ReactDOMTextComponent', function() {
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
   });
 
   it('should escape the rootID', function() {
     var ThisThingShouldBeEscaped = '">>> LULZ <<<"';
     var ThisThingWasBeEscaped = '&quot;&gt;&gt;&gt; LULZ &lt;&lt;&lt;&quot;';
     var thing = <div><span key={ThisThingShouldBeEscaped}>LULZ</span></div>;
-    var html = React.renderToString(thing);
+    var html = ReactDOMServer.renderToString(thing);
     expect(html).not.toContain(ThisThingShouldBeEscaped);
     expect(html).toContain(ThisThingWasBeEscaped);
   });
 
   it('updates a mounted text component in place', function() {
     var el = document.createElement('div');
-    var inst = React.render(<div>{'foo'}{'bar'}</div>, el);
+    var inst = ReactDOM.render(<div>{'foo'}{'bar'}</div>, el);
 
-    var foo = React.findDOMNode(inst).children[0];
-    var bar = React.findDOMNode(inst).children[1];
+    var foo = ReactDOM.findDOMNode(inst).children[0];
+    var bar = ReactDOM.findDOMNode(inst).children[1];
     expect(foo.tagName).toBe('SPAN');
     expect(bar.tagName).toBe('SPAN');
 
-    inst = React.render(<div>{'baz'}{'qux'}</div>, el);
+    inst = ReactDOM.render(<div>{'baz'}{'qux'}</div>, el);
     // After the update, the spans should have stayed in place (as opposed to
     // getting unmounted and remounted)
-    expect(React.findDOMNode(inst).children[0]).toBe(foo);
-    expect(React.findDOMNode(inst).children[1]).toBe(bar);
+    expect(ReactDOM.findDOMNode(inst).children[0]).toBe(foo);
+    expect(ReactDOM.findDOMNode(inst).children[1]).toBe(bar);
   });
 });

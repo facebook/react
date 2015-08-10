@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 var onlyChild;
@@ -23,6 +24,7 @@ describe('cloneWithProps', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     onlyChild = require('onlyChild');
     cloneWithProps = require('cloneWithProps');
@@ -65,7 +67,7 @@ describe('cloneWithProps', function() {
       },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className)
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className)
       .toBe('xyz child');
   });
 
@@ -92,7 +94,7 @@ describe('cloneWithProps', function() {
       },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className)
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className)
       .toBe('xyz child');
   });
 

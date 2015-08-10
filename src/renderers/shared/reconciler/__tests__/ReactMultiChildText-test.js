@@ -14,6 +14,7 @@
 require('mock-modules');
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactFragment = require('ReactFragment');
 var ReactTestUtils = require('ReactTestUtils');
 
@@ -30,17 +31,17 @@ var testAllPermutations = function(testCases) {
       var expectedResultAfterUpdate = testCases[j + 1];
 
       var container = document.createElement('div');
-      var d = React.render(<div>{renderWithChildren}</div>, container);
+      var d = ReactDOM.render(<div>{renderWithChildren}</div>, container);
       expectChildren(d, expectedResultAfterRender);
 
-      d = React.render(<div>{updateWithChildren}</div>, container);
+      d = ReactDOM.render(<div>{updateWithChildren}</div>, container);
       expectChildren(d, expectedResultAfterUpdate);
     }
   }
 };
 
 var expectChildren = function(d, children) {
-  var outerNode = React.findDOMNode(d);
+  var outerNode = ReactDOM.findDOMNode(d);
   var textNode;
   if (typeof children === 'string') {
     textNode = outerNode.firstChild;
