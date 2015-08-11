@@ -25,16 +25,6 @@ function enqueueUpdate(internalInstance) {
 }
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
-  if (__DEV__) {
-    warning(
-      ReactCurrentOwner.current == null,
-      '%s(...): Cannot update during an existing state transition ' +
-      '(such as within `render`). Render methods should be a pure function ' +
-      'of props and state.',
-      callerName
-    );
-  }
-
   var internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
     if (__DEV__) {
@@ -52,6 +42,16 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
       );
     }
     return null;
+  }
+
+  if (__DEV__) {
+    warning(
+      ReactCurrentOwner.current == null,
+      '%s(...): Cannot update during an existing state transition ' +
+      '(such as within `render`). Render methods should be a pure function ' +
+      'of props and state.',
+      callerName
+    );
   }
 
   return internalInstance;

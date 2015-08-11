@@ -38,6 +38,13 @@ function getDeclarationErrorAddendum(component) {
   return '';
 }
 
+function StatelessComponent(Component) {
+}
+StatelessComponent.prototype.render = function() {
+  var Component = ReactInstanceMap.get(this)._currentElement.type;
+  return new Component(this.props, this.context, this.updater);
+};
+
 /**
  * ------------------ The Life-Cycle of a Composite Component ------------------
  *
@@ -126,7 +133,24 @@ var ReactCompositeComponentMixin = {
     var Component = this._currentElement.type;
 
     // Initialize the public class
-    var inst = new Component(publicProps, publicContext, ReactUpdateQueue);
+    var inst;
+    var renderedElement;
+
+    if (__DEV__) {
+      ReactCurrentOwner.current = this;
+      try {
+        inst = new Component(publicProps, publicContext, ReactUpdateQueue);
+      } finally {
+        ReactCurrentOwner.current = null;
+      }
+    } else {
+      inst = new Component(publicProps, publicContext, ReactUpdateQueue);
+    }
+
+    if (inst === null || inst === false || ReactElement.isValidElement(inst)) {
+      renderedElement = inst;
+      inst = new StatelessComponent(Component);
+    }
 
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
@@ -231,7 +255,10 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    var renderedElement = this._renderValidatedComponent();
+    // If not a stateless component, we now render
+    if (renderedElement === undefined) {
+      renderedElement = this._renderValidatedComponent();
+    }
 
     this._renderedComponent = this._instantiateReactComponent(
       renderedElement
@@ -265,6 +292,7 @@ var ReactCompositeComponentMixin = {
 
     ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
+    this._instance = null;
 
     // Reset pending fields
     // Even if this component is scheduled for another update in ReactUpdates,
@@ -759,6 +787,7 @@ var ReactCompositeComponentMixin = {
    */
   attachRef: function(ref, component) {
     var inst = this.getPublicInstance();
+    invariant(inst != null, 'Stateless function components cannot have refs.');
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
     refs[ref] = component.getPublicInstance();
   },
@@ -800,7 +829,11 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   getPublicInstance: function() {
-    return this._instance;
+    var inst = this._instance;
+    if (inst instanceof StatelessComponent) {
+      return null;
+    }
+    return inst;
   },
 
   // Stub
