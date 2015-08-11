@@ -7,6 +7,39 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Relay Technical Preview</title>
+				<description>&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;relay&quot;&gt;&lt;/a&gt;Relay &lt;a class=&quot;hash-link&quot; href=&quot;#relay&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;Today we&amp;#39;re excited to share an update on Relay - the technical preview is now open-source and &lt;a href=&quot;http://github.com/facebook/relay&quot;&gt;available on GitHub&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;why-relay&quot;&gt;&lt;/a&gt;Why Relay &lt;a class=&quot;hash-link&quot; href=&quot;#why-relay&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;While React simplified the process of developing complex user-interfaces, it left open the question of how to interact with data on the server. It turns out that this was a significant source of friction for our developers; fragile coupling between client and server caused data-related bugs and made iteration harder. Furthermore, developers were forced to constantly re-implement complex async logic instead of focusing on their apps. Relay addresses these concerns by borrowing important lessons from React: it provides &lt;em&gt;declarative, component-oriented data fetching for React applications&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Declarative data-fetching means that Relay applications specify &lt;em&gt;what&lt;/em&gt; data they need, not &lt;em&gt;how&lt;/em&gt; to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.&lt;/p&gt;
+
+&lt;p&gt;Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such under- or over-fetching data.&lt;/p&gt;
+
+&lt;p&gt;Relay is in use at Facebook in production apps, and we&amp;#39;re using it more and more because &lt;em&gt;Relay lets developers focus on their products and move fast&lt;/em&gt;. It&amp;#39;s working for us and we&amp;#39;d like to share it with the community.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-included&quot;&gt;&lt;/a&gt;What&amp;#39;s Included &lt;a class=&quot;hash-link&quot; href=&quot;#whats-included&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We&amp;#39;re open-sourcing a technical preview of Relay - the core framework that we use internally, with some modifications for use outside Facebook. As this is the first release, it&amp;#39;s good to keep in mind that there may be some incomplete or missing features. We&amp;#39;ll continue to develop Relay and are working closely with the GraphQL community to ensure that Relay tracks updates during GraphQL&amp;#39;s RFC period. But we couldn&amp;#39;t wait any longer to get this in your hands, and we&amp;#39;re looking forward to your feedback and contributions.&lt;/p&gt;
+
+&lt;p&gt;Relay is available on &lt;a href=&quot;http://github.com/facebook/relay&quot;&gt;GitHub&lt;/a&gt; and &lt;a href=&quot;https://www.npmjs.com/package/react-relay&quot;&gt;npm&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-next&quot;&gt;&lt;/a&gt;What&amp;#39;s Next &lt;a class=&quot;hash-link&quot; href=&quot;#whats-next&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The team is super excited to be releasing Relay - and just as excited about what&amp;#39;s next. Here are some of the things we&amp;#39;ll be focusing on:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Offline support. This will allow applications to fulfill queries and enqueue updates without connectivity.&lt;/li&gt;
+&lt;li&gt;Real-time updates. In collaboration with the GraphQL community, we&amp;#39;re working to define a specification for subscriptions and provide support for them in Relay.&lt;/li&gt;
+&lt;li&gt;A generic Relay. Just as the power of React was never about the virtual DOM, Relay is much more than a GraphQL client. We&amp;#39;re working to extend Relay to provide a unified interface for interacting not only with server data, but also in-memory and native device data (and, even better, a mix of all three).&lt;/li&gt;
+&lt;li&gt;Finally, it&amp;#39;s all too easy as developers to focus on those people with the newest devices and fastest internet connections. We&amp;#39;re working to make it easier to build applications that are robust in the face of slow or intermittent connectivity.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Thanks!&lt;/p&gt;
+</description>
+				<pubDate>2015-08-11T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html</guid>
+			</item>
+		
+			<item>
 				<title>New React Devtools Beta</title>
 				<description>&lt;p&gt;We&amp;#39;ve made an entirely new version of the devtools, and we want you to try it
 out!&lt;/p&gt;
@@ -477,27 +510,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 				<pubDate>2015-03-30T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/03/30/community-roundup-26.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/30/community-roundup-26.html</guid>
-			</item>
-		
-			<item>
-				<title>Introducing React Native</title>
-				<description>&lt;p&gt;In January at React.js Conf, we announced React Native, a new framework for building native apps using React. We&amp;#39;re happy to announce that we&amp;#39;re open-sourcing React Native and you can start building your apps with it today.&lt;/p&gt;
-
-&lt;p&gt;For more details, see &lt;a href=&quot;https://code.facebook.com/posts/1014532261909640/react-native-bringing-modern-web-techniques-to-mobile/&quot;&gt;Tom Occhino&amp;#39;s post on the Facebook Engineering blog&lt;/a&gt;:&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;&lt;em&gt;What we really want is the user experience of the native mobile platforms, combined with the developer experience we have when building with React on the web.&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;With a bit of work, we can make it so the exact same React that&amp;#39;s on GitHub can power truly native mobile applications. The only difference in the mobile environment is that instead of running React in the browser and rendering to divs and spans, we run it an embedded instance of JavaScriptCore inside our apps and render to higher-level platform-specific components.&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;It&amp;#39;s worth noting that we&amp;#39;re not chasing “write once, run anywhere.” Different platforms have different looks, feels, and capabilities, and as such, we should still be developing discrete apps for each platform, but the same set of engineers should be able to build applications for whatever platform they choose, without needing to learn a fundamentally different set of technologies for each. We call this approach “learn once, write anywhere.”&lt;/em&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;To learn more, visit the &lt;a href=&quot;https://facebook.github.io/react-native/&quot;&gt;React Native website&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>2015-03-26T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/03/26/introducing-react-native.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/03/26/introducing-react-native.html</guid>
 			</item>
 		
 	</channel>
