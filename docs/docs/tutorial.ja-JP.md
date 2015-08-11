@@ -215,7 +215,7 @@ var CommentList = React.createClass({
 
 Markdown はインラインでテキストをフォーマットする簡単な記法です。例えば、テキストをアスタリスクで挟むと強調されて表示されます。
 
-まず最初に、サードパーティ製の **Showdown** ライブラリをアプリケーションに追加します。 Showdown は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように Showdown を読み込ませます。
+まず最初に、サードパーティ製の **marked** ライブラリをアプリケーションに追加します。 marked は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように marked を読み込ませます。
 
 ```html{8}
 <!-- index.html -->
@@ -225,7 +225,7 @@ Markdown はインラインでテキストをフォーマットする簡単な�
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
 
