@@ -66,8 +66,13 @@ var antiSubsequence = function(arr, indices) {
  * Helper for creating touch test config data.
  * @param allTouchHandles
  */
-var _touchConfig =
-  function(topType, targetNodeHandle, allTouchHandles, changedIndices, eventTarget) {
+var _touchConfig = function(
+  topType,
+  targetNodeHandle,
+  allTouchHandles,
+  changedIndices,
+  eventTarget
+) {
   var allTouchObjects = allTouchHandles.map(touch);
   var changedTouchObjects = subsequence(allTouchObjects, changedIndices);
   var activeTouchObjects =

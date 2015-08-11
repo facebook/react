@@ -616,9 +616,9 @@ describe('OrderedMap', function() {
       expect(res.get('dog')).toBe(undefined);
     };
     result = OrderedMap.fromArray([
-        {uniqueID: 'two', val: 'secondOM2'},
-        {uniqueID: 'three', val: 'third'},
-      ], extractUniqueID).merge(oneTwo);
+      {uniqueID: 'two', val: 'secondOM2'},
+      {uniqueID: 'three', val: 'third'},
+    ], extractUniqueID).merge(oneTwo);
     testTwoThreeMergedWithOneTwo(result);
 
   });

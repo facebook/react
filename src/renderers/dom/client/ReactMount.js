@@ -257,12 +257,13 @@ function findDeepestCachedAncestor(targetID) {
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
 function mountComponentIntoNode(
-    componentInstance,
-    rootID,
-    container,
-    transaction,
-    shouldReuseMarkup,
-    context) {
+  componentInstance,
+  rootID,
+  container,
+  transaction,
+  shouldReuseMarkup,
+  context
+) {
   if (__DEV__) {
     if (context === emptyObject) {
       context = {};
@@ -287,11 +288,12 @@ function mountComponentIntoNode(
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
 function batchedMountComponentIntoNode(
-    componentInstance,
-    rootID,
-    container,
-    shouldReuseMarkup,
-    context) {
+  componentInstance,
+  rootID,
+  container,
+  shouldReuseMarkup,
+  context
+) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
   transaction.perform(
     mountComponentIntoNode,

@@ -1,3 +1,5 @@
+'use strict';
+
 var warning = require('fbjs/lib/warning');
 warning(
   false,

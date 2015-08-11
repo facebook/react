@@ -127,13 +127,14 @@ function docs() {
 function msg() {
   // Just output a friendly reminder message for the rest of the process
   grunt.log.subhead('Release *almost* complete...');
-  [
+  var steps = [
     'Still todo:',
     '* put files on CDN',
     '* push changes to git repositories',
     '* publish npm module (`npm publish .`)',
     '* announce it on FB/Twitter/mailing list',
-  ].forEach(function(ln) {
+  ];
+  steps.forEach(function(ln) {
     grunt.log.writeln(ln);
   });
 }
