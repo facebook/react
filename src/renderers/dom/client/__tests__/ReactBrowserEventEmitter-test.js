@@ -161,6 +161,34 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
   });
 
+  it('should continue bubbling if an error is thrown', function() {
+    ReactBrowserEventEmitter.putListener(
+      getID(CHILD),
+      ON_CLICK_KEY,
+      recordID.bind(null, getID(CHILD))
+    );
+    ReactBrowserEventEmitter.putListener(
+      getID(PARENT),
+      ON_CLICK_KEY,
+      function() {
+        recordID(getID(PARENT));
+        throw new Error('Handler interrupted');
+      }
+    );
+    ReactBrowserEventEmitter.putListener(
+      getID(GRANDPARENT),
+      ON_CLICK_KEY,
+      recordID.bind(null, getID(GRANDPARENT))
+    );
+    expect(function() {
+      ReactTestUtils.Simulate.click(CHILD);
+    }).toThrow();
+    expect(idCallOrder.length).toBe(3);
+    expect(idCallOrder[0]).toBe(getID(CHILD));
+    expect(idCallOrder[1]).toBe(getID(PARENT));
+    expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
+  });
+
   it('should set currentTarget', function() {
     ReactBrowserEventEmitter.putListener(
       getID(CHILD),
@@ -236,7 +264,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getID(CHILD));
   });
 
-  it('should stopPropagation if false is returned, but warn', function() {
+  it('should not stopPropagation if false is returned', function() {
     ReactBrowserEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -254,14 +282,11 @@ describe('ReactBrowserEventEmitter', function() {
     );
     spyOn(console, 'error');
     ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(1);
+    expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(getID(CHILD));
-    expect(console.error.calls.length).toEqual(1);
-    expect(console.error.calls[0].args[0]).toBe(
-      'Warning: Returning `false` from an event handler is deprecated and ' +
-      'will be ignored in a future release. Instead, manually call ' +
-      'e.stopPropagation() or e.preventDefault(), as appropriate.'
-    );
+    expect(idCallOrder[1]).toBe(getID(PARENT));
+    expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
+    expect(console.error.calls.length).toEqual(0);
   });
 
   /**

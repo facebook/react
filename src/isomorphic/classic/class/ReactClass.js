@@ -13,7 +13,6 @@
 
 var ReactComponent = require('ReactComponent');
 var ReactElement = require('ReactElement');
-var ReactErrorUtils = require('ReactErrorUtils');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
@@ -705,10 +704,7 @@ function bindAutoBindMethods(component) {
       var method = component.__reactAutoBindMap[autoBindKey];
       component[autoBindKey] = bindAutoBindMethod(
         component,
-        ReactErrorUtils.guard(
-          method,
-          component.constructor.displayName + '.' + autoBindKey
-        )
+        method
       );
     }
   }
