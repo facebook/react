@@ -155,6 +155,20 @@ ReactElement.createFactory = function(type) {
   return factory;
 };
 
+ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
+  var newElement = new ReactElement(
+    oldElement.type,
+    newKey,
+    oldElement.ref,
+    oldElement.self,
+    oldElement.source,
+    oldElement._owner,
+    oldElement.props
+  );
+
+  return newElement;
+};
+
 ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
   var newElement = new ReactElement(
     oldElement.type,

@@ -12,6 +12,7 @@
 'use strict';
 
 var PooledClass = require('PooledClass');
+var ReactElement = require('ReactElement');
 var ReactFragment = require('ReactFragment');
 
 var traverseAllChildren = require('traverseAllChildren');
@@ -19,6 +20,7 @@ var warning = require('warning');
 
 var twoArgumentPooler = PooledClass.twoArgumentPooler;
 var threeArgumentPooler = PooledClass.threeArgumentPooler;
+
 
 /**
  * PooledClass representing the bookkeeping associated with performing a child
@@ -60,6 +62,7 @@ function forEachChildren(children, forEachFunc, forEachContext) {
   traverseAllChildren(children, forEachSingleChild, traverseContext);
   ForEachBookKeeping.release(traverseContext);
 }
+
 
 /**
  * PooledClass representing the bookkeeping associated with performing a child
@@ -126,6 +129,7 @@ function mapChildren(children, func, context) {
   return ReactFragment.create(mapResult);
 }
 
+
 function forEachSingleChildDummy(traverseContext, child, name) {
   return null;
 }
@@ -141,10 +145,38 @@ function countChildren(children, context) {
   return traverseAllChildren(children, forEachSingleChildDummy, null);
 }
 
+
+function pushSingleChildToArray(traverseContext, child, name, i) {
+  if (child == null) {
+    return;
+  }
+
+  var result = traverseContext;
+
+  if (ReactElement.isValidElement(child)) {
+    child = ReactElement.cloneAndReplaceKey(child, name);
+  }
+  // For text components, leave unkeyed
+
+  result.push(child);
+}
+
+/**
+ * Flatten a children object (typically specified as `props.children`) and
+ * return an array with appropriately re-keyed children.
+ */
+function toArray(children) {
+  var result = [];
+  traverseAllChildren(children, pushSingleChildToArray, result);
+  return result;
+}
+
+
 var ReactChildren = {
   forEach: forEachChildren,
   map: mapChildren,
   count: countChildren,
+  toArray: toArray,
 };
 
 module.exports = ReactChildren;
