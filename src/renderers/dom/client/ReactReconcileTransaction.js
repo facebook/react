@@ -82,6 +82,25 @@ var ON_DOM_READY_QUEUEING = {
 };
 
 /**
+ * Provides a queue for collecting refs attach during the the transaction.
+ */
+var ON_REFS_READY_QUEUEING = {
+  /**
+   * Initializes the internal refs attach queue.
+   */
+  initialize: function() {
+    this.reactRefsReady.reset();
+  },
+
+  /**
+   * After DOM is flushed, attach all refs.
+   */
+  close: function() {
+    this.reactRefsReady.notifyAll();
+  },
+};
+
+/**
  * Executed within the scope of the `Transaction` instance. Consider these as
  * being member methods, but with an implied ordering while being isolated from
  * each other.
@@ -89,6 +108,7 @@ var ON_DOM_READY_QUEUEING = {
 var TRANSACTION_WRAPPERS = [
   SELECTION_RESTORATION,
   EVENT_SUPPRESSION,
+  ON_REFS_READY_QUEUEING,
   ON_DOM_READY_QUEUEING,
 ];
 
@@ -115,6 +135,7 @@ function ReactReconcileTransaction() {
   // `ReactTextComponent` checks it in `mountComponent`.`
   this.renderToStaticMarkup = false;
   this.reactMountReady = CallbackQueue.getPooled(null);
+  this.reactRefsReady = CallbackQueue.getPooled(null);
 }
 
 var Mixin = {
@@ -134,6 +155,13 @@ var Mixin = {
    */
   getReactMountReady: function() {
     return this.reactMountReady;
+  },
+
+  /**
+   * @return {object} The queue to collect refs attach.
+   */
+  getReactRefsReady: function() {
+    return this.reactRefsReady;
   },
 
   /**

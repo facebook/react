@@ -36,7 +36,7 @@ var ReactReconciler = {
   mountComponent: function(internalInstance, rootID, transaction, context) {
     var markup = internalInstance.mountComponent(rootID, transaction, context);
     if (internalInstance._currentElement.ref != null) {
-      transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
+      transaction.getReactRefsReady().enqueue(attachRefs, internalInstance);
     }
     return markup;
   },
@@ -94,7 +94,7 @@ var ReactReconciler = {
     internalInstance.receiveComponent(nextElement, transaction, context);
 
     if (refsChanged) {
-      transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
+      transaction.getReactRefsReady().enqueue(attachRefs, internalInstance);
     }
   },
 
