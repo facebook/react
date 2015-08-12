@@ -13,7 +13,7 @@ While React simplified the process of developing complex user-interfaces, it lef
 
 Declarative data-fetching means that Relay applications specify *what* data they need, not *how* to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.
 
-Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such under- or over-fetching data.
+Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.
 
 Relay is in use at Facebook in production apps, and we're using it more and more because *Relay lets developers focus on their products and move fast*. It's working for us and we'd like to share it with the community.
 
