@@ -503,10 +503,10 @@ function mixSpecIntoComponent(Constructor, spec) {
         spec.autobind !== false;
 
       if (shouldAutoBind) {
-        if (!proto.__reactAutoBindMap) {
-          proto.__reactAutoBindMap = {};
+        if (!proto.__reactAutoBindKeys) {
+          proto.__reactAutoBindKeys = [];
         }
-        proto.__reactAutoBindMap[name] = property;
+        proto.__reactAutoBindKeys.push(name);
         proto[name] = property;
       } else {
         if (isAlreadyDefined) {
@@ -701,14 +701,14 @@ function bindAutoBindMethod(component, method) {
  * @param {object} component Component whose method is going to be bound.
  */
 function bindAutoBindMethods(component) {
-  for (var autoBindKey in component.__reactAutoBindMap) {
-    if (component.__reactAutoBindMap.hasOwnProperty(autoBindKey)) {
-      var method = component.__reactAutoBindMap[autoBindKey];
-      component[autoBindKey] = bindAutoBindMethod(
-        component,
-        method
-      );
-    }
+  var proto = component.constructor.prototype;
+  var keys = component.__reactAutoBindKeys;
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    component[key] = bindAutoBindMethod(
+      component,
+      proto[key]
+    );
   }
 }
 
@@ -813,7 +813,7 @@ var ReactClass = {
       }
 
       // Wire up auto-binding
-      if (this.__reactAutoBindMap) {
+      if (this.__reactAutoBindKeys) {
         bindAutoBindMethods(this);
       }
 

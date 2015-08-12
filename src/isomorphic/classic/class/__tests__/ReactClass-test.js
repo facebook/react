@@ -385,4 +385,18 @@ describe('ReactClass-spec', function() {
     );
   });
 
+  it('lets you mock out prototype methods (e.g., in a unit test)', () => {
+    var Component = React.createClass({
+      getContents: function() {
+        return 'hello'
+      },
+      render: function() {
+        return <div>{this.getContents()}</div>;
+      },
+    });
+    Component.prototype.getContents = () => 'world';
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    expect(React.findDOMNode(instance).textContent).toBe('world');
+  });
+
 });
