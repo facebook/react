@@ -394,6 +394,7 @@ var RESERVED_SPEC_KEYS = {
   statics: function(Constructor, statics) {
     mixStaticSpecIntoComponent(Constructor, statics);
   },
+  autobind: function() {}, // noop
 };
 
 function validateTypeDef(Constructor, typeDef, location) {
@@ -498,7 +499,8 @@ function mixSpecIntoComponent(Constructor, spec) {
       var shouldAutoBind =
         isFunction &&
         !isReactClassMethod &&
-        !isAlreadyDefined;
+        !isAlreadyDefined &&
+        spec.autobind !== false;
 
       if (shouldAutoBind) {
         if (!proto.__reactAutoBindMap) {
