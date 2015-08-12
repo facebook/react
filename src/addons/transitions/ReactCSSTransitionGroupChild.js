@@ -30,6 +30,8 @@ var NO_EVENT_TIMEOUT = 5000;
 
 var noEventListener = null;
 
+var REQUEST_ANIMATION_FRAME = (window && window.requestAnimationFrame) ? window.requestAnimationFrame : false;
+
 
 if (__DEV__) {
   noEventListener = function() {
@@ -87,7 +89,11 @@ var ReactCSSTransitionGroupChild = React.createClass({
     CSSCore.addClass(node, className);
 
     // Need to do this to actually trigger a transition.
-    this.queueClass(activeClassName);
+    if ( REQUEST_ANIMATION_FRAME ) {
+      REQUEST_ANIMATION_FRAME(this.queueClass.bind(this, activeClassName));
+    } else {
+      this.queueClass(activeClassName);
+    }
 
     if (__DEV__) {
       noEventTimeout = setTimeout(noEventListener, NO_EVENT_TIMEOUT);
