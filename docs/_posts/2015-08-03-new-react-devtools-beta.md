@@ -83,3 +83,9 @@ Let us know what issues you run into
 [on GitHub](https://github.com/facebook/react-devtools/issues), and check out
 [the README](https://github.com/facebook/react-devtools/tree/devtools-next)
 for more info.
+
+## Update
+*August 12, 2015*
+
+A second beta is out, with a number of bugfixes. It is also listed on the
+[releases page](https://github.com/facebook/react-devtools/releases).
