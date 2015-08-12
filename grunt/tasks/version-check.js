@@ -11,6 +11,8 @@ module.exports = function() {
       grunt.file.readJSON('./packages/react/package.json').version,
     'packages/react-dom/package.json':
       grunt.file.readJSON('./packages/react-dom/package.json').version,
+    'packages/react-native-renderer/package.json':
+      grunt.file.readJSON('./packages/react-native-renderer/package.json').version,
     'packages/react-addons/package.json (version)': addonsData.version,
     // Get the "version" without the range bit
     'packages/react-addons/package.json (react dependency)': addonsData.peerDependencies.react.slice(1),
