@@ -14,6 +14,7 @@
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -24,6 +25,7 @@ var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var containsNode = require('containsNode');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -41,6 +43,10 @@ var nodeCache = {};
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
 var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
+
+var ownerDocumentContextKey =
+  '__ReactMount_ownerDocument$' + Math.random().toString(36).slice(2);
+
 
 /** Mapping from reactRootID to React component instance. */
 var instancesByReactRootID = {};
@@ -264,6 +270,14 @@ function mountComponentIntoNode(
   shouldReuseMarkup,
   context
 ) {
+  if (ReactDOMFeatureFlags.useCreateElement) {
+    context = assign({}, context);
+    if (container.nodeType === DOC_NODE_TYPE) {
+      context[ownerDocumentContextKey] = container;
+    } else {
+      context[ownerDocumentContextKey] = container.ownerDocument;
+    }
+  }
   if (__DEV__) {
     if (context === emptyObject) {
       context = {};
@@ -276,7 +290,12 @@ function mountComponentIntoNode(
     componentInstance, rootID, transaction, context
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
-  ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
+  ReactMount._mountImageIntoNode(
+    markup,
+    container,
+    shouldReuseMarkup,
+    transaction
+  );
 }
 
 /**
@@ -294,7 +313,9 @@ function batchedMountComponentIntoNode(
   shouldReuseMarkup,
   context
 ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
+    /* forceHTML */ shouldReuseMarkup
+  );
   transaction.perform(
     mountComponentIntoNode,
     null,
@@ -870,7 +891,12 @@ var ReactMount = {
     );
   },
 
-  _mountImageIntoNode: function(markup, container, shouldReuseMarkup) {
+  _mountImageIntoNode: function(
+    markup,
+    container,
+    shouldReuseMarkup,
+    transaction
+  ) {
     invariant(
       container && (
         container.nodeType === ELEMENT_NODE_TYPE ||
@@ -959,8 +985,17 @@ var ReactMount = {
         'See React.renderToString() for server rendering.'
     );
 
-    setInnerHTML(container, markup);
+    if (transaction.useCreateElement) {
+      while (container.lastChild) {
+        container.removeChild(container.lastChild);
+      }
+      container.appendChild(markup);
+    } else {
+      setInnerHTML(container, markup);
+    }
   },
+
+  ownerDocumentContextKey: ownerDocumentContextKey,
 
   /**
    * React ID utilities.

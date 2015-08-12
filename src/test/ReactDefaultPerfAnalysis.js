@@ -23,8 +23,6 @@ var DOM_OPERATION_TYPES = {
   SET_MARKUP: 'set innerHTML',
   TEXT_CONTENT: 'set textContent',
   'updatePropertyByID': 'update attribute',
-  'deletePropertyByID': 'delete attribute',
-  'updateStylesByID': 'update styles',
   'dangerouslyReplaceNodeWithMarkupByID': 'replace',
 };
 

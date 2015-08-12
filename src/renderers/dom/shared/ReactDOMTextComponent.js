@@ -12,13 +12,15 @@
 
 'use strict';
 
+var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactDOMComponent = require('ReactDOMComponent');
+var ReactMount = require('ReactMount');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var setTextContent = require('setTextContent');
 var validateDOMNesting = require('validateDOMNesting');
 
 /**
@@ -77,20 +79,30 @@ assign(ReactDOMTextComponent.prototype, {
     }
 
     this._rootNodeID = rootID;
-    var escapedText = escapeTextContentForBrowser(this._stringText);
+    if (transaction.useCreateElement) {
+      var ownerDocument = context[ReactMount.ownerDocumentContextKey];
+      var el = ownerDocument.createElement('span');
+      DOMPropertyOperations.setAttributeForID(el, rootID);
+      // Populate node cache
+      ReactMount.getID(el);
+      setTextContent(el, this._stringText);
+      return el;
+    } else {
+      var escapedText = escapeTextContentForBrowser(this._stringText);
 
-    if (transaction.renderToStaticMarkup) {
-      // Normally we'd wrap this in a `span` for the reasons stated above, but
-      // since this is a situation where React won't take over (static pages),
-      // we can simply return the text as it is.
-      return escapedText;
+      if (transaction.renderToStaticMarkup) {
+        // Normally we'd wrap this in a `span` for the reasons stated above, but
+        // since this is a situation where React won't take over (static pages),
+        // we can simply return the text as it is.
+        return escapedText;
+      }
+
+      return (
+        '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
+          escapedText +
+        '</span>'
+      );
     }
-
-    return (
-      '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
-        escapedText +
-      '</span>'
-    );
   },
 
   /**
@@ -109,10 +121,8 @@ assign(ReactDOMTextComponent.prototype, {
         // and/or updateComponent to do the actual update for consistency with
         // other component types?
         this._stringText = nextStringText;
-        ReactDOMComponent.BackendIDOperations.updateTextContentByID(
-          this._rootNodeID,
-          nextStringText
-        );
+        var node = ReactMount.getNode(this._rootNodeID);
+        DOMChildrenOperations.updateTextContent(node, nextStringText);
       }
     }
   },

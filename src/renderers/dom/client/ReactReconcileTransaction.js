@@ -15,6 +15,7 @@
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactInputSelection = require('ReactInputSelection');
 var Transaction = require('Transaction');
 
@@ -106,7 +107,7 @@ var TRANSACTION_WRAPPERS = [
  *
  * @class ReactReconcileTransaction
  */
-function ReactReconcileTransaction() {
+function ReactReconcileTransaction(forceHTML) {
   this.reinitializeTransaction();
   // Only server-side rendering really needs this option (see
   // `ReactServerRendering`), but server-side uses
@@ -115,6 +116,8 @@ function ReactReconcileTransaction() {
   // `ReactTextComponent` checks it in `mountComponent`.`
   this.renderToStaticMarkup = false;
   this.reactMountReady = CallbackQueue.getPooled(null);
+  this.useCreateElement =
+    !forceHTML && ReactDOMFeatureFlags.useCreateElement;
 }
 
 var Mixin = {

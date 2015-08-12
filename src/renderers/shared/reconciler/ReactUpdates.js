@@ -69,7 +69,7 @@ function ReactUpdatesFlushTransaction() {
   this.dirtyComponentsLength = null;
   this.callbackQueue = CallbackQueue.getPooled();
   this.reconcileTransaction =
-    ReactUpdates.ReactReconcileTransaction.getPooled();
+    ReactUpdates.ReactReconcileTransaction.getPooled(/* forceHTML */ false);
 }
 
 assign(

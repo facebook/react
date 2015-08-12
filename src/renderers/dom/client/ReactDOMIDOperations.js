@@ -12,7 +12,6 @@
 
 'use strict';
 
-var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactMount = require('ReactMount');
@@ -33,8 +32,7 @@ var INVALID_PROPERTY_ERRORS = {
 };
 
 /**
- * Operations used to process updates to DOM nodes. This is made injectable via
- * `ReactDOMComponent.BackendIDOperations`.
+ * Operations used to process updates to DOM nodes.
  */
 var ReactDOMIDOperations = {
 
@@ -63,67 +61,6 @@ var ReactDOMIDOperations = {
     } else {
       DOMPropertyOperations.deleteValueForProperty(node, name);
     }
-  },
-
-  /**
-   * Updates a DOM node with new property values.
-   *
-   * @param {string} id ID of the node to update.
-   * @param {string} name A valid property name.
-   * @param {*} value New value of the property.
-   * @internal
-   */
-  updateAttributeByID: function(id, name, value) {
-    var node = ReactMount.getNode(id);
-    invariant(
-      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-      'updatePropertyByID(...): %s',
-      INVALID_PROPERTY_ERRORS[name]
-    );
-    DOMPropertyOperations.setValueForAttribute(node, name, value);
-  },
-
-  /**
-   * Updates a DOM node to remove a property. This should only be used to remove
-   * DOM properties in `DOMProperty`.
-   *
-   * @param {string} id ID of the node to update.
-   * @param {string} name A property name to remove, see `DOMProperty`.
-   * @internal
-   */
-  deletePropertyByID: function(id, name, value) {
-    var node = ReactMount.getNode(id);
-    invariant(
-      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-      'updatePropertyByID(...): %s',
-      INVALID_PROPERTY_ERRORS[name]
-    );
-    DOMPropertyOperations.deleteValueForProperty(node, name, value);
-  },
-
-  /**
-   * Updates a DOM node with new style values. If a value is specified as '',
-   * the corresponding style property will be unset.
-   *
-   * @param {string} id ID of the node to update.
-   * @param {object} styles Mapping from styles to values.
-   * @internal
-   */
-  updateStylesByID: function(id, styles) {
-    var node = ReactMount.getNode(id);
-    CSSPropertyOperations.setValueForStyles(node, styles);
-  },
-
-  /**
-   * Updates a DOM node's text content set by `props.content`.
-   *
-   * @param {string} id ID of the node to update.
-   * @param {string} content Text content.
-   * @internal
-   */
-  updateTextContentByID: function(id, content) {
-    var node = ReactMount.getNode(id);
-    DOMChildrenOperations.updateTextContent(node, content);
   },
 
   /**
@@ -156,9 +93,6 @@ var ReactDOMIDOperations = {
 
 ReactPerf.measureMethods(ReactDOMIDOperations, 'ReactDOMIDOperations', {
   updatePropertyByID: 'updatePropertyByID',
-  deletePropertyByID: 'deletePropertyByID',
-  updateStylesByID: 'updateStylesByID',
-  updateTextContentByID: 'updateTextContentByID',
   dangerouslyReplaceNodeWithMarkupByID: 'dangerouslyReplaceNodeWithMarkupByID',
   dangerouslyProcessChildrenUpdates: 'dangerouslyProcessChildrenUpdates',
 });
