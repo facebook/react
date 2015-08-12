@@ -795,6 +795,18 @@ var ReactMount = {
 
     var deepestAncestor = findDeepestCachedAncestor(targetID) || ancestorNode;
 
+    if (__DEV__) {
+      // This will throw on the next line; give an early warning
+      warning(
+        deepestAncestor != null,
+        'React can\'t find the root component node for data-reactid value ' +
+        '`%s`. If you\'re seeing this message, it probably means that ' +
+        'you\'ve loaded two copies of React on the page. At this time, only ' +
+        'a single copy of React can be loaded at a time.',
+        targetID
+      );
+    }
+
     firstChildren[0] = deepestAncestor.firstChild;
     firstChildren.length = 1;
 
