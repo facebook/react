@@ -15,60 +15,15 @@
 // the JS environment
 var ReactNativeDefaultInjection = require('ReactNativeDefaultInjection');
 
-var ReactChildren = require('ReactChildren');
-var ReactClass = require('ReactClass');
-var ReactComponent = require('ReactComponent');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactNativeMount = require('ReactNativeMount');
-var ReactPropTypes = require('ReactPropTypes');
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
-var invariant = require('fbjs/lib/invariant');
-var onlyChild = require('onlyChild');
-var warning = require('fbjs/lib/warning');
 
 ReactNativeDefaultInjection.inject();
-
-var createElement = ReactElement.createElement;
-var createFactory = ReactElement.createFactory;
-var cloneElement = ReactElement.cloneElement;
-
-if (__DEV__) {
-  createElement = ReactElementValidator.createElement;
-  createFactory = ReactElementValidator.createFactory;
-  cloneElement = ReactElementValidator.cloneElement;
-}
-
-var resolveDefaultProps = function(element) {
-  // Could be optimized, but not currently in heavy use.
-  var defaultProps = element.type.defaultProps;
-  var props = element.props;
-  for (var propName in defaultProps) {
-    if (props[propName] === undefined) {
-      props[propName] = defaultProps[propName];
-    }
-  }
-};
-
-// Experimental optimized element creation
-var augmentElement = function(element: ReactElement): ReactElement {
-  if (__DEV__) {
-    invariant(
-      false,
-      'This optimized path should never be used in DEV mode because ' +
-      'it does not provide validation. Check your JSX transform.'
-    );
-  }
-  element._owner = ReactCurrentOwner.current;
-  if (element.type.defaultProps) {
-    resolveDefaultProps(element);
-  }
-  return element;
-};
 
 var render = function(
   element: ReactElement,
@@ -80,20 +35,6 @@ var render = function(
 
 var ReactNative = {
   hasReactNativeInitialized: false,
-  Children: {
-    map: ReactChildren.map,
-    forEach: ReactChildren.forEach,
-    count: ReactChildren.count,
-    toArray: ReactChildren.toArray,
-    only: onlyChild
-  },
-  Component: ReactComponent,
-  PropTypes: ReactPropTypes,
-  createClass: ReactClass.createClass,
-  createElement: createElement,
-  createFactory: createFactory,
-  cloneElement: cloneElement,
-  _augmentElement: augmentElement,
   findNodeHandle: findNodeHandle,
   render: render,
   unmountComponentAtNode: ReactNativeMount.unmountComponentAtNode,
@@ -102,12 +43,7 @@ var ReactNative = {
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */
 
-  // Hook for JSX spread, don't use this for anything else.
-  __spread: Object.assign,
-
   unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
-  isValidClass: ReactElement.isValidFactory,
-  isValidElement: ReactElement.isValidElement,
 
   // Deprecations (remove for 0.13)
   renderComponent: function(
