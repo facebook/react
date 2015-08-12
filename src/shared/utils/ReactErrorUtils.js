@@ -18,10 +18,10 @@ var ReactErrorUtils = {
   /**
    * Call a function while guarding against errors that happens within it.
    *
-   * @param name (?String) name of the guard to use for logging or debugging
-   * @param func (Function) function to invoke
-   * @param a (*) a First argument
-   * @param b (*) b Second argument
+   * @param {?String} name of the guard to use for logging or debugging
+   * @param {Function} func The function to invoke
+   * @param {*} a First argument
+   * @param {*} b Second argument
    */
   invokeGuardedCallback: function(name, func, a, b) {
     try {
