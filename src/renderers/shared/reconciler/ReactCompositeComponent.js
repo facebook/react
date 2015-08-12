@@ -24,6 +24,7 @@ var ReactUpdateQueue = require('ReactUpdateQueue');
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
+var processProps = require('processProps');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -127,7 +128,7 @@ var ReactCompositeComponentMixin = {
     this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
 
-    var publicProps = this._processProps(this._currentElement.props);
+    var publicProps = this._processProps(this._currentElement);
     var publicContext = this._processContext(context);
 
     var Component = this._currentElement.type;
@@ -407,22 +408,23 @@ var ReactCompositeComponentMixin = {
    * asserting that the props are valid. Does not mutate its argument; returns
    * a new props object with defaults merged in.
    *
-   * @param {object} newProps
+   * @param {ReactElement} element
    * @return {object}
    * @private
    */
-  _processProps: function(newProps) {
+  _processProps: function(element) {
+    var props = processProps(element);
     if (__DEV__) {
-      var Component = this._currentElement.type;
+      var Component = element.type;
       if (Component.propTypes) {
         this._checkPropTypes(
           Component.propTypes,
-          newProps,
+          props,
           ReactPropTypeLocations.prop
         );
       }
     }
-    return newProps;
+    return props;
   },
 
   /**
@@ -554,20 +556,15 @@ var ReactCompositeComponentMixin = {
       this._processContext(nextUnmaskedContext);
     var nextProps;
 
+    // Skip checking prop types again -- we don't read inst.props to avoid
+    // warning for DOM component props in this upgrade
+    nextProps = this._processProps(nextParentElement);
+    // An update here will schedule an update but immediately set
+    // _pendingStateQueue which will ensure that any state updates gets
+    // immediately reconciled instead of waiting for the next batch.
     // Distinguish between a props update versus a simple state update
-    if (prevParentElement === nextParentElement) {
-      // Skip checking prop types again -- we don't read inst.props to avoid
-      // warning for DOM component props in this upgrade
-      nextProps = nextParentElement.props;
-    } else {
-      nextProps = this._processProps(nextParentElement.props);
-      // An update here will schedule an update but immediately set
-      // _pendingStateQueue which will ensure that any state updates gets
-      // immediately reconciled instead of waiting for the next batch.
-
-      if (inst.componentWillReceiveProps) {
-        inst.componentWillReceiveProps(nextProps, nextContext);
-      }
+    if (prevParentElement !== nextParentElement && inst.componentWillReceiveProps) {
+      inst.componentWillReceiveProps(nextProps, nextContext);
     }
 
     var nextState = this._processPendingState(nextProps, nextContext);

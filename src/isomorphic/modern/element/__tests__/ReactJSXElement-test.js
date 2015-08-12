@@ -189,4 +189,22 @@ describe('ReactJSXElement', function() {
     expect(inst2.props.prop).toBe(null);
   });
 
+  it('should merge defaultProps when initiating component', function() {
+    class Parent {
+      render() {
+        return <span><b>{this.props.children.props.a||''}</b>{this.props.children}</span>;
+      }
+    }
+    class Child {
+      render() {
+        return <u>{this.props.a}</u>;
+      }
+    }
+    Child.defaultProps = {a: 'a'};
+    var instance = ReactTestUtils.renderIntoDocument(<Parent><Child /></Parent>);
+    var node = React.findDOMNode(instance);
+    expect(node.childNodes[0].innerHTML).toBe('');
+    expect(node.childNodes[1].innerHTML).toBe('a');
+  });
+
 });

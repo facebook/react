@@ -26,6 +26,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
+var processProps = require('processProps');
 var warning = require('warning');
 
 function getDeclarationErrorAddendum() {
@@ -268,10 +269,11 @@ function validatePropTypes(element) {
   }
   var name = componentClass.displayName || componentClass.name;
   if (componentClass.propTypes) {
+    var props = processProps(element);
     checkPropTypes(
       name,
       componentClass.propTypes,
-      element.props,
+      props,
       ReactPropTypeLocations.prop
     );
   }
