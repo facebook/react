@@ -200,7 +200,7 @@ describe('ReactMount', function() {
     });
   }
 
-  it.only('warns when using two copies of React before throwing', function() {
+  it('warns when using two copies of React before throwing', function() {
     require('mock-modules').dumpCache();
     var RD1 = require('ReactDOM');
     require('mock-modules').dumpCache();
