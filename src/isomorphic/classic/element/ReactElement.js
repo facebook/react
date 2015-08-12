@@ -123,16 +123,6 @@ ReactElement.createElement = function(type, config, children) {
     props.children = childArray;
   }
 
-  // Resolve default props
-  if (type && type.defaultProps) {
-    var defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
-      if (typeof props[propName] === 'undefined') {
-        props[propName] = defaultProps[propName];
-      }
-    }
-  }
-
   return new ReactElement(
     type,
     key,
