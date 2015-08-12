@@ -15,7 +15,7 @@
 
 &lt;p&gt;Declarative data-fetching means that Relay applications specify &lt;em&gt;what&lt;/em&gt; data they need, not &lt;em&gt;how&lt;/em&gt; to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.&lt;/p&gt;
 
-&lt;p&gt;Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such under- or over-fetching data.&lt;/p&gt;
+&lt;p&gt;Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.&lt;/p&gt;
 
 &lt;p&gt;Relay is in use at Facebook in production apps, and we&amp;#39;re using it more and more because &lt;em&gt;Relay lets developers focus on their products and move fast&lt;/em&gt;. It&amp;#39;s working for us and we&amp;#39;d like to share it with the community.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-included&quot;&gt;&lt;/a&gt;What&amp;#39;s Included &lt;a class=&quot;hash-link&quot; href=&quot;#whats-included&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -111,6 +111,11 @@ download from the same &lt;a href=&quot;https://github.com/facebook/react-devtoo
 &lt;a href=&quot;https://github.com/facebook/react-devtools/issues&quot;&gt;on GitHub&lt;/a&gt;, and check out
 &lt;a href=&quot;https://github.com/facebook/react-devtools/tree/devtools-next&quot;&gt;the README&lt;/a&gt;
 for more info.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;update&quot;&gt;&lt;/a&gt;Update &lt;a class=&quot;hash-link&quot; href=&quot;#update&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;em&gt;August 12, 2015&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;A second beta is out, with a number of bugfixes. It is also listed on the
+&lt;a href=&quot;https://github.com/facebook/react-devtools/releases&quot;&gt;releases page&lt;/a&gt;.&lt;/p&gt;
 </description>
 				<pubDate>2015-08-03T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/08/03/new-react-devtools-beta.html</link>

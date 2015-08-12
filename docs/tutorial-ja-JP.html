@@ -575,7 +575,7 @@
 <h3><a class="anchor" name="markdown-"></a>Markdown の追加 <a class="hash-link" href="#markdown-">#</a></h3>
 <p>Markdown はインラインでテキストをフォーマットする簡単な記法です。例えば、テキストをアスタリスクで挟むと強調されて表示されます。</p>
 
-<p>まず最初に、サードパーティ製の <strong>Showdown</strong> ライブラリをアプリケーションに追加します。 Showdown は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように Showdown を読み込ませます。</p>
+<p>まず最初に、サードパーティ製の <strong>marked</strong> ライブラリをアプリケーションに追加します。 marked は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように marked を読み込ませます。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="nt">&lt;head&gt;</span>
   <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
@@ -583,7 +583,7 @@
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>
 <p>次に、Markdown で書かれたコメントを変換して出力してみましょう。</p>

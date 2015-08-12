@@ -416,7 +416,9 @@
 <span class="kr">boolean</span> <span class="nx">isTrusted</span>
 <span class="nx">DOMEvent</span> <span class="nx">nativeEvent</span>
 <span class="k">void</span> <span class="nx">preventDefault</span><span class="p">()</span>
+<span class="k">void</span> <span class="nx">isDefaultPrevented</span><span class="p">()</span>
 <span class="k">void</span> <span class="nx">stopPropagation</span><span class="p">()</span>
+<span class="k">void</span> <span class="nx">isPropagationStopped</span><span class="p">()</span>
 <span class="nx">DOMEventTarget</span> <span class="nx">target</span>
 <span class="nx">number</span> <span class="nx">timeStamp</span>
 <span class="nx">string</span> <span class="nx">type</span>
@@ -428,7 +430,7 @@
 </blockquote>
 <h2><a class="anchor" name="supported-events"></a>Supported Events <a class="hash-link" href="#supported-events">#</a></h2>
 <p>React normalizes events so that they have consistent properties across
-different browsers. </p>
+different browsers.</p>
 
 <p>The event handlers below are triggered by an event in the bubbling phase. To register an event handler for the capture phase, append <code>Capture</code> to the event name; for example, instead of using <code>onClick</code>, you would use <code>onClickCapture</code> to handle the click event in the capture phase.</p>
 <h3><a class="anchor" name="clipboard-events"></a>Clipboard Events <a class="hash-link" href="#clipboard-events">#</a></h3>
@@ -520,6 +522,9 @@ rendering any component.</p>
 <span class="nb">Number</span> <span class="nx">deltaX</span>
 <span class="nb">Number</span> <span class="nx">deltaY</span>
 <span class="nb">Number</span> <span class="nx">deltaZ</span>
+</code></pre></div><h3><a class="anchor" name="image-events"></a>Image Events <a class="hash-link" href="#image-events">#</a></h3>
+<p>Event names:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onLoad onError
 </code></pre></div>
 
     <div class="docs-prevnext">

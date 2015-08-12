@@ -424,22 +424,22 @@
 <p>목 컴포넌트 모듈을 이 메소드에 넘겨 더미 React 컴포넌트로 사용할 수 있도록 합니다. 이 더미는 유용한 메소드와 함께 사용해 기능을 보강할 수 있습니다. 일반적인 렌더링과는 다르게, 컴포넌트는 제공된 자식을 포함하는 평범한  <code>&lt;div&gt;</code>가 됩니다. (<code>mockTagName</code>을 통해 div가 아닌 다른 태그를 지정해 줄 수도 있습니다.)</p>
 <h3><a class="anchor" name="iselement"></a>isElement <a class="hash-link" href="#iselement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElement</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
-<p><code>element</code>가 ReactElement면 true를 리턴합니다.</p>
+<p><code>element</code>가 ReactElement면 <code>true</code>를 리턴합니다.</p>
 <h3><a class="anchor" name="iselementoftype"></a>isElementOfType <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElementOfType</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
 </code></pre></div>
-<p><code>element</code>가 React <code>componentClass</code> 타입인 ReactElement면 true를 리턴합니다.</p>
+<p><code>element</code>가 React <code>componentClass</code> 타입인 ReactElement면 <code>true</code>를 리턴합니다.</p>
 <h3><a class="anchor" name="isdomcomponent"></a>isDOMComponent <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDOMComponent</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">)</span>
 </code></pre></div>
-<p><code>instance</code>가 (<code>&lt;div&gt;</code>나 <code>&lt;span&gt;</code>같은) DOM 컴포넌트면 true를 리턴합니다.</p>
+<p><code>instance</code>가 (<code>&lt;div&gt;</code>나 <code>&lt;span&gt;</code>같은) DOM 컴포넌트면 <code>true</code>를 리턴합니다.</p>
 <h3><a class="anchor" name="iscompositecomponent"></a>isCompositeComponent <a class="hash-link" href="#iscompositecomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isCompositeComponent</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">)</span><span class="err">`</span>
 </code></pre></div>
-<p><code>instance</code>가 (<code>React.createClass()</code>로 생성된) 복합 컴포넌트면 true를 리턴합니다.</p>
+<p><code>instance</code>가 (<code>React.createClass()</code>로 생성된) 복합 컴포넌트면 <code>true</code>를 리턴합니다.</p>
 <h3><a class="anchor" name="iscompositecomponentwithtype"></a>isCompositeComponentWithType <a class="hash-link" href="#iscompositecomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isCompositeComponentWithType</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
 </code></pre></div>
-<p><code>instance</code>가 (<code>React.createClass()</code>로 생성된) 복합 컴포넌트고 React <code>componentClass</code> 타입이면 true를 리턴합니다.</p>
+<p><code>instance</code>가 (<code>React.createClass()</code>로 생성된) 복합 컴포넌트고 React <code>componentClass</code> 타입이면 <code>true</code>를 리턴합니다.</p>
 <h3><a class="anchor" name="findallinrenderedtree"></a>findAllInRenderedTree <a class="hash-link" href="#findallinrenderedtree">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">findAllInRenderedTree</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">test</span><span class="p">)</span>
 </code></pre></div>
-<p><code>tree</code>안의 모든 컴포넌트에서 <code>test(component)</code>가 true인 모든 컴포넌트를 모읍니다. 이것만으로는 그렇게 유용하지 않습니다만, 다른 테스트 유틸와 같이 사용합니다.</p>
+<p><code>tree</code>안의 모든 컴포넌트에서 <code>test(component)</code>가 <code>true</code>인 모든 컴포넌트를 모읍니다. 이것만으로는 그렇게 유용하지 않습니다만, 다른 테스트 유틸와 같이 사용합니다.</p>
 <h3><a class="anchor" name="scryrendereddomcomponentswithclass"></a>scryRenderedDOMComponentsWithClass <a class="hash-link" href="#scryrendereddomcomponentswithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="nx">string</span> <span class="nx">className</span><span class="p">)</span>
 </code></pre></div>
 <p>렌더된 트리의 모든 컴포넌트 인스턴스 중에서 클래스 이름이 <code>className</code>인 DOM 컴포넌트들을 찾습니다.</p>
@@ -468,7 +468,7 @@
 <p><code>React.render</code>와 유사합니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
 </code></pre></div>
-<p>렌더가 호출 된 후, 얕게 렌더된 결과물을 반환합니다. 그 후엔 결과물에 대한 검증을 시작할 수 있습니다. 예를 들어 컴포넌트의 렌더 메소드가 다음을 반환한다면:</p>
+<p><code>render</code>가 호출 된 후, 얕게 렌더된 결과물을 반환합니다. 그 후엔 결과물에 대한 검증을 시작할 수 있습니다. 예를 들어 컴포넌트의 렌더 메소드가 다음을 반환한다면:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
   <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;heading&quot;</span><span class="o">&gt;</span><span class="nx">Title</span><span class="o">&lt;</span><span class="err">/span&gt;</span>
   <span class="o">&lt;</span><span class="nx">Subcomponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span>

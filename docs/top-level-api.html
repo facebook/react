@@ -451,9 +451,13 @@ the type argument can be either an html tag name string (eg. &#39;div&#39;, &#39
 <blockquote>
 <p>Note:</p>
 
-<p><code>React.render()</code> replaces the contents of the container node you
-pass in. In the future, it may be possible to insert a component to an
-existing DOM node without overwriting the existing children.</p>
+<p><code>React.render()</code> controls the contents of the container node you pass in. Any existing DOM elements
+inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient
+updates.</p>
+
+<p><code>React.render()</code> does not modify the container node (only modifies the children of the container). In
+the future, it may be possible to insert a component to an existing DOM node without overwriting
+the existing children.</p>
 </blockquote>
 <h3><a class="anchor" name="react.unmountcomponentatnode"></a>React.unmountComponentAtNode <a class="hash-link" href="#react.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
 </code></pre></div>
