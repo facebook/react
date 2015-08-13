@@ -233,7 +233,6 @@ Markdown はインラインでテキストをフォーマットする簡単な�
 
 ```javascript{2,10}
 // tutorial6.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
     return (
@@ -241,7 +240,7 @@ var Comment = React.createClass({
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {converter.makeHtml(this.props.children.toString())}
+        {marked(this.props.children.toString())}
       </div>
     );
   }
@@ -256,10 +255,9 @@ var Comment = React.createClass({
 
 ```javascript{5,11}
 // tutorial7.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
-    var rawMarkup = converter.makeHtml(this.props.children.toString());
+    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
     return (
       <div className="comment">
         <h2 className="commentAuthor">
