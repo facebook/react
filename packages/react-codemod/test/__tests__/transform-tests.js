@@ -58,6 +58,11 @@ describe('Transform Tests', () => {
     });
 
     test('class', 'class-test3');
+
+  });
+
+  it('transforms exports class', () => {
+    test('class', 'export-default-class-test');
   });
 
 });

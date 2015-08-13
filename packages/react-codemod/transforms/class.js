@@ -479,7 +479,7 @@ function updateReactCreateClassToES6(file, api, options) {
   if (
     options['no-explicit-require'] || ReactUtils.hasReact(root)
   ) {
-    const apply = (path, isModuleExports) =>
+    const apply = (path, isModuleExports) => 
       path
         .filter(hasMixins)
         .filter(callsDeprecatedAPIs)
@@ -491,12 +491,14 @@ function updateReactCreateClassToES6(file, api, options) {
 
     const didTransform = (
       apply(ReactUtils.findReactCreateClass(root), false).size() +
-      apply(ReactUtils.findReactCreateClassModuleExports(root), true).size()
+      apply(ReactUtils.findReactCreateClassModuleExports(root), true).size() + 
+      apply(ReactUtils.findReactCreateClassExportDefault(root), false).size()
     ) > 0;
 
     if (didTransform) {
       return root.toSource(printOptions);
     }
+    
   }
 
   return null;
