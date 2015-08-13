@@ -16,7 +16,7 @@ Instances of a React Component are created internally in React when rendering. T
 ```javascript
 setState(function|object nextState[, function callback])
 ```
-Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
+Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
 
 The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.
 
