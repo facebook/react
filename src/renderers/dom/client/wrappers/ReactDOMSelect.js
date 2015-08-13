@@ -22,7 +22,7 @@ var valueContextKey =
   '__ReactDOMSelect_value$' + Math.random().toString(36).slice(2);
 
 function updateOptionsIfPendingUpdateAndMounted() {
-  if (this._wrapperState.pendingUpdate && this._rootNodeID) {
+  if (this._rootNodeID && this._wrapperState.pendingUpdate) {
     this._wrapperState.pendingUpdate = false;
 
     var props = this._currentElement.props;
