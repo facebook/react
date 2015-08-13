@@ -161,8 +161,8 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf(PropTypes.number),
         [1, 2, 'b'],
-        'Invalid prop `testProp[2]` of type `string` supplied to `testComponent`, ' +
-        'expected `number`.'
+        'Invalid prop `testProp[2]` of type `string` supplied to ' +
+        '`testComponent`, expected `number`.'
       );
     });
 
@@ -173,8 +173,8 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf(PropTypes.instanceOf(Thing)),
         [new Thing(), 'xyz'],
-        'Invalid prop `testProp[1]` supplied to `testComponent`, expected instance of `' +
-        name + '`.'
+        'Invalid prop `testProp[1]` of type `String` supplied to ' +
+        '`testComponent`, expected instance of `' + name + '`.'
       );
     });
 
@@ -277,6 +277,7 @@ describe('ReactPropTypes', function() {
   describe('Instance Types', function() {
     it('should warn for invalid instances', function() {
       function Person() {}
+      function Cat() {}
       var personName = Person.name || '<<anonymous>>';
       var dateName = Date.name || '<<anonymous>>';
       var regExpName = RegExp.name || '<<anonymous>>';
@@ -284,32 +285,44 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.instanceOf(Person),
         false,
-        'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-        'instance of `' + personName + '`.'
+        'Invalid prop `testProp` of type `Boolean` supplied to ' +
+        '`testComponent`, expected instance of `' + personName + '`.'
       );
       typeCheckFail(
         PropTypes.instanceOf(Person),
         {},
-        'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-        'instance of `' + personName + '`.'
+        'Invalid prop `testProp` of type `Object` supplied to ' +
+        '`testComponent`, expected instance of `' + personName + '`.'
       );
       typeCheckFail(
         PropTypes.instanceOf(Person),
         '',
-        'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-        'instance of `' + personName + '`.'
+        'Invalid prop `testProp` of type `String` supplied to ' +
+        '`testComponent`, expected instance of `' + personName + '`.'
       );
       typeCheckFail(
         PropTypes.instanceOf(Date),
         {},
-        'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-        'instance of `' + dateName + '`.'
+        'Invalid prop `testProp` of type `Object` supplied to ' +
+        '`testComponent`, expected instance of `' + dateName + '`.'
       );
       typeCheckFail(
         PropTypes.instanceOf(RegExp),
         {},
-        'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-        'instance of `' + regExpName + '`.'
+        'Invalid prop `testProp` of type `Object` supplied to ' +
+        '`testComponent`, expected instance of `' + regExpName + '`.'
+      );
+      typeCheckFail(
+        PropTypes.instanceOf(Person),
+        new Cat(),
+        'Invalid prop `testProp` of type `Cat` supplied to ' +
+        '`testComponent`, expected instance of `' + personName + '`.'
+      );
+      typeCheckFail(
+        PropTypes.instanceOf(Person),
+        Object.create(null),
+        'Invalid prop `testProp` of type `<<anonymous>>` supplied to ' +
+        '`testComponent`, expected instance of `' + personName + '`.'
       );
     });
 
@@ -503,8 +516,8 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.objectOf(PropTypes.instanceOf(Thing)),
         {a: new Thing(), b: 'xyz'},
-        'Invalid prop `testProp.b` supplied to `testComponent`, expected instance of `' +
-        name + '`.'
+        'Invalid prop `testProp.b` of type `String` supplied to ' +
+        '`testComponent`, expected instance of `' + name + '`.'
       );
     });
 
