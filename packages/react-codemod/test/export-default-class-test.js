@@ -9,6 +9,10 @@ export default React.createClass({
     };
   },
 
+  propTypes: {
+    foo: React.PropTypes.string,
+  },
+
   render: function() {
     return <div />;
   }

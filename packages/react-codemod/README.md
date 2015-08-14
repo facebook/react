@@ -25,8 +25,8 @@ calls.
   * `jscodeshift -t react/packages/react-codemod/transforms/findDOMNode.js <file>`
 
 `pure-render-mixin` removes `PureRenderMixin` and inlines
-`shouldComponentUpdate` so that the ES6 class transform can pick up the React
-component and turn it into an ES6 class. NOTE: This currently only works if you
+`shouldComponentUpdate` so that the ES2015 class transform can pick up the React
+component and turn it into an ES2015 class. NOTE: This currently only works if you
 are using the master version (>0.13.1) of React as it is using
 `React.addons.shallowCompare`
 
@@ -36,7 +36,7 @@ are using the master version (>0.13.1) of React as it is using
    namespaced name for the mixin. `mixins: [React.addons.PureRenderMixin]` will
    not currently work.
 
-`class` transforms `React.createClass` calls into ES6 classes.
+`class` transforms `React.createClass` calls into ES2015 classes.
 
   * `jscodeshift -t react/packages/react-codemod/transforms/class.js <file>`
   * If `--no-super-class=true` is specified it will not extend
@@ -49,7 +49,7 @@ All scripts take an option `--no-explicit-require=true` if you don't have a
 `require('React')` statement in your code files and if you access React as a
 global.
 
-### Explanation of the ES6 class transform
+### Explanation of the ES2015 class transform
 
   * Ignore components with calls to deprecated APIs. This is very defensive, if
     the script finds any identifiers called `isMounted`, `getDOMNode`,

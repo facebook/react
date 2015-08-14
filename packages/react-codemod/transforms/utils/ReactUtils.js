@@ -34,9 +34,9 @@ module.exports = function(j) {
         source: {
           type: 'Literal',
         }
-      }).filter((importDeclarator) => {
-        return importDeclarator.value.source.value === module;
-      }).size() === 1
+      })
+      .filter(declarator => declarator.value.source.value === module)
+      .size() === 1
 
   const hasReact = path => (
     hasModule(path, 'React') ||
@@ -56,19 +56,13 @@ module.exports = function(j) {
       .findVariableDeclarators()
       .filter(decl => findReactCreateClassCallExpression(decl).size() > 0);
 
-  const findReactCreateClassExportDefault = path => {
-    var collection = [];
-    path
-      .find(j.ExportDefaultDeclaration, {
-        type: 'ExportDefaultDeclaration',
-        declaration: {
-          type: 'CallExpression',
-          callee: REACT_CREATE_CLASS_MEMBER_EXPRESSION
-        }
-      })
-      .forEach((p) => collection.push(p.value.declaration))
-	  return j(collection);
-  }
+  const findReactCreateClassExportDefault = path =>
+    path.find(j.ExportDefaultDeclaration, {
+      declaration: {
+        type: 'CallExpression',
+        callee: REACT_CREATE_CLASS_MEMBER_EXPRESSION
+      }
+    });
 
   const findReactCreateClassModuleExports = path =>
     path
@@ -129,7 +123,8 @@ module.exports = function(j) {
   // ---------------------------------------------------------------------------
   // Others
   const getReactCreateClassSpec = classPath => {
-    const spec = (classPath.value.init || classPath.value.right ||  classPath.value).arguments[0]
+    var {value} = classPath;
+    const spec = (value.init || value.right ||  value.declaration).arguments[0];
     if (spec.type === 'ObjectExpression' && Array.isArray(spec.properties)) {
       return spec;
     }

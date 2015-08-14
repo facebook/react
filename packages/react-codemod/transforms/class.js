@@ -10,7 +10,7 @@
 
 'use strict';
 
-function updateReactCreateClassToES6(file, api, options) {
+module.exports = (file, api, options) => {
   const j = api.jscodeshift;
 
   require('./utils/array-polyfills');
@@ -341,9 +341,9 @@ function updateReactCreateClassToES6(file, api, options) {
     ];
   };
 
-  const createES6Class = (
+  const createESClass = (
     name,
-    functions,
+    properties,
     getInitialState,
     autobindFunctions,
     comments,
@@ -358,7 +358,7 @@ function updateReactCreateClassToES6(file, api, options) {
             autobindFunctions,
             shouldAddSuperClass
           ),
-          functions.map(createMethodDefinition)
+          properties
         )
       ),
       shouldAddSuperClass ? j.memberExpression(
@@ -383,6 +383,17 @@ function updateReactCreateClassToES6(file, api, options) {
 
   const createStaticAssignmentExpressions = (name, statics) =>
     statics.map(staticProperty => createStaticAssignment(name, staticProperty));
+
+  const createStaticClassProperty = staticProperty =>
+    withComments(j.classProperty(
+      j.identifier(staticProperty.key.name),
+      staticProperty.value,
+      null,
+      true
+    ), staticProperty);
+
+  const createStaticClassProperties = statics =>
+    statics.map(createStaticClassProperty);
 
   const hasSingleReturnStatement = value => (
     value.type === 'FunctionExpression' &&
@@ -434,7 +445,7 @@ function updateReactCreateClassToES6(file, api, options) {
       false
     );
 
-  const updateToES6Class = (classPath, shouldExtend, isModuleExports) => {
+  const updateToClass = (classPath, shouldExtend, type) => {
     const specPath = ReactUtils.getReactCreateClassSpec(classPath);
     const name = ReactUtils.getComponentName(classPath);
     const statics = collectStatics(specPath);
@@ -448,16 +459,19 @@ function updateReactCreateClassToES6(file, api, options) {
       name ? j.identifier(name) : createModuleExportsMemberExpression();
 
     var path;
-    if (isModuleExports) {
+    if (type == 'moduleExports' || type == 'exportDefault') {
       path = ReactUtils.findReactCreateClassCallExpression(classPath);
     } else {
       path = j(classPath).closest(j.VariableDeclaration);
     }
 
+    const properties =
+      (type == 'exportDefault') ? createStaticClassProperties(statics) : [];
+
     path.replaceWith(
-      createES6Class(
+      createESClass(
         name,
-        functions,
+        properties.concat(functions.map(createMethodDefinition)),
         getInitialState,
         autobindFunctions,
         comments,
@@ -465,43 +479,46 @@ function updateReactCreateClassToES6(file, api, options) {
       )
     );
 
-    const staticAssignments =
-      createStaticAssignmentExpressions(staticName, statics);
-    if (isModuleExports) {
-      const body = root.get().value.body;
-      body.push.apply(body, staticAssignments);
-    } else {
-      staticAssignments
-        .forEach(expression => path = path.insertAfter(expression));
+    if (type == 'moduleExports' || type == 'var') {
+      const staticAssignments = createStaticAssignmentExpressions(
+        staticName,
+        statics
+      );
+      if (type == 'moduleExports') {
+        root.get().value.program.body.push(...staticAssignments);
+      } else {
+        path.insertAfter(staticAssignments.reverse());
+      }
     }
   };
 
   if (
     options['no-explicit-require'] || ReactUtils.hasReact(root)
   ) {
-    const apply = (path, isModuleExports) => 
+    const apply = (path, type) =>
       path
         .filter(hasMixins)
         .filter(callsDeprecatedAPIs)
-        .forEach(classPath => updateToES6Class(
+        .forEach(classPath => updateToClass(
           classPath,
           !options['no-super-class'],
-          isModuleExports
+          type
         ));
 
     const didTransform = (
-      apply(ReactUtils.findReactCreateClass(root), false).size() +
-      apply(ReactUtils.findReactCreateClassModuleExports(root), true).size() + 
-      apply(ReactUtils.findReactCreateClassExportDefault(root), false).size()
+      apply(ReactUtils.findReactCreateClass(root), 'var')
+        .size() +
+      apply(ReactUtils.findReactCreateClassModuleExports(root), 'moduleExports')
+        .size() +
+      apply(ReactUtils.findReactCreateClassExportDefault(root), 'exportDefault')
+        .size()
     ) > 0;
 
     if (didTransform) {
       return root.toSource(printOptions);
     }
-    
+
   }
 
   return null;
 }
-
-module.exports = updateReactCreateClassToES6;
