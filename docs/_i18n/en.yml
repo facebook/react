@@ -1,0 +1,82 @@
+global:
+  next: Next
+  previous: Previous
+
+docs:
+  titles:
+    quick-start: Quick Start
+    getting-started: Getting Started
+    tutorial: Tutorial
+    thinking-in-react: Thinking in React
+
+    community-resources: Community Resources
+    conferences: Conferences
+    videos: Videos
+    complementary-tools: Complementary Tools
+    examples: Examples
+
+    guides: Guides
+    why-react: Why React?
+    displaying-data: Displaying Data
+    jsx-in-depth: JSX in Depth
+    jsx-spread: JSX Spread Attributes
+    jsx-gotchas: JSX Gotchas
+    interactivity-and-dynamic-uis: Interactivity and Dynamic UIs
+    multiple-components: Multiple Components
+    reusable-components: Reusable Components
+    transferring-props: Transferring Props
+    forms: Forms
+    working-with-the-browser: Working With the Browser
+    more-about-refs: Refs to Components
+    tooling-integration: Tooling Integration
+    addons: Add-Ons
+    animation: Animation
+    two-way-binding-helpers: Two-Way Binding Helpers
+    test-utils: Test Utilities
+    clone-with-props: Cloning Elements
+    create-fragment: Keyed Fragments
+    update: Immutability Helpers
+    pure-render-mixin: PureRenderMixin
+    perf: Performance Tools
+    advanced-performance: Advanced Performance
+    context: Context
+
+    reference: Reference
+    top-level-api: Top-Level API
+    component-api: Component API
+    component-specs: Component Specs and Lifecycle
+    tags-and-attributes: Supported Tags and Attributes
+    events: Event System
+    dom-differences: DOM Differences
+    special-non-dom-attributes: Special Non-DOM Attributes
+    reconciliation: Reconciliation
+    glossary: React (Virtual) DOM Terminology
+
+    flux: Flux
+    flux-overview: Flux Overview
+    flux-todo-list: Flux TodoMVC Tutorial
+
+
+tips:
+  titles:
+    tips: Tips
+
+    introduction: Introduction
+    inline-styles: Inline Styles
+    if-else-in-JSX: If-Else in JSX
+    self-closing-tag: Self-Closing Tag
+    maximum-number-of-jsx-root-nodes: Maximum Number of JSX Root Nodes
+    style-props-value-px: Shorthand for Specifying Pixel Values in style props
+    children-props-type: Type of the Children props
+    controlled-input-null-value: Value of null for Controlled Input
+    componentWillReceiveProps-not-triggered-after-mounting: componentWillReceiveProps Not Triggered After Mounting
+    props-in-getInitialState-as-anti-pattern: Props in getInitialState Is an Anti-Pattern
+    dom-event-listeners: DOM Event Listeners in a Component
+    initial-ajax: Load Initial Data via AJAX
+    false-in-jsx: False in JSX
+    communicate-between-components: Communicate Between Components
+    expose-component-functions: Expose Component Functions
+    references-to-components: References to Components
+    children-undefined: this.props.children undefined
+    use-react-with-other-libraries: Use React with Other Libraries
+    dangerously-set-inner-html: Dangerously Set innerHTML

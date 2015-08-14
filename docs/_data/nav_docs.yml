@@ -1,99 +1,99 @@
-- title: Quick Start
+- title: docs.titles.quick-start
   items:
   - id: getting-started
-    title: Getting Started
+    title: docs.titles.getting-started
   - id: tutorial
-    title: Tutorial
+    title: docs.titles.tutorial
   - id: thinking-in-react
-    title: Thinking in React
-- title: Community Resources
+    title: docs.titles.thinking-in-react
+- title: docs.titles.community-resources
   items:
   - id: conferences
-    title: Conferences
+    title: docs.titles.conferences
   - id: videos
-    title: Videos
+    title: docs.titles.videos
   - id: complementary-tools
-    title: Complementary Tools
+    title: docs.titles.complementary-tools
   - id: examples
-    title: Examples
-- title: Guides
+    title: docs.titles.examples
+- title: docs.titles.guides
   items:
   - id: why-react
-    title: Why React?
+    title: docs.titles.why-react
   - id: displaying-data
-    title: Displaying Data
+    title: docs.titles.displaying-data
     subitems:
     - id: jsx-in-depth
-      title: JSX in Depth
+      title: docs.titles.jsx-in-depth
     - id: jsx-spread
-      title: JSX Spread Attributes
+      title: docs.titles.jsx-spread
     - id: jsx-gotchas
-      title: JSX Gotchas
+      title: docs.titles.jsx-gotchas
   - id: interactivity-and-dynamic-uis
-    title: Interactivity and Dynamic UIs
+    title: docs.titles.interactivity-and-dynamic-uis
   - id: multiple-components
-    title: Multiple Components
+    title: docs.titles.multiple-components
   - id: reusable-components
-    title: Reusable Components
+    title: docs.titles.reusable-components
   - id: transferring-props
-    title: Transferring Props
+    title: docs.titles.transferring-props
   - id: forms
-    title: Forms
+    title: docs.titles.forms
   - id: working-with-the-browser
-    title: Working With the Browser
+    title: docs.titles.working-with-the-browser
     subitems:
     - id: more-about-refs
-      title: Refs to Components
+      title: docs.titles.more-about-refs
   - id: tooling-integration
-    title: Tooling Integration
+    title: docs.titles.tooling-integration
   - id: addons
-    title: Add-Ons
+    title: docs.titles.addons
     subitems:
     - id: animation
-      title: Animation
+      title: docs.titles.animation
     - id: two-way-binding-helpers
-      title: Two-Way Binding Helpers
+      title: docs.titles.two-way-binding-helpers
     - id: test-utils
-      title: Test Utilities
+      title: docs.titles.test-utils
     - id: clone-with-props
-      title: Cloning Elements
+      title: docs.titles.clone-with-props
     - id: create-fragment
-      title: Keyed Fragments
+      title: docs.titles.create-fragment
     - id: update
-      title: Immutability Helpers
+      title: docs.titles.update
     - id: pure-render-mixin
-      title: PureRenderMixin
+      title: docs.titles.pure-render-mixin
     - id: perf
-      title: Performance Tools
+      title: docs.titles.perf
   - id: advanced-performance
-    title: Advanced Performance
+    title: docs.titles.advanced-performance
   - id: context
-    title: Context
-- title: Reference
+    title: docs.titles.context
+- title: docs.titles.reference
   items:
   - id: top-level-api
-    title: Top-Level API
+    title: docs.titles.top-level-api
   - id: component-api
-    title: Component API
+    title: docs.titles.component-api
   - id: component-specs
-    title: Component Specs and Lifecycle
+    title: docs.titles.component-specs
   - id: tags-and-attributes
-    title: Supported Tags and Attributes
+    title: docs.titles.tags-and-attributes
   - id: events
-    title: Event System
+    title: docs.titles.events
   - id: dom-differences
-    title: DOM Differences
+    title: docs.titles.dom-differences
   - id: special-non-dom-attributes
-    title: Special Non-DOM Attributes
+    title: docs.titles.special-non-dom-attributes
   - id: reconciliation
-    title: Reconciliation
+    title: docs.titles.reconciliation
   - id: glossary
-    title: React (Virtual) DOM Terminology
-- title: Flux
+    title: docs.titles.glossary
+- title: docs.titles.flux
   items:
   - id: flux-overview
-    title: Flux Overview
+    title: docs.titles.flux-overview
     href: https://facebook.github.io/flux/docs/overview.html
   - id: flux-todo-list
-    title: Flux TodoMVC Tutorial
+    title: docs.titles.flux-todo-list
     href: https://facebook.github.io/flux/docs/todo-list.html

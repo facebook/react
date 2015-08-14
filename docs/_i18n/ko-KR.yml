@@ -1,0 +1,7 @@
+global:
+  next: 다음
+  previous: 이전
+
+docs:
+  titles:
+    why-react: 왜 React인가?

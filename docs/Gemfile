@@ -9,6 +9,9 @@ gem 'jekyll', '~>2.0'
 # Auto redirect pages
 gem 'jekyll-redirect-from'
 
+# i18n / l10n
+gem 'jekyll-multiple-languages'
+
 # JSON
 gem 'json'
 
