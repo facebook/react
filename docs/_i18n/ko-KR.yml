@@ -65,22 +65,22 @@ tips:
   titles:
     tips: Tips
 
-    introduction: Introduction
-    inline-styles: Inline Styles
-    if-else-in-JSX: If-Else in JSX
-    self-closing-tag: Self-Closing Tag
-    maximum-number-of-jsx-root-nodes: Maximum Number of JSX Root Nodes
-    style-props-value-px: Shorthand for Specifying Pixel Values in style props
-    children-props-type: Type of the Children props
-    controlled-input-null-value: Value of null for Controlled Input
-    componentWillReceiveProps-not-triggered-after-mounting: componentWillReceiveProps Not Triggered After Mounting
-    props-in-getInitialState-as-anti-pattern: Props in getInitialState Is an Anti-Pattern
-    dom-event-listeners: DOM Event Listeners in a Component
-    initial-ajax: Load Initial Data via AJAX
-    false-in-jsx: False in JSX
-    communicate-between-components: Communicate Between Components
-    expose-component-functions: Expose Component Functions
-    references-to-components: References to Components
-    children-undefined: this.props.children undefined
-    use-react-with-other-libraries: Use React with Other Libraries
+    introduction: 개요
+    inline-styles: 인라인 스타일
+    if-else-in-JSX: JSX에서 If-Else
+    self-closing-tag: 자기 자신을 닫는 태그
+    maximum-number-of-jsx-root-nodes: JSX 루트 노드의 최대 갯수
+    style-props-value-px: 스타일 속성에서 특정 픽셀 값 넣는 간단한 방법
+    children-props-type: 자식 속성들의 타입
+    controlled-input-null-value: 제어되는 input 내의 null 값
+    componentWillReceiveProps-not-triggered-after-mounting: 마운트 후에는 componentWillReceiveProps가 실행되지 않음
+    props-in-getInitialState-as-anti-pattern: getInitialState의 Props는 안티패턴
+    dom-event-listeners: 컴포넌트에서 DOM 이벤트 리스너
+    initial-ajax: AJAX를 통해 초기 데이터 읽어오기
+    false-in-jsx: JSX에서 False
+    communicate-between-components: 컴포넌트간의 통신
+    expose-component-functions: 컴포넌트 함수 드러내기
+    references-to-components: 컴포넌트 참조
+    children-undefined: 정의되지 않은 this.props.children
+    use-react-with-other-libraries: React와 다른 라이브러리를 함께 사용하기
     dangerously-set-inner-html: Dangerously Set innerHTML
