@@ -190,9 +190,11 @@ function createInstanceTypeChecker(expectedClass) {
     if (!(props[propName] instanceof expectedClass)) {
       var locationName = ReactPropTypeLocationNames[location];
       var expectedClassName = expectedClass.name || ANONYMOUS;
+      var actualClassName = getClassName(props[propName]);
       return new Error(
-        `Invalid ${locationName} \`${propFullName}\` supplied to ` +
-        `\`${componentName}\`, expected instance of \`${expectedClassName}\`.`
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${actualClassName}\` supplied to \`${componentName}\`, expected ` +
+        `instance of \`${expectedClassName}\`.`
       );
     }
     return null;
@@ -410,6 +412,14 @@ function getPreciseType(propValue) {
     }
   }
   return propType;
+}
+
+// Returns class name of the object, if any.
+function getClassName(propValue) {
+  if (!propValue.constructor || !propValue.constructor.name) {
+    return '<<anonymous>>';
+  }
+  return propValue.constructor.name;
 }
 
 module.exports = ReactPropTypes;
