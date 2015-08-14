@@ -2,9 +2,9 @@
 id: initial-ajax
 title: tips.titles.initial-ajax
 layout: tips
-permalink: initial-ajax-ko-KR.html
-prev: dom-event-listeners-ko-KR.html
-next: false-in-jsx-ko-KR.html
+permalink: initial-ajax.html
+prev: dom-event-listeners.html
+next: false-in-jsx.html
 ---
 
 `componentDidMount`에서 데이터를 가져옵니다. 응답이 올 때 데이터가 state에 저장되고 렌더링을 시작하여 UI를 갱신합니다.

@@ -2,9 +2,9 @@
 id: componentWillReceiveProps-not-triggered-after-mounting
 title: tips.titles.componentWillReceiveProps-not-triggered-after-mounting
 layout: tips
-permalink: componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html
-prev: controlled-input-null-value-ko-KR.html
-next: props-in-getInitialState-as-anti-pattern-ko-KR.html
+permalink: componentWillReceiveProps-not-triggered-after-mounting.html
+prev: controlled-input-null-value.html
+next: props-in-getInitialState-as-anti-pattern.html
 ---
 
 `componentWillReceiveProps`는 노드가 더해진 후엔 실행되지 않습니다. 이는 설계에 의한 것입니다. [다른 생명주기 메소드](/react/docs/component-specs-ko-KR.html)에서 요구사항에 적합한 것을 찾아보세요.

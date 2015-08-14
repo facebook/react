@@ -2,9 +2,9 @@
 id: dom-event-listeners
 title: tips.titles.dom-event-listeners
 layout: tips
-permalink: dom-event-listeners-ko-KR.html
-prev: props-in-getInitialState-as-anti-pattern-ko-KR.html
-next: initial-ajax-ko-KR.html
+permalink: dom-event-listeners.html
+prev: props-in-getInitialState-as-anti-pattern.html
+next: initial-ajax.html
 ---
 
 > 주의:

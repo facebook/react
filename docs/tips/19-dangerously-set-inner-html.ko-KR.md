@@ -2,8 +2,8 @@
 id: dangerously-set-inner-html
 title: tips.titles.dangerously-set-inner-html
 layout: tips
-permalink: dangerously-set-inner-html-ko-KR.html
-prev: children-undefined-ko-KR.html
+permalink: dangerously-set-inner-html.html
+prev: children-undefined.html
 ---
 
 부적절히 `innerHTML`를 사용하면 [사이트 간 스크립팅 (XSS)](https://en.wikipedia.org/wiki/Cross-site_scripting) 공격에 노출됩니다. 화면의 사용자 입력을 정제하다(sanitize) 오류를 내기 쉬우며, 적절하게 사용자의 입력을 정제하지 못하면 인터넷 상 [웹 취약점의 원인](https://owasptop10.googlecode.com/files/OWASP%20Top%2010%20-%202013.pdf)이 됩니다.

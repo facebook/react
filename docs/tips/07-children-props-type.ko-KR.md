@@ -2,9 +2,9 @@
 id: children-props-type
 title: tips.titles.children-props-type
 layout: tips
-permalink: children-props-type-ko-KR.html
-prev: style-props-value-px-ko-KR.html
-next: controlled-input-null-value-ko-KR.html
+permalink: children-props-type.html
+prev: style-props-value-px.html
+next: controlled-input-null-value.html
 ---
 
 컴포넌트의 자식들(`this.props.children`)은 대부분 컴포넌트의 배열로 들어갑니다:

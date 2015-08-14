@@ -2,9 +2,9 @@
 id: if-else-in-JSX
 title: tips.titles.if-else-in-JSX
 layout: tips
-permalink: if-else-in-JSX-ko-KR.html
-prev: inline-styles-ko-KR.html
-next: self-closing-tag-ko-KR.html
+permalink: if-else-in-JSX.html
+prev: inline-styles.html
+next: self-closing-tag.html
 ---
 
 JSX 안에서는 `if-else` 구문이 작동하지 않습니다. 왜냐하면 JSX가 그저 함수 호출과 객체 생성의 편의 문법이기 때문입니다. 다음의 기본적인 예제를 살펴봅시다.

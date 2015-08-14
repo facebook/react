@@ -2,9 +2,9 @@
 id: use-react-with-other-libraries
 title: tips.titles.use-react-with-other-libraries
 layout: tips
-permalink: use-react-with-other-libraries-ko-KR.html
-prev: children-undefined-ko-KR.html
-next: dangerously-set-inner-html-ko-KR.html
+permalink: use-react-with-other-libraries.html
+prev: children-undefined.html
+next: dangerously-set-inner-html.html
 ---
 
 React만으로 만들 필요는 없습니다. 컴포넌트의 [생명주기 이벤트](/react/docs/component-specs-ko-KR.html#lifecycle-methods), 특히 `componentDidMount`와 `componentDidUpdate`는 다른 라이브러리들의 로직을 넣기에 좋은 장소입니다.

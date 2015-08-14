@@ -2,9 +2,9 @@
 id: controlled-input-null-value
 title: tips.titles.controlled-input-null-value
 layout: tips
-permalink: controlled-input-null-value-ko-KR.html
-prev: children-props-type-ko-KR.html
-next: componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html
+permalink: controlled-input-null-value.html
+prev: children-props-type.html
+next: componentWillReceiveProps-not-triggered-after-mounting.html
 ---
 
 [제어되는 컴포넌트들](/react/docs/forms-ko-KR.html)의 `value` 속성 값을 지정하면 유저에 의해 입력값을 바꿀 수 없습니다.

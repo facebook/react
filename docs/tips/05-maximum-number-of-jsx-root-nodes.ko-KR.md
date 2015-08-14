@@ -2,9 +2,9 @@
 id: maximum-number-of-jsx-root-nodes
 title: tips.titles.maximum-number-of-jsx-root-nodes
 layout: tips
-permalink: maximum-number-of-jsx-root-nodes-ko-KR.html
-prev: self-closing-tag-ko-KR.html
-next: style-props-value-px-ko-KR.html
+permalink: maximum-number-of-jsx-root-nodes.html
+prev: self-closing-tag.html
+next: style-props-value-px.html
 ---
 
 현재 컴포넌트의 `render`는 한 노드만 리턴할 수 있습니다. 만약 `div` 배열을 리턴하려면, `div`, `span`과 같은 다른 컴포넌트로 한 번 더 싸주어야 합니다. 

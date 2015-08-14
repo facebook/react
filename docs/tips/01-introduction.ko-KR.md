@@ -2,8 +2,8 @@
 id: introduction
 title: tips.titles.introduction
 layout: tips
-permalink: introduction-ko-KR.html
-next: inline-styles-ko-KR.html
+permalink: introduction.html
+next: inline-styles.html
 ---
 
 React 팁 섹션에서는 여러 궁금증을 해결해주고 흔히 하는 실수를 피할 수 있도록 짧은 정보들을 제공합니다.

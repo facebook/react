@@ -2,9 +2,9 @@
 id: children-undefined
 title: tips.titles.children-undefined
 layout: tips
-permalink: children-undefined-ko-KR.html
-prev: expose-component-functions-ko-KR.html
-next: use-react-with-other-libraries-ko-KR.html
+permalink: children-undefined.html
+prev: expose-component-functions.html
+next: use-react-with-other-libraries.html
 ---
 
 `this.props.children`을 통해 자식 컴포넌트에 접근할 수 없습니다. `this.props.children`은 소유자에 의해 자식이 **전달**되도록 지정합니다:
@@ -12,7 +12,7 @@ next: use-react-with-other-libraries-ko-KR.html
 ```js
 var App = React.createClass({
   componentDidMount: function() {
-    // 이는 `span`을 참조하지 않습니다! 
+    // 이는 `span`을 참조하지 않습니다!
     // 마지막 줄의 `<App></App>` 사이의 정의되지 않은 자식을 참조합니다.
     console.log(this.props.children);
   },
