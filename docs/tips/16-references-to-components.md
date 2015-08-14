@@ -1,6 +1,6 @@
 ---
 id: references-to-components
-title: References to Components
+title: tips.titles.references-to-components
 layout: tips
 permalink: references-to-components.html
 prev: expose-component-functions.html

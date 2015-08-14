@@ -1,6 +1,6 @@
 ---
 id: false-in-jsx
-title: False in JSX
+title: tips.titles.false-in-jsx
 layout: tips
 permalink: false-in-jsx.html
 prev: initial-ajax.html

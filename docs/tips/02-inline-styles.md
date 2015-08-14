@@ -1,6 +1,6 @@
 ---
 id: inline-styles
-title: Inline Styles
+title: tips.titles.inline-styles
 layout: tips
 permalink: inline-styles.html
 next: if-else-in-JSX.html

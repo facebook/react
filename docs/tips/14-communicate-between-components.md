@@ -1,6 +1,6 @@
 ---
 id: communicate-between-components
-title: Communicate Between Components
+title: tips.titles.communicate-between-components
 layout: tips
 permalink: communicate-between-components.html
 prev: false-in-jsx.html

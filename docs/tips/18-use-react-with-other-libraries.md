@@ -1,6 +1,6 @@
 ---
 id: use-react-with-other-libraries
-title: Use React with Other Libraries
+title: tips.titles.use-react-with-other-libraries
 layout: tips
 permalink: use-react-with-other-libraries.html
 prev: children-undefined.html

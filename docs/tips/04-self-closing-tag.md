@@ -1,6 +1,6 @@
 ---
 id: self-closing-tag
-title: Self-Closing Tag
+title: tips.titles.self-closing-tag
 layout: tips
 permalink: self-closing-tag.html
 prev: if-else-in-JSX.html

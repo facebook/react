@@ -1,6 +1,6 @@
 ---
 id: initial-ajax
-title: Load Initial Data via AJAX
+title: tips.titles.initial-ajax
 layout: tips
 permalink: initial-ajax.html
 prev: dom-event-listeners.html

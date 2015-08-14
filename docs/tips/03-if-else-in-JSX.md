@@ -1,6 +1,6 @@
 ---
 id: if-else-in-JSX
-title: If-Else in JSX
+title: tips.titles.if-else-in-JSX
 layout: tips
 permalink: if-else-in-JSX.html
 prev: inline-styles.html
