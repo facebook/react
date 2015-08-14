@@ -1,9 +1,10 @@
 ---
-id: special-non-dom-attributes-ko-KR
+id: special-non-dom-attributes
+title: docs.titles.special-non-dom-attributes
 title: DOM이 아닌 특별한 어트리뷰트
-permalink: special-non-dom-attributes-ko-KR.html
-prev: dom-differences-ko-KR.html
-next: reconciliation-ko-KR.html
+permalink: special-non-dom-attributes.html
+prev: dom-differences.html
+next: reconciliation.html
 ---
 
 [DOM 차이점](/react/docs/dom-differences-ko-KR.html)처럼, React는 DOM에는 존재하지 않는 몇몇 어트리뷰트도 제공합니다.

@@ -1,8 +1,8 @@
 ---
-id: glossary-ko-KR
-title: React (가상) DOM 용어
-permalink: glossary-ko-KR.html
-prev: reconciliation-ko-KR.html
+id: glossary
+title: docs.titles.glossary
+permalink: glossary.html
+prev: reconciliation.html
 ---
 
 다음은 React에서 사용되는 용어들로, 이 다섯 가지의 타입을 구별하는 것은 중요합니다.
@@ -190,4 +190,3 @@ type ReactComponent<TProps> = {
   render : () => ReactElement
 };
 ```
-

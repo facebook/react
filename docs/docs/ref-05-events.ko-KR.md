@@ -1,9 +1,9 @@
 ---
-id: events-ko-KR
-title: 이벤트 시스템
-permalink: events-ko-KR.html
-prev: tags-and-attributes-ko-KR.html
-next: dom-differences-ko-KR.html
+id: events
+title: docs.titles.events
+permalink: events.html
+prev: tags-and-attributes.html
+next: dom-differences.html
 ---
 
 ## 통합적인(Synthetic) 이벤트

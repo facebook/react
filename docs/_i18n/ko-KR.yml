@@ -31,7 +31,7 @@ docs:
     transferring-props: Props 전달
     forms: 폼
     working-with-the-browser: 브라우저에서의 동작
-    more-about-refs: refs 심화
+    more-about-refs: refs에서 컴포넌트로
     tooling-integration: 툴 통합
     addons: 애드온
     animation: 애니메이션

@@ -1,9 +1,9 @@
 ---
-id: videos-ko-KR
-title: 비디오들
-permalink: videos-ko-KR.html
-prev: conferences-ko-KR.html
-next: complementary-tools-ko-KR.html
+id: videos
+title: docs.titles.videos
+permalink: videos.html
+prev: conferences.html
+next: complementary-tools.html
 ---
 
 ### Rethinking best practices - JSConf.eu

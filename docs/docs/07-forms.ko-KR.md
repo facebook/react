@@ -1,9 +1,9 @@
 ---
-id: forms-ko-KR
-title: 폼
-permalink: forms-ko-KR.html
-prev: transferring-props-ko-KR.html
-next: working-with-the-browser-ko-KR.html
+id: forms
+title: docs.titles.forms
+permalink: forms.html
+prev: transferring-props.html
+next: working-with-the-browser.html
 ---
 
 `<input>`, `<textarea>`, `<option>` 같은 폼 컴포넌트는 다른 네이티브 컴포넌트와 다릅니다. 왜냐하면, 사용자의 상호작용에 의해 변경될 수 있기 때문이죠. 이런 컴포넌트들은 사용자의 상호작용에 반응하여 폼을 더 쉽게 관리할 수 있도록 인터페이스를 제공합니다.
