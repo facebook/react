@@ -1,6 +1,6 @@
 ---
 id: dom-differences
-title: DOM Differences
+title: docs.titles.dom-differences
 permalink: dom-differences.html
 prev: events.html
 next: special-non-dom-attributes.html

@@ -1,6 +1,6 @@
 ---
 id: complementary-tools
-title: Complementary Tools
+title: docs.titles.complementary-tools
 permalink: complementary-tools.html
 prev: videos.html
 next: examples.html

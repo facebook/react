@@ -1,6 +1,6 @@
 ---
 id: transferring-props
-title: Transferring Props
+title: docs.titles.transferring-props
 permalink: transferring-props.html
 prev: reusable-components.html
 next: forms.html

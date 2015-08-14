@@ -1,6 +1,6 @@
 ---
 id: videos
-title: Videos
+title: docs.titles.videos
 permalink: videos.html
 prev: conferences.html
 next: complementary-tools.html

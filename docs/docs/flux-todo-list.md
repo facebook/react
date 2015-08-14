@@ -1,6 +1,6 @@
 ---
 id: flux-todo-list
-title: Flux TodoMVC Tutorial
+title: docs.titles.flux-todo-list
 permalink: flux-todo-list.html
 ---
 

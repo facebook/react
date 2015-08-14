@@ -1,6 +1,6 @@
 ---
 id: events
-title: Event System
+title: docs.titles.events
 permalink: events.html
 prev: tags-and-attributes.html
 next: dom-differences.html

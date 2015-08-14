@@ -1,6 +1,6 @@
 ---
 id: getting-started
-title: Getting Started
+title: docs.titles.getting-started
 next: tutorial.html
 redirect_from: "docs/index.html"
 ---

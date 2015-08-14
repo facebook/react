@@ -1,6 +1,6 @@
 ---
 id: advanced-performance
-title: Advanced Performance
+title: docs.titles.advanced-performance
 permalink: advanced-performance.html
 prev: perf.html
 next: context.html

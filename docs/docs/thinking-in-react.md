@@ -1,6 +1,6 @@
 ---
 id: thinking-in-react
-title: Thinking in React
+title: docs.titles.thinking-in-react
 prev: tutorial.html
 next: conferences.html
 redirect_from: 'blog/2013/11/05/thinking-in-react.html'

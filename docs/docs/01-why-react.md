@@ -1,6 +1,6 @@
 ---
 id: why-react
-title: docs.titles.why_react
+title: docs.titles.why-react
 permalink: why-react.html
 next: /docs/displaying-data.html
 ---

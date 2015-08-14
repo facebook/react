@@ -1,6 +1,6 @@
 ---
 id: top-level-api
-title: Top-Level API
+title: docs.titles.top-level-api
 permalink: top-level-api.html
 next: component-api.html
 redirect_from: "/docs/reference.html"

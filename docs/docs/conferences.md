@@ -1,6 +1,6 @@
 ---
 id: conferences
-title: Conferences
+title: docs.titles.conferences
 permalink: conferences.html
 prev: thinking-in-react.html
 next: videos.html
