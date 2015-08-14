@@ -257,9 +257,8 @@ var ReactMultiChild = {
             transaction,
             context
           );
-          child._mountIndex = index;
+          child._mountIndex = index++;
           mountImages.push(mountImage);
-          index++;
         }
       }
       return mountImages;
@@ -353,7 +352,6 @@ var ReactMultiChild = {
             processQueue();
           }
         }
-
       }
     },
 
