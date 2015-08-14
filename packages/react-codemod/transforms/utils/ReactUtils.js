@@ -33,7 +33,7 @@ module.exports = function(j) {
         type: 'ImportDeclaration',
         source: {
           type: 'Literal',
-        }
+        },
       })
       .filter(declarator => declarator.value.source.value === module)
       .size() === 1
@@ -60,8 +60,8 @@ module.exports = function(j) {
     path.find(j.ExportDefaultDeclaration, {
       declaration: {
         type: 'CallExpression',
-        callee: REACT_CREATE_CLASS_MEMBER_EXPRESSION
-      }
+        callee: REACT_CREATE_CLASS_MEMBER_EXPRESSION,
+      },
     });
 
   const findReactCreateClassModuleExports = path =>
@@ -124,7 +124,7 @@ module.exports = function(j) {
   // Others
   const getReactCreateClassSpec = classPath => {
     var {value} = classPath;
-    const spec = (value.init || value.right ||  value.declaration).arguments[0];
+    const spec = (value.init || value.right || value.declaration).arguments[0];
     if (spec.type === 'ObjectExpression' && Array.isArray(spec.properties)) {
       return spec;
     }
