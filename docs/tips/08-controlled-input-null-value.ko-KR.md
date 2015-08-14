@@ -1,6 +1,6 @@
 ---
-id: controlled-input-null-value-ko-KR
-title: 제어되는 input 내의 null 값
+id: controlled-input-null-value
+title: tips.titles.controlled-input-null-value
 layout: tips
 permalink: controlled-input-null-value-ko-KR.html
 prev: children-props-type-ko-KR.html

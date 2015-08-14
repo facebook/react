@@ -1,6 +1,6 @@
 ---
-id: expose-component-functions-ko-KR
-title: 컴포넌트 함수 드러내기
+id: expose-component-functions
+title: tips.titles.expose-component-functions
 layout: tips
 permalink: expose-component-functions-ko-KR.html
 prev: communicate-between-components-ko-KR.html

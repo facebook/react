@@ -1,6 +1,6 @@
 ---
-id: props-in-getInitialState-as-anti-pattern-ko-KR
-title: getInitialState의 Props는 안티패턴
+id: props-in-getInitialState-as-anti-pattern
+title: tips.titles.props-in-getInitialState-as-anti-pattern
 layout: tips
 permalink: props-in-getInitialState-as-anti-pattern-ko-KR.html
 prev: componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html

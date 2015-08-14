@@ -1,6 +1,6 @@
 ---
-id: inline-styles-ko-KR
-title: 인라인 스타일
+id: inline-styles
+title: tips.titles.inline-styles
 layout: tips
 permalink: inline-styles-ko-KR.html
 next: if-else-in-JSX-ko-KR.html

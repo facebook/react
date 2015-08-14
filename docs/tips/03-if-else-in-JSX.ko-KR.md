@@ -1,6 +1,6 @@
 ---
-id: if-else-in-JSX-ko-KR
-title: JSX에서 If-Else
+id: if-else-in-JSX
+title: tips.titles.if-else-in-JSX
 layout: tips
 permalink: if-else-in-JSX-ko-KR.html
 prev: inline-styles-ko-KR.html

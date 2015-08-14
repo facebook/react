@@ -1,6 +1,6 @@
 ---
-id: references-to-components-ko-KR
-title: 컴포넌트 참조
+id: references-to-components
+title: tips.titles.references-to-components
 layout: tips
 permalink: references-to-components-ko-KR.html
 prev: expose-component-functions-ko-KR.html

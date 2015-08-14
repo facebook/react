@@ -1,6 +1,6 @@
 ---
-id: use-react-with-other-libraries-ko-KR
-title: React와 다른 라이브러리를 함께 사용하기
+id: use-react-with-other-libraries
+title: tips.titles.use-react-with-other-libraries
 layout: tips
 permalink: use-react-with-other-libraries-ko-KR.html
 prev: children-undefined-ko-KR.html

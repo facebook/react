@@ -1,6 +1,6 @@
 ---
-id: children-props-type-ko-KR
-title: 자식 속성들의 타입
+id: children-props-type
+title: tips.titles.children-props-type
 layout: tips
 permalink: children-props-type-ko-KR.html
 prev: style-props-value-px-ko-KR.html

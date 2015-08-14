@@ -1,6 +1,6 @@
 ---
-id: false-in-jsx-ko-KR
-title: JSX에서 False
+id: false-in-jsx
+title: tips.titles.false-in-jsx
 layout: tips
 permalink: false-in-jsx-ko-KR.html
 prev: initial-ajax-ko-KR.html

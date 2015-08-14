@@ -1,6 +1,6 @@
 ---
-id: style-props-value-px-ko-KR
-title: 스타일 속성에서 특정 픽셀 값 넣는 간단한 방법 
+id: style-props-value-px
+title: tips.titles.style-props-value-px
 layout: tips
 permalink: style-props-value-px-ko-KR.html
 prev: maximum-number-of-jsx-root-nodes-ko-KR.html

@@ -1,6 +1,6 @@
 ---
-id: self-closing-tag-ko-KR
-title: 자기 자신을 닫는 태그
+id: self-closing-tag
+title: tips.titles.self-closing-tag
 layout: tips
 permalink: self-closing-tag-ko-KR.html
 prev: if-else-in-JSX-ko-KR.html

@@ -1,6 +1,6 @@
 ---
-id: children-undefined-ko-KR
-title: 정의되지 않은 this.props.children
+id: children-undefined
+title: tips.titles.children-undefined
 layout: tips
 permalink: children-undefined-ko-KR.html
 prev: expose-component-functions-ko-KR.html

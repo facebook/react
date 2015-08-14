@@ -1,6 +1,6 @@
 ---
-id: maximum-number-of-jsx-root-nodes-ko-KR
-title: JSX 루트 노드의 최대 갯수
+id: maximum-number-of-jsx-root-nodes
+title: tips.titles.maximum-number-of-jsx-root-nodes
 layout: tips
 permalink: maximum-number-of-jsx-root-nodes-ko-KR.html
 prev: self-closing-tag-ko-KR.html

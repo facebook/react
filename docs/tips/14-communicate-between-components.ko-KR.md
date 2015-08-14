@@ -1,6 +1,6 @@
 ---
-id: communicate-between-components-ko-KR
-title: 컴포넌트간의 통신
+id: communicate-between-components
+title: tips.titles.communicate-between-components
 layout: tips
 permalink: communicate-between-components-ko-KR.html
 prev: false-in-jsx-ko-KR.html

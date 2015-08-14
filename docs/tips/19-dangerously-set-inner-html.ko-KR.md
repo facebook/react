@@ -1,6 +1,6 @@
 ---
-id: dangerously-set-inner-html-ko-KR
-title: Dangerously Set innerHTML
+id: dangerously-set-inner-html
+title: tips.titles.dangerously-set-inner-html
 layout: tips
 permalink: dangerously-set-inner-html-ko-KR.html
 prev: children-undefined-ko-KR.html

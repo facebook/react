@@ -1,6 +1,6 @@
 ---
-id: initial-ajax-ko-KR
-title: AJAX를 통해 초기 데이터 읽어오기
+id: initial-ajax
+title: tips.titles.initial-ajax
 layout: tips
 permalink: initial-ajax-ko-KR.html
 prev: dom-event-listeners-ko-KR.html

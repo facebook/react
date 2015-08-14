@@ -1,6 +1,6 @@
 ---
-id: introduction-ko-KR
-title: 개요
+id: introduction
+title: tips.titles.introduction
 layout: tips
 permalink: introduction-ko-KR.html
 next: inline-styles-ko-KR.html
