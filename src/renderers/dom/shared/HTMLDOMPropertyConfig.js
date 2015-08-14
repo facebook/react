@@ -150,6 +150,7 @@ var HTMLDOMPropertyConfig = {
     sizes: MUST_USE_ATTRIBUTE,
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: null,
+    summary: null,
     src: null,
     srcDoc: MUST_USE_PROPERTY,
     srcSet: MUST_USE_ATTRIBUTE,
