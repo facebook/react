@@ -1,10 +1,11 @@
 var React = require('react');
 
+var shallowCompare = require('react/addons/shallowCompare');
 var PureRenderMixin = require('react/addons/PureRenderMixin');
 
 var MyComponent = React.createClass({
   shouldComponentUpdate: function(nextProps, nextState) {
-    return React.addons.shallowCompare(this, nextProps, nextState);
+    return shallowCompare(this, nextProps, nextState);
   },
 
   render: function() {
@@ -16,7 +17,7 @@ var MyMixedComponent = React.createClass({
   mixins: [SomeOtherMixin],
 
   shouldComponentUpdate: function(nextProps, nextState) {
-    return React.addons.shallowCompare(this, nextProps, nextState);
+    return shallowCompare(this, nextProps, nextState);
   },
 
   render: function() {
@@ -36,7 +37,7 @@ var MyFooComponent = React.createClass({
   },
 
   shouldComponentUpdate: function(nextProps, nextState) {
-    return React.addons.shallowCompare(this, nextProps, nextState);
+    return shallowCompare(this, nextProps, nextState);
   }
 });
 

@@ -41,6 +41,7 @@ describe('Transform Tests', () => {
   it('transforms the "pure-render-mixin" tests correctly', () => {
     test('pure-render-mixin', 'pure-render-mixin-test');
 
+    /*
     test('pure-render-mixin', 'pure-render-mixin-test2');
 
     test('pure-render-mixin', 'pure-render-mixin-test3');
@@ -48,6 +49,7 @@ describe('Transform Tests', () => {
     test('pure-render-mixin', 'pure-render-mixin-test4', {
       'mixin-name': 'ReactComponentWithPureRenderMixin',
     });
+    */
   });
 
   it('transforms the "class" tests correctly', () => {

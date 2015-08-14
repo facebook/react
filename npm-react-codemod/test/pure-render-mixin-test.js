@@ -1,6 +1,6 @@
-var React = require('react');
+var React = require('react/addons');
 
-var PureRenderMixin = require('react/addons/PureRenderMixin');
+var PureRenderMixin = React.addons.PureRenderMixin;
 
 var MyComponent = React.createClass({
   mixins: [PureRenderMixin],

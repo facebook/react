@@ -23,6 +23,16 @@ module.exports = function(j) {
     },
   };
 
+  const REACT_ADDONS_MEMBER_EXPRESSION = {
+    type: 'MemberExpression',
+    object: {
+      name: 'React',
+    },
+    property: {
+      name: 'addons',
+    },
+  };
+
   // ---------------------------------------------------------------------------
   // Checks if the file requires a certain module
   const hasModule = (path, module) =>
@@ -69,6 +79,31 @@ module.exports = function(j) {
           callee: REACT_CREATE_CLASS_MEMBER_EXPRESSION,
         },
       });
+
+  const findReactAddonsRequireExpressions = path =>
+    path
+      .findVariableDeclarators()
+      .filter(j.filters.VariableDeclarator.requiresModule('react/addons'))
+
+
+  // ---------------------------------------------------------------------------
+  // Finds all variable declarations that assign from React.addons
+  const findReactAddons = path =>
+    path
+      .findVariableDeclarators()
+      .filter(path => findReactAddonsMemberExpression(path).size() > 0);
+
+  const findReactAddonsMemberExpression = path =>
+    j(path).find(j.MemberExpression, {
+      object: REACT_ADDONS_MEMBER_EXPRESSION
+    });
+
+  /*
+  const findReactAddonsRequireExpression = path =>
+    j(path).find(j.MemberExpression, {
+      object: REACT_ADDONS_MEMBER_EXPRESSION
+    });
+  */
 
   // ---------------------------------------------------------------------------
   // Finds all classes that extend React.Component
@@ -125,15 +160,31 @@ module.exports = function(j) {
       [j.objectExpression(properties)]
     );
 
+  const createSpecificAddonRequireExpression = addon =>
+    j.variableDeclaration(
+      'var',
+      j.identifier(addon),
+      j.callExpression(
+        j.literal('require')
+        [j.literal('react/addons/' + addon)]
+      )
+    );
+
   const getComponentName =
     classPath => classPath.node.id && classPath.node.id.name;
 
+  const getReactAddons =
+    path => classPath.node.id && classPath.node.id.name;
+
+
   return {
     createCreateReactClassCallExpression,
+    createSpecificAddonRequireExpression,
     findReactES6ClassDeclaration,
     findReactCreateClass,
     findReactCreateClassCallExpression,
     findReactCreateClassModuleExports,
+    findReactAddonsRequireExpressions,
     getComponentName,
     getReactCreateClassSpec,
     hasMixins,

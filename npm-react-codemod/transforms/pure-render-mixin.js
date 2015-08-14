@@ -133,6 +133,21 @@ function removePureRenderMixin(file, api, options) {
     );
   };
 
+  const cleanupRequireReactAddonsExpression = addons => {
+    console.log('cleanupRequireReactAddonsExpression\n', addons);
+    addons
+      .forEach(addon =>
+        addon.value.id.name !== 'React' ?
+          j(addon.init).replaceWith(
+            j.CallExpression({
+              callee: 'require',
+              arguments: ['react']
+            })
+          )
+        )
+
+  };
+
   // Remove it if only two or fewer are left:
   // var PureRenderMixin = React.addons.PureRenderMixin;
   const hasPureRenderIdentifiers = path =>
@@ -177,7 +192,13 @@ function removePureRenderMixin(file, api, options) {
       .filter(hasPureRenderMixin)
       .filter(hasShouldComponentUpdate)
       .forEach(cleanupReactComponent)
-      .size() > 0;
+      .size() > 0
+
+    console.log(
+      ReactUtils
+        .findReactAddonsRequireExpressions(root)
+        .forEach(cleanupRequireReactAddonsExpression)
+    );
 
     if (didTransform) {
       deletePureRenderMixin(root);
