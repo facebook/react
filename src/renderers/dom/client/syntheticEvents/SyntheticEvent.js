@@ -16,6 +16,7 @@ var PooledClass = require('PooledClass');
 
 var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
+var warning = require('warning');
 
 /**
  * @interface Event
@@ -89,6 +90,16 @@ assign(SyntheticEvent.prototype, {
   preventDefault: function() {
     this.defaultPrevented = true;
     var event = this.nativeEvent;
+    if (__DEV__) {
+      warning(event,
+        'This Synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+        'you\'re calling `preventDefault` on a released/nullified Synthetic event. ' +
+        'This is a no-op. See https://facebook.github.io/react/docs/events.html#event-pooling ' +
+        'for more information.'
+      );
+    }
+    if (!event) return;
+
     if (event.preventDefault) {
       event.preventDefault();
     } else {
@@ -99,6 +110,16 @@ assign(SyntheticEvent.prototype, {
 
   stopPropagation: function() {
     var event = this.nativeEvent;
+    if (__DEV__) {
+      warning(event,
+        'This Synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+        'you\'re calling `stopPropagation` on a released/nullified Synthetic event. ' +
+        'This is a no-op. See https://facebook.github.io/react/docs/events.html#event-pooling ' +
+        'for more information.'
+      );
+    }
+    if (!event) return;
+
     if (event.stopPropagation) {
       event.stopPropagation();
     } else {
