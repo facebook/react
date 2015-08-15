@@ -57,7 +57,7 @@ function onClick(event) {
 
 > Note:
 >
-> If you want to access event properties in an asynchronous way, you need to create a new object e.g `var copiedEvent = assign({}, event);` or assign the specific properties to variables.
+> If you want to access the event properties in an asynchronous way, you should call `event.persist()` on the event, which will remove the synthetic event from the pool and allow references to the event to be retained by user code.
 
 ## Supported Events
 
