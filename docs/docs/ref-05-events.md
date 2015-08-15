@@ -33,6 +33,31 @@ string type
 >
 > As of v0.12, returning `false` from an event handler will no longer stop event propagation. Instead, `e.stopPropagation()` or `e.preventDefault()` should be triggered manually, as appropriate.
 
+## Event pooling
+
+The `SyntheticEvent` is pooled. This means that the `SyntheticEvent` object will be reused and all properties will be nullified after the event callback has been invoked.  
+This is for performance reasons.  
+As such, you cannot access the event in an asynchronous way.
+
+```javascript
+function onClick(event) {
+  console.log(event); // => nullified object.
+  console.log(event.type); // => "click"
+  var eventType = event.type; // => "click"
+
+  setTimeout(function() {
+    console.log(event.type); // => null
+    console.log(eventType); // => "click"
+  }, 0);
+
+  this.setState({clickEvent: event}); // Won't work. this.state.clickEvent will only contain null values.
+  this.setState({eventType: event.type}); // You can still export event properties.
+}
+```
+
+> Note:
+>
+> If you want to access event properties in an asynchronous way, you need to create a new object e.g `var copiedEvent = assign({}, event);` or assign the specific properties to variables.
 
 ## Supported Events
 
