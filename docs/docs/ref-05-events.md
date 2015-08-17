@@ -33,11 +33,36 @@ string type
 >
 > As of v0.12, returning `false` from an event handler will no longer stop event propagation. Instead, `e.stopPropagation()` or `e.preventDefault()` should be triggered manually, as appropriate.
 
+## Event pooling
+
+The `SyntheticEvent` is pooled. This means that the `SyntheticEvent` object will be reused and all properties will be nullified after the event callback has been invoked.  
+This is for performance reasons.  
+As such, you cannot access the event in an asynchronous way.
+
+```javascript
+function onClick(event) {
+  console.log(event); // => nullified object.
+  console.log(event.type); // => "click"
+  var eventType = event.type; // => "click"
+
+  setTimeout(function() {
+    console.log(event.type); // => null
+    console.log(eventType); // => "click"
+  }, 0);
+
+  this.setState({clickEvent: event}); // Won't work. this.state.clickEvent will only contain null values.
+  this.setState({eventType: event.type}); // You can still export event properties.
+}
+```
+
+> Note:
+>
+> If you want to access the event properties in an asynchronous way, you should call `event.persist()` on the event, which will remove the synthetic event from the pool and allow references to the event to be retained by user code.
 
 ## Supported Events
 
 React normalizes events so that they have consistent properties across
-different browsers. 
+different browsers.
 
 The event handlers below are triggered by an event in the bubbling phase. To register an event handler for the capture phase, append `Capture` to the event name; for example, instead of using `onClick`, you would use `onClickCapture` to handle the click event in the capture phase.
 
