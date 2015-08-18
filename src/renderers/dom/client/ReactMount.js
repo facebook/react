@@ -976,6 +976,8 @@ var ReactMount = {
 
   getNodeFromInstance: getNodeFromInstance,
 
+  isValid: isValid,
+
   purgeID: purgeID,
 };
 
