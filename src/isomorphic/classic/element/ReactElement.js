@@ -81,9 +81,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
 
 // We intentionally don't expose the function on the constructor property.
 // ReactElement should be indistinguishable from a plain object.
-ReactElement.prototype = {
-  _isReactElement: true,
-};
+ReactElement.prototype = {};
 
 ReactElement.createElement = function(type, config, children) {
   var propName;
@@ -251,17 +249,12 @@ ReactElement.cloneElement = function(element, config, children) {
  * @final
  */
 ReactElement.isValidElement = function(object) {
-  // ReactTestUtils is often used outside of beforeEach where as React is
-  // within it. This leads to two different instances of React on the same
-  // page. To identify a element from a different React instance we use
-  // a flag instead of an instanceof check.
-  var isElement = !!(object && object._isReactElement);
-  // if (isElement && !(object instanceof ReactElement)) {
-  // This is an indicator that you're using multiple versions of React at the
-  // same time. This will screw with ownership and stuff. Fix it, please.
-  // TODO: We could possibly warn here.
-  // }
-  return isElement;
+  return !!(
+    typeof object === 'object' &&
+    object != null &&
+    'type' in object &&
+    'props' in object
+  );
 };
 
 module.exports = ReactElement;
