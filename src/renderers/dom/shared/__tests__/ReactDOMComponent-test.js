@@ -582,9 +582,28 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({style: 'display: none'});
       }).toThrow(
-        'Invariant Violation: A dom node has incorrect inline style syntax.' +
-        ' The `style` prop expects a mapping from style properties to values, not' +
-        ' a string. For example, style={{marginRight: spacing + \'em\'}} when using JSX. '
+        'Invariant Violation: ' +
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
+        'using JSX.'
+      );
+    });
+
+    it('should report component containing invalid styles', function() {
+      var container = document.createElement('div');
+      var Animal = React.createClass({
+        render: function() {
+          return <div style={1}></div>;
+        },
+      });
+
+      expect(function() {
+        React.render(<Animal/>, container);
+      }).toThrow(
+        'Invariant Violation: ' +
+        'The `style` prop expects a mapping from style properties to values, not ' +
+        'a string. For example, style={{marginRight: spacing + \'em\'}} when using JSX. ' +
+        'This DOM node was rendered by `Animal`.'
       );
     });
 
@@ -718,9 +737,27 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         React.render(<div style={1}></div>, container);
       }).toThrow(
-        'Invariant Violation: A dom node has incorrect inline style syntax.' +
-        ' The `style` prop expects a mapping from style properties to values, not' +
-        ' a string. For example, style={{marginRight: spacing + \'em\'}} when using JSX. '
+        'Invariant Violation: ' +
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
+        'using JSX.'
+      );
+    });
+
+    it('should report component containing invalid styles', function() {
+      var Animal = React.createClass({
+        render: function() {
+          return <div style={1}></div>;
+        },
+      });
+
+      expect(function() {
+        React.render(<Animal/>, container);
+      }).toThrow(
+        'Invariant Violation: ' +
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
+        'using JSX. This DOM node was rendered by `Animal`.'
       );
     });
 

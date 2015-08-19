@@ -263,10 +263,9 @@ function assertValidProps(component, props) {
   }
   invariant(
     props.style == null || typeof props.style === 'object',
-    'A dom node has incorrect inline style syntax.' +
-     ' The `style` prop expects a mapping from style properties to values, ' +
+    'The `style` prop expects a mapping from style properties to values, ' +
     'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
-    'using JSX. %s',
+    'using JSX.%s',
      getDeclarationErrorAddendum(component)
   );
 }
