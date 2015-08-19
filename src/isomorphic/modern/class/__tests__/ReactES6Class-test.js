@@ -63,16 +63,15 @@ describe('ReactES6Class', function() {
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toBe(
-      'Warning: Foo(...): ' +
-      'No `render` method found on the returned component instance: you may ' +
-      'have forgotten to define `render` in your component or you may have ' +
-      'accidentally tried to render an element whose type is a function that ' +
-      'isn\'t a React component.'
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+      'instance: you may have forgotten to define `render`, returned ' +
+      'null/false from a stateless component, or tried to render an element ' +
+      'whose type is a function that isn\'t a React component.'
     );
   });
 
   it('renders a simple stateless component with prop', function() {
-    class Foo {
+    class Foo extends React.Component {
       render() {
         return <Inner name={this.props.bar} />;
       }
@@ -167,8 +166,9 @@ describe('ReactES6Class', function() {
 
   it('should throw with non-object in the initial state property', function() {
     [['an array'], 'a string', 1234].forEach(function(state) {
-      class Foo {
+      class Foo extends React.Component {
         constructor() {
+          super();
           this.state = state;
         }
         render() {
@@ -266,8 +266,9 @@ describe('ReactES6Class', function() {
 
   it('will call all the normal life cycle methods', function() {
     var lifeCycles = [];
-    class Foo {
+    class Foo extends React.Component {
       constructor() {
+        super();
         this.state = {};
       }
       componentWillMount() {
@@ -360,7 +361,7 @@ describe('ReactES6Class', function() {
   it('should warn when misspelling shouldComponentUpdate', function() {
     spyOn(console, 'error');
 
-    class NamedComponent {
+    class NamedComponent extends React.Component {
       componentShouldUpdate() {
         return false;
       }
@@ -382,7 +383,7 @@ describe('ReactES6Class', function() {
   it('should warn when misspelling componentWillReceiveProps', function() {
     spyOn(console, 'error');
 
-    class NamedComponent {
+    class NamedComponent extends React.Component {
       componentWillRecieveProps() {
         return false;
       }
@@ -428,13 +429,13 @@ describe('ReactES6Class', function() {
   });
 
   it('supports this.context passed via getChildContext', function() {
-    class Bar {
+    class Bar extends React.Component {
       render() {
         return <div className={this.context.bar} />;
       }
     }
     Bar.contextTypes = {bar: React.PropTypes.string};
-    class Foo {
+    class Foo extends React.Component {
       getChildContext() {
         return {bar: 'bar-through-context'};
       }
@@ -447,7 +448,7 @@ describe('ReactES6Class', function() {
   });
 
   it('supports classic refs', function() {
-    class Foo {
+    class Foo extends React.Component {
       render() {
         return <Inner name="foo" ref="inner" />;
       }

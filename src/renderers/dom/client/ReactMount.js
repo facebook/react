@@ -373,6 +373,10 @@ function hasNonRootReactChild(node) {
  * here.
  */
 var TopLevelWrapper = function() {};
+TopLevelWrapper.isReactClass = {};
+if (__DEV__) {
+  TopLevelWrapper.displayName = 'TopLevelWrapper';
+}
 TopLevelWrapper.prototype.render = function() {
   // this.props is actually a ReactElement
   return this.props;

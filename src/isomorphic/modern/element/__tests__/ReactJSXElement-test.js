@@ -24,7 +24,7 @@ describe('ReactJSXElement', function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    Component = class {
+    Component = class extends React.Component {
       render() {
         return <div />;
       }
@@ -176,7 +176,7 @@ describe('ReactJSXElement', function() {
   });
 
   it('should normalize props with default values', function() {
-    class NormalizingComponent {
+    class NormalizingComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
