@@ -172,7 +172,12 @@ var Danger = {
       'server rendering. See React.renderToString().'
     );
 
-    var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
+    var newChild;
+    if (typeof markup === 'string') {
+      newChild = createNodesFromMarkup(markup, emptyFunction)[0];
+    } else {
+      newChild = markup;
+    }
     oldChild.parentNode.replaceChild(newChild, oldChild);
   },
 

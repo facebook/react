@@ -37,6 +37,8 @@ var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
+var setInnerHTML = require('setInnerHTML');
+var setTextContent = require('setTextContent');
 var shallowEqual = require('shallowEqual');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
@@ -204,12 +206,6 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
     JSON.stringify(style2)
   );
 }
-
-
-/**
- * Optionally injectable operations for mutating the DOM
- */
-var BackendIDOperations = null;
 
 /**
  * @param {object} component
@@ -561,8 +557,26 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
-    var tagContent = this._createContentMarkup(transaction, props, context);
+    var mountImage;
+    if (transaction.useCreateElement) {
+      var ownerDocument = context[ReactMount.ownerDocumentContextKey];
+      var el = ownerDocument.createElement(this._currentElement.type);
+      DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
+      // Populate node cache
+      ReactMount.getID(el);
+      this._updateDOMProperties({}, props, transaction, el);
+      this._createInitialChildren(transaction, props, context, el);
+      mountImage = el;
+    } else {
+      var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
+      var tagContent = this._createContentMarkup(transaction, props, context);
+      if (!tagContent && omittedCloseTags[this._tag]) {
+        mountImage = tagOpen + '/>';
+      } else {
+        mountImage =
+          tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
+      }
+    }
 
     switch (this._tag) {
       case 'button':
@@ -578,10 +592,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    if (!tagContent && omittedCloseTags[this._tag]) {
-      return tagOpen + '/>';
-    }
-    return tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
+    return mountImage;
   },
 
   /**
@@ -694,6 +705,33 @@ ReactDOMComponent.Mixin = {
     }
   },
 
+  _createInitialChildren: function(transaction, props, context, el) {
+    // Intentional use of != to avoid catching zero/false.
+    var innerHTML = props.dangerouslySetInnerHTML;
+    if (innerHTML != null) {
+      if (innerHTML.__html != null) {
+        setInnerHTML(el, innerHTML.__html);
+      }
+    } else {
+      var contentToUse =
+        CONTENT_TYPES[typeof props.children] ? props.children : null;
+      var childrenToUse = contentToUse != null ? null : props.children;
+      if (contentToUse != null) {
+        // TODO: Validate that text is allowed as a child of this node
+        setTextContent(el, contentToUse);
+      } else if (childrenToUse != null) {
+        var mountImages = this.mountChildren(
+          childrenToUse,
+          transaction,
+          processChildContext(context, this)
+        );
+        for (var i = 0; i < mountImages.length; i++) {
+          el.appendChild(mountImages[i]);
+        }
+      }
+    }
+  },
+
   /**
    * Receives a next element and updates the component.
    *
@@ -747,8 +785,9 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
+    var node = ReactMount.getNode(this._rootNodeID);
     assertValidProps(this, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction);
+    this._updateDOMProperties(lastProps, nextProps, transaction, node);
     this._updateDOMChildren(
       lastProps,
       nextProps,
@@ -783,7 +822,7 @@ ReactDOMComponent.Mixin = {
    * @param {object} nextProps
    * @param {ReactReconcileTransaction} transaction
    */
-  _updateDOMProperties: function(lastProps, nextProps, transaction) {
+  _updateDOMProperties: function(lastProps, nextProps, transaction, node) {
     var propKey;
     var styleName;
     var styleUpdates;
@@ -811,10 +850,7 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        BackendIDOperations.deletePropertyByID(
-          this._rootNodeID,
-          propKey
-        );
+        DOMPropertyOperations.deleteValueForProperty(node, propKey);
       }
     }
     for (propKey in nextProps) {
@@ -867,26 +903,26 @@ ReactDOMComponent.Mixin = {
           deleteListener(this._rootNodeID, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
-        BackendIDOperations.updateAttributeByID(
-          this._rootNodeID,
+        DOMPropertyOperations.setValueForAttribute(
+          node,
           propKey,
           nextProp
         );
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        BackendIDOperations.updatePropertyByID(
-          this._rootNodeID,
-          propKey,
-          nextProp
-        );
+        // If we're updating to null or undefined, we should remove the property
+        // from the DOM node instead of inadvertantly setting to a string. This
+        // brings us in line with the same behavior we have on initial render.
+        if (nextProp != null) {
+          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
+        } else {
+          DOMPropertyOperations.deleteValueForProperty(node, propKey);
+        }
       }
     }
     if (styleUpdates) {
-      BackendIDOperations.updateStylesByID(
-        this._rootNodeID,
-        styleUpdates
-      );
+      CSSPropertyOperations.setValueForStyles(node, styleUpdates);
     }
   },
 
@@ -1037,11 +1073,5 @@ assign(
   ReactDOMComponent.Mixin,
   ReactMultiChild.Mixin
 );
-
-ReactDOMComponent.injection = {
-  injectIDOperations: function(IDOperations) {
-    ReactDOMComponent.BackendIDOperations = BackendIDOperations = IDOperations;
-  },
-};
 
 module.exports = ReactDOMComponent;

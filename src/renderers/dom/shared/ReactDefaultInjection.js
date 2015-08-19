@@ -23,7 +23,6 @@ var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactDOMComponent = require('ReactDOMComponent');
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
@@ -98,7 +97,6 @@ function inject() {
   );
 
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
-  ReactInjection.DOMComponent.injectIDOperations(ReactDOMIDOperations);
 
   if (__DEV__) {
     var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';

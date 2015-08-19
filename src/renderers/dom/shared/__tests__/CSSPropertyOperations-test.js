@@ -13,6 +13,7 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
+var ReactDOMServer = require('ReactDOMServer');
 
 describe('CSSPropertyOperations', function() {
   var CSSPropertyOperations;
@@ -102,9 +103,8 @@ describe('CSSPropertyOperations', function() {
       display: null,
     };
     var div = <div style={styles} />;
-    var root = document.createElement('div');
-    ReactDOM.render(div, root);
-    expect(/style=".*"/.test(root.innerHTML)).toBe(false);
+    var html = ReactDOMServer.renderToString(div);
+    expect(/style=/.test(html)).toBe(false);
   });
 
   it('should warn when using hyphenated style names', function() {

@@ -105,6 +105,10 @@ var DOMPropertyOperations = {
       quoteAttributeValueForBrowser(id);
   },
 
+  setAttributeForID: function(node, id) {
+    node.setAttribute(DOMProperty.ID_ATTRIBUTE_NAME, id);
+  },
+
   /**
    * Creates markup for a property.
    *

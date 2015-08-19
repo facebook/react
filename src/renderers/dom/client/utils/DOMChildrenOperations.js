@@ -98,7 +98,13 @@ var DOMChildrenOperations = {
       }
     }
 
-    var renderedMarkup = Danger.dangerouslyRenderMarkup(markupList);
+    var renderedMarkup;
+    // markupList is either a list of markup or just a list of elements
+    if (markupList.length && typeof markupList[0] === 'string') {
+      renderedMarkup = Danger.dangerouslyRenderMarkup(markupList);
+    } else {
+      renderedMarkup = markupList;
+    }
 
     // Remove updated children first so that `toIndex` is consistent.
     if (updatedChildren) {

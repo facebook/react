@@ -25,7 +25,7 @@ describe('Danger', function() {
       Danger = require('Danger');
 
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
-      transaction = new ReactReconcileTransaction();
+      transaction = new ReactReconcileTransaction(/* forceHTML */ true);
     });
 
     it('should render markup', function() {

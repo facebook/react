@@ -62,7 +62,7 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should display "false" for `defaultValue` of `false`', function() {
-    var stub = <textarea type="text" defaultValue={false} />;
+    var stub = <textarea defaultValue={false} />;
     stub = renderTextarea(stub);
     var node = ReactDOM.findDOMNode(stub);
 
@@ -76,7 +76,7 @@ describe('ReactDOMTextarea', function() {
       },
     };
 
-    var stub = <textarea type="text" defaultValue={objToString} />;
+    var stub = <textarea defaultValue={objToString} />;
     stub = renderTextarea(stub);
     var node = ReactDOM.findDOMNode(stub);
 

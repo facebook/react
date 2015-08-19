@@ -165,6 +165,9 @@ describe('ReactMultiChild', function() {
     }
 
     beforeEach(function() {
+      var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+      ReactDOMFeatureFlags.useCreateElement = false;
+
       Object.defineProperty(Element.prototype, 'innerHTML', {
         set: setInnerHTML = jasmine.createSpy().andCallFake(
           innerHTMLDescriptor.set
