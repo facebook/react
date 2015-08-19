@@ -54,7 +54,7 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value</div>;
+    return <div>{this.props.value}</div>;
   }
 });
 ```
@@ -78,7 +78,7 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value.foo</div>;
+    return <div>{this.props.value.foo}</div>;
   }
 });
 ```
