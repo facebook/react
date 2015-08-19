@@ -884,10 +884,9 @@ ReactDOMComponent.Mixin = {
               styleUpdates[styleName] = '';
             }
           }
-          // Update styles that changed since `lastProp`.
+          // Update styles that changed and keep the unchanged ones since `lastProp`.
           for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
+            if (nextProp.hasOwnProperty(styleName)) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = nextProp[styleName];
             }
