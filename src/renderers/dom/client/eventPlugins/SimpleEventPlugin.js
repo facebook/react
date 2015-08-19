@@ -416,16 +416,16 @@ var topLevelEventsToDispatchConfig = {
   topMouseOut:        eventTypes.mouseOut,
   topMouseOver:       eventTypes.mouseOver,
   topMouseUp:         eventTypes.mouseUp,
-  topPause:           eventTypes.pause,
   topPaste:           eventTypes.paste,
+  topPause:           eventTypes.pause,
   topPlay:            eventTypes.play,
   topPlaying:         eventTypes.playing,
   topProgress:        eventTypes.progress,
   topRateChange:      eventTypes.rateChange,
   topReset:           eventTypes.reset,
+  topScroll:          eventTypes.scroll,
   topSeeked:          eventTypes.seeked,
   topSeeking:         eventTypes.seeking,
-  topScroll:          eventTypes.scroll,
   topStalled:         eventTypes.stalled,
   topSubmit:          eventTypes.submit,
   topSuspend:         eventTypes.suspend,
@@ -463,7 +463,8 @@ var SimpleEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent,
-      nativeEventTarget) {
+      nativeEventTarget
+  ) {
     var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
