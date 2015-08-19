@@ -65,8 +65,8 @@ var ReactReconciler = {
     internalInstance, nextElement, transaction, context
   ) {
     var prevElement = internalInstance._currentElement;
+
     if (nextElement === prevElement &&
-        nextElement._owner != null &&
         context === internalInstance._context
       ) {
       // Since elements are immutable after the owner is rendered,
