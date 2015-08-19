@@ -32,14 +32,16 @@
     "optimist": "^0.6.1",
     "platform": "^1.1.0",
     "run-sequence": "^1.1.0",
+    "semver": "^5.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.18",
     "typescript": "~1.4.0",
     "uglify-js": "^2.4.23",
     "uglifyify": "^3.0.1"
   },
-  "engines": {
-    "node": ">=0.10.0"
+  "devEngines": {
+    "node": "0.10.x",
+    "npm": "2.x"
   },
   "commonerConfig": {
     "version": 7
@@ -48,6 +50,7 @@
     "build": "grunt build",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
+    "postinstall": "node scripts/check-dev-engines.js",
     "test": "NODE_ENV=test jest"
   },
   "jest": {
