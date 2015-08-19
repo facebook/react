@@ -27,7 +27,7 @@
     "gulp-flatten": "^0.1.0",
     "gulp-util": "^3.0.5",
     "gzip-js": "~0.3.2",
-    "jest-cli": "^0.4.13",
+    "jest-cli": "^0.5.7",
     "jstransform": "^11.0.0",
     "object-assign": "^3.0.0",
     "optimist": "^0.6.1",
@@ -40,7 +40,7 @@
     "uglifyify": "^3.0.1"
   },
   "devEngines": {
-    "node": "0.10.x",
+    "node": "4.x",
     "npm": "2.x"
   },
   "commonerConfig": {
