@@ -463,22 +463,40 @@
 <p>It&#39;s as simple as:</p>
 
 <ol>
-<li>Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</li>
+<li><p>Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
+</code></pre></div></li>
+<li><p>In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
+</code></pre></div></li>
 </ol>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
-</code></pre></div>
-<ol>
-<li>In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</li>
-</ol>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
-</code></pre></div>
+
 <p>You can access the component&#39;s DOM node directly by calling <code>React.findDOMNode(this.refs.myInput)</code>.</p>
 <h2><a class="anchor" name="the-ref-callback-attribute"></a>The ref Callback Attribute <a class="hash-link" href="#the-ref-callback-attribute">#</a></h2>
 <p>The <code>ref</code> attribute can be a callback function instead of a name.  This callback will be executed immediately after the component is mounted.  The referenced component will be passed in as a parameter, and the callback function may use the component immediately, or save the reference for future use (or both).</p>
 
 <p>It&#39;s as simple as assigning a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span> <span class="na">React</span><span class="err">.</span><span class="na">findDOMNode</span><span class="err">(</span><span class="na">component</span><span class="err">).</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
-</code></pre></div><h2><a class="anchor" name="completing-the-example"></a>Completing the Example <a class="hash-link" href="#completing-the-example">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  render: function() {
+    return <span class="nt">&lt;TextInput</span> <span class="na">ref=</span><span class="s">{(c)</span> <span class="err">=</span><span class="nt">&gt;</span> this._input = c} } /&gt;;
+  },
+  componentDidMount: function() {
+    this._input.focus();
+  },
+</code></pre></div>
+<p>or</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  render: function() {
+    return (
+      <span class="nt">&lt;TextInput</span>
+        <span class="na">ref=</span><span class="s">{function(input)</span> <span class="err">{</span>
+          <span class="na">if</span> <span class="err">(</span><span class="na">input</span> <span class="err">!=</span> <span class="na">null</span><span class="err">)</span> <span class="err">{</span>
+            <span class="na">input</span><span class="err">.</span><span class="na">focus</span><span class="err">();</span>
+          <span class="err">}</span>
+        <span class="err">}}</span> <span class="nt">/&gt;</span>
+    );
+  },
+</code></pre></div>
+<p>Note that when the referenced component is unmounted and whenever the ref changes, the old ref will be called with <code>null</code> as an argument. This prevents memory leaks in the case that the instance is stored, as in the first example. Note that when writing refs with inline function expressions as in the examples here, React sees a different function object each time so on every update, ref will be called with <code>null</code> immediately before it&#39;s called with the component instance.</p>
+<h2><a class="anchor" name="completing-the-example"></a>Completing the Example <a class="hash-link" href="#completing-the-example">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="p">},</span>

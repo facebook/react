@@ -588,17 +588,16 @@
 </code></pre></div>
 <p>次に、Markdown で書かれたコメントを変換して出力してみましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
-<span class="hll"><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Showdown</span><span class="p">.</span><span class="nx">converter</span><span class="p">();</span>
-</span><span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll"><span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h2</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentAuthor&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
         <span class="o">&lt;</span><span class="err">/h2&gt;</span>
-<span class="hll">        <span class="p">{</span><span class="nx">converter</span><span class="p">.</span><span class="nx">makeHtml</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
-</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
+        <span class="p">{</span><span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
+<span class="hll">      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span>    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
@@ -608,18 +607,17 @@
 
 <p>このような現象が起きるのは React が XSS 攻撃に対する防御を行っているからです。これを回避する方法はありますが、それを使うときにはフレームワークが警告をします。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
-<span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Showdown</span><span class="p">.</span><span class="nx">converter</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">converter</span><span class="p">.</span><span class="nx">makeHtml</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
-</span>    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>
+    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="p">{</span><span class="nx">sanitize</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+<span class="hll">    <span class="k">return</span> <span class="p">(</span>
+</span>      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h2</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentAuthor&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
         <span class="o">&lt;</span><span class="err">/h2&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span><span class="p">}}</span> <span class="o">/&gt;</span>
-</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
+        <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span><span class="p">}}</span> <span class="o">/&gt;</span>
+<span class="hll">      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span>    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>

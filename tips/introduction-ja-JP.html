@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Component API | React</title>
+  <title>イントロダクション | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Component API | React">
+  <meta property="og:title" content="イントロダクション | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/component-api.html">
+  <meta property="og:url" content="https://facebook.github.io/react/tips/introduction-ja-JP.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -249,7 +249,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/component-api.html" class="active">Component API</a>
+            <a href="/react/docs/component-api.html">Component API</a>
             
           </li>
         
@@ -398,109 +398,17 @@
 
 
   <div class="inner-content">
-    <h1>
-      Component API
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-02-component-api.md" target="_blank">Edit on GitHub</a>
-    </h1>
+    <h1>イントロダクション</h1>
     <div class="subHeader"></div>
-
-    <h2><a class="anchor" name="react.component"></a>React.Component <a class="hash-link" href="#react.component">#</a></h2>
-<p>Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as <code>this</code>. The only way to get a handle to a React Component instance outside of React is by storing the return value of <code>React.render</code>. Inside other Components, you may use <a href="/react/docs/more-about-refs.html">refs</a> to achieve the same result.</p>
-<h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="kd">function</span><span class="o">|</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
-</code></pre></div>
-<p>Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.</p>
-
-<p>The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.</p>
-
-<p>Here is the simple object usage...</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">({</span><span class="nx">mykey</span><span class="o">:</span> <span class="s1">&#39;my new value&#39;</span><span class="p">});</span>
-</code></pre></div>
-<p>It&#39;s also possible to pass a function with the signature <code>function(state, props)</code>. This can be useful in some cases when you want to enqueue an atomic update that consults the previous value of state+props before setting any values.  For instance, suppose we wanted to increment a value in state: </p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">previousState</span><span class="p">,</span> <span class="nx">currentProps</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">{</span><span class="nx">myInteger</span><span class="o">:</span> <span class="nx">previousState</span><span class="p">.</span><span class="nx">myInteger</span> <span class="o">+</span> <span class="mi">1</span><span class="p">};</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>The second (optional) parameter is a callback function that will be executed once <code>setState</code> is completed and the component is re-rendered.</p>
-
-<blockquote>
-<p>Notes:</p>
-
-<p><em>NEVER</em> mutate <code>this.state</code> directly, as calling <code>setState()</code> afterwards may replace the mutation you made. Treat <code>this.state</code> as if it were immutable.</p>
-
-<p><code>setState()</code> does not immediately mutate <code>this.state</code> but creates a pending state transition. Accessing <code>this.state</code> after calling this method can potentially return the existing value.</p>
-
-<p>There is no guarantee of synchronous operation of calls to <code>setState</code> and calls may be batched for performance gains.</p>
-
-<p><code>setState()</code> will always trigger a re-render unless conditional rendering logic is implemented in <code>shouldComponentUpdate()</code>. If mutable objects are being used and the logic cannot be implemented in <code>shouldComponentUpdate()</code>, calling <code>setState()</code> only when the new state differs from the previous state will avoid unnecessary re-renders.</p>
-</blockquote>
-<h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
-</code></pre></div>
-<p>Like <code>setState()</code> but deletes any pre-existing state keys that are not in nextState.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
-</blockquote>
-<h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
-</code></pre></div>
-<p>By default, when your component&#39;s state or props change, your component will re-render. However, if these change implicitly (eg: data deep within an object changes without changing the object itself) or if your <code>render()</code> method depends on some other data, you can tell React that it needs to re-run <code>render()</code> by calling <code>forceUpdate()</code>.</p>
-
-<p>Calling <code>forceUpdate()</code> will cause <code>render()</code> to be called on the component, skipping <code>shouldComponentUpdate()</code>. This will trigger the normal lifecycle methods for child components, including the <code>shouldComponentUpdate()</code> method of each child. React will still only update the DOM if the markup changes.</p>
-
-<p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your component &quot;pure&quot; and your application much simpler and more efficient.</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>this.getDOMNode()</code> returns <code>null</code>.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>getDOMNode is deprecated and has been replaced with <a href="/react/docs/top-level-api.html#react.finddomnode">React.findDOMNode()</a>.</p>
-
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
-</blockquote>
-<h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">bool</span> <span class="nx">isMounted</span><span class="p">()</span>
-</code></pre></div>
-<p><code>isMounted()</code> returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to <code>setState()</code> or <code>forceUpdate()</code>.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
-</blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
-</code></pre></div>
-<p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>React.render()</code>.</p>
-
-<p>Calling <code>setProps()</code> on a root-level component will change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>When possible, the declarative approach of calling <code>React.render()</code> again on the same node is preferred instead. It tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
-
-<p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>React.render()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
-
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
-</code></pre></div>
-<p>Like <code>setProps()</code> but deletes any pre-existing props instead of merging the two objects.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
-</blockquote>
+    <p>Reactのtipsのセクションでは、あなたの質問の多くに答えられたり、はまりそうな罠に対する注意を行う適当な大きさの情報を提供します。</p>
+<h2><a class="anchor" name=""></a>コントリビューティング <a class="hash-link" href="#">#</a></h2>
+<p><a href="https://github.com/facebook/react">Reactのリポジトリ</a>に<a href="https://github.com/facebook/react/tree/master/docs">現在のtips</a>の記事のスタイルに沿った形でプルリクエストを投げてください。プルリクエストを投げる前にレビューが必要な場合は<a href="irc://chat.freenode.net/reactjs">freenodeの #reactjs チャンネル</a>や<a href="https://discuss.reactjs.org/">discuss.reactjs.org フォーラム</a>で助けを求めることができます。</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/top-level-api.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/docs/component-specs.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/tips/inline-styles-ja-JP.html">Next &rarr;</a>
       
     </div>
   </div>

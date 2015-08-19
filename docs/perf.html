@@ -417,6 +417,8 @@
 <p>The <code>Perf</code> object documented here is exposed as <code>React.addons.Perf</code> when using the <code>react-with-addons.js</code> build in development mode.</p>
 <h3><a class="anchor" name="perf.start-and-perf.stop"></a><code>Perf.start()</code> and <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-and-perf.stop">#</a></h3>
 <p>Start/stop the measurement. The React operations in-between are recorded for analyses below. Operations that took an insignificant amount of time are ignored.</p>
+
+<p>After stopping, you will need <code>Perf.getLastMeasurements()</code> (described below) to get the measurements.</p>
 <h3><a class="anchor" name="perf.printinclusivemeasurements"></a><code>Perf.printInclusive(measurements)</code> <a class="hash-link" href="#perf.printinclusivemeasurements">#</a></h3>
 <p>Prints the overall time taken. If no argument&#39;s passed, defaults to all the measurements from the last recording. This prints a nicely formatted table in the console, like so:</p>
 
