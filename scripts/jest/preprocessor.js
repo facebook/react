@@ -1,5 +1,7 @@
 'use strict';
 
+var path = require('path');
+
 var babel = require('babel');
 var coffee = require('coffee-script');
 
@@ -19,15 +21,16 @@ var babelPluginDEV = require('fbjs/scripts/babel/dev-expression');
 var babelPluginModules = require('fbjs/scripts/babel/rewrite-modules');
 
 module.exports = {
-  process: function(src, path) {
-    if (path.match(/\.coffee$/)) {
+  process: function(src, filePath) {
+    if (filePath.match(/\.coffee$/)) {
       return coffee.compile(src, {'bare': true});
     }
-    if (path.match(/\.ts$/) && !path.match(/\.d\.ts$/)) {
-      return ts.compile(src, path);
+    if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
+      return ts.compile(src, filePath);
     }
     // TODO: make sure this stays in sync with gulpfile
-    if (!path.match(/\/node_modules\//) && !path.match(/\/third_party\//)) {
+    if (!filePath.match(/\/node_modules\//) &&
+        !filePath.match(/\/third_party\//)) {
       var rv = babel.transform(src, {
         nonStandard: true,
         blacklist: [
@@ -38,11 +41,26 @@ module.exports = {
           'es7.trailingFunctionCommas',
         ],
         plugins: [babelPluginDEV, babelPluginModules],
-        ignore: ['third_party'],
-        filename: path,
+        filename: filePath,
         retainLines: true,
         _moduleMap: moduleMap,
       }).code;
+
+      // hax to turn fbjs/lib/foo into /path/to/node_modules/fbjs/lib/foo
+      // because jest is slooow with node_modules paths (facebook/jest#465)
+      rv = rv.replace(
+        /require\('(fbjs\/lib\/.+)'\)/g,
+        function(call, arg) {
+          return (
+            'require(' +
+            JSON.stringify(
+              path.join(__dirname, '../../node_modules', arg)
+            ) +
+            ')'
+          );
+        }
+      );
+
       return rv;
     }
     return src;
