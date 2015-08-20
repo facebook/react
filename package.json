@@ -31,6 +31,7 @@
     "jstransform": "^10.1.0"
   },
   "devDependencies": {
+    "babel": "^5.8.3",
     "benchmark": "~1.0.0",
     "browserify": "^9.0.3",
     "bundle-collapser": "^1.1.1",
