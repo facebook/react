@@ -11,6 +11,7 @@
 
 'use strict';
 
+var DOMProperty = require('DOMProperty');
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
 var ReactClass = require('ReactClass');
@@ -33,7 +34,9 @@ if (__DEV__) {
 }
 
 var React = {
-
+  setIdAttributeName: function(id) {
+    DOMProperty.ID_ATTRIBUTE_NAME = id;
+  },
   // Modern
 
   Children: {
