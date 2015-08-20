@@ -80,10 +80,16 @@ Object.keys(isUnitlessNumber).forEach(function(prop) {
  */
 var shorthandPropertyExpansions = {
   background: {
-    backgroundImage: true,
-    backgroundPosition: true,
-    backgroundRepeat: true,
+    backgroundAttachment: true,
     backgroundColor: true,
+    backgroundImage: true,
+    backgroundPositionX: true,
+    backgroundPositionY: true,
+    backgroundRepeat: true,
+  },
+  backgroundPosition: {
+    backgroundPositionX: true,
+    backgroundPositionY: true,
   },
   border: {
     borderWidth: true,
@@ -117,6 +123,11 @@ var shorthandPropertyExpansions = {
     fontSize: true,
     lineHeight: true,
     fontFamily: true,
+  },
+  outline: {
+    outlineWidth: true,
+    outlineStyle: true,
+    outlineColor: true,
   },
 };
 
