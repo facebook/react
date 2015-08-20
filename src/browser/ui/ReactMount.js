@@ -36,7 +36,6 @@ var warning = require('warning');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
-var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var nodeCache = {};
 
 var ELEMENT_NODE_TYPE = 1;
@@ -100,7 +99,7 @@ function getID(node) {
         invariant(
           !isValid(cached, id),
           'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
+          DOMProperty.ID_ATTRIBUTE_NAME, id
         );
 
         nodeCache[id] = node;
@@ -117,7 +116,7 @@ function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+  return node && node.getAttribute && node.getAttribute(DOMProperty.ID_ATTRIBUTE_NAME) || '';
 }
 
 /**
@@ -131,7 +130,7 @@ function setID(node, id) {
   if (oldID !== id) {
     delete nodeCache[oldID];
   }
-  node.setAttribute(ATTR_NAME, id);
+  node.setAttribute(DOMProperty.ID_ATTRIBUTE_NAME, id);
   nodeCache[id] = node;
 }
 
@@ -182,7 +181,7 @@ function isValid(node, id) {
     invariant(
       internalGetID(node) === id,
       'ReactMount: Unexpected modification of `%s`',
-      ATTR_NAME
+      DOMProperty.ID_ATTRIBUTE_NAME
     );
 
     var container = ReactMount.findReactContainerForID(id);

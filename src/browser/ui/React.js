@@ -25,6 +25,7 @@ var ReactDOM = require('ReactDOM');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+var DOMProperty = require('DOMProperty');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
@@ -50,6 +51,9 @@ if (__DEV__) {
 var render = ReactPerf.measure('React', 'render', ReactMount.render);
 
 var React = {
+  setIdAttributeName: function(id) {
+    DOMProperty.ID_ATTRIBUTE_NAME = id;
+  },
   Children: {
     map: ReactChildren.map,
     forEach: ReactChildren.forEach,
