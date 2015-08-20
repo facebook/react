@@ -23,7 +23,7 @@ We have instructions for building from `master` [in our GitHub repository](https
 
 ### In-browser JSX Transform
 
-If you like using JSX, babel provides an [in-browser ES6 and JSX transformer for development](http://babeljs.io/docs/usage/browser/) called browser.js that can be included from a `babel-core` npm release or from [CDNJS](http://cdnjs.com/libraries/babel-core). Include a `<script type="text/babel">` tag to engage the JSX transformer.
+If you like using JSX, Babel provides an [in-browser ES6 and JSX transformer for development](http://babeljs.io/docs/usage/browser/) called browser.js that can be included from a `babel-core` npm release or from [CDNJS](http://cdnjs.com/libraries/babel-core). Include a `<script type="text/babel">` tag to engage the JSX transformer.
 
 > Note:
 >
@@ -32,11 +32,11 @@ If you like using JSX, babel provides an [in-browser ES6 and JSX transformer for
 
 ### Productionizing: Precompiled JSX
 
-If you have [npm](https://www.npmjs.com/), you can run `npm install -g babel`. `babel` has built-in support for React v0.12 and v0.13. Tags are automatically transformed to their equivalent `React.createElement(...)`, `displayName` is automatically inferred and added to all React.createClass calls.
+If you have [npm](https://www.npmjs.com/), you can run `npm install -g babel`. Babel has built-in support for React v0.12 and v0.13. Tags are automatically transformed to their equivalent `React.createElement(...)`, `displayName` is automatically inferred and added to all React.createClass calls.
 
 This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: `babel --watch src/ --out-dir lib/`.
 
-By default JSX files with a `.js` extension are transformed. Run `babel --help` for more information on how to use `babel`.
+By default JSX files with a `.js` extension are transformed. Run `babel --help` for more information on how to use Babel.
 
 Example output:
 
