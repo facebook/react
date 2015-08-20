@@ -152,8 +152,8 @@ var shorthandProperties = [
  * @param {object} style object to be examined if it contains shorthand property
  */
 function hasShorthandProperty(styles) {
-  for(var styleName in styles) {
-    if(shorthandProperties.indexOf(styleName)) {
+  for (var styleName in styles) {
+    if (shorthandProperties.indexOf(styleName)) {
       return true;
     }
   }
