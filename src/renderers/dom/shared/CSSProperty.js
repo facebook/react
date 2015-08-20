@@ -120,9 +120,51 @@ var shorthandPropertyExpansions = {
   },
 };
 
+var shorthandProperties = [
+  'background',
+  'font',
+  'margin',
+  'border',
+  'borderTop',
+  'borderRight',
+  'borderBottom',
+  'borderLeft',
+  'borderWidth',
+  'borderColor',
+  'borderStyle',
+  'transition',
+  'WebkitTransition',
+  'MozTransition',
+  'OTransition',
+  'msTransition',
+  'transition',
+  'WebkitTransform',
+  'MozTransform',
+  'OTransform',
+  'msTransform',
+  'transform',
+  'padding',
+  'listStyle',
+  'borderRadius',
+];
+
+/**
+ * @param {object} style object to be examined if it contains shorthand property
+ */
+function hasShorthandProperty(styles) {
+  for(var styleName in styles) {
+    if(shorthandProperties.indexOf(styleName)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 var CSSProperty = {
   isUnitlessNumber: isUnitlessNumber,
   shorthandPropertyExpansions: shorthandPropertyExpansions,
+  hasShorthandProperty: hasShorthandProperty,
 };
 
 module.exports = CSSProperty;
