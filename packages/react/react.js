@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 'use strict';
 
 var React = require('./lib/React');
@@ -39,7 +40,7 @@ if (process.env.NODE_ENV !== 'production') {
       'react-dom/server',
       React,
       React.renderToStaticMarkup
-    ),
+    )
   };
   // Export a wrapped object. We'll use assign and take advantage of the fact
   // that this will override the original methods in React.
