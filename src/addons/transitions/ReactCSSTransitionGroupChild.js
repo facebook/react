@@ -19,35 +19,31 @@ var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');
-var warning = require('warning');
 
 // We don't remove the element from the DOM until we receive an animationend or
 // transitionend event. If the user screws up and forgets to add an animation
 // their node will be stuck in the DOM forever, so we detect if an animation
 // does not start and if it doesn't, we just call the end listener immediately.
 var TICK = 17;
-var NO_EVENT_TIMEOUT = 5000;
-
-var noEventListener = null;
-
-
-if (__DEV__) {
-  noEventListener = function() {
-    warning(
-      false,
-      'transition(): tried to perform an animation without ' +
-      'an animationend or transitionend event after timeout (' +
-      '%sms). You should either disable this ' +
-      'transition in JS or add a CSS animation/transition.',
-      NO_EVENT_TIMEOUT
-    );
-  };
-}
 
 var ReactCSSTransitionGroupChild = React.createClass({
   displayName: 'ReactCSSTransitionGroupChild',
 
-  transition: function(animationType, finishCallback) {
+  propTypes: {
+    name: React.PropTypes.string.isRequired,
+
+    // Once we require timeouts to be specified, we can remove the
+    // boolean flags (appear etc.) and just accept a number
+    // or a bool for the timeout flags (appearTimeout etc.)
+    appear: React.PropTypes.bool,
+    enter: React.PropTypes.bool,
+    leave: React.PropTypes.bool,
+    appearTimeout: React.PropTypes.number,
+    enterTimeout: React.PropTypes.number,
+    leaveTimeout: React.PropTypes.number,
+  },
+
+  transition: function(animationType, finishCallback, userSpecifiedDelay) {
     var node = ReactDOM.findDOMNode(this);
 
     if (!node) {
@@ -59,16 +55,14 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
     var className = this.props.name[animationType] || this.props.name + '-' + animationType;
     var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
-
-    var noEventTimeout = null;
+    var timeout = null;
 
     var endListener = function(e) {
       if (e && e.target !== node) {
         return;
       }
-      if (__DEV__) {
-        clearTimeout(noEventTimeout);
-      }
+
+      clearTimeout(timeout);
 
       CSSCore.removeClass(node, className);
       CSSCore.removeClass(node, activeClassName);
@@ -82,15 +76,18 @@ var ReactCSSTransitionGroupChild = React.createClass({
       }
     };
 
-    ReactTransitionEvents.addEndEventListener(node, endListener);
-
     CSSCore.addClass(node, className);
 
     // Need to do this to actually trigger a transition.
     this.queueClass(activeClassName);
 
-    if (__DEV__) {
-      noEventTimeout = setTimeout(noEventListener, NO_EVENT_TIMEOUT);
+    // If the user specified a timeout delay.
+    if (userSpecifiedDelay) {
+      // Clean-up the animation after the specified delay
+      timeout = setTimeout(endListener, userSpecifiedDelay);
+    } else {
+      // DEPRECATED: this listener will be removed in a future version of react
+      ReactTransitionEvents.addEndEventListener(node, endListener);
     }
   },
 
@@ -124,7 +121,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
   componentWillAppear: function(done) {
     if (this.props.appear) {
-      this.transition('appear', done);
+      this.transition('appear', done, this.props.appearTimeout);
     } else {
       done();
     }
@@ -132,7 +129,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
   componentWillEnter: function(done) {
     if (this.props.enter) {
-      this.transition('enter', done);
+      this.transition('enter', done, this.props.enterTimeout);
     } else {
       done();
     }
@@ -140,7 +137,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
   componentWillLeave: function(done) {
     if (this.props.leave) {
-      this.transition('leave', done);
+      this.transition('leave', done, this.props.leaveTimeout);
     } else {
       done();
     }
