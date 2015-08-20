@@ -153,7 +153,7 @@ var shorthandProperties = [
  */
 function hasShorthandProperty(styles) {
   for (var styleName in styles) {
-    if (shorthandProperties.indexOf(styleName)) {
+    if (shorthandProperties.indexOf(styleName) > -1) {
       return true;
     }
   }
