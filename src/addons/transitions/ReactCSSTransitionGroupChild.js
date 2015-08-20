@@ -35,7 +35,7 @@ if (__DEV__) {
   noEventListener = function() {
     warning(
       false,
-      'transition(): tried to perform an animation without ' +
+      'transition(): tried to perform an animation ('+this.props.name+') without ' +
       'an animationend or transitionend event after timeout (' +
       '%sms). You should either disable this ' +
       'transition in JS or add a CSS animation/transition.',
@@ -90,7 +90,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
     this.queueClass(activeClassName);
 
     if (__DEV__) {
-      noEventTimeout = setTimeout(noEventListener, NO_EVENT_TIMEOUT);
+      noEventTimeout = setTimeout(noEventListener.bind(this), NO_EVENT_TIMEOUT);
     }
   },
 
