@@ -410,7 +410,7 @@
 <h3><a class="anchor" name="using-master"></a>Using master <a class="hash-link" href="#using-master">#</a></h3>
 <p>We have instructions for building from <code>master</code> <a href="https://github.com/facebook/react">in our GitHub repository</a>. We build a tree of CommonJS modules under <code>build/modules</code> which you can drop into any environment or packaging tool that supports CommonJS.</p>
 <h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="in-browser-jsx-transform"></a>In-browser JSX Transform <a class="hash-link" href="#in-browser-jsx-transform">#</a></h3>
-<p>If you like using JSX, babel provides an <a href="http://babeljs.io/docs/usage/browser/">in-browser ES6 and JSX transformer for development</a> called browser.js that can be included from a <code>babel-core</code> npm release or from <a href="http://cdnjs.com/libraries/babel-core">CDNJS</a>. Include a <code>&lt;script type=&quot;text/babel&quot;&gt;</code> tag to engage the JSX transformer.</p>
+<p>If you like using JSX, Babel provides an <a href="http://babeljs.io/docs/usage/browser/">in-browser ES6 and JSX transformer for development</a> called browser.js that can be included from a <code>babel-core</code> npm release or from <a href="http://cdnjs.com/libraries/babel-core">CDNJS</a>. Include a <code>&lt;script type=&quot;text/babel&quot;&gt;</code> tag to engage the JSX transformer.</p>
 
 <blockquote>
 <p>Note:</p>
@@ -418,11 +418,11 @@
 <p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
 </blockquote>
 <h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
-<p>If you have <a href="https://www.npmjs.com/">npm</a>, you can run <code>npm install -g babel</code>. <code>babel</code> has built-in support for React v0.12 and v0.13. Tags are automatically transformed to their equivalent <code>React.createElement(...)</code>, <code>displayName</code> is automatically inferred and added to all React.createClass calls.</p>
+<p>If you have <a href="https://www.npmjs.com/">npm</a>, you can run <code>npm install -g babel</code>. Babel has built-in support for React v0.12 and v0.13. Tags are automatically transformed to their equivalent <code>React.createElement(...)</code>, <code>displayName</code> is automatically inferred and added to all React.createClass calls.</p>
 
 <p>This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>babel --watch src/ --out-dir lib/</code>.</p>
 
-<p>By default JSX files with a <code>.js</code> extension are transformed. Run <code>babel --help</code> for more information on how to use <code>babel</code>.</p>
+<p>By default JSX files with a <code>.js</code> extension are transformed. Run <code>babel --help</code> for more information on how to use Babel.</p>
 
 <p>Example output:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">$ cat test.jsx
