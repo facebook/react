@@ -72,6 +72,7 @@ In addition, the following non-standard attributes are supported:
 - `property` for [Open Graph](http://ogp.me/) meta tags.
 - `itemProp itemScope itemType itemRef itemID` for [HTML5 microdata](http://schema.org/docs/gs.html).
 - `unselectable` for Internet Explorer.
+- `results autoSave` for WebKit/Blink input fields of type `search`.
 
 There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting HTML strings into a component.
 
