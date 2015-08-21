@@ -174,6 +174,8 @@ var HTMLDOMPropertyConfig = {
     // keyboard hints.
     autoCapitalize: null,
     autoCorrect: null,
+    // autoSave allows WebKit/Blink to persist values of input fields on page reloads
+    autoSave: null,
     // itemProp, itemScope, itemType are for
     // Microdata support. See http://schema.org/docs/gs.html
     itemProp: MUST_USE_ATTRIBUTE,
@@ -186,6 +188,9 @@ var HTMLDOMPropertyConfig = {
     itemRef: MUST_USE_ATTRIBUTE,
     // property is supported for OpenGraph in meta tags.
     property: null,
+    // results show looking glass icon and recent searches on input
+    // search fields in WebKit/Blink
+    results: null,
     // IE-only attribute that specifies security restrictions on an iframe
     // as an alternative to the sandbox attribute on IE<10
     security: MUST_USE_ATTRIBUTE,
@@ -204,6 +209,7 @@ var HTMLDOMPropertyConfig = {
     autoCorrect: 'autocorrect',
     autoFocus: 'autofocus',
     autoPlay: 'autoplay',
+    autoSave: 'autosave',
     // `encoding` is equivalent to `enctype`, IE8 lacks an `enctype` setter.
     // http://www.w3.org/TR/html5/forms.html#dom-fs-encoding
     encType: 'encoding',
