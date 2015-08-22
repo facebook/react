@@ -24,7 +24,7 @@ The rest of this tutorial explains best practices. It uses JSX and experimental 
 
 ## Manual Transfer
 
-Most of the time you should explicitly pass the properties down. That ensures that you only expose a subset of the inner API, one that you know will work.
+Most of the time you should explicitly pass the properties down. This ensures that you only expose a subset of the inner API, one that you know will work.
 
 ```javascript
 var FancyCheckbox = React.createClass({
