@@ -650,9 +650,9 @@ var CommentBox = React.createClass({
 
 ### Optimization: optimistic updates
 
-Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
+Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.  SetState now accepts a callback. In order to avoid a race condition, we'll send the ajax request right after we optimistically set the new state.
 
-```javascript{17-19}
+```javascript{17-31}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -670,19 +670,20 @@ var CommentBox = React.createClass({
   },
   handleCommentSubmit: function(comment) {
     var comments = this.state.data;
-    var newComments = comments.concat([comment]);
-    this.setState({data: newComments});
-    $.ajax({
-      url: this.props.url,
-      dataType: 'json',
-      type: 'POST',
-      data: comment,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error(this.props.url, status, err.toString());
-      }.bind(this)
+    comments.push(comment);
+    this.setState({data: comments}, function() {
+			$.ajax({
+  			url: this.props.url,
+  			dataType: 'json',
+  			type: 'POST',
+  			data: comment,
+  			success: function(data){
+  				this.setState({data: data});
+  			}.bind(this),
+  			error: function(xhr, status, err){
+  				console.error(this.props.url, status, err.toString());
+  			}.bind(this)
+  	  });
     });
   },
   getInitialState: function() {
