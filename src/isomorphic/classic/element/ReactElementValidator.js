@@ -19,7 +19,6 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -47,8 +46,6 @@ var ownerHasKeyUseWarning = {};
 
 var loggedTypeFailures = {};
 
-var NUMERIC_PROPERTY_REGEX = /^\d+$/;
-
 /**
  * Warn if the element doesn't have an explicit key assigned to it.
  * This element is in an array. The array could grow and shrink or be
@@ -73,34 +70,6 @@ function validateExplicitKey(element, parentType) {
   warning(
     false,
     'Each child in an array or iterator should have a unique "key" prop.' +
-    '%s%s%s',
-    addenda.parentOrOwner || '',
-    addenda.childOwner || '',
-    addenda.url || ''
-  );
-}
-
-/**
- * Warn if the key is being defined as an object property but has an incorrect
- * value.
- *
- * @internal
- * @param {string} name Property name of the key.
- * @param {ReactElement} element Component that requires a key.
- * @param {*} parentType element's parent's type.
- */
-function validatePropertyKey(name, element, parentType) {
-  if (!NUMERIC_PROPERTY_REGEX.test(name)) {
-    return;
-  }
-  var addenda = getAddendaForKeyUse('numericKeys', element, parentType);
-  if (addenda === null) {
-    // we already showed the warning
-    return;
-  }
-  warning(
-    false,
-    'Child objects should have non-numeric keys so ordering is preserved.' +
     '%s%s%s',
     addenda.parentOrOwner || '',
     addenda.childOwner || '',
@@ -187,13 +156,6 @@ function validateChildKeys(node, parentType) {
           if (ReactElement.isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
           }
-        }
-      }
-    } else if (typeof node === 'object') {
-      var fragment = ReactFragment.extractIfFragment(node);
-      for (var key in fragment) {
-        if (fragment.hasOwnProperty(key)) {
-          validatePropertyKey(key, fragment[key], parentType);
         }
       }
     }

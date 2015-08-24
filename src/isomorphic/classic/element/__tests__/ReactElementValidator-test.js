@@ -16,7 +16,6 @@
 
 var React;
 var ReactDOM;
-var ReactFragment;
 var ReactTestUtils;
 
 describe('ReactElementValidator', function() {
@@ -27,7 +26,6 @@ describe('ReactElementValidator', function() {
 
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
       render: function() {
@@ -35,10 +33,6 @@ describe('ReactElementValidator', function() {
       },
     });
   });
-
-  function frag(obj) {
-    return ReactFragment.create(obj);
-  }
 
   it('warns for keys for arrays of elements in rest args', function() {
     spyOn(console, 'error');
@@ -199,41 +193,6 @@ describe('ReactElementValidator', function() {
         };
       },
     };
-
-    Component(null, iterable);
-
-    expect(console.error.argsForCall.length).toBe(0);
-  });
-
-  it('warns for numeric keys on objects in rest args', function() {
-    spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
-
-    Component(null, frag({1: Component(), 2: Component()}));
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Child objects should have non-numeric keys so ordering is preserved.'
-    );
-  });
-
-  it('does not warn for numeric keys in entry iterables in rest args',
-      function() {
-    spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
-
-    var iterable = {
-      '@@iterator': function() {
-        var i = 0;
-        return {
-          next: function() {
-            var done = ++i > 2;
-            return {value: done ? undefined : [i, Component()], done: done};
-          },
-        };
-      },
-    };
-    iterable.entries = iterable['@@iterator'];
 
     Component(null, iterable);
 
@@ -452,14 +411,6 @@ describe('ReactElementValidator', function() {
       'the type checker creator (arrayOf, instanceOf, objectOf, oneOf, ' +
       'oneOfType, and shape all require an argument).'
     );
-  });
-
-  it('should warn if a fragment is used without the wrapper', function() {
-    spyOn(console, 'error');
-    var child = React.createElement('span');
-    React.createElement('div', null, {a: child, b: child});
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain('use of a keyed object');
   });
 
   it('should warn when accessing .type on an element factory', function() {

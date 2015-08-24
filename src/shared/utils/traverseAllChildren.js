@@ -11,8 +11,8 @@
 
 'use strict';
 
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var getIteratorFn = require('getIteratorFn');
@@ -179,28 +179,24 @@ function traverseAllChildrenImpl(
         }
       }
     } else if (type === 'object') {
-      invariant(
-        children.nodeType !== 1,
-        'traverseAllChildren(...): Encountered an invalid child; DOM ' +
-        'elements are not valid children of React components.'
-      );
-      var fragment = ReactFragment.extract(children);
-      for (var key in fragment) {
-        if (fragment.hasOwnProperty(key)) {
-          child = fragment[key];
-          nextName = (
-            nextNamePrefix +
-            wrapUserProvidedKey(key) + SUBSEPARATOR +
-            getComponentKey(child, 0)
-          );
-          subtreeCount += traverseAllChildrenImpl(
-            child,
-            nextName,
-            callback,
-            traverseContext
-          );
+      var addendum = '';
+      if (__DEV__) {
+        if (ReactCurrentOwner.current) {
+          var name = ReactCurrentOwner.current.getName();
+          if (name) {
+            addendum = ' Check the render method of `' + name + '`.'
+          }
         }
       }
+      invariant(
+        false,
+        'Objects are not valid as a React child (found object with keys ' +
+        '{%s}). If you meant to render a collection of children, use an ' +
+        'array instead or wrap the object using ' +
+        'React.addons.createFragment(object).%s',
+        Object.keys(children).join(', '),
+        addendum
+      );
     }
   }
 

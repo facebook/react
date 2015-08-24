@@ -12,13 +12,12 @@
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
-var ReactFragment = require('ReactFragment');
+var flattenChildren = require('flattenChildren');
 
 var ReactTransitionChildMapping = {
   /**
    * Given `this.props.children`, return an object mapping key to child. Just
-   * simple syntactic sugar around ReactChildren.map().
+   * simple syntactic sugar around flattenChildren().
    *
    * @param {*} children `this.props.children`
    * @return {object} Mapping of key to child
@@ -27,9 +26,7 @@ var ReactTransitionChildMapping = {
     if (!children) {
       return children;
     }
-    return ReactFragment.extract(ReactChildren.map(children, function(child) {
-      return child;
-    }));
+    return flattenChildren(children);
   },
 
   /**
