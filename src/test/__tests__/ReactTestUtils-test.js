@@ -338,9 +338,9 @@ describe('ReactTestUtils', function() {
   it('should change the value of an input field', function() {
     var handler = jasmine.createSpy('spy');
     var container = document.createElement('div');
-    var instance = React.render(<input type="text" onChange={handler} />, container);
+    var instance = ReactDOM.render(<input type="text" onChange={handler} />, container);
 
-    var node = React.findDOMNode(instance);
+    var node = ReactDOM.findDOMNode(instance);
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
 
@@ -360,9 +360,9 @@ describe('ReactTestUtils', function() {
 
     var handler = jasmine.createSpy('spy');
     var container = document.createElement('div');
-    var instance = React.render(<SomeComponent handleChange={handler} />, container);
+    var instance = ReactDOM.render(<SomeComponent handleChange={handler} />, container);
 
-    var node = React.findDOMNode(instance.refs.input);
+    var node = ReactDOM.findDOMNode(instance.refs.input);
     node.value = 'zebra';
     ReactTestUtils.Simulate.change(node);
 
