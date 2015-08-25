@@ -30,6 +30,9 @@ var ReactUpdates = require('ReactUpdates');
 var cloneWithProps = require('cloneWithProps');
 var shallowCompare = require('shallowCompare');
 var update = require('update');
+var warning = require('warning');
+
+var warnedAboutBatchedUpdates = false;
 
 React.addons = {
   CSSTransitionGroup: ReactCSSTransitionGroup,
@@ -37,7 +40,17 @@ React.addons = {
   PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
 
-  batchedUpdates: ReactUpdates.batchedUpdates,
+  batchedUpdates: function() {
+    if (__DEV__) {
+      warning(
+        warnedAboutBatchedUpdates,
+        'React.addons.batchedUpdates is deprecated. Use ' +
+        'ReactDOM.unstable_batchedUpdates instead.'
+      );
+      warnedAboutBatchedUpdates = true;
+    }
+    return ReactUpdates.batchedUpdates.apply(this, arguments);
+  },
   cloneWithProps: cloneWithProps,
   createFragment: ReactFragment.create,
   shallowCompare: shallowCompare,
