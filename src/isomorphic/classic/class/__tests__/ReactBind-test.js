@@ -164,4 +164,31 @@ describe('autobinding', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  it('does not bind if an inheriting class overwrites prototype method', function() {
+
+    var classMethodCalled = false;
+
+    var TestBindComponent = React.createClass({
+      nonBoundMethod: function() {
+        throw new Error();
+      },
+      componentDidMount: function() {
+        this.nonBoundMethod();
+      },
+      render: function() {
+        return <div />;
+      },
+    });
+
+    class TestChildComponent extends TestBindComponent {
+      nonBoundMethod() {
+        classMethodCalled = true;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<TestChildComponent />);
+
+    expect(classMethodCalled).toBe(true);
+  });
+
 });

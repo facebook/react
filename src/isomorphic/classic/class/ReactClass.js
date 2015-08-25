@@ -702,7 +702,8 @@ function bindAutoBindMethod(component, method) {
  */
 function bindAutoBindMethods(component) {
   for (var autoBindKey in component.__reactAutoBindMap) {
-    if (component.__reactAutoBindMap.hasOwnProperty(autoBindKey)) {
+    if (component.__reactAutoBindMap.hasOwnProperty(autoBindKey) &&
+      component.__reactAutoBindMap[autoBindKey] === component[autoBindKey]) {
       var method = component.__reactAutoBindMap[autoBindKey];
       component[autoBindKey] = bindAutoBindMethod(
         component,
