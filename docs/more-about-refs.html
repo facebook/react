@@ -404,7 +404,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>After returning the structure of your UI from the render method, you may find yourself wanting to &quot;reach out&quot; and invoke methods on component instances returned from render. Often, doing something like this isn&#39;t necessary for making data flow through your application, because the Reactive data flow always ensures that the most recent <code>props</code> are sent to each child that is output from <code>render()</code>. However, there are a few cases where it still might be necessary or beneficial.</p>
+    <p>After returning the structure of your UI from the render method, you may find yourself wanting to &quot;reach out&quot; and invoke methods on component instances returned from <code>render()</code>. Often, doing something like this isn&#39;t necessary for making data flow through your application, because the Reactive data flow always ensures that the most recent <code>props</code> are sent to each child that is output from <code>render()</code>. However, there are a few cases where it still might be necessary or beneficial.</p>
 
 <p>Consider the case, when you wish to tell an <code>&lt;input /&gt;</code> element (that exists within your instances sub-hierarchy) to focus after you update its value to be the empty string, <code>&#39;&#39;</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
