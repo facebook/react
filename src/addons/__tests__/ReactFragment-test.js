@@ -23,51 +23,23 @@ describe('ReactFragment', function() {
     ReactFragment = require('ReactFragment');
   });
 
-  it('should warn if a plain object is used as a child', function() {
-    spyOn(console, 'error');
-    var children = {
-      x: <span />,
-      y: <span />,
-    };
-    void <div>{children}</div>;
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'Any use of a keyed object'
-    );
-    expect(console.error.calls[0].args[0]).toContain(
-      '{x:object,y:object,}'
-    );
-    // Only warn once for the same set of children
-    var sameChildren = {
-      x: <span />,
-      y: <span />,
-    };
-    void <div>{sameChildren}</div>;
-    expect(console.error.calls.length).toBe(1);
-  });
-
-  it('should warn if a plain object even if it is deep', function() {
-    spyOn(console, 'error');
+  it('should throw if a plain object is used as a child', function() {
     var children = {
       x: <span />,
       y: <span />,
       z: <span />,
     };
     var element = <div>{[children]}</div>;
-    expect(console.error.calls.length).toBe(0);
     var container = document.createElement('div');
-    ReactDOM.render(element, container);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'Any use of a keyed object'
-    );
-    expect(console.error.calls[0].args[0]).toContain(
-      '{x:object,y:object,z:object,}'
+    expect(() => ReactDOM.render(element, container)).toThrow(
+      'Invariant Violation: Objects are not valid as a React child (found ' +
+      'object with keys {x, y, z}). If you meant to render a collection of ' +
+      'children, use an array instead or wrap the object using ' +
+      'React.addons.createFragment(object).'
     );
   });
 
-  it('should warn if a plain object even if it is in an owner', function() {
-    spyOn(console, 'error');
+  it('should throw if a plain object even if it is in an owner', function() {
     class Foo {
       render() {
         var children = {
@@ -78,27 +50,23 @@ describe('ReactFragment', function() {
         return <div>{[children]}</div>;
       }
     }
-    expect(console.error.calls.length).toBe(0);
     var container = document.createElement('div');
-    ReactDOM.render(<Foo />, container);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'Any use of a keyed object'
+    expect(() => ReactDOM.render(<Foo />, container)).toThrow(
+      'Invariant Violation: Objects are not valid as a React child (found ' +
+      'object with keys {a, b, c}). If you meant to render a collection of ' +
+      'children, use an array instead or wrap the object using ' +
+      'React.addons.createFragment(object). Check the render method of `Foo`.'
     );
   });
 
-  it('should warn if accessing any property on a fragment', function() {
+  it('warns for numeric keys on objects as children', function() {
     spyOn(console, 'error');
-    var children = {
-      x: <span />,
-      y: <span />,
-    };
-    var frag = ReactFragment.create(children);
-    void frag.x;
-    frag.y = 10;
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'A ReactFragment is an opaque type'
+
+    ReactFragment.create({1: <span />, 2: <span />});
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Child objects should have non-numeric keys so ordering is preserved.'
     );
   });
 

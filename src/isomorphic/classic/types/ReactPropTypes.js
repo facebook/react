@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var emptyFunction = require('emptyFunction');
@@ -371,12 +370,7 @@ function isNode(propValue) {
           }
         }
       } else {
-        propValue = ReactFragment.extractIfFragment(propValue);
-        for (var k in propValue) {
-          if (!isNode(propValue[k])) {
-            return false;
-          }
-        }
+        return false;
       }
 
       return true;

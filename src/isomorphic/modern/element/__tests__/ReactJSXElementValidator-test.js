@@ -15,7 +15,6 @@
 // of dynamic errors when using JSX with Flow.
 
 var React;
-var ReactFragment;
 var ReactTestUtils;
 
 describe('ReactJSXElementValidator', function() {
@@ -26,7 +25,6 @@ describe('ReactJSXElementValidator', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
-    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
 
     Component = class {
@@ -43,10 +41,6 @@ describe('ReactJSXElementValidator', function() {
     RequiredPropComponent.displayName = 'RequiredPropComponent';
     RequiredPropComponent.propTypes = {prop: React.PropTypes.string.isRequired};
   });
-
-  function frag(obj) {
-    return ReactFragment.create(obj);
-  }
 
   it('warns for keys for arrays of elements in children position', function() {
     spyOn(console, 'error');
@@ -140,17 +134,6 @@ describe('ReactJSXElementValidator', function() {
     void <Component>{iterable}</Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
-  });
-
-  it('warns for numeric keys on objects as children', function() {
-    spyOn(console, 'error');
-
-    void <Component>{frag({1: <Component />, 2: <Component />})}</Component>;
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Child objects should have non-numeric keys so ordering is preserved.'
-    );
   });
 
   it('does not warn for numeric keys in entry iterable as a child', function() {

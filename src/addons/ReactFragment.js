@@ -13,6 +13,8 @@
 
 var ReactElement = require('ReactElement');
 
+var invariant = require('invariant');
+var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
 /**
@@ -20,85 +22,25 @@ var warning = require('warning');
  * or nested sets. This allowed us a way to explicitly key a set a fragment of
  * components. This is now being replaced with an opaque data structure.
  * The upgrade path is to call React.addons.createFragment({ key: value }) to
- * create a keyed fragment. The resulting data structure is opaque, for now.
+ * create a keyed fragment. The resulting data structure is an array.
  */
 
-var fragmentKey;
-var didWarnKey;
-var canWarnForReactFragment;
+var numericPropertyRegex = /^\d+$/;
 
-if (__DEV__) {
-  fragmentKey = '_reactFragment';
-  didWarnKey = '_reactDidWarn';
-
-  try {
-    // Feature test. Don't even try to issue this warning if we can't use
-    // enumerable: false.
-
-    var dummy = function() {
-      return 1;
-    };
-
-    Object.defineProperty(
-      {},
-      fragmentKey,
-      {enumerable: false, value: true}
-    );
-
-    Object.defineProperty(
-      {},
-      'key',
-      {enumerable: true, get: dummy}
-    );
-
-    canWarnForReactFragment = true;
-  } catch (x) {
-    canWarnForReactFragment = false;
-  }
-
-  var proxyPropertyAccessWithWarning = function(obj, key) {
-    Object.defineProperty(obj, key, {
-      enumerable: true,
-      get: function() {
-        warning(
-          this[didWarnKey],
-          'A ReactFragment is an opaque type. Accessing any of its ' +
-          'properties is deprecated. Pass it to one of the React.Children ' +
-          'helpers.'
-        );
-        this[didWarnKey] = true;
-        return this[fragmentKey][key];
-      },
-      set: function(value) {
-        warning(
-          this[didWarnKey],
-          'A ReactFragment is an immutable opaque type. Mutating its ' +
-          'properties is deprecated.'
-        );
-        this[didWarnKey] = true;
-        this[fragmentKey][key] = value;
-      },
-    });
-  };
-
-  var issuedWarnings = {};
-
-  var getFragmentKeyString = function(fragment) {
-    var fragmentCacheKey = '';
-    for (var key in fragment) {
-      fragmentCacheKey += key + ':' + (typeof fragment[key]) + ',';
-    }
-    return fragmentCacheKey;
-  };
-
-  var didWarnForFragment = function(fragmentCacheKey) {
-    // We use the keys and the type of the value as a heuristic to dedupe the
-    // warning to avoid spamming too much.
-    var alreadyWarnedOnce = !!issuedWarnings[fragmentCacheKey];
-    issuedWarnings[fragmentCacheKey] = true;
-    return alreadyWarnedOnce;
-  };
+var userProvidedKeyEscapeRegex = /\//g;
+function escapeUserProvidedKey(text) {
+  return ('' + text).replace(userProvidedKeyEscapeRegex, '//');
 }
+
+function processSingleChildWithContext(ctx, child, childKey) {
+  if (ReactElement.isValidElement(child)) {
+    child = ReactElement.cloneAndReplaceKey(child, ctx.prefix + childKey);
+  }
+  // For text components, leave unkeyed
+  ctx.result.push(child);
+}
+
+var warnedAboutNumeric = false;
 
 var ReactFragment = {
   // Wrap a keyed object in an opaque proxy that warns you if you access any
@@ -121,71 +63,35 @@ var ReactFragment = {
         );
         return object;
       }
-      if (canWarnForReactFragment) {
-        var proxy = {};
-        Object.defineProperty(proxy, fragmentKey, {
-          enumerable: false,
-          value: object,
-        });
-        Object.defineProperty(proxy, didWarnKey, {
-          writable: true,
-          enumerable: false,
-          value: false,
-        });
-        for (var key in object) {
-          proxyPropertyAccessWithWarning(proxy, key);
-        }
-        Object.preventExtensions(proxy);
-        return proxy;
-      }
     }
-    return object;
-  },
-  // Extract the original keyed object from the fragment opaque type. Warn if
-  // a plain object is passed here.
-  extract: function(fragment) {
-    if (__DEV__) {
-      if (canWarnForReactFragment) {
-        if (!fragment[fragmentKey]) {
-          var fragmentKeys = getFragmentKeyString(fragment);
+    invariant(
+      object.nodeType !== 1,
+      'React.addons.createFragment(...): Encountered an invalid child; DOM ' +
+      'elements are not valid children of React components.'
+    );
+
+    var result = [];
+    var context = {
+      result: result,
+      prefix: '',
+    };
+
+    for (var key in object) {
+      if (__DEV__) {
+        if (!warnedAboutNumeric && numericPropertyRegex.test(key)) {
           warning(
-            didWarnForFragment(fragmentKeys),
-            'Any use of a keyed object should be wrapped in ' +
-            'React.addons.createFragment(object) before being passed as a ' +
-            'child. {%s}',
-            fragmentKeys
+            false,
+            'React.addons.createFragment(...): Child objects should have ' +
+            'non-numeric keys so ordering is preserved.'
           );
-          return fragment;
-        }
-        return fragment[fragmentKey];
-      }
-    }
-    return fragment;
-  },
-  // Check if this is a fragment and if so, extract the keyed object. If it
-  // is a fragment-like object, warn that it should be wrapped. Ignore if we
-  // can't determine what kind of object this is.
-  extractIfFragment: function(fragment) {
-    if (__DEV__) {
-      if (canWarnForReactFragment) {
-        // If it is the opaque type, return the keyed object.
-        if (fragment[fragmentKey]) {
-          return fragment[fragmentKey];
-        }
-        // Otherwise, check each property if it has an element, if it does
-        // it is probably meant as a fragment, so we can warn early. Defer,
-        // the warning to extract.
-        for (var key in fragment) {
-          if (fragment.hasOwnProperty(key) &&
-              ReactElement.isValidElement(fragment[key])) {
-            // This looks like a fragment object, we should provide an
-            // early warning.
-            return ReactFragment.extract(fragment);
-          }
+          warnedAboutNumeric = true;
         }
       }
+      context.prefix = escapeUserProvidedKey(key) + '/';
+      traverseAllChildren(object[key], processSingleChildWithContext, context);
     }
-    return fragment;
+
+    return result;
   },
 };
 

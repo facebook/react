@@ -146,7 +146,7 @@ function countChildren(children, context) {
 }
 
 
-function pushSingleChildToArray(traverseContext, child, name, i) {
+function pushSingleChildToArray(traverseContext, child, name) {
   if (child == null) {
     return;
   }
