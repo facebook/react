@@ -15,6 +15,10 @@ var React;
 var ReactDOM;
 var ReactCSSTransitionGroup;
 
+function hasClassName(domNode, className) {
+  return domNode.className.indexOf(className) > 0;
+}
+
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
 describe('ReactCSSTransitionGroup', function() {
@@ -197,5 +201,57 @@ describe('ReactCSSTransitionGroup', function() {
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
+  });
+
+  it('should use transition-type specific names when they\'re provided', function() {
+    var customTransitionNames = {
+      enter: 'custom-entering',
+      leave: 'custom-leaving',
+    };
+
+    var a = ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={ customTransitionNames }
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+
+    // Add an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={ customTransitionNames }
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="one" id="one" />
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    // Test for the custom entering name
+    expect(hasClassName(ReactDOM.findDOMNode(a).childNodes[1], 'custom-entering')).toBe(true);
+
+    // Remove an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={ customTransitionNames }
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    // Test for the custom leaving name
+    expect(hasClassName(ReactDOM.findDOMNode(a).childNodes[0], 'custom-leaving')).toBe(true);
   });
 });
