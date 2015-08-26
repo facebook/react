@@ -587,6 +587,26 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('should indicate the owner when validating against invalid styles', function() {
+      var ReactTestUtils = require('ReactTestUtils');
+      expect(function() {
+        var TestComponent = React.createClass({
+          displayName: 'HelloWorld',
+          render: function render() {
+            return (
+              <div style="display: none;" />
+            );
+          },
+        });
+        ReactTestUtils.renderIntoDocument(<TestComponent />);
+      }).toThrow(
+        'Invariant Violation: The `style` prop expects a mapping from style ' +
+        'properties to values, not a string. For example, ' +
+        'style={{marginRight: spacing + \'em\'}} when using JSX.' +
+        ' Check the render method of HelloWorld.'
+      );
+    });
+
     it('should execute custom event plugin listening behavior', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
