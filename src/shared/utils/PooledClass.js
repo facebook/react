@@ -81,9 +81,7 @@ var standardReleaser = function(instance) {
     instance instanceof Klass,
     'Trying to release an instance into a pool of a different type.'
   );
-  if (instance.destructor) {
-    instance.destructor();
-  }
+  instance.destructor();
   if (Klass.instancePool.length < Klass.poolSize) {
     Klass.instancePool.push(instance);
   }

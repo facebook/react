@@ -18,6 +18,7 @@ describe('Pooled class', function() {
   beforeEach(function() {
     PooledClass = require('PooledClass');
     PoolableClass = function() {};
+    PoolableClass.prototype.destructor = function() {};
     PooledClass.addPoolingTo(PoolableClass);
   });
 
@@ -63,6 +64,7 @@ describe('Pooled class', function() {
     var PoolableClassWithMultiArguments = function(a, b) {
       log.push(a, b);
     };
+    PoolableClassWithMultiArguments.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithMultiArguments,
       PooledClass.twoArgumentPooler
@@ -76,6 +78,7 @@ describe('Pooled class', function() {
     var PoolableClassWithOneArgument = function(a) {
       log.push(a);
     };
+    PoolableClassWithOneArgument.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithOneArgument
     );
@@ -88,6 +91,7 @@ describe('Pooled class', function() {
     var PoolableClassWithOneArgument = function(a) {
       log.push(a);
     };
+    PoolableClassWithOneArgument.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithOneArgument
     );
@@ -100,6 +104,7 @@ describe('Pooled class', function() {
   it('should throw when the class releases an instance of a different type',
     function() {
       var RandomClass = function() {};
+      RandomClass.prototype.destructor = function() {};
       PooledClass.addPoolingTo(RandomClass);
       var randomInstance = RandomClass.getPooled();
       PoolableClass.getPooled();
@@ -111,4 +116,13 @@ describe('Pooled class', function() {
       );
     }
   );
+
+  it('should throw if no destructor is defined', function() {
+    var ImmortalClass = function() {};
+    PooledClass.addPoolingTo(ImmortalClass);
+    var inst = ImmortalClass.getPooled();
+    expect(function() {
+      ImmortalClass.release(inst);
+    }).toThrow();
+  });
 });
