@@ -21,9 +21,6 @@ var BootstrapModal = React.createClass({
     $(React.findDOMNode(this))
       .modal({backdrop: 'static', keyboard: false, show: false});
   },
-  componentWillUnmount: function() {
-    $(React.findDOMNode(this)).off('hidden', this.handleHidden);
-  },
   close: function() {
     $(React.findDOMNode(this)).modal('hide');
   },
