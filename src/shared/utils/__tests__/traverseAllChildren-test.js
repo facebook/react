@@ -220,8 +220,8 @@ describe('traverseAllChildren', function() {
     );
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
-    expect(traverseFn.calls.length).toBe(6);
-    expect(traverseContext.length).toEqual(6);
+    expect(traverseFn.calls.length).toBe(4);
+    expect(traverseContext.length).toEqual(4);
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="firstHalfKey/.$keyZero" />,
