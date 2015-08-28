@@ -43,6 +43,7 @@ rules:
   quotes: [2, single, avoid-escape]
   no-shadow: 2
   no-multi-spaces: 2
+  no-undef: 2
 
   # WISHLIST. One day...
   # We'll need a custom version of this that does a subset of the whole rule.
