@@ -721,6 +721,23 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('should report component containing invalid styles', function() {
+      var Animal = React.createClass({
+        render: function() {
+          return <div style={1}></div>;
+        },
+      });
+
+      expect(function() {
+        React.render(<Animal/>, container);
+      }).toThrow(
+        'Invariant Violation: The `style` prop expects a mapping from style ' +
+        'properties to values, not a string. For example, ' +
+        'style={{marginRight: spacing + \'em\'}} when using JSX. ' +
+        'This DOM node was rendered by `Animal`.'
+      );
+    });
+
     it('should properly escape text content and attributes values', function() {
       expect(
         ReactDOMServer.renderToStaticMarkup(
