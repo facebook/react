@@ -119,7 +119,7 @@ function traverseAllChildrenImpl(
   var child;
   var nextName;
   var subtreeCount = 0; // Count of children found in the current subtree.
-  var nextNamePrefix = nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR;
+  var nextNamePrefix = nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
