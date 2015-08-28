@@ -35,6 +35,11 @@ function ForEachBookKeeping(forEachFunction, forEachContext) {
   this.context = forEachContext;
   this.count = 0;
 }
+ForEachBookKeeping.prototype.destructor = function() {
+  this.func = null;
+  this.context = null;
+  this.count = 0;
+};
 PooledClass.addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
 
 function forEachSingleChild(traverseContext, child, name) {
@@ -79,6 +84,12 @@ function MapBookKeeping(mapResult, mapFunction, mapContext) {
   this.context = mapContext;
   this.count = 0;
 }
+MapBookKeeping.prototype.destructor = function() {
+  this.result = null;
+  this.func = null;
+  this.context = null;
+  this.count = 0;
+};
 PooledClass.addPoolingTo(MapBookKeeping, threeArgumentPooler);
 
 function mapSingleChildIntoContext(traverseContext, child, name) {
