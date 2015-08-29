@@ -13,7 +13,7 @@
 
 var adler32 = require('adler32');
 
-describe('shallowEqual', function() {
+describe('adler32', function() {
   it('generates differing checksums', function() {
     expect(adler32('foo')).not.toBe(adler32('bar'));
   });
