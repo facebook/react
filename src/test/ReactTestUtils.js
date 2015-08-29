@@ -396,6 +396,22 @@ assign(
 );
 
 ReactShallowRenderer.prototype.render = function(element, context) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'ReactShallowRenderer render(): Invalid component element.%s',
+    typeof element === 'function' ?
+      ' Instead of passing a component class, make sure to instantiate ' +
+      'it by passing it to React.createElement.' :
+      ''
+  );
+  invariant(
+    typeof element.type !== 'string',
+    'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+    'components, not primitives (%s). Instead of calling `.render(el)` and ' +
+    'inspecting the rendered output, look at `el.props` directly instead.',
+    element.type
+  );
+
   if (!context) {
     context = emptyObject;
   }
