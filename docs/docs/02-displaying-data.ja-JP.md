@@ -66,7 +66,7 @@ setInterval(function() {
 
 ## コンポーネントは関数のようなものです。
 
-Reactのコンポーネントはとても単純です。それらは `props` や `state`　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの下では、コンポーネントは簡単に理解することができます。
+Reactのコンポーネントはとても単純です。それらは `props` や `state`　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの元、コンポーネントは簡単に理解することができます。
 
 > 注意:
 >
@@ -94,7 +94,6 @@ JSXはとても小さいです。さらに学ぶためには、[JSXの深層](/r
 
 JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては[JSXの理解](/react/docs/jsx-gotchas.html) をご覧ください。
 
-The easiest way to get started with JSX is to use the in-browser `JSXTransformer`. We strongly recommend that you don't use this in production. You can precompile your code using our command-line [react-tools](https://www.npmjs.com/package/react-tools) package.
 JSXを初めて使う際に最も簡単なのは、ブラウザで `JSXTransformer` を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの[react-tools](https://www.npmjs.com/package/react-tools)パッケージを使うことでプリコンパイルできます。
 
 ## JSXを使わないReact
