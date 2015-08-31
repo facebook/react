@@ -29,7 +29,7 @@ describe('adler32', function() {
   it('doesn\'t barf on large inputs', function() {
     var str = '';
     for (var i = 0; i < 100000; i++) {
-      str = str + 'This will be repeated to be very large indeed. ';
+      str += 'This will be repeated to be very large indeed. ';
     }
     expect(adler32(str)).toBe(692898118);
   });

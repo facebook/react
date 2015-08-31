@@ -17,7 +17,7 @@ var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 
 describe('renderSubtreeIntoContainer', function() {
 
-  it('should pass context when rendering subtree elsewhere', function () {
+  it('should pass context when rendering subtree elsewhere', function() {
 
     var portal = document.createElement('div');
 
@@ -57,7 +57,7 @@ describe('renderSubtreeIntoContainer', function() {
     expect(portal.firstChild.innerHTML).toBe('bar');
   });
 
-  it('should throw if parentComponent is invalid', function () {
+  it('should throw if parentComponent is invalid', function() {
     var portal = document.createElement('div');
 
     var Component = React.createClass({

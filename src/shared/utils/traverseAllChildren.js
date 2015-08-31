@@ -184,7 +184,7 @@ function traverseAllChildrenImpl(
         if (ReactCurrentOwner.current) {
           var name = ReactCurrentOwner.current.getName();
           if (name) {
-            addendum = ' Check the render method of `' + name + '`.'
+            addendum = ' Check the render method of `' + name + '`.';
           }
         }
       }

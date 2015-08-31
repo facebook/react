@@ -119,7 +119,9 @@ describe('ReactJSXElement', function() {
 
   it('merges JSX children onto the children prop in an array', function() {
     spyOn(console, 'error');
-    var a = 1, b = 2, c = 3;
+    var a = 1;
+    var b = 2;
+    var c = 3;
     var element = <Component>{a}{b}{c}</Component>;
     expect(element.props.children).toEqual([1, 2, 3]);
     expect(console.error.argsForCall.length).toBe(0);

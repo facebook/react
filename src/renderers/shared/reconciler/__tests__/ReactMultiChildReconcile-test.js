@@ -283,7 +283,7 @@ describe('ReactMultiChildReconcile', function() {
       bob: 'bobStatus',
     };
 
-    testPropsSequence([ {usernameToStatus: usernameToStatus} ]);
+    testPropsSequence([{usernameToStatus: usernameToStatus}]);
   });
 
   it('should preserve order if children order has not changed', function() {

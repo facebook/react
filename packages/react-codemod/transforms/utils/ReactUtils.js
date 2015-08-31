@@ -36,7 +36,7 @@ module.exports = function(j) {
         },
       })
       .filter(declarator => declarator.value.source.value === module)
-      .size() === 1
+      .size() === 1;
 
   const hasReact = path => (
     hasModule(path, 'React') ||

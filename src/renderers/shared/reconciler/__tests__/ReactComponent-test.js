@@ -51,7 +51,8 @@ describe('ReactComponent', function() {
   });
 
   it('should support refs on owned components', function() {
-    var innerObj = {}, outerObj = {};
+    var innerObj = {};
+    var outerObj = {};
 
     var Wrapper = React.createClass({
 
@@ -101,7 +102,8 @@ describe('ReactComponent', function() {
   });
 
   it('should support new-style refs', function() {
-    var innerObj = {}, outerObj = {};
+    var innerObj = {};
+    var outerObj = {};
 
     var Wrapper = React.createClass({
       getObject: function() {

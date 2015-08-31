@@ -1,76 +1,33 @@
 ---
 parser: babel-eslint
 
+extends:
+  - ./node_modules/fbjs-scripts/eslint/.eslintrc
+
 plugins:
   - react
   - react-internal
 
-env:
-  browser: true
-  node: true
-
-globals:
-  __DEV__: true
-  # Jest / Jasmine
-  describe: false
-  xdescribe: false
-  beforeEach: false
-  afterEach: false
-  it: false
-  xit: false
-  jest: false
-  pit: false
-  expect: false
-  spyOn: false
-  jasmine: false
-
+# We're stricter than the default config, mostly. We'll override a few rules and
+# then enable some React specific ones.
 rules:
-  # ERRORS
-  space-before-blocks: 2
-  indent: [2, 2, {SwitchCase: 1}]
-  brace-style: 2
-  space-after-keywords: 2
-  strict: [2, global]
+  accessor-pairs: 0
+  brace-style: [2, 1tbs]
   comma-dangle: [2, always-multiline]
-  # Make this a warning for now. We do this in a few places so we might need to
-  # disable
-  no-unused-expressions: 2
-  eol-last: 2
-  dot-notation: 2
-  dot-location: [2, property]
   consistent-return: 2
-  no-unused-vars: [2, args: none]
-  quotes: [2, single, avoid-escape]
-  no-shadow: 2
+  dot-location: [2, property]
+  dot-notation: 2
+  eol-last: 2
+  indent: [2, 2, {SwitchCase: 1}]
+  no-bitwise: 0
   no-multi-spaces: 2
-  no-undef: 2
-
-  # WISHLIST. One day...
-  # We'll need a custom version of this that does a subset of the whole rule.
-  # Otherwise this is just too noisy.
-  # valid-jsdoc: 1
-  # Ideally, we could just warn when *new* lines are added that exceed 80 chars
-  # while not warning about existing ones (often URLs, etc. which are
-  # necessarily long), but we don't have a good way to do so.
-  # max-len: [0, 80]
-
-  # DISABLED. These aren't compatible with our style
-  # We use this for private/internal variables
-  no-underscore-dangle: 0
-  # We pass constructors around / access them from members
-  new-cap: 0
-  # We do this a lot.
-  no-use-before-define: 0
-  # We do this in a few places to align values
-  key-spacing: 0
-  # It's nice to be able to leave catch blocks empty
-  no-empty: 0
-  # It makes code more readable to make this explicit sometimes
-  no-undef-init: 0
-
-  # BROKEN. We'd like to turn these back on.
-  # causes a ton of noise, eslint is too picky?
-  block-scoped-var: 0
+  no-shadow: 2
+  no-unused-expressions: 2
+  no-unused-vars: [2, {args: none}]
+  quotes: [2, single, avoid-escape]
+  space-after-keywords: 2
+  space-before-blocks: 2
+  strict: [2, global]
 
   # JSX
   # Our transforms set this automatically

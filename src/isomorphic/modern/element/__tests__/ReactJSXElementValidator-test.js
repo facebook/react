@@ -168,7 +168,7 @@ describe('ReactJSXElementValidator', function() {
   it('does not warn when the child array contains non-elements', function() {
     spyOn(console, 'error');
 
-    void <Component>{[ {}, {} ]}</Component>;
+    void <Component>{[{}, {}]}</Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
   });

@@ -145,7 +145,7 @@ describe('ReactMount', function() {
     expect(console.error.calls.length).toBe(0);
   });
 
-  it('should warn when mounting into document.body', function () {
+  it('should warn when mounting into document.body', function() {
     var iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
     spyOn(console, 'error');
@@ -158,7 +158,7 @@ describe('ReactMount', function() {
     );
   });
 
-  it('should account for escaping on a checksum mismatch', function () {
+  it('should account for escaping on a checksum mismatch', function() {
     var div = document.createElement('div');
     var markup = ReactDOMServer.renderToString(
       <div>This markup contains an nbsp entity: &nbsp; server text</div>);
