@@ -72,4 +72,33 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.isPersistent()).toBe(true);
   });
 
+  it('should warn if the Synthetic event has been released when calling `preventDefault`', function() {
+    spyOn(console, 'error');
+    var syntheticEvent = createEvent({});
+    SyntheticEvent.release(syntheticEvent);
+    syntheticEvent.preventDefault();
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: ' +
+      'This Synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+      'you\'re calling `preventDefault` on a released/nullified Synthetic event. ' +
+      'This is a no-op. See https://facebook.github.io/react/docs/events.html#event-pooling ' +
+      'for more information.'
+    );
+  });
+
+  it('should warn if the Synthetic event has been released when calling `stopPropagation`', function() {
+    spyOn(console, 'error');
+    var syntheticEvent = createEvent({});
+    SyntheticEvent.release(syntheticEvent);
+    syntheticEvent.stopPropagation();
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: ' +
+      'This Synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+      'you\'re calling `stopPropagation` on a released/nullified Synthetic event. ' +
+      'This is a no-op. See https://facebook.github.io/react/docs/events.html#event-pooling ' +
+      'for more information.'
+    );
+  });
 });
