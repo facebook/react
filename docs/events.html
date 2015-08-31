@@ -428,6 +428,29 @@
 
 <p>As of v0.12, returning <code>false</code> from an event handler will no longer stop event propagation. Instead, <code>e.stopPropagation()</code> or <code>e.preventDefault()</code> should be triggered manually, as appropriate.</p>
 </blockquote>
+<h2><a class="anchor" name="event-pooling"></a>Event pooling <a class="hash-link" href="#event-pooling">#</a></h2>
+<p>The <code>SyntheticEvent</code> is pooled. This means that the <code>SyntheticEvent</code> object will be reused and all properties will be nullified after the event callback has been invoked.<br>
+This is for performance reasons.<br>
+As such, you cannot access the event in an asynchronous way.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">onClick</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span> <span class="c1">// =&gt; nullified object.</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+  <span class="kd">var</span> <span class="nx">eventType</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">;</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+
+  <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span> <span class="c1">// =&gt; null</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eventType</span><span class="p">);</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+  <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">clickEvent</span><span class="o">:</span> <span class="nx">event</span><span class="p">});</span> <span class="c1">// Won&#39;t work. this.state.clickEvent will only contain null values.</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">eventType</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">});</span> <span class="c1">// You can still export event properties.</span>
+<span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>If you want to access the event properties in an asynchronous way, you should call <code>event.persist()</code> on the event, which will remove the synthetic event from the pool and allow references to the event to be retained by user code.</p>
+</blockquote>
 <h2><a class="anchor" name="supported-events"></a>Supported Events <a class="hash-link" href="#supported-events">#</a></h2>
 <p>React normalizes events so that they have consistent properties across
 different browsers.</p>
