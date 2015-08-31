@@ -21,7 +21,8 @@ var setID = function(el, id) {
   ReactMount.setID(el, id);
   idToNode[id] = el;
 };
-var oldGetNode = ReactMount.getNode;
+var oldGetNode;
+var oldGetFirstReactDOM;
 
 var EventPluginHub;
 var ReactBrowserEventEmitter;
@@ -83,9 +84,16 @@ describe('ReactBrowserEventEmitter', function() {
     EventListener = require('EventListener');
     ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
+
+    oldGetNode = ReactMount.getNode;
+    oldGetFirstReactDOM = ReactMount.oldGetFirstReactDOM;
     ReactMount.getNode = function(id) {
       return idToNode[id];
     };
+    ReactMount.getFirstReactDOM = function(node) {
+      return node;
+    };
+
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
     EventPluginHub.injection.injectEventPluginsByName({
@@ -95,6 +103,7 @@ describe('ReactBrowserEventEmitter', function() {
 
   afterEach(function() {
     ReactMount.getNode = oldGetNode;
+    ReactMount.getFirstReactDOM = oldGetFirstReactDOM;
   });
 
   it('should store a listener correctly', function() {

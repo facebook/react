@@ -112,11 +112,13 @@ function handleTopLevelWithPath(bookKeeping) {
   var eventsFired = 0;
   for (var i = 0; i < path.length; i++) {
     var currentPathElement = path[i];
-    var currentPathElementID = ReactMount.getID(currentPathElement);
     if (currentPathElement.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE) {
       currentNativeTarget = path[i + 1];
     }
-    if (ReactMount.isRenderedByReact(currentPathElement)) {
+    // TODO: slow
+    var reactParent = ReactMount.getFirstReactDOM(currentPathElement);
+    if (reactParent === currentPathElement) {
+      var currentPathElementID = ReactMount.getID(currentPathElement);
       var newRootID = ReactInstanceHandles.getReactRootIDFromNodeID(
         currentPathElementID
       );

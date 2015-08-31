@@ -74,14 +74,6 @@ describe('ReactInstanceHandles', function() {
     aggregatedArgs = [];
   });
 
-  describe('isRenderedByReact', function() {
-    it('should not crash on text nodes', function() {
-      expect(function() {
-        ReactMount.isRenderedByReact(document.createTextNode('yolo'));
-      }).not.toThrow();
-    });
-  });
-
   describe('findComponentRoot', function() {
     it('should find the correct node with prefix sibling IDs', function() {
       var parentNode = document.createElement('div');

@@ -35,8 +35,6 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
-var SEPARATOR = ReactInstanceHandles.SEPARATOR;
-
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var nodeCache = {};
 
@@ -368,6 +366,48 @@ function hasNonRootReactChild(node) {
 }
 
 /**
+ * Returns the first (deepest) ancestor of a node which is rendered by this copy
+ * of React.
+ */
+function findFirstReactDOMImpl(node) {
+  // This node might be from another React instance, so we make sure not to
+  // examine the node cache here
+  for (; node && node.parentNode !== node; node = node.parentNode) {
+    if (node.nodeType !== 1) {
+      // Not a DOMElement, therefore not a React component
+      continue;
+    }
+    var nodeID = internalGetID(node);
+    if (!nodeID) {
+      continue;
+    }
+    var reactRootID = ReactInstanceHandles.getReactRootIDFromNodeID(nodeID);
+
+    // If containersByReactRootID contains the container we find by crawling up
+    // the tree, we know that this instance of React rendered the node.
+    // nb. isValid's strategy (with containsNode) does not work because render
+    // trees may be nested and we don't want a false positive in that case.
+    var current = node;
+    var lastID;
+    do {
+      lastID = internalGetID(current);
+      current = current.parentNode;
+      invariant(
+        current != null,
+        'findFirstReactDOMImpl(...): Unexpected detached subtree found when ' +
+        'traversing DOM from node `%s`.',
+        nodeID
+      );
+    } while (lastID !== reactRootID);
+
+    if (current === containersByReactRootID[reactRootID]) {
+      return node;
+    }
+  }
+  return null;
+}
+
+/**
  * Temporary (?) hack so that we can store all top-level pending updates on
  * composites instead of having to worry about different types of components
  * here.
@@ -602,7 +642,7 @@ var ReactMount = {
 
     var reactRootElement = getReactRootElementInContainer(container);
     var containerHasReactMarkup =
-      reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
+      reactRootElement && !!internalGetID(reactRootElement);
     var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
@@ -617,7 +657,7 @@ var ReactMount = {
       if (!containerHasReactMarkup || reactRootElement.nextSibling) {
         var rootElementSibling = reactRootElement;
         while (rootElementSibling) {
-          if (ReactMount.isRenderedByReact(rootElementSibling)) {
+          if (internalGetID(rootElementSibling)) {
             warning(
               false,
               'render(): Target node has markup rendered by React, but there ' +
@@ -819,38 +859,15 @@ var ReactMount = {
   },
 
   /**
-   * True if the supplied `node` is rendered by React.
-   *
-   * @param {*} node DOM Element to check.
-   * @return {boolean} True if the DOM Element appears to be rendered by React.
-   * @internal
-   */
-  isRenderedByReact: function(node) {
-    if (node.nodeType !== 1) {
-      // Not a DOMElement, therefore not a React component
-      return false;
-    }
-    var id = ReactMount.getID(node);
-    return id ? id.charAt(0) === SEPARATOR : false;
-  },
-
-  /**
    * Traverses up the ancestors of the supplied node to find a node that is a
-   * DOM representation of a React component.
+   * DOM representation of a React component rendered by this copy of React.
    *
    * @param {*} node
    * @return {?DOMEventTarget}
    * @internal
    */
   getFirstReactDOM: function(node) {
-    var current = node;
-    while (current && current.parentNode !== current) {
-      if (ReactMount.isRenderedByReact(current)) {
-        return current;
-      }
-      current = current.parentNode;
-    }
-    return null;
+    return findFirstReactDOMImpl(node);
   },
 
   /**
