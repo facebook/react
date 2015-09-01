@@ -15,14 +15,37 @@ function formatErrorMessage(error) {
   );
 }
 
-function compile(defaultLib, content, contentFilename) {
+function compile(content, contentFilename) {
   var output = null;
   var compilerHost = {
     getSourceFile: function(filename, languageVersion) {
-      if (filename === contentFilename) {
-        return ts.createSourceFile(filename, content, 'ES5', '0');
+      var source;
+      if (filename === 'lib.d.ts') {
+        source = fs.readFileSync(
+          require.resolve('typescript/bin/lib.d.ts')
+        ).toString();
+      } else if (filename === 'jest.d.ts') {
+        source = fs.readFileSync(
+          path.join(__dirname, 'jest.d.ts')
+        ).toString();
+      } else if (filename === contentFilename) {
+        source = content;
+      } else if (/\/(?:React|ReactDOM)(?:\.d)?\.ts$/.test(filename)) {
+        // TypeScript will look for the .d.ts files in each ancestor directory,
+        // so there may not be a file at the referenced path as it climbs the
+        // hierarchy.
+        try {
+          source = fs.readFileSync(filename).toString();
+        } catch (e) {
+          if (e.code == 'ENOENT') {
+            return undefined;
+          }
+          throw e;
+        }
+      } else {
+        throw new Error('Unexpected filename ' + filename);
       }
-      return defaultLib;
+      return ts.createSourceFile(filename, source, 'ES5', '0');
     },
     writeFile: function(name, text, writeByteOrderMark) {
       if (output === null) {
@@ -41,7 +64,11 @@ function compile(defaultLib, content, contentFilename) {
       return '\n';
     },
   };
-  var program = ts.createProgram([contentFilename], tsOptions, compilerHost);
+  var program = ts.createProgram([
+    'lib.d.ts',
+    'jest.d.ts',
+    contentFilename,
+  ], tsOptions, compilerHost);
   var errors = program.getDiagnostics();
   if (!errors.length) {
     var checker = program.getTypeChecker(true);
@@ -54,20 +81,6 @@ function compile(defaultLib, content, contentFilename) {
   return output;
 }
 
-module.exports = function(defaultLibs) {
-  var defaultLibSource = fs.readFileSync(
-    path.join(path.dirname(require.resolve('typescript')), 'lib.d.ts')
-  );
-
-  for (var i = 0; i < defaultLibs.length; i++) {
-    defaultLibSource += '\n' + fs.readFileSync(defaultLibs[i]);
-  }
-
-  var defaultLibSourceFile = ts.createSourceFile(
-    'lib.d.ts', defaultLibSource, 'ES5'
-  );
-
-  return {
-    compile: compile.bind(null, defaultLibSourceFile),
-  };
+module.exports = {
+  compile: compile,
 };
