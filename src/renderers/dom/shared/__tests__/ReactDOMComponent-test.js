@@ -729,7 +729,7 @@ describe('ReactDOMComponent', function() {
       });
 
       expect(function() {
-        React.render(<Animal/>, container);
+        ReactDOM.render(<Animal/>, container);
       }).toThrow(
         'Invariant Violation: The `style` prop expects a mapping from style ' +
         'properties to values, not a string. For example, ' +

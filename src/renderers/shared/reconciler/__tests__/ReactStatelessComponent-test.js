@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 function StatelessComponent(props) {
@@ -22,12 +23,13 @@ describe('ReactStatelessComponent', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
   it('should render stateless component', function() {
     var el = document.createElement('div');
-    React.render(<StatelessComponent name="A" />, el);
+    ReactDOM.render(<StatelessComponent name="A" />, el);
 
     expect(el.textContent).toBe('A');
   });
@@ -40,20 +42,20 @@ describe('ReactStatelessComponent', function() {
     });
 
     var el = document.createElement('div');
-    React.render(<Parent name="A" />, el);
+    ReactDOM.render(<Parent name="A" />, el);
     expect(el.textContent).toBe('A');
 
-    React.render(<Parent name="B" />, el);
+    ReactDOM.render(<Parent name="B" />, el);
     expect(el.textContent).toBe('B');
   });
 
   it('should unmount stateless component', function() {
     var container = document.createElement('div');
 
-    React.render(<StatelessComponent name="A" />, container);
+    ReactDOM.render(<StatelessComponent name="A" />, container);
     expect(container.textContent).toBe('A');
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(container.textContent).toBe('');
   });
 
@@ -87,11 +89,11 @@ describe('ReactStatelessComponent', function() {
     });
 
     var el = document.createElement('div');
-    React.render(<GrandParent test="test" />, el);
+    ReactDOM.render(<GrandParent test="test" />, el);
 
     expect(el.textContent).toBe('test');
 
-    React.render(<GrandParent test="mest" />, el);
+    ReactDOM.render(<GrandParent test="mest" />, el);
 
     expect(el.textContent).toBe('mest');
   });
@@ -106,7 +108,7 @@ describe('ReactStatelessComponent', function() {
     }
 
     var el = document.createElement('div');
-    React.render(<Child test="test" />, el);
+    ReactDOM.render(<Child test="test" />, el);
 
     expect(el.textContent).toBe('test');
   });
@@ -178,7 +180,7 @@ describe('ReactStatelessComponent', function() {
     Child.contextTypes = {lang: React.PropTypes.string};
 
     var el = document.createElement('div');
-    React.render(<Parent />, el);
+    ReactDOM.render(<Parent />, el);
     expect(el.textContent).toBe('en');
   });
 });

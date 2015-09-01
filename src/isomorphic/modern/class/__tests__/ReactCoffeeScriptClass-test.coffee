@@ -8,6 +8,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 ###
 
 React = null
+ReactDOM = null
 
 describe 'ReactCoffeeScriptClass', ->
   div = null
@@ -19,6 +20,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   beforeEach ->
     React = require 'React'
+    ReactDOM = require 'ReactDOM'
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null
@@ -33,7 +35,7 @@ describe 'ReactCoffeeScriptClass', ->
     Inner = React.createFactory InnerComponent
 
   test = (element, expectedTag, expectedClassName) ->
-    instance = React.render(element, container)
+    instance = ReactDOM.render(element, container)
     expect(container.firstChild).not.toBeNull()
     expect(container.firstChild.tagName).toBe(expectedTag)
     expect(container.firstChild.className).toBe(expectedClassName)
@@ -47,7 +49,7 @@ describe 'ReactCoffeeScriptClass', ->
     spyOn console, 'error'
     class Foo extends React.Component
     expect(->
-      React.render React.createElement(Foo), container
+      ReactDOM.render React.createElement(Foo), container
     ).toThrow()
     expect(console.error.calls.length).toBe(1)
     expect(console.error.calls[0].args[0]).toContain('No `render` method found on the returned component instance')
@@ -262,7 +264,7 @@ describe 'ReactCoffeeScriptClass', ->
       'did-update',    { value: 'foo' }, {}
     ]
     lifeCycles = [] # reset
-    React.unmountComponentAtNode container
+    ReactDOM.unmountComponentAtNode container
     expect(lifeCycles).toEqual ['will-unmount']
 
   it 'warns when classic properties are defined on the instance,
@@ -394,5 +396,5 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'supports drilling through to the DOM using findDOMNode', ->
     instance = test Inner(name: 'foo'), 'DIV', 'foo'
-    node = React.findDOMNode(instance)
+    node = ReactDOM.findDOMNode(instance)
     expect(node).toBe container.firstChild
