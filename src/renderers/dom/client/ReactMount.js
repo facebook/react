@@ -531,7 +531,7 @@ var ReactMount = {
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     invariant(
       ReactElement.isValidElement(nextElement),
-      'React.render(): Invalid component element.%s',
+      'ReactDOM.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
           ' Instead of passing an element string, make sure to instantiate ' +
@@ -982,7 +982,7 @@ var ReactMount = {
       'You\'re trying to render a component to the document but ' +
         'you didn\'t use server rendering. We can\'t do this ' +
         'without using server rendering due to cross-browser quirks. ' +
-        'See React.renderToString() for server rendering.'
+        'See ReactDOMServer.renderToString() for server rendering.'
     );
 
     if (transaction.useCreateElement) {

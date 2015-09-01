@@ -93,7 +93,7 @@ function getAddendaForKeyUse(messageType, element, parentType) {
     var parentName = typeof parentType === 'string' ?
       parentType : parentType.displayName || parentType.name;
     if (parentName) {
-      addendum = ` Check the React.render call using <${parentName}>.`;
+      addendum = ` Check the top-level render call using <${parentName}>.`;
     }
   }
 

@@ -138,7 +138,7 @@ function legacySetProps(partialProps, callback) {
     warning(
       false,
       'ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
-      'Instead, call React.render again at the top level.%s',
+      'Instead, call ReactDOM.render again at the top level.%s',
       getDeclarationErrorAddendum(component)
     );
   }
@@ -157,7 +157,7 @@ function legacyReplaceProps(partialProps, callback) {
     warning(
       false,
       'ReactDOMComponent: Do not access .replaceProps() of a DOM node. ' +
-      'Instead, call React.render again at the top level.%s',
+      'Instead, call ReactDOM.render again at the top level.%s',
       getDeclarationErrorAddendum(component)
     );
   }

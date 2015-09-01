@@ -105,7 +105,7 @@ if (__DEV__) {
   var deprecatedAPIs = {
     getDOMNode: [
       'getDOMNode',
-      'Use React.findDOMNode(component) instead.',
+      'Use ReactDOM.findDOMNode(component) instead.',
     ],
     isMounted: [
       'isMounted',
@@ -114,7 +114,7 @@ if (__DEV__) {
     ],
     replaceProps: [
       'replaceProps',
-      'Instead, call React.render again at the top level.',
+      'Instead, call render again at the top level.',
     ],
     replaceState: [
       'replaceState',
@@ -123,7 +123,7 @@ if (__DEV__) {
     ],
     setProps: [
       'setProps',
-      'Instead, call React.render again at the top level.',
+      'Instead, call render again at the top level.',
     ],
   };
   var defineDeprecationWarning = function(methodName, info) {
