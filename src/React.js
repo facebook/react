@@ -18,6 +18,7 @@ var ReactIsomorphic = require('ReactIsomorphic');
 var assign = require('Object.assign');
 var deprecated = require('deprecated');
 
+// `version` will be added here by ReactIsomorphic.
 var React = {};
 
 assign(React, ReactIsomorphic);
@@ -62,7 +63,5 @@ assign(React, {
     ReactDOMServer.renderToStaticMarkup
   ),
 });
-
-React.version = '0.14.0-beta3';
 
 module.exports = React;

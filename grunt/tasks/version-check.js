@@ -2,11 +2,6 @@
 
 var grunt = require('grunt');
 
-// Check that the version we're exporting is the same one we expect in the
-// package. This is not an ideal way to do this, but makes sure that we keep
-// them in sync.
-var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
-
 module.exports = function() {
   var pkgVersion = grunt.config.data.pkg.version;
 
@@ -19,7 +14,7 @@ module.exports = function() {
     'packages/react-addons/package.json (version)': addonsData.version,
     // Get the "version" without the range bit
     'packages/react-addons/package.json (react dependency)': addonsData.peerDependencies.react.slice(1),
-    'src/React.js': reactVersionExp.exec(grunt.file.read('./src/React.js'))[1],
+    'src/ReactVersion.js': require('../../src/ReactVersion'),
   };
 
   // Return true (ok) or false (failed)
