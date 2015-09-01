@@ -83,6 +83,19 @@ var min = {
   after: [minify, bannerify],
 };
 
+var withDOM = {
+  entries: [
+    './build/modules/ReactWithReactDOM.js',
+  ],
+  outfile: './build/react-with-dom.js',
+  debug: false,
+  standalone: 'ReactWithDOM',
+  // Apply as global transform so that we also envify fbjs and any other deps
+  globalTransforms: [envifyDev],
+  plugins: [collapser],
+  after: [derequire, simpleBannerify],
+};
+
 var transformer = {
   entries:[
     './vendor/browser-transforms.js',
@@ -132,6 +145,7 @@ var addonsMin = {
 module.exports = {
   basic: basic,
   min: min,
+  withDOM: withDOM,
   transformer: transformer,
   addons: addons,
   addonsMin: addonsMin,
