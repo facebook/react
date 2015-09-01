@@ -212,7 +212,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, [ {}, {} ]);
+    Component(null, [{}, {}]);
 
     expect(console.error.argsForCall.length).toBe(0);
   });

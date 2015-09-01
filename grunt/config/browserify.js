@@ -80,7 +80,7 @@ var min = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [/*derequire,*/ minify, bannerify],
+  after: [minify, bannerify],
 };
 
 var transformer = {
@@ -126,7 +126,7 @@ var addonsMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [/*derequire,*/ minify, bannerify],
+  after: [minify, bannerify],
 };
 
 module.exports = {

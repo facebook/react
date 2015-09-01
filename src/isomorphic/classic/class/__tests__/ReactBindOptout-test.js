@@ -83,7 +83,7 @@ describe('autobind optout', function() {
   });
 
   it('should not hold reference to instance', function() {
-    var mouseDidClick = function () {
+    var mouseDidClick = function() {
       void this.state.something;
     };
 
@@ -129,11 +129,11 @@ describe('autobind optout', function() {
 
     expect(mountedInstance1.onClick).toBe(mountedInstance2.onClick);
 
-    expect(function () {
+    expect(function() {
       ReactTestUtils.Simulate.click(rendered1);
     }).toThrow();
 
-    expect(function () {
+    expect(function() {
       ReactTestUtils.Simulate.click(rendered2);
     }).toThrow();
   });

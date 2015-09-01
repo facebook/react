@@ -216,7 +216,7 @@ var oneEventLoopTestConfig = function(readableIDToID) {
  */
 var registerTestHandlers = function(eventTestConfig, readableIDToID) {
   var runs = {dispatchCount: 0};
-  var neverFire = function (readableID, registrationName) {
+  var neverFire = function(readableID, registrationName) {
     runs.dispatchCount++;
     expect('').toBe(
       'Event type: ' + registrationName +

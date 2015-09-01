@@ -521,4 +521,4 @@ module.exports = (file, api, options) => {
   }
 
   return null;
-}
+};

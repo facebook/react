@@ -285,7 +285,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('isMounted should return false when unmounted', function () {
+  it('isMounted should return false when unmounted', function() {
     var Component = React.createClass({
       render: function() {
         return <div/>;
