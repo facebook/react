@@ -11,10 +11,11 @@
 
 'use strict';
 
+var ReactChildren = require('ReactChildren');
 var ReactElement = require('ReactElement');
 
+var emptyFunction = require('emptyFunction');
 var invariant = require('invariant');
-var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
 /**
@@ -26,19 +27,6 @@ var warning = require('warning');
  */
 
 var numericPropertyRegex = /^\d+$/;
-
-var userProvidedKeyEscapeRegex = /\//g;
-function escapeUserProvidedKey(text) {
-  return ('' + text).replace(userProvidedKeyEscapeRegex, '//');
-}
-
-function processSingleChildWithContext(ctx, child, childKey) {
-  if (ReactElement.isValidElement(child)) {
-    child = ReactElement.cloneAndReplaceKey(child, ctx.prefix + childKey);
-  }
-  // For text components, leave unkeyed
-  ctx.result.push(child);
-}
 
 var warnedAboutNumeric = false;
 
@@ -71,10 +59,6 @@ var ReactFragment = {
     );
 
     var result = [];
-    var context = {
-      result: result,
-      prefix: '',
-    };
 
     for (var key in object) {
       if (__DEV__) {
@@ -87,8 +71,12 @@ var ReactFragment = {
           warnedAboutNumeric = true;
         }
       }
-      context.prefix = escapeUserProvidedKey(key) + '/';
-      traverseAllChildren(object[key], processSingleChildWithContext, context);
+      ReactChildren.mapIntoWithKeyPrefixInternal(
+        object[key],
+        result,
+        key,
+        emptyFunction.thatReturnsArgument
+      );
     }
 
     return result;

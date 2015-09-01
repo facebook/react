@@ -13,13 +13,18 @@
 
 var PooledClass = require('PooledClass');
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
 
+var emptyFunction = require('emptyFunction');
 var traverseAllChildren = require('traverseAllChildren');
-var warning = require('warning');
 
 var twoArgumentPooler = PooledClass.twoArgumentPooler;
-var threeArgumentPooler = PooledClass.threeArgumentPooler;
+var fourArgumentPooler = PooledClass.fourArgumentPooler;
+
+
+var userProvidedKeyEscapeRegex = /\/(?!\/)/g;
+function escapeUserProvidedKey(text) {
+  return ('' + text).replace(userProvidedKeyEscapeRegex, '//');
+}
 
 
 /**
@@ -42,9 +47,9 @@ ForEachBookKeeping.prototype.destructor = function() {
 };
 PooledClass.addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
 
-function forEachSingleChild(traverseContext, child, name) {
-  var bookKeeping = traverseContext;
-  bookKeeping.func.call(bookKeeping.context, child, bookKeeping.count++);
+function forEachSingleChild(bookKeeping, child, name) {
+  var {func, context} = bookKeeping;
+  func.call(context, child, bookKeeping.count++);
 }
 
 /**
@@ -61,7 +66,6 @@ function forEachChildren(children, forEachFunc, forEachContext) {
   if (children == null) {
     return children;
   }
-
   var traverseContext =
     ForEachBookKeeping.getPooled(forEachFunc, forEachContext);
   traverseAllChildren(children, forEachSingleChild, traverseContext);
@@ -78,40 +82,65 @@ function forEachChildren(children, forEachFunc, forEachContext) {
  * @param {!function} mapFunction Function to perform mapping with.
  * @param {?*} mapContext Context to perform mapping with.
  */
-function MapBookKeeping(mapResult, mapFunction, mapContext) {
+function MapBookKeeping(mapResult, keyPrefix, mapFunction, mapContext) {
   this.result = mapResult;
+  this.keyPrefix = keyPrefix;
   this.func = mapFunction;
   this.context = mapContext;
   this.count = 0;
 }
 MapBookKeeping.prototype.destructor = function() {
   this.result = null;
+  this.keyPrefix = null;
   this.func = null;
   this.context = null;
   this.count = 0;
 };
-PooledClass.addPoolingTo(MapBookKeeping, threeArgumentPooler);
+PooledClass.addPoolingTo(MapBookKeeping, fourArgumentPooler);
 
-function mapSingleChildIntoContext(traverseContext, child, name) {
-  var bookKeeping = traverseContext;
-  var mapResult = bookKeeping.result;
+function mapSingleChildIntoContext(bookKeeping, child, childKey) {
+  var {result, keyPrefix, func, context} = bookKeeping;
 
-  var keyUnique = (mapResult[name] === undefined);
-  if (__DEV__) {
-    warning(
-      keyUnique,
-      'ReactChildren.map(...): Encountered two children with the same key, ' +
-      '`%s`. Child keys must be unique; when two children share a key, only ' +
-      'the first child will be used.',
-      name
+  var mappedChild = func.call(context, child, bookKeeping.count++);
+  if (Array.isArray(mappedChild)) {
+    mapIntoWithKeyPrefixInternal(
+      mappedChild,
+      result,
+      childKey,
+      emptyFunction.thatReturnsArgument
     );
+  } else if (mappedChild != null) {
+    if (ReactElement.isValidElement(mappedChild)) {
+      mappedChild = ReactElement.cloneAndReplaceKey(
+        mappedChild,
+        // Keep both the (mapped) and old keys if they differ, just as
+        // traverseAllChildren used to do for objects as children
+        keyPrefix +
+        (
+          mappedChild !== child ?
+          escapeUserProvidedKey(mappedChild.key || '') + '/' :
+          ''
+        ) +
+        childKey
+      );
+    }
+    result.push(mappedChild);
   }
+}
 
-  if (keyUnique) {
-    var mappedChild =
-      bookKeeping.func.call(bookKeeping.context, child, bookKeeping.count++);
-    mapResult[name] = mappedChild;
+function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
+  var escapedPrefix = '';
+  if (prefix != null) {
+    escapedPrefix = escapeUserProvidedKey(prefix) + '/';
   }
+  var traverseContext = MapBookKeeping.getPooled(
+    array,
+    escapedPrefix,
+    func,
+    context
+  );
+  traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
+  MapBookKeeping.release(traverseContext);
 }
 
 /**
@@ -119,9 +148,6 @@ function mapSingleChildIntoContext(traverseContext, child, name) {
  *
  * The provided mapFunction(child, key, index) will be called for each
  * leaf child.
- *
- * TODO: This may likely break any calls to `ReactChildren.map` that were
- * previously relying on the fact that we guarded against null children.
  *
  * @param {?*} children Children tree container.
  * @param {function(*, int)} func The map function.
@@ -132,13 +158,11 @@ function mapChildren(children, func, context) {
   if (children == null) {
     return children;
   }
-
-  var mapResult = {};
-  var traverseContext = MapBookKeeping.getPooled(mapResult, func, context);
-  traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
-  MapBookKeeping.release(traverseContext);
-  return ReactFragment.create(mapResult);
+  var result = [];
+  mapIntoWithKeyPrefixInternal(children, result, null, func, context);
+  return result;
 }
+
 
 
 function forEachSingleChildDummy(traverseContext, child, name) {
@@ -157,28 +181,18 @@ function countChildren(children, context) {
 }
 
 
-function pushSingleChildToArray(traverseContext, child, name) {
-  if (child == null) {
-    return;
-  }
-
-  var result = traverseContext;
-
-  if (ReactElement.isValidElement(child)) {
-    child = ReactElement.cloneAndReplaceKey(child, name);
-  }
-  // For text components, leave unkeyed
-
-  result.push(child);
-}
-
 /**
  * Flatten a children object (typically specified as `props.children`) and
  * return an array with appropriately re-keyed children.
  */
 function toArray(children) {
   var result = [];
-  traverseAllChildren(children, pushSingleChildToArray, result);
+  mapIntoWithKeyPrefixInternal(
+    children,
+    result,
+    null,
+    emptyFunction.thatReturnsArgument
+  );
   return result;
 }
 
@@ -186,6 +200,7 @@ function toArray(children) {
 var ReactChildren = {
   forEach: forEachChildren,
   map: mapChildren,
+  mapIntoWithKeyPrefixInternal: mapIntoWithKeyPrefixInternal,
   count: countChildren,
   toArray: toArray,
 };
