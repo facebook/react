@@ -230,7 +230,7 @@ describe('ReactEmptyComponent', function() {
     expect(function() {
       ReactDOM.render(null, div);
     }).toThrow(
-      'Invariant Violation: React.render(): Invalid component element.'
+      'Invariant Violation: ReactDOM.render(): Invalid component element.'
     );
   });
 

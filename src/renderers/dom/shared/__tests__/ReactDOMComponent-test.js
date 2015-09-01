@@ -1019,11 +1019,11 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.length).toBe(2);
       expect(console.error.calls[0].args[0]).toBe(
         'Warning: ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
-        'Instead, call React.render again at the top level.'
+        'Instead, call ReactDOM.render again at the top level.'
       );
       expect(console.error.calls[1].args[0]).toBe(
         'Warning: ReactDOMComponent: Do not access .replaceProps() of a DOM ' +
-        'node. Instead, call React.render again at the top level.'
+        'node. Instead, call ReactDOM.render again at the top level.'
       );
     });
 

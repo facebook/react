@@ -457,7 +457,7 @@ var ReactCompositeComponentMixin = {
         }
         if (error instanceof Error) {
           // We may want to extend this logic for similar errors in
-          // React.render calls, so I'm abstracting it away into
+          // top-level render calls, so I'm abstracting it away into
           // a function to minimize refactoring in the future
           var addendum = getDeclarationErrorAddendum(this);
 
@@ -822,7 +822,7 @@ var ReactCompositeComponentMixin = {
 
   /**
    * Get the publicly accessible representation of this component - i.e. what
-   * is exposed by refs and returned by React.render. Can be null for stateless
+   * is exposed by refs and returned by render. Can be null for stateless
    * components.
    *
    * @return {ReactComponent} the public component instance.

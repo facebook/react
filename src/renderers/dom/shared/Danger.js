@@ -54,7 +54,7 @@ var Danger = {
       'dangerouslyRenderMarkup(...): Cannot render markup in a worker ' +
       'thread. Make sure `window` and `document` are available globally ' +
       'before requiring React when unit testing or use ' +
-      'React.renderToString for server rendering.'
+      'ReactDOMServer.renderToString for server rendering.'
     );
     var nodeName;
     var markupByNodeName = {};
@@ -161,7 +161,7 @@ var Danger = {
       'dangerouslyReplaceNodeWithMarkup(...): Cannot render markup in a ' +
       'worker thread. Make sure `window` and `document` are available ' +
       'globally before requiring React when unit testing or use ' +
-      'React.renderToString for server rendering.'
+      'ReactDOMServer.renderToString() for server rendering.'
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
     invariant(
@@ -169,7 +169,7 @@ var Danger = {
       'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +
       '<html> node. This is because browser quirks make this unreliable ' +
       'and/or slow. If you want to render to the root you must use ' +
-      'server rendering. See React.renderToString().'
+      'server rendering. See ReactDOMServer.renderToString().'
     );
 
     var newChild;

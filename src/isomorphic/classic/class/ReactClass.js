@@ -61,7 +61,7 @@ function warnSetProps() {
     warning(
       false,
       'setProps(...) and replaceProps(...) are deprecated. ' +
-      'Instead, call React.render again at the top level.'
+      'Instead, call render again at the top level.'
     );
   }
 }
