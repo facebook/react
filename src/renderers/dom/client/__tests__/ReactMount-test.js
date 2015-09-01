@@ -145,6 +145,23 @@ describe('ReactMount', function() {
     expect(console.error.calls.length).toBe(0);
   });
 
+  it('should warn when mounting before document.body is accessible', function () {
+    var iFrame = document.createElement('iframe');
+    /*eslint-disable no-script-url */
+    iFrame.src = 'javascript:void 0;';
+    /*eslint-enable no-script-url */
+    document.body.appendChild(iFrame);
+    spyOn(console, 'error');
+    iFrame.contentDocument.write('<!DOCTYPE html><html><head>');
+
+    ReactMount.render(<div />, iFrame.contentDocument.createElement('div'));
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain(
+      'Rendering components before document.body is accessible is discouraged'
+    );
+  });
+
   it('should warn when mounting into document.body', function () {
     var iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
