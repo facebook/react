@@ -14,8 +14,8 @@ var babel = require('gulp-babel');
 var flatten = require('gulp-flatten');
 var del = require('del');
 
-var babelPluginDEV = require('fbjs/scripts/babel/dev-expression');
-var babelPluginModules = require('fbjs/scripts/babel/rewrite-modules');
+var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
+var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
 
 var paths = {
   react: {

@@ -17,8 +17,8 @@ var ts = tsPreprocessor(defaultLibraries);
 // This assumes the module map has been built. This might not be safe.
 // We should consider consuming this from a built fbjs module from npm.
 var moduleMap = require('fbjs/module-map');
-var babelPluginDEV = require('fbjs/scripts/babel/dev-expression');
-var babelPluginModules = require('fbjs/scripts/babel/rewrite-modules');
+var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
+var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
 
 module.exports = {
   process: function(src, filePath) {
