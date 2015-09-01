@@ -8,6 +8,7 @@
  */
 
 import React = require('React');
+import ReactDOM = require('ReactDOM');
 
 // Before Each
 
@@ -27,7 +28,7 @@ class Inner extends React.Component {
 }
 
 function test(element, expectedTag, expectedClassName) {
-  var instance = React.render(element, container);
+  var instance = ReactDOM.render(element, container);
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -313,7 +314,7 @@ describe('ReactTypeScriptClass', function() {
   it('throws if no render function is defined', function() {
     spyOn(console, 'error');
 
-    expect(() => React.render(React.createElement(Empty), container)).toThrow();
+    expect(() => ReactDOM.render(React.createElement(Empty), container)).toThrow();
 
     expect((<any>console.error).argsForCall.length).toBe(1);
     expect((<any>console.error).argsForCall[0][0]).toBe(
@@ -425,7 +426,7 @@ describe('ReactTypeScriptClass', function() {
       'did-update', { value: 'foo' }, {}
     ]);
     lifeCycles = []; // reset
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(lifeCycles).toEqual([
       'will-unmount'
     ]);
@@ -527,7 +528,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    var node = React.findDOMNode(instance);
+    var node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
 

@@ -7,13 +7,6 @@ var coffee = require('coffee-script');
 
 var tsPreprocessor = require('./ts-preprocessor');
 
-var defaultLibraries = [
-  require.resolve('./jest.d.ts'),
-  require.resolve('../../src/isomorphic/modern/class/React.d.ts'),
-];
-
-var ts = tsPreprocessor(defaultLibraries);
-
 // This assumes the module map has been built. This might not be safe.
 // We should consider consuming this from a built fbjs module from npm.
 var moduleMap = require('fbjs/module-map');
@@ -26,7 +19,7 @@ module.exports = {
       return coffee.compile(src, {'bare': true});
     }
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
-      return ts.compile(src, filePath);
+      return tsPreprocessor.compile(src, filePath);
     }
     // TODO: make sure this stays in sync with gulpfile
     if (!filePath.match(/\/node_modules\//) &&
