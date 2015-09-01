@@ -15,7 +15,8 @@
     "eslint": "^1.1.0",
     "eslint-plugin-react": "^3.2.1",
     "eslint-plugin-react-internal": "file:eslint-rules",
-    "fbjs": "0.1.0-alpha.4",
+    "fbjs": "^0.2.0",
+    "fbjs-scripts": "^0.2.0",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
     "grunt-compare-size": "^0.4.0",
@@ -32,7 +33,6 @@
     "optimist": "^0.6.1",
     "platform": "^1.1.0",
     "run-sequence": "^1.1.0",
-    "semver": "^5.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.18",
     "typescript": "~1.4.0",
@@ -50,7 +50,7 @@
     "build": "grunt build",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
-    "postinstall": "node scripts/check-dev-engines.js",
+    "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "NODE_ENV=test jest"
   },
   "jest": {
