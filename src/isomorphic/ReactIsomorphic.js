@@ -18,6 +18,7 @@ var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
 var ReactPropTypes = require('ReactPropTypes');
+var ReactVersion = require('ReactVersion');
 
 var assign = require('Object.assign');
 var onlyChild = require('onlyChild');
@@ -33,6 +34,7 @@ if (__DEV__) {
 }
 
 var React = {
+  version: ReactVersion,
 
   // Modern
 
