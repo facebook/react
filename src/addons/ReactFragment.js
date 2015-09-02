@@ -34,24 +34,23 @@ var ReactFragment = {
   // Wrap a keyed object in an opaque proxy that warns you if you access any
   // of its properties.
   create: function(object) {
-    if (__DEV__) {
-      if (typeof object !== 'object' || !object || Array.isArray(object)) {
-        warning(
-          false,
-          'React.addons.createFragment only accepts a single object. Got: %s',
-          object
-        );
-        return object;
-      }
-      if (ReactElement.isValidElement(object)) {
-        warning(
-          false,
-          'React.addons.createFragment does not accept a ReactElement ' +
-          'without a wrapper object.'
-        );
-        return object;
-      }
+    if (typeof object !== 'object' || !object || Array.isArray(object)) {
+      warning(
+        false,
+        'React.addons.createFragment only accepts a single object. Got: %s',
+        object
+      );
+      return object;
     }
+    if (ReactElement.isValidElement(object)) {
+      warning(
+        false,
+        'React.addons.createFragment does not accept a ReactElement ' +
+        'without a wrapper object.'
+      );
+      return object;
+    }
+
     invariant(
       object.nodeType !== 1,
       'React.addons.createFragment(...): Encountered an invalid child; DOM ' +
