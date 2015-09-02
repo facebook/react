@@ -45,9 +45,18 @@ are using the master version (>0.13.1) of React as it is using
     if you are using or planning to use [Flow](http://flowtype.org/). Also make
     sure you are not calling `setState` anywhere outside of your component.
 
-All scripts take an option `--no-explicit-require=true` if you don't have a
+These three scripts take an option `--no-explicit-require=true` if you don't have a
 `require('React')` statement in your code files and if you access React as a
 global.
+
+`react-to-react-dom` updates code for the split of the `react` and `react-dom`
+packages (e.g., `React.render` to `ReactDOM.render`). It looks for
+`require('react')` and replaces the appropriate property accesses using
+`require('react-dom')`. It does not support ES6 modules or other non-CommonJS
+systems.
+
+  * `jscodeshift -t react/packages/react-codemod/transforms/react-to-react-dom.js <file>`
+  * After running the automated codemod, you may want to run a regex-based find-and-replace to remove extra whitespace between the added requires, such as `codemod.py -m -d src --extensions js '(var React\s*=\s*require\(.react.\);)\n\n(\s*var ReactDOM)' '\1\n\2'` using https://github.com/facebook/codemod.
 
 ### Explanation of the ES2015 class transform
 
