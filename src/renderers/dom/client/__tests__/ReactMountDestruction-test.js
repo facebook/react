@@ -56,9 +56,9 @@ describe('ReactMount', function() {
     expect(console.error.callCount).toBe(1);
     expect(console.error.mostRecentCall.args[0]).toBe(
       'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
-      'unmount is not a valid React root node, and thus cannot be ' +
-      'unmounted. You may have passed in a React root node as argument, ' +
-      'rather than its container.'
+      'unmount was rendered by React and is not a top-level container. You ' +
+      'may have accidentally passed in a React root node instead of its ' +
+      'container.'
     );
   });
 
@@ -80,8 +80,9 @@ describe('ReactMount', function() {
     expect(console.error.callCount).toBe(1);
     expect(console.error.mostRecentCall.args[0]).toBe(
       'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
-      'unmount is not a valid React root node, and thus cannot be ' +
-      'unmounted.'
+      'unmount was rendered by React and is not a top-level container. ' +
+      'Instead, have the parent component update its state and rerender in ' +
+      'order to remove this component.'
     );
   });
 });

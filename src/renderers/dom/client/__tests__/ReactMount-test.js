@@ -240,8 +240,10 @@ describe('ReactMount', function() {
     React.render(<span />, rootNode);
     expect(console.error.callCount).toBe(1);
     expect(console.error.mostRecentCall.args[0]).toBe(
-      'Warning: renderComponent(...): Replacing React-rendered children ' +
-      'with a new root component.'
+      'Warning: render(...): Replacing React-rendered children with a new ' +
+      'root component. If you intended to update the children of this node, ' +
+      'you should instead have the existing children update their state and ' +
+      'render the new components instead of calling ReactDOM.render.'
     );
   });
 });
