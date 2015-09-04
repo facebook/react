@@ -104,7 +104,7 @@ module.exports = (file, api, options) => {
       );
     }
     return !invalidProperties.length;
-  }
+  };
 
   const hasMixins = classPath => {
     if (ReactUtils.hasMixins(classPath)) {
