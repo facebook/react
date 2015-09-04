@@ -18,7 +18,7 @@ var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var warning = require('warning');
 
 // Simplified subset
-var VALID_ATTRIBUTE_NAME_REGEX = /^[a-zA-Z_][a-zA-Z_\.\-\d]*$/;
+var VALID_ATTRIBUTE_NAME_REGEX = /^[a-zA-Z_][\w\.\-]*$/;
 var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
 
