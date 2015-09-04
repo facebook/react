@@ -786,9 +786,8 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    var node = ReactMount.getNode(this._rootNodeID);
     assertValidProps(this, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction, node);
+    this._updateDOMProperties(lastProps, nextProps, transaction, null);
     this._updateDOMChildren(
       lastProps,
       nextProps,
@@ -822,6 +821,7 @@ ReactDOMComponent.Mixin = {
    * @param {object} lastProps
    * @param {object} nextProps
    * @param {ReactReconcileTransaction} transaction
+   * @param {?DOMElement} node
    */
   _updateDOMProperties: function(lastProps, nextProps, transaction, node) {
     var propKey;
@@ -851,6 +851,9 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
+        if (!node) {
+          node = ReactMount.getNode(this._rootNodeID);
+        }
         DOMPropertyOperations.deleteValueForProperty(node, propKey);
       }
     }
@@ -904,6 +907,9 @@ ReactDOMComponent.Mixin = {
           deleteListener(this._rootNodeID, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
+        if (!node) {
+          node = ReactMount.getNode(this._rootNodeID);
+        }
         DOMPropertyOperations.setValueForAttribute(
           node,
           propKey,
@@ -912,6 +918,9 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
+        if (!node) {
+          node = ReactMount.getNode(this._rootNodeID);
+        }
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertantly setting to a string. This
         // brings us in line with the same behavior we have on initial render.
@@ -923,6 +932,9 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
+      if (!node) {
+        node = ReactMount.getNode(this._rootNodeID);
+      }
       CSSPropertyOperations.setValueForStyles(node, styleUpdates);
     }
   },
