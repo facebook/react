@@ -132,6 +132,11 @@ MyComponent3.propTypes = {
 
 MyComponent3.someThing = 10;
 
+var MyComponent4 = React.createClass({
+  foo: callMeMaybe(),
+  render: function() {},
+});
+
 module.exports = Relay.createContainer(MyComponent, {
   queries: {
     me: Relay.graphql`this is not graphql`,

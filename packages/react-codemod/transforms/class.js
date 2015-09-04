@@ -46,6 +46,8 @@ module.exports = (file, api, options) => {
     'setProps',
   ];
 
+  const STATIC_KEY = 'statics';
+
   const STATIC_KEYS = {
     childContextTypes: true,
     contextTypes: true,
@@ -67,8 +69,8 @@ module.exports = (file, api, options) => {
   const callsDeprecatedAPIs = classPath => {
     if (checkDeprecatedAPICalls(classPath)) {
       console.log(
-        file.path + ': "' + ReactUtils.getComponentName(classPath) + '" ' +
-        'skipped because of deprecated API calls. Remove calls to ' +
+        file.path + ': `' + ReactUtils.getComponentName(classPath) + '` ' +
+        'was skipped because of deprecated API calls. Remove calls to ' +
         DEPRECATED_APIS.join(', ') + ' in your React component and re-run ' +
         'this script.'
       );
@@ -77,11 +79,38 @@ module.exports = (file, api, options) => {
     return true;
   };
 
+  const canConvertToClass = classPath => {
+    const specPath = ReactUtils.getReactCreateClassSpec(classPath);
+    const invalidProperties = specPath.properties.filter(prop => (
+      !prop.key.name || (
+        !STATIC_KEYS[prop.key.name] &&
+        STATIC_KEY != prop.key.name &&
+        !filterDefaultPropsField(prop) &&
+        !filterGetInitialStateField(prop) &&
+        !isFunctionExpression(prop)
+      )
+    ));
+
+    if (invalidProperties.length) {
+      const invalidText = invalidProperties
+        .map(prop => prop.key.name ? prop.key.name : prop.key)
+        .join(', ');
+      console.log(
+        file.path + ': `' + ReactUtils.getComponentName(classPath) + '` ' +
+        'was skipped because of invalid field(s) `' + invalidText + '` on ' +
+        'the React component. Remove any right-hand-side expressions that ' +
+        'are not simple, like: `componentWillUpdate: createWillUpdate()` or ' +
+        '`render: foo ? renderA : renderB`.'
+      );
+    }
+    return !invalidProperties.length;
+  }
+
   const hasMixins = classPath => {
     if (ReactUtils.hasMixins(classPath)) {
       console.log(
-        file.path + ': "' + ReactUtils.getComponentName(classPath) + '" ' +
-        ' skipped because of mixins.'
+        file.path + ': `' + ReactUtils.getComponentName(classPath) + '` ' +
+        'was skipped because of mixins.'
       );
       return false;
     }
@@ -499,6 +528,7 @@ module.exports = (file, api, options) => {
       path
         .filter(hasMixins)
         .filter(callsDeprecatedAPIs)
+        .filter(canConvertToClass)
         .forEach(classPath => updateToClass(
           classPath,
           !options['no-super-class'],

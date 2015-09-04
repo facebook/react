@@ -11,11 +11,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "jscodeshift": "^0.3.2"
+    "jscodeshift": "^0.3.7"
   },
   "devDependencies": {
-    "babel-jest": "^4.0.0",
-    "jest-cli": "^0.4.0"
+    "babel-jest": "^5.3.0",
+    "jest-cli": "^0.5.1"
   },
   "jest": {
     "scriptPreprocessor": "./node_modules/babel-jest",

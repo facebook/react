@@ -121,6 +121,11 @@ var MyComponent3 = React.createClass({
   }
 });
 
+var MyComponent4 = React.createClass({
+  foo: callMeMaybe(),
+  render: function() {},
+});
+
 module.exports = Relay.createContainer(MyComponent, {
   queries: {
     me: Relay.graphql`this is not graphql`,
