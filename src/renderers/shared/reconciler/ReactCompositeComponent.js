@@ -155,14 +155,24 @@ var ReactCompositeComponentMixin = {
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
       // warning now to help debugging
-      warning(
-        inst.render != null,
-        '%s(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render` in your ' +
-        'component or you may have accidentally tried to render an element ' +
-        'whose type is a function that isn\'t a React component.',
-        Component.displayName || Component.name || 'Component'
-      );
+      if (inst.render == null) {
+        warning(
+          false,
+          '%s(...): No `render` method found on the returned component ' +
+          'instance: you may have forgotten to define `render`, returned ' +
+          'null/false from a stateless component, or tried to render an ' +
+          'element whose type is a function that isn\'t a React component.',
+          Component.displayName || Component.name || 'Component'
+        );
+      } else {
+        // We support ES6 inheriting from React.Component, the module pattern,
+        // and stateless components, but not ES6 classes that don't extend
+        warning(
+          Component.isReactClass || !(inst instanceof Component),
+          '%s(...): React component classes must extend React.Component.',
+          Component.displayName || Component.name || 'Component'
+        );
+      }
     }
 
     // These should be set up in the constructor, but as a convenience for

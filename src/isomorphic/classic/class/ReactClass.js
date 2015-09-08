@@ -847,6 +847,7 @@ var ReactClass = {
     };
     Constructor.prototype = new ReactClassComponent();
     Constructor.prototype.constructor = Constructor;
+    Constructor.isReactClass = {};
 
     injectedMixins.forEach(
       mixSpecIntoComponent.bind(null, Constructor)

@@ -28,6 +28,7 @@ var ReactEmptyComponentInjection = {
 };
 
 var ReactEmptyComponentType = function() {};
+ReactEmptyComponentType.isReactClass = {};
 ReactEmptyComponentType.prototype.componentDidMount = function() {
   var internalInstance = ReactInstanceMap.get(this);
   // TODO: Make sure we run these methods in the correct order, we shouldn't

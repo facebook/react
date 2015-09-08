@@ -40,7 +40,7 @@ describe('ReactFragment', function() {
   });
 
   it('should throw if a plain object even if it is in an owner', function() {
-    class Foo {
+    class Foo extends React.Component {
       render() {
         var children = {
           a: <span />,

@@ -27,13 +27,13 @@ describe('ReactJSXElementValidator', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
-    Component = class {
+    Component = class extends React.Component {
       render() {
         return <div />;
       }
     };
 
-    RequiredPropComponent = class {
+    RequiredPropComponent = class extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
@@ -56,13 +56,13 @@ describe('ReactJSXElementValidator', function() {
   it('warns for keys for arrays of elements with owner info', function() {
     spyOn(console, 'error');
 
-    class InnerComponent {
+    class InnerComponent extends React.Component {
       render() {
         return <Component>{this.props.childSet}</Component>;
       }
     }
 
-    class ComponentWrapper {
+    class ComponentWrapper extends React.Component {
       render() {
         return (
           <InnerComponent
@@ -181,7 +181,7 @@ describe('ReactJSXElementValidator', function() {
     // component, we give a small hint as to which parent instantiated that
     // component as per warnings about key usage in ReactElementValidator.
     spyOn(console, 'error');
-    class MyComp {
+    class MyComp extends React.Component {
       render() {
         return <div>My color is {this.color}</div>;
       }
@@ -189,7 +189,7 @@ describe('ReactJSXElementValidator', function() {
     MyComp.propTypes = {
       color: React.PropTypes.string,
     };
-    class ParentComp {
+    class ParentComp extends React.Component {
       render() {
         return <MyComp color={123} />;
       }
@@ -290,7 +290,7 @@ describe('ReactJSXElementValidator', function() {
     // actually occurs. Since this step is skipped in production, we should just
     // warn instead of throwing for this case.
     spyOn(console, 'error');
-    class NullPropTypeComponent {
+    class NullPropTypeComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
@@ -308,7 +308,7 @@ describe('ReactJSXElementValidator', function() {
 
   it('should warn on invalid context types', function() {
     spyOn(console, 'error');
-    class NullContextTypeComponent {
+    class NullContextTypeComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
@@ -326,7 +326,7 @@ describe('ReactJSXElementValidator', function() {
 
   it('should warn if getDefaultProps is specificed on the class', function() {
     spyOn(console, 'error');
-    class GetDefaultPropsComponent {
+    class GetDefaultPropsComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }

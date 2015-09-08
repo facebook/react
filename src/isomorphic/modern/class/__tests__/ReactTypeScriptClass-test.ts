@@ -45,7 +45,7 @@ function test(element, expectedTag, expectedClassName) {
 class Empty extends React.Component { }
 
 // it renders a simple stateless component with prop
-class SimpleStateless {
+class SimpleStateless extends React.Component {
   props : any;
   render() {
     return React.createElement(Inner, {name: this.props.bar});
@@ -124,19 +124,19 @@ class RenderOnce extends React.Component {
 }
 
 // it should throw with non-object in the initial state property
-class ArrayState {
+class ArrayState extends React.Component {
   state = ['an array'];
   render() {
     return React.createElement('span');
   }
 }
-class StringState {
+class StringState extends React.Component {
   state = 'a string';
   render() {
     return React.createElement('span');
   }
 }
-class NumberState {
+class NumberState extends React.Component {
   state = 1234;
   render() {
     return React.createElement('span');
@@ -203,7 +203,7 @@ class ForceUpdateWithNoState extends React.Component {
 
 // it will call all the normal life cycle methods
 var lifeCycles = [];
-class NormalLifeCycles {
+class NormalLifeCycles extends React.Component {
   props : any;
   state = {};
   componentWillMount() {
@@ -254,7 +254,7 @@ class ClassicProperties extends React.Component {
 }
 
 // it should warn when misspelling shouldComponentUpdate
-class MisspelledComponent1 {
+class MisspelledComponent1 extends React.Component {
   componentShouldUpdate() {
     return false;
   }
@@ -264,7 +264,7 @@ class MisspelledComponent1 {
 }
 
 // it should warn when misspelling componentWillReceiveProps
-class MisspelledComponent2 {
+class MisspelledComponent2 extends React.Component {
   componentWillRecieveProps() {
     return false;
   }
@@ -280,7 +280,7 @@ class ReadContext extends React.Component {
     return React.createElement('div', { className: this.context.bar });
   }
 }
-class ProvideContext {
+class ProvideContext extends React.Component {
   static childContextTypes = { bar: React.PropTypes.string };
   getChildContext() {
     return { bar: 'bar-through-context' };
@@ -291,7 +291,7 @@ class ProvideContext {
 }
 
 // it supports classic refs
-class ClassicRefs {
+class ClassicRefs extends React.Component {
   render() {
     return React.createElement(Inner, {name: 'foo', ref: 'inner'});
   }
@@ -318,11 +318,10 @@ describe('ReactTypeScriptClass', function() {
 
     expect((<any>console.error).argsForCall.length).toBe(1);
     expect((<any>console.error).argsForCall[0][0]).toBe(
-      'Warning: Empty(...): ' +
-      'No `render` method found on the returned component instance: you may ' +
-      'have forgotten to define `render` in your component or you may have ' +
-      'accidentally tried to render an element whose type is a function that ' +
-      'isn\'t a React component.'
+      'Warning: Empty(...): No `render` method found on the returned ' +
+      'component instance: you may have forgotten to define `render`, ' +
+      'returned null/false from a stateless component, or tried to render an ' +
+      'element whose type is a function that isn\'t a React component.'
     );
   });
 

@@ -55,7 +55,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(console.error.calls[0].args[0]).toContain('No `render` method found on the returned component instance')
 
   it 'renders a simple stateless component with prop', ->
-    class Foo
+    class Foo extends React.Component
       render: ->
         Inner
           name: @props.bar
@@ -144,7 +144,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'should throw with non-object in the initial state property', ->
     [['an array'], 'a string', 1234].forEach (state) ->
-      class Foo
+      class Foo extends React.Component
         constructor: ->
           @state = state
 
@@ -220,7 +220,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'will call all the normal life cycle methods', ->
     lifeCycles = []
-    class Foo
+    class Foo extends React.Component
       constructor: ->
         @state = {}
 
@@ -308,7 +308,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'should warn when misspelling shouldComponentUpdate', ->
     spyOn console, 'error'
-    class NamedComponent
+    class NamedComponent extends React.Component
       componentShouldUpdate: ->
         false
 
@@ -326,7 +326,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'should warn when misspelling componentWillReceiveProps', ->
     spyOn console, 'error'
-    class NamedComponent
+    class NamedComponent extends React.Component
       componentWillRecieveProps: ->
         false
 
@@ -368,13 +368,13 @@ describe 'ReactCoffeeScriptClass', ->
     )
 
   it 'supports this.context passed via getChildContext', ->
-    class Bar
+    class Bar extends React.Component
       @contextTypes:
         bar: React.PropTypes.string
       render: ->
         div className: @context.bar
 
-    class Foo
+    class Foo extends React.Component
       @childContextTypes:
         bar: React.PropTypes.string
       getChildContext: ->
@@ -385,7 +385,7 @@ describe 'ReactCoffeeScriptClass', ->
     test React.createElement(Foo), 'DIV', 'bar-through-context'
 
   it 'supports classic refs', ->
-    class Foo
+    class Foo extends React.Component
       render: ->
         Inner
           name: 'foo'
