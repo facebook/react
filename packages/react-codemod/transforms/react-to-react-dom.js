@@ -74,12 +74,13 @@ module.exports = function(file, api) {
       .find(j.CallExpression)
       .filter(p => isRequire(p, coreModuleName))
       .forEach(p => {
+        var name, scope;
         if (p.parent.value.type === 'VariableDeclarator') {
           if (p.parent.value.id.type === 'ObjectPattern') {
             var pattern = p.parent.value.id;
             var all = pattern.properties.every(function(prop) {
               if (prop.key.type === 'Identifier') {
-                var name = prop.key.name;
+                name = prop.key.name;
                 return CORE_PROPERTIES.indexOf(name) !== -1;
               }
               return false;
@@ -101,8 +102,8 @@ module.exports = function(file, api) {
               'Unexpected destructuring in require of ' + coreModuleName
             );
           }
-          var name = p.parent.value.id.name;
-          var scope = p.scope.lookup(name);
+          name = p.parent.value.id.name;
+          scope = p.scope.lookup(name);
           if (scope.declares('ReactDOM')) {
             console.log('Using existing ReactDOM var in ' + file.path);
             domAlreadyDeclared = true;
@@ -119,8 +120,8 @@ module.exports = function(file, api) {
               'Unexpected destructuring in require of ' + coreModuleName
             );
           }
-          var name = p.parent.value.left.name;
-          var scope = p.scope.lookup(name);
+          name = p.parent.value.left.name;
+          scope = p.scope.lookup(name);
           var reactBindings = scope.getBindings()[name];
           if (reactBindings.length !== 1) {
             throw new Error(
