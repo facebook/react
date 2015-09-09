@@ -52,8 +52,8 @@ script:
           -F "transformer=@build/JSXTransformer.js" \
           -F "react-with-addons=@build/react-with-addons.js" \
           -F "react-with-addons.min=@build/react-with-addons.min.js" \
-          -F "react-dom=@build/react-dom.js"
-          -F "react-dom.min=@build/react-dom.min.js"
+          -F "react-dom=@build/react-dom.js" \
+          -F "react-dom.min=@build/react-dom.min.js" \
           -F "npm-react=@build/packages/react.tgz" \
           -F "npm-react-dom=@build/packages/react-dom.tgz" \
           -F "commit=$TRAVIS_COMMIT" \
