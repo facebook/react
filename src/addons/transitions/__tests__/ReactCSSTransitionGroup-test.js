@@ -252,4 +252,103 @@ describe('ReactCSSTransitionGroup', function() {
     var leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
     expect(CSSCore.hasClass(leavingNode, 'custom-leaving')).toBe(true);
   });
+
+  it('should call afterAppear', function() {
+    var callback = jest.genMockFunction();
+
+    var a = ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionAppear={true}
+        transitionEnter={false}
+        transitionLeave={false}
+        transitionAppearTimeout={210}
+        afterAppear={callback}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+
+    // Wait for the timer
+    for (var i = 0; i < setTimeout.mock.calls.length; i++) {
+      if (setTimeout.mock.calls[i][1] === 210) {
+        setTimeout.mock.calls[i][0]();
+        break;
+      }
+    }
+
+    expect(callback).toBeCalledWith('one');
+  });
+
+  it('should call afterEnter/afterLeave', function() {
+    var afterEnter = jest.genMockFunction();
+    var afterLeave = jest.genMockFunction();
+
+    var a = ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnterTimeout={211}
+        transitionLeaveTimeout={212}
+        afterEnter={afterEnter}
+        afterLeave={afterLeave}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+
+    // Add an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnterTimeout={211}
+        transitionLeaveTimeout={212}
+        afterEnter={afterEnter}
+        afterLeave={afterLeave}
+      >
+        <span key="one" id="one" />
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    // Wait for the timer
+    for (var i = 0; i < setTimeout.mock.calls.length; i++) {
+      if (setTimeout.mock.calls[i][1] === 211) {
+        setTimeout.mock.calls[i][0]();
+        break;
+      }
+    }
+
+    expect(afterEnter).toBeCalledWith('two');
+
+    // Remove an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnterTimeout={211}
+        transitionLeaveTimeout={212}
+        afterEnter={afterEnter}
+        afterLeave={afterLeave}
+      >
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    // Wait for the timer
+    for (var j = 0; j < setTimeout.mock.calls.length; j++) {
+      if (setTimeout.mock.calls[j][1] === 212) {
+        setTimeout.mock.calls[j][0]();
+        break;
+      }
+    }
+
+    expect(afterLeave).toBeCalledWith('one');
+  });
 });

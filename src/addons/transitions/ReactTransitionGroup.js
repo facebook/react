@@ -23,6 +23,10 @@ var ReactTransitionGroup = React.createClass({
   propTypes: {
     component: React.PropTypes.any,
     childFactory: React.PropTypes.func,
+
+    afterAppear: React.PropTypes.func,
+    afterEnter: React.PropTypes.func,
+    afterLeave: React.PropTypes.func,
   },
 
   getDefaultProps: function() {
@@ -117,6 +121,10 @@ var ReactTransitionGroup = React.createClass({
       component.componentDidAppear();
     }
 
+    if (this.props.afterAppear) {
+      this.props.afterAppear(component.props.children.key);
+    }
+
     delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -147,6 +155,10 @@ var ReactTransitionGroup = React.createClass({
     var component = this.refs[key];
     if (component.componentDidEnter) {
       component.componentDidEnter();
+    }
+
+    if (this.props.afterEnter) {
+      this.props.afterEnter(component.props.children.key);
     }
 
     delete this.currentlyTransitioningKeys[key];
@@ -180,6 +192,10 @@ var ReactTransitionGroup = React.createClass({
 
     if (component.componentDidLeave) {
       component.componentDidLeave();
+    }
+
+    if (this.props.afterLeave) {
+      this.props.afterLeave(component.props.children.key);
     }
 
     delete this.currentlyTransitioningKeys[key];
