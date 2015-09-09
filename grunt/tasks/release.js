@@ -7,6 +7,7 @@ var BOWER_GLOB = [BOWER_PATH + '*.{js}'];
 var BOWER_FILES = [
   'react.js', 'react.min.js', 'JSXTransformer.js',
   'react-with-addons.js', 'react-with-addons.min.js',
+  'react-dom.js', 'react-dom.min.js',
 ];
 var GH_PAGES_PATH = '../react-gh-pages/';
 var GH_PAGES_GLOB = [GH_PAGES_PATH + '*'];
