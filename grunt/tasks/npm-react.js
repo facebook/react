@@ -11,6 +11,7 @@ var dist = dest + 'dist/';
 var distFiles = [
   'react.js', 'react.min.js', 'JSXTransformer.js',
   'react-with-addons.js', 'react-with-addons.min.js',
+  'react-dom.js', 'react-dom.min.js',
 ];
 
 function buildRelease() {
