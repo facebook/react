@@ -265,4 +265,25 @@ describe('ReactEmptyComponent', function() {
       ReactTestUtils.renderIntoDocument(<Parent />);
     }).not.toThrow();
   });
+
+  it('preserves the dom node during updates', function() {
+    var Empty = React.createClass({
+      render: function() {
+        return null;
+      },
+    });
+
+    var container = document.createElement('div');
+
+    ReactDOM.render(<Empty />, container);
+    var noscript1 = container.firstChild;
+    expect(noscript1.tagName).toBe('NOSCRIPT');
+
+    // This update shouldn't create a DOM node
+    ReactDOM.render(<Empty />, container);
+    var noscript2 = container.firstChild;
+    expect(noscript2.tagName).toBe('NOSCRIPT');
+
+    expect(noscript1).toBe(noscript2);
+  });
 });
