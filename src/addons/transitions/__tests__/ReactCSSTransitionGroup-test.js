@@ -11,6 +11,8 @@
 
 'use strict';
 
+var CSSCore = require('CSSCore');
+
 var React;
 var ReactDOM;
 var ReactCSSTransitionGroup;
@@ -197,5 +199,57 @@ describe('ReactCSSTransitionGroup', function() {
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
+  });
+
+  it('should use transition-type specific names when they\'re provided', function() {
+    var customTransitionNames = {
+      enter: 'custom-entering',
+      leave: 'custom-leaving',
+    };
+
+    var a = ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={customTransitionNames}
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+
+    // Add an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={customTransitionNames}
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="one" id="one" />
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    var enteringNode = ReactDOM.findDOMNode(a).childNodes[1];
+    expect(CSSCore.hasClass(enteringNode, 'custom-entering')).toBe(true);
+
+    // Remove an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={customTransitionNames}
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    var leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
+    expect(CSSCore.hasClass(leavingNode, 'custom-leaving')).toBe(true);
   });
 });
