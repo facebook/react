@@ -435,4 +435,45 @@ describe('traverseAllChildren', function() {
     );
   });
 
+  it('should not enumerate enumerable numbers (#4776)', function() {
+    /*eslint-disable no-extend-native */
+    Number.prototype['@@iterator'] = function() {
+      throw new Error('number iterator called');
+    };
+    /*eslint-enable no-extend-native */
+
+    try {
+      var instance = (
+        <div>
+          {5}
+          {12}
+          {13}
+        </div>
+      );
+
+      var traverseFn = jasmine.createSpy();
+
+      traverseAllChildren(instance.props.children, traverseFn, null);
+      expect(traverseFn.calls.length).toBe(3);
+
+      expect(traverseFn).toHaveBeenCalledWith(
+        null,
+        5,
+        '.0'
+      );
+      expect(traverseFn).toHaveBeenCalledWith(
+        null,
+        12,
+        '.1'
+      );
+      expect(traverseFn).toHaveBeenCalledWith(
+        null,
+        13,
+        '.2'
+      );
+    } finally {
+      delete Number.prototype['@@iterator'];
+    }
+  });
+
 });
