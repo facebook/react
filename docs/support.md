@@ -8,7 +8,7 @@ id: support
 
 ## Stack Overflow
 
-Many members of the community use Stack Overflow to ask questions. Read through the [existing questions](http://stackoverflow.com/questions/tagged/reactjs) tagged with **reactjs** or [ask your own](http://stackoverflow.com/questions/ask)!
+Many members of the community use Stack Overflow to ask questions. Read through the [existing questions](http://stackoverflow.com/questions/tagged/reactjs) tagged with **reactjs** or [ask your own](http://stackoverflow.com/questions/ask?tags=reactjs)!
 
 ## Discussion forum
 
