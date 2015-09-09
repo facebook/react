@@ -16,7 +16,7 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
-var ReactEmptyComponent = require('ReactEmptyComponent');
+var ReactEmptyComponentRegistry = require('ReactEmptyComponentRegistry');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -181,7 +181,7 @@ function getNode(id) {
  */
 function getNodeFromInstance(instance) {
   var id = ReactInstanceMap.get(instance)._rootNodeID;
-  if (ReactEmptyComponent.isNullComponentID(id)) {
+  if (ReactEmptyComponentRegistry.isNullComponentID(id)) {
     return null;
   }
   if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {

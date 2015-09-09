@@ -150,6 +150,11 @@ assign(reactComponentExpectInternal.prototype, {
     return this;
   },
 
+  toBeEmptyComponent: function() {
+    var element = this._instance._currentElement;
+    return element === null || element === false;
+  },
+
   toBePresent: function() {
     expect(this.instance()).toBeTruthy();
     return this;

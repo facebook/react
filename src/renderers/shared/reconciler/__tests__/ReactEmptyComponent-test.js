@@ -13,7 +13,6 @@
 
 var React;
 var ReactDOM;
-var ReactEmptyComponent;
 var ReactTestUtils;
 var TogglingComponent;
 
@@ -25,7 +24,6 @@ describe('ReactEmptyComponent', function() {
 
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactEmptyComponent = require('ReactEmptyComponent');
     ReactTestUtils = require('ReactTestUtils');
 
     reactComponentExpect = require('reactComponentExpect');
@@ -64,10 +62,10 @@ describe('ReactEmptyComponent', function() {
     var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
     reactComponentExpect(instance1)
       .expectRenderedChild()
-      .toBeComponentOfType(ReactEmptyComponent.emptyElement.type);
+      .toBeEmptyComponent();
     reactComponentExpect(instance2)
       .expectRenderedChild()
-      .toBeComponentOfType(ReactEmptyComponent.emptyElement.type);
+      .toBeEmptyComponent();
   });
 
   it('should still throw when rendering to undefined', () => {
@@ -97,10 +95,8 @@ describe('ReactEmptyComponent', function() {
         secondComponent={null}
       />;
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(instance1);
-      ReactTestUtils.renderIntoDocument(instance2);
-    }).not.toThrow();
+    ReactTestUtils.renderIntoDocument(instance1);
+    ReactTestUtils.renderIntoDocument(instance2);
 
     expect(console.log.argsForCall.length).toBe(4);
     expect(console.log.argsForCall[0][0]).toBe(null);
