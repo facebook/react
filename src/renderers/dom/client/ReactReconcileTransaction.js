@@ -54,7 +54,7 @@ var EVENT_SUPPRESSION = {
 
   /**
    * @param {boolean} previouslyEnabled Enabled status of
-   *   `ReactBrowserEventEmitter` before the reconciliation occured. `close`
+   *   `ReactBrowserEventEmitter` before the reconciliation occurred. `close`
    *   restores the previous value.
    */
   close: function(previouslyEnabled) {

@@ -73,7 +73,7 @@ var eventTypes = {
   /**
    * On a `scroll`, is it desired that this element become the responder? This
    * is usually not needed, but should be used to retroactively infer that a
-   * `touchStart` had occured during momentum scroll. During a momentum scroll,
+   * `touchStart` had occurred during momentum scroll. During a momentum scroll,
    * a touch start will be immediately followed by a scroll event if the view is
    * currently scrolling.
    *
