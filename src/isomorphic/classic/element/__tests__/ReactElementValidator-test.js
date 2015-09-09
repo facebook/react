@@ -449,4 +449,24 @@ describe('ReactElementValidator', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  it('should not enumerate enumerable numbers (#4776)', function() {
+    /*eslint-disable no-extend-native */
+    Number.prototype['@@iterator'] = function() {
+      throw new Error('number iterator called');
+    };
+    /*eslint-enable no-extend-native */
+
+    try {
+      void (
+        <div>
+          {5}
+          {12}
+          {13}
+        </div>
+      );
+    } finally {
+      delete Number.prototype['@@iterator'];
+    }
+  });
+
 });
