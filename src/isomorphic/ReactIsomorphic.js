@@ -34,6 +34,7 @@ if (__DEV__) {
 }
 
 var React = {
+  version: ReactVersion,
 
   // Modern
 
