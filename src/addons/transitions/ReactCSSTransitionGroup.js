@@ -16,12 +16,8 @@ var React = require('React');
 
 var assign = require('Object.assign');
 
-var ReactTransitionGroup = React.createFactory(
-  require('ReactTransitionGroup')
-);
-var ReactCSSTransitionGroupChild = React.createFactory(
-  require('ReactCSSTransitionGroupChild')
-);
+var ReactTransitionGroup = require('ReactTransitionGroup');
+var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
 
 function createTransitionTimeoutPropValidator(transitionType) {
   var timeoutPropName = 'transition' + transitionType + 'Timeout';
@@ -52,8 +48,7 @@ var ReactCSSTransitionGroup = React.createClass({
   displayName: 'ReactCSSTransitionGroup',
 
   propTypes: {
-    // Re-require to access the raw class rather than the factory
-    transitionName: require('ReactCSSTransitionGroupChild').propTypes.name,
+    transitionName: ReactCSSTransitionGroupChild.propTypes.name,
 
     transitionAppear: React.PropTypes.bool,
     transitionEnter: React.PropTypes.bool,
@@ -75,7 +70,8 @@ var ReactCSSTransitionGroup = React.createClass({
     // We need to provide this childFactory so that
     // ReactCSSTransitionGroupChild can receive updates to name, enter, and
     // leave while it is leaving.
-    return ReactCSSTransitionGroupChild(
+    return React.createElement(
+      ReactCSSTransitionGroupChild,
       {
         name: this.props.transitionName,
         appear: this.props.transitionAppear,
@@ -90,10 +86,9 @@ var ReactCSSTransitionGroup = React.createClass({
   },
 
   render: function() {
-    return (
-      ReactTransitionGroup(
-        assign({}, this.props, {childFactory: this._wrapChild})
-      )
+    return React.createElement(
+      ReactTransitionGroup,
+      assign({}, this.props, {childFactory: this._wrapChild})
     );
   },
 });

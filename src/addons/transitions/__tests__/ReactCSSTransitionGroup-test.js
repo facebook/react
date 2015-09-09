@@ -11,13 +11,11 @@
 
 'use strict';
 
+var CSSCore = require('CSSCore');
+
 var React;
 var ReactDOM;
 var ReactCSSTransitionGroup;
-
-function hasClassName(domNode, className) {
-  return domNode.className.indexOf(className) > 0;
-}
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
@@ -211,7 +209,7 @@ describe('ReactCSSTransitionGroup', function() {
 
     var a = ReactDOM.render(
       <ReactCSSTransitionGroup
-        transitionName={ customTransitionNames }
+        transitionName={customTransitionNames}
         transitionEnterTimeout={1}
         transitionLeaveTimeout={1}
       >
@@ -224,7 +222,7 @@ describe('ReactCSSTransitionGroup', function() {
     // Add an element
     ReactDOM.render(
       <ReactCSSTransitionGroup
-        transitionName={ customTransitionNames }
+        transitionName={customTransitionNames}
         transitionEnterTimeout={1}
         transitionLeaveTimeout={1}
       >
@@ -235,13 +233,13 @@ describe('ReactCSSTransitionGroup', function() {
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
 
-    // Test for the custom entering name
-    expect(hasClassName(ReactDOM.findDOMNode(a).childNodes[1], 'custom-entering')).toBe(true);
+    var enteringNode = ReactDOM.findDOMNode(a).childNodes[1];
+    expect(CSSCore.hasClass(enteringNode, 'custom-entering')).toBe(true);
 
     // Remove an element
     ReactDOM.render(
       <ReactCSSTransitionGroup
-        transitionName={ customTransitionNames }
+        transitionName={customTransitionNames}
         transitionEnterTimeout={1}
         transitionLeaveTimeout={1}
       >
@@ -251,7 +249,7 @@ describe('ReactCSSTransitionGroup', function() {
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
 
-    // Test for the custom leaving name
-    expect(hasClassName(ReactDOM.findDOMNode(a).childNodes[0], 'custom-leaving')).toBe(true);
+    var leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
+    expect(CSSCore.hasClass(leavingNode, 'custom-leaving')).toBe(true);
   });
 });
