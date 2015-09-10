@@ -475,7 +475,7 @@
 <h2><a class="anchor" name="the-ref-callback-attribute"></a>The ref Callback Attribute <a class="hash-link" href="#the-ref-callback-attribute">#</a></h2>
 <p>The <code>ref</code> attribute can be a callback function instead of a name.  This callback will be executed immediately after the component is mounted.  The referenced component will be passed in as a parameter, and the callback function may use the component immediately, or save the reference for future use (or both).</p>
 
-<p>It&#39;s as simple as assigning a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>
+<p>It&#39;s as simple as adding a <code>ref</code> attribute to anything returned from <code>render</code> by using an ES6 arrow function:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  render: function() {
     return <span class="nt">&lt;TextInput</span> <span class="na">ref=</span><span class="s">{(c)</span> <span class="err">=</span><span class="nt">&gt;</span> this._input = c} } /&gt;;
   },
