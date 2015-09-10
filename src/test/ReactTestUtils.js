@@ -17,7 +17,6 @@ var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactElement = require('ReactElement');
-var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -359,9 +358,7 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
 
 var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
-  this._currentElement = element === null || element === false ?
-    ReactEmptyComponent.emptyElement :
-    element;
+  this._currentElement = element;
 };
 
 NoopInternalComponent.prototype = {
@@ -371,9 +368,7 @@ NoopInternalComponent.prototype = {
 
   receiveComponent: function(element) {
     this._renderedOutput = element;
-    this._currentElement = element === null || element === false ?
-      ReactEmptyComponent.emptyElement :
-      element;
+    this._currentElement = element;
   },
 
   unmountComponent: function() {
