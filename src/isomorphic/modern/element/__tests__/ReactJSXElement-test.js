@@ -153,6 +153,7 @@ describe('ReactJSXElement', function() {
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
+    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
   });
 
   it('is indistinguishable from a plain object', function() {
