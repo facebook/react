@@ -645,6 +645,12 @@ p code {
   padding: 1px 3px;
 }
 
+small a code,
+li a code,
+p a code {
+  color: inherit;
+}
+
 .cm-s-default span.cm-string-2 {
   color: inherit;
 }
