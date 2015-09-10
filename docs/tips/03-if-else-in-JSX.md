@@ -78,4 +78,4 @@ return (
 >
 > In the example above, an ES6 [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) is utilized to lexically bind the value of `this`.
 
-Try using it today with the [JSX compiler](/react/jsx-compiler.html).
+Try using it today with the [Babel REPL](https://babeljs.io/repl/).
