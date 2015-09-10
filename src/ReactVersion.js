@@ -11,4 +11,4 @@
 
 'use strict';
 
-module.exports = '0.14.0-beta3';
+module.exports = '0.14.0-rc1';
