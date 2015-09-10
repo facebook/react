@@ -15,6 +15,11 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
 
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var TYPE_SYMBOL = (typeof Symbol === 'function' && Symbol.for &&
+                  Symbol.for('react.element')) || 0xeac7;
+
 var RESERVED_PROPS = {
   key: true,
   ref: true,
@@ -52,17 +57,17 @@ if (__DEV__) {
  */
 var ReactElement = function(type, key, ref, self, source, owner, props) {
   var element = {
+    // This tag allow us to uniquely identify this as a React Element
+    $$typeof: TYPE_SYMBOL,
+
     // Built-in properties that belong on the element
     type: type,
     key: key,
     ref: ref,
-    self: self,
-    source: source,
+    props: props,
 
     // Record the component responsible for creating this element.
     _owner: owner,
-
-    props: props,
   };
 
   if (__DEV__) {
@@ -83,8 +88,25 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
         writable: true,
         value: false,
       });
+      // self and source are DEV only properties.
+      Object.defineProperty(element, '_self', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: self,
+      });
+      // Two elements created in two different places should be considered
+      // equal for testing purposes and therefore we hide it from enumeration.
+      Object.defineProperty(element, '_source', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: source,
+      });
     } else {
-      this._store.validated = false;
+      element._store.validated = false;
+      element._self = self;
+      element._source = source;
     }
     Object.freeze(element.props);
     Object.freeze(element);
@@ -164,12 +186,12 @@ ReactElement.createFactory = function(type) {
 };
 
 ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
-  var newElement = new ReactElement(
+  var newElement = ReactElement(
     oldElement.type,
     newKey,
     oldElement.ref,
-    oldElement.self,
-    oldElement.source,
+    oldElement._self,
+    oldElement._source,
     oldElement._owner,
     oldElement.props
   );
@@ -182,8 +204,8 @@ ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
     oldElement.type,
     oldElement.key,
     oldElement.ref,
-    oldElement.self,
-    oldElement.source,
+    oldElement._self,
+    oldElement._source,
     oldElement._owner,
     newProps
   );
@@ -205,8 +227,12 @@ ReactElement.cloneElement = function(element, config, children) {
   // Reserved names are extracted
   var key = element.key;
   var ref = element.ref;
-  var self = element.__self;
-  var source = element.__source;
+  // Self is preserved since the owner is preserved.
+  var self = element._self;
+  // Source is preserved since cloneElement is unlikely to be targeted by a
+  // transpiler, and the original source is probably a better indicator of the
+  // true owner.
+  var source = element._source;
 
   // Owner will be preserved, unless ref is overridden
   var owner = element._owner;
@@ -259,11 +285,10 @@ ReactElement.cloneElement = function(element, config, children) {
  * @final
  */
 ReactElement.isValidElement = function(object) {
-  return !!(
+  return (
     typeof object === 'object' &&
-    object != null &&
-    'type' in object &&
-    'props' in object
+    object !== null &&
+    object.$$typeof === TYPE_SYMBOL
   );
 };
 

@@ -24,6 +24,10 @@ describe('ReactElement', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
+    // Delete the native Symbol if we have one to ensure we test the
+    // unpolyfilled environment.
+    delete global.Symbol;
+
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
@@ -190,6 +194,10 @@ describe('ReactElement', function() {
     expect(React.isValidElement('string')).toEqual(false);
     expect(React.isValidElement(React.DOM.div)).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
+    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
+
+    var jsonElement = JSON.stringify(React.createElement('div'));
+    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(true);
   });
 
   it('allows the use of PropTypes validators in statics', function() {
@@ -303,6 +311,49 @@ describe('ReactElement', function() {
     var test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
     expect(console.error.argsForCall.length).toBe(0);
+  });
+
+  it('identifies elements, but not JSON, if Symbols are supported', function() {
+    // Rudimentary polyfill
+    // Once all jest engines support Symbols natively we can swap this to test
+    // WITH native Symbols by default.
+    var TYPE_SYMBOL = function() {}; // fake Symbol
+    var OTHER_SYMBOL = function() {}; // another fake Symbol
+    global.Symbol = function(name) {
+      return OTHER_SYMBOL;
+    };
+    global.Symbol.for = function(key) {
+      if (key === 'react.element') {
+        return TYPE_SYMBOL;
+      }
+      return OTHER_SYMBOL;
+    };
+
+    require('mock-modules').dumpCache();
+
+    React = require('React');
+
+    var Component = React.createClass({
+      render: function() {
+        return React.createElement('div');
+      },
+    });
+
+    expect(React.isValidElement(React.createElement('div')))
+      .toEqual(true);
+    expect(React.isValidElement(React.createElement(Component)))
+      .toEqual(true);
+
+    expect(React.isValidElement(null)).toEqual(false);
+    expect(React.isValidElement(true)).toEqual(false);
+    expect(React.isValidElement({})).toEqual(false);
+    expect(React.isValidElement('string')).toEqual(false);
+    expect(React.isValidElement(React.DOM.div)).toEqual(false);
+    expect(React.isValidElement(Component)).toEqual(false);
+    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
+
+    var jsonElement = JSON.stringify(React.createElement('div'));
+    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
 });
