@@ -141,6 +141,10 @@ function _handleChange(event) {
           otherNode.form !== rootNode.form) {
         continue;
       }
+      // This will throw if radio buttons rendered by different copies of React
+      // and the same name are rendered into the same form (same as #1939).
+      // That's probably okay; we don't support it just as we don't support
+      // mixing React with non-React.
       var otherID = ReactMount.getID(otherNode);
       invariant(
         otherID,

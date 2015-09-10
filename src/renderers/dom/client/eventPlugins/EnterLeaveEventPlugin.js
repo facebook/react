@@ -89,24 +89,30 @@ var EnterLeaveEventPlugin = {
       }
     }
 
-    var from, to;
+    var from;
+    var to;
+    var fromID = '';
+    var toID = '';
     if (topLevelType === topLevelTypes.topMouseOut) {
       from = topLevelTarget;
-      to =
-        getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
-        win;
+      fromID = topLevelTargetID;
+      to = getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement);
+      if (to) {
+        toID = ReactMount.getID(to);
+      } else {
+        to = win;
+      }
+      to = to || win;
     } else {
       from = win;
       to = topLevelTarget;
+      toID = topLevelTargetID;
     }
 
     if (from === to) {
       // Nothing pertains to our managed components.
       return null;
     }
-
-    var fromID = from ? ReactMount.getID(from) : '';
-    var toID = to ? ReactMount.getID(to) : '';
 
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,
