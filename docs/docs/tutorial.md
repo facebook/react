@@ -45,7 +45,7 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up `public
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
   <body>
-    <div id="content"></div>
+    <div id="blog-comment-box"></div>
     <script type="text/jsx">
       // Your code here
     </script>
@@ -85,7 +85,7 @@ var CommentBox = React.createClass({
 });
 React.render(
   <CommentBox />,
-  document.getElementById('content')
+  document.getElementById('blog-comment-box')
 );
 ```
 
@@ -108,7 +108,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
 });
 React.render(
   React.createElement(CommentBox, null),
-  document.getElementById('content')
+  document.getElementById('blog-comment-box')
 );
 ```
 
@@ -305,7 +305,7 @@ var CommentBox = React.createClass({
 
 React.render(
   <CommentBox data={data} />,
-  document.getElementById('content')
+  document.getElementById('blog-comment-box')
 );
 ```
 
@@ -341,7 +341,7 @@ Let's replace the hard-coded data with some dynamic data from the server. We wil
 // tutorial11.js
 React.render(
   <CommentBox url="comments.json" />,
-  document.getElementById('content')
+  document.getElementById('blog-comment-box')
 );
 ```
 
@@ -459,7 +459,7 @@ var CommentBox = React.createClass({
 
 React.render(
   <CommentBox url="comments.json" pollInterval={2000} />,
-  document.getElementById('content')
+  document.getElementById('blog-comment-box')
 );
 
 ```
