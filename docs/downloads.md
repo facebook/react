@@ -48,24 +48,9 @@ The compressed, production version of React with [add-ons](/react/docs/addons.ht
 <script src="https://fb.me/react-with-addons-{{site.react_version}}.min.js"></script>
 ```
 
-#### <a href="https://fb.me/JSXTransformer-{{site.react_version}}.js">JSX Transformer</a>
-The JSX transformer used to support [XML syntax](/react/docs/jsx-in-depth.html) in JavaScript.
-
-```html
-<script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-```
-
 All scripts are also available via [CDNJS](https://cdnjs.com/libraries/react/).
 
 ## npm
-
-To install the JSX transformer on your computer, run:
-
-```sh
-$ npm install -g react-tools
-```
-
-For more info about the `jsx` binary, see the [Getting Started](/react/docs/getting-started.html#offline-transform) guide.
 
 If you're using an npm-compatible packaging system like browserify or webpack, you can use the `react` package. After installing it using `npm install react` or adding `react` to `package.json`, you can use React:
 
