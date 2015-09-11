@@ -31,11 +31,11 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <script src="build/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
       React.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
@@ -45,7 +45,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 </html>
 ```
 
-The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](/react/docs/jsx-in-depth.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/jsx">` and include `JSXTransformer.js` to actually perform the transformation in the browser.
+The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](/react/docs/jsx-in-depth.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/babel">` and include Babel to actually perform the transformation in the browser.
 
 ### Separate File
 
@@ -61,7 +61,7 @@ React.render(
 Then reference it from `helloworld.html`:
 
 ```html{10}
-<script type="text/jsx" src="src/helloworld.js"></script>
+<script type="text/babel" src="src/helloworld.js"></script>
 ```
 
 Note that some browsers (Chrome, e.g.) will fail to load the file unless it's served via HTTP.
@@ -100,7 +100,7 @@ Update your HTML file as below:
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <!-- No need for JSXTransformer! -->
+    <!-- No need for Babel! -->
   </head>
   <body>
     <div id="example"></div>

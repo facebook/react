@@ -20,11 +20,11 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
 
       // ** Your code goes here! **
 

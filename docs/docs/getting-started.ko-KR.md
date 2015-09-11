@@ -32,11 +32,11 @@ React를 시작하는 가장 빠른 방법은 다음의 Hello World JSFiddle 예
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <script src="build/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
       React.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
@@ -62,7 +62,7 @@ React.render(
 그다음 `helloworld.html`에서 참조합니다:
 
 ```html{10}
-<script type="text/jsx" src="src/helloworld.js"></script>
+<script type="text/babel" src="src/helloworld.js"></script>
 ```
 
 크롬 같은 몇몇 브라우저에서는 HTTP를 통해 제공되는 파일이 아니면 로드에 실패하므로 주의하세요.
@@ -99,7 +99,7 @@ React.render(
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <!-- JSXTransformer는 이제 불필요합니다! -->
+    <!-- Babel는 이제 불필요합니다! -->
   </head>
   <body>
     <div id="example"></div>
