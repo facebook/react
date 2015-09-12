@@ -7,7 +7,7 @@ next: displaying-data-zh-CN.html
 
 React 是一个 Facebook 和 Instagram 用来创建用户界面的 JavaScript 库。很人多认为 React 是 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 中的 **V**（视图）。
 
-我们创造 React 是为了解决一个问题：**构建随着时间数据不断变化的大规模应用程序**。为了达到这个目标，React 采用下面两个主要的思想。
+我们创造 React 是为了解决一个问题：**构建随着时间数据不断变化的大规模应用程序**。
 
 ### 简单
 
