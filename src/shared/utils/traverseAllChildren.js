@@ -188,13 +188,20 @@ function traverseAllChildrenImpl(
           }
         }
       }
+      var objectInfo;
+      var objectKeys = Object.keys(children);
+      if (objectKeys.length > 0) {
+        objectInfo = 'with keys {' + objectKeys.join(', ') + '}';
+      } else {
+        objectInfo = children.toString();
+      }
       invariant(
         false,
-        'Objects are not valid as a React child (found object with keys ' +
-        '{%s}). If you meant to render a collection of children, use an ' +
+        'Objects are not valid as a React child (found object %s). ' +
+        'If you meant to render a collection of children, use an ' +
         'array instead or wrap the object using ' +
         'React.addons.createFragment(object).%s',
-        Object.keys(children).join(', '),
+        objectInfo,
         addendum
       );
     }

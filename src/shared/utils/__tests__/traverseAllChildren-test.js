@@ -476,4 +476,45 @@ describe('traverseAllChildren', function() {
     }
   });
 
+  it('should warn about using objects', function() {
+    spyOn(console, 'error');
+
+    var instance = (
+      <div>
+        {{ a: 1, b: 2 }}
+      </div>
+    );
+
+    expect(function() {
+      traverseAllChildren(instance.props.children, function() {});
+    }).toThrow(
+      'Invariant Violation: Objects are not valid as a React child ' +
+      '(found object with keys {a, b}). ' +
+      'If you meant to render a collection of children, use an ' +
+      'array instead or wrap the object using ' +
+      'React.addons.createFragment(object).'
+    );
+  });
+
+  it('should warn about using date objects', function() {
+    spyOn(console, 'error');
+
+    var instance = (
+      <div>
+        {new Date('2015-09-12T17:00:00Z')}
+      </div>
+    );
+
+    try {
+      traverseAllChildren(instance.props.children, function() {});
+      expect('here').toBe('not reached');
+    } catch (ex) {
+      // Can't fuzzy match on error with toThrow
+      expect(ex.message).toContain(
+        'Invariant Violation: Objects are not valid as a React child '
+      );
+      expect(ex.message).toContain('2015');
+    }
+  });
+
 });
