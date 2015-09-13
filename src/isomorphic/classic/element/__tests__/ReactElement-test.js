@@ -20,13 +20,15 @@ var ReactTestUtils;
 
 describe('ReactElement', function() {
   var ComponentClass;
+  var originalSymbol;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
     // Delete the native Symbol if we have one to ensure we test the
     // unpolyfilled environment.
-    delete global.Symbol;
+    originalSymbol = global.Symbol;
+    global.Symbol = undefined;
 
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -36,6 +38,14 @@ describe('ReactElement', function() {
         return React.createElement('div');
       },
     });
+  });
+
+  afterEach(function() {
+    global.Symbol = originalSymbol;
+  });
+
+  it('uses the fallback value when in an environment without Symbol', function() {
+    expect(<div />.$$typeof).toBe(0xeac7);
   });
 
   it('returns a complete element according to spec', function() {
