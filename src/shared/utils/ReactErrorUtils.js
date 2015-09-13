@@ -26,7 +26,7 @@ var ReactErrorUtils = {
   invokeGuardedCallback: function(name, func, a, b) {
     try {
       return func(a, b);
-    } catch(x) {
+    } catch (x) {
       if (caughtError === null) {
         caughtError = x;
       }

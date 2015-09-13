@@ -19,14 +19,19 @@ rules:
   dot-notation: 2
   eol-last: 2
   indent: [2, 2, {SwitchCase: 1}]
+  jsx-quotes: [2, prefer-double]
   no-bitwise: 0
+  no-dupe-class-members: 2
   no-multi-spaces: 2
+  no-restricted-syntax: [2, WithStatement]
   no-shadow: 2
   no-unused-expressions: 2
   no-unused-vars: [2, {args: none}]
   quotes: [2, single, avoid-escape]
   space-after-keywords: 2
   space-before-blocks: 2
+  # TODO: enable this rule after https://github.com/eslint/eslint/pull/3768 lands
+  space-before-keywords: 0
   strict: [2, global]
 
   # JSX
@@ -34,7 +39,6 @@ rules:
   react/display-name: 0
   react/jsx-boolean-value: [2, always]
   react/jsx-no-undef: 2
-  react/jsx-quotes: [2, double]
   # We don't care to do this
   react/jsx-sort-prop-types: 0
   react/jsx-sort-props: 0
