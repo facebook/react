@@ -183,4 +183,19 @@ describe('ReactStatelessComponent', function() {
     ReactDOM.render(<Parent />, el);
     expect(el.textContent).toBe('en');
   });
+
+  it('should work with arrow functions', function() {
+    // TODO: actually use arrow functions, probably need node v4 and maybe
+    // a separate file that we blacklist from the arrow function transform.
+    // We can't actually test this without native arrow functions since the
+    // issues (non-newable) don't apply to any other functions.
+    var Child = function() {
+      return <div />;
+    };
+    // Will create a new bound function without a prototype, much like a native
+    // arrow function.
+    Child = Child.bind(this);
+
+    expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
+  });
 });
