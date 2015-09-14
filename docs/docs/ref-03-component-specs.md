@@ -129,7 +129,9 @@ If you want to integrate with other JavaScript frameworks, set timers using `set
 ### Updating: componentWillReceiveProps
 
 ```javascript
-componentWillReceiveProps(object nextProps)
+componentWillReceiveProps(
+  object nextProps
+)
 ```
 
 Invoked when a component is receiving new props. This method is not called for the initial render.
@@ -152,7 +154,9 @@ componentWillReceiveProps: function(nextProps) {
 ### Updating: shouldComponentUpdate
 
 ```javascript
-boolean shouldComponentUpdate(object nextProps, object nextState)
+boolean shouldComponentUpdate(
+  object nextProps, object nextState
+)
 ```
 
 Invoked before rendering when new props or state are being received. This method is not called for the initial render or when `forceUpdate` is used.
@@ -166,9 +170,9 @@ shouldComponentUpdate: function(nextProps, nextState) {
 }
 ```
 
-If `shouldComponentUpdate` returns false, then `render()` will be completely skipped until the next state change. (In addition, `componentWillUpdate` and `componentDidUpdate` will not be called.)
+If `shouldComponentUpdate` returns false, then `render()` will be completely skipped until the next state change. In addition, `componentWillUpdate` and `componentDidUpdate` will not be called.
 
-By default, `shouldComponentUpdate` always returns true to prevent subtle bugs when `state` is mutated in place, but if you are careful to always treat `state` as immutable and to read only from `props` and `state` in `render()` then you can override `shouldComponentUpdate` with an implementation that compares the old props and state to their replacements.
+By default, `shouldComponentUpdate` always returns `true` to prevent subtle bugs when `state` is mutated in place, but if you are careful to always treat `state` as immutable and to read only from `props` and `state` in `render()` then you can override `shouldComponentUpdate` with an implementation that compares the old props and state to their replacements.
 
 If performance is a bottleneck, especially with dozens or hundreds of components, use `shouldComponentUpdate` to speed up your app.
 
@@ -176,7 +180,9 @@ If performance is a bottleneck, especially with dozens or hundreds of components
 ### Updating: componentWillUpdate
 
 ```javascript
-componentWillUpdate(object nextProps, object nextState)
+componentWillUpdate(
+  object nextProps, object nextState
+)
 ```
 
 Invoked immediately before rendering when new props or state are being received. This method is not called for the initial render.
@@ -191,7 +197,9 @@ Use this as an opportunity to perform preparation before an update occurs.
 ### Updating: componentDidUpdate
 
 ```javascript
-componentDidUpdate(object prevProps, object prevState)
+componentDidUpdate(
+  object prevProps, object prevState
+)
 ```
 
 Invoked immediately after the component's updates are flushed to the DOM. This method is not called for the initial render.
