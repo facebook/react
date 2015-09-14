@@ -522,7 +522,7 @@ module.exports = (file, api, options) => {
   };
 
   if (
-    options['no-explicit-require'] || ReactUtils.hasReact(root)
+    !options['explicit-require'] || ReactUtils.hasReact(root)
   ) {
     const apply = (path, type) =>
       path
@@ -531,7 +531,7 @@ module.exports = (file, api, options) => {
         .filter(canConvertToClass)
         .forEach(classPath => updateToClass(
           classPath,
-          !options['no-super-class'],
+          !options['super-class'],
           type
         ));
 
