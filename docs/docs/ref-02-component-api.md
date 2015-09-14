@@ -14,13 +14,16 @@ Instances of a React Component are created internally in React when rendering. T
 ### setState
 
 ```javascript
-setState(function|object nextState[, function callback])
+setState(
+  function|object nextState,
+  [function callback]
+)
 ```
 Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
 
 The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.
 
-Here is the simple object usage...
+Here is the simple object usage:
 
 ```javascript
 setState({mykey: 'my new value'});
@@ -50,7 +53,10 @@ The second (optional) parameter is a callback function that will be executed onc
 ### replaceState
 
 ```javascript
-replaceState(object nextState[, function callback])
+replaceState(
+  object nextState,
+  [function callback]
+)
 ```
 
 Like `setState()` but deletes any pre-existing state keys that are not in nextState.
@@ -63,7 +69,9 @@ Like `setState()` but deletes any pre-existing state keys that are not in nextSt
 ### forceUpdate
 
 ```javascript
-forceUpdate([function callback])
+forceUpdate(
+  [function callback]
+)
 ```
 
 By default, when your component's state or props change, your component will re-render. However, if these change implicitly (eg: data deep within an object changes without changing the object itself) or if your `render()` method depends on some other data, you can tell React that it needs to re-run `render()` by calling `forceUpdate()`.
@@ -94,7 +102,7 @@ If this component has been mounted into the DOM, this returns the corresponding 
 bool isMounted()
 ```
 
-`isMounted()` returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to `setState()` or `forceUpdate()`.
+`isMounted()` returns `true` if the component is rendered into the DOM, `false` otherwise. You can use this method to guard asynchronous calls to `setState()` or `forceUpdate()`.
 
 > Note:
 >
@@ -104,7 +112,10 @@ bool isMounted()
 ### setProps
 
 ```javascript
-setProps(object nextProps[, function callback])
+setProps(
+  object nextProps,
+  [function callback]
+)
 ```
 
 When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.render()`.
@@ -122,7 +133,10 @@ Calling `setProps()` on a root-level component will change its properties and tr
 ### replaceProps
 
 ```javascript
-replaceProps(object nextProps[, function callback])
+replaceProps(
+  object nextProps,
+  [function callback]
+)
 ```
 
 Like `setProps()` but deletes any pre-existing props instead of merging the two objects.
