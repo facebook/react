@@ -54,7 +54,7 @@ describe('Transform Tests', () => {
     test('class', 'class-test');
 
     test('class', 'class-test2', {
-      'no-super-class': true,
+      'super-class': false
     });
 
     test('class', 'class-test3');

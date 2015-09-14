@@ -39,13 +39,13 @@ are using the master version (>0.13.1) of React as it is using
 `class` transforms `React.createClass` calls into ES2015 classes.
 
   * `jscodeshift -t react/packages/react-codemod/transforms/class.js <file>`
-  * If `--no-super-class=true` is specified it will not extend
+  * If `--no-super-class` is specified it will not extend
     `React.Component` if `setState` and `forceUpdate` aren't being called in a
     class. We do recommend always extending from `React.Component`, especially
     if you are using or planning to use [Flow](http://flowtype.org/). Also make
     sure you are not calling `setState` anywhere outside of your component.
 
-These three scripts take an option `--no-explicit-require=true` if you don't have a
+These three scripts take an option `--no-explicit-require` if you don't have a
 `require('React')` statement in your code files and if you access React as a
 global.
 
@@ -87,7 +87,7 @@ systems.
   * Creates a constructor if necessary. This is necessary if either
     `getInitialState` exists in the `React.createClass` spec OR if functions
     need to be bound to the instance.
-  * When `--no-super-class=true` is passed it only optionally extends
+  * When `--no-super-class` is passed it only optionally extends
     `React.Component` when `setState` or `forceUpdate` are used within the
     class.
 
