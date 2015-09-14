@@ -8,7 +8,7 @@ next: events.html
 
 ## Supported Tags
 
-React attempts to support all common elements. If you need an element that isn't listed here, please file an issue.
+React attempts to support all common elements. If you need an element that isn't listed here, please [file an issue](https://github.com/facebook/react/issues/new).
 
 ### HTML Elements
 
