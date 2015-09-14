@@ -44,7 +44,7 @@ var root = <ul className="my-list">
 React.render(root, document.getElementById('example'));
 ```
 
-__Factories__
+### Factories
 
 A `ReactElement`-factory is simply a function that generates a `ReactElement` with a particular `type` property. React has a built-in helper for you to create factories. It's effectively just:
 
@@ -105,7 +105,7 @@ When this constructor is invoked it is expected to return an object with at leas
 var component = new MyComponent(props); // never do this
 ```
 
-Other than for testing, you would normally __never__ call this constructor yourself. React calls it for you.
+Other than for testing, you would normally *never* call this constructor yourself. React calls it for you.
 
 Instead, you pass the `ReactComponent` Class to `createElement` you get a `ReactElement`.
 
@@ -140,13 +140,13 @@ The `render` method of a `ReactComponent` is expected to return another `ReactEl
 
 ## Formal Type Definitions
 
-__Entry Point__
+### Entry Point
 
 ```
 React.render = (ReactElement, HTMLElement | SVGElement) => ReactComponent;
 ```
 
-__Nodes and Elements__
+### Nodes and Elements
 
 ```
 type ReactNode = ReactElement | ReactFragment | ReactText;
@@ -180,7 +180,7 @@ type ReactText = string | number;
 type ReactEmpty = null | undefined | boolean;
 ```
 
-__Classes and Components__
+### Classes and Components
 
 ```
 type ReactClass<TProps> = (TProps) => ReactComponent<TProps>;
