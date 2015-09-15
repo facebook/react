@@ -1,5 +1,4 @@
 {% assign page = include.page %}
-{% assign author = site.data.authors[page.author] %}
 
 <h1>
 {% if include.isPermalink %}
@@ -12,10 +11,10 @@
 <p class="meta">
   {{ page.date | date: "%B %e, %Y" }}
   by
-  {% if author.url %}
-    <a href="{{author.url}}">{{ author.name }}</a>
+  {% if page.author.url %}
+    <a href="{{page.author.url}}">{{ page.author.name }}</a>
   {% else %}
-    {{ author.name }}
+    {{ page.author.name }}
   {% endif %}
 </p>
 
