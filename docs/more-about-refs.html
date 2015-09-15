@@ -477,7 +477,7 @@
 
 <p>It&#39;s as simple as adding a <code>ref</code> attribute to anything returned from <code>render</code> by using an ES6 arrow function:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  render: function() {
-    return <span class="nt">&lt;TextInput</span> <span class="na">ref=</span><span class="s">{(c)</span> <span class="err">=</span><span class="nt">&gt;</span> this._input = c} } /&gt;;
+    return <span class="nt">&lt;TextInput</span> <span class="na">ref=</span><span class="s">{(c)</span> <span class="err">=</span><span class="nt">&gt;</span> this._input = c} /&gt;;
   },
   componentDidMount: function() {
     this._input.focus();

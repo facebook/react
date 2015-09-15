@@ -430,9 +430,7 @@
              <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Text</span> <span class="nx">Content</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
            <span class="o">&lt;</span><span class="err">/ul&gt;;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-</code></pre></div>
-<p><strong>Factories</strong></p>
-
+</code></pre></div><h3><a class="anchor" name="factories"></a>Factories <a class="hash-link" href="#factories">#</a></h3>
 <p>A <code>ReactElement</code>-factory is simply a function that generates a <code>ReactElement</code> with a particular <code>type</code> property. React has a built-in helper for you to create factories. It&#39;s effectively just:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createFactory</span><span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">type</span><span class="p">);</span>
@@ -473,7 +471,7 @@
 <p>When this constructor is invoked it is expected to return an object with at least a <code>render</code> method on it. This object is referred to as a <code>ReactComponent</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyComponent</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span> <span class="c1">// never do this</span>
 </code></pre></div>
-<p>Other than for testing, you would normally <strong>never</strong> call this constructor yourself. React calls it for you.</p>
+<p>Other than for testing, you would normally <em>never</em> call this constructor yourself. React calls it for you.</p>
 
 <p>Instead, you pass the <code>ReactComponent</code> Class to <code>createElement</code> you get a <code>ReactElement</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">MyComponent</span><span class="p">);</span>
@@ -492,12 +490,8 @@
 <p>This is why you shouldn&#39;t construct your own instance. Instead, <code>ReactElement</code> is a virtual <code>ReactComponent</code> before it gets constructed. An old and new <code>ReactElement</code> can be compared to see if a new <code>ReactComponent</code> instance is created or if the existing one is reused.</p>
 
 <p>The <code>render</code> method of a <code>ReactComponent</code> is expected to return another <code>ReactElement</code>. This allows these components to be composed. Ultimately the render resolves into <code>ReactElement</code> with a <code>string</code> tag which instantiates a DOM <code>Element</code> instance and inserts it into the document.</p>
-<h2><a class="anchor" name="formal-type-definitions"></a>Formal Type Definitions <a class="hash-link" href="#formal-type-definitions">#</a></h2>
-<p><strong>Entry Point</strong></p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">React.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
-</code></pre></div>
-<p><strong>Nodes and Elements</strong></p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">type ReactNode = ReactElement | ReactFragment | ReactText;
+<h2><a class="anchor" name="formal-type-definitions"></a>Formal Type Definitions <a class="hash-link" href="#formal-type-definitions">#</a></h2><h3><a class="anchor" name="entry-point"></a>Entry Point <a class="hash-link" href="#entry-point">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">React.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
+</code></pre></div><h3><a class="anchor" name="nodes-and-elements"></a>Nodes and Elements <a class="hash-link" href="#nodes-and-elements">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">type ReactNode = ReactElement | ReactFragment | ReactText;
 
 type ReactElement = ReactComponentElement | ReactDOMElement;
 
@@ -526,9 +520,7 @@ type ReactNodeList = ReactNode | ReactEmpty;
 type ReactText = string | number;
 
 type ReactEmpty = null | undefined | boolean;
-</code></pre></div>
-<p><strong>Classes and Components</strong></p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">type ReactClass&lt;TProps&gt; = (TProps) =&gt; ReactComponent&lt;TProps&gt;;
+</code></pre></div><h3><a class="anchor" name="classes-and-components"></a>Classes and Components <a class="hash-link" href="#classes-and-components">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">type ReactClass&lt;TProps&gt; = (TProps) =&gt; ReactComponent&lt;TProps&gt;;
 
 type ReactComponent&lt;TProps&gt; = {
   props : TProps,

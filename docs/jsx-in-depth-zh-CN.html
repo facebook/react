@@ -416,7 +416,7 @@
 <h2><a class="anchor" name="html--react-"></a>HTML 标签对比 React 组件 <a class="hash-link" href="#html--react-">#</a></h2>
 <p>React 可以渲染 HTML 标签 (strings) 或 React 组件 (classes)。</p>
 
-<p>要渲染 HTML 标签，只需在 JSX 里使用小写字母开头的标签名。</p>
+<p>要渲染 HTML 标签，只需在 JSX 里使用小写字母的标签名。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myDivElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myDivElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
@@ -425,7 +425,7 @@
 <span class="kd">var</span> <span class="nx">myElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">someProperty</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
-<p>React 的 JSX 里约定分别使用首字母大、小写来区分本地组件的类和 HTML 标签。</p>
+<p>React 的 JSX 使用大、小写的约定来区分本地组件的类和 HTML 标签。</p>
 
 <blockquote>
 <p>注意:</p>
@@ -454,6 +454,12 @@
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Profile</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
+<p>当显示名称没有定义时，JSX 会根据变量赋值来推断类的 <a href="/react/docs/component-specs.html#displayname">显示名称</a> :</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 输入 (JSX):</span>
+<span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">});</span>
+<span class="c1">// 输出 (JS):</span>
+<span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s2">&quot;Nav&quot;</span><span class="p">,</span> <span class="p">});</span>
+</code></pre></div>
 <p>使用 <a href="/react/jsx-compiler.html">JSX 编译器</a> 来试用 JSX 并理解它是如何转换到原生 JavaScript，还有 <a href="/react/html-jsx.html">HTML 到 JSX 转换器</a> 来把现有 HTML 转成 JSX。</p>
 
 <p>如果你要使用 JSX，这篇 <a href="/react/docs/getting-started.html">新手入门</a> 教程来教你如何搭建环境。</p>
@@ -465,6 +471,57 @@
 的模式是把 ReactElement 当作一个行内的对象字面量形式来绕过
 <code>React.createElement</code> 里的校验代码。</p>
 </blockquote>
+<h2><a class="anchor" name="namespaced-components"></a>命名组件（Namespaced Components） <a class="hash-link" href="#namespaced-components">#</a></h2>
+<p>如果你正在构建一个有很多子组件的组件，比如表单，你也许会最终得到许多的变量声明。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 尴尬的变量声明块 </span>
+<span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">FormRow</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">FormLabel</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">FormInput</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">FormRow</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">FormLabel</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">FormInput</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/FormRow&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Form&gt;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>为了使其更简单和容易，<em>命名组件</em>令你使用包含其他组件作为属性的单一的组件。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Form.Row&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Form&gt;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>要做到这一点，你只需要把你的<em>&quot;子组件&quot;</em>创建为主组件的属性。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyFormComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+
+<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Row</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Label</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Input</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+</code></pre></div>
+<p>当编译你的代码时，JSX会恰当的进行处理。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span><span class="p">,</span> <span class="kc">null</span><span class="p">),</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+    <span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<blockquote>
+<p>注意:</p>
+
+<p>此特性在 <a href="/react/blog/2014/07/17/react-v0.11.html#jsx">v0.11</a> 及以上可用.</p>
+</blockquote>
 <h2><a class="anchor" name="javascript-"></a>JavaScript 表达式 <a class="hash-link" href="#javascript-">#</a></h2><h3><a class="anchor" name=""></a>属性表达式 <a class="hash-link" href="#">#</a></h3>
 <p>要使用 JavaScript 表达式作为属性值，只需把这个表达式用一对大括号 (<code>{}</code>) 包起来，不要用引号 (<code>&quot;&quot;</code>)。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 输入 (JSX):</span>
@@ -474,6 +531,15 @@
   <span class="nx">Person</span><span class="p">,</span>
   <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span>
 <span class="p">);</span>
+</code></pre></div><h3><a class="anchor" name="boolean-"></a>Boolean 属性 <a class="hash-link" href="#boolean-">#</a></h3>
+<p>省略一个属性的值会导致JSX把它当做 <code>true</code>。要传值 <code>false</code>必须使用属性表达式。这常出现于使用HTML表单元素，含有属性如<code>disabled</code>, <code>required</code>, <code>checked</code> 和 <code>readOnly</code>。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 在JSX中，对于禁用按钮这二者是相同的。</span>
+<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+
+<span class="c1">// 在JSX中，对于不禁用按钮这二者是相同的。</span>
+<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div><h3><a class="anchor" name=""></a>子节点表达式 <a class="hash-link" href="#">#</a></h3>
 <p>同样地，JavaScript 表达式可用于描述子结点：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 输入 (JSX):</span>
@@ -485,10 +551,10 @@
   <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">)</span> <span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Login</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h3><a class="anchor" name=""></a>注释 <a class="hash-link" href="#">#</a></h3>
-<p>JSX 里添加注释很容易；它们只是 JS 表达式而已。你只需要在一个标签的子节点内(非最外层)小心地用 <code>{}</code> 包围要注释的部分。</p>
+<p>JSX 里添加注释很容易；它们只是 JS 表达式而已。你仅仅需要小心的是当你在一个标签的子节点块(props.children)时，要用 <code>{}</code> 包围要注释的部分。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>
-    <span class="p">{</span><span class="cm">/* 一般注释, 用 {} 包围 */</span><span class="p">}</span>
+    <span class="p">{</span><span class="cm">/* child comment, 用 {} 包围 */</span><span class="p">}</span>
     <span class="o">&lt;</span><span class="nx">Person</span>
       <span class="cm">/* 多</span>
 <span class="cm">         行</span>

@@ -464,7 +464,9 @@
 <p>Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via <code>React.findDOMNode(this)</code>. The <code>componentDidMount()</code> method of child components is invoked before that of parent components.</p>
 
 <p>If you want to integrate with other JavaScript frameworks, set timers using <code>setTimeout</code> or <code>setInterval</code>, or send AJAX requests, perform those operations in this method.</p>
-<h3><a class="anchor" name="updating-componentwillreceiveprops"></a>Updating: componentWillReceiveProps <a class="hash-link" href="#updating-componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-componentwillreceiveprops"></a>Updating: componentWillReceiveProps <a class="hash-link" href="#updating-componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>Invoked when a component is receiving new props. This method is not called for the initial render.</p>
 
@@ -480,7 +482,9 @@
 
 <p>There is no analogous method <code>componentWillReceiveState</code>. An incoming prop transition may cause a state change, but the opposite is not true. If you need to perform operations in response to a state change, use <code>componentWillUpdate</code>.</p>
 </blockquote>
-<h3><a class="anchor" name="updating-shouldcomponentupdate"></a>Updating: shouldComponentUpdate <a class="hash-link" href="#updating-shouldcomponentupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-shouldcomponentupdate"></a>Updating: shouldComponentUpdate <a class="hash-link" href="#updating-shouldcomponentupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>Invoked before rendering when new props or state are being received. This method is not called for the initial render or when <code>forceUpdate</code> is used.</p>
 
@@ -490,12 +494,14 @@ transition to the new props and state will not require a component update.</p>
   <span class="k">return</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">id</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>If <code>shouldComponentUpdate</code> returns false, then <code>render()</code> will be completely skipped until the next state change. (In addition, <code>componentWillUpdate</code> and <code>componentDidUpdate</code> will not be called.)</p>
+<p>If <code>shouldComponentUpdate</code> returns false, then <code>render()</code> will be completely skipped until the next state change. In addition, <code>componentWillUpdate</code> and <code>componentDidUpdate</code> will not be called.</p>
 
-<p>By default, <code>shouldComponentUpdate</code> always returns true to prevent subtle bugs when <code>state</code> is mutated in place, but if you are careful to always treat <code>state</code> as immutable and to read only from <code>props</code> and <code>state</code> in <code>render()</code> then you can override <code>shouldComponentUpdate</code> with an implementation that compares the old props and state to their replacements.</p>
+<p>By default, <code>shouldComponentUpdate</code> always returns <code>true</code> to prevent subtle bugs when <code>state</code> is mutated in place, but if you are careful to always treat <code>state</code> as immutable and to read only from <code>props</code> and <code>state</code> in <code>render()</code> then you can override <code>shouldComponentUpdate</code> with an implementation that compares the old props and state to their replacements.</p>
 
 <p>If performance is a bottleneck, especially with dozens or hundreds of components, use <code>shouldComponentUpdate</code> to speed up your app.</p>
-<h3><a class="anchor" name="updating-componentwillupdate"></a>Updating: componentWillUpdate <a class="hash-link" href="#updating-componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-componentwillupdate"></a>Updating: componentWillUpdate <a class="hash-link" href="#updating-componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately before rendering when new props or state are being received. This method is not called for the initial render.</p>
 
@@ -506,7 +512,9 @@ transition to the new props and state will not require a component update.</p>
 
 <p>You <em>cannot</em> use <code>this.setState()</code> in this method. If you need to update state in response to a prop change, use <code>componentWillReceiveProps</code> instead.</p>
 </blockquote>
-<h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately after the component&#39;s updates are flushed to the DOM. This method is not called for the initial render.</p>
 
