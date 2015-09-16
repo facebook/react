@@ -61,11 +61,13 @@ var ReactDOMTextarea = {
   },
 
   mountWrapper: function(inst, props) {
-    LinkedValueUtils.checkPropTypes(
-      'textarea',
-      props,
-      inst._currentElement._owner
-    );
+    if (__DEV__) {
+      LinkedValueUtils.checkPropTypes(
+        'textarea',
+        props,
+        inst._currentElement._owner
+      );
+    }
 
     var defaultValue = props.defaultValue;
     // TODO (yungsters): Remove support for children content in <textarea>.
