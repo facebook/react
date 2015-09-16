@@ -26,7 +26,7 @@
  *     var valueLink = new ReactLink(this.state.value, this._handleValueChange);
  *     return <input valueLink={valueLink} />;
  *   },
- *   this._handleValueChange: function(newValue) {
+ *   _handleValueChange: function(newValue) {
  *     this.setState({value: newValue});
  *   }
  * });
