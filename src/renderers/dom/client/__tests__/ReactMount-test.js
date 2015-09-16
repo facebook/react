@@ -25,7 +25,7 @@ describe('ReactMount', function() {
     if (WebComponents === undefined && typeof jest !== 'undefined') {
       WebComponents = require('WebComponents');
     }
-  } catch(e) {
+  } catch (e) {
     // Parse error expected on engines that don't support setters
     // or otherwise aren't supportable by the polyfill.
     // Leave WebComponents undefined.
