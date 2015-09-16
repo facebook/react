@@ -61,11 +61,13 @@ var ReactDOMInput = {
   },
 
   mountWrapper: function(inst, props) {
-    LinkedValueUtils.checkPropTypes(
-      'input',
-      props,
-      inst._currentElement._owner
-    );
+    if (__DEV__) {
+      LinkedValueUtils.checkPropTypes(
+        'input',
+        props,
+        inst._currentElement._owner
+      );
+    }
 
     var defaultValue = props.defaultValue;
     inst._wrapperState = {
