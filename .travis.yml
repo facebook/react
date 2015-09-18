@@ -15,7 +15,7 @@ before_install:
       echo "Only docs were updated, stopping build process."
       exit
     fi
-    npm install -g npm
+    npm install -g npm@latest-2
 script:
 - |
     if [ "$TEST_TYPE" = build_website ]; then
