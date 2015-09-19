@@ -24,6 +24,7 @@
       <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
     <script src="../../build/react.js"></script>
+    <script src="../../build/react-dom.js"></script>
     <script>
       var ExampleApplication = React.createClass({
         render: function() {
@@ -41,7 +42,7 @@
 
       var start = new Date().getTime();
       setInterval(function() {
-        React.render(
+        ReactDOM.render(
           ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
           document.getElementById('container')
         );

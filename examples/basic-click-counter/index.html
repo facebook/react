@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>Basic Example with Click Counter</title>
     <script src="../../build/react.js"></script>
+    <script src="../../build/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
   </head>
   <body>
@@ -23,7 +24,8 @@
           return (<h2 onClick={this.handleClick}>Click me! Number of clicks: {this.state.clickCount}</h2>);
         }
       });
-      React.render(<Counter />,
+      ReactDOM.render(
+        <Counter />,
         document.getElementById('message')
       );
     </script>
