@@ -63,6 +63,8 @@
           return (
             <CSSTransitionGroup
               className="animateExample"
+              transitionEnterTimeout={250}
+              transitionLeaveTimeout={250}
               transitionName="example">
               {children}
             </CSSTransitionGroup>
