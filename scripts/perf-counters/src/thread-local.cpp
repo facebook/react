@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-#include "hphp/util/thread-local.h"
+#include "thread-local.h"
 
 #ifdef __linux__
 #include <link.h>

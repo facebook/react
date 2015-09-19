@@ -10,11 +10,10 @@
 #ifndef incl_HPHP_UTIL_HARDWARE_COUNTER_H_
 #define incl_HPHP_UTIL_HARDWARE_COUNTER_H_
 
-#include "hphp/util/thread-local.h"
-
-#include <folly/Range.h>
+#include "thread-local.h"
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace HPHP {
@@ -43,7 +42,7 @@ public:
   static int64_t GetInstructionCount();
   static int64_t GetLoadCount();
   static int64_t GetStoreCount();
-  static bool SetPerfEvents(folly::StringPiece events);
+  static bool SetPerfEvents(std::string events);
   static void IncInstructionCount(int64_t amount);
   static void IncLoadCount(int64_t amount);
   static void IncStoreCount(int64_t amount);
@@ -61,7 +60,7 @@ private:
   int64_t getStoreCount();
   bool eventExists(const char* event);
   bool addPerfEvent(const char* event);
-  bool setPerfEvents(folly::StringPiece events);
+  bool setPerfEvents(std::string events);
   void getPerfEvents(PerfEventCallback f, void* data);
   void clearPerfEvents();
 

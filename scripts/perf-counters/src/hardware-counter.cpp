@@ -7,13 +7,9 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-#include "hphp/util/hardware-counter.h"
+#include "hardware-counter.h"
 
 #ifndef NO_HARDWARE_COUNTERS
-
-#include <folly/ScopeGuard.h>
-
-#include "hphp/util/logger.h"
 
 #define _GNU_SOURCE 1
 #include <stdio.h>
@@ -28,8 +24,6 @@
 #include <asm/unistd.h>
 #include <sys/prctl.h>
 #include <linux/perf_event.h>
-#include <folly/String.h>
-#include <folly/Memory.h>
 
 namespace HPHP {
 ///////////////////////////////////////////////////////////////////////////////
@@ -80,14 +74,14 @@ public:
     inited = true;
     m_fd = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
     if (m_fd < 0) {
-      Logger::Verbose("perf_event_open failed with: %s",
-                      folly::errnoStr(errno).c_str());
+      // Logger::Verbose("perf_event_open failed with: %s",
+      //                 folly::errnoStr(errno).c_str());
       m_err = -1;
       return;
     }
     if (ioctl(m_fd, PERF_EVENT_IOC_ENABLE, 0) < 0) {
-      Logger::Warning("perf_event failed to enable: %s",
-                      folly::errnoStr(errno).c_str());
+      // Logger::Warning("perf_event failed to enable: %s",
+      //                 folly::errnoStr(errno).c_str());
       close();
       m_err = -1;
       return;
@@ -136,15 +130,15 @@ public:
     extra = 0;
     if (m_fd > 0) {
       if (ioctl (m_fd, PERF_EVENT_IOC_RESET, 0) < 0) {
-        Logger::Warning("perf_event failed to reset with: %s",
-                        folly::errnoStr(errno).c_str());
+        // Logger::Warning("perf_event failed to reset with: %s",
+        //                 folly::errnoStr(errno).c_str());
         m_err = -1;
         return;
       }
       auto ret = ::read(m_fd, reset_values, sizeof(reset_values));
       if (ret != sizeof(reset_values)) {
-        Logger::Warning("perf_event failed to reset with: %s",
-                        folly::errnoStr(errno).c_str());
+        // Logger::Warning("perf_event failed to reset with: %s",
+        //                 folly::errnoStr(errno).c_str());
         m_err = -1;
         return;
       }
@@ -358,7 +352,7 @@ bool HardwareCounter::addPerfEvent(const char* event) {
       found = true;
       type = perfTable[i].type;
     } else if (type != perfTable[i].type) {
-      Logger::Warning("failed to find perf event: %s", event);
+      // Logger::Warning("failed to find perf event: %s", event);
       return false;
     }
     config |= perfTable[i].config;
@@ -377,12 +371,13 @@ bool HardwareCounter::addPerfEvent(const char* event) {
   }
 
   if (!found || *ev) {
-    Logger::Warning("failed to find perf event: %s", event);
+    // Logger::Warning("failed to find perf event: %s", event);
     return false;
   }
-  auto hwc = folly::make_unique<HardwareCounterImpl>(type, config, event);
+  std::unique_ptr<HardwareCounterImpl> hwc(
+      new HardwareCounterImpl(type, config, event));
   if (hwc->m_err) {
-    Logger::Warning("failed to set perf event: %s", event);
+    // Logger::Warning("failed to set perf event: %s", event);
     return false;
   }
   m_counters.emplace_back(std::move(hwc));
@@ -407,25 +402,27 @@ bool HardwareCounter::eventExists(const char *event) {
   return false;
 }
 
-bool HardwareCounter::setPerfEvents(folly::StringPiece sevents) {
+bool HardwareCounter::setPerfEvents(std::string sevents) {
   // Make a copy of the string for use with strtok.
   auto const sevents_buf = static_cast<char*>(malloc(sevents.size() + 1));
-  SCOPE_EXIT { free(sevents_buf); };
   memcpy(sevents_buf, sevents.data(), sevents.size());
   sevents_buf[sevents.size()] = '\0';
 
   char* strtok_buf = nullptr;
   char* s = strtok_r(sevents_buf, ",", &strtok_buf);
+  bool success = true;
   while (s) {
     if (!eventExists(s) && !addPerfEvent(s)) {
-      return false;
+      success = false;
+      break;
     }
     s = strtok_r(nullptr, ",", &strtok_buf);
   }
-  return true;
+  free(sevents_buf);
+  return success;
 }
 
-bool HardwareCounter::SetPerfEvents(folly::StringPiece events) {
+bool HardwareCounter::SetPerfEvents(std::string events) {
   return s_counter->setPerfEvents(events);
 }
 

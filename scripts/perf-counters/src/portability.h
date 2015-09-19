@@ -10,9 +10,14 @@
 #ifndef incl_HPHP_PORTABILITY_H_
 #define incl_HPHP_PORTABILITY_H_
 
-#include <folly/Likely.h> // defining LIKELY/UNLIKELY is part of this header
-#include <folly/Portability.h>
-#include <folly/CPortability.h> // defining FOLLY_DISABLE_ADDRESS_SANITIZER
+// From folly/Likely.h
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define LIKELY(x)   (__builtin_expect((x), 1))
+#define UNLIKELY(x) (__builtin_expect((x), 0))
+#else
+#define LIKELY(x)   (x)
+#define UNLIKELY(x) (x)
+#endif
 
 //////////////////////////////////////////////////////////////////////
 

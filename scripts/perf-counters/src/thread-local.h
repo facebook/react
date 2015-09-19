@@ -10,11 +10,16 @@
 #ifndef incl_HPHP_THREAD_LOCAL_H_
 #define incl_HPHP_THREAD_LOCAL_H_
 
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <pthread.h>
-#include "hphp/util/exception.h"
 #include <errno.h>
-#include <folly/String.h>
+#include <stdexcept>
 #include <type_traits>
+#include <utility>
+#include "portability.h"
 
 namespace HPHP {
 
@@ -85,8 +90,7 @@ inline void ThreadLocalCheckReturn(int ret, const char *funcName) {
   if (ret != 0) {
     // This is used from global constructors so the safest thing to do is just
     // print to stderr and exit().
-    fprintf(stderr, "%s returned %d: %s", funcName, ret,
-            folly::errnoStr(ret).c_str());
+    fprintf(stderr, "%s returned %d", funcName, ret);
     exit(1);
   }
 }
@@ -357,7 +361,7 @@ template<typename T, bool throwOnNull = true>
 struct ThreadLocalProxy {
   T *get() const {
     if (m_p == nullptr && throwOnNull) {
-      throw Exception("ThreadLocalProxy::get() called before set()");
+      throw std::runtime_error("ThreadLocalProxy::get() called before set()");
     }
     return m_p;
   }
@@ -708,7 +712,7 @@ public:
   T *get() const {
     T *obj = (T*)pthread_getspecific(m_key);
     if (obj == nullptr && throwOnNull) {
-      throw Exception("ThreadLocalProxy::get() called before set()");
+      throw std::runtime_error("ThreadLocalProxy::get() called before set()");
     }
     return obj;
   }
