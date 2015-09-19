@@ -4,27 +4,25 @@
     <meta charset="utf-8">
     <title>Basic Example with Click Counter</title>
     <script src="../../build/react.js"></script>
-    <script src="../../build/JSXTransformer.js"></script>
-    <script type="text/jsx">
-    var Counter = React.createClass({
-      getInitialState: function () {
-        return { clickCount: 0 };
-      },
-      handleClick: function () {
-        this.setState(function(state) {
-          return {clickCount: state.clickCount + 1};
-        });
-      },
-      render: function () {
-        return (<h2 onClick={this.handleClick}>Click me! Number of clicks: {this.state.clickCount}</h2>);
-      }
-    });
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
   </head>
   <body>
     <div id="message" align="center"></div>
 
-    <script type="text/jsx">
+    <script type="text/babel">
+      var Counter = React.createClass({
+        getInitialState: function () {
+          return { clickCount: 0 };
+        },
+        handleClick: function () {
+          this.setState(function(state) {
+            return {clickCount: state.clickCount + 1};
+          });
+        },
+        render: function () {
+          return (<h2 onClick={this.handleClick}>Click me! Number of clicks: {this.state.clickCount}</h2>);
+        }
+      });
       React.render(<Counter />,
         document.getElementById('message')
       );
