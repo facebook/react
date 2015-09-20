@@ -356,6 +356,10 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
   );
 };
 
+ReactShallowRenderer.prototype.getMountedInstance = function() {
+  return this._instance ? this._instance._instance : null;
+};
+
 var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
