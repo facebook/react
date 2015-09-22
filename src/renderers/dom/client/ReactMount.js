@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ClientReactRootIndex = require('ClientReactRootIndex');
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -727,7 +728,9 @@ var ReactMount = {
     }
     if (!reactRootID) {
       // No valid "reactRoot" ID found, create one.
-      reactRootID = ReactInstanceHandles.createReactRootID();
+      reactRootID = ReactInstanceHandles.createReactRootID(
+        ClientReactRootIndex.createReactRootIndex()
+      );
     }
     containersByReactRootID[reactRootID] = container;
     return reactRootID;

@@ -12,8 +12,6 @@
 
 'use strict';
 
-var ReactRootIndex = require('ReactRootIndex');
-
 var invariant = require('invariant');
 
 var SEPARATOR = '.';
@@ -221,10 +219,11 @@ var ReactInstanceHandles = {
 
   /**
    * Constructs a React root ID
+   * @param {number} index A unique integer
    * @return {string} A React root ID.
    */
-  createReactRootID: function() {
-    return getReactRootIDString(ReactRootIndex.createReactRootIndex());
+  createReactRootID: function(index) {
+    return getReactRootIDString(index);
   },
 
   /**
