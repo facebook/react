@@ -392,12 +392,11 @@ function findFirstReactDOMImpl(node) {
     do {
       lastID = internalGetID(current);
       current = current.parentNode;
-      invariant(
-        current != null,
-        'findFirstReactDOMImpl(...): Unexpected detached subtree found when ' +
-        'traversing DOM from node `%s`.',
-        nodeID
-      );
+      if (current == null) {
+        // The passed-in node has been detached from the container it was
+        // originally rendered into.
+        return null;
+      }
     } while (lastID !== reactRootID);
 
     if (current === containersByReactRootID[reactRootID]) {
