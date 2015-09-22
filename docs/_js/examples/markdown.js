@@ -6,6 +6,9 @@ var MarkdownEditor = React.createClass({
   handleChange: function() {
     this.setState({value: React.findDOMNode(this.refs.textarea).value});
   },
+  rawMarkup: function() {
+    return { __html: marked(this.state.value, {sanitize: true}) };
+  },
   render: function() {
     return (
       <div className="MarkdownEditor">
@@ -17,9 +20,7 @@ var MarkdownEditor = React.createClass({
         <h3>Output</h3>
         <div
           className="content"
-          dangerouslySetInnerHTML={{
-            __html: marked(this.state.value, {sanitize: true})
-          }}
+          dangerouslySetInnerHTML={this.rawMarkup()}
         />
       </div>
     );
