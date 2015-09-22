@@ -128,8 +128,8 @@ describe('ReactDOMComponent', function() {
         'Warning: `div` was passed a style object that has previously been ' +
         'mutated. Mutating `style` is deprecated. Consider cloning it ' +
         'beforehand. Check the `render` of `App`. Previous style: ' +
-        '{"border":"1px solid black"}. Mutated style: ' +
-        '{"border":"1px solid black","position":"absolute"}.'
+        '{border: "1px solid black"}. Mutated style: ' +
+        '{border: "1px solid black", position: "absolute"}.'
       );
 
       style = {background: 'red'};
@@ -145,6 +145,23 @@ describe('ReactDOMComponent', function() {
       style.background = 'blue';
       ReactDOM.render(<span style={style}></span>, div);
       expect(console.error.argsForCall.length).toBe(2);
+    });
+
+    it('should warn semi-nicely about NaN in style', function() {
+      spyOn(console, 'error');
+
+      var style = {fontSize: NaN};
+      var div = document.createElement('div');
+      ReactDOM.render(<span style={style}></span>, div);
+      ReactDOM.render(<span style={style}></span>, div);
+
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toEqual(
+        'Warning: `span` was passed a style object that has previously been ' +
+        'mutated. Mutating `style` is deprecated. Consider cloning it ' +
+        'beforehand. Check the `render` using <span>. Previous style: ' +
+        '{fontSize: NaN}. Mutated style: {fontSize: NaN}.'
+      );
     });
 
     it('should update styles if initially null', function() {
