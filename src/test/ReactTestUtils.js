@@ -475,7 +475,7 @@ function makeSimulator(eventType) {
 
     ReactUpdates.batchedUpdates(function() {
       EventPluginHub.enqueueEvents(event);
-      EventPluginHub.processEventQueue();
+      EventPluginHub.processEventQueue(true);
     });
   };
 }

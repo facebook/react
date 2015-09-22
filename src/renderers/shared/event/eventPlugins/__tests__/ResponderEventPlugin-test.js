@@ -306,7 +306,7 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
   // extraction process, but not the side effectful events. Below, we dispatch
   // side effectful events.
   EventPluginHub.enqueueEvents(extractedEvents);
-  EventPluginHub.processEventQueue();
+  EventPluginHub.processEventQueue(true);
 
   // Ensure that every event that declared an `order`, was actually dispatched.
   expect(

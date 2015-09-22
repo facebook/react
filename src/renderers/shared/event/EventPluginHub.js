@@ -35,16 +35,23 @@ var eventQueue = null;
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
  * @param {?object} event Synthetic event to be dispatched.
+ * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
-var executeDispatchesAndRelease = function(event) {
+var executeDispatchesAndRelease = function(event, simulated) {
   if (event) {
-    EventPluginUtils.executeDispatchesInOrder(event);
+    EventPluginUtils.executeDispatchesInOrder(event, simulated);
 
     if (!event.isPersistent()) {
       event.constructor.release(event);
     }
   }
+};
+var executeDispatchesAndReleaseSimulated = function(e) {
+  return executeDispatchesAndRelease(e, true);
+};
+var executeDispatchesAndReleaseTopLevel = function(e) {
+  return executeDispatchesAndRelease(e, false);
 };
 
 /**
@@ -266,12 +273,22 @@ var EventPluginHub = {
    *
    * @internal
    */
-  processEventQueue: function() {
+  processEventQueue: function(simulated) {
     // Set `eventQueue` to null before processing it so that we can tell if more
     // events get enqueued while processing.
     var processingEventQueue = eventQueue;
     eventQueue = null;
-    forEachAccumulated(processingEventQueue, executeDispatchesAndRelease);
+    if (simulated) {
+      forEachAccumulated(
+        processingEventQueue,
+        executeDispatchesAndReleaseSimulated
+      );
+    } else {
+      forEachAccumulated(
+        processingEventQueue,
+        executeDispatchesAndReleaseTopLevel
+      );
+    }
     invariant(
       !eventQueue,
       'processEventQueue(): Additional events were enqueued while processing ' +
