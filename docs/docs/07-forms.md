@@ -68,6 +68,10 @@ In this example, we are simply accepting the newest value provided by the user a
 
 This would accept user input but truncate the value to the first 140 characters.
 
+### Potential Issues With Checkboxes and Radio Buttons
+
+Be aware that, in an attempt to normalise change handling for checkbox and radio inputs, React uses a `click` event in place of a `change` event. For the most part this behaves as expected, except when calling `preventDefault` in a `change` handler. `preventDefault` stops the browser from visually updating the input, even if `checked` gets toggled. This can be worked around either by removing the call to `preventDefault`, or putting the toggle of `checked` in a `setTimeout`.
+
 
 ## Uncontrolled Components
 
