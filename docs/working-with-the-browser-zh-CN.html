@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>パフォーマンスツール | React</title>
+  <title>与浏览器协作 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="パフォーマンスツール | React">
+  <meta property="og:title" content="与浏览器协作 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/perf-ja-JP.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/working-with-the-browser-zh-CN.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -224,7 +224,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html" class="active">Performance Tools</a>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
               </ul>
@@ -399,72 +399,138 @@
 
   <div class="inner-content">
     <h1>
-      パフォーマンスツール
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.9-perf.ja-JP.md" target="_blank">Edit on GitHub</a>
+      与浏览器协作
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/08-working-with-the-browser-zh-CN.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>Reactは普通、従来の枠を超えてとても速いです。しかし、アプリケーションにおいて、少しでもパフォーマンスを上げようという状況では、Reactの差分を取るアルゴリズムを最大限活用するヒントが得られる、<a href="/react/docs/component-specs-ja-JP.html#updating-shouldcomponentupdate">shouldComponentUpdate</a>のフックを提供します。</p>
+    <p>React提供了强大的抽象机制使你在大多数情况下免于直接接触DOM，但有时你仅仅只需要访问底层API，也许是为了与第三方库或者已有的代码协作。</p>
+<h2><a class="anchor" name="dom"></a>虚拟DOM <a class="hash-link" href="#dom">#</a></h2>
+<p>React如此快速是因为它从不直接操作DOM。React维持了一个快速的内存中的DOM表示。<code>render()</code> 方法返回一个DOM的<em>描述</em>，然后React能根据内存中的描述diff此描述来计算出最快速的方法更新浏览器。</p>
 
-<p>アプリケーション全体のパフォーマンスについての要約を得ることに加えて、ReactPerfはそれらのフックを実際にはどこに配置する必要があるか教えてくれるプロファイリングツールでもあります。</p>
+<p>此外，React实现了一个完备的合成事件(synthetic event)系统，以使得所有的事件对象都被保证符合W3C细则，而不论各个浏览器的怪癖，并且所有事件跨浏览器地一致并高效的冒泡（bubbles），你甚至能在IE8里使用一些HTML5事件！</p>
+
+<p>大多数时间你应该和React的&quot;伪造浏览器&quot;呆在一起，因为它更高性能并且容易推理。然而，有时你只需要访问底层API，或许是为了与第三方库比如一个jQuery插件协作。React为你提供了安全仓口来直接使用底层API。</p>
+<h2><a class="anchor" name="refs--finddomnode"></a>Refs 和 findDOMNode() <a class="hash-link" href="#refs--finddomnode">#</a></h2>
+<p>为了与浏览器互动，你需要一个指向DOM node的引用。React有一个函数<code>React.findDOMNode(component)</code> ，你能调用以得到一个指向指向组件的DOM node的引用。</p>
 
 <blockquote>
-<p>注意:
-Reactの開発版のビルドは与えられた外部ロジックのためにプロダクション版のビルドよりも遅くなります。例えば、Reactのフレンドリーコンソールの警告（プロダクション版のビルドにおいては警告が出ません）のように。それゆえ、プロファイラは <em>比較的</em> コストがかかっている箇所のみを指し示します。</p>
+<p>注意:</p>
+
+<p><code>findDOMNode()</code> 只作用于已挂载的组件（即，已经放置于DOM中的组件）。如果你尝试在还没有被挂载的组件上调用此函数（比如在<code>render()</code> 里有待被创建的组件上调用<code>findDOMNode()</code>将会抛出一个异常）</p>
 </blockquote>
-<h2><a class="anchor" name="api"></a>一般的なAPI <a class="hash-link" href="#api">#</a></h2>
-<p>ここに記述されている <code>Perf</code> オブジェクトは <code>react-with-addons.js</code> を開発版でビルドしたものを使用する際に <code>React.addons.Perf</code> として表されます。</p>
-<h3><a class="anchor" name="perf.start--perf.stop"></a><code>Perf.start()</code> と <code>Perf.stop()</code> <a class="hash-link" href="#perf.start--perf.stop">#</a></h3>
-<p>測定の開始/終了です。その間のReactの操作は以下のような分析のために記録されます。あまり時間を使わない操作は無視されます。</p>
 
-<p>停止した後、あなたは、測定結果を得るために <code>Perf.getLastMeasurements()</code> （後述）が必要になります。</p>
-<h3><a class="anchor" name="perf.printinclusivemeasurements"></a><code>Perf.printInclusive(measurements)</code> <a class="hash-link" href="#perf.printinclusivemeasurements">#</a></h3>
-<p>かかった全ての時間を出力します。引数が渡されなかった場合は、デフォルトで最後の測定から全ての測定が行われます。これは以下のように、コンソールに綺麗にフォーマットされたテーブルを出力します。</p>
-
-<p><img src="/react/img/docs/perf-inclusive.png" alt=""></p>
-<h3><a class="anchor" name="perf.printexclusivemeasurements"></a><code>Perf.printExclusive(measurements)</code> <a class="hash-link" href="#perf.printexclusivemeasurements">#</a></h3>
-<p>「占有」時間はコンポーネントをマウントするのにかかった時間を含みません。プロパティの処理、 <code>getInitialState</code> , <code>componentWillMount</code> や <code>componentDidMount</code> の呼び出しなどは含みます。</p>
-
-<p><img src="/react/img/docs/perf-exclusive.png" alt=""></p>
-<h3><a class="anchor" name="perf.printwastedmeasurements"></a><code>Perf.printWasted(measurements)</code> <a class="hash-link" href="#perf.printwastedmeasurements">#</a></h3>
-<p><strong>プロファイラの最も有用な箇所です</strong>。</p>
-
-<p>「無駄な」時間はコンポーネントが実際には何もレンダリングしていないのにかかっている時間です。例えば、同じものをレンダリングしたので、DOMが触られなかったような場合です。</p>
-
-<p><img src="/react/img/docs/perf-wasted.png" alt=""></p>
-<h3><a class="anchor" name="perf.printdommeasurements"></a><code>Perf.printDOM(measurements)</code> <a class="hash-link" href="#perf.printdommeasurements">#</a></h3>
-<p>以下のような、DOMの操作を出力します。例えば、&quot;set innerHTML&quot;や&quot;remove&quot;といったものです。</p>
-
-<p><img src="/react/img/docs/perf-dom.png" alt=""></p>
-<h2><a class="anchor" name="api"></a>先進的なAPI <a class="hash-link" href="#api">#</a></h2>
-<p>上記の出力メソッドは結果をプリティプリントするのに <code>Perf.getLastMeasurements()</code> を使用しています。</p>
-<h3><a class="anchor" name="perf.getlastmeasurements"></a><code>Perf.getLastMeasurements()</code> <a class="hash-link" href="#perf.getlastmeasurements">#</a></h3>
-<p>最後の開始と終了のセッションから測定の配列を取得します。配列は以下のようなオブジェクトを含みます。</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
-  <span class="c1">// &quot;inclusive&quot;と&quot;exclusive&quot;の期間は以下で説明されています</span>
-  <span class="s2">&quot;exclusive&quot;</span><span class="o">:</span> <span class="p">{},</span>
-  <span class="c1">// &#39;.0.0&#39; はノードのReact ID</span>
-  <span class="s2">&quot;inclusive&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.0670000008540228</span><span class="p">,</span> <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.3259999939473346</span><span class="p">},</span>
-  <span class="s2">&quot;render&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.036999990697950125</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.010000003385357559</span><span class="p">},</span>
-  <span class="c1">// インスタンスの数</span>
-  <span class="s2">&quot;counts&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">},</span>
-  <span class="c1">// 触ったDOM</span>
-  <span class="s2">&quot;writes&quot;</span><span class="o">:</span> <span class="p">{},</span>
-  <span class="c1">// 追加のデバッグ情報</span>
-  <span class="s2">&quot;displayNames&quot;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;&lt;root&gt;&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;Box&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">}</span>
+<p>为了获得一个指向React组件的引用，你可以要么使用<code>this</code> 来得到当前React组件，要么使用refs来引用你拥有的组件。它们像这样工作：</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// 明确的强制text input使用原生DOM API。</span>
+    <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myTextInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>
   <span class="p">},</span>
-  <span class="s2">&quot;totalTime&quot;</span><span class="o">:</span> <span class="mf">0.48499999684281647</span>
-<span class="p">}</span>
-</code></pre></div>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// 当组件被挂载时</span>
+    <span class="c1">// ref属性给this.refs添加了一个指向指向组件的引用</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;myTextInput&quot;</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Focus the text input&quot;</span>
+          <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div><h2><a class="anchor" name="refs"></a>更多关于Refs <a class="hash-link" href="#refs">#</a></h2>
+<p>要学习更多有关refs，包括更有效使用它们的方法，请参见<a href="/react/docs/more-about-refs.html">more about refs</a> 文档。</p>
+<h2><a class="anchor" name=""></a>组件的生命周期 <a class="hash-link" href="#">#</a></h2>
+<p>组件的生命周期有三个主要部分：</p>
+
+<ul>
+<li><strong>挂载:</strong> 组件被注入DOM。</li>
+<li><strong>更新:</strong> 组件被重新渲染来决定DOM是否应被更新。</li>
+<li><strong>卸载:</strong> 组件从DOM中被移除。</li>
+</ul>
+
+<p>React提供生命周期方法，以便你可以指定钩挂到这个过程上。我们提供了 <strong>will</strong> 方法，该方法在某事发生前被调用，<strong>did</strong>方法，在某事发生后被调用。</p>
+<h3><a class="anchor" name=""></a>挂载 <a class="hash-link" href="#">#</a></h3>
+<ul>
+<li><code>getInitialState(): object</code> 在组件挂载前被调用. 有状态组件(Stateful components) 应该实现此函数并返回初始state的数据。</li>
+<li><code>componentWillMount()</code> 在挂载发生前被立即调用。 </li>
+<li><code>componentDidMount()</code> 在挂载发生后被立即调用。 需要DOM node的初始化应该放在这里。 </li>
+</ul>
+<h3><a class="anchor" name=""></a>更新 <a class="hash-link" href="#">#</a></h3>
+<ul>
+<li><code>componentWillReceiveProps(object nextProps)</code> 当挂载的组件接收到新的props时被调用。此方法应该被用于比较<code>this.props</code> 和 <code>nextProps</code>以用于使用<code>this.setState()</code>执行状态转换。</li>
+<li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> 当组件决定任何改变是否要更新到DOM时被调用。作为一个优化实现比较<code>this.props</code> 和 <code>nextProps</code> 、<code>this.state</code> 和 <code>nextState</code> ，如果React应该跳过更新，返回<code>false</code>。 </li>
+<li><code>componentWillUpdate(object nextProps, object nextState)</code> 在更新发生前被立即调用。你不能在此调用<code>this.setState()</code>。</li>
+<li><code>componentDidUpdate(object prevProps, object prevState)</code> 在更新发生后被立即调用。</li>
+</ul>
+<h3><a class="anchor" name=""></a>卸载 <a class="hash-link" href="#">#</a></h3>
+<ul>
+<li><code>componentWillUnmount()</code> 在组件被卸载和摧毁后被立即调用。清理应该放在这里。</li>
+</ul>
+<h3><a class="anchor" name="mounted-methods"></a>Mounted Methods <a class="hash-link" href="#mounted-methods">#</a></h3>
+<p><em>Mounted</em> 复合组件同样支持以下方法:</p>
+
+<ul>
+<li><code>findDOMNode(): DOMElement</code> 能够在任何已挂载的组件上调用以便于获取指向它渲染的DOM node的引用。</li>
+<li><code>forceUpdate()</code> 能在任何已挂载的组件上调用，当你知道一些更深层次的组件状态变化了但没有使用 <code>this.setState()</code>。</li>
+</ul>
+<h2><a class="anchor" name="polyfills"></a>浏览器支持和填充物(polyfills) <a class="hash-link" href="#polyfills">#</a></h2>
+<p>在 Facebook，我们支持老浏览器，包括IE8。我们由来已久的有适当的填充物(polyfills)来让我们写前瞻性的js。这意味着我们在代码库中没有一堆散落在各处的技巧(hacks)并且我们依然能期望我们的代码&quot;可行（just work）&quot;。例如，我可以只写 <code>Date.now()</code>，而不是额外看到<code>+new Date()</code>。既然开源的React和我们内部使用的一样，我们也应用了这种使用前瞻性js的哲学。</p>
+
+<p>除了这种哲学外，我们也采用了这样的立场，我们，作为一个JS库的作者，不应该把polyfills作为我们库的一部分。如果所有的库这样做，就有很大的机会发送同样的polyfill多次，这可能是一个相当大的无用代码。如果你的产品需要支援老的浏览器，你很有可能已经在使用某些东西比如<a href="https://github.com/es-shims/es5-shim">es5-shim</a>。</p>
+<h3><a class="anchor" name="polyfills"></a>需要用来支持旧浏览器的Polyfills <a class="hash-link" href="#polyfills">#</a></h3>
+<p>来自 <a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a>的<code>es5-shim.js</code>  提供了如下React需要的东西：</p>
+
+<ul>
+<li><code>Array.isArray</code></li>
+<li><code>Array.prototype.every</code></li>
+<li><code>Array.prototype.forEach</code></li>
+<li><code>Array.prototype.indexOf</code></li>
+<li><code>Array.prototype.map</code></li>
+<li><code>Date.now</code></li>
+<li><code>Function.prototype.bind</code></li>
+<li><code>Object.keys</code></li>
+<li><code>String.prototype.split</code></li>
+<li><code>String.prototype.trim</code></li>
+</ul>
+
+<p>同样来自 <a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a>的<code>es5-sham.js</code>, 提供了如下React需要的东西：</p>
+
+<ul>
+<li><code>Object.create</code></li>
+<li><code>Object.freeze</code></li>
+</ul>
+
+<p>非最小化的React build需要如下，来自<a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>.</p>
+
+<ul>
+<li><code>console.*</code></li>
+</ul>
+
+<p>当在IE8里使用HTML5元素，包括<code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;header&gt;</code>, 和 <code>&lt;footer&gt;</code>, 同样必须包含<a href="https://github.com/aFarkas/html5shiv">html5shiv</a> 或者类似的脚本。</p>
+<h3><a class="anchor" name=""></a>跨浏览器问题 <a class="hash-link" href="#">#</a></h3>
+<p>尽管React在抽象浏览器不同时做的相当好，但一些浏览器被限制或者表现出怪异的行为，我们没能找到变通的方案解决。</p>
+<h4><a class="anchor" name="ie8onscroll"></a>IE8的onScroll事件 <a class="hash-link" href="#ie8onscroll">#</a></h4>
+<p>在IE8<code>onScroll</code> 事件不冒泡，并且IE8没有定义事件捕获阶段handlers的API，意味React这没有办法去监听这些事件。
+目前这个事件的handler在IE8中是被忽略的。</p>
+
+<p>参见 <a href="https://github.com/facebook/react/issues/631">onScroll doesn&#39;t work in IE8</a> GitHub问题 来获得更多信息.</p>
+
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/pure-render-mixin-ja-JP.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/forms-zh-CN.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/advanced-performance-ja-JP.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/more-about-refs-zh-CN.html">Next &rarr;</a>
       
     </div>
   </div>

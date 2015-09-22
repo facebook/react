@@ -551,7 +551,7 @@
   <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">)</span> <span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Login</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h3><a class="anchor" name=""></a>注释 <a class="hash-link" href="#">#</a></h3>
-<p>JSX 里添加注释很容易；它们只是 JS 表达式而已。你仅仅需要小心的是当你在一个标签的子节点块(props.children)时，要用 <code>{}</code> 包围要注释的部分。</p>
+<p>JSX 里添加注释很容易；它们只是 JS 表达式而已。你仅仅需要小心的是当你在一个标签的子节点块时，要用 <code>{}</code> 包围要注释的部分。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>
     <span class="p">{</span><span class="cm">/* child comment, 用 {} 包围 */</span><span class="p">}</span>
