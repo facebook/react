@@ -257,14 +257,18 @@ That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/C
 ```javascript{4,10}
 // tutorial7.js
 var Comment = React.createClass({
-  render: function() {
+  rawMarkup: function() {
     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    return { __html: rawMarkup };
+  },
+
+  render: function() {
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        <span dangerouslySetInnerHTML={{"{{"}}__html: rawMarkup}} />
+        <span dangerouslySetInnerHTML={this.rawMarkup()} />
       </div>
     );
   }
