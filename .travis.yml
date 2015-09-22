@@ -62,15 +62,18 @@ script:
           -F "branch=$TRAVIS_BRANCH" \
           $SERVER
       fi
+    elif [ "$TEST_TYPE" = perf ]; then
+      set -x
+      nvm install iojs-v3.3.0
+      CXX=g++-4.8 npm install scripts/perf-counters
+      node -e 'var PC=require("perf-counters");PC.init();console.log(PC.getCounters());'
+      set +x
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi
 env:
   matrix:
-  - TEST_TYPE=build
-  - TEST_TYPE=jest
-  - TEST_TYPE=lint
-  - TEST_TYPE=build_website
+  - TEST_TYPE=perf
   global:
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
@@ -88,3 +91,9 @@ notifications:
     on_failure: change
     channels:
     - chat.freenode.net#reactjs
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8

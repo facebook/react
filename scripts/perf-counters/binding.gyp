@@ -8,6 +8,7 @@
         "src/thread-local.cpp",
       ],
       "cflags": [
+        "-std=c++0x",
         "-Wno-sign-compare",
       ],
     },
