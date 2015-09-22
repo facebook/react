@@ -26,8 +26,6 @@ var ReactDOMEmptyComponent = function(instantiate) {
   this._domID = null;
 };
 assign(ReactDOMEmptyComponent.prototype, {
-  construct: function(element) {
-  },
   mountComponent: function(
     transaction,
     nativeParent,

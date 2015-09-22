@@ -68,7 +68,7 @@ function createInternalComponent(element) {
     'There is no registered component for the tag %s',
     element.type
   );
-  return new genericComponentClass(element.type, element.props);
+  return new genericComponentClass(element);
 }
 
 /**
