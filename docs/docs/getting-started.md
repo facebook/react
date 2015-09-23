@@ -71,13 +71,13 @@ Note that some browsers (Chrome, e.g.) will fail to load the file unless it's se
 First install the command-line tools (requires [npm](https://www.npmjs.com/)):
 
 ```
-npm install -g react-tools
+npm install -g babel
 ```
 
 Then, translate your `src/helloworld.js` file to plain JavaScript:
 
 ```
-jsx --watch src/ build/
+babel --watch src/ --out-dir build/
 
 ```
 
@@ -108,6 +108,8 @@ Update your HTML file as below:
   </body>
 </html>
 ```
+
+You can read more about [babel, here.](http://facebook.github.io/react/docs/tooling-integration.html#jsx)
 
 ## Want CommonJS?
 
