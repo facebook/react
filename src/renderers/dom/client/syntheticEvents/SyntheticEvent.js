@@ -23,7 +23,6 @@ var warning = require('warning');
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var EventInterface = {
-  path: null,
   type: null,
   // currentTarget is set when dispatching; no use in copying it here
   currentTarget: emptyFunction.thatReturnsNull,
