@@ -184,6 +184,10 @@ function getUnchangedComponents(measurement) {
         break;
       }
     }
+    // check if component newly created
+    if (measurement.created[id]) {
+      isDirty = true;
+    }
     if (!isDirty && measurement.counts[id] > 0) {
       cleanComponents[id] = true;
     }
