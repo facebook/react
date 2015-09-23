@@ -476,4 +476,28 @@ describe('traverseAllChildren', function() {
     }
   });
 
+  it('should throw on object', function() {
+    expect(function() {
+      traverseAllChildren({a: 1, b: 2}, function() {}, null);
+    }).toThrow(
+      'Invariant Violation: Objects are not valid as a React child (found: ' +
+      'object with keys {a, b}). If you meant to render a collection of ' +
+      'children, use an array instead or wrap the object using ' +
+      'createFragment(object) from the React add-ons.'
+    );
+  });
+
+  it('should throw on regex', function() {
+    // Really, we care about dates (#4840) but those have nondeterministic
+    // serialization (timezones) so let's test a regex instead:
+    expect(function() {
+      traverseAllChildren(/abc/, function() {}, null);
+    }).toThrow(
+      'Invariant Violation: Objects are not valid as a React child (found: ' +
+      '/abc/). If you meant to render a collection of children, use an array ' +
+      'instead or wrap the object using createFragment(object) from the ' +
+      'React add-ons.'
+    );
+  });
+
 });
