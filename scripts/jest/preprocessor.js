@@ -2,6 +2,7 @@
 
 var path = require('path');
 
+var assign = require('object-assign');
 var babel = require('babel');
 var coffee = require('coffee-script');
 
@@ -12,6 +13,28 @@ var tsPreprocessor = require('./ts-preprocessor');
 var moduleMap = require('fbjs/module-map');
 var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
 var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
+var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+
+// Use require.resolve to be resiliant to file moves, npm updates, etc
+var pathToBabel = path.join(require.resolve('babel'), '..', 'package.json');
+var pathToModuleMap = require.resolve('fbjs/module-map');
+var pathToBabelPluginDev = require.resolve('fbjs-scripts/babel/dev-expression');
+var pathToBabelPluginModules = require.resolve('fbjs-scripts/babel/rewrite-modules');
+
+// TODO: make sure this stays in sync with gulpfile
+var babelOptions = {
+  nonStandard: true,
+  blacklist: [
+    'spec.functionName',
+    'validation.react',
+  ],
+  optional: [
+    'es7.trailingFunctionCommas',
+  ],
+  plugins: [babelPluginDEV, babelPluginModules],
+  retainLines: true,
+  _moduleMap: moduleMap,
+};
 
 module.exports = {
   process: function(src, filePath) {
@@ -21,24 +44,12 @@ module.exports = {
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
       return tsPreprocessor.compile(src, filePath);
     }
-    // TODO: make sure this stays in sync with gulpfile
-    if (!filePath.match(/\/node_modules\//) &&
-        !filePath.match(/\/third_party\//)) {
-      var rv = babel.transform(src, {
-        nonStandard: true,
-        blacklist: [
-          'spec.functionName',
-          'validation.react',
-        ],
-        optional: [
-          'es7.trailingFunctionCommas',
-        ],
-        plugins: [babelPluginDEV, babelPluginModules],
-        filename: filePath,
-        retainLines: true,
-        _moduleMap: moduleMap,
-      }).code;
-
+    if (
+      !filePath.match(/\/node_modules\//) &&
+      !filePath.match(/\/third_party\//)
+    ) {
+      var rv =
+        babel.transform(src, assign({filename: filePath}, babelOptions)).code;
       // hax to turn fbjs/lib/foo into /path/to/node_modules/fbjs/lib/foo
       // because jest is slooow with node_modules paths (facebook/jest#465)
       rv = rv.replace(
@@ -58,4 +69,12 @@ module.exports = {
     }
     return src;
   },
+
+  getCacheKey: createCacheKeyFunction([
+    __filename,
+    pathToBabel,
+    pathToModuleMap,
+    pathToBabelPluginDev,
+    pathToBabelPluginModules,
+  ]),
 };
