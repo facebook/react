@@ -156,6 +156,7 @@ var ReactDefaultPerf = {
           writes: {},
           displayNames: {},
           totalTime: 0,
+          created: {},
         });
         start = performanceNow();
         rv = func.apply(this, args);
@@ -228,6 +229,7 @@ var ReactDefaultPerf = {
         if (isRender) {
           addValue(entry.counts, rootNodeID, 1);
         } else if (isMount) {
+          entry.created[rootNodeID] = true;
           mountStack.push(0);
         }
 
