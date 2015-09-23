@@ -223,6 +223,47 @@ describe('ReactTestUtils', function() {
     expect(scryResults.length).toBe(1);
   });
 
+  it('can scryRenderedDOMComponentsWithClass with multiple classes', function() {
+    var Wrapper = React.createClass({
+      render: function() {
+        return <div>Hello <span className={'x y z'}>Jim</span></div>;
+      },
+    });
+    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    var scryResults1 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      renderedComponent,
+      'x y'
+    );
+    expect(scryResults1.length).toBe(1);
+
+    var scryResults2 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      renderedComponent,
+      'x z'
+    );
+    expect(scryResults2.length).toBe(1);
+
+    var scryResults3 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      renderedComponent,
+      ['x', 'y']
+    );
+    expect(scryResults3.length).toBe(1);
+
+    expect(scryResults1[0]).toBe(scryResults2[0]);
+    expect(scryResults1[0]).toBe(scryResults3[0]);
+
+    var scryResults4 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      renderedComponent,
+      ['x', 'a']
+    );
+    expect(scryResults4.length).toBe(0);
+
+    var scryResults5 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      renderedComponent,
+      ['x a']
+    );
+    expect(scryResults5.length).toBe(0);
+  });
+
   it('traverses children in the correct order', function() {
     var Wrapper = React.createClass({
       render: function() {

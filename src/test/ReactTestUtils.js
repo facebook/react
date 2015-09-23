@@ -174,14 +174,16 @@ var ReactTestUtils = {
    * components with the class name matching `className`.
    * @return {array} an array of all the matches.
    */
-  scryRenderedDOMComponentsWithClass: function(root, className) {
+  scryRenderedDOMComponentsWithClass: function(root, classNames) {
+    if (!Array.isArray(classNames)) {
+      classNames = classNames.split(/\s+/);
+    }
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
-        var instClassName = ReactDOM.findDOMNode(inst).className;
-        return (
-          instClassName &&
-          (('' + instClassName).split(/\s+/)).indexOf(className) !== -1
-        );
+        var classList = ReactDOM.findDOMNode(inst).className.split(/\s+/);
+        return classNames.every(function(className) {
+          return classList.indexOf(className) !== -1;
+        });
       }
       return false;
     });
