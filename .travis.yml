@@ -1,7 +1,7 @@
 ---
 language: node_js
 node_js:
-- '0.10'
+- 4
 sudo: false
 cache:
   directories:
@@ -16,6 +16,7 @@ before_install:
       exit
     fi
     npm install -g npm@latest-2
+    npm --version
 script:
 - |
     if [ "$TEST_TYPE" = build_website ]; then
