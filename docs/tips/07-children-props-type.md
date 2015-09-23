@@ -34,7 +34,7 @@ var GenericWrapper = React.createClass({
     console.log(Array.isArray(this.props.children)); // => false
 
     // warning: yields 5 for length of the string 'hello', not 1 for the
-    // length of the non-existant array wrapper!
+    // length of the non-existent array wrapper!
     console.log(this.props.children.length);
   },
 
