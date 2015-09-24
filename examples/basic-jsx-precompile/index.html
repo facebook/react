@@ -11,23 +11,21 @@
       <p>
         If you can see this, React is not running. Try running:
       </p>
-      <pre>npm install -g react-tools
+      <pre>npm install -g babel
 cd examples/basic-jsx-precompile/
-jsx . build/</pre>
+babel example.js --out-dir=build</pre>
     </div>
     <h4>Example Details</h4>
     <p>This is written with JSX in a separate file and precompiled to vanilla JS by running:</p>
-    <pre>npm install -g react-tools
+    <pre>npm install -g babel
 cd examples/basic-jsx-precompile/
-jsx . build/</pre>
+babel example.js --out-dir=build</pre>
     <p>
       Learn more about React at
       <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
-    <script src="../shared/thirdparty/es5-shim.min.js"></script>
-    <script src="../shared/thirdparty/es5-sham.min.js"></script>
-    <script src="../shared/thirdparty/console-polyfill.js"></script>
     <script src="../../build/react.js"></script>
+    <script src="../../build/react-dom.js"></script>
     <script src="build/example.js"></script>
   </body>
 </html>
