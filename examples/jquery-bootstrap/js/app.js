@@ -18,17 +18,16 @@ var BootstrapModal = React.createClass({
   // integrate Bootstrap or jQuery with the components lifecycle methods.
   componentDidMount: function() {
     // When the component is added, turn it into a modal
-    $(ReactDOM.findDOMNode(this))
-      .modal({backdrop: 'static', keyboard: false, show: false});
+    $(this.refs.root).modal({backdrop: 'static', keyboard: false, show: false});
   },
   componentWillUnmount: function() {
-    $(ReactDOM.findDOMNode(this)).off('hidden', this.handleHidden);
+    $(this.refs.root).off('hidden', this.handleHidden);
   },
   close: function() {
-    $(ReactDOM.findDOMNode(this)).modal('hide');
+    $(this.refs.root).modal('hide');
   },
   open: function() {
-    $(ReactDOM.findDOMNode(this)).modal('show');
+    $(this.refs.root).modal('show');
   },
   render: function() {
     var confirmButton = null;
@@ -52,7 +51,7 @@ var BootstrapModal = React.createClass({
     }
 
     return (
-      <div className="modal fade">
+      <div className="modal fade" ref="root">
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
