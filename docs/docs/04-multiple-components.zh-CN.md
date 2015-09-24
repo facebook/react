@@ -57,7 +57,7 @@ React.render(
 ## 从属关系
 
 上面例子中，`Avatar` 拥有 `ProfilePic` 和 `ProfileLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，
-如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的关键性原则。
+如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。
 
 把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，`Avatar` 拥有 `div`、`ProfilePic` 和 `ProfileLink` 实例，`div` 是 `ProfilePic` 和 `ProfileLink` 实例的**父级**（但不是拥有者）。
 
@@ -147,7 +147,8 @@ var MyComponent = React.createClass({
     );
   }
 });
-
+```
+```javascript
 // 正确 :)
 var ListItemWrapper = React.createClass({
   render: function() {
@@ -167,26 +168,7 @@ var MyComponent = React.createClass({
 });
 ```
 
-也可以传递 object 来做有 key 的子级。object 的 key 会被当作每个组件的 `key`。但是一定要牢记 JavaScript 并不总是保证属性的顺序会被保留。实际情况下浏览器一般会保留属性的顺序，**除了** 使用 32位无符号数字做为 key 的属性。数字型属性会按大小排序并且排在其它属性前面。一旦发生这种情况，React 渲染组件的顺序就是混乱。可能在 key 前面加一个字符串前缀来避免：
-
-```javascript
-  render: function() {
-    var items = {};
-
-    this.props.results.forEach(function(result) {
-      // 如果 result.id 看起来是一个数字（比如短哈希），那么
-      // 对象字面量的顺序就得不到保证。这种情况下，需要添加前缀
-      // 来确保 key 是字符串。
-      items['result-' + result.id] = <li>{result.text}</li>;
-    });
-
-    return (
-      <ol>
-        {items}
-      </ol>
-    );
-  }
-```
+也可以传递ReactFragment 对象 来做有 key 的子级。详见[Keyed Fragments](create-fragment.html) 
 
 ## 数据流
 
