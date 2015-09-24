@@ -808,10 +808,10 @@ var ReactCompositeComponentMixin = {
   attachRef: function(ref, component) {
     var inst = this.getPublicInstance();
     invariant(inst != null, 'Stateless function components cannot have refs.');
-    var componentInstance = component.getPublicInstance();
-    invariant(componentInstance != null, 'Stateless function components cannot be given refs.');
+    var publicComponentInstance = component.getPublicInstance();
+    invariant(publicComponentInstance != null, 'Stateless function components cannot be given refs.');
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
-    refs[ref] = componentInstance;
+    refs[ref] = publicComponentInstance;
   },
 
   /**
