@@ -81,7 +81,7 @@ ReactComponent render(
 )
 ```
 
-Render a ReactElement into the DOM in the supplied `container` and return a reference to the component.
+Render a ReactElement into the DOM in the supplied `container` and return a [reference](/react/docs/more-about-refs.html) to the component (or returns `null` for [stateless components](/react/docs/reusable-components.html#stateless-functions)).
 
 If the ReactElement was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.
 
@@ -143,6 +143,12 @@ DOMElement findDOMNode(ReactComponent component)
 ```
 If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `findDOMNode` returns `null`.
 
+> Note:
+>
+> `findDOMNode()` is an escape hatch used to access the underlying DOM node. In most cases, use of this escape hatch is discouraged because it pierces the component abstraction. However, there are some situations where this is necessary (for instance, you may need to find a DOM node in order to position it absolutely or to determine the rendered width measured in pixels).
+
+>
+> `findDOMNode()` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `findDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
 
 ### React.DOM
 

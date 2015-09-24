@@ -232,3 +232,33 @@ Methods follow the same semantics as regular ES6 classes, meaning that they don'
 ### No Mixins
 
 Unfortunately ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes. Instead, we're working on making it easier to support such use cases without resorting to mixins.
+
+
+
+## Stateless Functions
+
+You may also define your React classes as a plain JavaScript function. For example using the stateless function syntax:
+
+```javascript
+function HelloMessage(props) {
+  return <div>Hello {props.name}</div>;
+}
+React.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+Or using the new ES6 arrow syntax:
+
+```javascript
+var HelloMessage = (props) => <div>Hello {props.name}</div>;
+React.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+
+This simplified component API is intended for components that are pure functions of their props. These components must not retain internal state, do not have backing instances, and do not have the component lifecycle methods. They are pure functional transforms of their input, with zero boilerplate.
+
+> NOTE:
+> 
+> Because stateless functions don't have a backing instance, you can't attach a ref to a stateless function component. Normally this isn't an issue, since stateless functions do not provide an imperative API. Without an imperative API, there isn't much you could do with an instance anyway. However, if a user wants to find the DOM node of a stateless function component, they must wrap the component in a stateful component (eg. ES6 class component) and attach the ref to the stateful wrapper component.
+
+In an ideal world, most of your components would be stateless functions because these stateless components can follow a faster code path within the React core. This is the recommended pattern, when possible.
+
