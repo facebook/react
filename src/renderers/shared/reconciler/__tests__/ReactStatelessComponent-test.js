@@ -125,17 +125,19 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
-  it('should throw when given a ref', function() {
+  it('should warn when given a ref', function() {
+    spyOn(console, 'error');
+
     var Parent = React.createClass({
       render: function() {
         return <StatelessComponent name="A" ref="stateless"/>;
       },
     });
+    ReactTestUtils.renderIntoDocument(<Parent/>);
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<Parent/>);
-    }).toThrow(
-      'Invariant Violation: Stateless function components cannot be given refs.'
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Stateless function components cannot be given refs.'
     );
   });
 
