@@ -27,7 +27,11 @@ next: working-with-the-browser-zh-CN.html
 * `<option>` 的 `selected` 状态改变时。
               
 和所有 DOM 事件一样，所有的 HTML 原生组件都支持 `onChange` 属性，而且可以用来监听冒泡的 `change` 事件。               
-              
+        
+> 注意:
+>
+> 对于 `<input>` and `<textarea>`， `onChange` 替代 — 一般应该用来替代 — the DOM's 内建的 [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) 事件处理。
+
               
 ## 受限组件              
 
@@ -64,6 +68,10 @@ next: working-with-the-browser-zh-CN.html
 
 上面的代码接受用户输入，并截取前 140 个字符。
 
+### 复选框与单选按钮的潜在问题
+
+当心，在力图标准化复选框与单选按钮的变换处理中，React使用`click` 事件代替 `change` 事件。在大多数情况下它们表现的如同预期，除了在`change` handler中调用`preventDefault` 。`preventDefault` 阻止了浏览器视觉上更新输入，即使`checked`被触发。变通的方式是要么移除`preventDefault`的调用，要么把`checked` 的触发放在一个`setTimeout`里。
+
               
 ## 不受限组件
 
@@ -77,6 +85,8 @@ next: working-with-the-browser-zh-CN.html
 
 上面的代码将渲染出一个空值的输入框，用户输入将立即反应到元素上。和受限元素一样，使用 `onChange` 事件可以监听值的变化。
 
+### 默认值
+
 如果想给组件设置一个非空的初始值，可以使用 `defaultValue` 属性。例如：
 
 ```javascript
@@ -85,40 +95,27 @@ next: working-with-the-browser-zh-CN.html
   }
 ```
 
-上面的代码渲染出来的元素和**受限组件**一样有一个初始值，但这个值用户可以改变并会反应到界面上。
+这个例子会像上面的**Controlled Components** 例子一样运行。
 
-同样地， 类型为 `radio`、`checkbox` 的`<input>` 支持 `defaultChecked` 属性， `<select>` 支持 `defaultValue` 属性。
+同样的， `<input>` 支持 `defaultChecked` 、 `<select>` 支持 `defaultValue`.
 
-```javascript
-  render: function() {
-      return (
-          <div>
-            <input type="radio" name="opt" defaultChecked /> Option 1
-            <input type="radio" name="opt" /> Option 2
-            <select defaultValue="C">
-              <option value="A">Apple</option>
-              <option value="B">Banana</option>
-              <option value="C">Cranberry</option>
-            </select>
-          </div>
-      );
-    }
-```                
-
+> 注意:
+>
+>  `defaultValue` 和 `defaultChecked` props 只能在内部渲染时被使用。 如果你需要在随后的渲染更新值, 你需要使用 [受限组件](#受限组件).
+       
 
 ## 高级主题
+
                 
 ### 为什么使用受限组件？
 
-在 React 中使用诸如 `<input>` 的表单组件时，遇到了一个在传统 HTML 中没有的挑战。
-                
-比如下面的代码：                
+在 React 中使用诸如 `<input>` 的表单组件时，遇到了一个在传统 HTML 中没有的挑战。比如下面的代码：                
 
 ```html
   <input type="text" name="title" value="Untitled" />
 ```
 
-在 HTML 中将渲染初始值为 `Untitled` 的输入框。用户改变输入框的值时，节点的 `value` 属性（*property*）将随之变化，但是 `node.getAttribute('value')` 还是会返回初始设置的值 `Untitled`.
+在 HTML 中将渲染 *初始值* 为 `Untitled` 的输入框。用户改变输入框的值时，节点的 `value` 属性( *property*)将随之变化，但是 `node.getAttribute('value')` 还是会返回初始设置的值 `Untitled`.
 
 与 HTML 不同，React 组件必须在任何时间点描绘视图的状态，而不仅仅是在初始化时。比如在 React 中：
 
@@ -128,7 +125,7 @@ next: working-with-the-browser-zh-CN.html
   }
 ```
 
-该方法在任何时间点渲染组件以后，输入框的值就应该*始终*为 `Untitled`。
+该方法在任何时间点渲染组件以后，输入框的值就应该 *始终* 为 `Untitled`。
 
 
 ### 为什么 `<textarea>` 使用 `value` 属性？
@@ -146,7 +143,7 @@ next: working-with-the-browser-zh-CN.html
   <textarea name="description" value="This is a description." />
 ```
 
-如果*非要**使用子节点，效果和使用 `defaultValue` 一样。
+如果 *非要* 使用子节点，效果和使用 `defaultValue` 一样。
 
 
 ### 为什么 `<select>` 使用 `value` 属性                  
