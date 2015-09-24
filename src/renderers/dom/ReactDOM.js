@@ -98,16 +98,12 @@ if (__DEV__) {
       Object.keys,
       String.prototype.split,
       String.prototype.trim,
-
-      // shams
-      Object.create,
-      Object.freeze,
     ];
 
     for (var i = 0; i < expectedFeatures.length; i++) {
       if (!expectedFeatures[i]) {
         console.error(
-          'One or more ES5 shim/shams expected by React are not available: ' +
+          'One or more ES5 shims expected by React are not available: ' +
           'https://fb.me/react-warning-polyfills'
         );
         break;
