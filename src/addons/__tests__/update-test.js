@@ -70,6 +70,11 @@ describe('update', function() {
   it('should support set', function() {
     expect(update({a: 'b'}, {$set: {c: 'd'}})).toEqual({c: 'd'});
   });
+  
+  it('should keep reference equality when possible with set', function() {
+    var original = {a: 1};
+    expect(update(original, {a: {$set: 1}})).toBe(original);
+  });
 
   it('should support apply', function() {
     expect(update(2, {$apply: function(x) { return x * 2; }})).toEqual(4);
@@ -77,6 +82,14 @@ describe('update', function() {
       'Invariant Violation: update(): expected spec of $apply to be a ' +
       'function; got 123.'
     );
+  });
+  
+  it('should keep reference equality when possible with apply', function() {
+    var original = {a: {b: {}}};
+    function identity(val) {
+      return val;
+    }
+    expect(update(original, {a: {$apply: identity}})).toBe(original);
   });
 
   it('should support deep updates', function() {
