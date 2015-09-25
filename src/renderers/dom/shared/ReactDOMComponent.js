@@ -606,8 +606,10 @@ ReactDOMComponent.Mixin = {
     }
 
     switch (this._tag) {
-      case 'button':
       case 'input':
+        ReactDOMInput.mountReadyWrapper(this);
+        // falls through
+      case 'button':
       case 'select':
       case 'textarea':
         if (props.autoFocus) {
