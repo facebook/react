@@ -541,8 +541,7 @@ describe('ReactMultiChildReconcile', function() {
   });
 
 
-  it('should remove nulled out children and ignore ' +
-     'new null children', function() {
+  it('should remove nulled out children and ignore new null children', function() {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {

@@ -371,8 +371,7 @@ describe('ReactClass-mixin', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should include the mixin keys in even if their values are falsy',
-      function() {
+  it('should include the mixin keys in even if their values are falsy', function() {
     var mixin = {
       keyWithNullValue: null,
       randomCounter: 0,

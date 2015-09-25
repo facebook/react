@@ -317,8 +317,7 @@ describe('ReactES6Class', function() {
     ]);
   });
 
-  it('warns when classic properties are defined on the instance, ' +
-     'but does not invoke them.', function() {
+  it('warns when classic properties are defined on the instance, but does not invoke them.', function() {
     spyOn(console, 'error');
     var getDefaultPropsWasCalled = false;
     var getInitialStateWasCalled = false;
