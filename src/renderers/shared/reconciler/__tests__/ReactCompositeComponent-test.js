@@ -324,8 +324,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should silently allow `setState`, not call cb on unmounting components',
-     function() {
+  it('should silently allow `setState`, not call cb on unmounting components', function() {
     var cbCalled = false;
     var container = document.createElement('div');
     document.body.appendChild(container);

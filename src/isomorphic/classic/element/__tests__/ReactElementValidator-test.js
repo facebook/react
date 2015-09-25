@@ -246,8 +246,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('gives a helpful error when passing null, undefined, boolean, or number',
-      function() {
+  it('gives a helpful error when passing null, undefined, boolean, or number', function() {
     spyOn(console, 'error');
     React.createElement(undefined);
     React.createElement(null);
@@ -278,8 +277,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.length).toBe(4);
   });
 
-  it('includes the owner name when passing null, undefined, boolean, or number',
-      function() {
+  it('includes the owner name when passing null, undefined, boolean, or number', function() {
     spyOn(console, 'error');
     var ParentComp = React.createClass({
       render: function() {

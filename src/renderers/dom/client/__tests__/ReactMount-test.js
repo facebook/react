@@ -177,8 +177,7 @@ describe('ReactMount', function() {
   });
 
   if (WebComponents !== undefined) {
-    it('should allow mounting/unmounting to document fragment container',
-        function() {
+    it('should allow mounting/unmounting to document fragment container', function() {
       var shadowRoot;
       var proto = Object.create(HTMLElement.prototype, {
         createdCallback: {
