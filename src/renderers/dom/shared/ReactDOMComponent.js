@@ -422,6 +422,10 @@ function trapBubbledEventsLocal() {
   }
 }
 
+function mountReadyInputWrapper() {
+  ReactDOMInput.mountReadyWrapper(this);
+}
+
 function postUpdateSelectWrapper() {
   ReactDOMSelect.postUpdateWrapper(this);
 }
@@ -607,7 +611,10 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'input':
-        ReactDOMInput.mountReadyWrapper(this);
+        transaction.getReactMountReady().enqueue(
+          mountReadyInputWrapper,
+          this
+        );
         // falls through
       case 'button':
       case 'select':
