@@ -467,4 +467,20 @@ describe('ReactElementValidator', function() {
     }
   });
 
+  it('does not blow up with inlined children', function() {
+    // We don't suggest this since it silences all sorts of warnings, but we
+    // shouldn't blow up either.
+
+    var child = {
+      $$typeof: (<div />).$$typeof,
+      type: 'span',
+      key: null,
+      ref: null,
+      props: {},
+      _owner: null,
+    };
+
+    void <div>{[child]}</div>;
+  });
+
 });
