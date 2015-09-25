@@ -83,10 +83,26 @@ function update(value, spec) {
       COMMAND_SET
     );
 
-    return spec[COMMAND_SET];
+    // always return original if possible, to keep reference equality
+    return spec[COMMAND_SET] === value ? value : spec[COMMAND_SET];
   }
 
-  var nextValue = shallowCopy(value);
+  // not created unless needed
+  var nextValue;
+  var updatedProp;
+
+  /* get a clone of value, create if not present */
+  function getNextValue() {
+    if (!nextValue) {
+      nextValue = shallowCopy(value);
+    }
+    return nextValue;
+  }
+
+  /* get newest available of nextValue or value */
+  function getCurrentValue() {
+    return nextValue ? nextValue : value;
+  }
 
   if (hasOwnProperty.call(spec, COMMAND_MERGE)) {
     var mergeObj = spec[COMMAND_MERGE];
@@ -97,25 +113,25 @@ function update(value, spec) {
       mergeObj
     );
     invariant(
-      nextValue && typeof nextValue === 'object',
+      getCurrentValue() && typeof getCurrentValue() === 'object',
       'update(): %s expects a target of type \'object\'; got %s',
       COMMAND_MERGE,
-      nextValue
+      getCurrentValue()
     );
-    assign(nextValue, spec[COMMAND_MERGE]);
+    assign(getNextValue(), spec[COMMAND_MERGE]);
   }
 
   if (hasOwnProperty.call(spec, COMMAND_PUSH)) {
     invariantArrayCase(value, spec, COMMAND_PUSH);
     spec[COMMAND_PUSH].forEach(function(item) {
-      nextValue.push(item);
+      getNextValue().push(item);
     });
   }
 
   if (hasOwnProperty.call(spec, COMMAND_UNSHIFT)) {
     invariantArrayCase(value, spec, COMMAND_UNSHIFT);
     spec[COMMAND_UNSHIFT].forEach(function(item) {
-      nextValue.unshift(item);
+      getNextValue().unshift(item);
     });
   }
 
@@ -141,7 +157,7 @@ function update(value, spec) {
         COMMAND_SPLICE,
         spec[COMMAND_SPLICE]
       );
-      nextValue.splice.apply(nextValue, args);
+      getNextValue().splice.apply(getNextValue(), args);
     });
   }
 
@@ -152,16 +168,23 @@ function update(value, spec) {
       COMMAND_APPLY,
       spec[COMMAND_APPLY]
     );
-    nextValue = spec[COMMAND_APPLY](nextValue);
+
+    updatedProp = spec[COMMAND_APPLY](getCurrentValue());
+    if (updatedProp !== getCurrentValue()) {
+      nextValue = updatedProp;
+    }
   }
 
   for (var k in spec) {
     if (!(ALL_COMMANDS_SET.hasOwnProperty(k) && ALL_COMMANDS_SET[k])) {
-      nextValue[k] = update(value[k], spec[k]);
+      updatedProp = update(value[k], spec[k]);
+      if (updatedProp !== value[k]) {
+        getNextValue()[k] = updatedProp;
+      }
     }
   }
 
-  return nextValue;
+  return getCurrentValue();
 }
 
 module.exports = update;
