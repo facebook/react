@@ -32,11 +32,11 @@ redirect_from: "docs/index-zh-CN.html"
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <script src="build/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
       React.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
@@ -62,7 +62,7 @@ React.render(
 然后在 `helloworld.html` 引用该文件：
 
 ```html{10}
-<script type="text/jsx" src="src/helloworld.js"></script>
+<script type="text/babel" src="src/helloworld.js"></script>
 ```
 
 ### 离线转换
@@ -98,7 +98,7 @@ React.render(
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <!-- 不需要 JSXTransformer！ -->
+    <!-- 不需要 Babel！ -->
   </head>
   <body>
     <div id="example"></div>

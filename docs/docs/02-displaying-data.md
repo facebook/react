@@ -20,11 +20,11 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
 
       // ** Your code goes here! **
 
@@ -92,11 +92,11 @@ With JSX this becomes:
 
 We've found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so **JSX is not required to use React.**
 
-JSX is very small. To learn more about it, see [JSX in depth](/react/docs/jsx-in-depth.html). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
+JSX is very small. To learn more about it, see [JSX in depth](/react/docs/jsx-in-depth.html). Or see the transform in action in [the Babel REPL](https://babeljs.io/repl/).
 
 JSX is similar to HTML, but not exactly the same. See [JSX gotchas](/react/docs/jsx-gotchas.html) for some key differences.
 
-The easiest way to get started with JSX is to use the in-browser `JSXTransformer`. We strongly recommend that you don't use this in production. You can precompile your code using our command-line [react-tools](https://www.npmjs.com/package/react-tools) package.
+[Babel exposes a number of ways to get started using JSX](http://babeljs.io/docs/setup/), ranging from command line tools to Ruby on Rails integrations. Choose the tool that works best for you.
 
 
 ## React without JSX
