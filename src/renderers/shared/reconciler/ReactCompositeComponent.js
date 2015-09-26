@@ -310,7 +310,8 @@ var ReactCompositeComponentMixin = {
       inst.componentWillUnmount();
     }
 
-    ReactReconciler.unmountComponent(this._renderedComponent);
+    var unmountedNativeNode =
+      ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
     this._instance = null;
 
@@ -339,6 +340,7 @@ var ReactCompositeComponentMixin = {
     // TODO: inst.props = null;
     // TODO: inst.state = null;
     // TODO: inst.context = null;
+    return unmountedNativeNode;
   },
 
   /**
