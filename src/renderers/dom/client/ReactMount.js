@@ -724,19 +724,16 @@ var ReactMount = {
    * @return {string} The "reactRoot" ID of elements rendered within.
    */
   registerContainer: function(container) {
-    var reactRootID = getReactRootID(container);
-    if (reactRootID) {
-      // If one exists, make sure it is a valid "reactRoot" ID.
-      reactRootID = ReactInstanceHandles.getReactRootIDFromNodeID(reactRootID);
-    }
-    if (!reactRootID) {
+    var id = getReactRootID(container);
+    // If one exists, make sure it is a valid "reactRoot" ID.
+    if (!id || id !== ReactInstanceHandles.getReactRootIDFromNodeID(id)) {
       // No valid "reactRoot" ID found, create one.
-      reactRootID = ReactInstanceHandles.createReactRootID(
+      id = ReactInstanceHandles.createReactRootID(
         ClientReactRootIndex.createReactRootIndex()
       );
     }
-    containersByReactRootID[reactRootID] = container;
-    return reactRootID;
+    containersByReactRootID[id] = container;
+    return id;
   },
 
   /**
