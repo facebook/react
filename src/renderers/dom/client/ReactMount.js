@@ -100,7 +100,7 @@ function getReactRootElementInContainer(container) {
  */
 function getReactRootID(container) {
   var rootElement = getReactRootElementInContainer(container);
-  return rootElement && ReactMount.getID(rootElement);
+  return rootElement && internalGetID(rootElement);
 }
 
 /**
@@ -116,20 +116,12 @@ function getReactRootID(container) {
 function getID(node) {
   var id = internalGetID(node);
   if (id) {
-    if (nodeCache.hasOwnProperty(id)) {
-      var cached = nodeCache[id];
-      if (cached !== node) {
-        invariant(
-          !isValid(cached, id),
-          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
-        );
-
-        nodeCache[id] = node;
-      }
-    } else {
-      nodeCache[id] = node;
-    }
+    invariant(
+      !nodeCache.hasOwnProperty(id) || nodeCache[id] === node,
+      'ReactMount: Two unequal nodes with the same `%s`: %s',
+      ATTR_NAME, id
+    );
+    nodeCache[id] = node;
   }
 
   return id;
@@ -158,6 +150,25 @@ function setID(node, id) {
 }
 
 /**
+ * Finds the node with the supplied ID if present in the cache.
+ */
+function getNodeIfCached(id) {
+  var node = nodeCache[id];
+  // TODO: Since this "isValid" business is now just a sanity check, we can
+  // probably drop it with no consequences.
+  invariant(
+    !node || isValid(node, id),
+    'ReactMount: Cached node with `%s`: %s is missing from the document. ' +
+    'This probably means the DOM was unexpectedly mutated -- when removing ' +
+    'React-rendered children from the DOM, rerender without those children ' +
+    'or call ReactDOM.unmountComponentAtNode on the container to unmount an ' +
+    'entire subtree.',
+    ATTR_NAME, id
+  );
+  return node;
+}
+
+/**
  * Finds the node with the supplied React-generated DOM ID.
  *
  * @param {string} id A React-generated DOM ID.
@@ -165,10 +176,12 @@ function setID(node, id) {
  * @internal
  */
 function getNode(id) {
-  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
-    nodeCache[id] = ReactMount.findReactNodeByID(id);
+  var node = getNodeIfCached(id);
+  if (node) {
+    return node;
+  } else {
+    return nodeCache[id] = ReactMount.findReactNodeByID(id);
   }
-  return nodeCache[id];
 }
 
 /**
@@ -183,10 +196,7 @@ function getNodeFromInstance(instance) {
   if (ReactEmptyComponentRegistry.isNullComponentID(id)) {
     return null;
   }
-  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
-    nodeCache[id] = ReactMount.findReactNodeByID(id);
-  }
-  return nodeCache[id];
+  return getNode(id);
 }
 
 /**
@@ -227,8 +237,8 @@ function purgeID(id) {
 
 var deepestNodeSoFar = null;
 function findDeepestCachedAncestorImpl(ancestorID) {
-  var ancestor = nodeCache[ancestorID];
-  if (ancestor && isValid(ancestor, ancestorID)) {
+  var ancestor = getNodeIfCached(ancestorID);
+  if (ancestor) {
     deepestNodeSoFar = ancestor;
   } else {
     // This node isn't populated in the cache, so presumably none of its
