@@ -28,10 +28,10 @@
   <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
   <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
   <script type="text/javascript" src="/react/js/codemirror.js"></script>
   <script type="text/javascript" src="/react/js/javascript.js"></script>
   <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
   <script type="text/javascript" src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -413,11 +413,11 @@
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/JSXTransformer-0.13.3.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span><span class="nt">&gt;</span>
 
       <span class="c1">// ** Your code goes here! **</span>
 
@@ -474,11 +474,11 @@
 
 <p>We&#39;ve found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so <strong>JSX is not required to use React.</strong></p>
 
-<p>JSX is very small. To learn more about it, see <a href="/react/docs/jsx-in-depth.html">JSX in depth</a>. Or see the transform in action in <a href="/react/jsx-compiler.html">our live JSX compiler</a>.</p>
+<p>JSX is very small. To learn more about it, see <a href="/react/docs/jsx-in-depth.html">JSX in depth</a>. Or see the transform in action in <a href="https://babeljs.io/repl/">the Babel REPL</a>.</p>
 
 <p>JSX is similar to HTML, but not exactly the same. See <a href="/react/docs/jsx-gotchas.html">JSX gotchas</a> for some key differences.</p>
 
-<p>The easiest way to get started with JSX is to use the in-browser <code>JSXTransformer</code>. We strongly recommend that you don&#39;t use this in production. You can precompile your code using our command-line <a href="https://www.npmjs.com/package/react-tools">react-tools</a> package.</p>
+<p><a href="http://babeljs.io/docs/setup/">Babel exposes a number of ways to get started using JSX</a>, ranging from command line tools to Ruby on Rails integrations. Choose the tool that works best for you.</p>
 <h2><a class="anchor" name="react-without-jsx"></a>React without JSX <a class="hash-link" href="#react-without-jsx">#</a></h2>
 <p>JSX is completely optional; you don&#39;t have to use JSX with React. You can create React elements in plain JavaScript using <code>React.createElement</code>, which takes a tag name or component, a properties object, and variable number of optional child arguments.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>

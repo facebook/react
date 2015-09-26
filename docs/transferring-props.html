@@ -28,10 +28,10 @@
   <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
   <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
   <script type="text/javascript" src="/react/js/codemirror.js"></script>
   <script type="text/javascript" src="/react/js/javascript.js"></script>
   <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
   <script type="text/javascript" src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -437,7 +437,7 @@
 <blockquote>
 <p>NOTE:</p>
 
-<p>In the example below, the <code>--harmony</code> flag is required as this syntax is an experimental ES7 syntax. If using the in-browser JSX transformer, simply open your script with <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code>. See the <a href="/react/docs/transferring-props.html#rest-and-spread-properties-...">Rest and Spread Properties ...</a> section below for more details.</p>
+<p>The <code>...</code> syntax is part of the Object Rest Spread proposal. This proposal is on track to become a standard. See the <a href="/react/docs/transferring-props.html#rest-and-spread-properties-...">Rest and Spread Properties ...</a> section below for more details.</p>
 </blockquote>
 
 <p>Sometimes it&#39;s fragile and tedious to pass every property along. In that case you can use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">destructuring assignment</a> with rest properties to extract a set of unknown properties.</p>
@@ -516,7 +516,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>Use the <a href="https://www.npmjs.com/package/react-tools">JSX command-line tool</a> with the <code>--harmony</code> flag to activate the experimental ES7 syntax.</p>
+<p>This proposal has reached stage 2 and is now enabled by default in Babel. Older versions of Babel may need to explicitly enable this transform with <code>babel --optional es7.objectRestSpread</code></p>
 </blockquote>
 <h2><a class="anchor" name="transferring-with-underscore"></a>Transferring with Underscore <a class="hash-link" href="#transferring-with-underscore">#</a></h2>
 <p>If you don&#39;t use JSX, you can use a library to achieve the same pattern. Underscore supports <code>_.omit</code> to filter out properties and <code>_.extend</code> to copy properties onto a new object.</p>

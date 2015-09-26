@@ -28,10 +28,10 @@
   <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
   <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
   <script type="text/javascript" src="/react/js/codemirror.js"></script>
   <script type="text/javascript" src="/react/js/javascript.js"></script>
   <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
   <script type="text/javascript" src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -424,30 +424,32 @@
 <h3><a class="anchor" name="want-to-skip-all-this-and-just-see-the-source"></a>Want to skip all this and just see the source? <a class="hash-link" href="#want-to-skip-all-this-and-just-see-the-source">#</a></h3>
 <p><a href="https://github.com/reactjs/react-tutorial">It&#39;s all on GitHub.</a></p>
 <h3><a class="anchor" name="running-a-server"></a>Running a server <a class="hash-link" href="#running-a-server">#</a></h3>
-<p>While it&#39;s not necessary to get started with this tutorial, later on we&#39;ll be adding functionality that requires <code>POST</code>ing to a running server. If this is something you are intimately familiar with and want to create your own server, please do. For the rest of you who might want to focus on learning about React without having to worry about the server-side aspects, we have written simple servers in a number of languages - JavaScript (using Node.js), Python, Haskell, Ruby, Go, and PHP. These are all available on GitHub. You can <a href="https://github.com/reactjs/react-tutorial/">view the source</a> or <a href="https://github.com/reactjs/react-tutorial/archive/master.zip">download a zip file</a> to get started.</p>
+<p>In order to start this tutorial, we&#39;re going to require a running server. This will serve purely as an API endpoint which we&#39;ll use for getting and saving data. In order to make this as easy as possible, we&#39;ve created a simple server in a number of scripting languages that does exactly what we need it to do. <strong>You can <a href="https://github.com/reactjs/react-tutorial/">view the source</a> or <a href="https://github.com/reactjs/react-tutorial/archive/master.zip">download a zip file</a> containing everything needed to get started.</strong></p>
 
-<p>To get started using the tutorial, just start editing <code>public/index.html</code>.</p>
+<p>For sake of simplicity, the server we will run uses a <code>JSON</code> file as a database. You would not run this in production but it makes it easy to simulate what you might do when consuming an API. Once you start the server, it will support our API endpoint and it will also serve the static pages we need.</p>
 <h3><a class="anchor" name="getting-started"></a>Getting started <a class="hash-link" href="#getting-started">#</a></h3>
-<p>For this tutorial, we&#39;ll use prebuilt JavaScript files on a CDN. Open up <code>public/index.html</code> in your favorite editor, which should contain the following:</p>
+<p>For this tutorial, we&#39;re going to make it as easy as possible. Included in the server package discussed above is an HTML file which we&#39;ll work in. Open up <code>public/index.html</code> in your favorite editor. It should look something like this (with perhaps some minor differences, we&#39;ll add an additional <code>&lt;script&gt;</code> tag later):</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;title&gt;</span>React Tutorial<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
-      <span class="c1">// Your code here</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span> <span class="na">src=</span><span class="s">&quot;scripts/example.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span><span class="nt">&gt;</span>
+      <span class="c1">// To get started with this tutorial running your own code, simply remove</span>
+      <span class="c1">// the script tag loading scripts/example.js and start writing code here.</span>
     <span class="nt">&lt;/script&gt;</span>
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
-<p>For the remainder of this tutorial, we&#39;ll be writing our JavaScript code in this script tag. Follow your progress by opening your index.html file in your browser after each addition.</p>
+<p>For the remainder of this tutorial, we&#39;ll be writing our JavaScript code in this script tag. We don&#39;t have any advanced live-reloading so you&#39;ll need to refresh your browser to see updates after saving. Follow your progress by opening <code>http://localhost:3000</code> in your browser (after starting the server). When you load this for the first time without any changes, you&#39;ll see the finished product of what we&#39;re going to build. When you&#39;re ready to start working, just delete the preceding <code>&lt;script&gt;</code> tag and then you can continue.</p>
 
 <blockquote>
 <p>Note:</p>
@@ -580,10 +582,10 @@
 <p>First, add the third-party library <strong>marked</strong> to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="nt">&lt;head&gt;</span>
-  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
-  <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
+  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;title&gt;</span>React Tutorial<span class="nt">&lt;/title&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
@@ -681,7 +683,7 @@
 <p>Let&#39;s replace the hard-coded data with some dynamic data from the server. We will remove the data prop and replace it with a URL to fetch:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial11.js</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-<span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;comments.json&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
+<span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;/api/comments&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
@@ -712,17 +714,12 @@
 </code></pre></div>
 <p><code>getInitialState()</code> executes exactly once during the lifecycle of the component and sets up the initial state of the component.</p>
 <h4><a class="anchor" name="updating-state"></a>Updating state <a class="hash-link" href="#updating-state">#</a></h4>
-<p>When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example we will keep things simple by creating a static JSON file <code>public/comments.json</code> containing the array of comments:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.json</span>
-<span class="p">[</span>
-  <span class="p">{</span><span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="o">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
-  <span class="p">{</span><span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="o">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
+<p>When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. We&#39;re going to use jQuery to make an asynchronous request to the server we started earlier to fetch the data we need. It will look something like this:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">[</span>
+  <span class="p">{</span><span class="nt">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
+  <span class="p">{</span><span class="nt">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
 <span class="p">]</span>
-</code></pre></div>
-<p>We&#39;ll use jQuery to help make an asynchronous request to the server.</p>
-
-<p>Note: because this is becoming an AJAX application you&#39;ll need to develop your app using a web server rather than as a file sitting on your file system. <a href="#running-a-server">As mentioned above</a>, we have provided several servers you can use <a href="https://github.com/reactjs/react-tutorial/">on GitHub</a>. They provide the functionality you need for the rest of this tutorial.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.js</span>
+</code></pre></div><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
@@ -786,11 +783,11 @@
 <span class="p">});</span>
 
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-<span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;comments.json&quot;</span> <span class="nx">pollInterval</span><span class="o">=</span><span class="p">{</span><span class="mi">2000</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
+<span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;/api/comments&quot;</span> <span class="nx">pollInterval</span><span class="o">=</span><span class="p">{</span><span class="mi">2000</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file; within 2 seconds, the changes will show!</p>
+<p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file (in the same directory as your server); within 2 seconds, the changes will show!</p>
 <h3><a class="anchor" name="adding-new-comments"></a>Adding new comments <a class="hash-link" href="#adding-new-comments">#</a></h3>
 <p>Now it&#39;s time to build the form. Our <code>CommentForm</code> component should ask the user for their name and comment text and send a request to the server to save the comment.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial15.js</span>

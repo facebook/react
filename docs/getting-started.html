@@ -28,10 +28,10 @@
   <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
   <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
   <script type="text/javascript" src="/react/js/codemirror.js"></script>
   <script type="text/javascript" src="/react/js/javascript.js"></script>
   <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
   <script type="text/javascript" src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -427,11 +427,11 @@
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/JSXTransformer.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span><span class="nt">&gt;</span>
       <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
         <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
         <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
@@ -440,7 +440,7 @@
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
-<p>The XML syntax inside of JavaScript is called JSX; check out the <a href="/react/docs/jsx-in-depth.html">JSX syntax</a> to learn more about it. In order to translate it to vanilla JavaScript we use <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> and include <code>JSXTransformer.js</code> to actually perform the transformation in the browser.</p>
+<p>The XML syntax inside of JavaScript is called JSX; check out the <a href="/react/docs/jsx-in-depth.html">JSX syntax</a> to learn more about it. In order to translate it to vanilla JavaScript we use <code>&lt;script type=&quot;text/babel&quot;&gt;</code> and include Babel to actually perform the transformation in the browser.</p>
 <h3><a class="anchor" name="separate-file"></a>Separate File <a class="hash-link" href="#separate-file">#</a></h3>
 <p>Your React JSX code can live in a separate file. Create the following <code>src/helloworld.js</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
@@ -449,17 +449,17 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>Then reference it from <code>helloworld.html</code>:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
 <p>Note that some browsers (Chrome, e.g.) will fail to load the file unless it&#39;s served via HTTP.</p>
 <h3><a class="anchor" name="offline-transform"></a>Offline Transform <a class="hash-link" href="#offline-transform">#</a></h3>
-<p>First install the command-line tools (requires <a href="https://www.npmjs.com/">npm</a>):</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install -g react-tools
+<p>First install the <a href="http://babeljs.io/">Babel</a> command-line tools (requires <a href="https://www.npmjs.com/">npm</a>):</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install --global babel
 </code></pre></div>
 <p>Then, translate your <code>src/helloworld.js</code> file to plain JavaScript:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">jsx --watch src/ build/
+<div class="highlight"><pre><code class="language-text" data-lang="text">babel src --watch --out-dir build
 </code></pre></div>
-<p>The file <code>build/helloworld.js</code> is autogenerated whenever you make a change.</p>
+<p>The file <code>build/helloworld.js</code> is autogenerated whenever you make a change. Read the <a href="http://babeljs.io/docs/usage/cli/">Babel CLI documentation</a> for more advanced usage.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
 <span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello, world!&#39;</span><span class="p">),</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
@@ -472,7 +472,7 @@
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">    <span class="c">&lt;!-- No need for JSXTransformer! --&gt;</span>
+<span class="hll">    <span class="c">&lt;!-- No need for Babel! --&gt;</span>
 </span>  <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
