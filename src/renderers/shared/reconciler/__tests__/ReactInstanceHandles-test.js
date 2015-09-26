@@ -76,72 +76,84 @@ describe('ReactInstanceHandles', function() {
 
   describe('findComponentRoot', function() {
     it('should find the correct node with prefix sibling IDs', function() {
-      var parentNode = document.createElement('div');
-      var childNodeA = document.createElement('div');
-      var childNodeB = document.createElement('div');
-      parentNode.appendChild(childNodeA);
-      parentNode.appendChild(childNodeB);
-
-      ReactMount.setID(parentNode, '.0');
-      ReactMount.setID(childNodeA, '.0.0');
-      ReactMount.setID(childNodeB, '.0.0:1');
+      var parentNode = ReactTestUtils.renderIntoDocument(
+        <div>
+          <div />
+          {[<div key="x" />]}
+        </div>
+      );
+      var childNodeB = parentNode.childNodes[1];
 
       expect(
-        ReactMount.findComponentRoot(
-          parentNode,
-          ReactMount.getID(childNodeB)
+        ReactMount.getNode(
+          getNodeID(childNodeB)
         )
       ).toBe(childNodeB);
     });
 
     it('should work around unidentified nodes', function() {
-      var parentNode = document.createElement('div');
-      var childNodeA = document.createElement('div');
-      var childNodeB = document.createElement('div');
-      parentNode.appendChild(childNodeA);
-      parentNode.appendChild(childNodeB);
+      var parentNode = ReactTestUtils.renderIntoDocument(
+        <div>
+          {[<div key="x" />]}
+        </div>
+      );
+      var childNodeB = parentNode.childNodes[0];
 
-      ReactMount.setID(parentNode, '.0');
       // No ID on `childNodeA`.
-      ReactMount.setID(childNodeB, '.0.0:1');
+      var childNodeA = document.createElement('div');
+      parentNode.insertBefore(childNodeA, childNodeB);
 
       expect(
-        ReactMount.findComponentRoot(
-          parentNode,
-          ReactMount.getID(childNodeB)
+        ReactMount.getNode(
+          getNodeID(childNodeB)
         )
       ).toBe(childNodeB);
     });
 
     it('should throw if a rendered element cannot be found', function() {
-      var parentNode = document.createElement('table');
-      var childNodeA = document.createElement('tbody');
-      var childNodeB = document.createElement('tr');
-      parentNode.appendChild(childNodeA);
-      childNodeA.appendChild(childNodeB);
+      spyOn(console, 'error');
+      var parentNode = ReactTestUtils.renderIntoDocument(
+        <table>
+          <tr />
+        </table>
+      );
+      var childNodeA = parentNode.childNodes[0];
+      var childNodeB;
+      if (childNodeA.tagName === 'TR') {
+        childNodeB = childNodeA;
+        // No ID on `childNodeA`, it was "rendered by the browser".
+        childNodeA = document.createElement('tbody');
+        childNodeA.appendChild(childNodeB);
+        parentNode.appendChild(childNodeA);
+      } else {
+        childNodeB = childNodeA.childNodes[0];
+      }
+      expect(childNodeA.tagName).toBe('TBODY');
 
-      ReactMount.setID(parentNode, '.0');
-      // No ID on `childNodeA`, it was "rendered by the browser".
-      ReactMount.setID(childNodeB, '.0.1:0');
+      expect(
+        ReactMount.getNode(
+          getNodeID(childNodeB)
+        )
+      ).toBe(childNodeB);
 
-      expect(ReactMount.findComponentRoot(
-        parentNode,
-        ReactMount.getID(childNodeB)
-      )).toBe(childNodeB);
-
+      var junkID = getNodeID(childNodeB) + ':junk';
       expect(function() {
-        ReactMount.findComponentRoot(
-          parentNode,
-          ReactMount.getID(childNodeB) + ':junk'
+        ReactMount.getNode(
+          junkID
         );
       }).toThrow(
-        'Invariant Violation: findComponentRoot(..., .0.1:0:junk): ' +
+        'Invariant Violation: findComponentRoot(..., ' + junkID + '): ' +
         'Unable to find element. This probably means the DOM was ' +
         'unexpectedly mutated (e.g., by the browser), usually due to ' +
         'forgetting a <tbody> when using tables, nesting tags ' +
         'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
         'parent. ' +
-        'Try inspecting the child nodes of the element with React ID `.0`.'
+        'Try inspecting the child nodes of the element with React ID ``.'
+      );
+
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain(
+        '<tr> cannot appear as a child of <table>'
       );
     });
   });
