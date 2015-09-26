@@ -28,7 +28,7 @@ var ReactComponentEnvironment = {
    * Optionally injectable hook for swapping out mount images in the middle of
    * the tree.
    */
-  replaceNodeWithMarkupByID: null,
+  replaceNodeWithMarkup: null,
 
   /**
    * Optionally injectable hook for processing a queue of child updates. Will
@@ -44,8 +44,8 @@ var ReactComponentEnvironment = {
       );
       ReactComponentEnvironment.unmountIDFromEnvironment =
         environment.unmountIDFromEnvironment;
-      ReactComponentEnvironment.replaceNodeWithMarkupByID =
-        environment.replaceNodeWithMarkupByID;
+      ReactComponentEnvironment.replaceNodeWithMarkup =
+        environment.replaceNodeWithMarkup;
       ReactComponentEnvironment.processChildrenUpdates =
         environment.processChildrenUpdates;
       injected = true;

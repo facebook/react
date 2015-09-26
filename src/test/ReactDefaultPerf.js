@@ -169,7 +169,8 @@ var ReactDefaultPerf = {
           moduleName === 'ReactDOMIDOperations' ||
           moduleName === 'CSSPropertyOperations' ||
           moduleName === 'DOMChildrenOperations' ||
-          moduleName === 'DOMPropertyOperations') {
+          moduleName === 'DOMPropertyOperations' ||
+          moduleName === 'ReactComponentBrowserEnvironment') {
         start = performanceNow();
         rv = func.apply(this, args);
         totalTime = performanceNow() - start;

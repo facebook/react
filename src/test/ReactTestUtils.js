@@ -395,7 +395,7 @@ assign(
     _instantiateReactComponent: function(element) {
       return new NoopInternalComponent(element);
     },
-    _replaceNodeWithMarkupByID: function() {},
+    _replaceNodeWithMarkup: function() {},
     _renderValidatedComponent:
       ReactCompositeComponent.Mixin
         ._renderValidatedComponentWithoutOwnerOrContext,
