@@ -16,7 +16,8 @@ function removePureRenderMixin(file, api, options) {
   require('./utils/array-polyfills');
   const ReactUtils = require('./utils/ReactUtils')(j);
 
-  const printOptions = options.printOptions || {quote: 'single'};
+  const printOptions =
+    options.printOptions || {quote: 'single', trailingComma: true};
   const root = j(file.source);
 
   const PURE_RENDER_MIXIN = options['mixin-name'] || 'PureRenderMixin';
