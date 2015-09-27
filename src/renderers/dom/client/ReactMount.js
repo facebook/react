@@ -17,9 +17,7 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactElement = require('ReactElement');
-var ReactEmptyComponentRegistry = require('ReactEmptyComponentRegistry');
 var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
@@ -173,21 +171,6 @@ function getNode(id) {
   } else {
     return nodeCache[id] = ReactMount.findReactNodeByID(id);
   }
-}
-
-/**
- * Finds the node with the supplied public React instance.
- *
- * @param {*} instance A public React instance.
- * @return {?DOMElement} DOM node with the suppled `id`.
- * @internal
- */
-function getNodeFromInstance(instance) {
-  var id = ReactInstanceMap.get(instance)._rootNodeID;
-  if (ReactEmptyComponentRegistry.isNullComponentID(id)) {
-    return null;
-  }
-  return getNode(id);
 }
 
 /**
@@ -1072,8 +1055,6 @@ var ReactMount = {
   setID: setID,
 
   getNode: getNode,
-
-  getNodeFromInstance: getNodeFromInstance,
 
   isValid: isValid,
 

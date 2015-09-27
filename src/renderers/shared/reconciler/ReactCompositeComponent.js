@@ -15,6 +15,7 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactNodeTypes = require('ReactNodeTypes');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
@@ -105,6 +106,7 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    this._renderedNodeType = null;
     this._renderedComponent = null;
 
     this._context = null;
@@ -290,6 +292,7 @@ var ReactCompositeComponentMixin = {
       renderedElement = this._renderValidatedComponent();
     }
 
+    this._renderedNodeType = ReactNodeTypes.getType(renderedElement);
     this._renderedComponent = this._instantiateReactComponent(
       renderedElement
     );
@@ -327,6 +330,7 @@ var ReactCompositeComponentMixin = {
     }
 
     ReactReconciler.unmountComponent(this._renderedComponent);
+    this._renderedNodeType = null;
     this._renderedComponent = null;
     this._instance = null;
 
@@ -752,6 +756,7 @@ var ReactCompositeComponentMixin = {
 
       ReactReconciler.unmountComponent(prevComponentInstance);
 
+      this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );
