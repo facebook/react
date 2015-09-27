@@ -14,6 +14,7 @@
 
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactPerf = require('ReactPerf');
 
 var camelizeStyleName = require('camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
@@ -184,5 +185,9 @@ var CSSPropertyOperations = {
   },
 
 };
+
+ReactPerf.measureMethods(CSSPropertyOperations, 'CSSPropertyOperations', {
+  setValueForStyles: 'setValueForStyles',
+});
 
 module.exports = CSSPropertyOperations;
