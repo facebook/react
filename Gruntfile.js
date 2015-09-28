@@ -72,6 +72,7 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
 
   var npmReactDOMTasks = require('./grunt/tasks/npm-react-dom');
+  grunt.registerTask('npm-react-dom:release', npmReactDOMTasks.buildRelease);
   grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
 
   var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
@@ -123,6 +124,7 @@ module.exports = function(grunt) {
     'build:react-dom',
     'npm-react:release',
     'npm-react:pack',
+    'npm-react-dom:release',
     'npm-react-dom:pack',
     'npm-react-addons:release',
     'npm-react-addons:pack',
