@@ -17,7 +17,7 @@ var assign = require('Object.assign');
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-var TYPE_SYMBOL =
+var REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
 
@@ -59,7 +59,7 @@ if (__DEV__) {
 var ReactElement = function(type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allow us to uniquely identify this as a React Element
-    $$typeof: TYPE_SYMBOL,
+    $$typeof: REACT_ELEMENT_TYPE,
 
     // Built-in properties that belong on the element
     type: type,
@@ -289,7 +289,7 @@ ReactElement.isValidElement = function(object) {
   return (
     typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === TYPE_SYMBOL
+    object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
 
