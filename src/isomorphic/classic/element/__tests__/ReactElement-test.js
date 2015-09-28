@@ -327,14 +327,14 @@ describe('ReactElement', function() {
     // Rudimentary polyfill
     // Once all jest engines support Symbols natively we can swap this to test
     // WITH native Symbols by default.
-    var TYPE_SYMBOL = function() {}; // fake Symbol
+    var REACT_ELEMENT_TYPE = function() {}; // fake Symbol
     var OTHER_SYMBOL = function() {}; // another fake Symbol
     global.Symbol = function(name) {
       return OTHER_SYMBOL;
     };
     global.Symbol.for = function(key) {
       if (key === 'react.element') {
-        return TYPE_SYMBOL;
+        return REACT_ELEMENT_TYPE;
       }
       return OTHER_SYMBOL;
     };
