@@ -22,7 +22,9 @@ var DOM_OPERATION_TYPES = {
   REMOVE_NODE: 'remove',
   SET_MARKUP: 'set innerHTML',
   TEXT_CONTENT: 'set textContent',
-  'updatePropertyByID': 'update attribute',
+  'setValueForProperty': 'update attribute',
+  'setValueForAttribute': 'update attribute',
+  'deleteValueForProperty': 'remove attribute',
   'dangerouslyReplaceNodeWithMarkupByID': 'replace',
 };
 

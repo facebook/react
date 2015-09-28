@@ -165,7 +165,11 @@ var ReactDefaultPerf = {
         ].totalTime = performanceNow() - start;
         return rv;
       } else if (fnName === '_mountImageIntoNode' ||
-          moduleName === 'ReactDOMIDOperations') {
+          moduleName === 'ReactBrowserEventEmitter' ||
+          moduleName === 'ReactDOMIDOperations' ||
+          moduleName === 'CSSPropertyOperations' ||
+          moduleName === 'DOMChildrenOperations' ||
+          moduleName === 'DOMPropertyOperations') {
         start = performanceNow();
         rv = func.apply(this, args);
         totalTime = performanceNow() - start;
@@ -198,8 +202,12 @@ var ReactDefaultPerf = {
           });
         } else {
           // basic format
+          var id = args[0];
+          if (typeof id === 'object') {
+            id = ReactMount.getID(args[0]);
+          }
           ReactDefaultPerf._recordWrite(
-            args[0],
+            id,
             fnName,
             totalTime,
             Array.prototype.slice.call(args, 1)
@@ -211,7 +219,7 @@ var ReactDefaultPerf = {
         fnName === 'updateComponent' || // TODO: receiveComponent()?
         fnName === '_renderValidatedComponent')) {
 
-        if (typeof this._currentElement.type === 'string') {
+        if (this._currentElement.type === ReactMount.TopLevelWrapper) {
           return func.apply(this, args);
         }
 

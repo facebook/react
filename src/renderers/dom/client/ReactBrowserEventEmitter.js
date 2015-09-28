@@ -16,6 +16,7 @@ var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
+var ReactPerf = require('ReactPerf');
 var ViewportMetrics = require('ViewportMetrics');
 
 var assign = require('Object.assign');
@@ -371,6 +372,11 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
 
   deleteAllListeners: EventPluginHub.deleteAllListeners,
 
+});
+
+ReactPerf.measureMethods(ReactBrowserEventEmitter, 'ReactBrowserEventEmitter', {
+  putListener: 'putListener',
+  deleteListener: 'deleteListener',
 });
 
 module.exports = ReactBrowserEventEmitter;

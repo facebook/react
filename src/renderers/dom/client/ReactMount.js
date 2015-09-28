@@ -440,6 +440,9 @@ TopLevelWrapper.prototype.render = function() {
  * Inside of `container`, the first element rendered is the "reactRoot".
  */
 var ReactMount = {
+
+  TopLevelWrapper: TopLevelWrapper,
+
   /** Exposed for debugging purposes **/
   _instancesByReactRootID: instancesByReactRootID,
 

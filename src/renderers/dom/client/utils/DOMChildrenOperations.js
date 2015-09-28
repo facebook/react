@@ -14,6 +14,7 @@
 
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
+var ReactPerf = require('ReactPerf');
 
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
@@ -150,5 +151,9 @@ var DOMChildrenOperations = {
   },
 
 };
+
+ReactPerf.measureMethods(DOMChildrenOperations, 'DOMChildrenOperations', {
+  updateTextContent: 'updateTextContent',
+});
 
 module.exports = DOMChildrenOperations;
