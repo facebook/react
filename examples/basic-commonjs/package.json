@@ -6,9 +6,11 @@
     "babelify": "^6.3.0",
     "react": "^0.14.0-rc1",
     "react-dom": "^0.14.0-rc1",
-    "watchify": "^3.4.0"
+    "watchify": "^3.4.0",
+    "browserify": "^11.0.1"
   },
   "scripts": {
-    "start": "watchify index.js -v -t babelify -o bundle.js"
+    "build": "browserify ./index.js -t babelify -o bundle.js",
+    "watch": "watchify ./index.js -v -t babelify -o bundle.js"
   }
 }
