@@ -62,6 +62,7 @@
     "rootDir": "",
     "scriptPreprocessor": "scripts/jest/preprocessor.js",
     "setupEnvScriptFile": "scripts/jest/environment.js",
+    "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
     "testFileExtensions": [
       "coffee",
       "js",
