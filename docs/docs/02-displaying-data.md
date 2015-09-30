@@ -49,7 +49,7 @@ var HelloWorld = React.createClass({
 
 setInterval(function() {
   React.render(
-    <HelloWorld date={new Date()} />,
+    <HelloWorld date={Date.now()} />,
     document.getElementById('example')
   );
 }, 500);
