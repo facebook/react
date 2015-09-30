@@ -28,6 +28,10 @@ function forceUpdateIfMounted() {
   }
 }
 
+function isTextInput(props) {
+  return !props.type || props.type === 'text';
+}
+
 /**
  * Implements an <input> native component that allows setting these optional
  * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
@@ -81,8 +85,7 @@ var ReactDOMInput = {
     // Can't be in mountWrapper or else server rendering leaks.
     instancesByReactID[inst._rootNodeID] = inst;
     var rootNode = ReactMount.getNode(inst._rootNodeID);
-    var props = inst._currentElement.props;
-    if (!props.type || props.type==='text') {
+    if (isTextInput(inst._currentElement.props)) {
       inst._currentValue = rootNode.value;
     }
   },
@@ -108,11 +111,15 @@ var ReactDOMInput = {
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
+      value = '' + value;
       ReactDOMIDOperations.updatePropertyByID(
         inst._rootNodeID,
         'value',
-        '' + value
+        value
       );
+      if (isTextInput(props)) {
+        inst._currentValue = value;
+      }
     }
   },
 };
@@ -120,7 +127,7 @@ var ReactDOMInput = {
 function _handleChange(event) {
   var props = this._currentElement.props;
 
-  if (!props.type || props.type === 'text') {
+  if (isTextInput(props)) {
     var value = event.target.value;
     if (value === this._currentValue) {
       return undefined;

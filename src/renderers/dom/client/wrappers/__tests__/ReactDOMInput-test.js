@@ -387,7 +387,7 @@ describe('ReactDOMInput', function() {
     expect(() => ReactDOM.render(instance, node)).toThrow();
   });
 
-  it('will not fire onChange when render with placeholder', function () {
+  it('will not fire onChange when render with placeholder', function() {
     var node = document.createElement('div');
     document.body.appendChild(node);
     var onChange = mocks.getMockFunction();
