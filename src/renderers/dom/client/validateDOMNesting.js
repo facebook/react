@@ -412,9 +412,6 @@ if (__DEV__) {
     }
   };
 
-  validateDOMNesting.ancestorInfoContextKey =
-    '__validateDOMNesting_ancestorInfo$' + Math.random().toString(36).slice(2);
-
   validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
 
   // For testing

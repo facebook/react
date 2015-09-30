@@ -68,20 +68,30 @@ assign(ReactDOMTextComponent.prototype, {
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(
+    rootID,
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
     if (__DEV__) {
-      if (context[validateDOMNesting.ancestorInfoContextKey]) {
-        validateDOMNesting(
-          'span',
-          null,
-          context[validateDOMNesting.ancestorInfoContextKey]
-        );
+      var parentInfo;
+      if (nativeParent != null) {
+        parentInfo = nativeParent._ancestorInfo;
+      } else if (nativeContainerInfo != null) {
+        parentInfo = nativeContainerInfo._ancestorInfo;
+      }
+      if (parentInfo) {
+        // parentInfo should always be present except for the top-level
+        // component when server rendering
+        validateDOMNesting(this._tag, this, parentInfo);
       }
     }
 
     this._rootNodeID = rootID;
     if (transaction.useCreateElement) {
-      var ownerDocument = context[ReactMount.ownerDocumentContextKey];
+      var ownerDocument = nativeContainerInfo._ownerDocument;
       var el = ownerDocument.createElement('span');
       this._nativeNode = el;
       DOMPropertyOperations.setAttributeForID(el, rootID);

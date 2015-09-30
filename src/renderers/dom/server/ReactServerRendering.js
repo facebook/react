@@ -46,8 +46,13 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element, null);
-      var markup =
-        componentInstance.mountComponent(id, transaction, emptyObject);
+      var markup = componentInstance.mountComponent(
+        id,
+        transaction,
+        null,
+        null,
+        emptyObject
+      );
       if (!makeStaticMarkup) {
         markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
       }
