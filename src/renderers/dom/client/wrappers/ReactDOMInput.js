@@ -82,7 +82,7 @@ var ReactDOMInput = {
     instancesByReactID[inst._rootNodeID] = inst;
     var rootNode = ReactMount.getNode(inst._rootNodeID);
     var props = inst._currentElement.props;
-    if(!props.type || props.type==='text') {
+    if (!props.type || props.type==='text') {
       inst._currentValue = rootNode.value;
     }
   },
@@ -120,10 +120,10 @@ var ReactDOMInput = {
 function _handleChange(event) {
   var props = this._currentElement.props;
 
-  if(!props.type || props.type === 'text') {
+  if (!props.type || props.type === 'text') {
     var value = event.target.value;
     if (value === this._currentValue) {
-      return;
+      return undefined;
     }
     this._currentValue = value;
   }

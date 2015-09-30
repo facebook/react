@@ -391,7 +391,7 @@ describe('ReactDOMInput', function() {
     var node = document.createElement('div');
     document.body.appendChild(node);
     var onChange = mocks.getMockFunction();
-    var instance = <input placeholder="一鸣，何" onChange={onChange} />;
+    var instance = <input placeholder="中文" onChange={onChange} />;
     // can not use renderIntoDocument
     ReactDOM.render(instance, node);
     expect(onChange.mock.calls.length).toBe(0);
