@@ -212,16 +212,16 @@ describe('ReactMount', function() {
     });
 
     var container = document.createElement('div');
-    console.error = mocks.getMockFunction();
+    spyOn(console, 'error');
     var component = RD1.render(<X />, container);
-    expect(console.error.mock.calls.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
 
     // This fails but logs a warning first
     expect(function() {
       RD2.findDOMNode(component);
     }).toThrow();
-    expect(console.error.mock.calls.length).toBe(1);
-    expect(console.error.mock.calls[0][0]).toContain('two copies of React');
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain('two copies of React');
   });
 
   it('should warn if render removes React-rendered children', function() {
@@ -231,12 +231,12 @@ describe('ReactMount', function() {
         return <div><div /></div>;
       },
     });
-    React.render(<Component />, container);
+    ReactDOM.render(<Component />, container);
 
     // Test that blasting away children throws a warning
     spyOn(console, 'error');
     var rootNode = container.firstChild;
-    React.render(<span />, rootNode);
+    ReactDOM.render(<span />, rootNode);
     expect(console.error.callCount).toBe(1);
     expect(console.error.mostRecentCall.args[0]).toBe(
       'Warning: render(...): Replacing React-rendered children with a new ' +
