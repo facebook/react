@@ -410,4 +410,22 @@ describe('ReactTestUtils', function() {
     expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
   });
 
+  it('can scry with stateless components involved', function() {
+    var Stateless = () => <div><hr /></div>;
+    var SomeComponent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Stateless />
+            <hr />
+          </div>
+        );
+      },
+    });
+
+    var inst = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    var hrs = ReactTestUtils.scryRenderedDOMComponentsWithTag(inst, 'hr');
+    expect(hrs.length).toBe(2);
+  });
+
 });
