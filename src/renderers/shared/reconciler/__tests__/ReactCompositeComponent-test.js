@@ -607,6 +607,29 @@ describe('ReactCompositeComponent', function() {
     expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
   });
 
+  it('should skip update when rerendering element in container', function() {
+    var Parent = React.createClass({
+      render: function() {
+        return <div>{this.props.children}</div>;
+      },
+    });
+
+    var childRenders = 0;
+    var Child = React.createClass({
+      render: function() {
+        childRenders++;
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    var child = <Child />;
+
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    expect(childRenders).toBe(1);
+  });
+
   it('should pass context when re-rendered for static child', function() {
     var parentInstance = null;
     var childInstance = null;
