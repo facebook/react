@@ -86,7 +86,7 @@ var ReactTransitionGroup = React.createClass({
       children: ReactTransitionChildMapping.mergeChildMappings(
         this.state.children,
         nextChildMapping
-      )
+      ),
     });
 
     // If we want to someday check for reordering, we could do it here.
@@ -183,7 +183,7 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var newChildren = Object.assign({}, this.state.children);
+    var newChildren = assign({}, this.state.children);
     delete newChildren[key];
     this.setState({children: newChildren});
   },
