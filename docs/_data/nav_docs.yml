@@ -43,7 +43,7 @@
     title: Working With the Browser
     subitems:
     - id: more-about-refs
-      title: More About Refs
+      title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
   - id: addons

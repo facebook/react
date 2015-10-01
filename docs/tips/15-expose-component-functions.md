@@ -4,7 +4,7 @@ title: Expose Component Functions
 layout: tips
 permalink: expose-component-functions.html
 prev: communicate-between-components.html
-next: references-to-components.html
+next: children-undefined.html
 ---
 
 There's another (uncommon) way of [communicating between components](/react/tips/communicate-between-components.html): simply expose a method on the child component for the parent to call.
