@@ -51,7 +51,7 @@
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "test": "NODE_ENV=test jest"
+    "test": "jest"
   },
   "jest": {
     "modulePathIgnorePatterns": [
