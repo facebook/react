@@ -176,7 +176,7 @@ var ReactCompositeComponentMixin = {
         // We support ES6 inheriting from React.Component, the module pattern,
         // and stateless components, but not ES6 classes that don't extend
         warning(
-          Component.isReactClass ||
+          (Component.prototype && Component.prototype.isReactComponent) ||
             !canInstantiate ||
             !(inst instanceof Component),
           '%s(...): React component classes must extend React.Component.',

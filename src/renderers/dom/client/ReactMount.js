@@ -412,7 +412,7 @@ function findFirstReactDOMImpl(node) {
  * here.
  */
 var TopLevelWrapper = function() {};
-TopLevelWrapper.isReactClass = {};
+TopLevelWrapper.prototype.isReactComponent = {};
 if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }

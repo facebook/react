@@ -1211,5 +1211,35 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls.length).toBe(0);
   });
 
+  it('should warn when a class does not extend React.Component', function() {
+
+    var container = document.createElement('div');
+
+    class Foo {
+      render() {
+        return <span />;
+      }
+    }
+
+    function Bar() { }
+    Bar.prototype = Object.create(React.Component.prototype);
+    Bar.prototype.render = function() {
+      return <span />;
+    };
+
+    expect(console.error.calls.length).toBe(0);
+
+    ReactDOM.render(<Bar />, container);
+
+    expect(console.error.calls.length).toBe(0);
+
+    ReactDOM.render(<Foo />, container);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'React component classes must extend React.Component'
+    );
+
+  });
 
 });
