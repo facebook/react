@@ -108,7 +108,7 @@ By [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/j
 ### Backbone + React + Middleman Screencast
 <iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
-Backbone is a great way in interface a REST API with React. This screencast shows how to integate the two using [Backbone-React-Component](https://github.com/magalhas/backbone-react-component). Middleman is the framework used in this example but could easily be replaced with other frameworks. A supported template of this can be found [here](https://github.com/jbhatab/middleman-backbone-react-template). -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
+Backbone is a great way in interface a REST API with React. This screencast shows how to integrate the two using [Backbone-React-Component](https://github.com/magalhas/backbone-react-component). Middleman is the framework used in this example but could easily be replaced with other frameworks. A supported template of this can be found [here](https://github.com/jbhatab/middleman-backbone-react-template). -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
 
 * * *
 
