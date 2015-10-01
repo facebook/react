@@ -131,6 +131,7 @@ function _handleChange(event) {
   if (isTextInput(props)) {
     var value = event.target.value;
     if (value === this._wrapperState._currentValue) {
+      event.stopPropagation();
       return undefined;
     }
     this._wrapperState._currentValue = value;
