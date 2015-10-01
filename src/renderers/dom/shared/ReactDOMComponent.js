@@ -480,14 +480,12 @@ function validateDangerousTag(tag) {
   }
 }
 
-function processChildContext(context, inst) {
-  if (__DEV__) {
-    // Pass down our tag name to child components for validation purposes
-    context = assign({}, context);
-    var info = context[validateDOMNesting.ancestorInfoContextKey];
-    context[validateDOMNesting.ancestorInfoContextKey] =
-      validateDOMNesting.updatedAncestorInfo(info, inst._tag, inst);
-  }
+function processChildContextDev(context, inst) {
+  // Pass down our tag name to child components for validation purposes
+  context = assign({}, context);
+  var info = context[validateDOMNesting.ancestorInfoContextKey];
+  context[validateDOMNesting.ancestorInfoContextKey] =
+    validateDOMNesting.updatedAncestorInfo(info, inst._tag, inst);
   return context;
 }
 
@@ -519,6 +517,10 @@ function ReactDOMComponent(tag) {
   this._wrapperState = null;
   this._topLevelWrapper = null;
   this._nodeWithLegacyProperties = null;
+  if (__DEV__) {
+    this._unprocessedContextDev = null;
+    this._processedContextDev = null;
+  }
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';
@@ -586,6 +588,12 @@ ReactDOMComponent.Mixin = {
           context[validateDOMNesting.ancestorInfoContextKey]
         );
       }
+    }
+
+    if (__DEV__) {
+      this._unprocessedContextDev = context;
+      this._processedContextDev = processChildContextDev(context, this);
+      context = this._processedContextDev;
     }
 
     var mountImage;
@@ -721,7 +729,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          processChildContext(context, this)
+          context
         );
         ret = mountImages.join('');
       }
@@ -761,7 +769,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          processChildContext(context, this)
+          context
         );
         for (var i = 0; i < mountImages.length; i++) {
           el.appendChild(mountImages[i]);
@@ -823,13 +831,25 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
+    if (__DEV__) {
+      // If the context is reference-equal to the old one, pass down the same
+      // processed object so the update bailout in ReactReconciler behaves
+      // correctly (and identically in dev and prod). See #5005.
+      if (this._unprocessedContextDev !== context) {
+        this._unprocessedContextDev = context;
+        this._processedContextDev = processChildContextDev(context, this);
+      }
+      context = this._processedContextDev;
+    }
+
+
     assertValidProps(this, nextProps);
     this._updateDOMProperties(lastProps, nextProps, transaction, null);
     this._updateDOMChildren(
       lastProps,
       nextProps,
       transaction,
-      processChildContext(context, this)
+      context
     );
 
     if (!canDefineProperty && this._nodeWithLegacyProperties) {
