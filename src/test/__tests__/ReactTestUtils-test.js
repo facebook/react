@@ -29,6 +29,41 @@ describe('ReactTestUtils', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
+  describe('isCompositeComponent', function() {
+    it('should be true when passed a composite component', function() {
+      var CompositeComponent = React.createClass({
+        render: function() {
+          return <div />;
+        },
+      });
+      var component = ReactTestUtils.renderIntoDocument(<CompositeComponent />);
+      expect(ReactTestUtils.isCompositeComponent(component)).toBe(true);
+    });
+
+    it('should be true when passed composite a component defined by ES6 classes', function() {
+      class ES6Component extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      var component = ReactTestUtils.renderIntoDocument(<ES6Component />);
+      expect(ReactTestUtils.isCompositeComponent(component)).toBe(true);
+    });
+
+    it('should be false when passed a dom component', function() {
+      var component = ReactTestUtils.renderIntoDocument(<div/>);
+      expect(ReactTestUtils.isCompositeComponent(component)).toBe(false);
+    });
+
+    it('should be false when passed a string', function() {
+      expect(ReactTestUtils.isCompositeComponent('string')).toBe(false);
+    });
+
+    it('should be false when passed null', function() {
+      expect(ReactTestUtils.isCompositeComponent(null)).toBe(false);
+    });
+  });
+
   it('should have shallow rendering', function() {
     var SomeComponent = React.createClass({
       render: function() {
