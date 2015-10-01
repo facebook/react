@@ -357,7 +357,16 @@ describe('ReactDOMSelect', function() {
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
+
+    spyOn(console, 'error');
+
     stub = ReactTestUtils.renderIntoDocument(stub);
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`valueLink` prop on `select` is deprecated; set `value` and `onChange` instead.'
+    );
+
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey

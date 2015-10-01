@@ -18,6 +18,8 @@ var ReactUpdates = require('ReactUpdates');
 var assign = require('Object.assign');
 var warning = require('warning');
 
+var didWarnValueLink = false;
+
 var valueContextKey =
   '__ReactDOMSelect_value$' + Math.random().toString(36).slice(2);
 
@@ -57,6 +59,14 @@ function checkSelectPropTypes(inst, props) {
     props,
     owner
   );
+
+  if (props.valueLink !== undefined && !didWarnValueLink) {
+    warning(
+      false,
+      '`valueLink` prop on `select` is deprecated; set `value` and `onChange` instead.'
+    );
+    didWarnValueLink = true;
+  }
 
   for (var i = 0; i < valuePropNames.length; i++) {
     var propName = valuePropNames[i];

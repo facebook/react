@@ -18,8 +18,12 @@ var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
+var warning = require('warning');
 
 var instancesByReactID = {};
+
+var didWarnValueLink = false;
+var didWarnCheckedLink = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
@@ -67,6 +71,21 @@ var ReactDOMInput = {
         props,
         inst._currentElement._owner
       );
+
+      if (props.valueLink !== undefined && !didWarnValueLink) {
+        warning(
+          false,
+          '`valueLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+        );
+        didWarnValueLink = true;
+      }
+      if (props.checkedLink !== undefined && !didWarnCheckedLink) {
+        warning(
+          false,
+          '`checkedLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+        );
+        didWarnCheckedLink = true;
+      }
     }
 
     var defaultValue = props.defaultValue;
