@@ -78,6 +78,7 @@ var ReactDOMInput = {
       initialChecked: props.defaultChecked || false,
       initialValue: defaultValue != null ? defaultValue : null,
       onChange: _handleChange.bind(inst),
+      _currentValue: '',
     };
   },
 
@@ -86,7 +87,7 @@ var ReactDOMInput = {
     instancesByReactID[inst._rootNodeID] = inst;
     var rootNode = ReactMount.getNode(inst._rootNodeID);
     if (isTextInput(inst._currentElement.props)) {
-      inst._currentValue = rootNode.value;
+      inst._wrapperState._currentValue = rootNode.value;
     }
   },
 
@@ -118,7 +119,7 @@ var ReactDOMInput = {
         value
       );
       if (isTextInput(props)) {
-        inst._currentValue = value;
+        inst._wrapperState._currentValue = value;
       }
     }
   },
@@ -129,10 +130,10 @@ function _handleChange(event) {
 
   if (isTextInput(props)) {
     var value = event.target.value;
-    if (value === this._currentValue) {
+    if (value === this._wrapperState._currentValue) {
       return undefined;
     }
-    this._currentValue = value;
+    this._wrapperState._currentValue = value;
   }
 
   var returnValue = LinkedValueUtils.executeOnChange(props, event);
