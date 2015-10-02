@@ -483,4 +483,16 @@ describe('ReactElementValidator', function() {
     void <div>{[child]}</div>;
   });
 
+  it('does not blow up on key warning with undefined type', function() {
+    spyOn(console, 'error');
+    var Foo = undefined;
+    void <Foo>{[<div />]}</Foo>;
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: React.createElement: type should not be null, undefined, ' +
+      'boolean, or number. It should be a string (for DOM elements) or a ' +
+      'ReactClass (for composite components).'
+    );
+  });
+
 });
