@@ -14,15 +14,15 @@ No momento em que este relatório é redigido, o projeto encontra-se muito ativo
 
 ![Commits por semana do projeto React](./commits_graph.jpg)
 
-Esta grande variedade de commits suporta a tese de que o projeto segue um processo Agile, com constantes adaptações e correções do código, adição de funcionalidades, evolução do sistema e refactoring.
+Esta grande variedade de commits suporta a tese de que o projeto segue uma metodologia Agile, com constantes adaptações e correções do código, adição de funcionalidades, evolução do sistema e refactoring. Contudo, apesar da interpretação dos autores deste relatório acerca da filosofia de base que rege o desenvolvimento da biblioteca React, não parece haver um único processo de desenvolvimento bem definido, mas antes um conjunto de práticas associadas a processos Agile, como Scrum e XP, seguidas pelos colaboradores do projeto.
 
-Contudo, apesar da interpretação Na realidade, o projeto React não é um projeto único, mas antes uma coleção de [múltiplos projetos](https://github.com/facebook/react/wiki/Projects) interdependentes, cada um dos quais relacionado com um dado componente da biblioteca ou um conjunto de funcionalidades que necessitam de ser trabalhadas ou testadas. Uma vez que este facto poderia causar problemas de organização do repositório, um destes projetos, intitulado [Better Project Distinction](https://github.com/facebook/react/wiki/Projects#better-project-distinction), consiste precisamente organizar o projeto global da forma mais clara possível, distinguindo as funcionalidades dos vários projetos. Nas palavras de 
+Na realidade, o projeto React não é um projeto único, mas antes uma coleção de [múltiplos projetos](https://github.com/facebook/react/wiki/Projects) interdependentes, cada um dos quais relacionado com um dado componente da biblioteca ou um conjunto de funcionalidades que necessitam de ser trabalhadas ou testadas. Uma vez que este facto poderia causar problemas de organização do repositório, um destes projetos, intitulado [Better Project Distinction](https://github.com/facebook/react/wiki/Projects#better-project-distinction), consiste precisamente organizar o projeto global da forma mais clara possível, distinguindo as funcionalidades dos vários projetos.
 
 > With multiple interdependent projects in the same repo, we have a bit of a mess. I don’t think it hurts much to have these things together, but we should make this as clear as possible.
 
-[Paul O'Shannessy](https://github.com/zpao), um dos principais colaboradores no desenvolvimento do React e responsável pela tarefa de distinção entre os projetos.
+Estas palavras pertencem [Paul O'Shannessy](https://github.com/zpao), um dos principais colaboradores no desenvolvimento do React e responsável pela tarefa de distinção entre os projetos. Apesar de, aparentemente, existir a possibilidade de os colaboradores do projeto se depararem com algumas dificuldades na orientação do seu trabalho, a equipa central do projeto, designada de *core team*, realiza [reuniões frequentes](https://discuss.reactjs.org/c/meeting-notes), espaçadas de uma a duas semanas, onde são definidos os objetivos para o período entre uma reunião e a reunião seguinte, seguindo um conceito semelhante ao de um *sprint* no processo *Scrum*.
 
-
+O conjunto de objetivos que são definidos nestas reuniões podem 
 
 ### Análise Crítica
 
