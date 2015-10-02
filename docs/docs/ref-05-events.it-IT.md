@@ -93,17 +93,17 @@ Proprietà:
 
 ```javascript
 boolean altKey
-Number charCode
+number charCode
 boolean ctrlKey
-function getModifierState(key)
-String key
-Number keyCode
-String locale
-Number location
+boolean getModifierState(key)
+string key
+number keyCode
+string locale
+number location
 boolean metaKey
 boolean repeat
 boolean shiftKey
-Number which
+number which
 ```
 
 
@@ -149,18 +149,18 @@ Proprietà:
 
 ```javascript
 boolean altKey
-Number button
-Number buttons
-Number clientX
-Number clientY
+number button
+number buttons
+number clientX
+number clientY
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
-Number pageX
-Number pageY
+number pageX
+number pageY
 DOMEventTarget relatedTarget
-Number screenX
-Number screenY
+number screenX
+number screenY
 boolean shiftKey
 ```
 
@@ -179,7 +179,7 @@ Proprietà:
 boolean altKey
 DOMTouchList changedTouches
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
 boolean shiftKey
 DOMTouchList targetTouches
@@ -198,7 +198,7 @@ onScroll
 Proprietà:
 
 ```javascript
-Number detail
+number detail
 DOMAbstractView view
 ```
 
@@ -214,10 +214,10 @@ onWheel
 Proprietà:
 
 ```javascript
-Number deltaMode
-Number deltaX
-Number deltaY
-Number deltaZ
+number deltaMode
+number deltaX
+number deltaY
+number deltaZ
 ```
 
 ### Eventi dei Media

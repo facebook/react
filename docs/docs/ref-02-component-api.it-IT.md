@@ -14,7 +14,7 @@ Istanze di un React Component sono create internamente a React durante il render
 ### setState
 
 ```javascript
-setState(
+void setState(
   function|object nextState,
   [function callback]
 )
@@ -53,7 +53,7 @@ Il secondo parametro (opzionale) è una funzione callback che verrà eseguita qu
 ### replaceState
 
 ```javascript
-replaceState(
+void replaceState(
   object nextState,
   [function callback]
 )
@@ -69,7 +69,7 @@ Come `setState()`, ma elimina ogni chiave preesistente che non si trova in `next
 ### forceUpdate
 
 ```javascript
-forceUpdate(
+void forceUpdate(
   [function callback]
 )
 ```
@@ -99,7 +99,7 @@ Se questo componente è stato montato nel DOM, restituisce il corrispondente ele
 ### isMounted
 
 ```javascript
-bool isMounted()
+boolean isMounted()
 ```
 
 `isMounted()` restituisce `true` se il rendering del componente è stato effettuato nel DOM, `false` altrimenti. Puoi usare questo metodo come guardia per chiamate asincrone a `setState()` o `forceUpdate()`.
@@ -112,7 +112,7 @@ bool isMounted()
 ### setProps
 
 ```javascript
-setProps(
+void setProps(
   object nextProps,
   [function callback]
 )
@@ -133,7 +133,7 @@ Chiamare `setProps()` su un componente al livello radice cambierà le sue propri
 ### replaceProps
 
 ```javascript
-replaceProps(
+void replaceProps(
   object nextProps,
   [function callback]
 )

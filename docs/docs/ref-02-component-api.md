@@ -14,7 +14,7 @@ Instances of a React Component are created internally in React when rendering. T
 ### setState
 
 ```javascript
-setState(
+void setState(
   function|object nextState,
   [function callback]
 )
@@ -53,7 +53,7 @@ The second (optional) parameter is a callback function that will be executed onc
 ### replaceState
 
 ```javascript
-replaceState(
+void replaceState(
   object nextState,
   [function callback]
 )
@@ -69,7 +69,7 @@ Like `setState()` but deletes any pre-existing state keys that are not in nextSt
 ### forceUpdate
 
 ```javascript
-forceUpdate(
+void forceUpdate(
   [function callback]
 )
 ```
@@ -99,7 +99,7 @@ If this component has been mounted into the DOM, this returns the corresponding 
 ### isMounted
 
 ```javascript
-bool isMounted()
+boolean isMounted()
 ```
 
 `isMounted()` returns `true` if the component is rendered into the DOM, `false` otherwise. You can use this method to guard asynchronous calls to `setState()` or `forceUpdate()`.
@@ -112,7 +112,7 @@ bool isMounted()
 ### setProps
 
 ```javascript
-setProps(
+void setProps(
   object nextProps,
   [function callback]
 )
@@ -133,7 +133,7 @@ Calling `setProps()` on a root-level component will change its properties and tr
 ### replaceProps
 
 ```javascript
-replaceProps(
+void replaceProps(
   object nextProps,
   [function callback]
 )

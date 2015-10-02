@@ -109,7 +109,7 @@ Vari metodi vengono eseguiti durante precisi momenti del ciclo di vita di un com
 ### Montaggio: componentWillMount
 
 ```javascript
-componentWillMount()
+void componentWillMount()
 ```
 
 Invocato una volta, sia sul client che sul server, immediatamente prima che il rendering iniziale abbia luogo. Se chiami `setState` all'interno di questo metodo, `render()` vedrà lo stato aggiornato e sarà eseguito solo una volta nonostante il cambiamento di stato.
@@ -118,7 +118,7 @@ Invocato una volta, sia sul client che sul server, immediatamente prima che il r
 ### Montaggio: componentDidMount
 
 ```javascript
-componentDidMount()
+void componentDidMount()
 ```
 
 Invocato una volta, solo sul client (e non sul server), immediatamente dopo che il rendering iniziale ha avuto luogo. A questo punto del ciclo di vita, il componente ha una rappresentazione DOM che puoi accedere attraverso `React.findDOMNode(this)`. Il metodo `componentDidMount()` dei componenti figli è invocato prima di quello dei componenti genitori.
@@ -129,7 +129,7 @@ Se desideri integrare con altri framework JavaScript, impostare dei timer usando
 ### Aggiornamento: componentWillReceiveProps
 
 ```javascript
-componentWillReceiveProps(
+void componentWillReceiveProps(
   object nextProps
 )
 ```
@@ -179,7 +179,7 @@ Se le prestazioni diventano un collo di bottiglia, specialmente in presenza di  
 ### Aggiornamento: componentWillUpdate
 
 ```javascript
-componentWillUpdate(
+void componentWillUpdate(
   object nextProps, object nextState
 )
 ```
@@ -196,7 +196,7 @@ Usa questo metodo come opportunità per effettuare la preparazione prima che si 
 ### Aggiornamento: componentDidUpdate
 
 ```javascript
-componentDidUpdate(
+void componentDidUpdate(
   object prevProps, object prevState
 )
 ```
@@ -209,7 +209,7 @@ Usa questo metodo come opportunità per operare sul DOM quando il componente è 
 ### Smontaggio: componentWillUnmount
 
 ```javascript
-componentWillUnmount()
+void componentWillUnmount()
 ```
 
 Invocato immediatamente prima che un componente venga smontato dal DOM.
