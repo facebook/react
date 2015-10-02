@@ -14,9 +14,17 @@ No momento em que este relatório é redigido, o projeto encontra-se muito ativo
 
 ![Commits por semana do projeto React](./commits_graph.jpg)
 
-Na realidade, o projeto React não é um projeto único, mas antes uma coleção de [múltiplos projetos](https://github.com/facebook/react/wiki/Projects) interdependentes, cada um dos quais relacionado com um dado componente da biblioteca ou um conjunto de funcionalidades que necessitam de ser trabalhadas ou testadas. Uma vez que este facto poderia causar problemas de organização do repositório, um destes projetos, intitulado [Better Project Distinction](https://github.com/facebook/react/wiki/Projects#better-project-distinction), consiste precisamente organizar o projeto global da forma mais clara possível, distinguindo as funcionalidades dos vários projetos.
+Esta grande variedade de commits suporta a tese de que o projeto segue um processo Agile, com constantes adaptações e correções do código, adição de funcionalidades, evolução do sistema e refactoring.
 
-### Análise crítica
+Contudo, apesar da interpretação Na realidade, o projeto React não é um projeto único, mas antes uma coleção de [múltiplos projetos](https://github.com/facebook/react/wiki/Projects) interdependentes, cada um dos quais relacionado com um dado componente da biblioteca ou um conjunto de funcionalidades que necessitam de ser trabalhadas ou testadas. Uma vez que este facto poderia causar problemas de organização do repositório, um destes projetos, intitulado [Better Project Distinction](https://github.com/facebook/react/wiki/Projects#better-project-distinction), consiste precisamente organizar o projeto global da forma mais clara possível, distinguindo as funcionalidades dos vários projetos. Nas palavras de 
+
+> With multiple interdependent projects in the same repo, we have a bit of a mess. I don’t think it hurts much to have these things together, but we should make this as clear as possible.
+
+[Paul O'Shannessy](https://github.com/zpao), um dos principais colaboradores no desenvolvimento do React e responsável pela tarefa de distinção entre os projetos.
+
+
+
+### Análise Crítica
 
 A core team realiza reuniões, onde se discute os vários aspectos do projecto que podem ser melhorados, e planos futuros. A realização destas reuniões é feita, sensivelmente, de 2 em 2 semanas, cujos resultados são, posteriormente, colocados no fórum de discussão do React: https://discuss.reactjs.org/c/meeting-notes.
 
