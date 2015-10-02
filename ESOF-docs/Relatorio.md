@@ -26,6 +26,11 @@ Contudo, apesar da interpretação Na realidade, o projeto React não é um proj
 
 ### Análise Crítica
 
-A core team realiza reuniões, onde se discute os vários aspectos do projecto que podem ser melhorados, e planos futuros. A realização destas reuniões é feita, sensivelmente, de 2 em 2 semanas, cujos resultados são, posteriormente, colocados no fórum de discussão do React: https://discuss.reactjs.org/c/meeting-notes.
+O projecto em estudo pelos autores deste relatório sofre múltiplas contribuições por parte de vários programadores, provenientes da core team ou qualquer pessoa que deseje adicionar a sua contribuição ao projecto. Como cada contribuidor possui o seu próprio método de organização e de programação, e sendo este um projecto constiruído por vários deles, é essencial o establecimento de determinados padrões, por forma a garantir a organização e o sucesso deste projecto.
 
-Numa primeira análise, verifica-se a importância da existência de um "janitor" no repositório por vários motivos. Um dos principais motivos é que este projecto sofre contribuições por parte de vários programadores, o que pode provocar um certa ordem de "caos". Deste modo, é imperativa a realização de várias "limpezas" por forma a garantir a consistência e organização do repositório.
+Uma das formas que os principais contribuidores do projecto (core team) usam para garantir um processo de desenvolvimento fluído e eficaz é descriminando as várias convenções utilizadas ao longo do código e como deve ser utilizado o repositório.
+
+Todavia, apesar do estabelecimento das regras supramencionadas, podem surgir vários problemas de organização ao nível do repositório, que, em última análise, deterioram o processo de desenvolvimento. Deste modo, verifica-se a importância da existência de um "janitor" que garanta que os vários aspectos de organização são cumpridos e, se não, corrigi-los. 
+
+
+
