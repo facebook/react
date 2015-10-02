@@ -3,8 +3,18 @@
 
 ### Descrição do Projeto
 
-React é uma biblioteca em JavaScript para a criação de interfaces gráficas para o utilizador.
-Esta biblioteca é um dos primeiros projetos open source do Facebook que está em constante desenvolvimento e é usado para enviar código para todos no facebook.com. Os colaboradores continuam a trabalhar para tornar a contribuição para o projeto o mais fácil e transparente possivel.
+React é uma biblioteca em JavaScript para a criação de interfaces gráficas para o utilizador mantida pelo Facebook, Instagram e por uma comunidade de colaboradores individuais e corporações.
+
+Grande parte da comunidade opta por tratar este projeto como o V de MVC, ou seja, como a visão da representação da informação no padrão de arquitetura de software Model-View-Controller, refutando categoricamente que React seja uma framework MVC.
+
+O projeto mantém uma virtual DOM - Document Object Model, uma multiplataforma independente da linguagem para a representação e interação com objetos em documentos HTML, XHTML e XML. Isto permite oferecer um simples modelo de programação e uma melhor performance.
+
+React pode ainda processar no servidor usando Node - um interpretador de código JavaScript que funciona do lado do servidor - e pode ainda carregar aplicações nativas usando a framework React Native.
+
+Esta biblioteca é um dos primeiros projetos open source do Facebook que se encontra em constante desenvolvimento e é utilizado para enviar código para todos na página do Facebook. Os colaboradores continuam a trabalhar para tornar a contribuição para o projeto o mais fácil e transparente possível.
+
+React foi criado para resolver um único problema: construir um grande número de aplicações com informação que muda ao longo do tempo.
+
 
 ### Processo de Desenvolvimento
 
@@ -26,11 +36,12 @@ O conjunto de objetivos que são definidos nestas reuniões podem
 
 ### Análise Crítica
 
-O projecto em estudo pelos autores deste relatório sofre múltiplas contribuições por parte de vários programadores, provenientes da core team ou qualquer pessoa que deseje adicionar a sua contribuição ao projecto. Como cada contribuidor possui o seu próprio método de organização e de programação, e sendo este um projecto constiruído por vários deles, é essencial o establecimento de determinados padrões, por forma a garantir a organização e o sucesso deste projecto.
+O projecto em estudo pelos autores deste relatório sofre múltiplas contribuições por parte de vários programadores, provenientes da core team ou qualquer pessoa que deseje adicionar a sua contribuição ao projecto. Como cada contribuidor possui o seu próprio método de organização e de programação, e sendo este um projecto constituído por vários deles, é essencial o establecimento de determinados padrões, por forma a garantir a organização e o sucesso deste projecto.
 
 Uma das formas que os principais contribuidores do projecto (core team) usam para garantir um processo de desenvolvimento fluído e eficaz é descriminando as várias convenções utilizadas ao longo do código e como deve ser utilizado o repositório.
 
-Todavia, apesar do estabelecimento das regras supramencionadas, podem surgir vários problemas de organização ao nível do repositório, que, em última análise, deterioram o processo de desenvolvimento. Deste modo, verifica-se a importância da existência de um "janitor" que garanta que os vários aspectos de organização são cumpridos e, se não, corrigi-los. 
+Todavia, apesar do estabelecimento das regras supramencionadas, podem surgir vários problemas de organização ao nível do repositório, que, em última análise, deterioram o processo de desenvolvimento. Deste modo, verifica-se a importância da existência de um *janitor* que garanta que os vários aspectos de organização são cumpridos e, se não, corrigi-los. 
 
-
-
+A análise de um repositório tem em vista não só a sua organização bem como a qualidade e frequência dos commits realizados. 
+Quanto à frequência, pode constatar-se que o projecto é sujeito a várias alterações, como se pode constatar nos vários [gráficos disponibilizados pelo GitHub](https://github.com/facebook/react/graphs/commit-activity). Deste facto, pode deduzir-se que este projecto situa-se numa fase de desenvolvimento bastante activa, e, alem disso, verifica-se que este projecto continua a ser do interesse de várias entidades, quer de contribuidores, quer de várias [organizações](https://github.com/facebook/react/wiki/Sites-Using-React).
+Quanto à qualidade dos mesmos, a análise poderá ser mais subjectiva e complicada que a anterior. Verifica-se que, quando o projecto sofre adições de código, sensivelmente, em simultâneo, existe uma eliminação de código em igual parte, como se constata através da [estatística disponibilizada pelo GitHub](https://github.com/facebook/react/graphs/code-frequency). É da opinião dos autores que se verifica o refinamento do código que outrora fora submetido.
