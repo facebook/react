@@ -17,7 +17,7 @@ Um grande número de páginas e aplicações usam o React, como visível nesta [
 
 React foi criado para resolver um único problema: construir um grande número de aplicações com informação que muda ao longo do tempo.
 
-A versão atual disponivel da biblioteca é a [0.13.3] (https://github.com/facebook/react/issues?q=milestone%3A0.13.3).
+A versão atual disponível da biblioteca é a [0.13.3] (https://github.com/facebook/react/issues?q=milestone%3A0.13.3).
 
 ### Processo de Desenvolvimento
 
