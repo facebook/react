@@ -36,11 +36,12 @@ Contudo, apesar da interpretação Na realidade, o projeto React não é um proj
 
 ### Análise Crítica
 
-O projecto em estudo pelos autores deste relatório sofre múltiplas contribuições por parte de vários programadores, provenientes da core team ou qualquer pessoa que deseje adicionar a sua contribuição ao projecto. Como cada contribuidor possui o seu próprio método de organização e de programação, e sendo este um projecto constiruído por vários deles, é essencial o establecimento de determinados padrões, por forma a garantir a organização e o sucesso deste projecto.
+O projecto em estudo pelos autores deste relatório sofre múltiplas contribuições por parte de vários programadores, provenientes da core team ou qualquer pessoa que deseje adicionar a sua contribuição ao projecto. Como cada contribuidor possui o seu próprio método de organização e de programação, e sendo este um projecto constituído por vários deles, é essencial o establecimento de determinados padrões, por forma a garantir a organização e o sucesso deste projecto.
 
 Uma das formas que os principais contribuidores do projecto (core team) usam para garantir um processo de desenvolvimento fluído e eficaz é descriminando as várias convenções utilizadas ao longo do código e como deve ser utilizado o repositório.
 
 Todavia, apesar do estabelecimento das regras supramencionadas, podem surgir vários problemas de organização ao nível do repositório, que, em última análise, deterioram o processo de desenvolvimento. Deste modo, verifica-se a importância da existência de um "janitor" que garanta que os vários aspectos de organização são cumpridos e, se não, corrigi-los. 
 
-
-
+A análise de um repositório tem em vista não só a sua organização bem como a qualidade e frequência dos commits realizados. 
+Quanto à quantidade, pode constatar-se que o projecto é sujeito a várias alterações, como se pode constatar nos vários [gráficos disponibilizados pelo GitHub](https://github.com/facebook/react/graphs/commit-activity). Deste facto, pode deduzir-se que este projecto situa-se numa fase de desenvolvimento bastante activa, e, alem disso, verifica-se que este projecto continua a ser do interesse de várias entidades, quer de contribuidores, quer de várias [organizações](https://github.com/facebook/react/wiki/Sites-Using-React).
+Quanto à qualidade dos mesmos, a análise poderá ser mais subjectiva que a anterior. 
