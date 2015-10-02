@@ -450,7 +450,7 @@
 
 <p>このコンポーネントのインプットは <code>props</code> と呼ばれるものです。&quot;properties&quot; の省略形です。それらはJSXシンタックスの中でアトリビュートとして渡されます。それらはコンポーネントの中で不変と考えるべきで、 <strong><code>this.props</code> と書かないようにしてください</strong></p>
 <h2><a class="anchor" name=""></a>コンポーネントは関数のようなものです。 <a class="hash-link" href="#">#</a></h2>
-<p>Reactのコンポーネントはとても単純です。それらは <code>props</code> や <code>state</code>　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの下では、コンポーネントは簡単に理解することができます。</p>
+<p>Reactのコンポーネントはとても単純です。それらは <code>props</code> や <code>state</code>　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの元、コンポーネントは簡単に理解することができます。</p>
 
 <blockquote>
 <p>注意:</p>
@@ -478,8 +478,7 @@
 
 <p>JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては<a href="/react/docs/jsx-gotchas.html">JSXの理解</a> をご覧ください。</p>
 
-<p>The easiest way to get started with JSX is to use the in-browser <code>JSXTransformer</code>. We strongly recommend that you don&#39;t use this in production. You can precompile your code using our command-line <a href="https://www.npmjs.com/package/react-tools">react-tools</a> package.
-JSXを初めて使う際に最も簡単なのは、ブラウザで <code>JSXTransformer</code> を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの<a href="https://www.npmjs.com/package/react-tools">react-tools</a>パッケージを使うことでプリコンパイルできます。</p>
+<p>JSXを初めて使う際に最も簡単なのは、ブラウザで <code>JSXTransformer</code> を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの<a href="https://www.npmjs.com/package/react-tools">react-tools</a>パッケージを使うことでプリコンパイルできます。</p>
 <h2><a class="anchor" name="jsxreact"></a>JSXを使わないReact <a class="hash-link" href="#jsxreact">#</a></h2>
 <p>JSXは完全にオプションです。Reactと一緒にJSXを使う必要はありません。<code>React.createElement</code> を使って、ただのJavaScriptでReactの要素を作ることもできます。それは、タグの名前やコンポーネント、プロパティのオブジェクト、いくつかのオプションの子要素をとります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
