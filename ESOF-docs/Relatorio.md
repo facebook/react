@@ -3,8 +3,18 @@
 
 ### Descrição do Projeto
 
-React é uma biblioteca em JavaScript para a criação de interfaces gráficas para o utilizador.
-Esta biblioteca é um dos primeiros projetos open source do Facebook que está em constante desenvolvimento e é usado para enviar código para todos no facebook.com. Os colaboradores continuam a trabalhar para tornar a contribuição para o projeto o mais fácil e transparente possivel.
+React é uma biblioteca em JavaScript para a criação de interfaces gráficas para o utilizador mantida pelo Facebook, Instagram e por uma comunidade de colaboradores individuais e corporações.
+
+Grande parte da comunidade opta por tratar este projeto como o V de MVC, ou seja, como a visão da representação da informação no padrão de arquitetura de software Model-View-Controller, refutando categoricamente que React seja uma framework MVC.
+
+O projeto mantém uma virtual DOM - Document Object Model, uma multiplataforma independente da linguagem para a representação e interação com objetos em documentos HTML, XHTML e XML. Isto permite oferecer um simples modelo de programação e uma melhor performance.
+
+React pode ainda processar no servidor usando Node - um interpretador de código JavaScript que funciona do lado do servidor - e pode ainda carregar aplicações nativas usando a framework React Native.
+
+Esta biblioteca é um dos primeiros projetos open source do Facebook que se encontra em constante desenvolvimento e é utilizado para enviar código para todos na página do Facebook. Os colaboradores continuam a trabalhar para tornar a contribuição para o projeto o mais fácil e transparente possível.
+
+React foi criado para resolver um único problema: construir um grande número de aplicações com informação que muda ao longo do tempo.
+
 
 ### Processo de Desenvolvimento
 
