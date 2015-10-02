@@ -13,6 +13,8 @@ React pode ainda processar no servidor usando Node - um interpretador de código
 
 Esta biblioteca é um dos primeiros projetos open source do Facebook que se encontra em constante desenvolvimento e é utilizado para enviar código para todos na página do Facebook. Os colaboradores continuam a trabalhar para tornar a contribuição para o projeto o mais fácil e transparente possível.
 
+Um grande número de páginas e aplicações usam o React, como visível nesta [lista](https://github.com/facebook/react/wiki/Sites-Using-React).
+
 React foi criado para resolver um único problema: construir um grande número de aplicações com informação que muda ao longo do tempo.
 
 
