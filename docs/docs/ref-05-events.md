@@ -21,9 +21,9 @@ number eventPhase
 boolean isTrusted
 DOMEvent nativeEvent
 void preventDefault()
-void isDefaultPrevented()
+boolean isDefaultPrevented()
 void stopPropagation()
-void isPropagationStopped()
+boolean isPropagationStopped()
 DOMEventTarget target
 number timeStamp
 string type
@@ -94,17 +94,17 @@ Properties:
 
 ```javascript
 boolean altKey
-Number charCode
+number charCode
 boolean ctrlKey
-function getModifierState(key)
-String key
-Number keyCode
-String locale
-Number location
+boolean getModifierState(key)
+string key
+number keyCode
+string locale
+number location
 boolean metaKey
 boolean repeat
 boolean shiftKey
-Number which
+number which
 ```
 
 
@@ -144,24 +144,24 @@ onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 
-The `onMouseEnter` and `onMouseLeave` events propagate from the component being left to the one being entered instead of ordinary bubbling and do not have a capture phase.
+The `onMouseEnter` and `onMouseLeave` events propagate from the element being left to the one being entered instead of ordinary bubbling and do not have a capture phase.
 
 Properties:
 
 ```javascript
 boolean altKey
-Number button
-Number buttons
-Number clientX
-Number clientY
+number button
+number buttons
+number clientX
+number clientY
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
-Number pageX
-Number pageY
+number pageX
+number pageY
 DOMEventTarget relatedTarget
-Number screenX
-Number screenY
+number screenX
+number screenY
 boolean shiftKey
 ```
 
@@ -180,7 +180,7 @@ Properties:
 boolean altKey
 DOMTouchList changedTouches
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
 boolean shiftKey
 DOMTouchList targetTouches
@@ -199,7 +199,7 @@ onScroll
 Properties:
 
 ```javascript
-Number detail
+number detail
 DOMAbstractView view
 ```
 
@@ -215,10 +215,10 @@ onWheel
 Properties:
 
 ```javascript
-Number deltaMode
-Number deltaX
-Number deltaY
-Number deltaZ
+number deltaMode
+number deltaX
+number deltaY
+number deltaZ
 ```
 
 ### Media Events

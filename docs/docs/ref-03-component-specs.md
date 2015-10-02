@@ -109,7 +109,7 @@ Various methods are executed at specific points in a component's lifecycle.
 ### Mounting: componentWillMount
 
 ```javascript
-componentWillMount()
+void componentWillMount()
 ```
 
 Invoked once, both on the client and server, immediately before the initial rendering occurs. If you call `setState` within this method, `render()` will see the updated state and will be executed only once despite the state change.
@@ -118,7 +118,7 @@ Invoked once, both on the client and server, immediately before the initial rend
 ### Mounting: componentDidMount
 
 ```javascript
-componentDidMount()
+void componentDidMount()
 ```
 
 Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via `React.findDOMNode(this)`. The `componentDidMount()` method of child components is invoked before that of parent components.
@@ -129,7 +129,7 @@ If you want to integrate with other JavaScript frameworks, set timers using `set
 ### Updating: componentWillReceiveProps
 
 ```javascript
-componentWillReceiveProps(
+void componentWillReceiveProps(
   object nextProps
 )
 ```
@@ -180,7 +180,7 @@ If performance is a bottleneck, especially with dozens or hundreds of components
 ### Updating: componentWillUpdate
 
 ```javascript
-componentWillUpdate(
+void componentWillUpdate(
   object nextProps, object nextState
 )
 ```
@@ -197,7 +197,7 @@ Use this as an opportunity to perform preparation before an update occurs.
 ### Updating: componentDidUpdate
 
 ```javascript
-componentDidUpdate(
+void componentDidUpdate(
   object prevProps, object prevState
 )
 ```
@@ -210,7 +210,7 @@ Use this as an opportunity to operate on the DOM when the component has been upd
 ### Unmounting: componentWillUnmount
 
 ```javascript
-componentWillUnmount()
+void componentWillUnmount()
 ```
 
 Invoked immediately before a component is unmounted from the DOM.

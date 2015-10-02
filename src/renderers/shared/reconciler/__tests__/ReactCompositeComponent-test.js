@@ -607,6 +607,29 @@ describe('ReactCompositeComponent', function() {
     expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
   });
 
+  it('should skip update when rerendering element in container', function() {
+    var Parent = React.createClass({
+      render: function() {
+        return <div>{this.props.children}</div>;
+      },
+    });
+
+    var childRenders = 0;
+    var Child = React.createClass({
+      render: function() {
+        childRenders++;
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    var child = <Child />;
+
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    expect(childRenders).toBe(1);
+  });
+
   it('should pass context when re-rendered for static child', function() {
     var parentInstance = null;
     var childInstance = null;
@@ -1188,5 +1211,35 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls.length).toBe(0);
   });
 
+  it('should warn when a class does not extend React.Component', function() {
+
+    var container = document.createElement('div');
+
+    class Foo {
+      render() {
+        return <span />;
+      }
+    }
+
+    function Bar() { }
+    Bar.prototype = Object.create(React.Component.prototype);
+    Bar.prototype.render = function() {
+      return <span />;
+    };
+
+    expect(console.error.calls.length).toBe(0);
+
+    ReactDOM.render(<Bar />, container);
+
+    expect(console.error.calls.length).toBe(0);
+
+    ReactDOM.render(<Foo />, container);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'React component classes must extend React.Component'
+    );
+
+  });
 
 });

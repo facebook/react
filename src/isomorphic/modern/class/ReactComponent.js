@@ -29,7 +29,7 @@ function ReactComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-ReactComponent.isReactClass = {};
+ReactComponent.prototype.isReactComponent = {};
 
 /**
  * Sets a subset of the state. Always use this to mutate

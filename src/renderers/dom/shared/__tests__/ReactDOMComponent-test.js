@@ -630,6 +630,10 @@ describe('ReactDOMComponent', function() {
       SimpleEventPlugin.willDeleteListener = mocks.getMockFunction();
       var container = document.createElement('div');
 
+      ReactDOM.render(<div onClick={false} />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(0);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(0);
+
       ReactDOM.render(<div onClick={null} />, container);
       expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(0);
       expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(0);

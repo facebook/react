@@ -44,6 +44,7 @@ function findAllInRenderedTreeInternal(inst, test) {
   }
   var publicInst = inst.getPublicInstance();
   var ret = test(publicInst) ? [publicInst] : [];
+  var currentElement = inst._currentElement;
   if (ReactTestUtils.isDOMComponent(publicInst)) {
     var renderedChildren = inst._renderedChildren;
     var key;
@@ -58,7 +59,10 @@ function findAllInRenderedTreeInternal(inst, test) {
         )
       );
     }
-  } else if (ReactTestUtils.isCompositeComponent(publicInst)) {
+  } else if (
+    ReactElement.isValidElement(currentElement) &&
+    typeof currentElement.type === 'function'
+  ) {
     ret = ret.concat(
       findAllInRenderedTreeInternal(inst._renderedComponent, test)
     );
@@ -111,7 +115,8 @@ var ReactTestUtils = {
       // this returns when we have DOM nodes as refs directly
       return false;
     }
-    return typeof inst.render === 'function' &&
+    return inst != null &&
+           typeof inst.render === 'function' &&
            typeof inst.setState === 'function';
   },
 

@@ -15,7 +15,7 @@
     "eslint": "^1.5.1",
     "eslint-plugin-react": "^3.4.2",
     "eslint-plugin-react-internal": "file:eslint-rules",
-    "fbjs": "^0.2.0",
+    "fbjs": "^0.3.1",
     "fbjs-scripts": "^0.2.0",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
@@ -51,7 +51,7 @@
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "test": "NODE_ENV=test jest"
+    "test": "jest"
   },
   "jest": {
     "modulePathIgnorePatterns": [

@@ -1,5 +1,9 @@
 'use strict';
 
+// React's test can only work in NODE_ENV=test because of how things
+// are set up. So we might as well enforce it.
+process.env.NODE_ENV = 'test';
+
 var path = require('path');
 
 var assign = require('object-assign');
