@@ -43,6 +43,55 @@ O projeto tem um conjunto de proprietários, a *core team*, e um grupo de 519 co
 
 ### Análise Crítica
 
+Este projecto pode ser analisado tendo em conta vários ponto de vista. Neste relatório, vai-se proceder a uma inspeccção dos seguintes elementos:
+
+* Commits:
+  * Frequência
+  * Qualidade / Pertinência
+* Organização:
+  * código
+  * repositório
+* Milestones:
+  * relação com as versões finais e issues
+* Meetings notes:
+  * pertinência
+  * frequência
+* Conclusões
+
+#### Commits
+##### Frequência
+
+
+##### Qualidade / Pertinência
+
+
+
+#### Organização
+##### Código
+
+Analisando os vários documentos de código, constata-se que os mesmos estão bem comentados, onde são explicitadas algumas considerações tomadas pelos colaboradores no desenvolvimento das várias funções.
+
+
+##### Repositório
+
+Sendo este um projecto aberto à comunidade, e, por conseguinte, sujeito a múltiplas contribuições por parte de vários desenvolvedores de software, é imperativo o estabelecimento de padrões de organização, por forma a garantir o sucesso do projecto. Desta forma, os principais contribuidores do projecto (também referida no relatório por *core team*) discriminam as múltiplas convenções utilizadas quer ao longo do código quer no repositório. Para além do cumprimento destas regras, um desenvolvedor pode pedir *pull requests* à *core team* de forma a que a sua contribuição seja incorporada no ramo principal. No ponto de vista dos autores, esta é uma das componentes essenciais para permitir o processo de desenvolvimento fluído e eficaz, bem como garantir que a evolução do projecto não seja comprometida.
+
+------------------------------------------------------------------
+
+Todavia, apesar do estabelecimento das regras supramencionadas, podem surgir vários problemas de organização ao nível do repositório, que, em última análise, deterioram o processo de desenvolvimento. Deste modo, verifica-se a importância da existência de um *janitor* que garanta que os vários aspectos de organização são cumpridos e, se não, corrigi-los. 
+
+A análise de um repositório tem em vista não só a sua organização bem como a qualidade e frequência dos commits realizados. 
+Quanto à frequência, pode constatar-se que o projecto é sujeito a várias alterações, como se pode constatar nos gráficos de actividade já acima referidos. Deste facto, pode deduzir-se que este projecto situa-se numa fase de desenvolvimento bastante activa, e, alem disso, verifica-se que continua a ser do interesse de várias entidades, quer de contribuidores, quer de várias [organizações](https://github.com/facebook/react/wiki/Sites-Using-React).
+Quanto à qualidade dos mesmos, a análise poderá ser mais subjectiva e complicada que a anterior. Verifica-se que, quando o projecto sofre adições de código, sensivelmente, em simultâneo, existe uma eliminação de código em igual parte, como se constata através da [estatística disponibilizada pelo GitHub](https://github.com/facebook/react/graphs/code-frequency). É da opinião dos autores que se verifica o refinamento do código que outrora fora submetido.
+
+
+
+
+----------------------------------
+
+
+
+
 O projeto em estudo pelos autores deste relatório sofre múltiplas contribuições por parte de vários programadores, provenientes da core team ou qualquer pessoa que deseje adicionar a sua contribuição ao projecto. Como cada contribuidor possui o seu próprio método de organização e de programação, e sendo este um projecto constituído por vários deles, é essencial o establecimento de determinados padrões, por forma a garantir a organização e o sucesso deste projecto.
 
 Uma das formas que os principais contribuidores do projecto (core team) usam para garantir um processo de desenvolvimento fluído e eficaz é descriminando as várias convenções utilizadas ao longo do código e como deve ser utilizado o repositório.
