@@ -58,7 +58,6 @@ Este projeto pode ser analisado à luz de várias perspetivas. Neste relatório,
 * Reuniões
   * Pertinência
   * Frequência
-* Conclusões
 
 #### Commits
 ##### Frequência
@@ -97,7 +96,7 @@ A realização de [reuniões](https://discuss.reactjs.org/c/meeting-notes) entre
 
 As reuniões são normalmente espaçadas por períodos de cerca de uma a duas semanas, embora esse período possa ser estendido indefinidamente. A frequência das reuniões não é tão elevada como o que acontece, por exemplo, no modelo de processo *Scrum*, pelo que poderemos ser levados a pensar que não existe um grande esforço por parte da *core team* em perceber se os objetivos definidos em cada reunião estão a ser aplicados. No entanto, esta conclusão poderá não ser a mais correta, uma vez que as ferramentas de desenvolvimento e de comunicação atualmente existentes possibilitam a monitorização do desenvolvimento de um processo sem a necessidade de reuniões quase diárias.
 
-#### Conclusões
+### <a name="conclusao"></a>Conclusões
 
 Tratando-se o desenvolvimento da biblioteca React de um projeto *open-source*, não surpreende que não haja um processo de desenvolvimento bem definido, uma vez que o mesmo cresce a partir das contribuições da comunidade React. É provável que muitos membros desta comunidade não conheçam, sequer, o conceito de **processo de desenvolvimento de _software_**, pelo que seria muito difícil que o projeto seguisse um processo bem definido, conforme descrito em modelos teóricos.
 
