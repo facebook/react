@@ -5,7 +5,7 @@
 
 React é uma biblioteca *open-source* de JavaScript para a criação de interfaces para o utilizador desenvolvida pelo Facebook, Instagram e por uma comunidade de colaboradores.
 
-A maior parte da comunidade que utiliza e/ou desenvolve a biblioteca React considera que a mesma constitui apenas a componente *View* no padrão de arquitetura de *software* *Model-View-Controller*, ou MVC, isto é, a representação da informação conforme mostrada ao utilizador.
+A maior parte da comunidade que utiliza e/ou desenvolve a biblioteca React considera que a mesma constitui apenas a componente *View* do padrão de arquitetura de *software* *Model-View-Controller*, ou MVC, isto é, a representação da informação conforme mostrada ao utilizador.
 
 O projeto mantém um DOM (*Document Object Model*) virtual, abstraindo o DOM do *browser*, para a representação e interação com objetos em documentos HTML, XHTML e XML. Isto permite que atualizações à página Web e ao DOM do *browser* possam ocorrer de forma mais eficiente e transparente, oferecendo um modelo de programação mais simples e um melhor desempenho. Efetivamente, o objetivo principal do React é facilitar o desenvolvimento das chamadas *single-page applications*, isto é, aplicações Web que, não obstante sofrerem alterações ao longo do tempo, correm numa única página, de forma semelhante a uma aplicação *desktop*, recebendo todo o código necessário à sua execução (HTML, JavaScript e CSS) num único carregamento.
 
