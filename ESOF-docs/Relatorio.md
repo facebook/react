@@ -15,7 +15,7 @@ Esta biblioteca é um dos primeiros projetos *open-source* do Facebook, encontra
 
 Um grande número de [páginas e aplicações](https://github.com/facebook/react/wiki/Sites-Using-React) usam o React, sendo o Facebook, o Instagram, o Netflix e a Yahoo os nomes mais sonantes.
 
-A versão estável mais recente desta biblioteca é a [0.13.3](https://github.com/facebook/react/issues?q=milestone%3A0.13.3).
+A versão estável mais recente desta biblioteca é a [0.13.3](https://github.com/facebook/react/issues?q=milestone%3A0.13.3), à data deste relatório.
 
 ### <a name="processo"></a>Processo de Desenvolvimento
 
