@@ -1,4 +1,4 @@
-# Relatório ESOF
+# Relatório 1 - ESOF
 ## Facebook/React
 
 ### <a name="descricao"></a>Descrição do Projeto
@@ -106,3 +106,17 @@ Contudo, e uma vez que existe a clara necessidade de coordenar o esforço dos v�
 De uma forma geral, esse conjunto de práticas seguidas pareceu-nos adequado para um projeto desta dimensão. Modelos de processo tipicamente *Agile*, como *Scrum* e XP, são formulados a pensar em empresas que procuram modelos de negócio rentáveis, pelo que a sua adaptação a um projeto como o do React teria sempre de ter em conta a filosofia *open-source*, com fins não lucrativos, em que o mesmo se enquadra.
 
 Tendo compreendido claramente a forma como o projeto está organizado e os requisitos necessários para a contribuição para o seu desenvolvimento, é do entendimento dos autores deste relatório que os passos seguintes deverão ter em vista a participação ativa no mesmo.
+
+### <a name="info"></a>Informações
+
+2015-10-04
+
+* António Casimiro (antonio.casimiro@fe.up.pt)
+
+* Diogo Amaral (diogo.amaral@fe.up.pt)
+
+* Pedro Silva (pedro.silva@fe.up.pt)
+
+* Rui Cardoso (rui.peixoto@fe.up.pt)
+
+Faculdade de Engenharia da Universidade do Porto - MIEIC
