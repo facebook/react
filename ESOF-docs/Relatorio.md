@@ -111,12 +111,11 @@ Tendo compreendido claramente a forma como o projeto está organizado e os requi
 
 2015-10-04
 
+Autores:
+
 * António Casimiro (antonio.casimiro@fe.up.pt)
-
 * Diogo Amaral (diogo.amaral@fe.up.pt)
-
 * Pedro Silva (pedro.silva@fe.up.pt)
-
 * Rui Cardoso (rui.peixoto@fe.up.pt)
 
 Faculdade de Engenharia da Universidade do Porto - MIEIC
