@@ -23,7 +23,7 @@ Embora não tendo um processo bem determinado, o desenvolvimento da biblioteca R
 
 No momento em que este relatório é redigido, o projeto encontra-se muito ativo, com uma média de 28,23 *commits* por semana, desde a semana com início a 5 de outubro de 2014 até à semana com início a 27 de setembro de 2015, e um total de mais de 5400 *commits*.
 
-![Commits por semana do projeto React](./commits_graph.jpg)
+![Commits por semana do projeto React](./Resources/commits_graph.jpg)
 
 Esta grande variedade de *commits* é exemplificativa de alguns dos princípios *Agile* seguidos pelos desenvolvedores do projeto, com constantes adaptações e correções do código, adição de funcionalidades, evolução do sistema e *refactoring*. Como já foi referido, não parece haver um único processo de desenvolvimento bem definido, mas antes um conjunto de práticas que pode ser comparado a modelos como *Scrum* e XP e que é seguido pelos colaboradores do projeto, ainda que de forma não particularmente sistematizada, como refere [Ben Alpert](https://github.com/spicyj).
 
