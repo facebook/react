@@ -19,6 +19,7 @@ var assign = require('Object.assign');
 var warning = require('warning');
 
 var didWarnValueLink = false;
+var didWarnValueNull = false;
 
 function updateOptionsIfPendingUpdateAndMounted() {
   if (this._rootNodeID && this._wrapperState.pendingUpdate) {
@@ -41,6 +42,19 @@ function getDeclarationErrorAddendum(owner) {
     }
   }
   return '';
+}
+
+function warnIfValueIsNull(props) {
+  if (props != null && props.value === null && !didWarnValueNull) {
+    warning(
+        false,
+        '`value` prop on `select` should not be null. ' +
+        'Consider using the empty string to clear the component or' +
+        ' `undefined` for uncontrolled components.'
+    );
+
+    didWarnValueNull = true;
+  }
 }
 
 var valuePropNames = ['value', 'defaultValue'];
@@ -153,6 +167,7 @@ var ReactDOMSelect = {
   mountWrapper: function(inst, props) {
     if (__DEV__) {
       checkSelectPropTypes(inst, props);
+      warnIfValueIsNull(props);
     }
 
     var value = LinkedValueUtils.getValue(props);
@@ -172,6 +187,9 @@ var ReactDOMSelect = {
 
   postUpdateWrapper: function(inst) {
     var props = inst._currentElement.props;
+    if (__DEV__) {
+      warnIfValueIsNull(props);
+    }
 
     // After the initial mount, we control selected-ness manually so don't pass
     // this value down
