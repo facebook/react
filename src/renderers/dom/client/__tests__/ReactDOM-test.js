@@ -37,7 +37,7 @@ describe('ReactDOM', function() {
         return <form><input type="submit" value="Submit" /></form>;
       },
       componentDidMount: function() {
-        form = React.findDOMNode(this);
+        form = ReactDOM.findDOMNode(this);
       }
     });
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);

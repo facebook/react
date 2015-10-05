@@ -503,8 +503,8 @@ describe('ReactCompositeComponent', function() {
     var Inner = React.createClass({
       componentWillUnmount: function() {
         // It's important that ReactMount.purgeID is called after any component
-        // lifecycle methods, because a componentWillMount implementation is
-        // likely to call React.findDOMNode(this), which will repopulate the
+        // lifecycle methods, because a componentWillUnmount implementation is
+        // likely to call ReactDOM.findDOMNode(this), which will repopulate the
         // node cache after it's been cleared, causing a memory leak.
         expect(ReactMount.purgeID.calls.length).toBe(0);
         innerUnmounted = true;
