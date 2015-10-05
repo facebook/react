@@ -1,5 +1,5 @@
 ---
-title: "React.render and the Top Level React API"
+title: "ReactDOM.render and the Top Level React API"
 author: jimandsebastian
 ---
 

@@ -55,8 +55,8 @@ All scripts are also available via [CDNJS](https://cdnjs.com/libraries/react/).
 If you're using an npm-compatible packaging system like browserify or webpack, you can use the `react` package. After installing it using `npm install react` or adding `react` to `package.json`, you can use React:
 
 ```js
-var React = require('react');
-React.render(...);
+var React = require('react-dom');
+ReactDOM.render(...);
 ```
 
 If you'd like to use any [add-ons](/react/docs/addons.html), use `var React = require('react/addons');` instead.

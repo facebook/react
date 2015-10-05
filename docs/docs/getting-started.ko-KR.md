@@ -37,7 +37,7 @@ React를 시작하는 가장 빠른 방법은 다음의 Hello World JSFiddle 예
   <body>
     <div id="example"></div>
     <script type="text/babel">
-      React.render(
+      ReactDOM.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
       );
@@ -53,7 +53,7 @@ JavaScript 안에 보이는 XML 구문은 JSX라고 합니다; 더 자세한 내
 React JSX 코드는 분리된 파일로 존재할 수 있습니다. 다음 내용으로 `src/helloworld.js`를 생성해보세요.
 
 ```javascript
-React.render(
+ReactDOM.render(
   <h1>Hello, world!</h1>,
   document.getElementById('example')
 );
@@ -84,7 +84,7 @@ jsx --watch src/ build/
 수정할 때마다 `build/helloworld.js` 파일이 자동생성됩니다.
 
 ```javascript{2}
-React.render(
+ReactDOM.render(
   React.createElement('h1', null, 'Hello, world!'),
   document.getElementById('example')
 );

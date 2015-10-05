@@ -37,7 +37,7 @@ Nella directory principale dello starter kit, crea `helloworld.html` con il segu
   <body>
     <div id="example"></div>
     <script type="text/babel">
-      React.render(
+      ReactDOM.render(
         <h1>Cial, mondo!</h1>,
         document.getElementById('example')
       );
@@ -53,7 +53,7 @@ La sintassi XML all'interno di JavaScript è chiamata JSX; dài un'occhiata alla
 Il tuo codice React JSX può trovarsi in un file a parte. Crea il seguente `src/helloworld.js`.
 
 ```javascript
-React.render(
+ReactDOM.render(
   <h1>Ciao, mondo!</h1>,
   document.getElementById('example')
 );
@@ -85,7 +85,7 @@ babel src --watch --out-dir build
 Il file `build/helloworld.js` è generato automaticamente ogni qualvolta effettui un cambiamento. Leggi la [documentazione di Babel CLI](http://babeljs.io/docs/usage/cli/) per un uso più avanzato.
 
 ```javascript{2}
-React.render(
+ReactDOM.render(
   React.createElement('h1', null, 'Ciao, mondo!'),
   document.getElementById('example')
 );

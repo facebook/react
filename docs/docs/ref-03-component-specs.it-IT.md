@@ -24,7 +24,7 @@ Il metodo `render()` è richiesto.
 
 Quando viene chiamato, dovrebbe esaminare `this.props` e `this.state` e restituire un singolo elemento figlio. Questo elemento figlio può essere sia una rappresentazione virtuale di un componente DOM nativo (come `<div />` o `React.DOM.div()`) o un altro componente composito che hai definito tu stesso.
 
-Puoi anche restituire `null` o `false` per indicare che desideri che non venga visualizzato nulla. Dietro le quinte, React visualizza un tag `<noscript>` per lavorare con il nostro attuale algoritmo di differenza. Quando si restituisce `null` o `false`, `React.findDOMNode(this)` restituirà `null`.
+Puoi anche restituire `null` o `false` per indicare che desideri che non venga visualizzato nulla. Dietro le quinte, React visualizza un tag `<noscript>` per lavorare con il nostro attuale algoritmo di differenza. Quando si restituisce `null` o `false`, `ReactDOM.findDOMNode(this)` restituirà `null`.
 
 La funzione `render()` dovrebbe essere *pura*, nel senso che non modifica lo stato del componente, restituisce lo stesso risultato ogni volta che viene invocato, e non legge o scrive il DOM o interagisce in altro modo con il browser (ad es. usando `setTimeout`). Se devi interagire con il browser, effettua le tue operazioni in `componentDidMount()` o negli altri metodi del ciclo di vita. Mantenere `render()` puro rende il rendering lato server più praticabile e rende i componenti più facili da comprendere.
 
@@ -121,7 +121,7 @@ Invocato una volta, sia sul client che sul server, immediatamente prima che il r
 void componentDidMount()
 ```
 
-Invocato una volta, solo sul client (e non sul server), immediatamente dopo che il rendering iniziale ha avuto luogo. A questo punto del ciclo di vita, il componente ha una rappresentazione DOM che puoi accedere attraverso `React.findDOMNode(this)`. Il metodo `componentDidMount()` dei componenti figli è invocato prima di quello dei componenti genitori.
+Invocato una volta, solo sul client (e non sul server), immediatamente dopo che il rendering iniziale ha avuto luogo. A questo punto del ciclo di vita, il componente ha una rappresentazione DOM che puoi accedere attraverso `ReactDOM.findDOMNode(this)`. Il metodo `componentDidMount()` dei componenti figli è invocato prima di quello dei componenti genitori.
 
 Se desideri integrare con altri framework JavaScript, impostare dei timer usando `setTimeout` o `setInterval`, oppure inviare richieste AJAX, effettua tali operazioni in questo metodo.
 

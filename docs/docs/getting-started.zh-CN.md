@@ -37,7 +37,7 @@ redirect_from: "docs/index-zh-CN.html"
   <body>
     <div id="example"></div>
     <script type="text/babel">
-      React.render(
+      ReactDOM.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
       );
@@ -53,7 +53,7 @@ redirect_from: "docs/index-zh-CN.html"
 你的 React JSX 代码文件可以写在另外的文件里。新建下面的 `src/helloworld.js`。
 
 ```javascript
-React.render(
+ReactDOM.render(
   <h1>Hello, world!</h1>,
   document.getElementById('example')
 );
@@ -83,7 +83,7 @@ jsx --watch src/ build/
 只要你修改了， `build/helloworld.js` 文件会自动生成。
 
 ```javascript{2}
-React.render(
+ReactDOM.render(
   React.createElement('h1', null, 'Hello, world!'),
   document.getElementById('example')
 );

@@ -20,7 +20,7 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <GenericWrapper><span/><span/><span/></GenericWrapper>,
   mountNode
 );
@@ -43,7 +43,7 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.render(<GenericWrapper>hello</GenericWrapper>, mountNode);
+ReactDOM.render(<GenericWrapper>hello</GenericWrapper>, mountNode);
 ```
 
 `this.props.children`을 쉽게 다룰 수 있도록 [React.Children utilities](/react/docs/top-level-api-ko-KR.html#react.children)를 제공하고 있습니다.

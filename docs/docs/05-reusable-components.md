@@ -110,7 +110,7 @@ var CheckLink = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CheckLink href="/checked.html">
     Click here!
   </CheckLink>,
@@ -179,7 +179,7 @@ var TickTock = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <TickTock />,
   document.getElementById('example')
 );
@@ -197,7 +197,7 @@ class HelloMessage extends React.Component {
     return <div>Hello {this.props.name}</div>;
   }
 }
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 The API is similar to `React.createClass` with the exception of `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
@@ -243,14 +243,14 @@ You may also define your React classes as a plain JavaScript function. For examp
 function HelloMessage(props) {
   return <div>Hello {props.name}</div>;
 }
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 Or using the new ES6 arrow syntax:
 
 ```javascript
 var HelloMessage = (props) => <div>Hello {props.name}</div>;
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 

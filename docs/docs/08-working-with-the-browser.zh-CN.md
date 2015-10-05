@@ -20,7 +20,7 @@ React如此快速是因为它从不直接操作DOM。React维持了一个快速�
 
 ## Refs 和 findDOMNode()
 
-为了与浏览器互动，你需要一个指向DOM node的引用。React有一个函数`React.findDOMNode(component)` ，你能调用以得到一个指向指向组件的DOM node的引用。
+为了与浏览器互动，你需要一个指向DOM node的引用。React有一个函数`ReactDOM.findDOMNode(component)` ，你能调用以得到一个指向指向组件的DOM node的引用。
 
 > 注意:
 >
@@ -32,7 +32,7 @@ React如此快速是因为它从不直接操作DOM。React维持了一个快速�
 var MyComponent = React.createClass({
   handleClick: function() {
     // 明确的强制text input使用原生DOM API。
-    React.findDOMNode(this.refs.myTextInput).focus();
+    ReactDOM.findDOMNode(this.refs.myTextInput).focus();
   },
   render: function() {
     // 当组件被挂载时
@@ -50,7 +50,7 @@ var MyComponent = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <MyComponent />,
   document.getElementById('example')
 );

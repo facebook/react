@@ -18,7 +18,7 @@ ReactはDOMと直接対話を行わないため、とても速いです。React�
 
 ## 参照とfindDOMNode()
 
-ブラウザと相互に影響するために、DOMノードへの参照が必要になるでしょう。ReactはコンポーネントのDOMノードへの参照を得ることができる `React.findDOMNode(component)` 関数を持っています。
+ブラウザと相互に影響するために、DOMノードへの参照が必要になるでしょう。ReactはコンポーネントのDOMノードへの参照を得ることができる `ReactDOM.findDOMNode(component)` 関数を持っています。
 
 > 注意:
 > `findDOMNode()` はマウントされたコンポーネントの上でのみ動きます（これは、DOMに配置されたコンポーネントという意味です）。まだマウントされていない（まだ作成されていないコンポーネントの上で `render()` の `findDOMNode()` を呼ぶようなものです）コンポーネントの上でこれを呼ぼうとした場合、例外がスローされます。
@@ -29,7 +29,7 @@ Reactのコンポーネントへの参照を得るためには、現在のReact�
 var MyComponent = React.createClass({
   handleClick: function() {
     // 生のDOMのAPIを使ってテキスト入力に明確にフォーカスします。
-    React.findDOMNode(this.refs.myTextInput).focus();
+    ReactDOM.findDOMNode(this.refs.myTextInput).focus();
   },
   render: function() {
     // この参照属性はコンポーネントがマウントされた時に、 
@@ -47,7 +47,7 @@ var MyComponent = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <MyComponent />,
   document.getElementById('example')
 );

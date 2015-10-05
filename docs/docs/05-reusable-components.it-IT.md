@@ -111,7 +111,7 @@ var CheckLink = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CheckLink href="/checked.html">
     Clicca qui!
   </CheckLink>,
@@ -179,7 +179,7 @@ var TickTock = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <TickTock />,
   document.getElementById('example')
 );
@@ -197,7 +197,7 @@ class HelloMessage extends React.Component {
     return <div>Ciao {this.props.name}</div>;
   }
 }
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 L'API è simile a `React.createClass` con l'eccezione del metodo `getInitialState`. Anziché fornire un metodo `getInitialState` a parte, imposti la tua proprietà `state` nel costruttore.
@@ -243,14 +243,14 @@ Puoi anche definire le tue classi React come semplici funzioni JavaScript. Ad es
 function HelloMessage(props) {
   return <div>Ciao {props.name}</div>;
 }
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 Oppure usando la nuova sintassi freccia di ES6:
 
 ```javascript
 var HelloMessage = (props) => <div>Ciao {props.name}</div>;
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 

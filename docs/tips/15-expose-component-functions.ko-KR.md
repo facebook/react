@@ -53,7 +53,7 @@ var Todos = React.createClass({
   }
 });
 
-React.render(<Todos />, mountNode);
+ReactDOM.render(<Todos />, mountNode);
 ```
 
 다른 방법으로는, `isLastUnfinishedItem` prop을 `todo`에 넘기는 방식으로 원하는 바를 이룰수도 있습니다. `componentDidUpdate`에서 prop을 확인하고 스스로 애니메이션 효과를 주는겁니다; 하지만 애니메이션 제어를 위해 다른 prop들을 넘기게 되면 이는 금새 난잡해질 수 있습니다.
