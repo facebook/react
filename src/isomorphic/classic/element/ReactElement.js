@@ -109,10 +109,8 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
       element._self = self;
       element._source = source;
     }
-    if (Object.freeze) {
-      Object.freeze(element.props);
-      Object.freeze(element);
-    }
+    Object.freeze(element.props);
+    Object.freeze(element);
   }
 
   return element;
