@@ -809,16 +809,18 @@ var ReactCompositeComponentMixin = {
     var inst = this.getPublicInstance();
     invariant(inst != null, 'Stateless function components cannot have refs.');
     var publicComponentInstance = component.getPublicInstance();
-    var componentName = component && component.getName ?
-      component.getName() : 'a component';
-    warning(publicComponentInstance != null,
-      'Stateless function components cannot be given refs ' +
-      '(See ref "%s" in %s created by %s). ' +
-      'Attempts to access this ref will fail.',
-      ref,
-      componentName,
-      this.getName()
-    );
+    if (__DEV__) {
+      var componentName = component && component.getName ?
+        component.getName() : 'a component';
+      warning(publicComponentInstance != null,
+        'Stateless function components cannot be given refs ' +
+        '(See ref "%s" in %s created by %s). ' +
+        'Attempts to access this ref will fail.',
+        ref,
+        componentName,
+        this.getName()
+      );
+    }
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
     refs[ref] = publicComponentInstance;
   },
