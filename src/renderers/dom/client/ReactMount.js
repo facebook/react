@@ -337,6 +337,10 @@ function batchedMountComponentIntoNode(
  * @see {ReactMount.unmountComponentAtNode}
  */
 function unmountComponentFromNode(instance, container) {
+  // Unmounting a focused component causes a blur event to fire, so we want to
+  // suppress React event-listening during unmount.
+  var previouslyEnabled = ReactBrowserEventEmitter.isEnabled();
+  ReactBrowserEventEmitter.setEnabled(false);
   ReactReconciler.unmountComponent(instance);
 
   if (container.nodeType === DOC_NODE_TYPE) {
@@ -347,6 +351,8 @@ function unmountComponentFromNode(instance, container) {
   while (container.lastChild) {
     container.removeChild(container.lastChild);
   }
+
+  ReactBrowserEventEmitter.setEnabled(previouslyEnabled);
 }
 
 /**
