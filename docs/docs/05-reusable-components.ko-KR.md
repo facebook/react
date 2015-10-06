@@ -108,7 +108,7 @@ var CheckLink = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CheckLink href="/checked.html">
     Click here!
   </CheckLink>,
@@ -176,7 +176,7 @@ var TickTock = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <TickTock />,
   document.getElementById('example')
 );
@@ -195,7 +195,7 @@ class HelloMessage extends React.Component {
     return <div>Hello {this.props.name}</div>;
   }
 }
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 API는 `getInitialState`를 제외하고 `React.createClass`와 유사합니다. 별도의 `getInitialState` 메소드 대신에, 필요한 `state` 프로퍼티를 생성자에서 설정할 수 있습니다.

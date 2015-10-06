@@ -48,7 +48,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -107,7 +107,7 @@ JSX è completamente opzionale; non è necessario utilizzare JSX con React. Puoi
 var child1 = React.createElement('li', null, 'Primo Contenuto di Testo');
 var child2 = React.createElement('li', null, 'Secondo Contenuto di Testo');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 Per comodità, puoi creare funzioni factory scorciatoia per costruire elementi da componenti personalizzati.
@@ -116,7 +116,7 @@ Per comodità, puoi creare funzioni factory scorciatoia per costruire elementi d
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 React possiede già delle factory predefinite per i tag HTML comuni:

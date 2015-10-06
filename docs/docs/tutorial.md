@@ -85,7 +85,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -108,7 +108,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -124,11 +124,11 @@ The `<div>` tags are not actual DOM nodes; they are instantiations of React `div
 
 You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React **composable**: a key tenet of maintainable frontends.
 
-`React.render()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
+`ReactDOM.render()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
 
 ## Composing components
 
-Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s. Add these two components to your file, keeping the existing `CommentBox` declaration and `React.render` call:
+Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s. Add these two components to your file, keeping the existing `CommentBox` declaration and `ReactDOM.render` call:
 
 ```javascript
 // tutorial2.js
@@ -293,7 +293,7 @@ var data = [
 ];
 ```
 
-We need to get this data into `CommentList` in a modular way. Modify `CommentBox` and the `React.render()` call to pass this data into the `CommentList` via props:
+We need to get this data into `CommentList` in a modular way. Modify `CommentBox` and the `ReactDOM.render()` call to pass this data into the `CommentList` via props:
 
 ```javascript{7,15}
 // tutorial9.js
@@ -309,7 +309,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -345,7 +345,7 @@ Let's replace the hard-coded data with some dynamic data from the server. We wil
 
 ```javascript{3}
 // tutorial11.js
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" />,
   document.getElementById('content')
 );
@@ -460,7 +460,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" pollInterval={2000} />,
   document.getElementById('content')
 );
@@ -495,14 +495,14 @@ Let's make the form interactive. When the user submits the form, we should clear
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = this.refs.author.value.trim();
+    var text = this.refs.text.value.trim();
     if (!text || !author) {
       return;
     }
     // TODO: send request to the server
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    this.refs.author.value = '';
+    this.refs.text.value = '';
     return;
   },
   render: function() {
@@ -525,7 +525,7 @@ Call `preventDefault()` on the event to prevent the browser's default action of 
 
 ##### Refs
 
-We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the component. We can call `React.findDOMNode(component)` on a component to get the native browser DOM element.
+We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the component. We can call `ReactDOM.findDOMNode(component)` on a component to get the native browser DOM element.
 
 ##### Callbacks as props
 
@@ -578,14 +578,14 @@ Let's call the callback from the `CommentForm` when the user submits the form:
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = this.refs.author.value.trim();
+    var text = this.refs.text.value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    this.refs.author.value = '';
+    this.refs.text.value = '';
     return;
   },
   render: function() {

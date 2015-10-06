@@ -48,7 +48,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -107,7 +107,7 @@ JSX is completely optional; you don't have to use JSX with React. You can create
 var child1 = React.createElement('li', null, 'First Text Content');
 var child2 = React.createElement('li', null, 'Second Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 For convenience, you can create short-hand factory functions to create elements from custom components.
@@ -116,7 +116,7 @@ For convenience, you can create short-hand factory functions to create elements 
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 React already has built-in factories for common HTML tags:

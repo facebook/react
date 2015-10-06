@@ -20,7 +20,7 @@ React는 DOM을 직접 다루지 않기 때문에 굉장히 빠릅니다. React�
 
 ## Refs와 findDOMNode()
 
-브라우저와 상호 작용하려면 DOM 노드에 대한 참조가 필요합니다. React는 `React.findDOMNode(component)` 함수를 갖고 있으며, 이를 통해서 컴포넌트의 DOM 노드의 참조를 얻을 수 있습니다.
+브라우저와 상호 작용하려면 DOM 노드에 대한 참조가 필요합니다. React는 `ReactDOM.findDOMNode(component)` 함수를 갖고 있으며, 이를 통해서 컴포넌트의 DOM 노드의 참조를 얻을 수 있습니다.
 
 > 주의:
 >
@@ -32,7 +32,7 @@ React 컴포넌트에 대한 참조는 현재의 React 컴포넌트를 위해 `t
 var MyComponent = React.createClass({
   handleClick: function() {
     // raw DOM API를 사용해 명시적으로 텍스트 인풋을 포커스 합니다.
-    React.findDOMNode(this.refs.myTextInput).focus();
+    ReactDOM.findDOMNode(this.refs.myTextInput).focus();
   },
   render: function() {
     // ref 어트리뷰트는 컴포넌트가 마운트되면 그에 대한 참조를 this.refs에 추가합니다.
@@ -49,7 +49,7 @@ var MyComponent = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <MyComponent />,
   document.getElementById('example')
 );

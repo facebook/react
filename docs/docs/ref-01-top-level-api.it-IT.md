@@ -70,7 +70,7 @@ l'argomento `type` può essere sia la stringa contenente il nome di un tag HTML 
 `ReactClass`.
 
 
-### React.render
+### ReactDOM.render
 
 ```javascript
 ReactComponent render(
@@ -88,15 +88,15 @@ Se la callback opzionale è fornita, sarà eseguita dopo che il rendering o l'ag
 
 > Nota:
 >
-> `React.render()` controlla i contenuti del nodo contenitore che viene passato come argomento `container`. Gli elementi DOM
+> `ReactDOM.render()` controlla i contenuti del nodo contenitore che viene passato come argomento `container`. Gli elementi DOM
 > esistenti al suo interno sono sostituiti quando viene chiamata la prima volta. Le chiamate successive usano l'algoritmo di
 > differenza di React per aggiornamenti efficienti.
 >
-> `React.render()` non modifica il nodo contenitore (modifica soltanto i figli del contenitore). In
+> `ReactDOM.render()` non modifica il nodo contenitore (modifica soltanto i figli del contenitore). In
 > futuro potrebbe essere possibile inserire un componente in un nodo DOM esistente senza sovrascrivere i figli esistenti.
 
 
-### React.unmountComponentAtNode
+### ReactDOM.unmountComponentAtNode
 
 ```javascript
 boolean unmountComponentAtNode(DOMElement container)
@@ -105,7 +105,7 @@ boolean unmountComponentAtNode(DOMElement container)
 Rimuove un componente React montato nel DOM e ripulisce i suoi gestori di evento e lo stato. Se nessun componente è stato montato nel contenitore `container`, chiamare questa funzione non ha alcun effetto. Restituisce `true` se il componente è stato smontato e `false` se non è stato trovato un componente da smontare.
 
 
-### React.renderToString
+### ReactDOM.renderToString
 
 ```javascript
 string renderToString(ReactElement element)
@@ -113,10 +113,10 @@ string renderToString(ReactElement element)
 
 Effettua il rendering di un ReactElement come il suo HTML iniziale. Questo dovrebe essere utilizzato soltanto lato server. React restituirà una stringa di HTML. Puoi usare questo metodo per generare HTML sul server e inviare il markup come risposta alla richiesta iniziale per un più rapido caricamento della pagina, e permettere ai motori di ricerca di effettuare il crawling della tua pagina per ottimizzazione SEO.
 
-Se chiami `React.render()` su un nodo che possiede già questo markup generato lato server, React lo preserverà e vi attaccherà soltanto i gestori di eventi, permettendoti di avere una esperienza di primo caricamento altamente efficiente.
+Se chiami `ReactDOM.render()` su un nodo che possiede già questo markup generato lato server, React lo preserverà e vi attaccherà soltanto i gestori di eventi, permettendoti di avere una esperienza di primo caricamento altamente efficiente.
 
 
-### React.renderToStaticMarkup
+### ReactDOM.renderToStaticMarkup
 
 ```javascript
 string renderToStaticMarkup(ReactElement element)
@@ -125,7 +125,7 @@ string renderToStaticMarkup(ReactElement element)
 Simile a `renderToString`, eccetto che non crea attributi DOM aggiuntivi come `data-react-id`, che React utilizza internamente. Questo è utile se vuoi usare React come un semplice generatore di pagine statiche, in quanto eliminare gli attributi aggiuntivi può risparmiare parecchi byte.
 
 
-### React.isValidElement
+### ReactDOM.isValidElement
 
 ```javascript
 boolean isValidElement(* object)
@@ -134,7 +134,7 @@ boolean isValidElement(* object)
 Verifica che `object` sia un ReactElement.
 
 
-### React.findDOMNode
+### ReactDOM.findDOMNode
 
 ```javascript
 DOMElement findDOMNode(ReactComponent component)

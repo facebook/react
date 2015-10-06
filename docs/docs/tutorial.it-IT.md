@@ -85,7 +85,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -108,7 +108,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -124,11 +124,11 @@ I tag `<div>` non sono veri nodi DOM; sono istanze dei componenti React `div`. P
 
 Non devi necessariamente restituire semplice HTML. Puoi anche restituire un albero di componenti costruiti da te (o da qualcun altro). Questo è ciò che rende React **componibile**: una caratteristica chiave dei front-end manutenibili.
 
-`React.render()` istanzia il componente radice, avvia il framework, e inietta il markup in un elemento DOM nativo, fornito come secondo argomento.
+`ReactDOM.render()` istanzia il componente radice, avvia il framework, e inietta il markup in un elemento DOM nativo, fornito come secondo argomento.
 
 ## Comporre componenti
 
-Costruiamo degli scheletri per `CommentList` e `CommentForm` che saranno, nuovamente, dei semplici `<div>`. Aggiungi questi due componenti al tuo file, mantenendo la dichiarazione esistente di `CommentBox` e la chiamata a `React.render`:
+Costruiamo degli scheletri per `CommentList` e `CommentForm` che saranno, nuovamente, dei semplici `<div>`. Aggiungi questi due componenti al tuo file, mantenendo la dichiarazione esistente di `CommentBox` e la chiamata a `ReactDOM.render`:
 
 ```javascript
 // tutorial2.js
@@ -293,7 +293,7 @@ var data = [
 ];
 ```
 
-Dobbiamo inserire questi dati in `CommentList` in maniera modulare. Modifica `CommentBox` e la chiamata a `React.render()` per passare questi dati a `CommentList` tramite proprietà:
+Dobbiamo inserire questi dati in `CommentList` in maniera modulare. Modifica `CommentBox` e la chiamata a `ReactDOM.render()` per passare questi dati a `CommentList` tramite proprietà:
 
 ```javascript{7,15}
 // tutorial9.js
@@ -309,7 +309,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -345,7 +345,7 @@ Sostituiamo i dati scritti nel codice con dati dinamici ottenuti dal server. Rim
 
 ```javascript{3}
 // tutorial11.js
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" />,
   document.getElementById('content')
 );
@@ -460,7 +460,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" pollInterval={2000} />,
   document.getElementById('content')
 );
@@ -495,14 +495,14 @@ Rendiamo il modulo interattivo. Quando l'utente invia il modulo, dobbiamo ripuli
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     // TODO: invia la richiesta al server
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {
@@ -525,7 +525,7 @@ Chiamiamo `preventDefault()` sull'evento per prevenire l'azione predefinita del 
 
 ##### Refs
 
-Usiamo l'attributo `ref` per assegnare un nome a un componente figlio e  `this.refs` per riferirsi al componente. Possiamo chiamare `React.findDOMNode(component)` su di un componente per ottenere l'elemento nativo del DOM del browser.
+Usiamo l'attributo `ref` per assegnare un nome a un componente figlio e  `this.refs` per riferirsi al componente. Possiamo chiamare `ReactDOM.findDOMNode(component)` su di un componente per ottenere l'elemento nativo del DOM del browser.
 
 ##### Callback come proprietà
 
@@ -578,14 +578,14 @@ Chiamiamo la callback da `CommentForm` quando l'utente invia il modulo:
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {

@@ -21,10 +21,10 @@ Puoi creare uno di questi oggetti attraverso `React.createElement`.
 var root = React.createElement('div');
 ```
 
-Per effettuare il rendering di un nuovo albero nel DOM, crei dei `ReactElement` ande li passi a `React.render` assieme a un `Element` DOM regolare (`HTMLElement` o `SVGElement`). I `ReactElement` non vanno confusi con gli `Element` del DOM. Un `ReactElement` è una rappresentazione leggera, priva di stato, immutabile e virtuale di un `Element` del DOM. È un DOM virtuale.
+Per effettuare il rendering di un nuovo albero nel DOM, crei dei `ReactElement` ande li passi a `ReactDOM.render` assieme a un `Element` DOM regolare (`HTMLElement` o `SVGElement`). I `ReactElement` non vanno confusi con gli `Element` del DOM. Un `ReactElement` è una rappresentazione leggera, priva di stato, immutabile e virtuale di un `Element` del DOM. È un DOM virtuale.
 
 ```javascript
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 Per aggiungere proprietà ad un elemento DOM, passa un oggetto di proprietà come secondo argomento, e i figli come terzo argomento.
@@ -32,7 +32,7 @@ Per aggiungere proprietà ad un elemento DOM, passa un oggetto di proprietà com
 ```javascript
 var child = React.createElement('li', null, 'Contenuto di Testo');
 var root = React.createElement('ul', { className: 'my-list' }, child);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 Se usi React JSX, allora questi `ReactElement` verranno creati per te. Questa espressione è equivalente:
@@ -41,7 +41,7 @@ Se usi React JSX, allora questi `ReactElement` verranno creati per te. Questa es
 var root = <ul className="my-list">
              <li>Contenuto di Testo</li>
            </ul>;
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 ### Le Factory
@@ -59,7 +59,7 @@ Ti permette di creare una conveniente scorciatoia anziché scrivere ogni volta `
 ```javascript
 var div = React.createFactory('div');
 var root = div({ className: 'my-div' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 React possiede già factory integrate per tag HTML comuni:
@@ -119,17 +119,17 @@ OPPURE usando JSX:
 var element = <MyComponent />;
 ```
 
-Quando `element` viene passato a `React.render`, React chiamerà il costruttore al tuo posto e creerà un`ReactComponent`, che verrà restituito.
+Quando `element` viene passato a `ReactDOM.render`, React chiamerà il costruttore al tuo posto e creerà un`ReactComponent`, che verrà restituito.
 
 ```javascript
-var component = React.render(element, document.getElementById('example'));
+var component = ReactDOM.render(element, document.getElementById('example'));
 ```
 
-Se chiami ripetutamente `React.render` con lo stesso tipo di `ReactElement` e lo stesso `Element` DOM come contenitore, ti restituirà sempre la stessa istanza. Questa istanza è dotata di stato.
+Se chiami ripetutamente `ReactDOM.render` con lo stesso tipo di `ReactElement` e lo stesso `Element` DOM come contenitore, ti restituirà sempre la stessa istanza. Questa istanza è dotata di stato.
 
 ```javascript
-var componentA = React.render(<MyComponent />, document.getElementById('example'));
-var componentB = React.render(<MyComponent />, document.getElementById('example'));
+var componentA = ReactDOM.render(<MyComponent />, document.getElementById('example'));
+var componentB = ReactDOM.render(<MyComponent />, document.getElementById('example'));
 componentA === componentB; // true
 ```
 
@@ -143,7 +143,7 @@ Ci si aspetta che il metodo `render` di un `ReactComponent` restituisca un altro
 ### Punto di Entrata
 
 ```
-React.render = (ReactElement, HTMLElement | SVGElement) => ReactComponent;
+ReactDOM.render = (ReactElement, HTMLElement | SVGElement) => ReactComponent;
 ```
 
 ### Nodi ed Elementi

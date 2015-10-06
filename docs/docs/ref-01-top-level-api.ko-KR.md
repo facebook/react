@@ -68,7 +68,7 @@ factoryFunction createFactory(
 주어진 타입의 ReactElement를 만들어주는 함수를 리턴합니다. `React.createElement`와 마찬가지로 `type` 인자는 HTML 태그명 문자열 (예: 'div', 'span' 등) 또는 `ReactClass`입니다.
 
 
-### React.render
+### ReactDOM.render
 
 ```javascript
 ReactComponent render(
@@ -86,12 +86,12 @@ ReactComponent render(
 
 > 주의:
 >
-> `React.render()`는 넘어온 컨테이너 노드의 내용을 교체합니다. 안에 있는 DOM 엘리먼트는 첫 호출을 할 때 교체됩니다. 그 후의 호출에는 효율석으로 업데이트하기 위해 React의 DOM diff 알고리즘을 사용합니다.
+> `ReactDOM.render()`는 넘어온 컨테이너 노드의 내용을 교체합니다. 안에 있는 DOM 엘리먼트는 첫 호출을 할 때 교체됩니다. 그 후의 호출에는 효율석으로 업데이트하기 위해 React의 DOM diff 알고리즘을 사용합니다.
 >
-> `React.render()`는 컨테이너 노드를 수정하지 않습니다. (컨테이너의 자식만 수정함) 추후에 기존 자식들을 덮어쓰지 않고 이미 있는 DOM 노드에 컴포넌트를 삽입하는 것도 지원할 가능성이 있습니다.
+> `ReactDOM.render()`는 컨테이너 노드를 수정하지 않습니다. (컨테이너의 자식만 수정함) 추후에 기존 자식들을 덮어쓰지 않고 이미 있는 DOM 노드에 컴포넌트를 삽입하는 것도 지원할 가능성이 있습니다.
 
 
-### React.unmountComponentAtNode
+### ReactDOM.unmountComponentAtNode
 
 ```javascript
 boolean unmountComponentAtNode(DOMElement container)
@@ -100,7 +100,7 @@ boolean unmountComponentAtNode(DOMElement container)
 DOM에 마운트된 React 컴포넌트를 제거하고 이벤트 핸들러 및 state를 정리합니다. 컨테이너에 마운트된 컴포넌트가 없는 경우에는 호출해도 아무 동작을 하지 않습니다. 컴포넌트가 마운트 해제된 경우 `true`를, 마운트 해제할 컴포넌트가 없으면 `false`를 리턴합니다.
 
 
-### React.renderToString
+### ReactDOM.renderToString
 
 ```javascript
 string renderToString(ReactElement element)
@@ -108,10 +108,10 @@ string renderToString(ReactElement element)
 
 주어진 ReactElement의 최초 HTML을 렌더링합니다. 이 함수는 서버에서만 사용해야 합니다. React가 HTML 문자열을 리턴합니다. HTML을 서버에서 생성하고 마크업을 최초 요청에 내려보내서, 페이지 로딩을 빠르게 하거나 검색 엔진이 크롤링할 수 있도록 하는 SEO 목적으로 이 메소드를 사용할 수 있습니다.
 
-또한 이 메소드로 서버에서 렌더링한 마크업을 포함한 노드에 `React.render()`를 호출하면, React는 마크업을 보존하고 이벤트 핸들러만 붙이므로 최초 로딩을 매우 빠르게 느껴지게 할 수 있습니다.
+또한 이 메소드로 서버에서 렌더링한 마크업을 포함한 노드에 `ReactDOM.render()`를 호출하면, React는 마크업을 보존하고 이벤트 핸들러만 붙이므로 최초 로딩을 매우 빠르게 느껴지게 할 수 있습니다.
 
 
-### React.renderToStaticMarkup
+### ReactDOM.renderToStaticMarkup
 
 ```javascript
 string renderToStaticMarkup(ReactElement element)
@@ -120,7 +120,7 @@ string renderToStaticMarkup(ReactElement element)
 `renderToString`와 비슷하지만 `data-react-id`처럼 React에서 내부적으로 사용하는 추가적인 DOM 어트리뷰트를 만들지 않습니다. 추가적인 어트리뷰트를 제거하면 생성되는 마크업의 용량을 줄일 수 있기 때문에 React를 단순한 정적 페이지 생성기로 사용할 때 유용합니다.
 
 
-### React.isValidElement
+### ReactDOM.isValidElement
 
 ```javascript
 boolean isValidElement(* object)
@@ -128,7 +128,7 @@ boolean isValidElement(* object)
 
 주어진 객체가 ReactElement인지 확인합니다.
 
-### React.findDOMNode
+### ReactDOM.findDOMNode
 
 ```javascript
 DOMElement findDOMNode(ReactComponent component)

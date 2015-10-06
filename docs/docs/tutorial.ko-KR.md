@@ -84,7 +84,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -107,7 +107,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -123,11 +123,11 @@ JSX의 사용은 선택적이지만 JSX 문법이 일반 JavsScript보다 사용
 
 일반적인 HTML만 리턴할 수 있는 것은 아닙니다. 여러분이 직접 만든 (또는 다른 사람들이 만들어 놓은) 컴포넌트의 트리를 리턴할 수도 있습니다. 이것이 React를 **조합가능(composable)하게 만듭니다**: 유지보수 가능한 프론트엔드를 위한 핵심 교리(key tenet)지요.
 
-`React.render()`는 최상위 컴포넌트의 인스턴스를 만들고, 두 번째 인수로 전달받은 DOM 엘리먼트에 마크업을 삽입해 프레임워크를 시작합니다.
+`ReactDOM.render()`는 최상위 컴포넌트의 인스턴스를 만들고, 두 번째 인수로 전달받은 DOM 엘리먼트에 마크업을 삽입해 프레임워크를 시작합니다.
 
 ## 컴포넌트 조합하기
 
-이제 `CommentList`와 `CommentForm`을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 `<div>` 태그 하나 입니다. 파일에 두 컴포넌트를 추가해, 이미 있는 `CommentBox` 선언을 참고로 `React.render`를 호출합시다.
+이제 `CommentList`와 `CommentForm`을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 `<div>` 태그 하나 입니다. 파일에 두 컴포넌트를 추가해, 이미 있는 `CommentBox` 선언을 참고로 `ReactDOM.render`를 호출합시다.
 
 ```javascript
 // tutorial2.js
@@ -289,7 +289,7 @@ var data = [
 ];
 ```
 
-이 데이터를 모듈화된 방식으로 `CommentList`에 넣어야 합니다. props을 이용해 데이터를 넘기도록 `CommentBox`와 `React.render()` 호출 코드를 수정합시다.
+이 데이터를 모듈화된 방식으로 `CommentList`에 넣어야 합니다. props을 이용해 데이터를 넘기도록 `CommentBox`와 `ReactDOM.render()` 호출 코드를 수정합시다.
 
 ```javascript{7,15}
 // tutorial9.js
@@ -305,7 +305,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -341,7 +341,7 @@ var CommentList = React.createClass({
 
 ```javascript{3}
 // tutorial11.js
-React.render(
+ReactDOM.render(
   <CommentBox url="comments.json" />,
   document.getElementById('content')
 );
@@ -460,7 +460,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );
@@ -495,14 +495,14 @@ var CommentForm = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     // TODO: 서버에 요청을 전송합니다
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {
@@ -525,7 +525,7 @@ React는 카멜케이스 네이밍 컨벤션으로 컴포넌트에 이벤트 핸
 
 ##### Refs
 
-우리는 자식 컴포넌트의 이름을 지정하기 위해 `ref` 어트리뷰트를, 컴포넌트를 참조하기 위해 `this.refs`를 사용합니다. 고유한(native) 브라우저 DOM 엘리먼트를 얻기 위해 `React.findDOMNode(component)`를 호출할 수 있습니다.
+우리는 자식 컴포넌트의 이름을 지정하기 위해 `ref` 어트리뷰트를, 컴포넌트를 참조하기 위해 `this.refs`를 사용합니다. 고유한(native) 브라우저 DOM 엘리먼트를 얻기 위해 `ReactDOM.findDOMNode(component)`를 호출할 수 있습니다.
 
 ##### props으로 콜백 처리하기
 
@@ -578,14 +578,14 @@ var CommentBox = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {

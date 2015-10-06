@@ -48,7 +48,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -104,7 +104,7 @@ JSXは完全にオプションです。Reactと一緒にJSXを使う必要はあ
 var child1 = React.createElement('li', null, 'First Text Content');
 var child2 = React.createElement('li', null, 'Second Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 便利に書くために、カスタムコンポーネントで要素を作るために簡略した記法でファクトリー関数を作ることができます。
 
@@ -112,7 +112,7 @@ React.render(root, document.getElementById('example'));
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 Reactはすでに、共通なHTMLのタグについてはビルトインの関数を持っています。

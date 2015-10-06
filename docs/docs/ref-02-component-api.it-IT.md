@@ -8,7 +8,7 @@ next: component-specs-it-IT.html
 
 ## React.Component
 
-Istanze di un React Component sono create internamente a React durante il rendering. Queste istanze sono riutilizzate in rendering successivi, e possono essere accedute dai metodi del tuo componente come `this`. L'unica maniera di ottenere un riferimento a una istanza di un React Component fuori da React è conservare il valore restituito da `React.render`. All'interno di altri Component, puoi utilizzare [i ref](/react/docs/more-about-refs.html) per ottenere il medesimo risultato.
+Istanze di un React Component sono create internamente a React durante il rendering. Queste istanze sono riutilizzate in rendering successivi, e possono essere accedute dai metodi del tuo componente come `this`. L'unica maniera di ottenere un riferimento a una istanza di un React Component fuori da React è conservare il valore restituito da `ReactDOM.render`. All'interno di altri Component, puoi utilizzare [i ref](/react/docs/more-about-refs.html) per ottenere il medesimo risultato.
 
 
 ### setState
@@ -91,7 +91,7 @@ Se questo componente è stato montato nel DOM, restituisce il corrispondente ele
 
 > Nota:
 >
-> getDOMNode è deprecato ed è stato sostituito da [React.findDOMNode()](/react/docs/top-level-api.html#react.finddomnode).
+> getDOMNode è deprecato ed è stato sostituito da [ReactDOM.findDOMNode()](/react/docs/top-level-api.html#reactdom.finddomnode).
 >
 > Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Potrebbe essere eliminato del tutto in una versione futura di React.
 
@@ -118,15 +118,15 @@ void setProps(
 )
 ```
 
-Quando stai integrando con un'applicazione JavaScript esterna puoi voler segnalare un cambiamento a un componente React il cui rendering è stato effettuato con `React.render()`.
+Quando stai integrando con un'applicazione JavaScript esterna puoi voler segnalare un cambiamento a un componente React il cui rendering è stato effettuato con `ReactDOM.render()`.
 
 Chiamare `setProps()` su un componente al livello radice cambierà le sue proprietà e scatenerà un ri-rendering. Inoltre, puoi fornire una funzione callback opzionale che verrà eseguita quando `setProps` ha terminato e il rendering del componente è terminato.
 
 > Nota:
 >
-> Quando possibile, l'approccio dichiarativo di invocare nuovamente `React.render()` sullo stesso nodo è preferibile. Quest'ultimo tende a rendere gli aggiornamenti più comprensibili. (Non vi è una differenza significativa di prestazioni tra i due approcci.)
+> Quando possibile, l'approccio dichiarativo di invocare nuovamente `ReactDOM.render()` sullo stesso nodo è preferibile. Quest'ultimo tende a rendere gli aggiornamenti più comprensibili. (Non vi è una differenza significativa di prestazioni tra i due approcci.)
 >
-> Questo metodo può essere chiamato soltanto su un componente al livello radice. Ovvero, è disponibile soltanto sul componente passato direttamente a `React.render()` e nessuno dei suoi figli. Se il tuo intento è usare `setProps()` su un componente figlio, approfitta degli aggiornamenti reattivi e passa la nuova proprietà al componente figlio quando viene creato in `render()`.
+> Questo metodo può essere chiamato soltanto su un componente al livello radice. Ovvero, è disponibile soltanto sul componente passato direttamente a `ReactDOM.render()` e nessuno dei suoi figli. Se il tuo intento è usare `setProps()` su un componente figlio, approfitta degli aggiornamenti reattivi e passa la nuova proprietà al componente figlio quando viene creato in `render()`.
 >
 > Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Potrebbe essere eliminato del tutto in una versione futura di React.
 

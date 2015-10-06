@@ -47,7 +47,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -106,7 +106,7 @@ JSX는 완전히 선택적입니다. 당신은 React와 JSX를 함께 사용하�
 var child1 = React.createElement('li', null, 'First Text Content');
 var child2 = React.createElement('li', null, 'Second Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 편의를 위하여, 당신은 팩토리 함수 헬퍼들을 이용해 커스텀 컴포넌트로부터 엘리먼트들을 만들 수 있습니다.
@@ -115,7 +115,7 @@ React.render(root, document.getElementById('example'));
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 React는 이미 일반적인 HTML 태그에 대한 빌트인 팩토리를 가지고 있습니다.

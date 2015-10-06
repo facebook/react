@@ -29,7 +29,7 @@ var LikeButton = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <LikeButton />,
   document.getElementById('example')
 );

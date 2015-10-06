@@ -8,7 +8,7 @@ next: component-specs.html
 
 ## React.Component
 
-Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as `this`. The only way to get a handle to a React Component instance outside of React is by storing the return value of `React.render`. Inside other Components, you may use [refs](/react/docs/more-about-refs.html) to achieve the same result.
+Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as `this`. The only way to get a handle to a React Component instance outside of React is by storing the return value of `ReactDOM.render`. Inside other Components, you may use [refs](/react/docs/more-about-refs.html) to achieve the same result.
 
 
 ### setState
@@ -91,7 +91,7 @@ If this component has been mounted into the DOM, this returns the corresponding 
 
 > Note:
 >
-> getDOMNode is deprecated and has been replaced with [React.findDOMNode()](/react/docs/top-level-api.html#react.finddomnode).
+> getDOMNode is deprecated and has been replaced with [ReactDOM.findDOMNode()](/react/docs/top-level-api.html#reactdom.finddomnode).
 >
 > This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
 
@@ -118,15 +118,15 @@ void setProps(
 )
 ```
 
-When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.render()`.
+When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `ReactDOM.render()`.
 
 Calling `setProps()` on a root-level component will change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
 
 > Note:
 >
-> When possible, the declarative approach of calling `React.render()` again on the same node is preferred instead. It tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
+> When possible, the declarative approach of calling `ReactDOM.render()` again on the same node is preferred instead. It tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
 >
-> This method can only be called on a root-level component. That is, it's only available on the component passed directly to `React.render()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
+> This method can only be called on a root-level component. That is, it's only available on the component passed directly to `ReactDOM.render()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
 >
 > This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
 
