@@ -160,6 +160,21 @@ describe('ReactTestUtils', function() {
     expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
   });
 
+  it('can access the mounted component instance', function() {
+    var SimpleComponent = React.createClass({
+      someMethod: function() {
+        return this.props.n;
+      },
+      render: function() {
+        return <div>{this.props.n}</div>;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SimpleComponent n={5} />);
+    expect(shallowRenderer.getMountedInstance().someMethod()).toEqual(5);
+  });
+
   it('can shallowly render components with contextTypes', function() {
     var SimpleComponent = React.createClass({
       contextTypes: {
