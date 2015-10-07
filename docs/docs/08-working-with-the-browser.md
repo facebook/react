@@ -56,10 +56,9 @@ React provides lifecycle methods that you can specify to hook into this process.
 
 ### Mounted Methods
 
-_Mounted_ composite components also support the following methods:
+_Mounted_ composite components also support the following method:
 
-* `findDOMNode(): DOMElement` can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.
-* `forceUpdate()` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`.
+* `component.forceUpdate()` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`.
 
 
 ## Browser Support and Polyfills

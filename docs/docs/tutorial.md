@@ -529,7 +529,7 @@ Call `preventDefault()` on the event to prevent the browser's default action of 
 
 ##### Refs
 
-We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the component. We can call `ReactDOM.findDOMNode(component)` on a component to get the native browser DOM element.
+We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the DOM node.
 
 ##### Callbacks as props
 

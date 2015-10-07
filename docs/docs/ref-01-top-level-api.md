@@ -128,7 +128,7 @@ Return the only child in `children`. Throws otherwise.
 
 ## ReactDOM
 
-The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to.
+The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.
 
 ### ReactDOM.render
 
@@ -171,14 +171,15 @@ Remove a mounted React component from the DOM and clean up its event handlers an
 ```javascript
 DOMElement findDOMNode(ReactComponent component)
 ```
-If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `findDOMNode` returns `null`.
+If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. **In most cases, you can attach a ref to the DOM node and avoid using `findDOMNode` at all.** When `render` returns `null` or `false`, `findDOMNode` returns `null`.
 
 > Note:
 >
-> `findDOMNode()` is an escape hatch used to access the underlying DOM node. In most cases, use of this escape hatch is discouraged because it pierces the component abstraction. However, there are some situations where this is necessary (for instance, you may need to find a DOM node in order to position it absolutely or to determine the rendered width measured in pixels).
-
+> `findDOMNode()` is an escape hatch used to access the underlying DOM node. In most cases, use of this escape hatch is discouraged because it pierces the component abstraction.
 >
 > `findDOMNode()` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `findDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
+>
+> `findDOMNode()` cannot be used on stateless components.
 
 ## ReactDOMServer
 
