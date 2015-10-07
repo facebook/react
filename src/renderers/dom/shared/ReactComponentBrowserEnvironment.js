@@ -11,8 +11,10 @@
 
 'use strict';
 
+var DOMChildrenOperations = require('DOMChildrenOperations');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactMount = require('ReactMount');
+var ReactPerf = require('ReactPerf');
 
 /**
  * Abstracts away all functionality of the reconciler that requires knowledge of
@@ -24,8 +26,8 @@ var ReactComponentBrowserEnvironment = {
   processChildrenUpdates:
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates,
 
-  replaceNodeWithMarkupByID:
-    ReactDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
+  replaceNodeWithMarkup:
+    DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup,
 
   /**
    * If a particular environment requires that some resources be cleaned up,
@@ -39,5 +41,13 @@ var ReactComponentBrowserEnvironment = {
   },
 
 };
+
+ReactPerf.measureMethods(
+  ReactComponentBrowserEnvironment,
+  'ReactComponentBrowserEnvironment',
+  {
+    replaceNodeWithMarkup: 'replaceNodeWithMarkup',
+  }
+);
 
 module.exports = ReactComponentBrowserEnvironment;

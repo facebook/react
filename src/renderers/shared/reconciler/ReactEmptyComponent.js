@@ -46,10 +46,11 @@ assign(ReactEmptyComponent.prototype, {
   receiveComponent: function() {
   },
   unmountComponent: function(rootID, transaction, context) {
-    ReactReconciler.unmountComponent(this._renderedComponent);
+    var nativeNode = ReactReconciler.unmountComponent(this._renderedComponent);
     ReactEmptyComponentRegistry.deregisterNullComponentID(this._rootNodeID);
     this._rootNodeID = null;
     this._renderedComponent = null;
+    return nativeNode;
   },
 });
 

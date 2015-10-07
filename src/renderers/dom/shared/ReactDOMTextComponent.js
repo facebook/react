@@ -52,6 +52,7 @@ assign(ReactDOMTextComponent.prototype, {
     // TODO: This is really a ReactText (ReactNode), not a ReactElement
     this._currentElement = text;
     this._stringText = '' + text;
+    this._nativeNode = null;
 
     // Properties
     this._rootNodeID = null;
@@ -82,6 +83,7 @@ assign(ReactDOMTextComponent.prototype, {
     if (transaction.useCreateElement) {
       var ownerDocument = context[ReactMount.ownerDocumentContextKey];
       var el = ownerDocument.createElement('span');
+      this._nativeNode = el;
       DOMPropertyOperations.setAttributeForID(el, rootID);
       // Populate node cache
       ReactMount.getID(el);
@@ -121,14 +123,20 @@ assign(ReactDOMTextComponent.prototype, {
         // and/or updateComponent to do the actual update for consistency with
         // other component types?
         this._stringText = nextStringText;
-        var node = ReactMount.getNode(this._rootNodeID);
+        var node = this._nativeNode;
+        if (!node) {
+          node = this._nativeNode = ReactMount.getNode(this._rootNodeID);
+        }
         DOMChildrenOperations.updateTextContent(node, nextStringText);
       }
     }
   },
 
   unmountComponent: function() {
+    var node = this._nativeNode || ReactMount.getNode(this._rootNodeID);
+    this._nativeNode = null;
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
+    return node;
   },
 
 });

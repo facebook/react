@@ -357,7 +357,7 @@ function trapBubbledEventsLocal() {
   // If a component renders to null or if another component fatals and causes
   // the state of the tree to be corrupted, `node` here can be null.
   invariant(inst._rootNodeID, 'Must be mounted to trap events');
-  var node = ReactMount.getNode(inst._rootNodeID);
+  var node = getNode(inst);
   invariant(
     node,
     'trapBubbledEvent(...): Requires node to be rendered.'
@@ -493,6 +493,14 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
+function getNode(inst) {
+  if (inst._nativeNode) {
+    return inst._nativeNode;
+  } else {
+    return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
+  }
+}
+
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -513,10 +521,11 @@ function ReactDOMComponent(tag) {
   this._renderedChildren = null;
   this._previousStyle = null;
   this._previousStyleCopy = null;
+  this._nativeNode = null;
   this._rootNodeID = null;
   this._wrapperState = null;
   this._topLevelWrapper = null;
-  this._nodeWithLegacyProperties = null;
+  this._nodeHasLegacyProperties = false;
   if (__DEV__) {
     this._unprocessedContextDev = null;
     this._processedContextDev = null;
@@ -600,10 +609,11 @@ ReactDOMComponent.Mixin = {
     if (transaction.useCreateElement) {
       var ownerDocument = context[ReactMount.ownerDocumentContextKey];
       var el = ownerDocument.createElement(this._currentElement.type);
+      this._nativeNode = el;
       DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
       // Populate node cache
       ReactMount.getID(el);
-      this._updateDOMProperties({}, props, transaction, el);
+      this._updateDOMProperties({}, props, transaction);
       this._createInitialChildren(transaction, props, context, el);
       mountImage = el;
     } else {
@@ -844,7 +854,7 @@ ReactDOMComponent.Mixin = {
 
 
     assertValidProps(this, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction, null);
+    this._updateDOMProperties(lastProps, nextProps, transaction);
     this._updateDOMChildren(
       lastProps,
       nextProps,
@@ -852,8 +862,8 @@ ReactDOMComponent.Mixin = {
       context
     );
 
-    if (!canDefineProperty && this._nodeWithLegacyProperties) {
-      this._nodeWithLegacyProperties.props = nextProps;
+    if (!canDefineProperty && this._nodeHasLegacyProperties) {
+      this._nativeNode.props = nextProps;
     }
 
     if (this._tag === 'select') {
@@ -877,10 +887,9 @@ ReactDOMComponent.Mixin = {
    * @private
    * @param {object} lastProps
    * @param {object} nextProps
-   * @param {ReactReconcileTransaction} transaction
    * @param {?DOMElement} node
    */
-  _updateDOMProperties: function(lastProps, nextProps, transaction, node) {
+  _updateDOMProperties: function(lastProps, nextProps, transaction) {
     var propKey;
     var styleName;
     var styleUpdates;
@@ -908,10 +917,7 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        if (!node) {
-          node = ReactMount.getNode(this._rootNodeID);
-        }
-        DOMPropertyOperations.deleteValueForProperty(node, propKey);
+        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
@@ -964,20 +970,15 @@ ReactDOMComponent.Mixin = {
           deleteListener(this._rootNodeID, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
-        if (!node) {
-          node = ReactMount.getNode(this._rootNodeID);
-        }
         DOMPropertyOperations.setValueForAttribute(
-          node,
+          getNode(this),
           propKey,
           nextProp
         );
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        if (!node) {
-          node = ReactMount.getNode(this._rootNodeID);
-        }
+        var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertantly setting to a string. This
         // brings us in line with the same behavior we have on initial render.
@@ -989,10 +990,7 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      if (!node) {
-        node = ReactMount.getNode(this._rootNodeID);
-      }
-      CSSPropertyOperations.setValueForStyles(node, styleUpdates);
+      CSSPropertyOperations.setValueForStyles(getNode(this), styleUpdates);
     }
   },
 
@@ -1089,21 +1087,26 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
+    var nativeNode = getNode(this);
+    this._nativeNode = null;
+    if (this._nodeHasLegacyProperties) {
+      nativeNode._reactInternalComponent = null;
+    }
+
     this.unmountChildren();
     ReactBrowserEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
     this._wrapperState = null;
-    if (this._nodeWithLegacyProperties) {
-      var node = this._nodeWithLegacyProperties;
-      node._reactInternalComponent = null;
-      this._nodeWithLegacyProperties = null;
-    }
+
+    return nativeNode;
   },
 
   getPublicInstance: function() {
-    if (!this._nodeWithLegacyProperties) {
-      var node = ReactMount.getNode(this._rootNodeID);
+    if (this._nodeHasLegacyProperties) {
+      return this._nativeNode;
+    } else {
+      var node = getNode(this);
 
       node._reactInternalComponent = this;
       node.getDOMNode = legacyGetDOMNode;
@@ -1126,9 +1129,9 @@ ReactDOMComponent.Mixin = {
         node.props = this._currentElement.props;
       }
 
-      this._nodeWithLegacyProperties = node;
+      this._nodeHasLegacyProperties = true;
+      return node;
     }
-    return this._nodeWithLegacyProperties;
   },
 
 };

@@ -64,19 +64,6 @@ var ReactDOMIDOperations = {
   },
 
   /**
-   * Replaces a DOM node that exists in the document with markup.
-   *
-   * @param {string} id ID of child to be replaced.
-   * @param {string} markup Dangerous markup to inject in place of child.
-   * @internal
-   * @see {Danger.dangerouslyReplaceNodeWithMarkup}
-   */
-  dangerouslyReplaceNodeWithMarkupByID: function(id, markup) {
-    var node = ReactMount.getNode(id);
-    DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
-  },
-
-  /**
    * Updates a component's children by processing a series of updates.
    *
    * @param {array<object>} updates List of update configurations.
@@ -92,7 +79,6 @@ var ReactDOMIDOperations = {
 };
 
 ReactPerf.measureMethods(ReactDOMIDOperations, 'ReactDOMIDOperations', {
-  dangerouslyReplaceNodeWithMarkupByID: 'dangerouslyReplaceNodeWithMarkupByID',
   dangerouslyProcessChildrenUpdates: 'dangerouslyProcessChildrenUpdates',
 });
 

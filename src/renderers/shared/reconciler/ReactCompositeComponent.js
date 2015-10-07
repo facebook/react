@@ -310,7 +310,8 @@ var ReactCompositeComponentMixin = {
       inst.componentWillUnmount();
     }
 
-    ReactReconciler.unmountComponent(this._renderedComponent);
+    var unmountedNativeNode =
+      ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
     this._instance = null;
 
@@ -339,6 +340,7 @@ var ReactCompositeComponentMixin = {
     // TODO: inst.props = null;
     // TODO: inst.state = null;
     // TODO: inst.context = null;
+    return unmountedNativeNode;
   },
 
   /**
@@ -727,30 +729,30 @@ var ReactCompositeComponentMixin = {
         this._processChildContext(context)
       );
     } else {
-      // These two IDs are actually the same! But nothing should rely on that.
-      var thisID = this._rootNodeID;
-      var prevComponentID = prevComponentInstance._rootNodeID;
-      ReactReconciler.unmountComponent(prevComponentInstance);
+      var oldNativeNode =
+        ReactReconciler.unmountComponent(prevComponentInstance);
 
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
-        thisID,
+        this._rootNodeID,
         transaction,
         this._processChildContext(context)
       );
-      this._replaceNodeWithMarkupByID(prevComponentID, nextMarkup);
+      this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);
     }
   },
 
   /**
+   * Overridden in shallow rendering.
+   *
    * @protected
    */
-  _replaceNodeWithMarkupByID: function(prevComponentID, nextMarkup) {
-    ReactComponentEnvironment.replaceNodeWithMarkupByID(
-      prevComponentID,
+  _replaceNodeWithMarkup: function(oldNativeNode, nextMarkup) {
+    ReactComponentEnvironment.replaceNodeWithMarkup(
+      oldNativeNode,
       nextMarkup
     );
   },
