@@ -4,7 +4,7 @@ title: Downloads
 layout: single
 ---
 Download the starter kit to get everything you need to
-[get started with React](/react/docs/getting-started.html). The starter kit includes React, the in-browser JSX transformer, and some simple example apps.
+[get started with React](/react/docs/getting-started.html). The starter kit includes React and some simple example apps.
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
@@ -52,16 +52,17 @@ All scripts are also available via [CDNJS](https://cdnjs.com/libraries/react/).
 
 ## npm
 
-If you're using an npm-compatible packaging system like browserify or webpack, you can use the `react` package. After installing it using `npm install react` or adding `react` to `package.json`, you can use React:
+We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). You can use the `react` and `react-dom` packages. After installing it using `npm install --save react react-dom`, you can use:
 
 ```js
-var React = require('react-dom');
-ReactDOM.render(...);
+var React = require('react');
+var ReactDOM = require('react-dom');
+ReactDOM.render(<App />, ...);
 ```
 
-If you'd like to use any [add-ons](/react/docs/addons.html), use `var React = require('react/addons');` instead.
+Each of the [add-ons](/react/docs/addons.html) lives in its own package.
 
-**Note:** by default, React will be in development mode. To use React in production mode, set the environment variable `NODE_ENV` to `production`. A minifier that performs dead-code elimination such as [UglifyJS](https://github.com/mishoo/UglifyJS2) is recommended to completely remove the extra code present in development mode.
+**Note:** by default, React will be in development mode. To use React in production mode, set the environment variable `NODE_ENV` to `production` (using envify or webpack's DefinePlugin). A minifier that performs dead-code elimination such as [UglifyJS](https://github.com/mishoo/UglifyJS2) is recommended to completely remove the extra code present in development mode.
 
 ## Bower
 
