@@ -13,7 +13,6 @@
 
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
-var ClientReactRootIndex = require('ClientReactRootIndex');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var ExecutionEnvironment = require('ExecutionEnvironment');
@@ -30,7 +29,6 @@ var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var SelectEventPlugin = require('SelectEventPlugin');
-var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
@@ -88,12 +86,6 @@ function inject() {
   );
   ReactInjection.Updates.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
-  );
-
-  ReactInjection.RootIndex.injectCreateReactRootIndex(
-    ExecutionEnvironment.canUseDOM ?
-      ClientReactRootIndex.createReactRootIndex :
-      ServerReactRootIndex.createReactRootIndex
   );
 
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);

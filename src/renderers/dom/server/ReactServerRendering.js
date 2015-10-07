@@ -19,6 +19,7 @@ var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
 var ReactUpdates = require('ReactUpdates');
+var ServerReactRootIndex = require('ServerReactRootIndex');
 
 var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -38,7 +39,9 @@ function renderToString(element) {
   try {
     ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
 
-    var id = ReactInstanceHandles.createReactRootID();
+    var id = ReactInstanceHandles.createReactRootID(
+      ServerReactRootIndex.createReactRootIndex()
+    );
     transaction = ReactServerRenderingTransaction.getPooled(false);
 
     return transaction.perform(function() {
@@ -70,7 +73,9 @@ function renderToStaticMarkup(element) {
   try {
     ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
 
-    var id = ReactInstanceHandles.createReactRootID();
+    var id = ReactInstanceHandles.createReactRootID(
+      ServerReactRootIndex.createReactRootIndex()
+    );
     transaction = ReactServerRenderingTransaction.getPooled(true);
 
     return transaction.perform(function() {

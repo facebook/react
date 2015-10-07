@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ClientReactRootIndex = require('ClientReactRootIndex');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
@@ -432,7 +433,9 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
   if (this._instance) {
     this._instance.receiveComponent(element, transaction, context);
   } else {
-    var rootID = ReactInstanceHandles.createReactRootID();
+    var rootID = ReactInstanceHandles.createReactRootID(
+      ClientReactRootIndex.createReactRootIndex()
+    );
     var instance = new ShallowComponentWrapper(element.type);
     instance.construct(element);
 
