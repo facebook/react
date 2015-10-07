@@ -19,6 +19,8 @@ var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
+var didWarnValueLink = false;
+
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
@@ -67,6 +69,13 @@ var ReactDOMTextarea = {
         props,
         inst._currentElement._owner
       );
+      if (props.valueLink !== undefined && !didWarnValueLink) {
+        warning(
+          false,
+          '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
+        );
+        didWarnValueLink = true;
+      }
     }
 
     var defaultValue = props.defaultValue;

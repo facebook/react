@@ -241,7 +241,13 @@ describe('ReactDOMTextarea', function() {
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <textarea valueLink={link} />;
 
+    spyOn(console, 'error');
     instance = renderTextarea(instance);
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
+    );
+
 
     expect(ReactDOM.findDOMNode(instance).value).toBe('yolo');
     expect(link.value).toBe('yolo');
