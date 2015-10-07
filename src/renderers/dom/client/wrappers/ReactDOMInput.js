@@ -28,8 +28,8 @@ function forceUpdateIfMounted() {
   }
 }
 
-function isTextInput(props) {
-  return !props.type || props.type === 'text';
+function hasPlaceholder(props) {
+  return 'placeholder' in props;
 }
 
 /**
@@ -86,7 +86,7 @@ var ReactDOMInput = {
     // Can't be in mountWrapper or else server rendering leaks.
     instancesByReactID[inst._rootNodeID] = inst;
     var rootNode = ReactMount.getNode(inst._rootNodeID);
-    if (isTextInput(inst._currentElement.props)) {
+    if (hasPlaceholder(inst._currentElement.props)) {
       inst._wrapperState._currentValue = rootNode.value;
     }
   },
@@ -118,7 +118,7 @@ var ReactDOMInput = {
         'value',
         value
       );
-      if (isTextInput(props)) {
+      if (hasPlaceholder(props)) {
         inst._wrapperState._currentValue = value;
       }
     }
@@ -128,7 +128,8 @@ var ReactDOMInput = {
 function _handleChange(event) {
   var props = this._currentElement.props;
 
-  if (isTextInput(props)) {
+  // #5004: IE fires input event for placeholder wrongly
+  if (hasPlaceholder(props)) {
     var value = event.target.value;
     if (value === this._wrapperState._currentValue) {
       event.stopPropagation();
