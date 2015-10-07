@@ -97,10 +97,10 @@ Verifies the object is a ReactElement.
 #### React.Children.map
 
 ```javascript
-object React.Children.map(object children, function fn [, object thisArg])
+array React.Children.map(object children, function fn [, object thisArg])
 ```
 
-Invoke `fn` on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an empty object.
+Invoke `fn` on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an array.
 
 #### React.Children.forEach
 
@@ -108,7 +108,7 @@ Invoke `fn` on every immediate child contained within `children` with `this` set
 React.Children.forEach(object children, function fn [, object thisArg])
 ```
 
-Like `React.Children.map()` but does not return an object.
+Like `React.Children.map()` but does not return an array.
 
 #### React.Children.count
 
@@ -125,6 +125,14 @@ object React.Children.only(object children)
 ```
 
 Return the only child in `children`. Throws otherwise.
+
+#### React.Children.toArray
+
+```javascript
+array React.Children.toArray(object children)
+```
+
+Return the `children` opaque data structure as a flat array with keys assigned to each child. Useful if you want to manipulate collections of children in your render methods, especially if you want to reorder or slice `this.props.children` before passing it down.
 
 ## ReactDOM
 
