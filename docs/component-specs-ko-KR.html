@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -418,7 +411,7 @@
 
 <p>호출되면 <code>this.props</code>와 <code>this.state</code>를 토대로 하나의 자식 엘리먼트를 리턴합니다. 이 자식 엘리먼트는 네이티브 DOM 컴포넌트의 가상 표현 (<code>&lt;div /&gt;</code>나 <code>React.DOM.div()</code> 등) 또는 직접 정의한 조합(composite) 컴포넌트가 될 수 있습니다.</p>
 
-<p>아무 것도 렌더링되지 않도록 하려면 <code>null</code>이나 <code>false</code>를 리턴합니다. React는 지금의 차이 비교 알고리즘이 작동할 수 있도록 내부적으로는 <code>&lt;noscript&gt;</code> 태그를 렌더링합니다. <code>null</code>이나 <code>false</code>를 리턴한 경우, <code>React.findDOMNode(this)</code>는 <code>null</code>을 리턴합니다.</p>
+<p>아무 것도 렌더링되지 않도록 하려면 <code>null</code>이나 <code>false</code>를 리턴합니다. React는 지금의 차이 비교 알고리즘이 작동할 수 있도록 내부적으로는 <code>&lt;noscript&gt;</code> 태그를 렌더링합니다. <code>null</code>이나 <code>false</code>를 리턴한 경우, <code>ReactDOM.findDOMNode(this)</code>는 <code>null</code>을 리턴합니다.</p>
 
 <p><code>render()</code> 함수는 순수 함수여야 합니다. 즉, 컴포넌트의 상태를 변경하지 않고, 여러번 호출해도 같은 결과를 리턴하며, DOM을 읽고 쓰거나 브라우저와 상호작용(예를 들어 <code>setTimeout</code>를 사용)하지 않아야 합니다. 브라우저와 상호작용해야 한다면 <code>componentDidMount()</code>나 다른 생명주기 메소드에서 수행해야 합니다. <code>render()</code> 함수를 순수 함수로 유지하면 서버 렌더링이 훨씬 쓸만해지고 컴포넌트에 대해 생각하기 쉬워집니다.</p>
 <h3><a class="anchor" name="getinitialstate"></a>getInitialState <a class="hash-link" href="#getinitialstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
@@ -458,15 +451,15 @@
 <p><a name="lifecycle-methods"></a></p>
 <h2><a class="anchor" name="-"></a>생명주기 메소드 <a class="hash-link" href="#-">#</a></h2>
 <p>컴포넌트의 생명주기에서 특정 시점마다 실행되는 메소드들입니다.</p>
-<h3><a class="anchor" name="--componentwillmount"></a>마운트 시: componentWillMount <a class="hash-link" href="#--componentwillmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
+<h3><a class="anchor" name="--componentwillmount"></a>마운트 시: componentWillMount <a class="hash-link" href="#--componentwillmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
 <p>최초 렌더링이 일어나기 직전에 클라이언트 및 서버에서 한번 호출됩니다. 이 메소드 안에서 <code>setState</code>를 호출하면, <code>render()</code>에서 업데이트된 state를 확인할 수 있고 state가 변함에도 불구하고 <code>render()</code>가 한번만 실행됩니다.</p>
-<h3><a class="anchor" name="--componentdidmount"></a>마운트 시: componentDidMount <a class="hash-link" href="#--componentdidmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">()</span>
+<h3><a class="anchor" name="--componentdidmount"></a>마운트 시: componentDidMount <a class="hash-link" href="#--componentdidmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentDidMount</span><span class="p">()</span>
 </code></pre></div>
-<p>최초 렌더링이 일어난 다음 클라이언트에서만 한번 호출됩니다. (서버에서는 호출되지 않습니다.) 이 시점에 컴포넌트는 <code>React.findDOMNode(this)</code>로 접근 가능한 DOM 표현을 가집니다.</p>
+<p>최초 렌더링이 일어난 다음 클라이언트에서만 한번 호출됩니다. (서버에서는 호출되지 않습니다.) 이 시점에 컴포넌트는 <code>ReactDOM.findDOMNode(this)</code>로 접근 가능한 DOM 표현을 가집니다.</p>
 
 <p>다른 JavaScript 프레임워크를 연동하거나, <code>setTimeout</code>/<code>setInterval</code>로 타이머를 설정하고 AJAX 요청을 보내는 등의 작업을 이 메소드에서 합니다.</p>
-<h3><a class="anchor" name="--componentwillreceiveprops"></a>업데이트 시: componentWillReceiveProps <a class="hash-link" href="#--componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+<h3><a class="anchor" name="--componentwillreceiveprops"></a>업데이트 시: componentWillReceiveProps <a class="hash-link" href="#--componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
 </code></pre></div>
 <p>컴포넌트가 새로운 props를 받을 때 호출됩니다. 이 메소드는 최초 렌더링 시에는 호출되지 않습니다.</p>
 
@@ -499,7 +492,7 @@
 <p>기본적으로 <code>shouldComponentUpdate</code>는 항상 true를 리턴합니다. <code>state</code>가 제자리에서(in place) 바뀐 경우에 발생하는 파악하기 힘든 버그를 막기 위함입니다. 하지만 <code>state</code>가 항상 변경 불가능하도록 주의하고 <code>render()</code>에서 <code>props</code>와 <code>state</code>를 읽기만 하면 이전 props 및 state와 바뀌는 값을 비교하는 <code>shouldComponentUpdate</code>를 직접 구현할 수 있습니다.</p>
 
 <p>성능에 병목이 있다면, 특히 컴포넌트가 매우 많은 경우 <code>shouldComponentUpdate</code>를 사용하여 앱을 빠르게 만들 수 있습니다.</p>
-<h3><a class="anchor" name="--componentwillupdate"></a>업데이트 시: componentWillUpdate <a class="hash-link" href="#--componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+<h3><a class="anchor" name="--componentwillupdate"></a>업데이트 시: componentWillUpdate <a class="hash-link" href="#--componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
 </code></pre></div>
 <p>새로운 props나 state를 받았을 때 렌더링 직전에 호출됩니다. 최초 렌더링 시에는 호출되지 않습니다.</p>
 
@@ -510,12 +503,12 @@
 
 <p>이 메소드에서는 <code>this.setState()</code>를 호출할 수 없습니다. prop 변화에 반응하여 state를 업데이트해야 할 경우, <code>componentWillReceiveProps</code>를 대신 사용하세요.</p>
 </blockquote>
-<h3><a class="anchor" name="--componentdidupdate"></a>업데이트 시: componentDidUpdate <a class="hash-link" href="#--componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">)</span>
+<h3><a class="anchor" name="--componentdidupdate"></a>업데이트 시: componentDidUpdate <a class="hash-link" href="#--componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">)</span>
 </code></pre></div>
 <p>컴포넌트의 업데이트가 DOM에 반영된 직후에 호출됩니다. 최초 렌더링 시에는 호출되지 않습니다.</p>
 
 <p>컴포넌트가 업데이트된 뒤 DOM을 조작해야 하는 경우 사용할 수 있습니다.</p>
-<h3><a class="anchor" name="---componentwillunmount"></a>마운트 해제 시: componentWillUnmount <a class="hash-link" href="#---componentwillunmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
+<h3><a class="anchor" name="---componentwillunmount"></a>마운트 해제 시: componentWillUnmount <a class="hash-link" href="#---componentwillunmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillUnmount</span><span class="p">()</span>
 </code></pre></div>
 <p>컴포넌트가 DOM에서 마운트 해제 되기 직전에 호출됩니다.</p>
 

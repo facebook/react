@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -433,7 +426,7 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>주어진 타입의 ReactElement를 만들어주는 함수를 리턴합니다. <code>React.createElement</code>와 마찬가지로 <code>type</code> 인자는 HTML 태그명 문자열 (예: &#39;div&#39;, &#39;span&#39; 등) 또는 <code>ReactClass</code>입니다.</p>
-<h3><a class="anchor" name="react.render"></a>React.render <a class="hash-link" href="#react.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
+<h3><a class="anchor" name="reactdom.render"></a>ReactDOM.render <a class="hash-link" href="#reactdom.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
   <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
@@ -448,25 +441,25 @@
 <blockquote>
 <p>주의:</p>
 
-<p><code>React.render()</code>는 넘어온 컨테이너 노드의 내용을 교체합니다. 안에 있는 DOM 엘리먼트는 첫 호출을 할 때 교체됩니다. 그 후의 호출에는 효율석으로 업데이트하기 위해 React의 DOM diff 알고리즘을 사용합니다.</p>
+<p><code>ReactDOM.render()</code>는 넘어온 컨테이너 노드의 내용을 교체합니다. 안에 있는 DOM 엘리먼트는 첫 호출을 할 때 교체됩니다. 그 후의 호출에는 효율석으로 업데이트하기 위해 React의 DOM diff 알고리즘을 사용합니다.</p>
 
-<p><code>React.render()</code>는 컨테이너 노드를 수정하지 않습니다. (컨테이너의 자식만 수정함) 추후에 기존 자식들을 덮어쓰지 않고 이미 있는 DOM 노드에 컴포넌트를 삽입하는 것도 지원할 가능성이 있습니다.</p>
+<p><code>ReactDOM.render()</code>는 컨테이너 노드를 수정하지 않습니다. (컨테이너의 자식만 수정함) 추후에 기존 자식들을 덮어쓰지 않고 이미 있는 DOM 노드에 컴포넌트를 삽입하는 것도 지원할 가능성이 있습니다.</p>
 </blockquote>
-<h3><a class="anchor" name="react.unmountcomponentatnode"></a>React.unmountComponentAtNode <a class="hash-link" href="#react.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
+<h3><a class="anchor" name="reactdom.unmountcomponentatnode"></a>ReactDOM.unmountComponentAtNode <a class="hash-link" href="#reactdom.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
 </code></pre></div>
 <p>DOM에 마운트된 React 컴포넌트를 제거하고 이벤트 핸들러 및 state를 정리합니다. 컨테이너에 마운트된 컴포넌트가 없는 경우에는 호출해도 아무 동작을 하지 않습니다. 컴포넌트가 마운트 해제된 경우 <code>true</code>를, 마운트 해제할 컴포넌트가 없으면 <code>false</code>를 리턴합니다.</p>
-<h3><a class="anchor" name="react.rendertostring"></a>React.renderToString <a class="hash-link" href="#react.rendertostring">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToString</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+<h3><a class="anchor" name="reactdom.rendertostring"></a>ReactDOM.renderToString <a class="hash-link" href="#reactdom.rendertostring">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToString</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>주어진 ReactElement의 최초 HTML을 렌더링합니다. 이 함수는 서버에서만 사용해야 합니다. React가 HTML 문자열을 리턴합니다. HTML을 서버에서 생성하고 마크업을 최초 요청에 내려보내서, 페이지 로딩을 빠르게 하거나 검색 엔진이 크롤링할 수 있도록 하는 SEO 목적으로 이 메소드를 사용할 수 있습니다.</p>
 
-<p>또한 이 메소드로 서버에서 렌더링한 마크업을 포함한 노드에 <code>React.render()</code>를 호출하면, React는 마크업을 보존하고 이벤트 핸들러만 붙이므로 최초 로딩을 매우 빠르게 느껴지게 할 수 있습니다.</p>
-<h3><a class="anchor" name="react.rendertostaticmarkup"></a>React.renderToStaticMarkup <a class="hash-link" href="#react.rendertostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+<p>또한 이 메소드로 서버에서 렌더링한 마크업을 포함한 노드에 <code>ReactDOM.render()</code>를 호출하면, React는 마크업을 보존하고 이벤트 핸들러만 붙이므로 최초 로딩을 매우 빠르게 느껴지게 할 수 있습니다.</p>
+<h3><a class="anchor" name="reactdom.rendertostaticmarkup"></a>ReactDOM.renderToStaticMarkup <a class="hash-link" href="#reactdom.rendertostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p><code>renderToString</code>와 비슷하지만 <code>data-react-id</code>처럼 React에서 내부적으로 사용하는 추가적인 DOM 어트리뷰트를 만들지 않습니다. 추가적인 어트리뷰트를 제거하면 생성되는 마크업의 용량을 줄일 수 있기 때문에 React를 단순한 정적 페이지 생성기로 사용할 때 유용합니다.</p>
-<h3><a class="anchor" name="react.isvalidelement"></a>React.isValidElement <a class="hash-link" href="#react.isvalidelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isValidElement</span><span class="p">(</span><span class="o">*</span> <span class="nx">object</span><span class="p">)</span>
+<h3><a class="anchor" name="reactdom.isvalidelement"></a>ReactDOM.isValidElement <a class="hash-link" href="#reactdom.isvalidelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isValidElement</span><span class="p">(</span><span class="o">*</span> <span class="nx">object</span><span class="p">)</span>
 </code></pre></div>
 <p>주어진 객체가 ReactElement인지 확인합니다.</p>
-<h3><a class="anchor" name="react.finddomnode"></a>React.findDOMNode <a class="hash-link" href="#react.finddomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findDOMNode</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
+<h3><a class="anchor" name="reactdom.finddomnode"></a>ReactDOM.findDOMNode <a class="hash-link" href="#reactdom.finddomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findDOMNode</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
 </code></pre></div>
 <p>이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. <code>render</code>가 <code>null</code>이나 <code>false</code>를 리턴할 때 <code>findDOMNode()</code>는 <code>null</code>을 리턴합니다.</p>
 <h3><a class="anchor" name="react.dom"></a>React.DOM <a class="hash-link" href="#react.dom">#</a></h3>

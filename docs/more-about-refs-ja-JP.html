@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html" class="active">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html" class="active">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -471,12 +464,12 @@
 </ol>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
 </code></pre></div>
-<p><code>React.findDOMNode(this.refs.myInput)</code> を呼ぶことで、コンポーネントのDOMノードに直接アクセスできる。</p>
+<p><code>ReactDOM.findDOMNode(this.refs.myInput)</code> を呼ぶことで、コンポーネントのDOMノードに直接アクセスできる。</p>
 <h2><a class="anchor" name=""></a>参照のコールバック属性 <a class="hash-link" href="#">#</a></h2>
 <p><code>ref</code> 属性は名前の代わりのコールバック関数になり得ます。このコールバックはコンポーネントがマウントされた直後に実行されます。参照されたコンポーネントはパラメータとして渡され、コールバック関数はコンポーネントを即座に使用するか、または将来使用するために参照を保存します（またはその両方を行います）。</p>
 
 <p>これは、以下のように、 <code>render</code> でリターンされてきたものに <code>ref</code> 属性をアサインするのと同じくらい簡単です。</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span> <span class="na">React</span><span class="err">.</span><span class="na">findDOMNode</span><span class="err">(</span><span class="na">component</span><span class="err">).</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span> <span class="na">ReactDOM</span><span class="err">.</span><span class="na">findDOMNode</span><span class="err">(</span><span class="na">component</span><span class="err">).</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
 </code></pre></div><h2><a class="anchor" name=""></a>完全な例 <a class="hash-link" href="#">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
@@ -488,7 +481,7 @@
       <span class="c1">// inputをクリアする</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
         <span class="c1">// このコードはコンポーネントが再度レンダリングされた後に実行されます。</span>
-        <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// どーん！フォーカスされました！</span>
+        <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// どーん！フォーカスされました！</span>
       <span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -513,7 +506,7 @@
 <h3><a class="anchor" name=""></a>利益: <a class="hash-link" href="#">#</a></h3>
 <ul>
 <li>コンポーネントクラス（例えば、Typeaheadのリセットメソッドのようなもの）にパブリックなメソッドを定義できる。また、参照（例えば、 <code>this.refs.myTypeahead.reset()</code> のように）を通してそれらのパブリックなメソッドを呼べる。</li>
-<li>DOMの計測を行うことは大体いつも <code>&lt;input /&gt;</code> のような「ネイティブの」コンポーネントや <code>React.findDOMNode(this.refs.myInput)</code> を通した根本のDOMノードにアクセスすることを必要とします。参照は、こういったことを期待通りに行う唯一の実用的な方法です。</li>
+<li>DOMの計測を行うことは大体いつも <code>&lt;input /&gt;</code> のような「ネイティブの」コンポーネントや <code>ReactDOM.findDOMNode(this.refs.myInput)</code> を通した根本のDOMノードにアクセスすることを必要とします。参照は、こういったことを期待通りに行う唯一の実用的な方法です。</li>
 <li>参照は自動的に管理されます！もし子要素が削除されたら、その参照もまた削除されます。メモリに関しての心配は要りません（あなた自身が参照を維持するために何かおかしなことを行っていなければ）。</li>
 </ul>
 <h3><a class="anchor" name=""></a>警告: <a class="hash-link" href="#">#</a></h3>

@@ -87,5 +87,5 @@
     }
   });
 
-  React.render(React.createElement(HTMLtoJSXComponent, null), document.getElementById('jsxCompiler'));
+  ReactDOM.render(React.createElement(HTMLtoJSXComponent, null), document.getElementById('jsxCompiler'));
 })();

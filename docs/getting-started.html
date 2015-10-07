@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -411,12 +404,26 @@
 <li><strong><a href="https://jsfiddle.net/reactjs/69z2wepo/">React JSFiddle</a></strong></li>
 <li><a href="https://jsfiddle.net/reactjs/5vjqabv3/">React JSFiddle without JSX</a></li>
 </ul>
-<h2><a class="anchor" name="starter-kit"></a>Starter Kit <a class="hash-link" href="#starter-kit">#</a></h2>
-<p>Download the starter kit to get started.</p>
+<h2><a class="anchor" name="using-react-from-npm"></a>Using React from npm <a class="hash-link" href="#using-react-from-npm">#</a></h2>
+<p>We recommend using React with a CommonJS module system like <a href="http://browserify.org/">browserify</a> or <a href="https://webpack.github.io/">webpack</a>. Use the <a href="https://www.npmjs.com/package/react"><code>react</code></a> and <a href="https://www.npmjs.com/package/react-dom"><code>react-dom</code></a> npm packages.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// main.js</span>
+<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ReactDOM</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom&#39;</span><span class="p">);</span>
+
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>To install React DOM and build your bundle after installing browserify:</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom
+<span class="nv">$ </span>browserify -t babelify main.js -o bundle.js
+</code></pre></div><h2><a class="anchor" name="quick-start-without-npm"></a>Quick Start Without npm <a class="hash-link" href="#quick-start-without-npm">#</a></h2>
+<p>If you&#39;re not ready to use npm yet, you can download the starter kit which includes prebuilt copies of React and React DOM.</p>
 
 <div class="buttons-unit downloads">
-  <a href="/react/downloads/react-0.13.3.zip" class="button">
-    Download Starter Kit 0.13.3
+  <a href="/react/downloads/react-0.14.0.zip" class="button">
+    Download Starter Kit 0.14.0
   </a>
 </div>
 
@@ -427,12 +434,13 @@
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
     <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span><span class="nt">&gt;</span>
-      <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+      <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
         <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
         <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
       <span class="p">);</span>
@@ -443,7 +451,7 @@
 <p>The XML syntax inside of JavaScript is called JSX; check out the <a href="/react/docs/jsx-in-depth.html">JSX syntax</a> to learn more about it. In order to translate it to vanilla JavaScript we use <code>&lt;script type=&quot;text/babel&quot;&gt;</code> and include Babel to actually perform the transformation in the browser.</p>
 <h3><a class="anchor" name="separate-file"></a>Separate File <a class="hash-link" href="#separate-file">#</a></h3>
 <p>Your React JSX code can live in a separate file. Create the following <code>src/helloworld.js</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
@@ -460,7 +468,7 @@
 <div class="highlight"><pre><code class="language-text" data-lang="text">babel src --watch --out-dir build
 </code></pre></div>
 <p>The file <code>build/helloworld.js</code> is autogenerated whenever you make a change. Read the <a href="http://babeljs.io/docs/usage/cli/">Babel CLI documentation</a> for more advanced usage.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
 <span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello, world!&#39;</span><span class="p">),</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
@@ -472,6 +480,7 @@
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="hll">    <span class="c">&lt;!-- No need for Babel! --&gt;</span>
 </span>  <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
@@ -479,9 +488,7 @@
 <span class="hll">    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span>  <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-</code></pre></div><h2><a class="anchor" name="want-commonjs"></a>Want CommonJS? <a class="hash-link" href="#want-commonjs">#</a></h2>
-<p>If you want to use React with <a href="http://browserify.org/">browserify</a>, <a href="https://webpack.github.io/">webpack</a>, or another CommonJS-compatible module system, just use the <a href="https://www.npmjs.com/package/react"><code>react</code> npm package</a>. In addition, the <code>jsx</code> build tool can be integrated into most packaging systems (not just CommonJS) quite easily.</p>
-<h2><a class="anchor" name="next-steps"></a>Next Steps <a class="hash-link" href="#next-steps">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="next-steps"></a>Next Steps <a class="hash-link" href="#next-steps">#</a></h2>
 <p>Check out <a href="/react/docs/tutorial.html">the tutorial</a> and the other examples in the starter kit&#39;s <code>examples</code> directory to learn more.</p>
 
 <p>We also have a wiki where the community contributes with <a href="https://github.com/facebook/react/wiki/Complementary-Tools">workflows, UI-components, routing, data management etc.</a></p>

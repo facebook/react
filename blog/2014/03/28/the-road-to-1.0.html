@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -66,7 +67,9 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">React.render and the Top Level React API</a></li>
+        <li><a href="/react/blog/2015/10/07/react-v0.14.html">React v0.14</a></li>
+      
+        <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">ReactDOM.render and the Top Level React API</a></li>
       
         <li><a href="/react/blog/2015/09/14/community-roundup-27.html">Community Round-up #27 &ndash; Relay Edition</a></li>
       
@@ -84,8 +87,6 @@
       
         <li><a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating JSTransform and react-tools</a></li>
       
-        <li><a href="/react/blog/2015/05/22/react-native-release-process.html">React Native Release Process</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
@@ -93,7 +94,6 @@
 
   <div class="inner-content">
     
-
 
 <h1>
 
@@ -131,7 +131,7 @@
 </code></pre></div>
 <p>There are other features of ES6 we&#39;re already using in core. I&#39;m sure we&#39;ll see more of that. The <code>jsx</code> executable we ship with <code>react-tools</code> already supports transforming many parts of ES6 into code that will run on older browsers.</p>
 <h2><a class="anchor" name="context"></a>Context <a class="hash-link" href="#context">#</a></h2>
-<p>While we haven&#39;t documented <code>context</code>, it exists in some form in React already. It exists as a way to pass values through a tree without having to use props at every single point. We&#39;ve seen this need crop up time and time again, so we want to make this as easy as possible. It&#39;s use has performance tradeoffs, and there are known weaknesses in our implementation, so we want to make sure this is a solid feature.</p>
+<p>While we haven&#39;t documented <code>context</code>, it exists in some form in React already. It exists as a way to pass values through a tree without having to use props at every single point. We&#39;ve seen this need crop up time and time again, so we want to make this as easy as possible. Its use has performance tradeoffs, and there are known weaknesses in our implementation, so we want to make sure this is a solid feature.</p>
 <h2><a class="anchor" name="addons"></a>Addons <a class="hash-link" href="#addons">#</a></h2>
 <p>As you may know, we ship a separate build of React with some extra features we called &quot;addons&quot;. While this has served us fine, it&#39;s not great for our users. It&#39;s made testing harder, but also results in more cache misses for people using a CDN. The problem we face is that many of these &quot;addons&quot; need access to parts of React that we don&#39;t expose publicly. Our goal is to ship each addon on its own and let each hook into React as needed. This would also allow others to write and distribute &quot;addons&quot;.</p>
 <h2><a class="anchor" name="browser-support"></a>Browser Support <a class="hash-link" href="#browser-support">#</a></h2>

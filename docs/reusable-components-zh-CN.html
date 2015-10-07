@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -419,7 +412,7 @@
     <span class="nx">optionalString</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
 
     <span class="c1">// 所有可以被渲染的对象：数字，</span>
-    <span class="c1">// 字符串，DOM 元素或包含这些类型的数组。</span>
+    <span class="c1">// 字符串，DOM 元素或包含这些类型的数组(or fragment) 。</span>
     <span class="nx">optionalNode</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">node</span><span class="p">,</span>
 
     <span class="c1">// React 元素</span>
@@ -487,7 +480,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">CheckLink</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;/checked.html&quot;</span><span class="o">&gt;</span>
     <span class="nx">Click</span> <span class="nx">here</span><span class="o">!</span>
   <span class="o">&lt;</span><span class="err">/CheckLink&gt;,</span>
@@ -521,7 +514,7 @@
     <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">setInterval</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">));</span>
   <span class="p">},</span>
   <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">clearInterval</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">clearInterval</span><span class="p">);</span>
   <span class="p">}</span>
 <span class="p">};</span>
 
@@ -545,12 +538,46 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">TickTock</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
 <p>关于 mixin 值得一提的优点是，如果一个组件使用了多个 mixin，并用有多个 mixin 定义了同样的生命周期方法（如：多个 mixin 都需要在组件销毁时做资源清理操作），所有这些生命周期方法都保证会被执行到。方法执行顺序是：首先按 mixin 引入顺序执行 mixin 里方法，最后执行组件内定义的方法。</p>
+<h2><a class="anchor" name="es6-classes"></a>ES6 Classes <a class="hash-link" href="#es6-classes">#</a></h2>
+<p>你也可以以一个简单的JavaScript 类来定义你的React classes。使用ES6 class的例子:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+</code></pre></div>
+<p>API近似于 <code>React.createClass</code> 除了 <code>getInitialState</code>。 你应该在构造函数里设置你的<code>state</code>，而不是提供一个单独的  <code>getInitialState</code> 方法。</p>
+
+<p>另一个不同是 <code>propTypes</code> 和 <code>defaultProps</code> 在构造函数而不是class body里被定义为属性。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">export</span> <span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span><span class="p">};</span>
+  <span class="p">}</span>
+  <span class="nx">tick</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">});</span>
+  <span class="p">}</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span><span class="o">&gt;</span>
+        <span class="nx">Clicks</span><span class="o">:</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="nx">Counter</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
+<span class="nx">Counter</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
+</code></pre></div><h3><a class="anchor" name=""></a>无自动绑定 <a class="hash-link" href="#">#</a></h3>
+<p>方法遵循正式的ES6 class的语义，意味着它们不会自动绑定<code>this</code>到实例上。你必须显示的使用<code>.bind(this)</code> or <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions">箭头函数</a> <code>=&gt;</code>.</p>
+<h3><a class="anchor" name="-mixins"></a>没有 Mixins <a class="hash-link" href="#-mixins">#</a></h3>
+<p>不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易支持这些用例不依靠mixins。</p>
 
 
     <div class="docs-prevnext">

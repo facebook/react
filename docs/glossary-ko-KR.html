@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -417,19 +410,19 @@
 <p>이러한 객체는 <code>React.createElement</code>를 통해 만들 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
 </code></pre></div>
-<p>DOM에 새로운 트리를 렌더링하기 위해서는 <code>ReactElement</code>를 만들고 일반적인 DOM <code>Element</code> (<code>HTMLElement</code> 또는 <code>SVGElement</code>)와 함께 <code>React.render</code>에 넘깁니다. <code>ReactElement</code>를 DOM <code>Element</code>와 혼동해서는 안됩니다. <code>ReactElement</code>는 가볍고, 상태를 갖지 않으며, 변경 불가능한, DOM <code>Element</code>의 가상 표현입니다. 즉 가상 DOM입니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<p>DOM에 새로운 트리를 렌더링하기 위해서는 <code>ReactElement</code>를 만들고 일반적인 DOM <code>Element</code> (<code>HTMLElement</code> 또는 <code>SVGElement</code>)와 함께 <code>ReactDOM.render</code>에 넘깁니다. <code>ReactElement</code>를 DOM <code>Element</code>와 혼동해서는 안됩니다. <code>ReactElement</code>는 가볍고, 상태를 갖지 않으며, 변경 불가능한, DOM <code>Element</code>의 가상 표현입니다. 즉 가상 DOM입니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
 <p>DOM 엘리먼트에 프로퍼티를 추가하려면 두번째 인자로 프로퍼티 객체를, 세번째 인자로 자식을 넘깁니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
 <p>React JSX를 사용하면 <code>ReactElement</code>가 알아서 만들어집니다. 따라서 다음 코드는 앞의 코드와 같습니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">ul</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;my-list&quot;</span><span class="o">&gt;</span>
              <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Text</span> <span class="nx">Content</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
            <span class="o">&lt;</span><span class="err">/ul&gt;;</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
 <p><strong>팩토리</strong></p>
 
@@ -441,7 +434,7 @@
 <p>이를 이용하면 편리한 단축 함수를 만들 수 있어 항상 <code>React.createElement(&#39;div&#39;)</code>를 입력하지 않아도 됩니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">div</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-div&#39;</span> <span class="p">});</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
 <p>React에는 이미 보통의 HTML 태그를 위한 팩토리가 내장되어 있습니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span>
@@ -481,12 +474,12 @@
 <p>또는 JSX를 사용하면:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
-<p>이것이 <code>React.render</code>에 넘겨지면 React가 알아서 생성자를 호출하여 <code>ReactComponent</code>를 만들고 리턴합니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<p>이것이 <code>ReactDOM.render</code>에 넘겨지면 React가 알아서 생성자를 호출하여 <code>ReactComponent</code>를 만들고 리턴합니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 </code></pre></div>
-<p>같은 타입의 <code>ReactElement</code>와 같은 컨테이너 DOM <code>Element</code>를 가지고 <code>React.render</code>를 계속 호출하면 항상 같은 인스턴스를 리턴합니다. 이 인스턴스는 상태를 가집니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">componentA</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-<span class="kd">var</span> <span class="nx">componentB</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<p>같은 타입의 <code>ReactElement</code>와 같은 컨테이너 DOM <code>Element</code>를 가지고 <code>ReactDOM.render</code>를 계속 호출하면 항상 같은 인스턴스를 리턴합니다. 이 인스턴스는 상태를 가집니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">componentA</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<span class="kd">var</span> <span class="nx">componentB</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
 <span class="nx">componentA</span> <span class="o">===</span> <span class="nx">componentB</span><span class="p">;</span> <span class="c1">// true</span>
 </code></pre></div>
 <p>그렇기 때문에 직접 인스턴스를 만들어서는 안됩니다. <code>ReactComponent</code>가 생성되기 전에 <code>ReactElement</code>가 대신 가상의 <code>ReactComponent</code> 역할을 합니다. 이전 <code>ReactElement</code>와 새 <code>ReactElement</code>를 비교하여 새로운 <code>ReactComponent</code>를 만들지, 아니면 기존 것을 재사용할지 결정합니다.</p>
@@ -494,7 +487,7 @@
 <p><code>ReactComponent</code>의 <code>render</code> 메소드는 또다른 <code>ReactElement</code>를 리턴해야 합니다. 이렇게 해서 컴포넌트들이 조합됩니다. 결과적으로 렌더링 과정은 다음과 같습니다. <code>string</code> 타입의 태그를 가진 <code>ReactElement</code>를 통해 DOM <code>Element</code> 인스턴스가 생성되며 문서에 삽입됩니다.</p>
 <h2><a class="anchor" name="--"></a>형식 타입 정의 <a class="hash-link" href="#--">#</a></h2>
 <p><strong>진입점</strong></p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">React.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
+<div class="highlight"><pre><code class="language-text" data-lang="text">ReactDOM.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
 </code></pre></div>
 <p><strong>노드와 엘리먼트</strong></p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">type ReactNode = ReactElement | ReactFragment | ReactText;

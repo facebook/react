@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -418,7 +411,7 @@
 
 <p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single child element. This child element can be either a virtual representation of a native DOM component (such as <code>&lt;div /&gt;</code> or <code>React.DOM.div()</code>) or another composite component that you&#39;ve defined yourself.</p>
 
-<p>You can also return <code>null</code> or <code>false</code> to indicate that you don&#39;t want anything rendered. Behind the scenes, React renders a <code>&lt;noscript&gt;</code> tag to work with our current diffing algorithm. When returning <code>null</code> or <code>false</code>, <code>React.findDOMNode(this)</code> will return <code>null</code>.</p>
+<p>You can also return <code>null</code> or <code>false</code> to indicate that you don&#39;t want anything rendered. Behind the scenes, React renders a <code>&lt;noscript&gt;</code> tag to work with our current diffing algorithm. When returning <code>null</code> or <code>false</code>, <code>ReactDOM.findDOMNode(this)</code> will return <code>null</code>.</p>
 
 <p>The <code>render()</code> function should be <em>pure</em>, meaning that it does not modify component state, it returns the same result each time it&#39;s invoked, and it does not read from or write to the DOM or otherwise interact with the browser (e.g., by using <code>setTimeout</code>). If you need to interact with the browser, perform your work in <code>componentDidMount()</code> or the other lifecycle methods instead. Keeping <code>render()</code> pure makes server rendering more practical and makes components easier to think about.</p>
 <h3><a class="anchor" name="getinitialstate"></a>getInitialState <a class="hash-link" href="#getinitialstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
@@ -456,15 +449,15 @@
 <p>The <code>displayName</code> string is used in debugging messages. JSX sets this value automatically; see <a href="/react/docs/jsx-in-depth.html#the-transform">JSX in Depth</a>.</p>
 <h2><a class="anchor" name="lifecycle-methods"></a>Lifecycle Methods <a class="hash-link" href="#lifecycle-methods">#</a></h2>
 <p>Various methods are executed at specific points in a component&#39;s lifecycle.</p>
-<h3><a class="anchor" name="mounting-componentwillmount"></a>Mounting: componentWillMount <a class="hash-link" href="#mounting-componentwillmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
+<h3><a class="anchor" name="mounting-componentwillmount"></a>Mounting: componentWillMount <a class="hash-link" href="#mounting-componentwillmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked once, both on the client and server, immediately before the initial rendering occurs. If you call <code>setState</code> within this method, <code>render()</code> will see the updated state and will be executed only once despite the state change.</p>
-<h3><a class="anchor" name="mounting-componentdidmount"></a>Mounting: componentDidMount <a class="hash-link" href="#mounting-componentdidmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">()</span>
+<h3><a class="anchor" name="mounting-componentdidmount"></a>Mounting: componentDidMount <a class="hash-link" href="#mounting-componentdidmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentDidMount</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via <code>React.findDOMNode(this)</code>. The <code>componentDidMount()</code> method of child components is invoked before that of parent components.</p>
+<p>Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, you can access any refs to your children (e.g., to access the underlying DOM representation). The <code>componentDidMount()</code> method of child components is invoked before that of parent components.</p>
 
 <p>If you want to integrate with other JavaScript frameworks, set timers using <code>setTimeout</code> or <code>setInterval</code>, or send AJAX requests, perform those operations in this method.</p>
-<h3><a class="anchor" name="updating-componentwillreceiveprops"></a>Updating: componentWillReceiveProps <a class="hash-link" href="#updating-componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span>
+<h3><a class="anchor" name="updating-componentwillreceiveprops"></a>Updating: componentWillReceiveProps <a class="hash-link" href="#updating-componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillReceiveProps</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -499,7 +492,7 @@ transition to the new props and state will not require a component update.</p>
 <p>By default, <code>shouldComponentUpdate</code> always returns <code>true</code> to prevent subtle bugs when <code>state</code> is mutated in place, but if you are careful to always treat <code>state</code> as immutable and to read only from <code>props</code> and <code>state</code> in <code>render()</code> then you can override <code>shouldComponentUpdate</code> with an implementation that compares the old props and state to their replacements.</p>
 
 <p>If performance is a bottleneck, especially with dozens or hundreds of components, use <code>shouldComponentUpdate</code> to speed up your app.</p>
-<h3><a class="anchor" name="updating-componentwillupdate"></a>Updating: componentWillUpdate <a class="hash-link" href="#updating-componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span>
+<h3><a class="anchor" name="updating-componentwillupdate"></a>Updating: componentWillUpdate <a class="hash-link" href="#updating-componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillUpdate</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -512,14 +505,14 @@ transition to the new props and state will not require a component update.</p>
 
 <p>You <em>cannot</em> use <code>this.setState()</code> in this method. If you need to update state in response to a prop change, use <code>componentWillReceiveProps</code> instead.</p>
 </blockquote>
-<h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span>
+<h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentDidUpdate</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately after the component&#39;s updates are flushed to the DOM. This method is not called for the initial render.</p>
 
 <p>Use this as an opportunity to operate on the DOM when the component has been updated.</p>
-<h3><a class="anchor" name="unmounting-componentwillunmount"></a>Unmounting: componentWillUnmount <a class="hash-link" href="#unmounting-componentwillunmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
+<h3><a class="anchor" name="unmounting-componentwillunmount"></a>Unmounting: componentWillUnmount <a class="hash-link" href="#unmounting-componentwillunmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillUnmount</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked immediately before a component is unmounted from the DOM.</p>
 

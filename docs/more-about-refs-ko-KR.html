@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -472,12 +465,12 @@
 </ol>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
 </code></pre></div>
-<p><code>React.findDOMNode(this.refs.myInput)</code>를 호출해 컴포넌트의 DOM 노드에 접근할 수 있습니다.</p>
+<p><code>this.refs.myInput</code>를 호출해 컴포넌트의 DOM 노드에 접근할 수 있습니다.</p>
 <h2><a class="anchor" name="ref--"></a>ref 콜백 어트리뷰트 <a class="hash-link" href="#ref--">#</a></h2>
 <p><code>ref</code> 어트리뷰트는 이름 대신 콜백 함수가 될 수도 있습니다. 이 콜백은 컴포넌트가 마운트 된 뒤 즉시 실행될 것입니다. 참조된 컴포넌트는 매개 변수로 전달되며 콜백은 이를 즉시 사용하거나, 앞으로 사용하기 위해 참조를 저장해 놓거나, 혹은 둘 다 할 것입니다.</p>
 
 <p><code>render</code>에서 반환한 모든 것에 간단하게 <code>ref</code> 어트리뷰트를 할당할 수 있습니다:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span> <span class="na">React</span><span class="err">.</span><span class="na">findDOMNode</span><span class="err">(</span><span class="na">component</span><span class="err">).</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span><span class="na">component</span><span class="err">.</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
 </code></pre></div><h2><a class="anchor" name="-"></a>예제 완성하기 <a class="hash-link" href="#-">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
@@ -489,7 +482,7 @@
       <span class="c1">// input을 비워준다</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
         <span class="c1">// 이 코드는 컴포넌트가 다시 렌더 된 다음 실행됩니다</span>
-        <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// 짠! 포커스 됨!</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// 짠! 포커스 됨!</span>
       <span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -514,7 +507,7 @@
 <h3><a class="anchor" name=""></a>이점: <a class="hash-link" href="#">#</a></h3>
 <ul>
 <li>컴포넌트 클래스에 public 메소드(ex. Typeahead의 reset)를 선언할 수 있으며 refs를 통해 그를 호출할 수 있습니다. (ex. <code>this.refs.myTypeahead.reset()</code>)</li>
-<li>DOM을 측정하기 위해서는 거의 항상 <code>&lt;input /&gt;</code> 같은 &quot;기본&quot; 컴포넌트를 다루고 <code>React.findDOMNode(this.refs.myInput)</code>를 통해 그 기저의 DOM 노드에 접근해야 합니다. Refs는 이 일을 확실하게 수행하는 몇 안 되는 실용적인 방법의 하나입니다.</li>
+<li>DOM을 측정하기 위해서는 거의 항상 <code>&lt;input /&gt;</code> 같은 &quot;기본&quot; 컴포넌트를 다루고 <code>this.refs.myInput</code>를 통해 그 기저의 DOM 노드에 접근해야 합니다. Refs는 이 일을 확실하게 수행하는 몇 안 되는 실용적인 방법의 하나입니다.</li>
 <li>Refs는 자동으로 관리합니다! 자식이 파괴되면, 그의 ref도 마찬가지로 파괴됩니다. 참조를 유지하기 위해 뭔가 미친 짓을 하지 않는 한, 메모리 걱정은 하지 않아도 됩니다.</li>
 </ul>
 <h3><a class="anchor" name=""></a>주의: <a class="hash-link" href="#">#</a></h3>

@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -416,9 +409,9 @@
 <span class="kr">boolean</span> <span class="nx">isTrusted</span>
 <span class="nx">DOMEvent</span> <span class="nx">nativeEvent</span>
 <span class="k">void</span> <span class="nx">preventDefault</span><span class="p">()</span>
-<span class="k">void</span> <span class="nx">isDefaultPrevented</span><span class="p">()</span>
+<span class="kr">boolean</span> <span class="nx">isDefaultPrevented</span><span class="p">()</span>
 <span class="k">void</span> <span class="nx">stopPropagation</span><span class="p">()</span>
-<span class="k">void</span> <span class="nx">isPropagationStopped</span><span class="p">()</span>
+<span class="kr">boolean</span> <span class="nx">isPropagationStopped</span><span class="p">()</span>
 <span class="nx">DOMEventTarget</span> <span class="nx">target</span>
 <span class="nx">number</span> <span class="nx">timeStamp</span>
 <span class="nx">string</span> <span class="nx">type</span>
@@ -426,7 +419,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>As of v0.12, returning <code>false</code> from an event handler will no longer stop event propagation. Instead, <code>e.stopPropagation()</code> or <code>e.preventDefault()</code> should be triggered manually, as appropriate.</p>
+<p>As of v0.14, returning <code>false</code> from an event handler will no longer stop event propagation. Instead, <code>e.stopPropagation()</code> or <code>e.preventDefault()</code> should be triggered manually, as appropriate.</p>
 </blockquote>
 <h2><a class="anchor" name="event-pooling"></a>Event pooling <a class="hash-link" href="#event-pooling">#</a></h2>
 <p>The <code>SyntheticEvent</code> is pooled. This means that the <code>SyntheticEvent</code> object will be reused and all properties will be nullified after the event callback has been invoked.<br>
@@ -468,17 +461,17 @@ different browsers.</p>
 </code></pre></div>
 <p>Properties:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
-<span class="nb">Number</span> <span class="nx">charCode</span>
+<span class="nx">number</span> <span class="nx">charCode</span>
 <span class="kr">boolean</span> <span class="nx">ctrlKey</span>
-<span class="kd">function</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
-<span class="nb">String</span> <span class="nx">key</span>
-<span class="nb">Number</span> <span class="nx">keyCode</span>
-<span class="nb">String</span> <span class="nx">locale</span>
-<span class="nb">Number</span> <span class="nx">location</span>
+<span class="kr">boolean</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+<span class="nx">string</span> <span class="nx">key</span>
+<span class="nx">number</span> <span class="nx">keyCode</span>
+<span class="nx">string</span> <span class="nx">locale</span>
+<span class="nx">number</span> <span class="nx">location</span>
 <span class="kr">boolean</span> <span class="nx">metaKey</span>
 <span class="kr">boolean</span> <span class="nx">repeat</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
-<span class="nb">Number</span> <span class="nx">which</span>
+<span class="nx">number</span> <span class="nx">which</span>
 </code></pre></div><h3><a class="anchor" name="focus-events"></a>Focus Events <a class="hash-link" href="#focus-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onFocus onBlur
@@ -496,27 +489,24 @@ different browsers.</p>
 onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 </code></pre></div>
-<p>The <code>onMouseEnter</code> and <code>onMouseLeave</code> events propagate from the component being left to the one being entered instead of ordinary bubbling and do not have a capture phase.</p>
+<p>The <code>onMouseEnter</code> and <code>onMouseLeave</code> events propagate from the element being left to the one being entered instead of ordinary bubbling and do not have a capture phase.</p>
 
 <p>Properties:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
-<span class="nb">Number</span> <span class="nx">button</span>
-<span class="nb">Number</span> <span class="nx">buttons</span>
-<span class="nb">Number</span> <span class="nx">clientX</span>
-<span class="nb">Number</span> <span class="nx">clientY</span>
+<span class="nx">number</span> <span class="nx">button</span>
+<span class="nx">number</span> <span class="nx">buttons</span>
+<span class="nx">number</span> <span class="nx">clientX</span>
+<span class="nx">number</span> <span class="nx">clientY</span>
 <span class="kr">boolean</span> <span class="nx">ctrlKey</span>
-<span class="kd">function</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+<span class="kr">boolean</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
 <span class="kr">boolean</span> <span class="nx">metaKey</span>
-<span class="nb">Number</span> <span class="nx">pageX</span>
-<span class="nb">Number</span> <span class="nx">pageY</span>
+<span class="nx">number</span> <span class="nx">pageX</span>
+<span class="nx">number</span> <span class="nx">pageY</span>
 <span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
-<span class="nb">Number</span> <span class="nx">screenX</span>
-<span class="nb">Number</span> <span class="nx">screenY</span>
+<span class="nx">number</span> <span class="nx">screenX</span>
+<span class="nx">number</span> <span class="nx">screenY</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 </code></pre></div><h3><a class="anchor" name="touch-events"></a>Touch events <a class="hash-link" href="#touch-events">#</a></h3>
-<p>To enable touch events, call <code>React.initializeTouchEvents(true)</code> before
-rendering any component.</p>
-
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onTouchCancel onTouchEnd onTouchMove onTouchStart
 </code></pre></div>
@@ -524,7 +514,7 @@ rendering any component.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
 <span class="nx">DOMTouchList</span> <span class="nx">changedTouches</span>
 <span class="kr">boolean</span> <span class="nx">ctrlKey</span>
-<span class="kd">function</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+<span class="kr">boolean</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
 <span class="kr">boolean</span> <span class="nx">metaKey</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 <span class="nx">DOMTouchList</span> <span class="nx">targetTouches</span>
@@ -534,17 +524,20 @@ rendering any component.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onScroll
 </code></pre></div>
 <p>Properties:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nb">Number</span> <span class="nx">detail</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">number</span> <span class="nx">detail</span>
 <span class="nx">DOMAbstractView</span> <span class="nx">view</span>
 </code></pre></div><h3><a class="anchor" name="wheel-events"></a>Wheel Events <a class="hash-link" href="#wheel-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onWheel
 </code></pre></div>
 <p>Properties:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nb">Number</span> <span class="nx">deltaMode</span>
-<span class="nb">Number</span> <span class="nx">deltaX</span>
-<span class="nb">Number</span> <span class="nx">deltaY</span>
-<span class="nb">Number</span> <span class="nx">deltaZ</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">number</span> <span class="nx">deltaMode</span>
+<span class="nx">number</span> <span class="nx">deltaX</span>
+<span class="nx">number</span> <span class="nx">deltaY</span>
+<span class="nx">number</span> <span class="nx">deltaZ</span>
+</code></pre></div><h3><a class="anchor" name="media-events"></a>Media Events <a class="hash-link" href="#media-events">#</a></h3>
+<p>Event names:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
 </code></pre></div><h3><a class="anchor" name="image-events"></a>Image Events <a class="hash-link" href="#image-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onLoad onError

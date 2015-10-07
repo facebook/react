@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React.render and the Top Level React API | React</title>
+  <title>ReactDOM.render and the Top Level React API | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React.render and the Top Level React API | React">
+  <meta property="og:title" content="ReactDOM.render and the Top Level React API | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/blog/2015/10/01/react-render-and-top-level-api.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -66,7 +67,9 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html" class="active">React.render and the Top Level React API</a></li>
+        <li><a href="/react/blog/2015/10/07/react-v0.14.html">React v0.14</a></li>
+      
+        <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html" class="active">ReactDOM.render and the Top Level React API</a></li>
       
         <li><a href="/react/blog/2015/09/14/community-roundup-27.html">Community Round-up #27 &ndash; Relay Edition</a></li>
       
@@ -84,8 +87,6 @@
       
         <li><a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating JSTransform and react-tools</a></li>
       
-        <li><a href="/react/blog/2015/05/22/react-native-release-process.html">React Native Release Process</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
@@ -94,10 +95,9 @@
   <div class="inner-content">
     
 
-
 <h1>
 
-  React.render and the Top Level React API
+  ReactDOM.render and the Top Level React API
 
 </h1>
 

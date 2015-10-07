@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -404,7 +397,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p><code>React.addons</code> is where we park some useful utilities for building React apps. <strong>These should be considered experimental</strong> but will eventually be rolled into core or a blessed utilities library:</p>
+    <p>The React add-ons are a collection of useful utility modules for building React apps. <strong>These should be considered experimental</strong> and tend to change more often than the core.</p>
 
 <ul>
 <li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
@@ -413,7 +406,6 @@
 <li><a href="create-fragment.html"><code>createFragment</code></a>, to create a set of externally-keyed children.</li>
 <li><a href="update.html"><code>update</code></a>, a helper function that makes dealing with immutable data in JavaScript easier.</li>
 <li><a href="pure-render-mixin.html"><code>PureRenderMixin</code></a>, a performance booster under certain situations.</li>
-<li>(DEPRECATED) <a href="class-name-manipulation.html"><code>classSet</code></a>, for manipulating the DOM <code>class</code> string a bit more cleanly.</li>
 </ul>
 
 <p>The add-ons below are in the development (unminified) version of React only:</p>
@@ -423,9 +415,7 @@
 <li><a href="perf.html"><code>Perf</code></a>, for measuring performance and giving you hint where to optimize.</li>
 </ul>
 
-<p>To get the add-ons, use <code>react-with-addons.js</code> (and its minified counterpart) rather than the common <code>react.js</code>.</p>
-
-<p>When using the react package from npm, simply <code>require(&#39;react/addons&#39;)</code> instead of <code>require(&#39;react&#39;)</code> to get React with all of the add-ons.</p>
+<p>To get the add-ons, install them individually from npm (e.g., <code>npm install react-addons-pure-render-mixin</code>). We don&#39;t support using the addons if you&#39;re not using npm.</p>
 
 
     <div class="docs-prevnext">

@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -404,7 +397,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>이 문서의 원본은 <a href="/react/blog">공식 블로그</a>의 <a href="/react/blog/2013/11/05/thinking-in-react.html">포스팅</a> 입니다.</p>
+    <p>Pete Hunt의 글입니다.</p>
 
 <p>제가 생각하기에, React는 JavaScript로 크고 빠른 웹 애플리케이션을 만드는데 최고입니다. 페이스북과 인스타그램에서 우리에게 잘 맞도록 조정되어 왔습니다.</p>
 
@@ -468,7 +461,7 @@
 
 <p>껍데기부터 혹은 속알맹이부터 만들 수 있습니다. 즉 계층구조상 위에서부터 (<code>FilterableProductTable</code> 부터) 혹은 아래에서부터 (<code>ProductRow</code>), 어느 방향에서든 시작해도 됩니다. 통상 큰 프로젝트에서는 계층구조상 위에서부터 시작하는 것이 쉽고, 테스트를 작성할때는, 아래에서부터 시작하는 것이 쉽습니다.</p>
 
-<p>이 단계의 결과, 자료 모델을 그리는 재활용 가능한 컴포넌트의 라이브러리를 갖게 되었습니다. 정적버전 이후로 컴포넌트들은 오직 <code>render()</code> 메소드만 갖고 있습니다. 계층구조상 가장 위의 컴포넌트 (<code>FilterableProductTable</code>)은 자료 모델을 prop으로 취할 것입니다. 자료 모델이 변했을 때, <code>React.render()</code>를 다시 부르면 UI가 업데이트 됩니다. 어떻게 UI가 업데이트 되는지 참 알기 쉽습니다. 자료가 바뀌어도 처리해야 할 복잡한 일이 아무것도 없습니다. React의 <strong>단일 방향 자료 흐름</strong> (혹은 <em>단일방향 바인딩</em>)이 모든것을 모듈식으로, 추론하기 쉽게, 그리고 빠르게 유지해줍니다.</p>
+<p>이 단계의 결과, 자료 모델을 그리는 재활용 가능한 컴포넌트의 라이브러리를 갖게 되었습니다. 정적버전 이후로 컴포넌트들은 오직 <code>render()</code> 메소드만 갖고 있습니다. 계층구조상 가장 위의 컴포넌트 (<code>FilterableProductTable</code>)은 자료 모델을 prop으로 취할 것입니다. 자료 모델이 변했을 때, <code>ReactDOM.render()</code>를 다시 부르면 UI가 업데이트 됩니다. 어떻게 UI가 업데이트 되는지 참 알기 쉽습니다. 자료가 바뀌어도 처리해야 할 복잡한 일이 아무것도 없습니다. React의 <strong>단일 방향 자료 흐름</strong> (혹은 <em>단일방향 바인딩</em>)이 모든것을 모듈식으로, 추론하기 쉽게, 그리고 빠르게 유지해줍니다.</p>
 
 <p>이 단계를 진행하는 데에 도움이 필요하시다면, <a href="/react/docs/getting-started-ko-KR.html">React 문서</a>를 참조하세요.</p>
 <h3><a class="anchor" name="-props-vs-state"></a>잠시만: props vs state <a class="hash-link" href="#-props-vs-state">#</a></h3>

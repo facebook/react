@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -405,8 +398,8 @@
     <div class="subHeader"></div>
 
     <h2><a class="anchor" name="react.component"></a>React.Component <a class="hash-link" href="#react.component">#</a></h2>
-<p>React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 만듭니다. 이때 만들어진 인스턴스는 이후의 렌더링에서 다시 사용되고 컴포넌트의 메소드들에서 <code>this</code> 변수로 접근할 수 있습니다. React 외부에서 React 컴포넌트의 핸들을 얻는 방법은 <code>React.render</code>의 리턴값을 저장하는 것이 유일합니다. 다른 컴포넌트 안에서 비슷한 결과를 얻으려면 <a href="/react/docs/more-about-refs-ko-KR.html">refs</a>를 사용해야 합니다.</p>
-<h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="kd">function</span><span class="o">|</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<p>React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 만듭니다. 이때 만들어진 인스턴스는 이후의 렌더링에서 다시 사용되고 컴포넌트의 메소드들에서 <code>this</code> 변수로 접근할 수 있습니다. React 외부에서 React 컴포넌트의 핸들을 얻는 방법은 <code>ReactDOM.render</code>의 리턴값을 저장하는 것이 유일합니다. 다른 컴포넌트 안에서 비슷한 결과를 얻으려면 <a href="/react/docs/more-about-refs-ko-KR.html">refs</a>를 사용해야 합니다.</p>
+<h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setState</span><span class="p">(</span><span class="kd">function</span><span class="o">|</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p><code>nextState</code>를 현재 state에 합칩니다. 이벤트 핸들러와 서버 요청 콜백에서 UI 업데이트를 발생시키기 위해 이 메소드를 주로 사용합니다.</p>
 
@@ -433,7 +426,7 @@
 
 <p><code>setState()</code>는 <code>shouldComponentUpdate()</code>에 조건부 렌더링 로직이 구현되어 있지 않다면 항상 재렌더링을 발생시킵니다. 변경 가능한 객체를 사용하고 있고 조건부 렌더링 로직을 <code>shouldComponentUpdate()</code>에 구현할 수 없는 경우라면 새로운 state가 이전 state와 달라지는 경우에만 <code>setState()</code>를 호출하여 불필요한 재렌더링을 피할 수 있습니다.</p>
 </blockquote>
-<h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p><code>setState()</code>와 비슷하지만 기존에 존재하는 state 중 nextState에 없는 키는 모두 삭제됩니다.</p>
 
@@ -442,7 +435,7 @@
 
 <p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
 </blockquote>
-<h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>기본적으로, 컴포넌트의 state나 props가 변경되면, 컴포넌트는 다시 렌더됩니다. 하지만 이런 변경이 묵시적이거나(예를들어 객체의 변경 없이 깊이 있는 데이터만 변경된 경우) <code>render()</code> 함수가 다른 값에 의존하는 경우, <code>forceUpdate()</code>를 호출해 React에게 <code>render()</code>를 다시 실행할 필요가 있다고 알릴 수 있습니다.</p>
 
@@ -456,11 +449,11 @@
 <blockquote>
 <p>주의:</p>
 
-<p>getDOMNode는 <a href="/react/docs/top-level-api.html#react.finddomnode">React.findDOMNode()</a>로 교체되었습니다.</p>
+<p>getDOMNode는 <a href="/react/docs/top-level-api.html#reactdom.finddomnode">ReactDOM.findDOMNode()</a>로 교체되었습니다.</p>
 
 <p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
 </blockquote>
-<h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">bool</span> <span class="nx">isMounted</span><span class="p">()</span>
+<h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p><code>isMounted()</code>는 컴포넌트가 DOM에 렌더링되었으면 true를, 아니면 false를 리턴합니다. 비동기적으로 <code>setState()</code>나 <code>forceUpdate()</code>를 호출할 때 이 메소드를 사용하여 오류를 방지할 수 있습니다.</p>
 
@@ -469,22 +462,22 @@
 
 <p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
 </blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
-<p>외부 JavaScript 애플리케이션과 연동하는 경우 <code>React.render()</code>로 렌더링된 React 컴포넌트에 변경을 알리고 싶을 때가 있습니다.</p>
+<p>외부 JavaScript 애플리케이션과 연동하는 경우 <code>ReactDOM.render()</code>로 렌더링된 React 컴포넌트에 변경을 알리고 싶을 때가 있습니다.</p>
 
 <p>최상위 컴포넌트에서 <code>setProps()</code>를 호출하면 프로퍼티를 변경하고 렌더를 다시 발생합니다. 거기에 콜백 함수를 넘기면 <code>setProps</code>가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.</p>
 
 <blockquote>
 <p>주의:</p>
 
-<p>가능하다면 이것 대신 <code>React.render()</code>를 같은 노드에서 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)</p>
+<p>가능하다면 이것 대신 <code>ReactDOM.render()</code>를 같은 노드에서 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)</p>
 
-<p>이 메소드는 최상위 컴포넌트에만 호출 가능합니다. 다시 말해, <code>React.render()</code>에 바로 넘긴 컴포넌트에서만 사용할 수 있고 자식에서는 불가능합니다. 자식 컴포넌트에 <code>setProps()</code>를 사용하고 싶다면, 그 대신 반응적인 업데이트의 장점을 활용하여 <code>render()</code> 안에서 자식 컴포넌트를 만들 때 새로운 prop을 넘기세요.</p>
+<p>이 메소드는 최상위 컴포넌트에만 호출 가능합니다. 다시 말해, <code>ReactDOM.render()</code>에 바로 넘긴 컴포넌트에서만 사용할 수 있고 자식에서는 불가능합니다. 자식 컴포넌트에 <code>setProps()</code>를 사용하고 싶다면, 그 대신 반응적인 업데이트의 장점을 활용하여 <code>render()</code> 안에서 자식 컴포넌트를 만들 때 새로운 prop을 넘기세요.</p>
 
 <p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
 </blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p><code>setProps()</code>와 비슷하지만 두 객체를 합치는 대신 이전에 존재하던 props를 삭제합니다.</p>
 

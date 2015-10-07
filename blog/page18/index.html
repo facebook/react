@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -66,7 +67,9 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">React.render and the Top Level React API</a></li>
+        <li><a href="/react/blog/2015/10/07/react-v0.14.html">React v0.14</a></li>
+      
+        <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">ReactDOM.render and the Top Level React API</a></li>
       
         <li><a href="/react/blog/2015/09/14/community-roundup-27.html">Community Round-up #27 &ndash; Relay Edition</a></li>
       
@@ -84,8 +87,6 @@
       
         <li><a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating JSTransform and react-tools</a></li>
       
-        <li><a href="/react/blog/2015/05/22/react-native-release-process.html">React Native Release Process</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
@@ -96,6 +97,113 @@
       <div class="post-list-item">
         
 
+<h1>
+
+  <a href="/react/blog/2013/06/05/why-react.html">Why did we build React?</a>
+
+</h1>
+
+<p class="meta">
+  June  5, 2013
+  by
+  
+    <a href="https://twitter.com/floydophone">Pete Hunt</a>
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>There are a lot of JavaScript MVC frameworks out there. Why did we build React
+and why would you want to use it?</p>
+<h2><a class="anchor" name="react-isnt-an-mvc-framework."></a>React isn&#39;t an MVC framework. <a class="hash-link" href="#react-isnt-an-mvc-framework.">#</a></h2>
+<p>React is a library for building composable user interfaces. It encourages
+the creation of reusable UI components which present data that changes over
+time.</p>
+<h2><a class="anchor" name="react-doesnt-use-templates."></a>React doesn&#39;t use templates. <a class="hash-link" href="#react-doesnt-use-templates.">#</a></h2>
+<p>Traditionally, web application UIs are built using templates or HTML directives.
+These templates dictate the full set of abstractions that you are allowed to use
+to build your UI.</p>
+
+<p>React approaches building user interfaces differently by breaking them into
+<strong>components</strong>. This means React uses a real, full featured programming language
+to render views, which we see as an advantage over templates for a few reasons:</p>
+
+<ul>
+<li><strong>JavaScript is a flexible, powerful programming language</strong> with the ability
+to build abstractions. This is incredibly important in large applications.</li>
+<li>By unifying your markup with its corresponding view logic, React can actually
+make views <strong>easier to extend and maintain</strong>.</li>
+<li>By baking an understanding of markup and content into JavaScript, there&#39;s
+<strong>no manual string concatenation</strong> and therefore less surface area for XSS
+vulnerabilities.</li>
+</ul>
+
+<p>We&#39;ve also created <a href="/react/docs/jsx-in-depth.html">JSX</a>, an optional syntax
+extension, in case you prefer the readability of HTML to raw JavaScript.</p>
+<h2><a class="anchor" name="reactive-updates-are-dead-simple."></a>Reactive updates are dead simple. <a class="hash-link" href="#reactive-updates-are-dead-simple.">#</a></h2>
+<p>React really shines when your data changes over time.</p>
+
+<p>In a traditional JavaScript application, you need to look at what data changed
+and imperatively make changes to the DOM to keep it up-to-date. Even AngularJS,
+which provides a declarative interface via directives and data binding <a href="https://code.angularjs.org/1.0.8/docs/guide/directive#reasonsbehindthecompilelinkseparation">requires
+a linking function to manually update DOM nodes</a>.</p>
+
+<p>React takes a different approach.</p>
+
+<p>When your component is first initialized, the <code>render</code> method is called,
+generating a lightweight representation of your view. From that representation,
+a string of markup is produced, and injected into the document. When your data
+changes, the <code>render</code> method is called again. In order to perform updates as
+efficiently as possible, we diff the return value from the previous call to
+<code>render</code> with the new one, and generate a minimal set of changes to be applied
+to the DOM.</p>
+
+<blockquote>
+<p>The data returned from <code>render</code> is neither a string nor a DOM node -- it&#39;s a
+lightweight description of what the DOM should look like.</p>
+</blockquote>
+
+<p>We call this process <strong>reconciliation</strong>. Check out
+<a href="http://jsfiddle.net/fv6RD/3/">this jsFiddle</a> to see an example of
+reconciliation in action.</p>
+
+<p>Because this re-render is so fast (around 1ms for TodoMVC), the developer
+doesn&#39;t need to explicitly specify data bindings. We&#39;ve found this approach
+makes it easier to build apps.</p>
+<h2><a class="anchor" name="html-is-just-the-beginning."></a>HTML is just the beginning. <a class="hash-link" href="#html-is-just-the-beginning.">#</a></h2>
+<p>Because React has its own lightweight representation of the document, we can do
+some pretty cool things with it:</p>
+
+<ul>
+<li>Facebook has dynamic charts that render to <code>&lt;canvas&gt;</code> instead of HTML.</li>
+<li>Instagram is a &quot;single page&quot; web app built entirely with React and
+<code>Backbone.Router</code>. Designers regularly contribute React code with JSX.</li>
+<li>We&#39;ve built internal prototypes that run React apps in a web worker and use
+React to drive <strong>native iOS views</strong> via an Objective-C bridge.</li>
+<li>You can run React
+<a href="https://github.com/petehunt/react-server-rendering-example">on the server</a>
+for SEO, performance, code sharing and overall flexibility.</li>
+<li>Events behave in a consistent, standards-compliant way in all browsers
+(including IE8) and automatically use
+<a href="http://davidwalsh.name/event-delegate">event delegation</a>.</li>
+</ul>
+
+<p>Head on over to <a href="/react">facebook.github.io/react</a> to check out what we have
+built. Our documentation is geared towards building apps with the framework,
+but if you are interested in the nuts and bolts
+<a href="/react/support.html">get in touch</a> with us!</p>
+
+<p>Thanks for reading!</p>
+
+</div>
+
+
+
+      </div>
+    
+      <div class="post-list-item">
+        
 
 <h1>
 

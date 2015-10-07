@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Video | React</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="Video | React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/videos-it-IT.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+          React
+        </a>
+        <ul class="nav-site nav-site-internal">
+          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
+          <li><a href="/react/support.html">Support</a></li>
+          <li><a href="/react/downloads.html">Download</a></li>
+          <li><a href="/react/blog/">Blog</a></li>
+        </ul>
+
+        <ul class="nav-site nav-site-external">
+          <li><a href="https://github.com/facebook/react">GitHub</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">Getting Started</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">Tutorial</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Community Resources</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/videos.html">Videos</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/complementary-tools.html">Complementary Tools</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/examples.html">Examples</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">Why React?</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">Multiple Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">Top-Level API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html">Component API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">Event System</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">DOM Differences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Flux</h3>
+      <ul>
+        
+          <li>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            
+          </li>
+        
+          <li>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Tips Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tips</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tips/introduction.html">Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>
+      Video
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/videos.it-IT.md" target="_blank">Edit on GitHub</a>
+    </h1>
+    <div class="subHeader"></div>
+
+    <h3><a class="anchor" name="riconsiderare-le-best-practice---jsconf.eu"></a>Riconsiderare le best practice - JSConf.eu <a class="hash-link" href="#riconsiderare-le-best-practice---jsconf.eu">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
+
+<p>&quot;A Facebook e Instagram, con React stiamo provando a spingerci oltre i limiti di ciò che è possibile realizzare sul web. Il mio talk comincerà con una breve introduzione al framework, e poi approfondirà tre argomenti controversi: Gettare via la nozione dei template e costruire le viste con JavaScript, effettuare il “ri-rendering” dell&#39;intera applicazione quando i dati cambiano, e un&#39;implementazione leggera del DOM e degli eventi.&quot; -- <a href="http://www.petehunt.net/">Pete Hunt</a></p>
+
+<hr>
+<h3><a class="anchor" name="pensare-in-react---tagtree.tv"></a>Pensare in react - tagtree.tv <a class="hash-link" href="#pensare-in-react---tagtree.tv">#</a></h3>
+<p>Un video di <a href="http://tagtree.tv/">tagtree.tv</a> che espone i principi di <a href="/react/docs/thinking-in-react.html">Pensare in React</a> mentre costruisci una semplice applicazione
+<figure><a href="http://tagtree.tv/thinking-in-react"><img src="/react/img/docs/thinking-in-react-tagtree.png" alt=""></a></figure></p>
+
+<hr>
+<h3><a class="anchor" name="i-segreti-del-dom-virtuale---mtnwest-js"></a>I Segreti del DOM Virtuale - MtnWest JS <a class="hash-link" href="#i-segreti-del-dom-virtuale---mtnwest-js">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
+
+<p>&quot;In questo talk discuterò perché abbiamo costruito un DOM virtuale, i vantaggi rispetto ad altri sistemi, e la sua rilevanza per il futuro della tecnologia dei browser.&quot; -- <a href="http://www.petehunt.net/">Pete Hunt</a></p>
+
+<hr>
+<h3><a class="anchor" name="pensare-in-grande-con-react"></a>Pensare in grande con React <a class="hash-link" href="#pensare-in-grande-con-react">#</a></h3>
+<p>&quot;Sulla carta, tutti questi framework JS sembrano promettenti: implementazioni pulite, design veloce del codice, esecuzione perfetta. Ma che succede quando metti Javascript sotto stress? Che succede se gli dài in pasto 6 megabyte di codice? In questo talk investigheremo come si comporta React in situazioni di stress elevato, e come ha aiutato il nostro team a costruire codice sicuro ad una scala enorme.&quot;
+<figure><a href="https://skillsmatter.com/skillscasts/5429-going-big-with-react#video"><img src="https://i.vimeocdn.com/video/481670116_650.jpg" alt=""></a></figure></p>
+
+<hr>
+<h3><a class="anchor" name="codewinds"></a>CodeWinds <a class="hash-link" href="#codewinds">#</a></h3>
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> ha parlato con <a href="http://jeff.barczewski.com/">Jeff Barczewski</a> a proposito di React nell&#39;Episodio 4 di CodeWinds.
+<figure><a href="http://codewinds.com/4"><img src="/react/img/docs/codewinds-004.png" alt=""></a></figure></p>
+
+<table width="100%"><tr><td>
+02:08 - Cos'è React e perché usarlo?<br />
+03:08 - La relazione simbiotica di ClojureScript e React<br />
+04:54 - La storia di React e il perché è stato creato<br />
+09:43 - Aggiornare una pagina web con React senza usare data binding<br />
+13:11 - Usare il DOM virtuale per cambiare il DOM del browser<br />
+13:57 - Programmare con React, rendering in HTML, canvas, ed altro<br />
+16:45 - Lavorare con i designer. Paragone con Ember ed AngularJS<br />
+21:45 - Il Compilatore JSX che unisce HTML e il javascript di React<br />
+23:50 - Autobuilding JSX e strumenti nel browser per React<br />
+24:50 - Trucchi e suggerimenti per lavorare con React, primi passi<br />
+</td><td>
+27:17 - Rendering HTML lato server con Node.js. Rendering backend<br />
+29:20 - React evoluto tramite sopravvivenza del più adatto a Facebook<br />
+30:15 - Idee per avere lo stato sul server e il client, usando web sockets.<br />
+32:05 - React-multiutente - stato mutevole distribuito usando Firebase<br />
+33:03 - Miglior debug con React usando le transizioni di stato, ripetere eventi<br />
+34:08 - Differenze con i Web Components<br />
+34:25 - Compagnie rilevanti che usano React<br />
+35:16 - Si può creare un plugin backend di React per generare PDF?<br />
+36:30 - Futuro di React, cosa viene dopo?<br />
+39:38 - Contribuire e ricevere aiuto<br />
+</td></tr></table>
+
+<p><a href="http://codewinds.com/4">Leggi le note dell&#39;episodio</a></p>
+
+<hr>
+<h3><a class="anchor" name="javascript-jabber"></a>JavaScript Jabber <a class="hash-link" href="#javascript-jabber">#</a></h3>
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> e <a href="https://github.com/jordwalke">Jordan Walke</a> hanno parlato di React in JavaScript Jabber 73.
+<figure><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="/react/img/docs/javascript-jabber.png" alt=""></a></figure></p>
+
+<table width="100%"><tr><td>
+01:34 – Introduzione di Pete Hunt<br />
+02:45 – Introduzione di Jordan Walke<br />
+04:15 – React<br />
+06:38 – 60 Frame Al Secondo<br />
+09:34 – Data Binding<br />
+12:31 – Performance<br />
+17:39 – Algoritmo di Differenza<br />
+19:36 – Manipolazione del DOM
+</td><td>
+23:06 – Supporto per node.js<br />
+24:03 – rendr<br />
+26:02 – JSX<br />
+30:31 – requestAnimationFrame<br />
+34:15 – React e le Applicazioni<br />
+38:12 – Utenti React Khan Academy<br />
+39:53 – Farlo funzionare
+</td></tr></table>
+
+<p><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">Leggi la trascrizione completa</a></p>
+
+<hr>
+<h3><a class="anchor" name="introduzione-a-react.js---facebook-seattle"></a>Introduzione a React.js - Facebook Seattle <a class="hash-link" href="#introduzione-a-react.js---facebook-seattle">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
+
+<p>Di <a href="http://tomocchino.com/">Tom Occhino</a> e <a href="https://github.com/jordwalke">Jordan Walke</a></p>
+
+<hr>
+<h3><a class="anchor" name="backbone--react--middleman-screencast"></a>Backbone + React + Middleman Screencast <a class="hash-link" href="#backbone--react--middleman-screencast">#</a></h3>
+<iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
+
+<p>Backbone è una grande maniera di interfacciare una API REST con React. Questo screencast mostra come integrare i due usando <a href="https://github.com/magalhas/backbone-react-component">Backbone-React-Component</a>. Middleman è il framework utilizzato in questo esempio, ma può essere facilmente sostituito con altri framework. Si può trovare un template supportato per questo esempio <a href="https://github.com/jbhatab/middleman-backbone-react-template">qui</a>. -- <a href="http://www.openmindedinnovations.com/">Open Minded Innovations</a></p>
+
+<hr>
+<h3><a class="anchor" name="sviluppare-interfacce-utente-con-react---super-vanjs"></a>Sviluppare Interfacce Utente Con React - Super VanJS <a class="hash-link" href="#sviluppare-interfacce-utente-con-react---super-vanjs">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
+
+<p>Di <a href="https://github.com/steveluscher">Steven Luscher</a></p>
+
+<hr>
+<h3><a class="anchor" name="introduzione-a-react---lawebspeed-meetup"></a>Introduzione a React - LAWebSpeed meetup <a class="hash-link" href="#introduzione-a-react---lawebspeed-meetup">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
+
+<p>Di <a href="http://www.phpied.com/">Stoyan Stefanov</a></p>
+
+<hr>
+<h3><a class="anchor" name="react-o-come-rendere-la-vita-pi-semplice---frontend-dev-conf-14"></a>React, o come rendere la vita più semplice - FrontEnd Dev Conf &#39;14 <a class="hash-link" href="#react-o-come-rendere-la-vita-pi-semplice---frontend-dev-conf-14">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
+
+<p><strong>In Russo</strong> di <a href="http://solovyov.net/">Alexander Solovyov</a></p>
+
+<hr>
+<h3><a class="anchor" name="programmazione-funzionale-del-dom---meteor-devshop-11"></a>&quot;Programmazione funzionale del DOM&quot; - Meteor DevShop 11 <a class="hash-link" href="#programmazione-funzionale-del-dom---meteor-devshop-11">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
+
+<hr>
+<h3><a class="anchor" name="ripensare-lo-sviluppo-di-applicazioni-web-a-facebook---facebook-f8-conference-2014"></a>&quot;Ripensare lo Sviluppo di Applicazioni Web a Facebook&quot; - Facebook F8 Conference 2014 <a class="hash-link" href="#ripensare-lo-sviluppo-di-applicazioni-web-a-facebook---facebook-f8-conference-2014">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
+
+<hr>
+<h3><a class="anchor" name="react-e-flux-costruire-applicazioni-con-un-flusso-dati-unidirezionale---forward-js-2014"></a>React e Flux: Costruire Applicazioni con un Flusso Dati Unidirezionale - Forward JS 2014 <a class="hash-link" href="#react-e-flux-costruire-applicazioni-con-un-flusso-dati-unidirezionale---forward-js-2014">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+
+<p>Gli ingegneri di Facebook <a href="https://twitter.com/fisherwebdev">Bill Fisher</a> e <a href="https://twitter.com/jingc">Jing Chen</a> parlano di Flux e React, e di come usare un&#39;architettura dell&#39;applicazione con un flusso di dati unidirezionale rende gran parte del loro codice più pulito.</p>
+
+<hr>
+<h3><a class="anchor" name="rendering-lato-server-di-applicazioni-isomorfiche-a-soundcloud"></a>Rendering Lato Server di Applicazioni Isomorfiche a SoundCloud <a class="hash-link" href="#rendering-lato-server-di-applicazioni-isomorfiche-a-soundcloud">#</a></h3>
+<iframe src="https://player.vimeo.com/video/108488724" width="650" height="365" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+<p><a href="https://github.com/zertosh">Andres Suarez</a> ci accompagna alla scoperta di come <a href="https://developers.soundcloud.com/blog/">SoundCloud</a> usa React e Flux per il rendering lato server.</p>
+
+<p><a href="https://github.com/zertosh/ssr-demo-kit">Slide e codice d&#39;esempio</a></p>
+
+<hr>
+<h3><a class="anchor" name="introduzione-a-react-native-playlist---react.js-conf-2015"></a>Introduzione a React Native (+Playlist) - React.js Conf 2015 <a class="hash-link" href="#introduzione-a-react-native-playlist---react.js-conf-2015">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+
+<p><a href="https://twitter.com/tomocchino">Tom Occhino</a> ripercorre il passato e il presente di React nel 2015, e ci mostra dove è diretto nell&#39;immediato futuro.</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/conferences-it-IT.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/complementary-tools-it-IT.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">
+        &copy; 2013&ndash;2015 Facebook Inc.<br>
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

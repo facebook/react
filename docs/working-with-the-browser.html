@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -412,42 +405,7 @@
 
 <p>Most of the time you should stay within React&#39;s &quot;faked browser&quot; world since it&#39;s more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.</p>
 <h2><a class="anchor" name="refs-and-finddomnode"></a>Refs and findDOMNode() <a class="hash-link" href="#refs-and-finddomnode">#</a></h2>
-<p>To interact with the browser, you&#39;ll need a reference to a DOM node. React has a <code>React.findDOMNode(component)</code> function which you can call to get a reference to the component&#39;s DOM node.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p><code>findDOMNode()</code> only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling <code>findDOMNode()</code> in <code>render()</code> on a component that has yet to be created) an exception will be thrown.</p>
-</blockquote>
-
-<p>In order to get a reference to a React component, you can either use <code>this</code> to get the current React component, or you can use refs to refer to a component you own. They work like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Explicitly focus the text input using the raw DOM API.</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myTextInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// The ref attribute adds a reference to the component to</span>
-    <span class="c1">// this.refs when the component is mounted.</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;myTextInput&quot;</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span>
-          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span>
-          <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Focus the text input&quot;</span>
-          <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span>
-        <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="more-about-refs"></a>More About Refs <a class="hash-link" href="#more-about-refs">#</a></h2>
-<p>To learn more about refs, including ways to use them effectively, see our <a href="/react/docs/more-about-refs.html">more about refs</a> documentation.</p>
+<p>To interact with the browser, you&#39;ll need a reference to a DOM node. You can attach a <code>ref</code> to any element, which allows you to reference the <strong>backing instance</strong> of the component.  This is useful if you need to invoke imperative functions on the component, or want to access the underlying DOM nodes.  To learn more about refs, including ways to use them effectively, see our <a href="/react/docs/more-about-refs.html">refs to components</a> documentation.</p>
 <h2><a class="anchor" name="component-lifecycle"></a>Component Lifecycle <a class="hash-link" href="#component-lifecycle">#</a></h2>
 <p>Components have three main parts of their lifecycle:</p>
 
@@ -476,11 +434,10 @@
 <li><code>componentWillUnmount()</code> is invoked immediately before a component is unmounted and destroyed. Cleanup should go here.</li>
 </ul>
 <h3><a class="anchor" name="mounted-methods"></a>Mounted Methods <a class="hash-link" href="#mounted-methods">#</a></h3>
-<p><em>Mounted</em> composite components also support the following methods:</p>
+<p><em>Mounted</em> composite components also support the following method:</p>
 
 <ul>
-<li><code>findDOMNode(): DOMElement</code> can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.</li>
-<li><code>forceUpdate()</code> can be invoked on any mounted component when you know that some deeper aspect of the component&#39;s state has changed without using <code>this.setState()</code>.</li>
+<li><code>component.forceUpdate()</code> can be invoked on any mounted component when you know that some deeper aspect of the component&#39;s state has changed without using <code>this.setState()</code>.</li>
 </ul>
 <h2><a class="anchor" name="browser-support-and-polyfills"></a>Browser Support and Polyfills <a class="hash-link" href="#browser-support-and-polyfills">#</a></h2>
 <p>At Facebook, we support older browsers, including IE8. We&#39;ve had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don&#39;t have a bunch of hacks scattered throughout our codebase and we can still expect our code to &quot;just work&quot;. For example, instead of seeing <code>+new Date()</code>, we can just write <code>Date.now()</code>. Since the open source React is the same as what we use internally, we&#39;ve carried over this philosophy of using forward thinking JS.</p>

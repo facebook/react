@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -407,14 +400,14 @@
     <p>React is usually quite fast out of the box. However, in situations where you need to squeeze every ounce of performance out of your app, it provides a <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> hook where you can add optimization hints to React&#39;s diff algorithm.</p>
 
 <p>In addition to giving you an overview of your app&#39;s overall performance, ReactPerf is a profiling tool that tells you exactly where you need to put these hooks.</p>
+<h2><a class="anchor" name="general-api"></a>General API <a class="hash-link" href="#general-api">#</a></h2>
+<p>The <code>Perf</code> object documented here is exposed as <code>require(&#39;react-addons-perf&#39;)</code> and can be used with React in development mode only. You should not include this bundle when building your app for production.</p>
 
 <blockquote>
 <p>Note:</p>
 
 <p>The dev build of React is slower than the prod build, due to all the extra logic for providing, for example, React&#39;s friendly console warnings (stripped away in the prod build). Therefore, the profiler only serves to indicate the <em>relatively</em> expensive parts of your app.</p>
 </blockquote>
-<h2><a class="anchor" name="general-api"></a>General API <a class="hash-link" href="#general-api">#</a></h2>
-<p>The <code>Perf</code> object documented here is exposed as <code>React.addons.Perf</code> when using the <code>react-with-addons.js</code> build in development mode.</p>
 <h3><a class="anchor" name="perf.start-and-perf.stop"></a><code>Perf.start()</code> and <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-and-perf.stop">#</a></h3>
 <p>Start/stop the measurement. The React operations in-between are recorded for analyses below. Operations that took an insignificant amount of time are ignored.</p>
 

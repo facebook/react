@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -435,16 +428,17 @@ radialGradient rect stop svg text tspan
 <h3><a class="anchor" name="html-attributes"></a>HTML Attributes <a class="hash-link" href="#html-attributes">#</a></h3>
 <p>These standard attributes are supported:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accept acceptCharset accessKey action allowFullScreen allowTransparency alt
-async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
-classID className colSpan cols content contentEditable contextMenu controls
-coords crossOrigin data dateTime defer dir disabled download draggable encType
-form formAction formEncType formMethod formNoValidate formTarget frameBorder
-headers height hidden high href hrefLang htmlFor httpEquiv icon id label lang
-list loop low manifest marginHeight marginWidth max maxLength media mediaGroup
-method min multiple muted name noValidate open optimum pattern placeholder
-poster preload radioGroup readOnly rel required role rowSpan rows sandbox scope
-scoped scrolling seamless selected shape size sizes span spellCheck src srcDoc
-srcSet start step style tabIndex target title type useMap value width wmode
+async autoComplete autoFocus autoPlay capture cellPadding cellSpacing charSet
+challenge checked classID className cols colSpan content contentEditable contextMenu
+controls coords crossOrigin data dateTime defer dir disabled download draggable
+encType form formAction formEncType formMethod formNoValidate formTarget frameBorder
+headers height hidden high href hrefLang htmlFor httpEquiv icon id inputMode
+keyParams keyType label lang list loop low manifest marginHeight marginWidth max
+maxLength media mediaGroup method min minlength multiple muted name noValidate open
+optimum pattern placeholder poster preload radioGroup readOnly rel required role
+rows rowSpan sandbox scope scoped scrolling seamless selected shape size sizes
+span spellCheck src srcDoc srcSet start step style summary tabIndex target title
+type useMap value width wmode wrap
 </code></pre></div>
 <p>In addition, the following non-standard attributes are supported:</p>
 
@@ -453,14 +447,18 @@ srcSet start step style tabIndex target title type useMap value width wmode
 <li><code>property</code> for <a href="http://ogp.me/">Open Graph</a> meta tags.</li>
 <li><code>itemProp itemScope itemType itemRef itemID</code> for <a href="http://schema.org/docs/gs.html">HTML5 microdata</a>.</li>
 <li><code>unselectable</code> for Internet Explorer.</li>
+<li><code>results autoSave</code> for WebKit/Blink input fields of type <code>search</code>.</li>
 </ul>
 
 <p>There is also the React-specific attribute <code>dangerouslySetInnerHTML</code> (<a href="/react/docs/special-non-dom-attributes.html">more here</a>), used for directly inserting HTML strings into a component.</p>
-<h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">clipPath cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy
-gradientTransform gradientUnits markerEnd markerMid markerStart offset opacity
-patternContentUnits patternUnits points preserveAspectRatio r rx ry
-spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version viewBox x1 x2 x y1 y2 y
+<h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">clipPath cx cy d dx dy fill fillOpacity fontFamily
+fontSize fx fy gradientTransform gradientUnits markerEnd
+markerMid markerStart offset opacity patternContentUnits
+patternUnits points preserveAspectRatio r rx ry spreadMethod
+stopColor stopOpacity stroke  strokeDasharray strokeLinecap
+strokeOpacity strokeWidth textAnchor transform version
+viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
+xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
 </code></pre></div>
 
     <div class="docs-prevnext">

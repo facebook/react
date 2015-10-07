@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -427,6 +420,12 @@
 </ul>
 
 <p>和所有 DOM 事件一样，所有的 HTML 原生组件都支持 <code>onChange</code> 属性，而且可以用来监听冒泡的 <code>change</code> 事件。               </p>
+
+<blockquote>
+<p>注意:</p>
+
+<p>对于 <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code>， <code>onChange</code> 替代 — 一般应该用来替代 — the DOM&#39;s 内建的 <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> 事件处理。</p>
+</blockquote>
 <h2><a class="anchor" name=""></a>受限组件 <a class="hash-link" href="#">#</a></h2>
 <p>设置了 <code>value</code> 的 <code>&lt;input&gt;</code> 是一个<em>受限</em>组件。 对于受限的 <code>&lt;input&gt;</code>，渲染出来的 HTML 元素始终保持 <code>value</code> 属性的值。例如：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -451,6 +450,8 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>上面的代码接受用户输入，并截取前 140 个字符。</p>
+<h3><a class="anchor" name=""></a>复选框与单选按钮的潜在问题 <a class="hash-link" href="#">#</a></h3>
+<p>当心，在力图标准化复选框与单选按钮的变换处理中，React使用<code>click</code> 事件代替 <code>change</code> 事件。在大多数情况下它们表现的如同预期，除了在<code>change</code> handler中调用<code>preventDefault</code> 。<code>preventDefault</code> 阻止了浏览器视觉上更新输入，即使<code>checked</code>被触发。变通的方式是要么移除<code>preventDefault</code>的调用，要么把<code>checked</code> 的触发放在一个<code>setTimeout</code>里。</p>
 <h2><a class="anchor" name=""></a>不受限组件 <a class="hash-link" href="#">#</a></h2>
 <p>没有设置 <code>value</code>(或者设为 <code>null</code>) 的 <code>&lt;input&gt;</code> 组件是一个<em>不受限</em>组件。对于不受限的 <code>&lt;input&gt;</code> 组件，渲染出来的元素直接反应用户输入。例如：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -458,42 +459,33 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>上面的代码将渲染出一个空值的输入框，用户输入将立即反应到元素上。和受限元素一样，使用 <code>onChange</code> 事件可以监听值的变化。</p>
-
+<h3><a class="anchor" name=""></a>默认值 <a class="hash-link" href="#">#</a></h3>
 <p>如果想给组件设置一个非空的初始值，可以使用 <code>defaultValue</code> 属性。例如：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>上面的代码渲染出来的元素和<strong>受限组件</strong>一样有一个初始值，但这个值用户可以改变并会反应到界面上。</p>
+<p>这个例子会像上面的<strong>Controlled Components</strong> 例子一样运行。</p>
 
-<p>同样地， 类型为 <code>radio</code>、<code>checkbox</code> 的<code>&lt;input&gt;</code> 支持 <code>defaultChecked</code> 属性， <code>&lt;select&gt;</code> 支持 <code>defaultValue</code> 属性。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="p">(</span>
-          <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-            <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;opt&quot;</span> <span class="nx">defaultChecked</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="mi">1</span>
-            <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;opt&quot;</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="mi">2</span>
-            <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span>
-              <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-              <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-              <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Cranberry</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-            <span class="o">&lt;</span><span class="err">/select&gt;</span>
-          <span class="o">&lt;</span><span class="err">/div&gt;</span>
-      <span class="p">);</span>
-    <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name=""></a>高级主题 <a class="hash-link" href="#">#</a></h2><h3><a class="anchor" name=""></a>为什么使用受限组件？ <a class="hash-link" href="#">#</a></h3>
-<p>在 React 中使用诸如 <code>&lt;input&gt;</code> 的表单组件时，遇到了一个在传统 HTML 中没有的挑战。</p>
+<p>同样的， <code>&lt;input&gt;</code> 支持 <code>defaultChecked</code> 、 <code>&lt;select&gt;</code> 支持 <code>defaultValue</code>.</p>
 
-<p>比如下面的代码：                </p>
+<blockquote>
+<p>注意:</p>
+
+<p><code>defaultValue</code> 和 <code>defaultChecked</code> props 只能在内部渲染时被使用。 如果你需要在随后的渲染更新值, 你需要使用 <a href="#%E5%8F%97%E9%99%90%E7%BB%84%E4%BB%B6">受限组件</a>.</p>
+</blockquote>
+<h2><a class="anchor" name=""></a>高级主题 <a class="hash-link" href="#">#</a></h2><h3><a class="anchor" name=""></a>为什么使用受限组件？ <a class="hash-link" href="#">#</a></h3>
+<p>在 React 中使用诸如 <code>&lt;input&gt;</code> 的表单组件时，遇到了一个在传统 HTML 中没有的挑战。比如下面的代码：                </p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
-<p>在 HTML 中将渲染初始值为 <code>Untitled</code> 的输入框。用户改变输入框的值时，节点的 <code>value</code> 属性（<em>property</em>）将随之变化，但是 <code>node.getAttribute(&#39;value&#39;)</code> 还是会返回初始设置的值 <code>Untitled</code>.</p>
+<p>在 HTML 中将渲染 <em>初始值</em> 为 <code>Untitled</code> 的输入框。用户改变输入框的值时，节点的 <code>value</code> 属性( <em>property</em>)将随之变化，但是 <code>node.getAttribute(&#39;value&#39;)</code> 还是会返回初始设置的值 <code>Untitled</code>.</p>
 
 <p>与 HTML 不同，React 组件必须在任何时间点描绘视图的状态，而不仅仅是在初始化时。比如在 React 中：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;title&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Untitled&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>该方法在任何时间点渲染组件以后，输入框的值就应该<em>始终</em>为 <code>Untitled</code>。</p>
+<p>该方法在任何时间点渲染组件以后，输入框的值就应该 <em>始终</em> 为 <code>Untitled</code>。</p>
 <h3><a class="anchor" name="-lttextareagt--value-"></a>为什么 <code>&lt;textarea&gt;</code> 使用 <code>value</code> 属性？ <a class="hash-link" href="#-lttextareagt--value-">#</a></h3>
 <p>在 HTML 中， <code>&lt;textarea&gt;</code> 的值通常使用子节点设置：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 反例：在 React 中不要这样使用！ --&gt;</span>
@@ -502,7 +494,7 @@
 <p>对 HTML 而言，让开发者设置多行的值很容易。但是，React 是 JavaScript，没有字符限制，可以使用 <code>\n</code> 实现换行。简言之，React 已经有 <code>value</code>、<code>defaultValue</code> 属性，<code>&lt;/textarea&gt;</code> 组件的子节点扮演什么角色就有点模棱两可了。基于此， 设置 <code>&lt;textarea&gt;</code> 值时不应该使用子节点：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;This is a description.&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
-<p>如果<em>非要</em>*使用子节点，效果和使用 <code>defaultValue</code> 一样。</p>
+<p>如果 <em>非要</em> 使用子节点，效果和使用 <code>defaultValue</code> 一样。</p>
 <h3><a class="anchor" name="-ltselectgt--value-"></a>为什么 <code>&lt;select&gt;</code> 使用 <code>value</code> 属性 <a class="hash-link" href="#-ltselectgt--value-">#</a></h3>
 <p>HTML 中 <code>&lt;select&gt;</code> 通常使用 <code>&lt;option&gt;</code> 的 <code>selected</code> 属性设置选中状态；React 为了更方面的控制组件，采用以下方式代替：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>

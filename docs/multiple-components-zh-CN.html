@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -438,13 +431,13 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">username</span><span class="o">=</span><span class="s2">&quot;pwh&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name=""></a>从属关系 <a class="hash-link" href="#">#</a></h2>
 <p>上面例子中，<code>Avatar</code> 拥有 <code>ProfilePic</code> 和 <code>ProfileLink</code> 的实例。<code>拥有者</code> 就是给其它组件设置 <code>props</code> 的那个组件。更正式地说，
-如果组件 <code>Y</code> 在 <code>render()</code> 方法是创建了组件 <code>X</code>，那么 <code>Y</code> 就拥有 <code>X</code>。上面讲过，组件不能修改自身的 <code>props</code> - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的关键性原则。</p>
+如果组件 <code>Y</code> 在 <code>render()</code> 方法是创建了组件 <code>X</code>，那么 <code>Y</code> 就拥有 <code>X</code>。上面讲过，组件不能修改自身的 <code>props</code> - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。</p>
 
 <p>把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，<code>Avatar</code> 拥有 <code>div</code>、<code>ProfilePic</code> 和 <code>ProfileLink</code> 实例，<code>div</code> 是 <code>ProfilePic</code> 和 <code>ProfileLink</code> 实例的<strong>父级</strong>（但不是拥有者）。</p>
 <h2><a class="anchor" name=""></a>子级 <a class="hash-link" href="#">#</a></h2>
@@ -511,8 +504,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-
-<span class="c1">// 正确 :)</span>
+</code></pre></div><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 正确 :)</span>
 <span class="kd">var</span> <span class="nx">ListItemWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
@@ -530,24 +522,8 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>也可以传递 object 来做有 key 的子级。object 的 key 会被当作每个组件的 <code>key</code>。但是一定要牢记 JavaScript 并不总是保证属性的顺序会被保留。实际情况下浏览器一般会保留属性的顺序，<strong>除了</strong> 使用 32位无符号数字做为 key 的属性。数字型属性会按大小排序并且排在其它属性前面。一旦发生这种情况，React 渲染组件的顺序就是混乱。可能在 key 前面加一个字符串前缀来避免：</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">{};</span>
-
-    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-      <span class="c1">// 如果 result.id 看起来是一个数字（比如短哈希），那么</span>
-      <span class="c1">// 对象字面量的顺序就得不到保证。这种情况下，需要添加前缀</span>
-      <span class="c1">// 来确保 key 是字符串。</span>
-      <span class="nx">items</span><span class="p">[</span><span class="s1">&#39;result-&#39;</span> <span class="o">+</span> <span class="nx">result</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
-    <span class="p">});</span>
-
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/ol&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name=""></a>数据流 <a class="hash-link" href="#">#</a></h2>
+<p>也可以传递ReactFragment 对象 来做有 key 的子级。详见<a href="create-fragment.html">Keyed Fragments</a> </p>
+<h2><a class="anchor" name=""></a>数据流 <a class="hash-link" href="#">#</a></h2>
 <p>React 里，数据通过上面介绍过的 <code>props</code> 从拥有者流向归属者。这就是高效的单向数据绑定(one-way data binding)：拥有者通过它的 <code>props</code> 或 <code>state</code> 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有被使用的地方自动反映出来。</p>
 <h2><a class="anchor" name=""></a>性能提醒 <a class="hash-link" href="#">#</a></h2>
 <p>你或许会担心如果一个拥有者有大量子级时，对于数据变化做出响应非常耗费性能。值得庆幸的是执行 JavaScript  非常的快，而且 <code>render()</code> 方法一般比较简单，所以在大部分应用里这样做速度极快。此外，性能的瓶颈大多是因为 DOM 更新，而非 JS 执行，而且 React 会通过批量更新和变化检测来优化性能。</p>

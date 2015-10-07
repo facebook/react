@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -436,53 +429,13 @@ html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a <code>ReactC
 <p>Return a function that produces ReactElements of a given type. Like <code>React.createElement</code>,
 the type argument can be either an html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a
 <code>ReactClass</code>.</p>
-<h3><a class="anchor" name="react.render"></a>React.render <a class="hash-link" href="#react.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
-  <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
-  <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Render a ReactElement into the DOM in the supplied <code>container</code> and return a reference to the component.</p>
-
-<p>If the ReactElement was previously rendered into <code>container</code>, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.</p>
-
-<p>If the optional callback is provided, it will be executed after the component is rendered or updated.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p><code>React.render()</code> controls the contents of the container node you pass in. Any existing DOM elements
-inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient
-updates.</p>
-
-<p><code>React.render()</code> does not modify the container node (only modifies the children of the container). In
-the future, it may be possible to insert a component to an existing DOM node without overwriting
-the existing children.</p>
-</blockquote>
-<h3><a class="anchor" name="react.unmountcomponentatnode"></a>React.unmountComponentAtNode <a class="hash-link" href="#react.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
-</code></pre></div>
-<p>Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns <code>true</code> if a component was unmounted and <code>false</code> if there was no component to unmount.</p>
-<h3><a class="anchor" name="react.rendertostring"></a>React.renderToString <a class="hash-link" href="#react.rendertostring">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToString</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
-</code></pre></div>
-<p>Render a ReactElement to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
-
-<p>If you call <code>React.render()</code> on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.</p>
-<h3><a class="anchor" name="react.rendertostaticmarkup"></a>React.renderToStaticMarkup <a class="hash-link" href="#react.rendertostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
-</code></pre></div>
-<p>Similar to <code>renderToString</code>, except this doesn&#39;t create extra DOM attributes such as <code>data-react-id</code>, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.</p>
 <h3><a class="anchor" name="react.isvalidelement"></a>React.isValidElement <a class="hash-link" href="#react.isvalidelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isValidElement</span><span class="p">(</span><span class="o">*</span> <span class="nx">object</span><span class="p">)</span>
 </code></pre></div>
 <p>Verifies the object is a ReactElement.</p>
-<h3><a class="anchor" name="react.finddomnode"></a>React.findDOMNode <a class="hash-link" href="#react.finddomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findDOMNode</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
-</code></pre></div>
-<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>findDOMNode</code> returns <code>null</code>.</p>
 <h3><a class="anchor" name="react.dom"></a>React.DOM <a class="hash-link" href="#react.dom">#</a></h3>
 <p><code>React.DOM</code> provides convenience wrappers around <code>React.createElement</code> for DOM components. These should only be used when not using JSX. For example, <code>React.DOM.div(null, &#39;Hello World!&#39;)</code></p>
 <h3><a class="anchor" name="react.proptypes"></a>React.PropTypes <a class="hash-link" href="#react.proptypes">#</a></h3>
 <p><code>React.PropTypes</code> includes types that can be used with a component&#39;s <code>propTypes</code> object to validate props being passed to your components. For more information about <code>propTypes</code>, see <a href="/react/docs/reusable-components.html">Reusable Components</a>.</p>
-<h3><a class="anchor" name="react.initializetouchevents"></a>React.initializeTouchEvents <a class="hash-link" href="#react.initializetouchevents">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">initializeTouchEvents</span><span class="p">(</span><span class="kr">boolean</span> <span class="nx">shouldUseTouch</span><span class="p">)</span>
-</code></pre></div>
-<p>Configure React&#39;s event system to handle touch events on mobile devices.</p>
 <h3><a class="anchor" name="react.children"></a>React.Children <a class="hash-link" href="#react.children">#</a></h3>
 <p><code>React.Children</code> provides utilities for dealing with the <code>this.props.children</code> opaque data structure.</p>
 <h4><a class="anchor" name="react.children.map"></a>React.Children.map <a class="hash-link" href="#react.children.map">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">fn</span> <span class="p">[,</span> <span class="nx">object</span> <span class="nx">thisArg</span><span class="p">])</span>
@@ -497,6 +450,57 @@ the existing children.</p>
 <h4><a class="anchor" name="react.children.only"></a>React.Children.only <a class="hash-link" href="#react.children.only">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">only</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
 </code></pre></div>
 <p>Return the only child in <code>children</code>. Throws otherwise.</p>
+<h2><a class="anchor" name="reactdom"></a>ReactDOM <a class="hash-link" href="#reactdom">#</a></h2>
+<p>The <code>react-dom</code> package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.</p>
+<h3><a class="anchor" name="reactdom.render"></a>ReactDOM.render <a class="hash-link" href="#reactdom.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
+  <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
+  <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>
+  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Render a ReactElement into the DOM in the supplied <code>container</code> and return a <a href="/react/docs/more-about-refs.html">reference</a> to the component (or returns <code>null</code> for <a href="/react/docs/reusable-components.html#stateless-functions">stateless components</a>).</p>
+
+<p>If the ReactElement was previously rendered into <code>container</code>, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.</p>
+
+<p>If the optional callback is provided, it will be executed after the component is rendered or updated.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p><code>ReactDOM.render()</code> controls the contents of the container node you pass in. Any existing DOM elements
+inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient
+updates.</p>
+
+<p><code>ReactDOM.render()</code> does not modify the container node (only modifies the children of the container). In
+the future, it may be possible to insert a component to an existing DOM node without overwriting
+the existing children.</p>
+</blockquote>
+<h3><a class="anchor" name="reactdom.unmountcomponentatnode"></a>ReactDOM.unmountComponentAtNode <a class="hash-link" href="#reactdom.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
+</code></pre></div>
+<p>Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns <code>true</code> if a component was unmounted and <code>false</code> if there was no component to unmount.</p>
+<h3><a class="anchor" name="reactdom.finddomnode"></a>ReactDOM.findDOMNode <a class="hash-link" href="#reactdom.finddomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findDOMNode</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
+</code></pre></div>
+<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. <strong>In most cases, you can attach a ref to the DOM node and avoid using <code>findDOMNode</code> at all.</strong> When <code>render</code> returns <code>null</code> or <code>false</code>, <code>findDOMNode</code> returns <code>null</code>.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p><code>findDOMNode()</code> is an escape hatch used to access the underlying DOM node. In most cases, use of this escape hatch is discouraged because it pierces the component abstraction.</p>
+
+<p><code>findDOMNode()</code> only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling <code>findDOMNode()</code> in <code>render()</code> on a component that has yet to be created) an exception will be thrown.</p>
+
+<p><code>findDOMNode()</code> cannot be used on stateless components.</p>
+</blockquote>
+<h2><a class="anchor" name="reactdomserver"></a>ReactDOMServer <a class="hash-link" href="#reactdomserver">#</a></h2>
+<p>The <code>react-dom/server</code> package allows you to render your components on the server.</p>
+<h3><a class="anchor" name="reactdomserver.rendertostring"></a>ReactDOMServer.renderToString <a class="hash-link" href="#reactdomserver.rendertostring">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToString</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+</code></pre></div>
+<p>Render a ReactElement to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
+
+<p>If you call <code>ReactDOM.render()</code> on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.</p>
+<h3><a class="anchor" name="reactdomserver.rendertostaticmarkup"></a>ReactDOMServer.renderToStaticMarkup <a class="hash-link" href="#reactdomserver.rendertostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+</code></pre></div>
+<p>Similar to <code>renderToString</code>, except this doesn&#39;t create extra DOM attributes such as <code>data-react-id</code>, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.</p>
 
 
     <div class="docs-prevnext">

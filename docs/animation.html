@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -409,7 +402,7 @@
 <p><code>ReactCSSTransitionGroup</code> is based on <code>ReactTransitionGroup</code> and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
 <h3><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code> is the interface to <code>ReactTransitions</code>. This is a simple element that wraps all of the components you are interested in animating. Here&#39;s an example where we fade list items in and out.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">TodoList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -436,7 +429,7 @@
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Add</span> <span class="nx">Item</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span> <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span> <span class="o">&gt;</span>
 </span><span class="hll">          <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -459,23 +452,24 @@
 
 <span class="nc">.example-enter.example-enter-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">500</span><span class="n">ms</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div>
-<p>You&#39;ll notice that when you try to remove an item <code>ReactCSSTransitionGroup</code> keeps it in the DOM. If you&#39;re using an unminified build of React with add-ons you&#39;ll see a warning that React was expecting an animation or transition to occur. That&#39;s because <code>ReactCSSTransitionGroup</code> keeps your DOM elements on the page until the animation completes. Try adding this CSS:</p>
-<div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-leave</span> <span class="p">{</span>
+
+<span class="nc">.example-leave</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">300</span><span class="n">ms</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="animate-initial-mounting"></a>Animate Initial Mounting <a class="hash-link" href="#animate-initial-mounting">#</a></h3>
+</code></pre></div>
+<p>You&#39;ll notice that animation durations need to be specified in both the CSS and the render method; this tells React when to remove the animation classes from the element and -- if it&#39;s leaving -- when to remove the element from the DOM.</p>
+<h3><a class="anchor" name="animate-initial-mounting"></a>Animate Initial Mounting <a class="hash-link" href="#animate-initial-mounting">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code> provides the optional prop <code>transitionAppear</code>, to add an extra transition phase at the initial mount of the component. There is generally no transition phase at the initial mount as the default value of <code>transitionAppear</code> is <code>false</code>. The following is an example which passes the prop <code>transitionAppear</code> with the value <code>true</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&gt;</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span><span class="o">&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Fading</span> <span class="nx">at</span> <span class="nx">Initial</span> <span class="nx">Mount</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
 </span><span class="hll">      <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 </span>    <span class="p">);</span>
@@ -484,11 +478,11 @@
 <p>During the initial mount <code>ReactCSSTransitionGroup</code> will get the <code>example-appear</code> CSS class and the <code>example-appear-active</code> CSS class added in the next tick.</p>
 <div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-appear</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="nc">.example-appear.example-appear-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>At the initial mount, all children of the <code>ReactCSSTransitionGroup</code> will <code>appear</code> but not <code>enter</code>. However, all children later added to an existing <code>ReactCSSTransitionGroup</code> will <code>enter</code> but not <code>appear</code>.</p>
@@ -498,7 +492,31 @@
 
 <p>The prop <code>transitionAppear</code> was added to <code>ReactCSSTransitionGroup</code> in version <code>0.13</code>. To maintain backwards compatibility, the default value is set to <code>false</code>.</p>
 </blockquote>
-<h3><a class="anchor" name="animation-group-must-be-mounted-to-work"></a>Animation Group Must Be Mounted To Work <a class="hash-link" href="#animation-group-must-be-mounted-to-work">#</a></h3>
+<h3><a class="anchor" name="custom-classes"></a>Custom Classes <a class="hash-link" href="#custom-classes">#</a></h3>
+<p>It is also possible to use custom class names for each of the steps in your transitions. Instead of passing a string into transitionName you can pass an object containing either the <code>enter</code> and <code>leave</code> class names, or an object containing the <code>enter</code>, <code>enter-active</code>, <code>leave-active</code>, and <code>leave</code> class names. If only the enter and leave classes are provided, the enter-active and leave-active classes will be determined by appending &#39;-active&#39; to the end of the class name. Here are two examples using custom classes:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="p">...</span>
+  <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
+    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
+      <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
+      <span class="nx">enterActive</span><span class="o">:</span> <span class="s1">&#39;enterActive&#39;</span><span class="p">,</span>
+      <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
+      <span class="nx">leaveActive</span><span class="o">:</span> <span class="s1">&#39;leaveActive&#39;</span><span class="p">,</span>
+      <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span><span class="p">,</span>
+      <span class="nx">appearActive</span><span class="o">:</span> <span class="s1">&#39;appearActive&#39;</span>
+    <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+
+  <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
+    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
+      <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
+      <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
+      <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span>
+    <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="nx">item2</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+  <span class="p">...</span>
+</code></pre></div><h3><a class="anchor" name="animation-group-must-be-mounted-to-work"></a>Animation Group Must Be Mounted To Work <a class="hash-link" href="#animation-group-must-be-mounted-to-work">#</a></h3>
 <p>In order for it to apply transitions to its children, the <code>ReactCSSTransitionGroup</code> must already be mounted in the DOM or the prop <code>transitionAppear</code> must be set to <code>true</code>. The example below would not work, because the <code>ReactCSSTransitionGroup</code> is being mounted along with the new item, instead of the new item being mounted within it. Compare this to the <a href="#getting-started">Getting Started</a> section above to see the difference.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
@@ -519,7 +537,7 @@
   <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="animating-one-or-zero-items"></a>Animating One or Zero Items <a class="hash-link" href="#animating-one-or-zero-items">#</a></h3>
 <p>In the example above, we rendered a list of items into <code>ReactCSSTransitionGroup</code>. However, the children of <code>ReactCSSTransitionGroup</code> can also be one or zero items. This makes it possible to animate a single element entering or leaving. Similarly, you can animate a new element replacing the current element. For example, we can implement a simple image carousel like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">ImageCarousel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -528,7 +546,7 @@
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;carousel&quot;</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;carousel&quot;</span> <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span> <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
 </span><span class="hll">          <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -544,7 +562,7 @@
 <p>When using <code>ReactCSSTransitionGroup</code>, there&#39;s no way for your components to be notified when a transition has ended or to perform any more complex logic around animation. If you want more fine-grained control, you can use the lower-level <code>ReactTransitionGroup</code> API which provides the hooks you need to do custom transitions.</p>
 </blockquote>
 <h2><a class="anchor" name="low-level-api-reacttransitiongroup"></a>Low-level API: <code>ReactTransitionGroup</code> <a class="hash-link" href="#low-level-api-reacttransitiongroup">#</a></h2>
-<p><code>ReactTransitionGroup</code> is the basis for animations. It is accessible as <code>React.addons.TransitionGroup</code>. When children are declaratively added or removed from it (as in the example above) special lifecycle hooks are called on them.</p>
+<p><code>ReactTransitionGroup</code> is the basis for animations. It is accessible from <code>require(&#39;react-addons-transition-group&#39;)</code>. When children are declaratively added or removed from it (as in the example above) special lifecycle hooks are called on them.</p>
 <h3><a class="anchor" name="componentwillappearcallback"></a><code>componentWillAppear(callback)</code> <a class="hash-link" href="#componentwillappearcallback">#</a></h3>
 <p>This is called at the same time as <code>componentDidMount()</code> for components that are initially mounted in a <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It is only called on the initial render of a <code>TransitionGroup</code>.</p>
 <h3><a class="anchor" name="componentdidappear"></a><code>componentDidAppear()</code> <a class="hash-link" href="#componentdidappear">#</a></h3>
@@ -563,13 +581,7 @@
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
-<p>Every DOM component that React can render is available for use. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself!</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>Prior to v0.12, when using DOM components, the <code>component</code> prop needed to be a reference to <code>React.DOM.*</code>. Since the component is simply passed to <code>React.createElement</code>, it must now be a string. Composite components must pass the factory.</p>
-</blockquote>
+<p>Every DOM component that React can render is available for use. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself! Just write <code>component={List}</code> and your component will receive <code>this.props.children</code>.</p>
 
 <p>Any additional, user-defined, properties will become properties of the rendered component. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code> with CSS class:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>

@@ -20,19 +20,20 @@
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
 
-  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
-  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="/react/js/babel-browser.min.js"></script>
-  <script type="text/javascript" src="/react/js/codemirror.js"></script>
-  <script type="text/javascript" src="/react/js/javascript.js"></script>
-  <script type="text/javascript" src="/react/js/react.js"></script>
-  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
 
@@ -174,7 +175,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
                   </li>
                 
               </ul>
@@ -197,10 +198,6 @@
                 
                   <li>
                     <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
                   </li>
                 
                   <li>
@@ -376,10 +373,6 @@
           </li>
         
           <li>
-            <a href="/react/tips/references-to-components.html">References to Components</a>
-          </li>
-        
-          <li>
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
@@ -404,8 +397,9 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p><code>React.addons.TestUtils</code> makes it easy to test React components in the testing framework of your choice (we use <a href="https://facebook.github.io/jest/">Jest</a>).</p>
-<h3><a class="anchor" name="simulate"></a>Simulate <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
+    <p><code>ReactTestUtils</code> makes it easy to test React components in the testing framework of your choice (we use <a href="https://facebook.github.io/jest/">Jest</a>).</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">var ReactTestUtils = require(&#39;react-addons-test-utils&#39;);
+</code></pre></div><h3><a class="anchor" name="simulate"></a>Simulate <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
   <span class="nx">DOMElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="p">[</span><span class="nx">object</span> <span class="nx">eventData</span><span class="p">]</span>
 <span class="p">)</span>
@@ -413,14 +407,16 @@
 <p>Simulate an event dispatch on a DOM node with optional <code>eventData</code> event data. <strong>This is possibly the single most useful utility in <code>ReactTestUtils</code>.</strong></p>
 
 <p><strong>Clicking an element</strong>  </p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">button</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;button ref=&quot;button&quot;&gt;...&lt;/button&gt;</span>
+<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">button</span><span class="p">;</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
 </code></pre></div>
 <p><strong>Changing the value of an input field and then pressing ENTER</strong>  </p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;input ref=&quot;input&quot; /&gt;</span>
+<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">;</span>
 <span class="nx">node</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;giraffe&#39;</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">keyDown</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;Enter&quot;</span><span class="p">,</span> <span class="nx">keyCode</span><span class="o">:</span> <span class="mi">13</span><span class="p">,</span> <span class="nx">which</span><span class="o">:</span> <span class="mi">13</span><span class="p">});</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">keyDown</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;Enter&quot;</span><span class="p">,</span> <span class="nx">keyCode</span><span class="o">:</span> <span class="mi">13</span><span class="p">,</span> <span class="nx">which</span><span class="o">:</span> <span class="mi">13</span><span class="p">});</span>
 </code></pre></div>
 <p><em>note that you will have to provide any event property that you&#39;re using in your component (e.g. keyCode, which, etc...) as React is not creating any of these for you</em></p>
 
@@ -430,6 +426,13 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>Render a component into a detached DOM node in the document. <strong>This function requires a DOM.</strong></p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>You will need to have <code>window</code>, <code>window.document</code> and <code>window.document.createElement</code>
+ globally available <strong>before</strong> you import React. Otherwise React will think it can&#39;t access the DOM and methods like <code>setState</code> won&#39;t work.  </p>
+</blockquote>
 <h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span>
   <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span>
   <span class="p">[</span><span class="nx">string</span> <span class="nx">mockTagName</span><span class="p">]</span>
@@ -512,7 +515,7 @@
   <span class="nx">ReactElement</span> <span class="nx">element</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Similar to <code>React.render</code>.</p>
+<p>Similar to <code>ReactDOM.render</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
 </code></pre></div>
 <p>After <code>render</code> has been called, returns shallowly rendered output. You can then begin to assert facts about the output. For example, if your component&#39;s render method returns:</p>
@@ -534,7 +537,7 @@
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/class-name-manipulation.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/two-way-binding-helpers.html">&larr; Prev</a>
       
       
         <a class="docs-next" href="/react/docs/clone-with-props.html">Next &rarr;</a>
