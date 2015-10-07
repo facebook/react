@@ -41,6 +41,7 @@ For this tutorial, we're going to make it as easy as possible. Included in the s
     <meta charset="utf-8" />
     <title>React Tutorial</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
@@ -125,6 +126,8 @@ The `<div>` tags are not actual DOM nodes; they are instantiations of React `div
 You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React **composable**: a key tenet of maintainable frontends.
 
 `ReactDOM.render()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
+
+The `ReactDOM` module exposes DOM-specific methods, while `React` has the core tools shared by React on different platforms (e.g., [React Native](http://facebook.github.io/react-native/)).
 
 ## Composing components
 
@@ -220,12 +223,13 @@ Markdown is a simple way to format your text inline. For example, surrounding te
 
 First, add the third-party library **marked** to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):
 
-```html{8}
+```html{9}
 <!-- index.html -->
 <head>
   <meta charset="utf-8" />
   <title>React Tutorial</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
@@ -525,7 +529,7 @@ Call `preventDefault()` on the event to prevent the browser's default action of 
 
 ##### Refs
 
-We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the component. We can call `ReactDOM.findDOMNode(component)` on a component to get the native browser DOM element.
+We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the DOM node.
 
 ##### Callbacks as props
 
