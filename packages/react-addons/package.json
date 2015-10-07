@@ -1,9 +1,9 @@
 {
   "name": "react-addons",
-  "version": "0.14.0-rc1",
+  "version": "0.15.0-alpha",
   "main": "index.js",
   "license": "BSD-3-Clause",
   "peerDependencies": {
-    "react": "^0.14.0-rc1"
+    "react": "^0.15.0-alpha"
   }
 }
