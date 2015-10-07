@@ -66,7 +66,7 @@
     <h1>Downloads</h1>
     <div class="subHeader"></div>
     <p>Download the starter kit to get everything you need to
-<a href="/react/docs/getting-started.html">get started with React</a>. The starter kit includes React, the in-browser JSX transformer, and some simple example apps.</p>
+<a href="/react/docs/getting-started.html">get started with React</a>. The starter kit includes React and some simple example apps.</p>
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-0.14.0.zip" class="button">
@@ -92,13 +92,14 @@
 </code></pre></div>
 <p>All scripts are also available via <a href="https://cdnjs.com/libraries/react/">CDNJS</a>.</p>
 <h2><a class="anchor" name="npm"></a>npm <a class="hash-link" href="#npm">#</a></h2>
-<p>If you&#39;re using an npm-compatible packaging system like browserify or webpack, you can use the <code>react</code> package. After installing it using <code>npm install react</code> or adding <code>react</code> to <code>package.json</code>, you can use React:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom&#39;</span><span class="p">);</span>
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(...);</span>
+<p>We recommend using React from npm with a bundler like <a href="http://browserify.org/">browserify</a> or <a href="https://webpack.github.io/">webpack</a>. You can use the <code>react</code> and <code>react-dom</code> packages. After installing it using <code>npm install --save react react-dom</code>, you can use:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ReactDOM</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom&#39;</span><span class="p">);</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="p">...);</span>
 </code></pre></div>
-<p>If you&#39;d like to use any <a href="/react/docs/addons.html">add-ons</a>, use <code>var React = require(&#39;react/addons&#39;);</code> instead.</p>
+<p>Each of the <a href="/react/docs/addons.html">add-ons</a> lives in its own package.</p>
 
-<p><strong>Note:</strong> by default, React will be in development mode. To use React in production mode, set the environment variable <code>NODE_ENV</code> to <code>production</code>. A minifier that performs dead-code elimination such as <a href="https://github.com/mishoo/UglifyJS2">UglifyJS</a> is recommended to completely remove the extra code present in development mode.</p>
+<p><strong>Note:</strong> by default, React will be in development mode. To use React in production mode, set the environment variable <code>NODE_ENV</code> to <code>production</code> (using envify or webpack&#39;s DefinePlugin). A minifier that performs dead-code elimination such as <a href="https://github.com/mishoo/UglifyJS2">UglifyJS</a> is recommended to completely remove the extra code present in development mode.</p>
 <h2><a class="anchor" name="bower"></a>Bower <a class="hash-link" href="#bower">#</a></h2><div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>bower install --save react
 </code></pre></div>
 
