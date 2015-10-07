@@ -12,9 +12,31 @@ The easiest way to start hacking on React is using the following JSFiddle Hello 
  * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
  * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
-## Starter Kit
+## Using React from npm
 
-Download the starter kit to get started.
+We recommend using React with a CommonJS module system like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). Use the [`react`](https://www.npmjs.com/package/react) and [`react-dom`](https://www.npmjs.com/package/react-dom) npm packages.
+
+```js
+// main.js
+var React = require('react');
+var ReactDOM = require('react-dom');
+
+ReactDOM.render(
+  <h1>Hello, world!</h1>,
+  document.getElementById('example')
+);
+```
+
+To install React DOM and build your bundle after installing browserify:
+
+```sh
+$ npm install --save react react-dom
+$ browserify -t babelify main.js -o bundle.js
+```
+
+## Quick Start Without npm
+
+If you're not ready to use npm yet, you can download the starter kit which includes prebuilt copies of React and React DOM.
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
@@ -31,6 +53,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
+    <script src="build/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
@@ -93,13 +116,14 @@ ReactDOM.render(
 
 Update your HTML file as below:
 
-```html{7,11}
+```html{8,12}
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
+    <script src="build/react-dom.js"></script>
     <!-- No need for Babel! -->
   </head>
   <body>
@@ -108,10 +132,6 @@ Update your HTML file as below:
   </body>
 </html>
 ```
-
-## Want CommonJS?
-
-If you want to use React with [browserify](http://browserify.org/), [webpack](https://webpack.github.io/), or another CommonJS-compatible module system, just use the [`react` npm package](https://www.npmjs.com/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
 
 ## Next Steps
 
