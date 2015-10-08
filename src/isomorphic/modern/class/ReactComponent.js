@@ -13,6 +13,7 @@
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
+var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
@@ -129,7 +130,7 @@ if (__DEV__) {
     ],
   };
   var defineDeprecationWarning = function(methodName, info) {
-    try {
+    if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           warning(
@@ -141,8 +142,6 @@ if (__DEV__) {
           return undefined;
         },
       });
-    } catch (x) {
-      // IE will fail on defineProperty (es5-shim/sham too)
     }
   };
   for (var fnName in deprecatedAPIs) {

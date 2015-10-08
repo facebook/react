@@ -33,6 +33,7 @@ var ReactPerf = require('ReactPerf');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
+var canDefineProperty = require('canDefineProperty');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -53,13 +54,6 @@ var CONTENT_TYPES = {'string': true, 'number': true};
 var STYLE = keyOf({style: null});
 
 var ELEMENT_NODE_TYPE = 1;
-
-var canDefineProperty = false;
-try {
-  Object.defineProperty({}, 'test', {get: function() {}});
-  canDefineProperty = true;
-} catch (e) {
-}
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
