@@ -59,41 +59,41 @@
       </div>
     </div>
 
-    
+
 
     <section class="content wrap blogContent">
   <div class="nav-docs nav-blog">
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
-      
+
         <li><a href="/react/blog/2015/10/07/react-v0.14.html" class="active">React v0.14</a></li>
-      
+
         <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">ReactDOM.render and the Top Level React API</a></li>
-      
+
         <li><a href="/react/blog/2015/09/14/community-roundup-27.html">Community Round-up #27 &ndash; Relay Edition</a></li>
-      
+
         <li><a href="/react/blog/2015/09/10/react-v0.14-rc1.html">React v0.14 Release Candidate</a></li>
-      
+
         <li><a href="/react/blog/2015/09/02/new-react-developer-tools.html">New React Developer Tools</a></li>
-      
+
         <li><a href="/react/blog/2015/08/13/reacteurope-roundup.html">ReactEurope Round-up</a></li>
-      
+
         <li><a href="/react/blog/2015/08/11/relay-technical-preview.html">Relay Technical Preview</a></li>
-      
+
         <li><a href="/react/blog/2015/08/03/new-react-devtools-beta.html">New React Devtools Beta</a></li>
-      
+
         <li><a href="/react/blog/2015/07/03/react-v0.14-beta-1.html">React v0.14 Beta 1</a></li>
-      
+
         <li><a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating JSTransform and react-tools</a></li>
-      
+
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
-    
+
 
 <h1>
 
@@ -104,9 +104,9 @@
 <p class="meta">
   October  7, 2015
   by
-  
+
     <a href="http://benalpert.com">Ben Alpert</a>
-  
+
 </p>
 
 <hr>
@@ -224,7 +224,7 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0.min.js">h
 <li><h4><a class="anchor" name="deprecation-of-react-tools"></a>Deprecation of react-tools <a class="hash-link" href="#deprecation-of-react-tools">#</a></h4>
 <p>The <code>react-tools</code> package and <code>JSXTransformer.js</code> browser file <a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">have been deprecated</a>. You can continue using version <code>0.13.3</code> of both, but we no longer support them and recommend migrating to <a href="http://babeljs.io/">Babel</a>, which has built-in support for React and JSX.</p></li>
 <li><h4><a class="anchor" name="compiler-optimizations"></a>Compiler optimizations <a class="hash-link" href="#compiler-optimizations">#</a></h4>
-<p>React now supports two compiler optimizations that can be enabled in Babel 5.8.23 and newer. Both of these transforms <strong>should be enabled only in production</strong> (e.g., just before minifying your code) because although they improve runtime performance, they make warning messages more cryptic and skip important checks that happen in development mode, including propTypes.</p>
+<p>React now supports two compiler optimizations that can be enabled in Babel 5.8.24 and newer. Both of these transforms <strong>should be enabled only in production</strong> (e.g., just before minifying your code) because although they improve runtime performance, they make warning messages more cryptic and skip important checks that happen in development mode, including propTypes.</p>
 
 <p><strong>Inlining React elements:</strong> The <code>optimisation.react.inlineElements</code> transform converts JSX elements to object literals like <code>{type: &#39;div&#39;, props: ...}</code> instead of calls to <code>React.createElement</code>.</p>
 
