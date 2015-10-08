@@ -99,8 +99,6 @@ var ReactTestUtils = {
   },
 
   isDOMComponent: function(inst) {
-    // TODO: Fix this heuristic. It's just here because composites can currently
-    // pretend to be DOM components.
     return !!(inst && inst.nodeType === 1 && inst.tagName);
   },
 
@@ -186,9 +184,14 @@ var ReactTestUtils = {
     }
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
-        var classList = ReactDOM.findDOMNode(inst).className.split(/\s+/);
-        return classNames.every(function(className) {
-          return classList.indexOf(className) !== -1;
+        var className = inst.className;
+        if (typeof className !== 'string') {
+          // SVG, probably.
+          className = inst.getAttribute('class') || '';
+        }
+        var classList = className.split(/\s+/);
+        return classNames.every(function(name) {
+          return classList.indexOf(name) !== -1;
         });
       }
       return false;
