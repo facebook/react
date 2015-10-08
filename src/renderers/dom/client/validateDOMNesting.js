@@ -392,7 +392,7 @@ if (__DEV__) {
         } else if (childTag === 'span') {
           info +=
             ' Remove unnecessary whitespace inside <' + ancestorTag + '>' +
-            ' as it is internally transformed into <span>'
+            ' as it is internally transformed into <span>';
         }
         warning(
           false,
