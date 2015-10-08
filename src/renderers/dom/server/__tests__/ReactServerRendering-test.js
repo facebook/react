@@ -356,7 +356,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderToStaticMarkup(): You must pass ' +
+        'Invariant Violation: renderToString(): You must pass ' +
         'a valid ReactElement.'
       );
     });
