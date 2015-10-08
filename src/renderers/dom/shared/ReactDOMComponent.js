@@ -16,6 +16,7 @@
 
 var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
+var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventConstants = require('EventConstants');
@@ -503,6 +504,7 @@ function getNode(inst) {
 function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
   this._tag = tag.toLowerCase();
+  this._namespaceURI = null;
   this._renderedChildren = null;
   this._previousStyle = null;
   this._previousStyleCopy = null;
@@ -582,6 +584,31 @@ ReactDOMComponent.Mixin = {
     }
 
     assertValidProps(this, props);
+
+    // We create tags in the namespace of their parent container, except HTML
+    // tags get no namespace.
+    var namespaceURI;
+    var parentTag;
+    if (nativeParent != null) {
+      namespaceURI = nativeParent._namespaceURI;
+      parentTag = nativeParent._tag;
+    } else if (nativeContainerInfo != null) {
+      namespaceURI = nativeContainerInfo._namespaceURI;
+      parentTag = nativeContainerInfo._tag;
+    }
+    if (namespaceURI == null ||
+        namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject') {
+      namespaceURI = DOMNamespaces.html;
+    }
+    if (namespaceURI === DOMNamespaces.html) {
+      if (this._tag === 'svg') {
+        namespaceURI = DOMNamespaces.svg;
+      } else if (this._tag === 'math') {
+        namespaceURI = DOMNamespaces.mathml;
+      }
+    }
+    this._namespaceURI = namespaceURI;
+
     if (__DEV__) {
       var parentInfo;
       if (nativeParent != null) {
@@ -601,7 +628,15 @@ ReactDOMComponent.Mixin = {
     var mountImage;
     if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
-      var el = ownerDocument.createElement(this._currentElement.type);
+      var el;
+      if (namespaceURI === DOMNamespaces.html) {
+        el = ownerDocument.createElement(this._currentElement.type);
+      } else {
+        el = ownerDocument.createElementNS(
+          namespaceURI,
+          this._currentElement.type
+        );
+      }
       this._nativeNode = el;
       DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
       // Populate node cache

@@ -18,11 +18,12 @@ var DOC_NODE_TYPE = 9;
 function ReactDOMContainerInfo(node) {
   var info = {
     _ownerDocument: node.nodeType === DOC_NODE_TYPE ? node : node.ownerDocument,
+    _tag: node.nodeName.toLowerCase(),
+    _namespaceURI: node.namespaceURI,
   };
   if (__DEV__) {
-    var tag = node.nodeName.toLowerCase();
     info._ancestorInfo =
-      validateDOMNesting.updatedAncestorInfo(null, tag, null);
+      validateDOMNesting.updatedAncestorInfo(null, info._tag, null);
   }
   return info;
 }
