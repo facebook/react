@@ -23,6 +23,7 @@ var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var warning = require('warning');
@@ -298,7 +299,7 @@ var ReactElementValidator = {
     validatedFactory.type = type;
 
     if (__DEV__) {
-      try {
+      if (canDefineProperty) {
         Object.defineProperty(
           validatedFactory,
           'type',
@@ -317,8 +318,6 @@ var ReactElementValidator = {
             },
           }
         );
-      } catch (x) {
-        // IE will fail on defineProperty (es5-shim/sham too)
       }
     }
 
