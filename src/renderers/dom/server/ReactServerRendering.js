@@ -29,7 +29,7 @@ var invariant = require('invariant');
  * @param {ReactElement} element
  * @return {string} the HTML markup
  */
-function renderToString(element) {
+function renderToStringImpl(element, makeStaticMarkup) {
   invariant(
     ReactElement.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.'
@@ -42,13 +42,16 @@ function renderToString(element) {
     var id = ReactInstanceHandles.createReactRootID(
       ServerReactRootIndex.createReactRootIndex()
     );
-    transaction = ReactServerRenderingTransaction.getPooled(false);
+    transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element, null);
       var markup =
         componentInstance.mountComponent(id, transaction, emptyObject);
-      return ReactMarkupChecksum.addChecksumToMarkup(markup);
+      if (!makeStaticMarkup) {
+        markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
+      }
+      return markup;
     }, null);
   } finally {
     ReactServerRenderingTransaction.release(transaction);
@@ -58,36 +61,12 @@ function renderToString(element) {
   }
 }
 
-/**
- * @param {ReactElement} element
- * @return {string} the HTML markup, without the extra React ID and checksum
- * (for generating static pages)
- */
+function renderToString(element) {
+  return renderToStringImpl(element, false);
+}
+
 function renderToStaticMarkup(element) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'renderToStaticMarkup(): You must pass a valid ReactElement.'
-  );
-
-  var transaction;
-  try {
-    ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
-
-    var id = ReactInstanceHandles.createReactRootID(
-      ServerReactRootIndex.createReactRootIndex()
-    );
-    transaction = ReactServerRenderingTransaction.getPooled(true);
-
-    return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(element, null);
-      return componentInstance.mountComponent(id, transaction, emptyObject);
-    }, null);
-  } finally {
-    ReactServerRenderingTransaction.release(transaction);
-    // Revert to the DOM batching strategy since these two renderers
-    // currently share these stateful modules.
-    ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
-  }
+  return renderToStringImpl(element, true);
 }
 
 module.exports = {
