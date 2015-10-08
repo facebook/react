@@ -74,6 +74,15 @@ if (__DEV__) {
       }
     }
 
+    var testFunc = function testFn() {};
+    warning(
+      (testFunc.name || testFunc.toString()).indexOf('testFn') !== -1,
+      'It looks like you\'re using a minified copy of the development build ' +
+      'of React. When deploying React apps to production, make sure to use ' +
+      'the production build which skips development warnings and is faster. ' +
+      'See https://fb.me/react-minification for more details.'
+    );
+
     // If we're in IE8, check to see if we are in compatibility mode and provide
     // information on preventing compatibility mode
     var ieCompatibilityMode =
@@ -102,7 +111,8 @@ if (__DEV__) {
 
     for (var i = 0; i < expectedFeatures.length; i++) {
       if (!expectedFeatures[i]) {
-        console.error(
+        warning(
+          false,
           'One or more ES5 shims expected by React are not available: ' +
           'https://fb.me/react-warning-polyfills'
         );
