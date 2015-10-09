@@ -532,7 +532,7 @@
 <ul>
 <li><em>绝不</em> 在任何组件的 render 方法中访问 refs - 或者当任何组件的render方法还在调用栈上的任何地方运行时。</li>
 <li>如果你想要保留Google Closure Compiler Crushing resilience，务必不要把指明为字符串的以属性来访问。这意味这你必须用<code>this.refs[&#39;myRefString&#39;]</code>访问，如果你的ref被定义为<code>ref=&quot;myRefString&quot;</code>。</li>
-<li>如果你没有用React写过数个程序，你的第一反应通常是打算试着用refs来在你的应用里&quot;让事情发生&quot;。如果是这样，花一些时间并且更精密的思考<code>state</code>应该属于组件层级的哪个位置。常常，这会变得清晰：正确的&quot;拥有&quot;那个属性的地方应该在层级的更高层上。把state放在那里往往消除了任何使用<code>ref</code>来 &quot;让事情发生&quot;的渴望 - 作为替代，数据流通常将完成你的目录。</li>
+<li>如果你没有用React写过数个程序，你的第一反应通常是打算试着用refs来在你的应用里&quot;让事情发生&quot;。如果是这样，花一些时间并且更精密的思考<code>state</code>应该属于组件层级的哪个位置。常常，这会变得清晰：正确的&quot;拥有&quot;那个属性的地方应该在层级的更高层上。把state放在那里往往消除了任何使用<code>ref</code>来 &quot;让事情发生&quot;的渴望 - 作为替代，数据流通常将完成你的目标。</li>
 </ul>
 
 

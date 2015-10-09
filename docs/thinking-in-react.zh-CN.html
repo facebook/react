@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React 编程思想 | React</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React 编程思想 | React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/thinking-in-react.zh-CN.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+          React
+        </a>
+        <ul class="nav-site nav-site-internal">
+          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
+          <li><a href="/react/support.html">Support</a></li>
+          <li><a href="/react/downloads.html">Download</a></li>
+          <li><a href="/react/blog/">Blog</a></li>
+        </ul>
+
+        <ul class="nav-site nav-site-external">
+          <li><a href="https://github.com/facebook/react">GitHub</a>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">Getting Started</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">Tutorial</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Community Resources</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/videos.html">Videos</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/complementary-tools.html">Complementary Tools</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/examples.html">Examples</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">Why React?</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">Multiple Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">Top-Level API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html">Component API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">Event System</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">DOM Differences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Flux</h3>
+      <ul>
+        
+          <li>
+            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            
+          </li>
+        
+          <li>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Tips Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tips</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tips/introduction.html">Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>
+      React 编程思想
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/thinking-in-react.zh-CN.md" target="_blank">Edit on GitHub</a>
+    </h1>
+    <div class="subHeader"></div>
+
+    <p>by Pete Hunt</p>
+
+<p>在我看来，React 是构建大型，快速 web app 的首选方式。它已经在 Facebook 和 Instagram 被我们有了广泛的应用。</p>
+
+<p>React许多优秀的部分之一是它如何使你随着构建 app 来思考 app。在本文里，我将带领你学习一个用 React 构建可搜索的数据表的思考过程。</p>
+<h2><a class="anchor" name="mock"></a>从模型（mock）开始 <a class="hash-link" href="#mock">#</a></h2>
+<p>想象我们已经有个一个 JSON API 和一个来自设计师的模型。我们的设计师似乎不是很好因为模型看起来像是这样：</p>
+
+<p><img src="/react/img/blog/thinking-in-react-mock.png" alt="Mockup"></p>
+
+<p>我们的 JSON API 返回一些看起来像这样的数据：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">[
+  {category: &quot;Sporting Goods&quot;, price: &quot;$49.99&quot;, stocked: true, name: &quot;Football&quot;},
+  {category: &quot;Sporting Goods&quot;, price: &quot;$9.99&quot;, stocked: true, name: &quot;Baseball&quot;},
+  {category: &quot;Sporting Goods&quot;, price: &quot;$29.99&quot;, stocked: false, name: &quot;Basketball&quot;},
+  {category: &quot;Electronics&quot;, price: &quot;$99.99&quot;, stocked: true, name: &quot;iPod Touch&quot;},
+  {category: &quot;Electronics&quot;, price: &quot;$399.99&quot;, stocked: false, name: &quot;iPhone 5&quot;},
+  {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
+];
+</code></pre></div><h2><a class="anchor" name="ui"></a>第一步：把UI拆分为一个组件的层级 <a class="hash-link" href="#ui">#</a></h2>
+<p>首先你想要做的是在模型里的每一个组建周围绘制边框并给他们命名。如果你和设计师一起工作，他们应该已经完成这步了，所以去和他们谈谈！他们的photoshop图层名也许最终会成为你的React组件名。</p>
+
+<p>但是你如何知道什么东西应该是独立的组件？只需使用你决定是否创建一个函数或者对象的相同技术。这样一种技术是<a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">single responsibility principle</a>，即是，一个组件在理想情况下只做一件事情。如果它最终变大，它就应该被分解为更小的组件。</p>
+
+<p>既然你频繁显示一个JSON的数据模型给用户，你会发现,如果你的模型构建正确，你的UI（因此也有你的组件结构）就将映射良好.那是因为UI和数据模型趋向于附着于相同的 <em>信息架构</em>,这意味着把你的 UI 分离为组件的工作通常是简单的,只需把他拆成精确对应代表你的数据模型的每一块的组件.</p>
+
+<p><img src="/react/img/blog/thinking-in-react-components.png" alt="Component diagram"></p>
+
+<p>在这里你会看到,在我们简单的APP里有五个组件.我用斜体表示每个组件的数据.</p>
+
+<ol>
+<li><strong><code>FilterableProductTable</code> (orange):</strong> 包含示例的整体</li>
+<li><strong><code>SearchBar</code> (blue):</strong>  接受所有 <em>用户输入</em><br></li>
+<li><strong><code>ProductTable</code> (green):</strong> 基于 <em>用户输入</em> 显示和过滤 <em>数据集合(data collection)</em><br></li>
+<li><strong><code>ProductCategoryRow</code> (turquoise):</strong> 为每个 <em>分类</em> 显示一个列表头</li>
+<li><strong><code>ProductRow</code> (red):</strong> 为每个 <em>产品</em> 显示一个行 </li>
+</ol>
+
+<p>如果你看着 <code>ProductTable</code>,你会看到表的头(包含了 &quot;Name&quot; 和 &quot;Price&quot; 标签) 不是独立的组件.这是一个个人喜好问题,并且无论哪种方式都有争论.对于这个例子,我把它留做 <code>ProductTable</code> 的一部分,因为它是 <em>data collection</em>渲染的一部分,而 <em>data collection</em>渲染是 <code>ProductTable</code> 的职责.然而,当列表头增长到复杂的时候(例如 如果我们添加排序的功能性),那么无疑的使它成为独立的 <code>ProductTableHeader</code> 组件是有意义的.</p>
+
+<p>既然现在我们已经识别出了我们模型中的组件,让我们把他们安排到一个层级中.这很容易. 在模型中出现在其他组件中的组件 同样应该在层级中表现为一个子级:</p>
+
+<ul>
+<li><code>FilterableProductTable</code>
+
+<ul>
+<li><code>SearchBar</code></li>
+<li><code>ProductTable</code>
+
+<ul>
+<li><code>ProductCategoryRow</code></li>
+<li><code>ProductRow</code></li>
+</ul></li>
+</ul></li>
+</ul>
+<h2><a class="anchor" name="step-2-react"></a>Step 2: 用React创建一个静态版本 <a class="hash-link" href="#step-2-react">#</a></h2>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<p>既然你已经有了你的组件层级,时候实现你的app了.简单的方式是构建一个版本,它采取你的数据模型并渲染UI但是没有互动性.最好是分离这些过程,因为构建一个静态版本需要无脑的打很多字,然而添加互动性需要很多思考但不需要打太多字.我们会看到是为什么:</p>
+
+<p>要构建一个渲染你的数据模型的 app 的静态版本,你会想构建一个重用其他组件并利用 <em>props</em> 传递数据的组件. <em>props</em> 是一种从父级传递数据到子级的方式.如果你对 <em>state</em> 的观念很熟悉, <strong>绝不要用state</strong> 来构建这个静态版本.State 仅仅是为互动预留的,即,随时间变化的数据. 因为这是一个静态版本的app,你不需要它.</p>
+
+<p>你可以自顶向下或自底向上的构建.也就是说,你可以既从较高的层级(如 从 <code>FilterableProductTable</code> 开始) 也可以从较低的层级(<code>ProductRow</code>)开始构建组件. 在较简单的例子里,通常自顶向下要容易一些,然而在更大的项目上 自底向上更容易,并且伴随着构建写测试较容易.</p>
+
+<p>在这一步的最后,你会有一个渲染你数据模型的可重用的组件库. 这些组件将只含有 <code>render()</code> 方法因为这是一个你的app的静态版本. 在层级顶端的组件 (<code>FilterableProductTable</code>) 将会接受你的数据模型作为一个prop.如果你对你的底层数据模型做了变化并且再次调用 <code>React.render()</code> ,UI将会更新.很容易看到你的UI是如何更新以及哪里来作出变动,因为这里没有任何复杂的事情发生. React的  <strong>单向数据流</strong> (也被称为 <em>单向绑定</em> )保持了每个东西模块化和快速.</p>
+
+<p>如果你执行这步需要帮助,请参考 <a href="/react/docs/">React docs</a> .</p>
+<h3><a class="anchor" name="-props-vs-state"></a>小插曲: props vs state <a class="hash-link" href="#-props-vs-state">#</a></h3>
+<p>在React里有两种数据 &quot;模型&quot;:props和state.明白这二者之间的区别是很重要的;如果你不是很确定不同是什么,请概览<a href="/react/docs/interactivity-and-dynamic-uis-zh-CN.html">React官方文档</a></p>
+<h2><a class="anchor" name="-ui-state-"></a>第三步:确定最小(但完备)的 UI state 的表达 <a class="hash-link" href="#-ui-state-">#</a></h2>
+<p>要让你的UI互动,你需要能够触发变化到你的底层数据模型上.React用 <strong>state</strong> 来让此变得容易.</p>
+
+<p>要正确的构建你的app,你首先需要思考你的app需要的可变state的最小组. 这里的关键是 DRY: <em>Don&#39;t Repeat Yourself(不要重复自己)</em>.想出哪些是你的应用需要的绝对最小 state 表达,并按需计算其他任何数据.例如,如果你要构建一个 TODO list,只要保持一个 TODO 项的数组;不要为了计数保持一个单独的 state 变量.作为替代,当你想渲染 TODO 数量时,简单的采用TODO项目数组的长度.</p>
+
+<p>考虑我们例子应用中数据的所有块.我们有:</p>
+
+<ul>
+<li>原始的产品列表 </li>
+<li>用户输入的搜索文本 </li>
+<li>checkbox的值 </li>
+<li>产品的滤过的列表 </li>
+</ul>
+
+<p>让我们遍历每一个并指出哪一个是state.简单的问三个关于每个数据块的问题:</p>
+
+<ol>
+<li>它是通过props从父级传递来的吗?如果是,它可能不是state.</li>
+<li>它随时间变化吗?如果不是,它可能不是state.</li>
+<li>你能基于其他任何组件里的 state 或者 props 计算出它吗?如果是,它可能不是state.</li>
+</ol>
+
+<p>原始的产品列表被以 props 传入,所以它不是 state. 搜索文本和 checkbox 看起来是state 因为他们随时间变化并且不能从任何东西计算出.最后,产品滤过的列表不是state因为它可以联合原始列表与搜索文本及 checkbox 的值计算出.</p>
+
+<p>所以最后,我们的 state 是:</p>
+
+<ul>
+<li>用户输入的搜索文本</li>
+<li>checkbox 的值</li>
+</ul>
+<h2><a class="anchor" name="-state-"></a>第四步:确定你的 state 应该存在于哪里 <a class="hash-link" href="#-state-">#</a></h2>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<p>好,我们已经确定了app state 的最小组是什么.接下来,我们需要确定哪个组件变动,或者 <em>拥有</em>,这 个state.</p>
+
+<p>记住:React都是关于单向数据流下组件层级的.可能不能立刻明白哪些组件应该拥有哪些 state. <strong>这常常对于新手在理解上是最具挑战的一部分,</strong> 所以跟着这几步来弄明白它:</p>
+
+<p>对于你的应用里每一个数据块:</p>
+
+<ul>
+<li>基于 state 确定每个绘制某些东西的组件</li>
+<li>找到一个共同拥有者的组件(在层级中所有组件之上需要这个state的单个组件)</li>
+<li>要么是共同拥有者,要么是其他在层级里更高级的组件应该拥有这个state</li>
+<li>如果你不能找到一个组件,它拥有这个state有意义,创建一个新的组件简单的为了持有此state,并把它在层级里添加比共同拥有者组件更高的层级上.</li>
+</ul>
+
+<p>让我们过一遍这个用于我们应用的策略:</p>
+
+<ul>
+<li><code>ProductTable</code> 需要基于 state 过滤产品列表,<code>SearchBar</code> 需要显示搜索文本和选择状态.</li>
+<li>共同拥有者组件是<code>FilterableProductTable</code> .</li>
+<li>对于过滤文本和选择值存在于  <code>FilterableProductTable</code> 观念上是有意义的.</li>
+</ul>
+
+<p>酷,我们已经决定了我们的state存在于 <code>FilterableProductTable</code> .首先,添加一个 <code>getInitialState()</code> 方法到  <code>FilterableProductTable</code> ,返回 <code>{filterText: &#39;&#39;, inStockOnly: false}</code> 来反映你的应用的初始状态. 然后,传递<code>filterText</code> 和 <code>inStockOnly</code> 给 <code>ProductTable</code> 和<code>SearchBar</code> 作为prop.最后,使用这些prop来过滤 <code>ProductTable</code> 中的行和设置<code>SearchBar</code>的表单项的值.</p>
+
+<p>你可以开始看看你的应用将有怎样的行为: 设置 <code>filterText</code> 为 <code>&quot;ball&quot;</code> 并刷新你的app.你将看到数据表被正确更新了.</p>
+<h2><a class="anchor" name=""></a>第五步:添加反向数据流 <a class="hash-link" href="#">#</a></h2>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<p>到目前为止，我们已经构建了一个应用, 它以props 和 state 沿着层级向下流动的功能正确渲染。现在是时候支持数据的另一种流动了：在层级深处的表单组件需要更新 <code>FilterableProductTable</code> 里的state. </p>
+
+<p>React 让数据显式流动，使理解你的应用如何工作变得简单，但是相对于传统的双向数据绑定，确实需要打多一些的字。 React 提供了一个叫做 <code>ReactLink</code> 的插件来使这种模式和双向数据绑定一样方便，但是考虑到这篇文章的目的，我们将会保持所有东西都直截了当。</p>
+
+<p>如果你尝试在当前版本的示例中输入或者选中复选框，你会发现 React 忽略了你的输入。这是有意的，因为已经设置了 <code>input</code> 的 <code>value</code> prop 总是与 <code>FilterableProductTable</code> 传递过来的 <code>state</code> 一致。</p>
+
+<p>让我们思考下我们希望发生什么。我们想确保每当用户改变了表单，我们就更新 state 来反映用户的输入。由于组件应该只更新自己拥有的 state ， <code>FilterableProductTable</code> 将会传递一个回调函数给 <code>SearchBar</code> ，此函数每当 state 应被改变时就会击发。我们可以使用 input 的 <code>onChange</code> 事件来接受它的通知。 <code>FilterableProductTable</code> 传递的回调函数将会调用 <code>setState()</code> ，然后应用将会被更新。</p>
+
+<p>虽然这听起来复杂，但是实际上只是数行代码。并且数据在应用中从始至终如何流动是非常明确的。</p>
+<h2><a class="anchor" name=""></a>好了,就是这样 <a class="hash-link" href="#">#</a></h2>
+<p>希望,这给了你一个怎样思考用React构建组件和应用的概念。虽然可能比你通常要输入更多的代码，记住，读代码的时间远比写代码的时间多，并且阅读这种模块化的,显式的代码是极端容易的。当你开始构建大型组件库时，你会非常感激这种清晰性和模块化，并且随着代码的重用，你的代码行数将会开始缩减. :)。</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/tutorial-zh-CN.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/conferences-zh-CN.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">
+        &copy; 2013&ndash;2015 Facebook Inc.<br>
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
