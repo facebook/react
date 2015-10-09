@@ -13,7 +13,7 @@ When designing interfaces, break down the common design elements (buttons, form 
 
 As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. Note that for performance reasons `propTypes` is only checked in development mode. Here is an example documenting the different validators provided:
 
-```javascript
+```jsx
 React.createClass({
   propTypes: {
     // You can declare that a prop is a specific JS primitive. By default, these
@@ -100,9 +100,9 @@ The result of `getDefaultProps()` will be cached and used to ensure that `this.p
 
 ## Transferring Props: A Shortcut
 
-A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
+A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX _spread_ syntax to achieve this:
 
-```javascript
+```jsx
 var CheckLink = React.createClass({
   render: function() {
     // This takes any props passed to CheckLink and copies them to <a>
@@ -123,7 +123,7 @@ ReactDOM.render(
 With `React.PropTypes.element` you can specify that only a single child can be passed to
 a component as children.
 
-```javascript
+```jsx
 var MyComponent = React.createClass({
   propTypes: {
     children: React.PropTypes.element.isRequired
@@ -146,7 +146,7 @@ Components are the best way to reuse code in React, but sometimes very different
 
 One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
-```javascript
+```jsx
 var SetIntervalMixin = {
   componentWillMount: function() {
     this.intervals = [];
@@ -191,7 +191,7 @@ A nice feature of mixins is that if a component is using multiple mixins and sev
 
 You may also define your React classes as a plain JavaScript class. For example using ES6 class syntax:
 
-```javascript
+```jsx
 class HelloMessage extends React.Component {
   render() {
     return <div>Hello {this.props.name}</div>;
@@ -204,7 +204,7 @@ The API is similar to `React.createClass` with the exception of `getInitialState
 
 Another difference is that `propTypes` and `defaultProps` are defined as properties on the constructor instead of in the class body.
 
-```javascript
+```jsx
 export class Counter extends React.Component {
   constructor(props) {
     super(props);
@@ -239,7 +239,7 @@ Unfortunately ES6 launched without any mixin support. Therefore, there is no sup
 
 You may also define your React classes as a plain JavaScript function. For example using the stateless function syntax:
 
-```javascript
+```jsx
 function HelloMessage(props) {
   return <div>Hello {props.name}</div>;
 }
@@ -248,7 +248,7 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 
 Or using the new ES6 arrow syntax:
 
-```javascript
+```jsx
 var HelloMessage = (props) => <div>Hello {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
