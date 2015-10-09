@@ -55,7 +55,8 @@ describe('ReactContextValidator', function() {
   it('allows any tag with no context', function() {
     // With renderToString (for example), we don't know where we're mounting the
     // tag so we must err on the side of leniency.
-    specialTags.concat(formattingTags, ['mysterytag']).forEach(function(tag) {
+    var allTags = [].concat(specialTags, formattingTags, ['mysterytag']);
+    allTags.forEach(function(tag) {
       expect(validateDOMNesting.isTagValidInContext(tag, null)).toBe(true);
     });
   });
