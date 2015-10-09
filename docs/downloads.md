@@ -20,32 +20,36 @@ If you're just starting out, make sure to use the development version.
 
 ## Individual Downloads
 
-#### <a href="https://fb.me/react-{{site.react_version}}.js">React {{site.react_version}} (development)</a>
-The uncompressed, development version of React core with inline documentation.
+#### React {{site.react_version}} (development)
+The uncompressed, development version of [react.js](https://fb.me/react-{{site.react_version}}.js) and [react-dom.js](https://fb.me/react-dom-{{site.react_version}}.js) with inline documentation (you need both files).
 
 ```html
 <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
 ```
 
-#### <a href="https://fb.me/react-{{site.react_version}}.min.js">React {{site.react_version}} (production)</a>
-The compressed, production version of React core.
+#### React {{site.react_version}} (production)
+The compressed, production version of [react.js](https://fb.me/react-{{site.react_version}}.min.js) and [react-dom.js](https://fb.me/react-dom-{{site.react_version}}.min.js) (you need both).
 
 ```html
 <script src="https://fb.me/react-{{site.react_version}}.min.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.min.js"></script>
 ```
 
-#### <a href="https://fb.me/react-with-addons-{{site.react_version}}.js">React with Add-Ons {{site.react_version}} (development)</a>
-The uncompressed, development version of React with [add-ons](/react/docs/addons.html).
+#### React with Add-Ons {{site.react_version}} (development)
+The uncompressed, development version of React with [optional add-ons](/react/docs/addons.html).
 
 ```html
 <script src="https://fb.me/react-with-addons-{{site.react_version}}.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
 ```
 
-#### <a href="https://fb.me/react-with-addons-{{site.react_version}}.min.js">React with Add-Ons {{site.react_version}} (production)</a>
-The compressed, production version of React with [add-ons](/react/docs/addons.html).
+#### React with Add-Ons {{site.react_version}} (production)
+The compressed, production version of React with [optional add-ons](/react/docs/addons.html).
 
 ```html
 <script src="https://fb.me/react-with-addons-{{site.react_version}}.min.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.min.js"></script>
 ```
 
 All scripts are also available via [CDNJS](https://cdnjs.com/libraries/react/).
