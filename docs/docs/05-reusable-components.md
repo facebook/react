@@ -100,7 +100,7 @@ The result of `getDefaultProps()` will be cached and used to ensure that `this.p
 
 ## Transferring Props: A Shortcut
 
-A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
+A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
 var CheckLink = React.createClass({
