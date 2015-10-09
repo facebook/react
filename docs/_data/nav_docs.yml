@@ -67,6 +67,8 @@
       title: Performance Tools
   - id: advanced-performance
     title: Advanced Performance
+  - id: context
+    title: Context
 - title: Reference
   items:
   - id: top-level-api
