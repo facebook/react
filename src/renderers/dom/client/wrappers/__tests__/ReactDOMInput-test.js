@@ -279,6 +279,17 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
   });
 
+  it('should have a this value of undefined if bind is not used', function() {
+    var unboundInputOnChange = function() {
+      expect(this).toBe(undefined);
+    };
+
+    var instance = <input type="text" onChange={unboundInputOnChange} />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+
+    ReactTestUtils.Simulate.change(instance);
+  });
+
   it('should throw if both value and valueLink are provided', function() {
     var node = document.createElement('div');
     var link = new ReactLink('yolo', mocks.getMockFunction());
