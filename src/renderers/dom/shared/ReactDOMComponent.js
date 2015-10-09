@@ -377,7 +377,7 @@ function trapBubbledEventsLocal() {
     case 'audio':
 
       inst._wrapperState.listeners = [];
-      // Create listener for each media event
+      // create listener for each media event
       for (var event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
           inst._wrapperState.listeners.push(
@@ -431,7 +431,7 @@ function postUpdateSelectWrapper() {
 }
 
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
+// those special cased tags.
 
 var omittedCloseTags = {
   'area': true,
