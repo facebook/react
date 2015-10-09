@@ -15,7 +15,7 @@ var ClientReactRootIndex = require('ClientReactRootIndex');
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactElement = require('ReactElement');
 var ReactEmptyComponentRegistry = require('ReactEmptyComponentRegistry');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -26,14 +26,12 @@ var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var containsNode = require('containsNode');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
@@ -42,9 +40,6 @@ var nodeCache = {};
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
 var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
-
-var ownerDocumentContextKey =
-  '__ReactMount_ownerDocument$' + Math.random().toString(36).slice(2);
 
 
 /** Mapping from reactRootID to React component instance. */
@@ -279,24 +274,13 @@ function mountComponentIntoNode(
   shouldReuseMarkup,
   context
 ) {
-  if (ReactDOMFeatureFlags.useCreateElement) {
-    context = assign({}, context);
-    if (container.nodeType === DOC_NODE_TYPE) {
-      context[ownerDocumentContextKey] = container;
-    } else {
-      context[ownerDocumentContextKey] = container.ownerDocument;
-    }
-  }
-  if (__DEV__) {
-    if (context === emptyObject) {
-      context = {};
-    }
-    var tag = container.nodeName.toLowerCase();
-    context[validateDOMNesting.ancestorInfoContextKey] =
-      validateDOMNesting.updatedAncestorInfo(null, tag, null);
-  }
   var markup = ReactReconciler.mountComponent(
-    componentInstance, rootID, transaction, context
+    componentInstance,
+    rootID,
+    transaction,
+    null,
+    ReactDOMContainerInfo(container),
+    context
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   ReactMount._mountImageIntoNode(
@@ -1080,8 +1064,6 @@ var ReactMount = {
       setInnerHTML(container, markup);
     }
   },
-
-  ownerDocumentContextKey: ownerDocumentContextKey,
 
   /**
    * React ID utilities.

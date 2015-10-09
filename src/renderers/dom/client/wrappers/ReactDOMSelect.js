@@ -20,9 +20,6 @@ var warning = require('warning');
 
 var didWarnValueLink = false;
 
-var valueContextKey =
-  '__ReactDOMSelect_value$' + Math.random().toString(36).slice(2);
-
 function updateOptionsIfPendingUpdateAndMounted() {
   if (this._rootNodeID && this._wrapperState.pendingUpdate) {
     this._wrapperState.pendingUpdate = false;
@@ -146,9 +143,7 @@ function updateOptions(inst, multiple, propValue) {
  * selected.
  */
 var ReactDOMSelect = {
-  valueContextKey: valueContextKey,
-
-  getNativeProps: function(inst, props, context) {
+  getNativeProps: function(inst, props) {
     return assign({}, props, {
       onChange: inst._wrapperState.onChange,
       value: undefined,
@@ -169,19 +164,17 @@ var ReactDOMSelect = {
     };
   },
 
-  processChildContext: function(inst, props, context) {
-    // Pass down initial value so initial generated markup has correct
-    // `selected` attributes
-    var childContext = assign({}, context);
-    childContext[valueContextKey] = inst._wrapperState.initialValue;
-    return childContext;
+  getSelectValueContext: function(inst) {
+    // ReactDOMOption looks at this initial value so the initial generated
+    // markup has correct `selected` attributes
+    return inst._wrapperState.initialValue;
   },
 
   postUpdateWrapper: function(inst) {
     var props = inst._currentElement.props;
 
     // After the initial mount, we control selected-ness manually so don't pass
-    // the context value down
+    // this value down
     inst._wrapperState.initialValue = undefined;
 
     var wasMultiple = inst._wrapperState.wasMultiple;

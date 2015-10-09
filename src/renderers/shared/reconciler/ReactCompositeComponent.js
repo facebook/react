@@ -96,6 +96,8 @@ var ReactCompositeComponentMixin = {
     this._currentElement = element;
     this._rootNodeID = null;
     this._instance = null;
+    this._nativeParent = null;
+    this._nativeContainerInfo = null;
 
     // See ReactUpdateQueue
     this._pendingElement = null;
@@ -122,10 +124,18 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(
+    rootID,
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
     this._context = context;
     this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
+    this._nativeParent = nativeParent;
+    this._nativeContainerInfo = nativeContainerInfo;
 
     var publicProps = this._processProps(this._currentElement.props);
     var publicContext = this._processContext(context);
@@ -288,6 +298,8 @@ var ReactCompositeComponentMixin = {
       this._renderedComponent,
       rootID,
       transaction,
+      nativeParent,
+      nativeContainerInfo,
       this._processChildContext(context)
     );
     if (inst.componentDidMount) {
@@ -739,6 +751,8 @@ var ReactCompositeComponentMixin = {
         this._renderedComponent,
         this._rootNodeID,
         transaction,
+        this._nativeParent,
+        this._nativeContainerInfo,
         this._processChildContext(context)
       );
       this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);

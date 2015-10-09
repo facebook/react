@@ -255,6 +255,8 @@ var ReactMultiChild = {
             child,
             rootID,
             transaction,
+            this,
+            this._nativeContainerInfo,
             context
           );
           child._mountIndex = index++;
@@ -503,6 +505,8 @@ var ReactMultiChild = {
         child,
         rootID,
         transaction,
+        this,
+        this._nativeContainerInfo,
         context
       );
       child._mountIndex = index;

@@ -11,40 +11,25 @@
 
 'use strict';
 
-var React = require('React');
-var instantiateReactComponent = require('instantiateReactComponent');
-
 describe('Danger', function() {
 
   describe('dangerouslyRenderMarkup', function() {
     var Danger;
-    var transaction;
 
     beforeEach(function() {
       require('mock-modules').dumpCache();
       Danger = require('Danger');
-
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
-      transaction = new ReactReconcileTransaction(/* forceHTML */ true);
     });
 
     it('should render markup', function() {
-      var markup = instantiateReactComponent(
-        <div />
-      ).mountComponent('.rX', transaction, {});
+      var markup = '<div data-reactid=".rX"></div>';
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
     });
 
     it('should render markup with props', function() {
-      var markup = instantiateReactComponent(
-        <div className="foo" />
-      ).mountComponent(
-        '.rX',
-        transaction,
-        {}
-      );
+      var markup = '<div class="foo" data-reactid=".rX"></div>';
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
@@ -52,9 +37,7 @@ describe('Danger', function() {
     });
 
     it('should render wrapped markup', function() {
-      var markup = instantiateReactComponent(
-        <th />
-      ).mountComponent('.rX', transaction, {});
+      var markup = '<th data-reactid=".rX"></th>';
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('TH');

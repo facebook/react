@@ -33,13 +33,21 @@ var ReactEmptyComponent = function(instantiate) {
 assign(ReactEmptyComponent.prototype, {
   construct: function(element) {
   },
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(
+    rootID,
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
     ReactEmptyComponentRegistry.registerNullComponentID(rootID);
     this._rootNodeID = rootID;
     return ReactReconciler.mountComponent(
       this._renderedComponent,
       rootID,
       transaction,
+      nativeParent,
+      nativeContainerInfo,
       context
     );
   },
