@@ -30,7 +30,7 @@ In order to do a tree diff, we first need to be able to diff two nodes. There ar
 
 ### Different Node Types
 
-If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one. 
+If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one.
 
 ```xml
 renderA: <div />

@@ -35,8 +35,8 @@ string type
 
 ## Event pooling
 
-The `SyntheticEvent` is pooled. This means that the `SyntheticEvent` object will be reused and all properties will be nullified after the event callback has been invoked.  
-This is for performance reasons.  
+The `SyntheticEvent` is pooled. This means that the `SyntheticEvent` object will be reused and all properties will be nullified after the event callback has been invoked.
+This is for performance reasons.
 As such, you cannot access the event in an asynchronous way.
 
 ```javascript

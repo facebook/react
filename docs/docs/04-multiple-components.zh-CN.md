@@ -168,7 +168,7 @@ var MyComponent = React.createClass({
 });
 ```
 
-也可以传递ReactFragment 对象 来做有 key 的子级。详见[Keyed Fragments](create-fragment.html) 
+也可以传递ReactFragment 对象 来做有 key 的子级。详见[Keyed Fragments](create-fragment.html)
 
 ## 数据流
 
@@ -182,5 +182,5 @@ React 里，数据通过上面介绍过的 `props` 从拥有者流向归属者�
 但是，有时候需要做细粒度的性能控制。这种情况下，可以重写 `shouldComponentUpdate()` 方法返回 false 来让 React 跳过对子树的处理。参考 [React reference docs](/react/docs/component-specs.html) 了解更多。
 
 > 注意：
-> 
+>
 > 如果在数据变化时让 `shouldComponentUpdate()` 返回 false，React 就不能保证用户界面同步。当使用它的时候一定确保你清楚到底做了什么，并且只在遇到明显性能问题的时候才使用它。不要低估 JavaScript 的速度，DOM 操作通常才是慢的原因。

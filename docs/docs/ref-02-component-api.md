@@ -29,7 +29,7 @@ Here is the simple object usage:
 setState({mykey: 'my new value'});
 ```
 
-It's also possible to pass a function with the signature `function(state, props)`. This can be useful in some cases when you want to enqueue an atomic update that consults the previous value of state+props before setting any values.  For instance, suppose we wanted to increment a value in state: 
+It's also possible to pass a function with the signature `function(state, props)`. This can be useful in some cases when you want to enqueue an atomic update that consults the previous value of state+props before setting any values.  For instance, suppose we wanted to increment a value in state:
 
 ```javascript
 setState(function(previousState, currentProps) {
