@@ -185,7 +185,9 @@ var ReactTestUtils = {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
         var classList = ReactDOM.findDOMNode(inst).classList;
-        return classList.contains.apply(classList, classNames);
+        return classNames.every(function(className) {
+          return classList.contains(className);
+        });
       }
       return false;
     });
