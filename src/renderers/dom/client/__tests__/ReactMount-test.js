@@ -237,7 +237,7 @@ describe('ReactMount', function() {
     spyOn(console, 'error');
     var rootNode = container.firstChild;
     ReactDOM.render(<span />, rootNode);
-    expect(console.error.callCount).toBe(1);
+    expect(console.error.calls.length).toBe(1);
     expect(console.error.mostRecentCall.args[0]).toBe(
       'Warning: render(...): Replacing React-rendered children with a new ' +
       'root component. If you intended to update the children of this node, ' +
