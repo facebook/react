@@ -53,7 +53,7 @@ describe('ReactMount', function() {
     var rootDiv = mainContainerDiv.firstChild;
     spyOn(console, 'error');
     ReactDOM.unmountComponentAtNode(rootDiv);
-    expect(console.error.callCount).toBe(1);
+    expect(console.error.calls.length).toBe(1);
     expect(console.error.mostRecentCall.args[0]).toBe(
       'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
       'unmount was rendered by React and is not a top-level container. You ' +
@@ -77,7 +77,7 @@ describe('ReactMount', function() {
     var nonRootDiv = mainContainerDiv.firstChild.firstChild;
     spyOn(console, 'error');
     ReactDOM.unmountComponentAtNode(nonRootDiv);
-    expect(console.error.callCount).toBe(1);
+    expect(console.error.calls.length).toBe(1);
     expect(console.error.mostRecentCall.args[0]).toBe(
       'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
       'unmount was rendered by React and is not a top-level container. ' +
