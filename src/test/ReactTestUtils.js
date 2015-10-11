@@ -184,14 +184,9 @@ var ReactTestUtils = {
     }
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
-        var className = inst.className;
-        if (typeof className !== 'string') {
-          // SVG, probably.
-          className = inst.getAttribute('class') || '';
-        }
-        var classList = className.split(/\s+/);
-        return classNames.every(function(name) {
-          return classList.indexOf(name) !== -1;
+        var classList = ReactDOM.findDOMNode(inst).classList;
+        return classNames.every(function(className) {
+          return classList.contains(className);
         });
       }
       return false;
