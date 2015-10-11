@@ -9,7 +9,7 @@ next: more-about-refs-zh-CN.html
 React提供了强大的抽象机制使你在大多数情况下免于直接接触DOM，但有时你仅仅只需要访问底层API，也许是为了与第三方库或者已有的代码协作。
 
 
-## 虚拟DOM 
+## 虚拟DOM
 
 React如此快速是因为它从不直接操作DOM。React维持了一个快速的内存中的DOM表示。`render()` 方法返回一个DOM的*描述*，然后React能根据内存中的描述diff此描述来计算出最快速的方法更新浏览器。
 
@@ -76,14 +76,14 @@ React提供生命周期方法，以便你可以指定钩挂到这个过程上。
 ### 挂载
 
 * `getInitialState(): object` 在组件挂载前被调用. 有状态组件(Stateful components) 应该实现此函数并返回初始state的数据。
-* `componentWillMount()` 在挂载发生前被立即调用。 
-* `componentDidMount()` 在挂载发生后被立即调用。 需要DOM node的初始化应该放在这里。 
+* `componentWillMount()` 在挂载发生前被立即调用。
+* `componentDidMount()` 在挂载发生后被立即调用。 需要DOM node的初始化应该放在这里。
 
 
 ### 更新
 
 * `componentWillReceiveProps(object nextProps)` 当挂载的组件接收到新的props时被调用。此方法应该被用于比较`this.props` 和 `nextProps`以用于使用`this.setState()`执行状态转换。
-* `shouldComponentUpdate(object nextProps, object nextState): boolean` 当组件决定任何改变是否要更新到DOM时被调用。作为一个优化实现比较`this.props` 和 `nextProps` 、`this.state` 和 `nextState` ，如果React应该跳过更新，返回`false`。 
+* `shouldComponentUpdate(object nextProps, object nextState): boolean` 当组件决定任何改变是否要更新到DOM时被调用。作为一个优化实现比较`this.props` 和 `nextProps` 、`this.state` 和 `nextState` ，如果React应该跳过更新，返回`false`。
 * `componentWillUpdate(object nextProps, object nextState)` 在更新发生前被立即调用。你不能在此调用`this.setState()`。
 * `componentDidUpdate(object prevProps, object prevState)` 在更新发生后被立即调用。
 
@@ -108,7 +108,7 @@ _Mounted_ 复合组件同样支持以下方法:
 除了这种哲学外，我们也采用了这样的立场，我们，作为一个JS库的作者，不应该把polyfills作为我们库的一部分。如果所有的库这样做，就有很大的机会发送同样的polyfill多次，这可能是一个相当大的无用代码。如果你的产品需要支援老的浏览器，你很有可能已经在使用某些东西比如[es5-shim](https://github.com/es-shims/es5-shim)。
 
 
-### 需要用来支持旧浏览器的Polyfills  
+### 需要用来支持旧浏览器的Polyfills
 
 来自 [kriskowal's es5-shim](https://github.com/es-shims/es5-shim)的`es5-shim.js`  提供了如下React需要的东西：
 
@@ -135,7 +135,7 @@ _Mounted_ 复合组件同样支持以下方法:
 当在IE8里使用HTML5元素，包括`<section>`, `<article>`, `<nav>`, `<header>`, 和 `<footer>`, 同样必须包含[html5shiv](https://github.com/aFarkas/html5shiv) 或者类似的脚本。
 
 
-### 跨浏览器问题 
+### 跨浏览器问题
 
 尽管React在抽象浏览器不同时做的相当好，但一些浏览器被限制或者表现出怪异的行为，我们没能找到变通的方案解决。
 

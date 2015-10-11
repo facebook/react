@@ -78,7 +78,7 @@ forceUpdate(
 
 调用 `forceUpdate()` 将会导致 `render()` 跳过 `shouldComponentUpdate()` 在组件上被调用，这会为子级触发正常的生命周期方法。包括每个子级的 `shouldComponentUpdate()` 方法。如果标记改变了，React 仍仅只更新 DOM。
 
-通常你应该试着避免所有对 `forceUpdate()` 的使用并且在 `render()` 里只从 `this.props` 和 `this.state` 读取。这会使你的组件 "纯粹" 并且你的组件会更简单和高效。 
+通常你应该试着避免所有对 `forceUpdate()` 的使用并且在 `render()` 里只从 `this.props` 和 `this.state` 读取。这会使你的组件 "纯粹" 并且你的组件会更简单和高效。
 
 
 ### getDOMNode

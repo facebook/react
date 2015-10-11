@@ -35,8 +35,8 @@ string type
 
 ## Riutilizzo degli eventi
 
-Gli oggetti `SyntheticEvent` sono gestiti come un pool. Ciò significa che ciascun oggetto `SyntheticEvent` sarà riutilizzato e tutte le sue proprietà annullate dopo che la callback dell'evento è stata invocata.  
-Ciò avviene per ragioni di performance.  
+Gli oggetti `SyntheticEvent` sono gestiti come un pool. Ciò significa che ciascun oggetto `SyntheticEvent` sarà riutilizzato e tutte le sue proprietà annullate dopo che la callback dell'evento è stata invocata.
+Ciò avviene per ragioni di performance.
 Per questo motivo non potrai accedere all'evento in maniera asincrona.
 
 ```javascript
