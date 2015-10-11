@@ -83,7 +83,7 @@ ReactDOM.render(
 ```
 
 > 注意:
-> 
+>
 > 上面例子中，`checked` 属性也是一个有效的 DOM 属性。如果你没有使用解构赋值，那么可能无意中把它传下去。
 
 在传递这些未知的 `other` 属性时，要经常使用解构赋值模式。
@@ -126,7 +126,7 @@ var FancyCheckbox = React.createClass({
 ```
 
 > 注意:
-> 
+>
 > 顺序很重要，把 `{...other}` 放到 JSX props 前面会使它不被覆盖。上面例子中我们可以保证 input 的 type 是 `"checkbox"`。
 
 

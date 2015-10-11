@@ -44,10 +44,10 @@ React许多优秀的部分之一是它如何使你随着构建 app 来思考 app
 在这里你会看到,在我们简单的APP里有五个组件.我用斜体表示每个组件的数据.
 
   1. **`FilterableProductTable` (orange):** 包含示例的整体
-  2. **`SearchBar` (blue):**  接受所有 *用户输入*  
-  3. **`ProductTable` (green):** 基于 *用户输入* 显示和过滤 *数据集合(data collection)*  
+  2. **`SearchBar` (blue):**  接受所有 *用户输入*
+  3. **`ProductTable` (green):** 基于 *用户输入* 显示和过滤 *数据集合(data collection)*
   4. **`ProductCategoryRow` (turquoise):** 为每个 *分类* 显示一个列表头
-  5. **`ProductRow` (red):** 为每个 *产品* 显示一个行 
+  5. **`ProductRow` (red):** 为每个 *产品* 显示一个行
 
 如果你看着 `ProductTable`,你会看到表的头(包含了 "Name" 和 "Price" 标签) 不是独立的组件.这是一个个人喜好问题,并且无论哪种方式都有争论.对于这个例子,我把它留做 `ProductTable` 的一部分,因为它是 *data collection*渲染的一部分,而 *data collection*渲染是 `ProductTable` 的职责.然而,当列表头增长到复杂的时候(例如 如果我们添加排序的功能性),那么无疑的使它成为独立的 `ProductTableHeader` 组件是有意义的.
 
@@ -85,10 +85,10 @@ React许多优秀的部分之一是它如何使你随着构建 app 来思考 app
 
 考虑我们例子应用中数据的所有块.我们有:
 
-  * 原始的产品列表 
-  * 用户输入的搜索文本 
-  * checkbox的值 
-  * 产品的滤过的列表 
+  * 原始的产品列表
+  * 用户输入的搜索文本
+  * checkbox的值
+  * 产品的滤过的列表
 
 让我们遍历每一个并指出哪一个是state.简单的问三个关于每个数据块的问题:
 
@@ -132,7 +132,7 @@ React许多优秀的部分之一是它如何使你随着构建 app 来思考 app
 
 <iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
-到目前为止，我们已经构建了一个应用, 它以props 和 state 沿着层级向下流动的功能正确渲染。现在是时候支持数据的另一种流动了：在层级深处的表单组件需要更新 `FilterableProductTable` 里的state. 
+到目前为止，我们已经构建了一个应用, 它以props 和 state 沿着层级向下流动的功能正确渲染。现在是时候支持数据的另一种流动了：在层级深处的表单组件需要更新 `FilterableProductTable` 里的state.
 
 React 让数据显式流动，使理解你的应用如何工作变得简单，但是相对于传统的双向数据绑定，确实需要打多一些的字。 React 提供了一个叫做 `ReactLink` 的插件来使这种模式和双向数据绑定一样方便，但是考虑到这篇文章的目的，我们将会保持所有东西都直截了当。
 

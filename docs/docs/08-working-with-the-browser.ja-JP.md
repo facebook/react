@@ -32,7 +32,7 @@ var MyComponent = React.createClass({
     ReactDOM.findDOMNode(this.refs.myTextInput).focus();
   },
   render: function() {
-    // この参照属性はコンポーネントがマウントされた時に、 
+    // この参照属性はコンポーネントがマウントされた時に、
     // this.refs のコンポーネントへの参照を追加します。
     return (
       <div>
