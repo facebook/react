@@ -258,7 +258,7 @@ describe('ReactElementClone', function() {
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
       'expected `string`. Check the render method of `Parent`.'

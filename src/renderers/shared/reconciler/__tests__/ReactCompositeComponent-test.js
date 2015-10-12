@@ -1075,7 +1075,7 @@ describe('ReactCompositeComponent', function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrow();  // has no method 'render'
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'NotAComponent(...): No `render` method found'
     );
   });
