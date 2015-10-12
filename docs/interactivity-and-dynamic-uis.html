@@ -446,7 +446,7 @@
 <p>A common pattern is to create several stateless components that just render data, and have a stateful component above them in the hierarchy that passes its state to its children via <code>props</code>. The stateful component encapsulates all of the interaction logic, while the stateless components take care of rendering data in a declarative way.</p>
 <h2><a class="anchor" name="what-should-go-in-state"></a>What <em>Should</em> Go in State? <a class="hash-link" href="#what-should-go-in-state">#</a></h2>
 <p><strong>State should contain data that a component&#39;s event handlers may change to trigger a UI update.</strong> In real apps this data tends to be very small and JSON-serializable. When building a stateful component, think about the minimal possible representation of its state, and only store those properties in <code>this.state</code>. Inside of <code>render()</code> simply compute any other information you need based on this state. You&#39;ll find that thinking about and writing applications in this way tends to lead to the most correct application, since adding redundant or computed values to state means that you need to explicitly keep them in sync rather than rely on React computing them for you.</p>
-<h2><a class="anchor" name="what-shouldnt-go-in-state"></a>What <em>Shouldn’t</em> Go in State? <a class="hash-link" href="#what-shouldnt-go-in-state">#</a></h2>
+<h2><a class="anchor" name="what-shouldnt-go-in-state"></a>What <em>Shouldn&#39;t</em> Go in State? <a class="hash-link" href="#what-shouldnt-go-in-state">#</a></h2>
 <p><code>this.state</code> should only contain the minimal amount of data needed to represent your UI&#39;s state. As such, it should not contain:</p>
 
 <ul>

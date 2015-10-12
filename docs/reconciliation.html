@@ -419,7 +419,7 @@
 <h2><a class="anchor" name="pair-wise-diff"></a>Pair-wise diff <a class="hash-link" href="#pair-wise-diff">#</a></h2>
 <p>In order to do a tree diff, we first need to be able to diff two nodes. There are three different cases being handled.</p>
 <h3><a class="anchor" name="different-node-types"></a>Different Node Types <a class="hash-link" href="#different-node-types">#</a></h3>
-<p>If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one. </p>
+<p>If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one.</p>
 <div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="nt">/&gt;</span>
 renderB: <span class="nt">&lt;span</span> <span class="nt">/&gt;</span>
 =&gt; [removeNode <span class="nt">&lt;div</span> <span class="nt">/&gt;</span>], [insertNode <span class="nt">&lt;span</span> <span class="nt">/&gt;</span>]

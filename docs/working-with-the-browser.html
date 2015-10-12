@@ -404,7 +404,7 @@
 
     <p>React provides powerful abstractions that free you from touching the DOM directly in most cases, but sometimes you simply need to access the underlying API, perhaps to work with a third-party library or existing code.</p>
 <h2><a class="anchor" name="the-virtual-dom"></a>The Virtual DOM <a class="hash-link" href="#the-virtual-dom">#</a></h2>
-<p>React is so fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. <code>render()</code> methods return a <em>description</em> of the DOM, and React can diff this description with the in-memory representation to compute the fastest way to update the browser.</p>
+<p>React is very fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. <code>render()</code> methods actually return a <em>description</em> of the DOM, and React can compare this description with the in-memory representation to compute the fastest way to update the browser.</p>
 
 <p>Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and efficiently across browsers. You can even use some HTML5 events in IE8!</p>
 

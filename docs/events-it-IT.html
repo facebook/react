@@ -427,8 +427,8 @@
 <p>A partire dalla v0.14, restituire <code>false</code> da un gestore di eventi non fermerà più la propagazione dell&#39;evento. Invece, <code>e.stopPropagation()</code> o <code>e.preventDefault()</code> devono essere invocati manualmente, in maniera appropriata.</p>
 </blockquote>
 <h2><a class="anchor" name="riutilizzo-degli-eventi"></a>Riutilizzo degli eventi <a class="hash-link" href="#riutilizzo-degli-eventi">#</a></h2>
-<p>Gli oggetti <code>SyntheticEvent</code> sono gestiti come un pool. Ciò significa che ciascun oggetto <code>SyntheticEvent</code> sarà riutilizzato e tutte le sue proprietà annullate dopo che la callback dell&#39;evento è stata invocata.<br>
-Ciò avviene per ragioni di performance.<br>
+<p>Gli oggetti <code>SyntheticEvent</code> sono gestiti come un pool. Ciò significa che ciascun oggetto <code>SyntheticEvent</code> sarà riutilizzato e tutte le sue proprietà annullate dopo che la callback dell&#39;evento è stata invocata.
+Ciò avviene per ragioni di performance.
 Per questo motivo non potrai accedere all&#39;evento in maniera asincrona.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">onClick</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span> <span class="c1">// =&gt; oggetto annullato.</span>

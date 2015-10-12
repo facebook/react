@@ -411,19 +411,19 @@
 </code></pre></div>
 <p>Simulate an event dispatch on a DOM node with optional <code>eventData</code> event data. <strong>This is possibly the single most useful utility in <code>ReactTestUtils</code>.</strong></p>
 
-<p><strong>Clicking an element</strong>  </p>
+<p><strong>Clicking an element</strong></p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;button ref=&quot;button&quot;&gt;...&lt;/button&gt;</span>
 <span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">button</span><span class="p">;</span>
 <span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
 </code></pre></div>
-<p><strong>Changing the value of an input field and then pressing ENTER</strong>  </p>
+<p><strong>Changing the value of an input field and then pressing ENTER.</strong></p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;input ref=&quot;input&quot; /&gt;</span>
 <span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">;</span>
 <span class="nx">node</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;giraffe&#39;</span>
 <span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
 <span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">keyDown</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;Enter&quot;</span><span class="p">,</span> <span class="nx">keyCode</span><span class="o">:</span> <span class="mi">13</span><span class="p">,</span> <span class="nx">which</span><span class="o">:</span> <span class="mi">13</span><span class="p">});</span>
 </code></pre></div>
-<p><em>note that you will have to provide any event property that you&#39;re using in your component (e.g. keyCode, which, etc...) as React is not creating any of these for you</em></p>
+<p><em>Note that you will have to provide any event property that you&#39;re using in your component (e.g. keyCode, which, etc...) as React is not creating any of these for you.</em></p>
 
 <p><code>Simulate</code> has a method for every event that React understands.</p>
 <h3><a class="anchor" name="renderintodocument"></a>renderIntoDocument <a class="hash-link" href="#renderintodocument">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">renderIntoDocument</span><span class="p">(</span>
@@ -436,7 +436,7 @@
 <p>Note:</p>
 
 <p>You will need to have <code>window</code>, <code>window.document</code> and <code>window.document.createElement</code>
- globally available <strong>before</strong> you import React. Otherwise React will think it can&#39;t access the DOM and methods like <code>setState</code> won&#39;t work.  </p>
+ globally available <strong>before</strong> you import React. Otherwise React will think it can&#39;t access the DOM and methods like <code>setState</code> won&#39;t work.</p>
 </blockquote>
 <h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span>
   <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span>

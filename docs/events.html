@@ -427,8 +427,8 @@
 <p>As of v0.14, returning <code>false</code> from an event handler will no longer stop event propagation. Instead, <code>e.stopPropagation()</code> or <code>e.preventDefault()</code> should be triggered manually, as appropriate.</p>
 </blockquote>
 <h2><a class="anchor" name="event-pooling"></a>Event pooling <a class="hash-link" href="#event-pooling">#</a></h2>
-<p>The <code>SyntheticEvent</code> is pooled. This means that the <code>SyntheticEvent</code> object will be reused and all properties will be nullified after the event callback has been invoked.<br>
-This is for performance reasons.<br>
+<p>The <code>SyntheticEvent</code> is pooled. This means that the <code>SyntheticEvent</code> object will be reused and all properties will be nullified after the event callback has been invoked.
+This is for performance reasons.
 As such, you cannot access the event in an asynchronous way.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">onClick</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span> <span class="c1">// =&gt; nullified object.</span>
@@ -460,6 +460,12 @@ different browsers.</p>
 </code></pre></div>
 <p>Properties:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMDataTransfer</span> <span class="nx">clipboardData</span>
+</code></pre></div><h3><a class="anchor" name="composition-events"></a>Composition Events <a class="hash-link" href="#composition-events">#</a></h3>
+<p>Event names:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onCompositionEnd onCompositionStart onCompositionUpdate
+</code></pre></div>
+<p>Properties:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">data</span>
 </code></pre></div><h3><a class="anchor" name="keyboard-events"></a>Keyboard Events <a class="hash-link" href="#keyboard-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
@@ -511,6 +517,9 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">number</span> <span class="nx">screenX</span>
 <span class="nx">number</span> <span class="nx">screenY</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
+</code></pre></div><h3><a class="anchor" name="selection-events"></a>Selection events <a class="hash-link" href="#selection-events">#</a></h3>
+<p>Event names:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onSelect
 </code></pre></div><h3><a class="anchor" name="touch-events"></a>Touch events <a class="hash-link" href="#touch-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onTouchCancel onTouchEnd onTouchMove onTouchStart

@@ -404,7 +404,7 @@
 
     <p>If you know all the properties that you want to place on a component ahead of time, it is easy to use JSX:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="nx">x</span><span class="p">}</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="nx">y</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h2><a class="anchor" name="mutating-props-is-bad-mkay"></a>Mutating Props is Bad, mkay <a class="hash-link" href="#mutating-props-is-bad-mkay">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="mutating-props-is-bad"></a>Mutating Props is Bad <a class="hash-link" href="#mutating-props-is-bad">#</a></h2>
 <p>If you don&#39;t know which properties you want to set, you might be tempted to add them onto the object later:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="c1">// bad</span>

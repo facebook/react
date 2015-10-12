@@ -451,7 +451,7 @@ Reactでは、全てのメソッドが自動でコンポーネントのインス
 <p><code>this.state</code> UIのstateを表す必要がある最小限の量のデータだけを保持するべきです。このような点で以下のようなものは保持するべきではありません。</p>
 
 <ul>
-<li><strong>計算されたデータ:</strong> 
+<li><strong>計算されたデータ:</strong>
 stateに基づく事前に計算された値について心配は要りません。 <code>render()</code> を用いて、全ての計算を行って、UIの一貫性を保証するよりも簡単です。例えば、stateにリスト化されたアイテムの配列を持っていて、文字列としてその数をレンダリングしたいとして、それらをstateに保持するよりも <code>render()</code> メソッドに <code>this.state.listItems.length + &#39; list items&#39;</code> を単純にレンダリングすれば良いのです。</li>
 <li><strong>Reactのコンポーネント:</strong> 隠れたpropsとstateに基づいて <code>render()</code> でそれらをビルドしてください。</li>
 <li><strong>propsからコピーしたデータ:</strong> 可能であれば、propsを真のソースとして使ってみてください。propsは時とともに変化し得るので、正しくstateにpropsを保持する使い方は、以前の値を知っていることになり得ます。</li>

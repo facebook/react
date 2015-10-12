@@ -434,10 +434,10 @@
 
 <ol>
 <li><strong><code>FilterableProductTable</code> (orange):</strong> 包含示例的整体</li>
-<li><strong><code>SearchBar</code> (blue):</strong>  接受所有 <em>用户输入</em><br></li>
-<li><strong><code>ProductTable</code> (green):</strong> 基于 <em>用户输入</em> 显示和过滤 <em>数据集合(data collection)</em><br></li>
+<li><strong><code>SearchBar</code> (blue):</strong>  接受所有 <em>用户输入</em></li>
+<li><strong><code>ProductTable</code> (green):</strong> 基于 <em>用户输入</em> 显示和过滤 <em>数据集合(data collection)</em></li>
 <li><strong><code>ProductCategoryRow</code> (turquoise):</strong> 为每个 <em>分类</em> 显示一个列表头</li>
-<li><strong><code>ProductRow</code> (red):</strong> 为每个 <em>产品</em> 显示一个行 </li>
+<li><strong><code>ProductRow</code> (red):</strong> 为每个 <em>产品</em> 显示一个行</li>
 </ol>
 
 <p>如果你看着 <code>ProductTable</code>,你会看到表的头(包含了 &quot;Name&quot; 和 &quot;Price&quot; 标签) 不是独立的组件.这是一个个人喜好问题,并且无论哪种方式都有争论.对于这个例子,我把它留做 <code>ProductTable</code> 的一部分,因为它是 <em>data collection</em>渲染的一部分,而 <em>data collection</em>渲染是 <code>ProductTable</code> 的职责.然而,当列表头增长到复杂的时候(例如 如果我们添加排序的功能性),那么无疑的使它成为独立的 <code>ProductTableHeader</code> 组件是有意义的.</p>
@@ -479,10 +479,10 @@
 <p>考虑我们例子应用中数据的所有块.我们有:</p>
 
 <ul>
-<li>原始的产品列表 </li>
-<li>用户输入的搜索文本 </li>
-<li>checkbox的值 </li>
-<li>产品的滤过的列表 </li>
+<li>原始的产品列表</li>
+<li>用户输入的搜索文本</li>
+<li>checkbox的值</li>
+<li>产品的滤过的列表</li>
 </ul>
 
 <p>让我们遍历每一个并指出哪一个是state.简单的问三个关于每个数据块的问题:</p>
@@ -531,7 +531,7 @@
 <h2><a class="anchor" name=""></a>第五步:添加反向数据流 <a class="hash-link" href="#">#</a></h2>
 <iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
-<p>到目前为止，我们已经构建了一个应用, 它以props 和 state 沿着层级向下流动的功能正确渲染。现在是时候支持数据的另一种流动了：在层级深处的表单组件需要更新 <code>FilterableProductTable</code> 里的state. </p>
+<p>到目前为止，我们已经构建了一个应用, 它以props 和 state 沿着层级向下流动的功能正确渲染。现在是时候支持数据的另一种流动了：在层级深处的表单组件需要更新 <code>FilterableProductTable</code> 里的state.</p>
 
 <p>React 让数据显式流动，使理解你的应用如何工作变得简单，但是相对于传统的双向数据绑定，确实需要打多一些的字。 React 提供了一个叫做 <code>ReactLink</code> 的插件来使这种模式和双向数据绑定一样方便，但是考虑到这篇文章的目的，我们将会保持所有东西都直截了当。</p>
 

@@ -459,13 +459,13 @@
 <h3><a class="anchor" name=""></a>挂载 <a class="hash-link" href="#">#</a></h3>
 <ul>
 <li><code>getInitialState(): object</code> 在组件挂载前被调用. 有状态组件(Stateful components) 应该实现此函数并返回初始state的数据。</li>
-<li><code>componentWillMount()</code> 在挂载发生前被立即调用。 </li>
-<li><code>componentDidMount()</code> 在挂载发生后被立即调用。 需要DOM node的初始化应该放在这里。 </li>
+<li><code>componentWillMount()</code> 在挂载发生前被立即调用。</li>
+<li><code>componentDidMount()</code> 在挂载发生后被立即调用。 需要DOM node的初始化应该放在这里。</li>
 </ul>
 <h3><a class="anchor" name=""></a>更新 <a class="hash-link" href="#">#</a></h3>
 <ul>
 <li><code>componentWillReceiveProps(object nextProps)</code> 当挂载的组件接收到新的props时被调用。此方法应该被用于比较<code>this.props</code> 和 <code>nextProps</code>以用于使用<code>this.setState()</code>执行状态转换。</li>
-<li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> 当组件决定任何改变是否要更新到DOM时被调用。作为一个优化实现比较<code>this.props</code> 和 <code>nextProps</code> 、<code>this.state</code> 和 <code>nextState</code> ，如果React应该跳过更新，返回<code>false</code>。 </li>
+<li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> 当组件决定任何改变是否要更新到DOM时被调用。作为一个优化实现比较<code>this.props</code> 和 <code>nextProps</code> 、<code>this.state</code> 和 <code>nextState</code> ，如果React应该跳过更新，返回<code>false</code>。</li>
 <li><code>componentWillUpdate(object nextProps, object nextState)</code> 在更新发生前被立即调用。你不能在此调用<code>this.setState()</code>。</li>
 <li><code>componentDidUpdate(object prevProps, object prevState)</code> 在更新发生后被立即调用。</li>
 </ul>

@@ -431,12 +431,12 @@
     <span class="p">}</span>
   <span class="p">});</span>
 </code></pre></div>
-<p>注意，在这个例子中，我们想 &quot;告诉&quot; input 一些东西 - 那些最后它不能从他的props推断出来的东西。在这个场景中我们想 &quot;告诉&quot; 它，它应该转为获得焦点。然而，有一些挑战。从<code>render()</code> 返回的东西不是你实际的 &quot;子&quot; 组件的组合，而是一个在某刻特定实例的子组件的 <em>描述</em> - 一个快照。 </p>
+<p>注意，在这个例子中，我们想 &quot;告诉&quot; input 一些东西 - 那些最后它不能从他的props推断出来的东西。在这个场景中我们想 &quot;告诉&quot; 它，它应该转为获得焦点。然而，有一些挑战。从<code>render()</code> 返回的东西不是你实际的 &quot;子&quot; 组件的组合，而是一个在某刻特定实例的子组件的 <em>描述</em> - 一个快照。</p>
 
 <blockquote>
 <p>注意:</p>
 
-<p>记住，从 <code>render()</code>返回的东西不是你的 <em>实际的</em> 被渲染出的子组件实例。从 <code>render()</code> 返回的东西仅仅是一个在特定时间你的组件的子层级中的子实例的 <em>描述</em>。 </p>
+<p>记住，从 <code>render()</code>返回的东西不是你的 <em>实际的</em> 被渲染出的子组件实例。从 <code>render()</code> 返回的东西仅仅是一个在特定时间你的组件的子层级中的子实例的 <em>描述</em>。</p>
 </blockquote>
 
 <p>这意味着你万万不要把你从<code>render()</code>返回的东西 &quot;抓住不放&quot; 然后期望它变成任何有意义的东西。</p>
@@ -452,7 +452,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>在这个例子中，<code>&lt;input /&gt;</code> 仅仅是一个<code>&lt;input /&gt;</code> 的 <em>描述</em>。 这个描述被用于为<code>&lt;input /&gt;</code>创建一个 <em>真实的</em>  <strong>支持实例(backing instance)</strong>  </p>
+<p>在这个例子中，<code>&lt;input /&gt;</code> 仅仅是一个<code>&lt;input /&gt;</code> 的 <em>描述</em>。 这个描述被用于为<code>&lt;input /&gt;</code>创建一个 <em>真实的</em>  <strong>支持实例(backing instance)</strong></p>
 
 <p>所以我们如何与input的 <em>真实的</em>支持实例对话？</p>
 <h2><a class="anchor" name="ref-string-"></a>ref String 属性 <a class="hash-link" href="#ref-string-">#</a></h2>

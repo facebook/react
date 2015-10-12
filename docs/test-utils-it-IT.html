@@ -410,11 +410,11 @@
 </code></pre></div>
 <p>Simula l&#39;inoltro di un evento su un nodo DOM con dei dati dell&#39;evento opzionali <code>eventData</code>. <strong>Questa è probabilmente l&#39;utilità più essenziale in <code>ReactTestUtils</code>.</strong></p>
 
-<p><strong>Cliccare un elemento</strong>  </p>
+<p><strong>Cliccare un elemento</strong></p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">button</span><span class="p">);</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
 </code></pre></div>
-<p><strong>Cambiare il valore di un campo di input e in seguito premere INVIO</strong>  </p>
+<p><strong>Cambiare il valore di un campo di input e in seguito premere INVIO</strong></p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">);</span>
 <span class="nx">node</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;giraffe&#39;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>

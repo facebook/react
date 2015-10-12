@@ -414,7 +414,7 @@
 <li><code>selected</code>，用于 <code>&lt;option&gt;</code> 组件。</li>
 </ul>
 
-<p>在 HTML 中，<code>&lt;textarea&gt;</code> 的值通过子节点设置；在 React 中则应该使用 <code>value</code> 代替。        </p>
+<p>在 HTML 中，<code>&lt;textarea&gt;</code> 的值通过子节点设置；在 React 中则应该使用 <code>value</code> 代替。</p>
 
 <p>表单组件可以通过 <code>onChange</code> 回调函数来监听组件变化。当用户做出以下交互时，<code>onChange</code> 执行并通过浏览器做出响应：</p>
 
@@ -424,7 +424,7 @@
 <li><code>&lt;option&gt;</code> 的 <code>selected</code> 状态改变时。</li>
 </ul>
 
-<p>和所有 DOM 事件一样，所有的 HTML 原生组件都支持 <code>onChange</code> 属性，而且可以用来监听冒泡的 <code>change</code> 事件。               </p>
+<p>和所有 DOM 事件一样，所有的 HTML 原生组件都支持 <code>onChange</code> 属性，而且可以用来监听冒泡的 <code>change</code> 事件。</p>
 
 <blockquote>
 <p>注意:</p>
@@ -480,7 +480,7 @@
 <p><code>defaultValue</code> 和 <code>defaultChecked</code> props 只能在内部渲染时被使用。 如果你需要在随后的渲染更新值, 你需要使用 <a href="#%E5%8F%97%E9%99%90%E7%BB%84%E4%BB%B6">受限组件</a>.</p>
 </blockquote>
 <h2><a class="anchor" name=""></a>高级主题 <a class="hash-link" href="#">#</a></h2><h3><a class="anchor" name=""></a>为什么使用受限组件？ <a class="hash-link" href="#">#</a></h3>
-<p>在 React 中使用诸如 <code>&lt;input&gt;</code> 的表单组件时，遇到了一个在传统 HTML 中没有的挑战。比如下面的代码：                </p>
+<p>在 React 中使用诸如 <code>&lt;input&gt;</code> 的表单组件时，遇到了一个在传统 HTML 中没有的挑战。比如下面的代码：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
 <p>在 HTML 中将渲染 <em>初始值</em> 为 <code>Untitled</code> 的输入框。用户改变输入框的值时，节点的 <code>value</code> 属性( <em>property</em>)将随之变化，但是 <code>node.getAttribute(&#39;value&#39;)</code> 还是会返回初始设置的值 <code>Untitled</code>.</p>
