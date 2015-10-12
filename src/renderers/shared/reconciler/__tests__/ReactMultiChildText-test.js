@@ -187,7 +187,7 @@ describe('ReactMultiChildText', function() {
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should throw if rendering both HTML and children', function() {

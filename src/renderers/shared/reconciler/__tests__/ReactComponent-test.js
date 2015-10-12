@@ -284,7 +284,7 @@ describe('ReactComponent', function() {
     instance.getDOMNode();
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'Potato.getDOMNode(...) is deprecated. Please use ' +
       'ReactDOM.findDOMNode(instance) instead.'
     );

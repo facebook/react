@@ -195,7 +195,7 @@ describe('ReactJSXElementValidator', function() {
       }
     }
     ReactTestUtils.renderIntoDocument(<ParentComp />);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`. Check the render method of `ParentComp`.'
@@ -214,19 +214,19 @@ describe('ReactJSXElementValidator', function() {
     void <True />;
     void <Num />;
     expect(console.error.calls.length).toBe(4);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls[1].args[0]).toContain(
+    expect(console.error.argsForCall[1][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls[2].args[0]).toContain(
+    expect(console.error.argsForCall[2][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls[3].args[0]).toContain(
+    expect(console.error.argsForCall[3][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
@@ -242,7 +242,7 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
@@ -254,7 +254,7 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
@@ -267,12 +267,12 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={42} />);
 
     expect(console.error.calls.length).toBe(2);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
 
-    expect(console.error.calls[1].args[0]).toBe(
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
       '`RequiredPropComponent`, expected `string`.'
@@ -300,7 +300,7 @@ describe('ReactJSXElementValidator', function() {
     };
     ReactTestUtils.renderIntoDocument(<NullPropTypeComponent />);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'Invariant Violation: NullPropTypeComponent: prop type `prop` is ' +
       'invalid; it must be a function, usually from React.PropTypes.'
     );
@@ -318,7 +318,7 @@ describe('ReactJSXElementValidator', function() {
     };
     ReactTestUtils.renderIntoDocument(<NullContextTypeComponent />);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'Invariant Violation: NullContextTypeComponent: context type `prop` is ' +
       'invalid; it must be a function, usually from React.PropTypes.'
     );
@@ -336,7 +336,7 @@ describe('ReactJSXElementValidator', function() {
     });
     ReactTestUtils.renderIntoDocument(<GetDefaultPropsComponent />);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'getDefaultProps is only used on classic React.createClass definitions.' +
       ' Use a static property named `defaultProps` instead.'
     );

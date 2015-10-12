@@ -153,7 +153,7 @@ describe('ReactMount', function() {
     ReactMount.render(<div />, iFrame.contentDocument.body);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'Rendering components directly into document.body is discouraged'
     );
   });
@@ -170,7 +170,7 @@ describe('ReactMount', function() {
       div
     );
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       ' (client) nbsp entity: &nbsp; client text</div>\n' +
       ' (server) nbsp entity: &nbsp; server text</div>'
     );
@@ -238,7 +238,7 @@ describe('ReactMount', function() {
     var rootNode = container.firstChild;
     ReactDOM.render(<span />, rootNode);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.mostRecentCall.args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: render(...): Replacing React-rendered children with a new ' +
       'root component. If you intended to update the children of this node, ' +
       'you should instead have the existing children update their state and ' +
