@@ -49,7 +49,7 @@
        if (typeof modifiersList[modifier] === 'boolean') {
          modifierClassString += this._createModifier(base, modifier, modifiersList[modifier]);
        } else {
-         const baseClassName = this.bemEnabled ? base + this.modSeperator : '';
+         var baseClassName = this.bemEnabled ? base + this.modSeperator : '';
          modifierClassString += this.classSeperator + baseClassName + modifier + this.modValueSeperator + modifiersList[modifier];
        }
      }.bind(this));
