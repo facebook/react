@@ -147,6 +147,46 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall.length).toBe(2);
     });
 
+    it('should warn about styles with numeric string values for non-unitless properties', function() {
+      spyOn(console, 'error');
+
+      var div = document.createElement('div');
+      var One = React.createClass({
+        render: function() {
+          return this.props.inline ? <span style={{fontSize: '1'}} /> : <div style={{fontSize: '1'}} />;
+        },
+      });
+      var Two = React.createClass({
+        render: function() {
+          return <div style={{fontSize: '1'}} />;
+        },
+      });
+      ReactDOM.render(<One inline={false} />, div);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: a `div` tag (owner: `One`) was passed a numeric string value ' +
+        'for CSS property `fontSize` (value: `1`) which will be treated ' +
+        'as a unitless number in a future version of React.'
+      );
+
+      // Don't warn again for the same component
+      ReactDOM.render(<One inline={true} />, div);
+      expect(console.error.calls.length).toBe(1);
+
+      // Do warn for different components
+      ReactDOM.render(<Two />, div);
+      expect(console.error.calls.length).toBe(2);
+      expect(console.error.argsForCall[1][0]).toBe(
+        'Warning: a `div` tag (owner: `Two`) was passed a numeric string value ' +
+        'for CSS property `fontSize` (value: `1`) which will be treated ' +
+        'as a unitless number in a future version of React.'
+      );
+
+      // Really don't warn again for the same component
+      ReactDOM.render(<One inline={true} />, div);
+      expect(console.error.calls.length).toBe(2);
+    });
+
     it('should warn semi-nicely about NaN in style', function() {
       spyOn(console, 'error');
 
