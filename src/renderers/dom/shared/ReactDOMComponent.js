@@ -630,7 +630,16 @@ ReactDOMComponent.Mixin = {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el;
       if (namespaceURI === DOMNamespaces.html) {
-        el = ownerDocument.createElement(this._currentElement.type);
+        if (this._tag === 'script') {
+          // Create the script via .innerHTML so its "parser-inserted" flag is
+          // set to true and it does not execute
+          var div = ownerDocument.createElement('div');
+          var type = this._currentElement.type;
+          div.innerHTML = `<${type}></${type}>`;
+          el = div.removeChild(div.firstChild);
+        } else {
+          el = ownerDocument.createElement(this._currentElement.type);
+        }
       } else {
         el = ownerDocument.createElementNS(
           namespaceURI,
