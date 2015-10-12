@@ -2,6 +2,12 @@
 
 var assign = require('object-assign');
 var path = require('path');
+var process = require('process');
+
+var GULP_EXE = 'gulp';
+if (process.platform === 'win32') {
+  GULP_EXE += '.cmd';
+}
 
 module.exports = function(grunt) {
 
@@ -25,10 +31,11 @@ module.exports = function(grunt) {
   grunt.config.set('compress', require('./grunt/config/compress'));
 
   function spawnGulp(args, opts, done) {
+
     grunt.util.spawn({
       // This could be more flexible (require.resolve & lookup bin in package)
       // but if it breaks we'll fix it then.
-      cmd: path.join('node_modules', '.bin', 'gulp'),
+      cmd: path.join('node_modules', '.bin', GULP_EXE),
       args: args,
       opts: assign({stdio: 'inherit'}, opts),
     }, function(err, result, code) {
