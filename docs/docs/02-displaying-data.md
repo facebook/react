@@ -8,7 +8,6 @@ next: jsx-in-depth.html
 
 The most basic thing you can do with a UI is display some data. React makes it easy to display data and automatically keeps the interface up-to-date when the data changes.
 
-
 ## Getting Started
 
 Let's look at a really simple example. Create a `hello-react.html` file with the following code:
@@ -56,7 +55,6 @@ setInterval(function() {
 }, 500);
 ```
 
-
 ## Reactive Updates
 
 Open `hello-react.html` in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI — any input you put in the text field remains, even though you haven't written any code to manage this behavior. React figures it out for you and does the right thing.
@@ -65,7 +63,6 @@ The way we are able to figure this out is that React does not manipulate the DOM
 
 The inputs to this component are called `props` — short for "properties". They're passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, **never write to `this.props`**.
 
-
 ## Components are Just Like Functions
 
 React components are very simple. You can think of them as simple functions that take in `props` and `state` (discussed later) and render HTML. With this in mind, components are easy to reason about.
@@ -73,7 +70,6 @@ React components are very simple. You can think of them as simple functions that
 > Note:
 >
 > **One limitation**: React components can only render a single root node. If you want to return multiple nodes they *must* be wrapped in a single root.
-
 
 ## JSX Syntax
 
@@ -98,7 +94,6 @@ JSX is very small. To learn more about it, see [JSX in depth](/react/docs/jsx-in
 JSX is similar to HTML, but not exactly the same. See [JSX gotchas](/react/docs/jsx-gotchas.html) for some key differences.
 
 [Babel exposes a number of ways to get started using JSX](http://babeljs.io/docs/setup/), ranging from command line tools to Ruby on Rails integrations. Choose the tool that works best for you.
-
 
 ## React without JSX
 

@@ -32,7 +32,6 @@ Like all DOM events, the `onChange` prop is supported on all native components a
 >
 > For `<input>` and `<textarea>`, `onChange` supersedes — and should generally be used instead of — the DOM's built-in [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) event handler.
 
-
 ## Controlled Components
 
 An `<input>` with `value` set is a *controlled* component. In a controlled `<input>`, the value of the rendered element will always reflect the `value` prop. For example:
@@ -70,8 +69,7 @@ This would accept user input but truncate the value to the first 140 characters.
 
 ### Potential Issues With Checkboxes and Radio Buttons
 
-Be aware that, in an attempt to normalise change handling for checkbox and radio inputs, React uses a `click` event in place of a `change` event. For the most part this behaves as expected, except when calling `preventDefault` in a `change` handler. `preventDefault` stops the browser from visually updating the input, even if `checked` gets toggled. This can be worked around either by removing the call to `preventDefault`, or putting the toggle of `checked` in a `setTimeout`.
-
+Be aware that, in an attempt to normalize change handling for checkbox and radio inputs, React uses a `click` event in place of a `change` event. For the most part this behaves as expected, except when calling `preventDefault` in a `change` handler. `preventDefault` stops the browser from visually updating the input, even if `checked` gets toggled. This can be worked around either by removing the call to `preventDefault`, or putting the toggle of `checked` in a `setTimeout`.
 
 ## Uncontrolled Components
 
@@ -103,9 +101,7 @@ Likewise, `<input>` supports `defaultChecked` and `<select>` supports `defaultVa
 >
 > The `defaultValue` and `defaultChecked` props are only used during initial render. If you need to update the value in a subsequent render, you will need to use a [controlled component](#controlled-components).
 
-
 ## Advanced Topics
-
 
 ### Why Controlled Components?
 
@@ -127,7 +123,6 @@ Unlike HTML, React components must represent the state of the view at any point 
 
 Since this method describes the view at any point in time, the value of the text input should *always* be `Untitled`.
 
-
 ### Why Textarea Value?
 
 In HTML, the value of `<textarea>` is usually set using its children:
@@ -144,7 +139,6 @@ For HTML, this easily allows developers to supply multiline values. However, sin
 ```
 
 If you *do* decide to use children, they will behave like `defaultValue`.
-
 
 ### Why Select Value?
 
