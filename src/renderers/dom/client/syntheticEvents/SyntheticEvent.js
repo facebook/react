@@ -175,7 +175,7 @@ SyntheticEvent.Interface = EventInterface;
 SyntheticEvent.augmentClass = function(Class, Interface) {
   var Super = this;
 
-  var E = function () {};
+  var E = function() {};
   E.prototype = Super.prototype;
   var prototype = new E();
 
