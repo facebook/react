@@ -10,6 +10,10 @@ var addons = {
     module: 'ReactCSSTransitionGroup',
     name: 'css-transition-group',
   },
+  ClassNameGenerator: {
+    module: 'ReactClassNameGenerator',
+    name: 'react-className-generator',
+  },
   LinkedStateMixin: {
     module: 'LinkedStateMixin',
     name: 'linked-state-mixin',

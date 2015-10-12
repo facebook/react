@@ -23,6 +23,7 @@ var React = require('React');
 var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
+var ReactClassNameGenerator = require('ReactClassNameGenerator');
 var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactUpdates = require('ReactUpdates');
@@ -39,6 +40,7 @@ React.addons = {
   LinkedStateMixin: LinkedStateMixin,
   PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
+  ClassNameGenerator: ReactClassNameGenerator,
 
   batchedUpdates: function() {
     if (__DEV__) {
