@@ -522,7 +522,7 @@ describe('ReactCompositeComponent', function() {
     // unmountIDFromEnvironment which calls purgeID, for a total of 3.
     // TODO: Test the effect of this. E.g. does the node cache get repopulated
     // after a getDOMNode call?
-    expect(ReactMount.purgeID.callCount).toBe(3);
+    expect(ReactMount.purgeID.calls.length).toBe(3);
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
