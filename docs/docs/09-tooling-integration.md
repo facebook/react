@@ -12,8 +12,7 @@ Every project uses a different system for building and deploying JavaScript. We'
 
 ### CDN-hosted React
 
-We provide CDN-hosted versions of React [on our download page](/react/downloads.html). These prebuilt files use the UMD module format. Dropping them in with a simple `<script>` tag will inject a `React` global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.
-
+We provide CDN-hosted versions of React [on our download page](/react/downloads.html). These pre-built files use the UMD module format. Dropping them in with a simple `<script>` tag will inject a `React` global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.
 
 ### Using master
 
@@ -28,7 +27,6 @@ If you like using JSX, Babel provides an [in-browser ES6 and JSX transformer for
 > Note:
 >
 > The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.
-
 
 ### Productionizing: Precompiled JSX
 
@@ -67,7 +65,6 @@ var HelloMessage = React.createClass({
 
 ReactDOM.render(React.createElement(HelloMessage, { name: "John" }), mountNode);
 ```
-
 
 ### Helpful Open-Source Projects
 

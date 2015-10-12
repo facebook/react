@@ -8,7 +8,6 @@ next: transferring-props.html
 
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc.) into reusable components with well-defined interfaces. That way, the next time you need to build some UI, you can write much less code. This means faster development time, fewer bugs, and fewer bytes down the wire.
 
-
 ## Prop Validation
 
 As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. Note that for performance reasons `propTypes` is only checked in development mode. Here is an example documenting the different validators provided:
@@ -79,7 +78,6 @@ React.createClass({
 });
 ```
 
-
 ## Default Prop Values
 
 React lets you define default values for your `props` in a very declarative way:
@@ -96,7 +94,6 @@ var ComponentWithDefaultProps = React.createClass({
 ```
 
 The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
-
 
 ## Transferring Props: A Shortcut
 
@@ -233,8 +230,6 @@ Methods follow the same semantics as regular ES6 classes, meaning that they don'
 
 Unfortunately ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes. Instead, we're working on making it easier to support such use cases without resorting to mixins.
 
-
-
 ## Stateless Functions
 
 You may also define your React classes as a plain JavaScript function. For example using the stateless function syntax:
@@ -253,7 +248,6 @@ var HelloMessage = (props) => <div>Hello {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
-
 This simplified component API is intended for components that are pure functions of their props. These components must not retain internal state, do not have backing instances, and do not have the component lifecycle methods. They are pure functional transforms of their input, with zero boilerplate.
 
 > NOTE:
@@ -261,4 +255,3 @@ This simplified component API is intended for components that are pure functions
 > Because stateless functions don't have a backing instance, you can't attach a ref to a stateless function component. Normally this isn't an issue, since stateless functions do not provide an imperative API. Without an imperative API, there isn't much you could do with an instance anyway. However, if a user wants to find the DOM node of a stateless function component, they must wrap the component in a stateful component (eg. ES6 class component) and attach the ref to the stateful wrapper component.
 
 In an ideal world, most of your components would be stateless functions because these stateless components can follow a faster code path within the React core. This is the recommended pattern, when possible.
-
