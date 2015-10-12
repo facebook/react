@@ -8,11 +8,9 @@ next: reusable-components.html
 
 So far, we've looked at how to write a single component to display data and handle user input. Next let's examine one of React's finest features: composability.
 
-
 ## Motivation: Separation of Concerns
 
 By building modular components that reuse other components with well-defined interfaces, you get much of the same benefits that you get by using functions or classes. Specifically you can *separate the different concerns* of your app however you please simply by building new components. By building a custom component library for your application, you are expressing your UI in a way that best fits your domain.
-
 
 ## Composition Example
 
@@ -54,13 +52,11 @@ ReactDOM.render(
 );
 ```
 
-
 ## Ownership
 
 In the above example, instances of `Avatar` *own* instances of `ProfilePic` and `ProfileLink`. In React, **an owner is the component that sets the `props` of other components**. More formally, if a component `X` is created in component `Y`'s `render()` method, it is said that `X` is *owned by* `Y`. As discussed earlier, a component cannot mutate its `props` — they are always consistent with what its owner sets them to. This fundamental invariant leads to UIs that are guaranteed to be consistent.
 
 It's important to draw a distinction between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, `Avatar` owns the `div`, `ProfilePic` and `ProfileLink` instances, and `div` is the **parent** (but not owner) of the `ProfilePic` and `ProfileLink` instances.
-
 
 ## Children
 
@@ -71,7 +67,6 @@ When you create a React component instance, you can include additional React com
 ```
 
 `Parent` can read its children by accessing the special `this.props.children` prop. **`this.props.children` is an opaque data structure:** use the [React.Children utilities](/react/docs/top-level-api.html#react.children) to manipulate them.
-
 
 ### Child Reconciliation
 
@@ -91,7 +86,6 @@ When you create a React component instance, you can include additional React com
 
 Intuitively, `<p>Paragraph 1</p>` was removed. Instead, React will reconcile the DOM by changing the text content of the first child and destroying the last child. React reconciles according to the *order* of the children.
 
-
 ### Stateful Children
 
 For most components, this is not a big deal. However, for stateful components that maintain data in `this.state` across render passes, this can be very problematic.
@@ -110,7 +104,6 @@ In most cases, this can be sidestepped by hiding elements instead of destroying 
   <p>Paragraph 2</p>
 </Card>
 ```
-
 
 ### Dynamic Children
 
@@ -177,7 +170,6 @@ You can also key children by passing a ReactFragment object. See [Keyed Fragment
 ## Data Flow
 
 In React, data flows from owner to owned component through `props` as discussed above. This is effectively one-way data binding: owners bind their owned component's props to some value the owner has computed based on its `props` or `state`. Since this process happens recursively, data changes are automatically reflected everywhere they are used.
-
 
 ## A Note on Performance
 
