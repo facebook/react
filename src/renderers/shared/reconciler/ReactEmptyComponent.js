@@ -53,12 +53,14 @@ assign(ReactEmptyComponent.prototype, {
   },
   receiveComponent: function() {
   },
+  getNativeNode: function() {
+    return ReactReconciler.getNativeNode(this._renderedComponent);
+  },
   unmountComponent: function(rootID, transaction, context) {
-    var nativeNode = ReactReconciler.unmountComponent(this._renderedComponent);
+    ReactReconciler.unmountComponent(this._renderedComponent);
     ReactEmptyComponentRegistry.deregisterNullComponentID(this._rootNodeID);
     this._rootNodeID = null;
     this._renderedComponent = null;
-    return nativeNode;
   },
 });
 

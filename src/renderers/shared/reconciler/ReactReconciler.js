@@ -58,6 +58,14 @@ var ReactReconciler = {
   },
 
   /**
+   * Returns a value that can be passed to
+   * ReactComponentEnvironment.replaceNodeWithMarkup.
+   */
+  getNativeNode: function(internalInstance) {
+    return internalInstance.getNativeNode();
+  },
+
+  /**
    * Releases any resources allocated by `mountComponent`.
    *
    * @final
