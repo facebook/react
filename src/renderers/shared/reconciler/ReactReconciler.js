@@ -41,14 +41,16 @@ var ReactReconciler = {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    debugPath
   ) {
     var markup = internalInstance.mountComponent(
       rootID,
       transaction,
       nativeParent,
       nativeContainerInfo,
-      context
+      context,
+      debugPath
     );
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {

@@ -81,7 +81,8 @@ assign(ReactDOMTextComponent.prototype, {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    debugPath
   ) {
     if (__DEV__) {
       var parentInfo;

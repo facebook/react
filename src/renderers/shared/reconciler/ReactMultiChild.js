@@ -257,7 +257,8 @@ var ReactMultiChild = {
             transaction,
             this,
             this._nativeContainerInfo,
-            context
+            context,
+            this._debugPath
           );
           child._mountIndex = index++;
           mountImages.push(mountImage);

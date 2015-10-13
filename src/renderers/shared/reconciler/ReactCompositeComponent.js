@@ -13,6 +13,7 @@
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDebugPath = require('ReactDebugPath');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPerf = require('ReactPerf');
@@ -97,6 +98,7 @@ var ReactCompositeComponentMixin = {
     this._rootNodeID = null;
     this._instance = null;
     this._nativeParent = null;
+    this._debugPath = null;
     this._nativeContainerInfo = null;
 
     // See ReactUpdateQueue
@@ -129,13 +131,18 @@ var ReactCompositeComponentMixin = {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    debugPath
   ) {
     this._context = context;
     this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
     this._nativeParent = nativeParent;
     this._nativeContainerInfo = nativeContainerInfo;
+
+    if (__DEV__) {
+      this._debugPath = new ReactDebugPath(debugPath, this.getName() || 'ReactCompositeComponent');
+    }
 
     var publicProps = this._processProps(this._currentElement.props);
     var publicContext = this._processContext(context);
@@ -300,7 +307,8 @@ var ReactCompositeComponentMixin = {
       transaction,
       nativeParent,
       nativeContainerInfo,
-      this._processChildContext(context)
+      this._processChildContext(context),
+      this._debugPath
     );
     if (inst.componentDidMount) {
       transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
@@ -761,7 +769,8 @@ var ReactCompositeComponentMixin = {
         transaction,
         this._nativeParent,
         this._nativeContainerInfo,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        this._debugPath
       );
       this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);
     }

@@ -23,6 +23,7 @@ var EventConstants = require('EventConstants');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
+var ReactDebugPath = require('ReactDebugPath');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
@@ -513,6 +514,7 @@ function ReactDOMComponent(tag) {
   this._nativeContainerInfo = null;
   this._wrapperState = null;
   this._topLevelWrapper = null;
+  this._debugPath = null;
   this._nodeHasLegacyProperties = false;
   if (__DEV__) {
     this._ancestorInfo = null;
@@ -544,12 +546,17 @@ ReactDOMComponent.Mixin = {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    debugPath
   ) {
     this._rootNodeID = rootID;
     this._nativeContainerInfo = nativeContainerInfo;
 
     var props = this._currentElement.props;
+
+    if (__DEV__) {
+      this._debugPath = new ReactDebugPath(debugPath, this._tag);
+    }
 
     switch (this._tag) {
       case 'iframe':
@@ -729,7 +736,7 @@ ReactDOMComponent.Mixin = {
         if (this._tag != null && isCustomComponent(this._tag, props)) {
           markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
         } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
+          markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue, this._debugPath);
         }
         if (markup) {
           ret += ' ' + markup;
@@ -1008,9 +1015,9 @@ ReactDOMComponent.Mixin = {
         // from the DOM node instead of inadvertantly setting to a string. This
         // brings us in line with the same behavior we have on initial render.
         if (nextProp != null) {
-          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
+          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp, this._debugPath);
         } else {
-          DOMPropertyOperations.deleteValueForProperty(node, propKey);
+          DOMPropertyOperations.deleteValueForProperty(node, propKey, this._debugPath);
         }
       }
     }
