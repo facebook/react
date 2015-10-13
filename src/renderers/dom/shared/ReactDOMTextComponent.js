@@ -23,6 +23,14 @@ var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var setTextContent = require('setTextContent');
 var validateDOMNesting = require('validateDOMNesting');
 
+function getNode(inst) {
+  if (inst._nativeNode) {
+    return inst._nativeNode;
+  } else {
+    return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
+  }
+}
+
 /**
  * Text nodes violate a couple assumptions that React makes about components:
  *
@@ -133,20 +141,18 @@ assign(ReactDOMTextComponent.prototype, {
         // and/or updateComponent to do the actual update for consistency with
         // other component types?
         this._stringText = nextStringText;
-        var node = this._nativeNode;
-        if (!node) {
-          node = this._nativeNode = ReactMount.getNode(this._rootNodeID);
-        }
-        DOMChildrenOperations.updateTextContent(node, nextStringText);
+        DOMChildrenOperations.updateTextContent(getNode(this), nextStringText);
       }
     }
   },
 
+  getNativeNode: function() {
+    return getNode(this);
+  },
+
   unmountComponent: function() {
-    var node = this._nativeNode || ReactMount.getNode(this._rootNodeID);
     this._nativeNode = null;
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
-    return node;
   },
 
 });
