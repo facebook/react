@@ -275,4 +275,29 @@ describe('ReactMount', function() {
 
     ReactDOM.unmountComponentAtNode(container);
   });
+
+  it('should not crash in node cache when unmounting, case 2', function() {
+    var A = React.createClass({
+      render: function() {
+        return <a key={this.props.innerKey}>{this.props.innerKey}</a>;
+      },
+    });
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <b>
+            <i>{this.props.step === 1 && <q />}</i>
+            {this.props.step === 1 && <A innerKey={this.props.step} />}
+          </b>
+        );
+      },
+    });
+
+    var container = document.createElement('container');
+
+    ReactDOM.render(<Component step={1} />, container);
+    ReactDOM.render(<Component step={2} />, container);
+    ReactDOM.render(<Component step={1} />, container);
+    ReactMount.getID(container.querySelector('a'));
+  });
 });
