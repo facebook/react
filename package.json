@@ -41,7 +41,7 @@
   },
   "devEngines": {
     "node": "4.x",
-    "npm": "2.x"
+    "npm": "2.x || 3.x"
   },
   "commonerConfig": {
     "version": 7
