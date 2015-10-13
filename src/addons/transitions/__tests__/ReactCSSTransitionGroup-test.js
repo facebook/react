@@ -23,6 +23,7 @@ describe('ReactCSSTransitionGroup', function() {
   var container;
 
   beforeEach(function() {
+    require('mock-modules').dumpCache();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
@@ -45,6 +46,22 @@ describe('ReactCSSTransitionGroup', function() {
 
     // Warning about the missing transitionLeaveTimeout prop
     expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should not warn if timeouts is zero', function() {
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={true}
+        transitionLeaveTimeout={0}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('should clean-up silently after the timeout elapses', function() {
