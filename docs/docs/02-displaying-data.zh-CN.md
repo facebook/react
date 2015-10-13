@@ -96,8 +96,6 @@ JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性�
 
 JSX 类似于 HTML，但不是完全一样。参考 [JSX 陷阱](/react/docs/jsx-gotchas-zh-CN.html) 学习关键区别。
 
-[Babel exposes a number of ways to get started using JSX](http://babeljs.io/docs/setup/), ranging from command line tools to Ruby on Rails integrations. Choose the tool that works best for you.
-
 [Babel 公开了一些使用 JSX 的方式],从命令行工具到 Ruby on Rails 集成。选择一个对你来说最合适的工具。
 
 ## 没有 JSX 的 React
