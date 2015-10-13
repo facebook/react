@@ -19,7 +19,7 @@ React 是一个 Facebook 和 Instagram 用来创建用户界面的 JavaScript �
 
 ## 构建可组合的组件
 
-React 都是关于构建可复用的组件。事实上，通过 React 你*唯一*要做的事情就是构建组件。得益于其良好的封装性，组件使代码复用、测试和关注分离（separation of concerns）更加简单。。
+React 都是关于构建可复用的组件。事实上，通过 React 你*唯一*要做的事情就是构建组件。得益于其良好的封装性，组件使代码复用、测试和关注分离（separation of concerns）更加简单。
 
 ## 给它5分钟的时间
 
