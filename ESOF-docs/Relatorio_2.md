@@ -18,7 +18,7 @@ Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as
 
 #### Objetivos
 
-Como o projeto depende de pessoas de forma independente, a comunicação entre elas podem muitas vezes nao ocorrer. Com isso, pode acontecer que os colaboradores introduzam erros na correção dos issues e pôr em causa topo o projeto já realizado até à altura. E, por consequência, o produto desejado pelo Facebook seja diferente do acordado, manchando a imagem de quem desenvolveu. 
+Como o projeto depende de pessoas de forma independente, a comunicação entre elas pode muitas vezes não ocorrer. Com isso, pode acontecer que os colaboradores introduzam erros na correção dos issues e pôr em causa todo o projeto já realizado até à altura. E, por consequência, o produto desejado pelo Facebook seja diferente do acordado, manchando a imagem de quem desenvolveu. 
 
 
 #### Motivação
