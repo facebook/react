@@ -43,7 +43,6 @@ Milestones
 ### <a name="validacao"></a>Validação de Requisitos
 
 
-
 Este processo de validação de requisitos trata, tal como o nome indica , de validar quanto à consistência, precisão e contextualização dos requisitos levantados no processo de [Levantamento de Requisitos](#levantamento) e [Análise e Negociação](#analise).É necessário demonstrar que os requisitos definem o sistema que o cliente realmente deseja.
 
 
