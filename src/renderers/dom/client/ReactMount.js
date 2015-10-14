@@ -111,9 +111,12 @@ function getReactRootID(container) {
 function getID(node) {
   var id = internalGetID(node);
   if (id) {
+    var cached = nodeCache[id];
+    // TODO: Fix this whole concept of "validity" -- the cache just shouldn't
+    // have nodes that have been unmounted.
     invariant(
-      !nodeCache.hasOwnProperty(id) || nodeCache[id] === node,
-      'ReactMount: Two unequal nodes with the same `%s`: %s',
+      !cached || cached === node || !isValid(cached, id),
+      'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
       ATTR_NAME, id
     );
     nodeCache[id] = node;
@@ -149,18 +152,11 @@ function setID(node, id) {
  */
 function getNodeIfCached(id) {
   var node = nodeCache[id];
-  // TODO: Since this "isValid" business is now just a sanity check, we can
-  // probably drop it with no consequences.
-  invariant(
-    !node || isValid(node, id),
-    'ReactMount: Cached node with `%s`: %s is missing from the document. ' +
-    'This probably means the DOM was unexpectedly mutated -- when removing ' +
-    'React-rendered children from the DOM, rerender without those children ' +
-    'or call ReactDOM.unmountComponentAtNode on the container to unmount an ' +
-    'entire subtree.',
-    ATTR_NAME, id
-  );
-  return node;
+  // TODO: Fix this whole concept of "validity" -- the cache just shouldn't have
+  // nodes that have been unmounted.
+  if (node && isValid(node, id)) {
+    return node;
+  }
 }
 
 /**
