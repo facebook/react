@@ -1,14 +1,14 @@
 # Relatório 2 - ESOF
 ## Facebook/React - Gestão de Requisitos
 
-### Levantamento de Requisitos
+### <a name="levantamento"></a>Levantamento de Requisitos
 
 Antes de se iniciar a discussão acerca da gestão de requisitos num projeto como o React, é necessário perceber claramente o contexto de desenvolvimento *open-source* em que o mesmo se enquadra. Os conceitos estudados nas aulas teóricas da Unidade Curricular de Engenharia de Software dizem respeito a projetos de *software* proprietário. Nesse sentido, esses conceitos aplicam-se apenas em parte a um projeto comunitário e sem fins lucrativos como é o React.
 
 Na fase em que o projeto se encontra, os novos requisitos são determinados pela lista de *issues* levantados pela comunidade, assim como pelos *pull requests* que os colaboradores podem submeter para apreciação da *core team*, conforme discutido no [Relatório 1](./Relatorio_1.md). Não existe uma definição clara dos requisitos futuros, mas apenas um direcionamento e validação das sugestões supramencionadas com vista à sua integração na biblioteca, sem comprometer a estabilidade do projeto a longo prazo. Importa, no entanto, explorar a motivação por parte do Facebook por trás do 
 
 
-### Análise e Negociação
+### <a name="analise"></a>Análise e Negociação
 
 Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se um dado *report* é significativo para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
@@ -21,8 +21,9 @@ Caso se constate que o *issue* possui uma relevante importância, é marcado com
 
 
 
-### Validação de Requisitos
+### <a name="validacao"></a>Validação de Requisitos
 
+Este processo de validação de requisitos trata, tal como o nome indica , de validar quanto à consistência, precisão e contextualização dos requisitos levantados no processo de [Levantamento de Requisitos](#levantamento) e [Análise e Negociação](#analise).
 Cada colaborador escolhe, da lista de *issues* ou *good first bugs*, aquele ou aqueles que se vai atrever a resolver. Antes de fazer *pull request*, a correção deve ser testada para ter a certeza que o problema ficou resolvido.
 Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as correções ao código foram realmente bem feitas, que não vão introduzir novos erros e que aquela especificação ainda é útil para o projecto.
 
