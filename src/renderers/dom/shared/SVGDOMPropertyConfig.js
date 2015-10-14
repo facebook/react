@@ -116,7 +116,7 @@ var SVGDOMPropertyConfig = {
     markerHeight: 'markerHeight',
     markerMid: 'marker-mid',
     markerStart: 'marker-start',
-    markerUnits: 'marker-units',
+    markerUnits: 'markerUnits',
     markerWidth: 'markerWidth',
     patternContentUnits: 'patternContentUnits',
     patternUnits: 'patternUnits',
