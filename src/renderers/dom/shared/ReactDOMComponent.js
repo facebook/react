@@ -1173,4 +1173,8 @@ assign(
   ReactMultiChild.Mixin
 );
 
+assign(ReactDOMComponent, {
+  getNodeFromInstance: getNode,
+});
+
 module.exports = ReactDOMComponent;
