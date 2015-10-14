@@ -13,7 +13,7 @@ Na fase em que o projeto se encontra, os novos requisitos são determinados pela
 
 ### Validação de Requisitos
 
-Cada colaborador escolhe, da lista de issues ou good first bugs, aquele ou aqueles que se vai atrever a resolver. Antes de fazer pull request, a correção deve ser testada para ter a certeza que o problema ficou resolvido.
+Cada colaborador escolhe, da lista de *issues* ou *good first bugs*, aquele ou aqueles que se vai atrever a resolver. Antes de fazer *pull request*, a correção deve ser testada para ter a certeza que o problema ficou resolvido.
 Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as correções ao código foram realmente bem feitas, que não vão introduzir novos erros e que aquela especificação ainda é útil para o projecto.
 
 #### Objetivos
@@ -25,7 +25,7 @@ O React é um caso pouco comum, porque normalmente os projetos *open source* nun
 #### Técnicas
 
 Mesmo que os projectos *open source* não tenham, muitos deles, a dimensão e a estrutura de outros projetos realizados pelas grandes empresas, nada se consegue fazer sem organização. Para isso, existem os requesitos, são objetivos que os colaboradores têm de cumprir para se conseguir fazer evoluir o projeto.
-No caso do react, qualquer um pode ajudar ao projecto. Para começar, uma boa base de trabalho são os good first bugs, tendo sido mesmo indicado por um dos responsáveis do projecto como sendo o melhor começo, e a partir daí passar para os issues que vão aparecendo.
+No caso do React, qualquer um pode ajudar ao projecto. Para começar, uma boa base de trabalho são os good first bugs, tendo sido mesmo indicado por um dos responsáveis do projecto como sendo o melhor começo, e a partir daí passar para os issues que vão aparecendo.
 
 ### <a name="info"></a>Informações
 
