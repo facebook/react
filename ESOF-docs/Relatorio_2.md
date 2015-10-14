@@ -1,7 +1,7 @@
 # Relatório 2 - ESOF
 ## Facebook/React - Gestão de Requisitos
 
-### Levantamento de Requisitos
+### <a name="levantamento"></a>Levantamento de Requisitos
 
 Antes de se iniciar a discussão acerca da gestão de requisitos num projeto como o React, é necessário perceber claramente o contexto de desenvolvimento *open-source* em que o mesmo se enquadra. Os conceitos estudados nas aulas teóricas da Unidade Curricular de Engenharia de Software dizem respeito a projetos de *software* proprietário. Nesse sentido, esses conceitos aplicam-se apenas em parte a um projeto comunitário e sem fins lucrativos como é o React.
 
@@ -15,40 +15,54 @@ O objetivo do React é, assim, possibilitar a escrita de código mais simples, d
 
 Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_application) é uma aplicação Web que corre numa única página Web, conforme explicado no [Relatório 1](./Relatorio_1.md). O objetivo deste tipo de aplicação é fornecer uma experiência semelhante à de aplicações *desktop*, ou recebendo todo o código necessário à sua execução num único carregamento, ou carregando os recursos necessários de forma dinâmica, em resposta a ações do utilizador. A página não é recarregada durante o processo.
 
-### Análise e Negociação
+### <a name="analise"></a>Análise e Negociação
 
-
-Os vários *issues* e *pull requests* expressam *bug reports* ou *features requests*.
-Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se são significativos para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
+Uma das formas que um dado colaborador pode contribuir para o projecto é através da adição de *issues*, na secção apropriada, ou através de *pull requests*, onde a *core-team* pode, após uma cuidada análise, por forma a determinar se são significativos para a contribuição do projeto, incorporar tais modificações, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
 > [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)
 > [Where to Find Known Issues](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#where-to-find-known-issues): We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
 
-Caso se constate que um *bug report* possui uma relevante importância, é marcado como *good first bug* pela *core-team*, atribuíndo, desta forma, uma prioridade à resolução do *bug*. Na situação de se tratar de uma *feature request*, são incorporados nos [*milestones*](https://github.com/facebook/react/milestones) delineados pela *core-team*.
+De notar que os *issues* e os *pull requests* podem expressar *bug reports*, isto é, correcções a serem realizadas no projecto por forma a colmatar os múltiplos erros que possam surgir no decorrer da utilização do React, ou *features requests*, ou seja, a descrição e posterior implementação de determinadas características que levam ao melhoramento do projecto em geral. Contudo, no projecto, estas duas noções são tomadas como equivalentes. Assim sendo, neste relatório, os autores deste relatório irão considerar também como equivalentes.
 
-Note-se que, por forma a organizar a lista de *issues*, são utilizadas várias *labels* por forma a atribuir diferentes significados/intenções.
+A *core-team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização.
 
-### Especificação
+Caso se constate que um *issue* possua uma relevante importância, é marcado como *good first bug* pela *core-team*, atribuíndo, desta forma, uma prioridade à resolução do *issue*. Deste modo, a *core-team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização.
+
+Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
+
+
+### <a name="especificacao"></a>Especificação
+
+Reunião
+|
+v
+Milestones
 
 
 
+### <a name="validacao"></a>Validação de Requisitos
 
 
-### Validação de Requisitos
+
+Este processo de validação de requisitos trata, tal como o nome indica , de validar quanto à consistência, precisão e contextualização dos requisitos levantados no processo de [Levantamento de Requisitos](#levantamento) e [Análise e Negociação](#analise).É necessário demonstrar que os requisitos definem o sistema que o cliente realmente deseja.
+
+
+Aplicando este processo ao React, como demonstra a figura relativa aos ![Pull Requests no último mês do projeto React](./Resources/pull_requests_september-10_october-10.jpg), foram recebidos no último mês, à data deste relatório, 128 *pull request*.
+
 
 Cada colaborador escolhe, da lista de *issues* ou *good first bugs*, aquele ou aqueles que se vai atrever a resolver. Antes de fazer *pull request*, a correção deve ser testada para ter a certeza que o problema ficou resolvido.
 Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as correções ao código foram realmente bem feitas, que não vão introduzir novos erros e que aquela especificação ainda é útil para o projecto.
 
-#### Objetivos
+#### <a name="objetivos"></a>Objetivos
 
 Como o projeto depende de pessoas de forma independente, a comunicação entre elas pode muitas vezes não ocorrer. Com isso, pode acontecer que os colaboradores introduzam erros na correção dos issues e pôr em causa todo o projeto já realizado até à altura.
 De modo a garantir que a evolução do projeto segue conforme as exigências do cliente, existe um grupo de pessoas que a sua função é verificar que as correções feitas foram o mais correto possível, realizando testes a essas alterações. Após esses testes, cabe a eles decidir se as correções aos *issues* são úteis ao projeto, indo de encontro às funcionalidades necessárias do programa final.
 
-#### Motivação
+#### <a name="motivacao"></a>Motivação
 
 O React é um caso pouco comum, porque normalmente os projetos *open source* nunca têm grande projeção e vão evoluindo consoante o gosto e a paciência dos seus criadores porque não passa de um passatempo para os contribuidores. Neste caso, o projeto têm um propósito importante, é uma biblioteca usada para criar interfaces gráficas incorporada no Facebook. Só isso é um grande estímulo para todos os que ajudam o projeto, podem ver que todo o seu contributo é aplicado na maior rede social da atualidade.
 
-#### Técnicas
+#### <a name="tecnicas"></a>Técnicas
 
 Mesmo que os projectos *open source* não tenham, muitos deles, a dimensão e a estrutura de outros projetos realizados pelas grandes empresas, nada se consegue fazer sem organização. Para isso, existem os requesitos, são objetivos que os colaboradores têm de cumprir para se conseguir fazer evoluir o projeto.
 No caso do React, qualquer um pode ajudar ao projecto. Para começar, uma boa base de trabalho são os good first bugs, tendo sido mesmo indicado por um dos responsáveis do projecto como sendo o melhor começo, e a partir daí passar para os issues que vão aparecendo.
