@@ -5,23 +5,32 @@
 
 Antes de se iniciar a discussão acerca da gestão de requisitos num projeto como o React, é necessário perceber claramente o contexto de desenvolvimento *open-source* em que o mesmo se enquadra. Os conceitos estudados nas aulas teóricas da Unidade Curricular de Engenharia de Software dizem respeito a projetos de *software* proprietário. Nesse sentido, esses conceitos aplicam-se apenas em parte a um projeto comunitário e sem fins lucrativos como é o React.
 
-Na fase em que o projeto se encontra, os novos requisitos são determinados pela lista de *issues* levantados pela comunidade, assim como pelos *pull requests* que os colaboradores podem submeter para apreciação da *core team*, conforme discutido no [Relatório 1](./Relatorio_1.md). Não existe uma definição clara dos requisitos futuros, mas apenas um direcionamento e validação das sugestões supramencionadas com vista à sua integração na biblioteca, sem comprometer a estabilidade do projeto a longo prazo. Importa, no entanto, explorar a motivação por parte do Facebook por trás do 
+Na fase em que o projeto se encontra, os novos requisitos são determinados pela lista de *issues* levantados pela comunidade, assim como pelos *pull requests* que os colaboradores podem submeter para apreciação da *core team*, conforme discutido no [Relatório 1](./Relatorio_1.md). Não existe uma definição clara dos requisitos futuros, mas apenas um direcionamento e validação das sugestões supramencionadas com vista à sua integração na biblioteca, sem comprometer a estabilidade do projeto a longo prazo. Importa, no entanto, explorar a [motivação](http://reactjs.de/posts/react-tutorial) por parte do Facebook em desenvolver o React.
 
+A principal motivação por trás do desenvolvimento da biblioteca React foi a vontade do Facebook em tornar o seu código *front-end*, isto é, o código que corre no lado do cliente, de uma compreensão e manutenção mais fáceis. Antes do aparecimento do React, visualizar o comportamento do código existente era um processo moroso. Certas partes do código eram tão complexas que apenas os membros de um dado grupo de colaboradores conseguiam tratá-las. Erros de sincronização eram muito frequentes, com perdas de mensagens na comunicação entre cliente e servidor.
+
+O objetivo do React é, assim, possibilitar a escrita de código mais simples, definindo componentes que não estejam tão enredados e dependentes entre si, como acontecia anteriormente, diminuindo, assim, a complexidade de programação. Estes são, de uma forma geral, os requisitos não funcionais do React, que se assume como uma solução aos problemas encontrados no desenvolvimento de *single-page applications*.
+
+#### *Single-Page Applications*
 
 ### <a name="analise"></a>Análise e Negociação
 
-Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se um dado *report* é significativo para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
-> The core team will be monitoring for pull requests. (...)
-> We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
+Os vários *issues* e *pull requests* expressam *bug reports* ou *features requests*.
+Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se são significativos para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
-Caso se constate que o *issue* possui uma relevante importância, é marcado como *good first bug*, atribuíndo, desta forma, uma prioridade à resolução do *bug*.
+> [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)
+> [Where to Find Known Issues](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#where-to-find-known-issues): We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
+
+Caso se constate que um *bug report* possui uma relevante importância, é marcado como *good first bug* pela *core-team*, atribuíndo, desta forma, uma prioridade à resolução do *bug*. Na situação de se tratar de uma *feature request*, são incorporados nos [*milestones*](https://github.com/facebook/react/milestones) delineados pela *core-team*.
+
+Note-se que, por forma a organizar a lista de *issues*, são utilizadas várias *labels* por forma a atribuir diferentes significados/intenções.
 
 ### Especificação
 
 
-
 ### <a name="validacao"></a>Validação de Requisitos
+
 
 Este processo de validação de requisitos trata, tal como o nome indica , de validar quanto à consistência, precisão e contextualização dos requisitos levantados no processo de [Levantamento de Requisitos](#levantamento) e [Análise e Negociação](#analise).
 Cada colaborador escolhe, da lista de *issues* ou *good first bugs*, aquele ou aqueles que se vai atrever a resolver. Antes de fazer *pull request*, a correção deve ser testada para ter a certeza que o problema ficou resolvido.
