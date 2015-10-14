@@ -61,7 +61,9 @@ if (__DEV__) {
    * real browser event.
    */
   if (typeof window !== 'undefined' &&
-      typeof window.dispatchEvent === 'function') {
+      typeof window.dispatchEvent === 'function' &&
+      typeof document !== 'undefined' &&
+      typeof document.createEvent === 'function') {
     var fakeNode = document.createElement('react');
     ReactErrorUtils.invokeGuardedCallback = function(name, func, a, b) {
       var boundFunc = func.bind(null, a, b);
