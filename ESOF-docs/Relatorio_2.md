@@ -9,9 +9,19 @@ Na fase em que o projeto se encontra, os novos requisitos são determinados pela
 
 A principal motivação por trás do desenvolvimento da biblioteca React foi a vontade do Facebook em tornar o seu código *front-end*, isto é, o código que corre no lado do cliente, de uma compreensão e manutenção mais fáceis. Antes do aparecimento do React, visualizar o comportamento do código existente era um processo moroso. Certas partes do código eram tão complexas que apenas os membros de um dado grupo de colaboradores conseguiam tratá-las. Erros de sincronização eram muito frequentes, com perdas de mensagens na comunicação entre cliente e servidor.
 
+
 ### Análise e Negociação
 
+Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se um dado *report* é significativo para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
+
+> The core team will be monitoring for pull requests. (...)
+> We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
+
+Caso se constate que o *issue* possui uma relevante importância, é marcado como *good first bug*, atribuíndo, desta forma, uma prioridade à resolução do *bug*.
+
 ### Especificação
+
+
 
 ### Validação de Requisitos
 
@@ -19,6 +29,9 @@ Cada colaborador escolhe, da lista de *issues* ou *good first bugs*, aquele ou a
 Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as correções ao código foram realmente bem feitas, que não vão introduzir novos erros e que aquela especificação ainda é útil para o projecto.
 
 #### Objetivos
+
+Como o projeto depende de pessoas de forma independente, a comunicação entre elas pode muitas vezes não ocorrer. Com isso, pode acontecer que os colaboradores introduzam erros na correção dos issues e pôr em causa todo o projeto já realizado até à altura. E, por consequência, o produto desejado pelo Facebook seja diferente do acordado, manchando a imagem de quem desenvolveu. 
+
 
 #### Motivação
 
