@@ -13,6 +13,8 @@ O objetivo do React é, assim, possibilitar a escrita de código mais simples, d
 
 #### *Single-Page Applications*
 
+Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_application) é uma aplicação Web que corre numa única página Web, conforme explicado no [Relatório 1](./Relatorio_1.md). O objetivo deste tipo de aplicação é fornecer uma experiência semelhante à de aplicações *desktop*, ou recebendo todo o código necessário à sua execução num único carregamento, ou carregando os recursos necessários de forma dinâmica, em resposta a ações do utilizador. A página não é recarregada durante o processo.
+
 ### Análise e Negociação
 
 
