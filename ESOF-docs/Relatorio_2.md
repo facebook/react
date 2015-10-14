@@ -10,14 +10,20 @@ Na fase em que o projeto se encontra, os novos requisitos são determinados pela
 
 ### Análise e Negociação
 
-Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se um dado *report* é significativo para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
-> The core team will be monitoring for pull requests. (...)
-> We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
+Os vários *issues* e *pull requests* expressam *bug reports* ou *features requests*.
+Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se são significativos para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
-Caso se constate que o *issue* possui uma relevante importância, é marcado como *good first bug*, atribuíndo, desta forma, uma prioridade à resolução do *bug*.
+> [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)
+> [Where to Find Known Issues](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#where-to-find-known-issues): We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
+
+Caso se constate que um *bug report* possui uma relevante importância, é marcado como *good first bug* pela *core-team*, atribuíndo, desta forma, uma prioridade à resolução do *bug*. Na situação de se tratar de uma *feature request*, são incorporados nos [*milestones*](https://github.com/facebook/react/milestones) delineados pela *core-team*.
+
+Note-se que, por forma a organizar a lista de *issues*, são utilizadas várias *labels* por forma a atribuir diferentes significados/intenções.
 
 ### Especificação
+
+
 
 
 
