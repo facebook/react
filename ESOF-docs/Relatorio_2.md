@@ -49,7 +49,7 @@ Este processo de validação de requisitos trata, tal como o nome indica , de va
 Aplicando este processo ao React, como demonstra a figura abaixo relativa aos *pull request* recebidos no último mês, à data deste relatório, somos confrontados com 128 pedidos ativos, tendo 105 já aprovados e os restantes ainda em proposta.
 
 
-![Pull Requests no último mês do projeto React](./Resources/pull_requests_september-10_october-10.jpg
+![Pull Requests no último mês do projeto React](./Resources/pull_requests_september-10_october-10.jpg)
 
 Inicialmente, os *pull request* são testados, de forma a verificar se estão dentro dos requisitos exigidos, através da ferramenta **Travis IC** disponível no sítio [travis-ci.org](https://travis-ci.org/). Esta ferramenta, um serviço *hosted continuous integration* para projetos *open source* e privados, executa testes previamente preparados e informa os colaboradores do sucesso ou não dos testes. A resposta da ferramenta **Travis IC** não é decisiva, cabendo a decisão final aos colaboradores, porque mesmo que reprove nos testes, o código pode ser adicionado ao projeto.
 
