@@ -7,9 +7,19 @@ Antes de se iniciar a discussão acerca da gestão de requisitos num projeto com
 
 Na fase em que o projeto se encontra, os novos requisitos são determinados pela lista de *issues* levantados pela comunidade, assim como pelos *pull requests* que os colaboradores podem submeter para apreciação da *core team*, conforme discutido no [Relatório 1](./Relatorio_1.md). Não existe uma definição clara dos requisitos futuros, mas apenas um direcionamento e validação das sugestões supramencionadas com vista à sua integração na biblioteca, sem comprometer a estabilidade do projeto a longo prazo. Importa, no entanto, explorar a motivação por parte do Facebook por trás do 
 
+
 ### Análise e Negociação
 
+Os vários *issues*, que foram relatados pelos vários elementos da comunidade *open-source*, são sujeitos, por parte da *core-team*, a uma análise detalhada, de maneira a determinar se um dado *report* é significativo para a contribuição do projeto, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
+
+> The core team will be monitoring for pull requests. (...)
+> We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
+
+Caso se constate que o *issue* possui uma relevante importância, é marcado como *good first bug*, atribuíndo, desta forma, uma prioridade à resolução do *bug*.
+
 ### Especificação
+
+
 
 ### Validação de Requisitos
 
