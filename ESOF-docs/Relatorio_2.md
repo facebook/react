@@ -27,7 +27,7 @@ Caso se constate que um *bug report* possui uma relevante importância, é marca
 
 Note-se que, por forma a organizar a lista de *issues*, são utilizadas várias *labels* por forma a atribuir diferentes significados/intenções.
 
-### Especificação
+### <a name="especificacao"></a>Especificação
 
 
 ### <a name="validacao"></a>Validação de Requisitos
@@ -37,16 +37,16 @@ Este processo de validação de requisitos trata, tal como o nome indica , de va
 Cada colaborador escolhe, da lista de *issues* ou *good first bugs*, aquele ou aqueles que se vai atrever a resolver. Antes de fazer *pull request*, a correção deve ser testada para ter a certeza que o problema ficou resolvido.
 Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as correções ao código foram realmente bem feitas, que não vão introduzir novos erros e que aquela especificação ainda é útil para o projecto.
 
-#### Objetivos
+#### <a name="objetivos"></a>Objetivos
 
 Como o projeto depende de pessoas de forma independente, a comunicação entre elas pode muitas vezes não ocorrer. Com isso, pode acontecer que os colaboradores introduzam erros na correção dos issues e pôr em causa todo o projeto já realizado até à altura.
 De modo a garantir que a evolução do projeto segue conforme as exigências do cliente, existe um grupo de pessoas que a sua função é verificar que as correções feitas foram o mais correto possível, realizando testes a essas alterações. Após esses testes, cabe a eles decidir se as correções aos *issues* são úteis ao projeto, indo de encontro às funcionalidades necessárias do programa final.
 
-#### Motivação
+#### <a name="motivacao"></a>Motivação
 
 O React é um caso pouco comum, porque normalmente os projetos *open source* nunca têm grande projeção e vão evoluindo consoante o gosto e a paciência dos seus criadores porque não passa de um passatempo para os contribuidores. Neste caso, o projeto têm um propósito importante, é uma biblioteca usada para criar interfaces gráficas incorporada no Facebook. Só isso é um grande estímulo para todos os que ajudam o projeto, podem ver que todo o seu contributo é aplicado na maior rede social da atualidade.
 
-#### Técnicas
+#### <a name="tecnicas"></a>Técnicas
 
 Mesmo que os projectos *open source* não tenham, muitos deles, a dimensão e a estrutura de outros projetos realizados pelas grandes empresas, nada se consegue fazer sem organização. Para isso, existem os requesitos, são objetivos que os colaboradores têm de cumprir para se conseguir fazer evoluir o projeto.
 No caso do React, qualquer um pode ajudar ao projecto. Para começar, uma boa base de trabalho são os good first bugs, tendo sido mesmo indicado por um dos responsáveis do projecto como sendo o melhor começo, e a partir daí passar para os issues que vão aparecendo.
