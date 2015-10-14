@@ -61,6 +61,7 @@ O projeto *React* precisa também de validar o elevado número de *issues* que r
 ![Issues no último mês do projeto React](./Resources/issues_september-10_october-10.jpg)
 
 
+~~Informação repetida na Analise, como por exemplo nas Issues.~~
 
 #### <a name="objetivos"></a>Objetivos
 
