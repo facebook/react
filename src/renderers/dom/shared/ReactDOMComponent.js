@@ -723,7 +723,7 @@ ReactDOMComponent.Mixin = {
             }
             propValue = this._previousStyleCopy = assign({}, props.style);
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
+          propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
