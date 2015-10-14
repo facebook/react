@@ -28,6 +28,7 @@ Caso se constate que um *issue* possua uma relevante importância, é marcado co
 
 Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
 
+
 ### <a name="especificacao"></a>Especificação
 
 Reunião
@@ -40,7 +41,13 @@ Milestones
 ### <a name="validacao"></a>Validação de Requisitos
 
 
-Este processo de validação de requisitos trata, tal como o nome indica , de validar quanto à consistência, precisão e contextualização dos requisitos levantados no processo de [Levantamento de Requisitos](#levantamento) e [Análise e Negociação](#analise).
+
+Este processo de validação de requisitos trata, tal como o nome indica , de validar quanto à consistência, precisão e contextualização dos requisitos levantados no processo de [Levantamento de Requisitos](#levantamento) e [Análise e Negociação](#analise).É necessário demonstrar que os requisitos definem o sistema que o cliente realmente deseja.
+
+
+Aplicando este processo ao React, como demonstra a figura relativa aos ![Pull Requests no último mês do projeto React](./Resources/pull_requests_september-10_october-10.jpg), foram recebidos no último mês, à data deste relatório, 128 *pull request*.
+
+
 Cada colaborador escolhe, da lista de *issues* ou *good first bugs*, aquele ou aqueles que se vai atrever a resolver. Antes de fazer *pull request*, a correção deve ser testada para ter a certeza que o problema ficou resolvido.
 Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as correções ao código foram realmente bem feitas, que não vão introduzir novos erros e que aquela especificação ainda é útil para o projecto.
 
