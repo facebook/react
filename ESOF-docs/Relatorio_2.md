@@ -28,6 +28,9 @@ Mesmo depois de enviar a correção, cabe aos verificadores certificar-se que as
 
 #### Objetivos
 
+Como o projeto depende de pessoas de forma independente, a comunicação entre elas pode muitas vezes não ocorrer. Com isso, pode acontecer que os colaboradores introduzam erros na correção dos issues e pôr em causa todo o projeto já realizado até à altura. E, por consequência, o produto desejado pelo Facebook seja diferente do acordado, manchando a imagem de quem desenvolveu. 
+
+
 #### Motivação
 
 O React é um caso pouco comum, porque normalmente os projetos *open source* nunca têm grande projeção e vão evoluindo consoante o gosto e a paciência dos seus criadores porque não passa de um passatempo para os contribuidores. Neste caso, o projeto têm um propósito importante, é uma biblioteca usada para criar interfaces gráficas incorporada no Facebook. Só isso é um grande estímulo para todos os que ajudam o projeto, podem ver que todo o seu contributo é aplicado na maior rede social da atualidade.
