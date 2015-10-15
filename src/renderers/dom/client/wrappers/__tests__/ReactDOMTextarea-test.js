@@ -271,8 +271,9 @@ describe('ReactDOMTextarea', function() {
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
     expect(console.error.argsForCall[0][0]).toContain(
-       '`value` prop on `textarea` should not be null. Consider using the empty string to clear the component or'
-        + ' `undefined` for uncontrolled components.'
+      '`value` prop on `textarea` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
     );
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);

@@ -407,8 +407,9 @@ describe('ReactDOMInput', function() {
   it('should throw warning message if value is null', function() {
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
     expect(console.error.argsForCall[0][0]).toContain(
-        '`value` prop on `input` should not be null. Consider using the empty string to clear the component or'
-        + ' `undefined` for uncontrolled components.'
+      '`value` prop on `input` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
     );
 
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);

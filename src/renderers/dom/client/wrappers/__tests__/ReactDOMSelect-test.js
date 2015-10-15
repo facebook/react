@@ -469,8 +469,9 @@ describe('ReactDOMSelect', function() {
 
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
     expect(console.error.argsForCall[0][0]).toContain(
-        '`value` prop on `select` should not be null. Consider using the empty string to clear the component or'
-        + ' `undefined` for uncontrolled components.'
+      '`value` prop on `select` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
     );
 
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
