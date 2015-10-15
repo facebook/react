@@ -196,31 +196,6 @@ describe('ReactMount', function() {
     });
   }
 
-  it('warns when using two copies of React before throwing', function() {
-    jest.resetModuleRegistry();
-    var RD1 = require('ReactDOM');
-    jest.resetModuleRegistry();
-    var RD2 = require('ReactDOM');
-
-    var X = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-
-    var container = document.createElement('div');
-    spyOn(console, 'error');
-    var component = RD1.render(<X />, container);
-    expect(console.error.argsForCall.length).toBe(0);
-
-    // This fails but logs a warning first
-    expect(function() {
-      RD2.findDOMNode(component);
-    }).toThrow();
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('two copies of React');
-  });
-
   it('should warn if render removes React-rendered children', function() {
     var container = document.createElement('container');
     var Component = React.createClass({
