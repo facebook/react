@@ -17,9 +17,9 @@ Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_applic
 
 ### <a name="analise"></a>Análise e Negociação
 
-Uma das formas que um dado colaborador pode contribuir para o projecto é através da adição de *issues*, na secção apropriada, ou através de *pull requests*, onde a *core-team* pode, após uma cuidada análise, por forma a determinar se são significativos para a contribuição do projeto, incorporar tais modificações, intenção manifestada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
+Como já foi mencionado na secção anterior, a principal fonte de requisitos provém dos vários colaboradores que apoiam o projecto. Uma das formas que um dado colaborador pode contribuir para o projecto é através da adição de *issues*, na secção apropriada, ou através de *pull requests*. Após submissão, a *core-team* fica encarregue de analisar as várias contribuições e determinar se são relevantes o suficiente para serem incorporadas no projecto. Note-se que o papel de análise por parte *core-team* está delineada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
-> [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)
+> [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)*
 > [Where to Find Known Issues](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#where-to-find-known-issues): We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
 
 De notar que os *issues* e os *pull requests* podem expressar *bug reports*, isto é, correcções a serem realizadas no projecto por forma a colmatar os múltiplos erros que possam surgir no decorrer da utilização do React, ou *features requests*, ou seja, a descrição e posterior implementação de determinadas características que levam ao melhoramento do projecto em geral. Contudo, no projecto, estas duas noções são tomadas como equivalentes. Assim sendo, neste relatório, os autores deste relatório irão considerar também como equivalentes.
