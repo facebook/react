@@ -17,12 +17,26 @@ Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_applic
 
 ### <a name="analise"></a>Análise e Negociação
 
-Como já foi mencionado na secção anterior, a principal fonte de requisitos provém dos vários colaboradores que apoiam o projecto. Uma das formas que um dado colaborador pode contribuir para o projecto é através da adição de *issues*, na secção apropriada, ou através de *pull requests*. Após submissão, a *core-team* fica encarregue de analisar as várias contribuições e determinar se são relevantes o suficiente para serem incorporadas no projecto. Note-se que o papel de análise por parte *core-team* está delineada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
+Como já foi mencionado na secção anterior, a principal fonte de requisitos provém quer dos vários colaboradores que apoiam o projecto quer da própria *core-team*. Uma das formas que um dado colaborador pode contribuir para o projecto é através da adição de *issues*, na secção apropriada, ou através de *pull requests*. Após submissão, a *core-team* fica encarregue de analisar as várias contribuições e determinar se são relevantes o suficiente para serem incorporadas no projecto. Note-se que o papel de análise por parte *core-team* está delineada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
-> [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)*
+> [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)
+
 > [Where to Find Known Issues](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#where-to-find-known-issues): We will be using GitHub Issues for our public bugs. We will keep a close eye on this and try to make it clear when we have an internal fix in progress.
 
-De notar que os *issues* e os *pull requests* podem expressar *bug reports*, isto é, correcções a serem realizadas no projecto por forma a colmatar os múltiplos erros que possam surgir no decorrer da utilização do React, ou *features requests*, ou seja, a descrição e posterior implementação de determinadas características que levam ao melhoramento do projecto em geral. Contudo, no projecto, estas duas noções são tomadas como equivalentes. Assim sendo, neste relatório, os autores deste relatório irão considerar também como equivalentes.
+De notar que os *issues* e os *pull requests* podem expressar *bug reports*, isto é, correcções a serem realizadas no projecto por forma a colmatar os múltiplos erros que possam surgir no decorrer da utilização do React, ou *features requests*, ou seja, a descrição e, possivelmente, posterior implementação de determinadas características que levam ao melhoramento do projecto em geral. Contudo, no projecto, estas duas noções são tomadas como equivalentes. Assim sendo, neste relatório, os autores irão considerá-las também como equivalentes.
+
+Note-se, contudo, que
+
+
+
+
+
+
+
+
+
+
+
 
 A *core-team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização.
 
@@ -30,8 +44,14 @@ Caso se constate que um *issue* possua uma relevante importância, é marcado co
 
 Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
 
+Negociação: através de comentários nos issues
+
 
 ### <a name="especificacao"></a>Especificação
+
+Após a análise e negociação dos vários requisitos propostos, é necessário estabelecer o rumo que o projecto tomará nos próximos tempos. Assim, a *core-team* procede à realização de várias reuniões entre os seus elementos de tempos a tempos (assunto este que já foi abordado no relatório anterior). Nessas reuniões, tendo em conta os vários requisitos, são criados milestones.
+
+
 
 Reunião
 |
