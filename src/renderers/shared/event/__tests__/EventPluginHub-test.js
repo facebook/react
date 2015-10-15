@@ -30,8 +30,7 @@ describe('EventPluginHub', function() {
     expect(function() {
       EventPluginHub.putListener(1, 'onClick', 'not a function');
     }).toThrow(
-      'Invariant Violation: Expected onClick listener to be a function, ' +
-      'instead got type string'
+      'Expected onClick listener to be a function, instead got type string'
     );
   });
 });

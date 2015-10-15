@@ -30,8 +30,7 @@ describe('ReactClass-spec', function() {
     expect(function() {
       React.createClass({});
     }).toThrow(
-      'Invariant Violation: createClass(...): Class specification must ' +
-      'implement a `render` method.'
+      'createClass(...): Class specification must implement a `render` method.'
     );
   });
 
@@ -197,10 +196,10 @@ describe('ReactClass-spec', function() {
         },
       });
     }).toThrow(
-      'Invariant Violation: ReactClass: You are attempting to ' +
-      'define a reserved property, `getDefaultProps`, that shouldn\'t be on ' +
-      'the "statics" key. Define it as an instance property instead; it ' +
-      'will still be accessible on the constructor.'
+      'ReactClass: You are attempting to define a reserved property, ' +
+      '`getDefaultProps`, that shouldn\'t be on the "statics" key. Define ' +
+      'it as an instance property instead; it will still be accessible on ' +
+      'the constructor.'
     );
   });
 
@@ -331,8 +330,7 @@ describe('ReactClass-spec', function() {
       expect(function() {
         instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrow(
-        'Invariant Violation: Component.getInitialState(): ' +
-        'must return an object or null'
+        'Component.getInitialState(): must return an object or null'
       );
     });
   });

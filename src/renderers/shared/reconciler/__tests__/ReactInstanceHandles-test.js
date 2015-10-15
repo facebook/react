@@ -135,7 +135,7 @@ describe('ReactInstanceHandles', function() {
           ReactMount.getID(childNodeB) + ':junk'
         );
       }).toThrow(
-        'Invariant Violation: findComponentRoot(..., .0.1:0:junk): ' +
+        'findComponentRoot(..., .0.1:0:junk): ' +
         'Unable to find element. This probably means the DOM was ' +
         'unexpectedly mutated (e.g., by the browser), usually due to ' +
         'forgetting a <tbody> when using tables, nesting tags ' +
