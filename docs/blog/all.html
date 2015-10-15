@@ -11,11 +11,7 @@ id: all-posts
     {% for page in site.posts %}
       <p><strong><a href="/react{{ page.url }}">{{ page.title }}</a></strong> on {{ page.date | date: "%B %e, %Y" }} by
         {% for author in page.authors %}
-          {% if author.url %}
-            <a href="{{author.url}}">{{ author.name }}</a>
-          {% else %}
-            {{ author.name }}
-          {% endif %}
+          {{ author.name }}
           {% if forloop.last == false %} and {% endif %}
         {% endfor %}
       </p>
