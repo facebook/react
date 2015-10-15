@@ -9,7 +9,16 @@ id: all-posts
   <div class="inner-content">
     <h1>All Posts</h1>
     {% for page in site.posts %}
-      <p><strong><a href="/react{{ page.url }}">{{ page.title }}</a></strong> on {{ page.date | date: "%B %e, %Y" }} by {{ page.author.name }}</p>
+      <p><strong><a href="/react{{ page.url }}">{{ page.title }}</a></strong> on {{ page.date | date: "%B %e, %Y" }} by
+        {% for author in page.authors %}
+          {% if author.url %}
+            <a href="{{author.url}}">{{ author.name }}</a>
+          {% else %}
+            {{ author.name }}
+          {% endif %}
+          {% if forloop.last == false %} and {% endif %}
+        {% endfor %}
+      </p>
     {% endfor %}
   </div>
 </section>

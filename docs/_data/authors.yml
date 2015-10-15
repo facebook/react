@@ -1,8 +1,6 @@
 # Map of short name to more information. `name` will be used but if you don't
 # want to use your real name, just use whatever. If url is included, your name
 # will be a link to the provided url.
-billandjing:
-  name: Bill Fisher and Jing Chen
 chenglou:
   name: Cheng Lou
   url: https://twitter.com/_chenglou
@@ -18,8 +16,12 @@ jaredly:
 jgebhardt:
   name: Jonas Gebhardt
   url: https://twitter.com/jonasgebhardt
-jimandsebastian:
-  name: Jim Sproch and Sebastian Markbåge
+jimfb:
+  name: Jim Sproch
+  url: http://www.jimsproch.com
+jingc:
+  name: Jing Chen
+  url: https://twitter.com/jingc
 josephsavona:
   name: Joseph Savona
   url: https://twitter.com/en_JS
