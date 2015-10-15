@@ -463,4 +463,17 @@ describe('ReactDOMSelect', function() {
     expect(node.options[1].selected).toBe(false);  // giraffe
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
+
+  it('should throw warning message if value is null', function() {
+    spyOn(console, 'error');
+
+    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
+    expect(console.error.argsForCall[0][0]).toContain(
+        '`value` prop on `select` should not be null. Consider using the empty string to clear the component or'
+        + ' `undefined` for uncontrolled components.'
+    );
+
+    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
+    expect(console.error.argsForCall.length).toBe(1);
+  });
 });

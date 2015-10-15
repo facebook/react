@@ -265,4 +265,17 @@ describe('ReactDOMTextarea', function() {
     renderTextarea(<textarea />, container);
     ReactDOM.unmountComponentAtNode(container);
   });
+
+  it('should throw warning message if value is null', function() {
+    spyOn(console, 'error');
+
+    ReactTestUtils.renderIntoDocument(<textarea value={null} />);
+    expect(console.error.argsForCall[0][0]).toContain(
+       '`value` prop on `textarea` should not be null. Consider using the empty string to clear the component or'
+        + ' `undefined` for uncontrolled components.'
+    );
+
+    ReactTestUtils.renderIntoDocument(<textarea value={null} />);
+    expect(console.error.argsForCall.length).toBe(1);
+  });
 });

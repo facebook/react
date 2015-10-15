@@ -24,11 +24,25 @@ var instancesByReactID = {};
 
 var didWarnValueLink = false;
 var didWarnCheckedLink = false;
+var didWarnValueNull = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
     ReactDOMInput.updateWrapper(this);
+  }
+}
+
+function warnIfValueIsNull(props) {
+  if (props != null && props.value === null && !didWarnValueNull) {
+    warning(
+        false,
+        '`value` prop on `input` should not be null. ' +
+        'Consider using the empty string to clear the component or' +
+        ' `undefined` for uncontrolled components.'
+    );
+
+    didWarnValueNull = true;
   }
 }
 
@@ -86,6 +100,7 @@ var ReactDOMInput = {
         );
         didWarnCheckedLink = true;
       }
+      warnIfValueIsNull(props);
     }
 
     var defaultValue = props.defaultValue;
@@ -107,6 +122,10 @@ var ReactDOMInput = {
 
   updateWrapper: function(inst) {
     var props = inst._currentElement.props;
+
+    if (__DEV__) {
+      warnIfValueIsNull(props);
+    }
 
     // TODO: Shouldn't this be getChecked(props)?
     var checked = props.checked;

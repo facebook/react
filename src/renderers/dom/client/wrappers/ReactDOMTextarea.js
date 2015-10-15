@@ -20,11 +20,25 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 var didWarnValueLink = false;
+var didWarnValueNull = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
     ReactDOMTextarea.updateWrapper(this);
+  }
+}
+
+function warnIfValueIsNull(props) {
+  if (props != null && props.value === null && !didWarnValueNull) {
+    warning(
+        false,
+        '`value` prop on `textarea` should not be null. ' +
+        'Consider using the empty string to clear the component or' +
+        ' `undefined` for uncontrolled components.'
+    );
+
+    didWarnValueNull = true;
   }
 }
 
@@ -76,6 +90,7 @@ var ReactDOMTextarea = {
         );
         didWarnValueLink = true;
       }
+      warnIfValueIsNull(props);
     }
 
     var defaultValue = props.defaultValue;
@@ -107,7 +122,6 @@ var ReactDOMTextarea = {
       defaultValue = '';
     }
     var value = LinkedValueUtils.getValue(props);
-
     inst._wrapperState = {
       // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
@@ -120,6 +134,11 @@ var ReactDOMTextarea = {
 
   updateWrapper: function(inst) {
     var props = inst._currentElement.props;
+
+    if (__DEV__) {
+      warnIfValueIsNull(props);
+    }
+
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
