@@ -51,6 +51,7 @@ Negociação: através de comentários nos issues
 
 Após a análise e negociação dos vários requisitos propostos, é necessário estabelecer o rumo que o projecto tomará nos próximos tempos. Assim, a *core-team* procede à realização de várias reuniões entre os seus elementos de tempos a tempos (assunto este que já foi abordado no relatório anterior). Nessas reuniões, tendo em conta os vários requisitos, são criados milestones.
 
+https://discuss.reactjs.org/t/meeting-notes-2015-05-15/362
 
 
 Reunião
