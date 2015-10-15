@@ -432,7 +432,7 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   if (!context) {
     context = emptyObject;
   }
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(false);
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   transaction.perform(this._render, this, element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
 };
