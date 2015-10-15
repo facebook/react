@@ -13,7 +13,7 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMComponent = require('ReactDOMComponent');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactNodeTypes = require('ReactNodeTypes');
 
@@ -66,7 +66,7 @@ function findDOMNode(componentOrElement) {
   var inst = ReactInstanceMap.get(componentOrElement);
   if (inst) {
     inst = getNativeComponentFromComposite(inst);
-    return inst ? ReactDOMComponent.getNodeFromInstance(inst) : null;
+    return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
   }
 
   if (typeof componentOrElement.render === 'function') {

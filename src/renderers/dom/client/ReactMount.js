@@ -16,6 +16,7 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
@@ -267,6 +268,7 @@ function mountComponentIntoNode(
   ReactMount._mountImageIntoNode(
     markup,
     container,
+    componentInstance,
     shouldReuseMarkup,
     transaction
   );
@@ -951,6 +953,7 @@ var ReactMount = {
   _mountImageIntoNode: function(
     markup,
     container,
+    instance,
     shouldReuseMarkup,
     transaction
   ) {
@@ -966,6 +969,7 @@ var ReactMount = {
     if (shouldReuseMarkup) {
       var rootElement = getReactRootElementInContainer(container);
       if (ReactMarkupChecksum.canReuseMarkup(markup, rootElement)) {
+        ReactDOMComponentTree.precacheNode(instance, rootElement);
         return;
       } else {
         var checksum = rootElement.getAttribute(
@@ -1049,6 +1053,7 @@ var ReactMount = {
       DOMLazyTree.insertTreeBefore(container, markup, null);
     } else {
       setInnerHTML(container, markup);
+      ReactDOMComponentTree.precacheNode(instance, container.firstChild);
     }
   },
 

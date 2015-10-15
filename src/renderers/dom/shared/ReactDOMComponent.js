@@ -27,6 +27,8 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMButton = require('ReactDOMButton');
+var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
@@ -46,7 +48,9 @@ var shallowEqual = require('shallowEqual');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
+var Flags = ReactDOMComponentFlags;
 var deleteListener = EventPluginHub.deleteListener;
+var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
@@ -493,14 +497,6 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-function getNode(inst) {
-  if (inst._nativeNode) {
-    return inst._nativeNode;
-  } else {
-    return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
-  }
-}
-
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -523,11 +519,12 @@ function ReactDOMComponent(tag) {
   this._previousStyle = null;
   this._previousStyleCopy = null;
   this._nativeNode = null;
+  this._nativeParent = null;
   this._rootNodeID = null;
   this._nativeContainerInfo = null;
   this._wrapperState = null;
   this._topLevelWrapper = null;
-  this._nodeHasLegacyProperties = false;
+  this._flags = 0;
   if (__DEV__) {
     this._ancestorInfo = null;
   }
@@ -561,6 +558,7 @@ ReactDOMComponent.Mixin = {
     context
   ) {
     this._rootNodeID = rootID;
+    this._nativeParent = nativeParent;
     this._nativeContainerInfo = nativeContainerInfo;
 
     var props = this._currentElement.props;
@@ -664,6 +662,7 @@ ReactDOMComponent.Mixin = {
         );
       }
       this._nativeNode = el;
+      this._flags |= Flags.hasCachedChildNodes;
       DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
       // Populate node cache
       ReactMount.getID(el);
@@ -907,7 +906,7 @@ ReactDOMComponent.Mixin = {
       context
     );
 
-    if (!canDefineProperty && this._nodeHasLegacyProperties) {
+    if (!canDefineProperty && this._flags & Flags.nodeHasLegacyProperties) {
       this._nativeNode.props = nextProps;
     }
 
@@ -1146,7 +1145,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    if (this._nodeHasLegacyProperties) {
+    if (this._flags & Flags.nodeHasLegacyProperties) {
       this._nativeNode._reactInternalComponent = null;
     }
     this._nativeNode = null;
@@ -1159,7 +1158,7 @@ ReactDOMComponent.Mixin = {
   },
 
   getPublicInstance: function() {
-    if (this._nodeHasLegacyProperties) {
+    if (this._flags & Flags.nodeHasLegacyProperties) {
       return this._nativeNode;
     } else {
       var node = getNode(this);
@@ -1185,7 +1184,7 @@ ReactDOMComponent.Mixin = {
         node.props = this._currentElement.props;
       }
 
-      this._nodeHasLegacyProperties = true;
+      this._flags |= Flags.nodeHasLegacyProperties;
       return node;
     }
   },
@@ -1200,11 +1199,15 @@ ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {
 assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
-  ReactMultiChild.Mixin
+  ReactMultiChild.Mixin,
+  {
+    prepareToManageChildren: function() {
+      // Before we add, remove, or reorder the children of a node, make sure
+      // we have references to all of its children so we don't lose them, even
+      // if nefarious browser plugins add extra nodes to our tree.
+      ReactDOMComponentTree.precacheChildNodes(this, getNode(this));
+    },
+  }
 );
-
-assign(ReactDOMComponent, {
-  getNodeFromInstance: getNode,
-});
 
 module.exports = ReactDOMComponent;

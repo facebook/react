@@ -194,7 +194,7 @@ var ReactDefaultPerf = {
               writeArgs.markup = args[1][update.markupIndex];
             }
             ReactDefaultPerf._recordWrite(
-              update.parentID,
+              update.parentInst._rootNodeID,
               update.type,
               totalTime,
               writeArgs
