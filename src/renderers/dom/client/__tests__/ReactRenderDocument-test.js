@@ -25,7 +25,7 @@ var getTestDocument;
 var testDocument;
 
 var UNMOUNT_INVARIANT_MESSAGE =
-  'Invariant Violation: <html> tried to unmount. ' +
+  '<html> tried to unmount. ' +
   'Because of cross-browser quirks it is impossible to unmount some ' +
   'top-level components (eg <html>, <head>, and <body>) reliably and ' +
   'efficiently. To fix this, have a single top-level component that ' +
@@ -215,7 +215,6 @@ describe('rendering React components at document', function() {
       // Notice the text is different!
       ReactDOM.render(<Component text="Hello world" />, testDocument);
     }).toThrow(
-      'Invariant Violation: ' +
       'You\'re trying to render a component to the document using ' +
       'server rendering but the checksum was invalid. This usually ' +
       'means you rendered a different component type or props on ' +
@@ -252,9 +251,9 @@ describe('rendering React components at document', function() {
     expect(function() {
       ReactDOM.render(<Component />, container);
     }).toThrow(
-      'Invariant Violation: You\'re trying to render a component to the ' +
-      'document but you didn\'t use server rendering. We can\'t do this ' +
-      'without using server rendering due to cross-browser quirks. See ' +
+      'You\'re trying to render a component to the document but you didn\'t ' +
+      'use server rendering. We can\'t do this without using server ' +
+      'rendering due to cross-browser quirks. See ' +
       'ReactDOMServer.renderToString() for server rendering.'
     );
   });

@@ -208,11 +208,10 @@ describe('ReactClass-mixin', function() {
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
-      'Invariant Violation: mergeIntoWithNoDuplicateKeys(): ' +
-      'Tried to merge two objects with the same key: `x`. This conflict ' +
-      'may be due to a mixin; in particular, this may be caused by two ' +
-      'getInitialState() or getDefaultProps() methods returning objects ' +
-      'with clashing keys.'
+      'mergeIntoWithNoDuplicateKeys(): Tried to merge two objects with the ' +
+      'same key: `x`. This conflict may be due to a mixin; in particular, ' +
+      'this may be caused by two getInitialState() or getDefaultProps() ' +
+      'methods returning objects with clashing keys.'
     );
   });
 
@@ -280,9 +279,8 @@ describe('ReactClass-mixin', function() {
         },
       });
     }).toThrow(
-      'Invariant Violation: ReactClass: You are attempting to ' +
-      'define `abc` on your component more than once. This conflict may be ' +
-      'due to a mixin.'
+      'ReactClass: You are attempting to define `abc` on your component more ' +
+      'than once. This conflict may be due to a mixin.'
     );
   });
 
@@ -309,9 +307,8 @@ describe('ReactClass-mixin', function() {
         },
       });
     }).toThrow(
-      'Invariant Violation: ReactClass: You are attempting to ' +
-      'define `abc` on your component more than once. This conflict may be ' +
-      'due to a mixin.'
+      'ReactClass: You are attempting to define `abc` on your component ' +
+      'more than once. This conflict may be due to a mixin.'
     );
   });
 
@@ -325,8 +322,8 @@ describe('ReactClass-mixin', function() {
         },
       });
     }).toThrow(
-      'Invariant Violation: ReactClass: You\'re attempting to ' +
-      'use a component as a mixin. Instead, just use a regular object.'
+      'ReactClass: You\'re attempting to use a component as a mixin. ' +
+      'Instead, just use a regular object.'
     );
   });
 
@@ -346,9 +343,8 @@ describe('ReactClass-mixin', function() {
         },
       });
     }).toThrow(
-      'Invariant Violation: ReactClass: You\'re attempting to ' +
-      'use a component class or function as a mixin. Instead, just use a ' +
-      'regular object.'
+      'ReactClass: You\'re attempting to use a component class or function ' +
+      'as a mixin. Instead, just use a regular object.'
     );
   });
 

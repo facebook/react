@@ -97,8 +97,8 @@ describe('EventPluginRegistry', function() {
         bad: BadPlugin,
       });
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Event plugins must ' +
-      'implement an `extractEvents` method, but `bad` does not.'
+      'EventPluginRegistry: Event plugins must implement an `extractEvents` ' +
+      'method, but `bad` does not.'
     );
   });
 
@@ -114,8 +114,8 @@ describe('EventPluginRegistry', function() {
         random: RandomPlugin,
       });
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Cannot inject event plugins ' +
-      'that do not exist in the plugin ordering, `random`.'
+      'EventPluginRegistry: Cannot inject event plugins that do not exist ' +
+      'in the plugin ordering, `random`.'
     );
   });
 
@@ -127,9 +127,8 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Cannot inject event plugin ' +
-      'ordering more than once. You are likely trying to load more than one ' +
-      'copy of React.'
+      'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
+      'once. You are likely trying to load more than one copy of React.'
     );
   });
 
@@ -142,8 +141,8 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginsByName({same: TwoPlugin});
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Cannot inject two different ' +
-      'event plugins using the same name, `same`.'
+      'EventPluginRegistry: Cannot inject two different event plugins using ' +
+      'the same name, `same`.'
     );
   });
 
@@ -206,8 +205,8 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(['one', 'two']);
     }).toThrow(
-      'Invariant Violation: EventPluginHub: More than one plugin attempted ' +
-      'to publish the same registration name, `onPhotoCapture`.'
+      'EventPluginHub: More than one plugin attempted to publish the same ' +
+      'registration name, `onPhotoCapture`.'
     );
   });
 
@@ -223,8 +222,8 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(['one']);
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Failed to publish event ' +
-      '`badEvent` for plugin `one`.'
+      'EventPluginRegistry: Failed to publish event `badEvent` for plugin ' +
+      '`one`.'
     );
   });
 
