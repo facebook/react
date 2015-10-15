@@ -32,6 +32,10 @@ function forceUpdateIfMounted() {
   }
 }
 
+function hasPlaceholder(props) {
+  return 'placeholder' in props;
+}
+
 /**
  * Implements an <input> native component that allows setting these optional
  * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
@@ -93,12 +97,17 @@ var ReactDOMInput = {
       initialChecked: props.defaultChecked || false,
       initialValue: defaultValue != null ? defaultValue : null,
       onChange: _handleChange.bind(inst),
+      _currentValue: '',
     };
   },
 
   mountReadyWrapper: function(inst) {
     // Can't be in mountWrapper or else server rendering leaks.
     instancesByReactID[inst._rootNodeID] = inst;
+    var rootNode = ReactMount.getNode(inst._rootNodeID);
+    if (hasPlaceholder(inst._currentElement.props)) {
+      inst._wrapperState._currentValue = rootNode.value;
+    }
   },
 
   unmountWrapper: function(inst) {
@@ -122,17 +131,31 @@ var ReactDOMInput = {
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
+      value = '' + value;
       ReactDOMIDOperations.updatePropertyByID(
         inst._rootNodeID,
         'value',
-        '' + value
+        value
       );
+      if (hasPlaceholder(props)) {
+        inst._wrapperState._currentValue = value;
+      }
     }
   },
 };
 
 function _handleChange(event) {
   var props = this._currentElement.props;
+
+  // #5004: IE fires input event for placeholder wrongly
+  if (hasPlaceholder(props)) {
+    var value = event.target.value;
+    if (value === this._wrapperState._currentValue) {
+      event.stopPropagation();
+      return undefined;
+    }
+    this._wrapperState._currentValue = value;
+  }
 
   var returnValue = LinkedValueUtils.executeOnChange(props, event);
 

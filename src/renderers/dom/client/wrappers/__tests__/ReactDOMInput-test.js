@@ -403,4 +403,18 @@ describe('ReactDOMInput', function() {
       <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
     expect(() => ReactDOM.render(instance, node)).toThrow();
   });
+
+  it('will not fire onChange when render with placeholder', function() {
+    var node = document.createElement('div');
+    document.body.appendChild(node);
+    var onChange = mocks.getMockFunction();
+    var parentOnChange = mocks.getMockFunction();
+    var instance = <div onChange={parentOnChange}><input placeholder="中文" onChange={onChange} /></div>;
+    // can not use renderIntoDocument
+    ReactDOM.render(instance, node);
+    expect(onChange.mock.calls.length).toBe(0);
+    expect(parentOnChange.mock.calls.length).toBe(0);
+    ReactDOM.unmountComponentAtNode(node);
+    document.body.removeChild(node);
+  });
 });
