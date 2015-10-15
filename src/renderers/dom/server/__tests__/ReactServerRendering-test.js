@@ -246,8 +246,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderToString(): You must pass ' +
-        'a valid ReactElement.'
+        'renderToString(): You must pass a valid ReactElement.'
       );
     });
   });
@@ -356,7 +355,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderToStaticMarkup(): You must pass ' +
+        'renderToStaticMarkup(): You must pass ' +
         'a valid ReactElement.'
       );
     });

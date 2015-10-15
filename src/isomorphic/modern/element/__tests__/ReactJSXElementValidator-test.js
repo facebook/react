@@ -301,7 +301,7 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<NullPropTypeComponent />);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
-      'Invariant Violation: NullPropTypeComponent: prop type `prop` is ' +
+      'NullPropTypeComponent: prop type `prop` is ' +
       'invalid; it must be a function, usually from React.PropTypes.'
     );
   });
@@ -319,7 +319,7 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<NullContextTypeComponent />);
     expect(console.error.calls.length).toBe(1);
     expect(console.error.calls[0].args[0]).toContain(
-      'Invariant Violation: NullContextTypeComponent: context type `prop` is ' +
+      'NullContextTypeComponent: context type `prop` is ' +
       'invalid; it must be a function, usually from React.PropTypes.'
     );
   });

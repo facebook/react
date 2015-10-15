@@ -88,8 +88,7 @@ describe('renderSubtreeIntoContainer', function() {
       componentDidMount: function() {
         expect(function() {
           renderSubtreeIntoContainer(<Parent />, <Component />, portal);
-        }).toThrow('Invariant Violation: parentComponent' +
-          'must be a valid React Component');
+        }).toThrow('parentComponentmust be a valid React Component');
       },
     });
   });

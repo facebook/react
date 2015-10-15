@@ -154,7 +154,7 @@ describe 'ReactCoffeeScriptClass', ->
       expect(->
         test React.createElement(Foo), 'span', ''
       ).toThrow(
-        'Invariant Violation: Foo.state: must be set to an object or null'
+        'Foo.state: must be set to an object or null'
       )
 
   it 'should render with null in the initial state property', ->
