@@ -1,6 +1,6 @@
 ---
 title: "ReactDOM.render and the Top Level React API"
-author: jimandsebastian
+author: ["jimfb", "sebmarkbage"]
 ---
 
 
