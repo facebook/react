@@ -70,7 +70,10 @@ Milestones
 Este processo de validação de requisitos trata, tal como o nome indica , de validar quanto à consistência, precisão e contextualização dos requisitos levantados nos processos de [Levantamento de Requisitos](#levantamento) e [Análise e Negociação](#analise). É necessário demonstrar que os requisitos definem o sistema que o cliente realmente deseja.
 
 
-Aplicando este processo ao React, como demonstra a figura abaixo relativa aos *pull request* recebidos no último mês, à data deste relatório, somos confrontados com 128 pedidos ativos, tendo 105 já aprovados e os restantes ainda em avaliação.
+Aplicando este processo ao **React**, não existe o conceito de clientes que deve validar os requisitos, pelo contrário, a *core team* do projeto é a responsável pela validação, sendo eles, a um certo nível, os *stakeholders*. 
+
+
+Como demonstra a figura abaixo relativa aos *pull request* recebidos no último mês, à data deste relatório, somos confrontados com 128 pedidos ativos, tendo 105 já aprovados e os restantes ainda em avaliação.
 
 
 ![Pull Requests no último mês do projeto React](./Resources/pull_requests_september-10_october-10.jpg)
