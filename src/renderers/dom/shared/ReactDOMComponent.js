@@ -1041,7 +1041,11 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      CSSPropertyOperations.setValueForStyles(getNode(this), styleUpdates);
+      CSSPropertyOperations.setValueForStyles(
+        getNode(this),
+        styleUpdates,
+        this
+      );
     }
   },
 

@@ -51,7 +51,7 @@ describe('ReactDOMComponent', function() {
       var stubStyle = container.firstChild.style;
 
       // set initial style
-      var setup = {display: 'block', left: '1', top: 2, fontFamily: 'Arial'};
+      var setup = {display: 'block', left: '1px', top: 2, fontFamily: 'Arial'};
       ReactDOM.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
@@ -152,7 +152,9 @@ describe('ReactDOMComponent', function() {
       var div = document.createElement('div');
       var One = React.createClass({
         render: function() {
-          return this.props.inline ? <span style={{fontSize: '1'}} /> : <div style={{fontSize: '1'}} />;
+          return this.props.inline ?
+            <span style={{fontSize: '1'}} /> :
+            <div style={{fontSize: '1'}} />;
         },
       });
       var Two = React.createClass({
