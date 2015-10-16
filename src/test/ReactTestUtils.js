@@ -14,6 +14,7 @@
 var ClientReactRootIndex = require('ClientReactRootIndex');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactDOM = require('ReactDOM');
@@ -474,7 +475,7 @@ function makeSimulator(eventType) {
     }
 
     var dispatchConfig =
-      ReactBrowserEventEmitter.eventNameDispatchConfigs[eventType];
+      EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
@@ -505,7 +506,7 @@ function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
   var eventType;
-  for (eventType in ReactBrowserEventEmitter.eventNameDispatchConfigs) {
+  for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
