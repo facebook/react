@@ -19,6 +19,9 @@ var invariant = require('invariant');
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var Flags = ReactDOMComponentFlags;
 
+var internalInstanceKey =
+  '__reactInternalInstance$' + Math.random().toString(36).slice(2);
+
 /**
  * Drill down (through composites and empty components) until we get a native or
  * native text component.
@@ -41,6 +44,15 @@ function getRenderedNativeOrTextFromComponent(component) {
 function precacheNode(inst, node) {
   var nativeInst = getRenderedNativeOrTextFromComponent(inst);
   nativeInst._nativeNode = node;
+  node[internalInstanceKey] = nativeInst;
+}
+
+function uncacheNode(inst) {
+  var node = inst._nativeNode;
+  if (node) {
+    delete node[internalInstanceKey];
+    inst._nativeNode = null;
+  }
 }
 
 /**
@@ -85,6 +97,53 @@ function precacheChildNodes(inst, node) {
 }
 
 /**
+ * Given a DOM node, return the closest ReactDOMComponent or
+ * ReactDOMTextComponent instance ancestor.
+ */
+function getClosestInstanceFromNode(node) {
+  if (node[internalInstanceKey]) {
+    return node[internalInstanceKey];
+  }
+
+  // Walk up the tree until we find an ancestor whose instance we have cached.
+  var parents = [];
+  while (!node[internalInstanceKey]) {
+    parents.push(node);
+    if (node.parentNode) {
+      node = node.parentNode;
+    } else {
+      // Top of the tree. This node must not be part of a React tree (or is
+      // unmounted, potentially).
+      return null;
+    }
+  }
+
+  var closest;
+  var inst;
+  for (; node && (inst = node[internalInstanceKey]); node = parents.pop()) {
+    closest = inst;
+    if (parents.length) {
+      precacheChildNodes(inst, node);
+    }
+  }
+
+  return closest;
+}
+
+/**
+ * Given a DOM node, return the ReactDOMComponent or ReactDOMTextComponent
+ * instance, or null if the node was not rendered by this React.
+ */
+function getInstanceFromNode(node) {
+  var inst = getClosestInstanceFromNode(node);
+  if (inst != null && inst._nativeNode === node) {
+    return inst;
+  } else {
+    return null;
+  }
+}
+
+/**
  * Given a ReactDOMComponent or ReactDOMTextComponent, return the corresponding
  * DOM node.
  */
@@ -114,9 +173,12 @@ function getNodeFromInstance(inst) {
 }
 
 var ReactDOMComponentTree = {
+  getClosestInstanceFromNode: getClosestInstanceFromNode,
+  getInstanceFromNode: getInstanceFromNode,
   getNodeFromInstance: getNodeFromInstance,
   precacheChildNodes: precacheChildNodes,
   precacheNode: precacheNode,
+  uncacheNode: uncacheNode,
 };
 
 module.exports = ReactDOMComponentTree;

@@ -82,7 +82,7 @@ if (__DEV__) {
     props: {
       enumerable: false,
       get: function() {
-        var component = this._reactInternalComponent;
+        var component = ReactDOMComponentTree.getInstanceFromNode(this);
         warning(
           false,
           'ReactDOMComponent: Do not access .props of a DOM node; instead, ' +
@@ -99,7 +99,7 @@ if (__DEV__) {
 
 function legacyGetDOMNode() {
   if (__DEV__) {
-    var component = this._reactInternalComponent;
+    var component = ReactDOMComponentTree.getInstanceFromNode(this);
     warning(
       false,
       'ReactDOMComponent: Do not access .getDOMNode() of a DOM node; ' +
@@ -111,7 +111,7 @@ function legacyGetDOMNode() {
 }
 
 function legacyIsMounted() {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
@@ -124,7 +124,7 @@ function legacyIsMounted() {
 
 function legacySetStateEtc() {
   if (__DEV__) {
-    var component = this._reactInternalComponent;
+    var component = ReactDOMComponentTree.getInstanceFromNode(this);
     warning(
       false,
       'ReactDOMComponent: Do not access .setState(), .replaceState(), or ' +
@@ -135,7 +135,7 @@ function legacySetStateEtc() {
 }
 
 function legacySetProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
@@ -154,7 +154,7 @@ function legacySetProps(partialProps, callback) {
 }
 
 function legacyReplaceProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
@@ -661,7 +661,7 @@ ReactDOMComponent.Mixin = {
           this._currentElement.type
         );
       }
-      this._nativeNode = el;
+      ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
       DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
       // Populate node cache
@@ -1145,11 +1145,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    if (this._flags & Flags.nodeHasLegacyProperties) {
-      this._nativeNode._reactInternalComponent = null;
-    }
-    this._nativeNode = null;
-
+    ReactDOMComponentTree.uncacheNode(this);
     this.unmountChildren();
     EventPluginHub.deleteAllListeners(this._rootNodeID);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
@@ -1158,12 +1154,10 @@ ReactDOMComponent.Mixin = {
   },
 
   getPublicInstance: function() {
+    var node = getNode(this);
     if (this._flags & Flags.nodeHasLegacyProperties) {
-      return this._nativeNode;
+      return node;
     } else {
-      var node = getNode(this);
-
-      node._reactInternalComponent = this;
       node.getDOMNode = legacyGetDOMNode;
       node.isMounted = legacyIsMounted;
       node.setState = legacySetStateEtc;
