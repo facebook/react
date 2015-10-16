@@ -109,8 +109,10 @@ var ReactUpdateQueue = {
     invariant(
       typeof callback === 'function',
       'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-      'isn\'t callable.'
+      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
+      '%s. A function is expected',
+      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
+        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
     );
     var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
@@ -139,8 +141,10 @@ var ReactUpdateQueue = {
     invariant(
       typeof callback === 'function',
       'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-      'isn\'t callable.'
+      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
+      '%s. A function is expected',
+      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
+        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
     );
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
