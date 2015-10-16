@@ -93,6 +93,9 @@ Existem várias técnicas relativas a validação de requesitos, sendo que algum
 
 Tendo em conta as opções listadas, o projeto React demonstra poucas evidências de uso das mesmas. A mais clara delas todas é mesmo o *prototyping*, dado que cada colaborador possui o seu fork.
 Através dos forks, os seus contribuidor podem fazer e testar as alterações desenvolvidas por si, como por exemplo uma *issue*, num programa à parte do principal. Depois de realizados todos os testes, esta nova versão poderá ser acoplada ao repositório principal atrás de um *pull request*. 
+### <a name="conc"></a>Conclusão
+
+Este projeto apresenta um conceito de validação de recursos oposto ao esperado e estudado. Neste caso, não é a *core team* que procura os colaboradores e diz que *features* gostavam que fossem implementadas. São os colaboradores que desenvolvem as funcionalidades que acham que melhorariam o projeto e, só depois, fazem *pull request*. Após este passo, estas novas alterações são analisadas pelos responsáveis do projeto e caso sejam melhorias úteis para o projeto final, são introduzidas no repositório principal.
 
 ### <a name="info"></a>Informações
 
