@@ -86,17 +86,10 @@ O projeto **React** precisa também de validar o elevado número de *issues* que
 A *core-team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização. Caso se constate que um *issue* possui uma ideia interessante, é marcado como *good first bug* pela *core-team*, atribuíndo, desta forma, uma prioridade à resolução do *issue*.
 
 
+É de realçar a importância que a *core team* dá para a organização do código. São mais de cinco centenas de colaboradores e cinco milhares de *commits*, à presente data deste relatório, que tornam a sua gestão custosa. E, caso se consiga corrigir erros previamente, evitar-se-á elevados custos no futuro devido à elevada dimensão do projeto, como referido.
+
 Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
 
-
-#### <a name="objetivos"></a>Objetivos
-
-Como o projeto depende de pessoas de forma independente, a comunicação entre elas pode muitas vezes não ocorrer. Com isso, pode acontecer que os colaboradores introduzam erros na correção dos issues e pôr em causa todo o projeto já realizado até à altura.
-De modo a garantir que a evolução do projeto segue conforme as exigências do cliente, existe um grupo de pessoas que a sua função é verificar que as correções feitas foram o mais correto possível, realizando testes a essas alterações. Após esses testes, cabe a eles decidir se as correções aos *issues* são úteis ao projeto, indo de encontro às funcionalidades necessárias do programa final.
-
-#### <a name="motivacao"></a>Motivação
-
-O React é um caso pouco comum, porque normalmente os projetos *open source* nunca têm grande projeção e vão evoluindo consoante o gosto e a paciência dos seus criadores porque não passa de um passatempo para os contribuidores. Neste caso, o projeto têm um propósito importante, é uma biblioteca usada para criar interfaces gráficas incorporada no Facebook. Só isso é um grande estímulo para todos os que ajudam o projeto, podem ver que todo o seu contributo é aplicado na maior rede social da atualidade.
 
 #### <a name="tecnicas"></a>Técnicas
 
