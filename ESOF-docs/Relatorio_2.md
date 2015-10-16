@@ -25,9 +25,11 @@ Ao criar elementos a partir de *tags* HTML, isto é, componentes do *Document Ob
 
 #### *Single-Page Applications*
 
-Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_application) é uma aplicação Web que corre numa única página, conforme explicado no [Relatório 1](./Relatorio_1.md#descricao). O objetivo deste tipo de aplicação é fornecer uma experiência semelhante à de aplicações *desktop*, ou recebendo todo o código necessário à sua execução num único carregamento, ou carregando os recursos necessários de forma dinâmica, em resposta a ações do utilizador. A página não é recarregada durante todo o processo.
+Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_application) é uma aplicação Web que corre numa única página, conforme explicado no [Relatório 1](./Relatorio_1.md#descricao). O objetivo deste tipo de aplicação é fornecer uma experiência semelhante à de aplicações *desktop*, ou recebendo todo o código necessário à sua execução num único carregamento, ou carregando os recursos necessários de forma dinâmica, em resposta a ações do utilizador. A página não é recarregada durante todo o processo. A interação com uma aplicação deste tipo envolve comunicação dinâmica com o servidor Web.
 
+#### Isomorfismo (*Server-Side Rendering*)
 
+https://www.terlici.com/2015/03/18/fast-react-loading-server-rendering.html
 
 ### <a name="analise"></a>Análise e Negociação
 
