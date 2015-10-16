@@ -91,8 +91,8 @@ Existem várias técnicas relativas a validação de requesitos, sendo que algum
 -Model validation
 -Acceptance test case generation.
 
-Tendo em conta as opções listadas, o React demonstra poucas evidências das mesmas. A mais clara delas todas é mesmo o *prototyping*, dado que cada colaborador possui o seu fork.
-Através dos forks, os seus colaboradores(que outra palavra coloco???) podem fazer e testar as alterações desenvolvidas por si, como por exemplo uma *issue*, num programa à parte do principal. Depois de realizados todos os testes, esta nova versão poderá ser acoplada ao repositório principal atrás de um *pull request*. 
+Tendo em conta as opções listadas, o projeto React demonstra poucas evidências de uso das mesmas. A mais clara delas todas é mesmo o *prototyping*, dado que cada colaborador possui o seu fork.
+Através dos forks, os seus contribuidor podem fazer e testar as alterações desenvolvidas por si, como por exemplo uma *issue*, num programa à parte do principal. Depois de realizados todos os testes, esta nova versão poderá ser acoplada ao repositório principal atrás de um *pull request*. 
 
 ### <a name="info"></a>Informações
 
