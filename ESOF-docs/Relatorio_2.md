@@ -51,8 +51,13 @@ Note-se, contudo, que, no conjunto de requisitos disponíveis, podem subsistir a
 ### <a name="especificacao"></a>Especificação
 
 Após a análise (e possível negociação) dos vários requisitos, é necessário estabelecer o rumo que o projecto tomará nos próximos tempos. 
-Assim, a *core-team* procede à realização de várias reuniões entre os seus elementos de tempos a tempos (assunto este que já foi abordado no relatório anterior), de maneira a consolidar os requisitos do projecto. Nessas reuniões, entre outros temas, é abordado o planeamento dos vários *milestones*, como se constata na [Meeting Notes 2015-05-15](https://discuss.reactjs.org/t/meeting-notes-2015-05-15/362). 
-Um *milestone* é utilizado para agrupar *issues* e *pull requests* semelhantes, que normalmente têm um *deadline* associado. Note-se, contudo, neste projecto, a componente de *deadline* não é utilizado, como se comprova na secção de [milestones](https://github.com/facebook/react/milestones). Em adição das reuniões, outros colaboradores, por iniciativa própria, podem proceder à realização de documentação relativamente à biblioteca React. 
+Deste modo, a *core-team* procede à realização de várias reuniões entre os seus elementos de tempos a tempos (assunto este que já foi abordado no relatório anterior), por forma a consolidar os requisitos do projecto. 
+Nessas reuniões, entre outros temas, é abordado o planeamento dos  *milestones*, como se constata nas [Notas da Reunião de 2015-05-15](https://discuss.reactjs.org/t/meeting-notes-2015-05-15/362). Note-se que um *milestone* é utilizado para agrupar *issues* e *pull requests* que se focalizam em partes comuns e específicas do projecto; além disto, é usual terem um *deadline* associado, de maneira a melhor controlar a evolução do projecto. Contudo, neste projecto, os *milestones* são principalmente utilizados não para efeitos de controlo temporal (uma vez que, em cada *milestone*, não é patente uma data de *entrega*) mas sim para averiguar quão próximo está o projecto em atingir os objectivos que foram delineados para cada *milestone*, como se comprova na secção de [milestones do React](https://github.com/facebook/react/milestones). 
+
+
+-> Fala-se da existência de API's?
+
+Em adição das reuniões, outros colaboradores, por iniciativa própria, podem proceder à realização de documentação relativamente à biblioteca React. 
 Por exemplo, o utilizador [jamesknelson](https://discuss.reactjs.org/t/react-cheatsheet-for-0-14/1979) concebeu uma documentação onde expressa, principalmente, a componente funcional da mesma biblioteca, por forma a auxiliar ao desenvolvimento de aplicações que usam o React.
 
 
