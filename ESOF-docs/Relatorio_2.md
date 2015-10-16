@@ -31,20 +31,13 @@ Como já foi mencionado na secção anterior, a principal fonte de requisitos pr
 
 De notar que os *issues* e os *pull requests* podem expressar *bug reports*, isto é, correcções a serem realizadas no projecto por forma a colmatar os múltiplos erros que possam surgir no decorrer da utilização do React, ou *features requests*, ou seja, a descrição e, possivelmente, posterior implementação de determinadas características que levam ao melhoramento do projecto em geral. Contudo, no projecto, estas duas noções são tomadas como equivalentes. Assim sendo, neste relatório, os autores irão considerá-las também como equivalentes.
 
-Caso se constate que um *issue* possua uma relevante importância, é marcado como *good first bug* pela *core-team*, indicando, assim, para os que pretendem começar a contribuir para o projecto, um bom [começo de contribuição](https://discuss.reactjs.org/t/contributing-to-react/2188). Deste modo, é utilizado o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções/prioridades e também para efeitos de organização do projecto.
-
 
 Relativamente à componente de negociação, a sua manifestação pode encontrada nos vários locais de debate disponibilizados pelo React, como, por exemplo, a secção de conversação disponível em cada *issue*. Nestas áreas, os colaboradores, em geral, questionam entre si a importância e a relevância das várias contribuições, garantido, paralelamente, a inexistência de conflitos entre os requisitos, bem como proceder ao acordo dos vários requisitos. Por exemplo, no *issue* (#5157)[https://github.com/facebook/react/pull/5157], existe uma discussão por forma a averiguar se uma dada contribuição não introduz problemas de compatibilidade entre os vários *browsers*. 
 
 
 
-<<<<<<< HEAD
-
-
 Negociação: através de comentários nos issues
 
-=======
->>>>>>> origin/master
 
 ### <a name="especificacao"></a>Especificação
 
