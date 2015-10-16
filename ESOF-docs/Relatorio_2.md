@@ -35,10 +35,6 @@ De notar que os *issues* e os *pull requests* podem expressar *bug reports*, ist
 Relativamente à componente de negociação, a sua manifestação pode encontrada nos vários locais de debate disponibilizados pelo React, como, por exemplo, a secção de conversação disponível em cada *issue*. Nestas áreas, os colaboradores, em geral, questionam entre si a importância e a relevância das várias contribuições, garantido, paralelamente, a inexistência de conflitos entre os requisitos, bem como proceder ao acordo dos vários requisitos. Por exemplo, no *issue* (#5157)[https://github.com/facebook/react/pull/5157], existe uma discussão por forma a averiguar se uma dada contribuição não introduz problemas de compatibilidade entre os vários *browsers*. 
 
 
-
-Negociação: através de comentários nos issues
-
-
 ### <a name="especificacao"></a>Especificação
 
 Após a análise (e possível negociação) dos vários requisitos propostos, é necessário estabelecer o rumo que o projecto tomará nos próximos tempos. Assim, a *core-team* procede à realização de várias reuniões entre os seus elementos de tempos a tempos (assunto este que já foi abordado no relatório anterior), de maneira a consolidar os requisitos do projecto. Nessas reuniões, entre outros temas, é abordado o planeamento dos vários *milestones*, como se constata na [Meeting Notes 2015-05-15](https://discuss.reactjs.org/t/meeting-notes-2015-05-15/362). Um *milestone* é utilizado para agrupar *issues* e *pull requests* semelhantes, que normalmente têm um *deadline* associado. Note-se, contudo, neste projecto, a componente de *deadline* não é utilizado, como se comprova na secção de [milestones](https://github.com/facebook/react/milestones). Em adição das reuniões, outros colaboradores, por iniciativa própria, podem proceder à realização de documentação relativamente à biblioteca React. Por exemplo, o utilizador [jamesknelson](https://discuss.reactjs.org/t/react-cheatsheet-for-0-14/1979) concebeu uma documentação onde expressa, principalmente, a componente funcional da mesma biblioteca, por forma a auxiliar ao desenvolvimento de aplicações que usam o React.
