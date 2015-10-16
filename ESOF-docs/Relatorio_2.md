@@ -81,8 +81,15 @@ O React é um caso pouco comum, porque normalmente os projetos *open source* nun
 
 #### <a name="tecnicas"></a>Técnicas
 
-Mesmo que os projectos *open source* não tenham, muitos deles, a dimensão e a estrutura de outros projetos realizados pelas grandes empresas, nada se consegue fazer sem organização. Para isso, existem os requesitos, são objetivos que os colaboradores têm de cumprir para se conseguir fazer evoluir o projeto.
-No caso do React, qualquer um pode ajudar ao projecto. Para começar, uma boa base de trabalho são os good first bugs, tendo sido mesmo indicado por um dos responsáveis do projecto como sendo o melhor começo, e a partir daí passar para os issues que vão aparecendo.
+Existem várias técnicas relativas a validação de requesitos, sendo que algumas delas foram estudadas nas aulas teóricas, tais como: 
+
+-Requirements reviews and inspections
+-Prototyping
+-Model validation
+-Acceptance test case generation.
+
+Tendo em conta as opções listadas, o React demonstra poucas evidências das mesmas. A mais clara delas todas é mesmo o *prototyping*, dado que cada colaborador possui o seu fork.
+Através dos forks, os seus colaboradores(que outra palavra coloco???) podem fazer e testar as alterações desenvolvidas por si, como por exemplo uma *issue*, num programa à parte do principal. Depois de realizados todos os testes, esta nova versão poderá ser acoplada ao repositório principal atrás de um *pull request*. 
 
 ### <a name="info"></a>Informações
 
