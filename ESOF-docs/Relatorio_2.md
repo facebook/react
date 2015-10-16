@@ -61,7 +61,7 @@ Como demonstra a figura abaixo relativa aos *pull request* recebidos no último 
 Inicialmente, os *pull request* são testados automaticamente, de forma a verificar se estão dentro dos requisitos exigidos, através da ferramenta **Travis IC** disponível no sítio [travis-ci.org](https://travis-ci.org/). Esta ferramenta, um serviço *hosted continuous integration* para projetos *open source* e privados, executa testes de compilação e regista o sucesso ou não dos testes. A resposta da ferramenta **Travis IC** não é decisiva quanto à aceitação do *source code*, cabendo a decisão final à *core-team*, porque mesmo que reprove nos testes, o *pull request* pode ser adicionado ao projeto. Esta ferramenta é uma mais valia para os colaboradores devido à grande densidade de solicitações de alterações que o projeto recebe. 
 
 
-O projeto *React* precisa também de validar o elevado número de *issues* que recebe, estando o último mês descriminado na seguinte imagem.
+O projeto **React** precisa também de validar o elevado número de *issues* que recebe, estando o último mês descriminado na seguinte imagem.
 
 
 ![Issues no último mês do projeto React](./Resources/issues_september-10_october-10.jpg)
