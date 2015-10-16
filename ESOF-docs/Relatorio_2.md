@@ -39,20 +39,9 @@ Como já foi mencionado na secção anterior, a principal fonte de requisitos pr
 
 De notar que os *issues* e os *pull requests* podem expressar *bug reports*, isto é, correcções a serem realizadas no projecto por forma a colmatar os múltiplos erros que possam surgir no decorrer da utilização do React, ou *features requests*, ou seja, a descrição e, possivelmente, posterior implementação de determinadas características que levam ao melhoramento do projecto em geral. Contudo, no projecto, estas duas noções são tomadas como equivalentes. Assim sendo, neste relatório, os autores irão considerá-las também como equivalentes.
 
-Caso se constate que um *issue* possua uma relevante importância, é marcado como *good first bug* pela *core-team*, indicando, assim, para os que pretendem começar a contribuir para o projecto, um bom [começo de contribuição](https://discuss.reactjs.org/t/contributing-to-react/2188). Deste modo, é utilizado o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções/prioridades e também para efeitos de organização do projecto.
-
 
 Relativamente à componente de negociação, a sua manifestação pode encontrada nos vários locais de debate disponibilizados pelo React, como, por exemplo, a secção de conversação disponível em cada *issue*. Nestas áreas, os colaboradores, em geral, questionam entre si a importância e a relevância das várias contribuições, garantido, paralelamente, a inexistência de conflitos entre os requisitos, bem como proceder ao acordo dos vários requisitos. Por exemplo, no *issue* (#5157)[https://github.com/facebook/react/pull/5157], existe uma discussão por forma a averiguar se uma dada contribuição não introduz problemas de compatibilidade entre os vários *browsers*. 
 
-
-
-<<<<<<< HEAD
-
-
-Negociação: através de comentários nos issues
-
-=======
->>>>>>> origin/master
 
 ### <a name="especificacao"></a>Especificação
 
@@ -80,7 +69,7 @@ Como demonstra a figura abaixo relativa aos *pull request* recebidos no último 
 Inicialmente, os *pull request* são testados automaticamente, de forma a verificar se estão dentro dos requisitos exigidos, através da ferramenta **Travis IC** disponível no sítio [travis-ci.org](https://travis-ci.org/). Esta ferramenta, um serviço *hosted continuous integration* para projetos *open source* e privados, executa testes de compilação e regista o sucesso ou não dos testes. A resposta da ferramenta **Travis IC** não é decisiva quanto à aceitação do *source code*, cabendo a decisão final à *core-team*, porque mesmo que reprove nos testes, o *pull request* pode ser adicionado ao projeto. Esta ferramenta é uma mais valia para os colaboradores devido à grande densidade de solicitações de alterações que o projeto recebe. 
 
 
-O projeto *React* precisa também de validar o elevado número de *issues* que recebe, estando o último mês descriminado na seguinte imagem.
+O projeto **React** precisa também de validar o elevado número de *issues* que recebe, estando o último mês descriminado na seguinte imagem.
 
 
 ![Issues no último mês do projeto React](./Resources/issues_september-10_october-10.jpg)
@@ -110,8 +99,11 @@ Existem várias técnicas relativas a validação de requesitos, sendo que algum
 -Model validation
 -Acceptance test case generation.
 
-Tendo em conta as opções listadas, o React demonstra poucas evidências das mesmas. A mais clara delas todas é mesmo o *prototyping*, dado que cada colaborador possui o seu fork.
-Através dos forks, os seus colaboradores(que outra palavra coloco???) podem fazer e testar as alterações desenvolvidas por si, como por exemplo uma *issue*, num programa à parte do principal. Depois de realizados todos os testes, esta nova versão poderá ser acoplada ao repositório principal atrás de um *pull request*. 
+Tendo em conta as opções listadas, o projeto React demonstra poucas evidências de uso das mesmas. A mais clara delas todas é mesmo o *prototyping*, dado que cada colaborador possui o seu fork.
+Através dos forks, os seus contribuidor podem fazer e testar as alterações desenvolvidas por si, como por exemplo uma *issue*, num programa à parte do principal. Depois de realizados todos os testes, esta nova versão poderá ser acoplada ao repositório principal atrás de um *pull request*. 
+### <a name="conc"></a>Conclusão
+
+Este projeto apresenta um conceito de validação de recursos oposto ao esperado e estudado. Neste caso, não é a *core team* que procura os colaboradores e diz que *features* gostavam que fossem implementadas. São os colaboradores que desenvolvem as funcionalidades que acham que melhorariam o projeto e, só depois, fazem *pull request*. Após este passo, estas novas alterações são analisadas pelos responsáveis do projeto e caso sejam melhorias úteis para o projeto final, são introduzidas no repositório principal.
 
 ### <a name="info"></a>Informações
 
