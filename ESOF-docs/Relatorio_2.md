@@ -91,7 +91,7 @@ A *core-team* utiliza o método de etiquetação das *issues*, por forma a atrib
 Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
 
 
-#### <a name="tecnicas"></a>Técnicas
+#### <a name="tecnicas"></a>Técnicas ~~ Por corrigir/completar: Amaral ~~
 
 Existem várias técnicas relativas a validação de requesitos, sendo que algumas delas foram estudadas nas aulas teóricas, tais como: 
 
