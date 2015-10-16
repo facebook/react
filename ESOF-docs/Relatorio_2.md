@@ -42,11 +42,7 @@ Note-se, contudo, que
 
 
 
-A *core-team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização.
 
-Caso se constate que um *issue* possua uma relevante importância, é marcado como *good first bug* pela *core-team*, atribuíndo, desta forma, uma prioridade à resolução do *issue*. Deste modo, a *core-team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização.
-
-Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
 
 Negociação: através de comentários nos issues
 
@@ -74,6 +70,9 @@ Este processo de validação de requisitos trata, tal como o nome indica , de va
 Aplicando este processo ao **React**, não existe o conceito de clientes que deve validar os requisitos, pelo contrário, a *core-team* do projeto é a responsável pela validação, sendo eles, a um certo nível, os *stakeholders*. 
 
 
+Ao nível da validação para o **React** podemos considerar as *issues* e os *pull requests*.
+
+
 Como demonstra a figura abaixo relativa aos *pull request* recebidos no último mês, à data deste relatório, somos confrontados com 128 pedidos ativos, tendo 105 já aprovados e os restantes ainda em avaliação.
 
 
@@ -89,7 +88,11 @@ O projeto *React* precisa também de validar o elevado número de *issues* que r
 ![Issues no último mês do projeto React](./Resources/issues_september-10_october-10.jpg)
 
 
-~~Informação repetida na Analise, como por exemplo nas Issues.~~
+A *core-team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização. Caso se constate que um *issue* possui uma ideia interessante, é marcado como *good first bug* pela *core-team*, atribuíndo, desta forma, uma prioridade à resolução do *issue*.
+
+
+Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
+
 
 #### <a name="objetivos"></a>Objetivos
 
