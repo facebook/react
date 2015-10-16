@@ -19,9 +19,11 @@ O objetivo do React é, assim, possibilitar a escrita de código mais simples, d
 
 Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_application) é uma aplicação Web que corre numa única página Web, conforme explicado no [Relatório 1](./Relatorio_1.md). O objetivo deste tipo de aplicação é fornecer uma experiência semelhante à de aplicações *desktop*, ou recebendo todo o código necessário à sua execução num único carregamento, ou carregando os recursos necessários de forma dinâmica, em resposta a ações do utilizador. A página não é recarregada durante o processo.
 
+
+
 ### <a name="analise"></a>Análise e Negociação
 
-Como já foi mencionado na secção anterior, a principal fonte de requisitos provém quer dos vários colaboradores que apoiam o projecto quer da própria *core-team*. Uma das formas que um dado colaborador pode contribuir para o projecto é através da adição de *issues*, na secção apropriada, ou através de *pull requests*. Após submissão, a *core-team* fica encarregue de analisar as várias contribuições e determinar se são relevantes o suficiente para serem incorporadas no projecto. Note-se que o papel de análise por parte *core-team* está delineada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
+Como já foi mencionado na secção anterior, a principal fonte de requisitos provém quer dos vários colaboradores que apoiam o projecto quer da própria *core-team*. Uma das formas que um dado colaborador pode contribuir para o projecto é através da adição de *issues*, na secção apropriada, ou através de *pull requests*. Após submissão, a *core-team* fica encarregue de **analisar** as várias contribuições e determinar se são relevantes o suficiente para serem incorporadas no projecto. Para tal, são realizados vários testes ao código, usando a ferramenta [Travis CI](https://travis-ci.org/facebook/react/branches), por forma a averiguar se cumprem as directivas pela *core-team*. Note-se que o papel de análise por parte *core-team* está delineada no documento [Contributing to React](https://github.com/rppc/react/blob/master/CONTRIBUTING.md):
 
 > [Pull Requests](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests): The core team will be monitoring for pull requests. (...)
 
@@ -29,36 +31,24 @@ Como já foi mencionado na secção anterior, a principal fonte de requisitos pr
 
 De notar que os *issues* e os *pull requests* podem expressar *bug reports*, isto é, correcções a serem realizadas no projecto por forma a colmatar os múltiplos erros que possam surgir no decorrer da utilização do React, ou *features requests*, ou seja, a descrição e, possivelmente, posterior implementação de determinadas características que levam ao melhoramento do projecto em geral. Contudo, no projecto, estas duas noções são tomadas como equivalentes. Assim sendo, neste relatório, os autores irão considerá-las também como equivalentes.
 
-Note-se, contudo, que
+Caso se constate que um *issue* possua uma relevante importância, é marcado como *good first bug* pela *core-team*, indicando, assim, para os que pretendem começar a contribuir para o projecto, um bom [começo de contribuição](https://discuss.reactjs.org/t/contributing-to-react/2188). Deste modo, é utilizado o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções/prioridades e também para efeitos de organização do projecto.
+
+
+Relativamente à componente de negociação, a sua manifestação pode encontrada nos vários locais de debate disponibilizados pelo React, como, por exemplo, a secção de conversação disponível em cada *issue*. Nestas áreas, os colaboradores, em geral, questionam entre si a importância e a relevância das várias contribuições, garantido, paralelamente, a inexistência de conflitos entre os requisitos, bem como proceder ao acordo dos vários requisitos. Por exemplo, no *issue* (#5157)[https://github.com/facebook/react/pull/5157], existe uma discussão por forma a averiguar se uma dada contribuição não introduz problemas de compatibilidade entre os vários *browsers*. 
 
 
 
-
-
-
-
-
-
-
-
-
+<<<<<<< HEAD
 
 
 Negociação: através de comentários nos issues
 
+=======
+>>>>>>> origin/master
 
 ### <a name="especificacao"></a>Especificação
 
-Após a análise e negociação dos vários requisitos propostos, é necessário estabelecer o rumo que o projecto tomará nos próximos tempos. Assim, a *core-team* procede à realização de várias reuniões entre os seus elementos de tempos a tempos (assunto este que já foi abordado no relatório anterior). Nessas reuniões, tendo em conta os vários requisitos, são criados milestones.
-
-https://discuss.reactjs.org/t/meeting-notes-2015-05-15/362
-
-
-Reunião
-|
-v
-Milestones
-
+Após a análise (e possível negociação) dos vários requisitos propostos, é necessário estabelecer o rumo que o projecto tomará nos próximos tempos. Assim, a *core-team* procede à realização de várias reuniões entre os seus elementos de tempos a tempos (assunto este que já foi abordado no relatório anterior), de maneira a consolidar os requisitos do projecto. Nessas reuniões, entre outros temas, é abordado o planeamento dos vários *milestones*, como se constata na [Meeting Notes 2015-05-15](https://discuss.reactjs.org/t/meeting-notes-2015-05-15/362). Um *milestone* é utilizado para agrupar *issues* e *pull requests* semelhantes, que normalmente têm um *deadline* associado. Note-se, contudo, neste projecto, a componente de *deadline* não é utilizado, como se comprova na secção de [milestones](https://github.com/facebook/react/milestones). Em adição das reuniões, outros colaboradores, por iniciativa própria, podem proceder à realização de documentação relativamente à biblioteca React. Por exemplo, o utilizador [jamesknelson](https://discuss.reactjs.org/t/react-cheatsheet-for-0-14/1979) concebeu uma documentação onde expressa, principalmente, a componente funcional da mesma biblioteca, por forma a auxiliar ao desenvolvimento de aplicações que usam o React.
 
 
 ### <a name="validacao"></a>Validação de Requisitos
