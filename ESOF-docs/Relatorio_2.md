@@ -31,9 +31,9 @@ Uma [*single-page application*](https://en.wikipedia.org/wiki/Single-page_applic
 
 Outro requisito do React é permitir o [*rendering* da aplicação no lado do servidor](https://www.terlici.com/2015/03/18/fast-react-loading-server-rendering.html), um conceito conhecido como isomorfismo. Em vez de enviar uma grande quantidade de código JavaScript para a aplicação cliente, o próprio servidor tem a capacidade de realizar o [*rendering* da árvore DOM](http://www.pathinteractive.com/blog/design-development/rendering-a-webpage-with-google-webmaster-tools/) da página, enviando apenas código HTML. No lado do cliente, apenas é necessário juntar os *event handlers* necessários, o que torna o carregamento inicial da página mais rápido. Para que o resultado destas operações seja uma página dinâmica e com bom tempo de resposta, é necessário que a árvore DOM seja atualizada nos momentos certos. O React implementa algoritmos muito eficientes que permitem que a aplicação realize alterações à árvore DOM da página num número mínimo de passos, recorrendo a [heurísticas](http://facebook.github.io/react/docs/reconciliation.html) que, não garantindo uma solução ótima, garantem soluções muito rápidas para quase todos os casos de uso.
 
-### <a name="analise"></a>Análise e Negociação
+### <a name="analise"></a>Análise e Negociação de Requisitos
 
-Como já foi mencionado na secção anterior, a principal fonte de requisitos correntes provém das listas de *issues* e de *pull requests* existente no repositório do GitHub. A primeira é povoada pela contribuição quer da própria *core-team*, quer dos elementos externos a ela. Qualquer colaborador pode sugerir alterações a certas partes do projecto, por exemplo, reportando *bugs*, ou solicitando novas *features*, como será explicado posteriormente. Pode, igualmente, solicitar a integração de alterações feitas ao código-fonte da biblioteca através de um *pull request*. 
+Como já foi mencionado na secção anterior, a principal fonte de requisitos correntes provém das listas de *issues* e de *pull requests* existente no repositório do GitHub. A primeira é povoada pela contribuição quer da própria *core-team*, quer dos elementos externos a ela. Qualquer colaborador pode sugerir alterações a certas partes do projecto, por exemplo, reportando *bugs*, ou propondo novas funcionalidades. Pode, igualmente, solicitar a integração de alterações feitas ao código-fonte da biblioteca através de um *pull request*. 
 
 Perante um conjunto tão diverso de fontes de requisitos, é necessário prodecer a uma análise prévia dos pedidos submetidos, garantindo que não há conflitos entre as várias propostas ou no código (impedindo, por exemplo, a existência de código redundante). Desta forma, a *core-team* reserva-se o direito de analisar as várias contribuições e determinar se são suficientemente relevantes e pertinentes para serem integradas no projecto. Note-se, contudo, que, mesmo após realizada a análise e se verificar que a contribuição é significante para o projecto, é necessário proceder à execução de testes sobre o código submetido. Este assunto será abordado na secção [Validação](#validacao).
 
@@ -47,9 +47,9 @@ Por forma a tornar claro o papel da *core team* neste processo, o documento [Con
 
 Note-se, contudo, que nem todos os requisitos propostos podem ser considerados viáveis, como será discutido na secção de [Validação de Requisitos](#validacao). Nestas situações, ou o pedido é rejeitado, ou é negociado e adaptado às necessidades do projeto. Para este efeito, os colaboradores recorrem à secção de discussão associada a cada *issue* e a cada *pull request* como um meio para eventuais esclarecimentos. Tome-se o caso do [issue #5179](https://github.com/facebook/react/pull/5179) como exemplo. Um dado colaborador procedeu a modificações na sintaxe de importação da biblioteca. Todavia, esta mudança foi rejeitada sob o pretexto de que dificultaria a utilização do React, ao acrescentar novas dependências.
 
-### <a name="especificacao"></a>Especificação
+### <a name="especificacao"></a>Especificação de Requisitos
 
-Após a análise e eventual negociação dos vários requisitos, é necessário estabelecer o rumo que o projecto deverá tomar a médio prazo. Numa abordagem mais estruturada, esta seria a fase em que se procederia à elaboração de um documento formal de especificação de requisitos. Todavia, no contexto de um projeto como o do React, no qual há uma grande diversidade de novos requisitos, em constante mudança, um documento deste género pode não existir. Efetivamente, os autores deste relatório não encontraram qualquer evidência da existência de um documento de especificação de requisitos associado a este projeto, tendo, contudo, constatado que algumas alternativas razoavelmente formais são seguidas.
+Após a análise e eventual negociação dos vários requisitos, é necessário estabelecer o rumo que o projecto deverá tomar a médio prazo, de modo a ser possível perceber quais deles são relevantes para a biblioteca. Numa abordagem mais estruturada, esta seria a fase em que se procederia à elaboração de um documento formal de especificação de requisitos. Todavia, no contexto de um projeto como o do React, no qual há uma grande diversidade de novos requisitos, em constante mudança, um documento deste género pode não existir. Efetivamente, os autores deste relatório não encontraram qualquer evidência da existência de um documento de especificação de requisitos associado a este projeto, tendo, contudo, constatado que algumas alternativas razoavelmente formais são seguidas.
 
 O aspeto de maior relevância no que diz respeito à especificação de requisitos é a realização de reuniões regulares entre os elementos da *core team*, tal como já foi discutido no [Relatório 1](./Relatorio_1.md#processo). Estas reuniões são aproveitadas para definir o rumo que o projeto deverá seguir, sendo que essas orientações podem ser modificadas em reuniões subsequentes.
 
@@ -67,7 +67,7 @@ Como forma de contextualização, a figura abaixo mostra o número de [*pull req
 
 ![Número de *pull requests* recebidos durante um mês](./Resources/pull_requests_september-17_october-17.jpg)
 
-Numa fase inicial, os *pull requests* são sujeitos a vários [testes automatizados](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests) definidos através da ferramenta [Travis CI](https://travis-ci.org/), de forma a possibilitar a integração, sem conflitos com outras partes do código, das novas funcionalidades. Na [página da ferramenta](https://travis-ci.org/facebook/react/pull_requests), é possível ver o resultado dos testes realizados sobre os *pull requests* submetidos ao projeto do React. A passagem do código submetido nos testes é uma condição necessária (embora possam ser abertas algumas exceções) à sua aceitação por parte da *core team*, embora não suficiente, como mostra o *pull request* [#5099](https://github.com/facebook/react/pull/5099), que, à data deste relatório, estava assinalado como necessitando de uma revisão para ser aceite (*GH Review: needs-revision*), embora os testes já tivessem sucedido.
+Numa fase inicial, os *pull requests* são sujeitos a vários [testes automatizados](https://github.com/facebook/react/blob/master/CONTRIBUTING.md#pull-requests) definidos através da ferramenta [Travis CI](https://travis-ci.org/), de forma a possibilitar a adição, sem conflitos com outras partes do código, das novas funcionalidades. Estes testes não são [testes de aceitação](https://en.wikipedia.org/wiki/Acceptance_testing), mas antes testes de integração sobre o código submetido. Na [página da ferramenta](https://travis-ci.org/facebook/react/pull_requests), é possível ver o resultado dos testes realizados sobre os *pull requests* submetidos ao projeto do React. A passagem do código submetido nos testes é uma condição necessária (embora possam ser abertas algumas exceções) à sua aceitação por parte da *core team*, embora não suficiente, como mostra o *pull request* [#5099](https://github.com/facebook/react/pull/5099), que, à data deste relatório, estava assinalado como necessitando de uma revisão para ser aceite (*GH Review: needs-revision*), embora os testes já tivessem sucedido.
 
 A figura abaixo mostra o número de [*issues* recebidos](https://github.com/facebook/react/pulse/monthly) no mesmo período de 17 de setembro a 17 de outubro de 2015. Foram submetidos 223 *issues*, o que justifica claramente a necessidade de priorizar e classificar os mesmos, com vista a uma maior eficiência no momento de os endereçar.
 
@@ -77,30 +77,36 @@ O GitHub disponibiliza métodos de [etiquetação](https://github.com/facebook/r
 
 Deste modo, todos os requisitos definidos pela comunidade são escrutinados pela *core-team*, que os prioriza e avalia em função do seu grau de utilidade para o projeto. É, ainda, de realçar a importância que a *core team* dá à organização do código. O número elevado de colaboradores e de *commits* poderia facilmente tornar a gestão e tratamento do código muito difíceis, pelo que os autores deste relatório consideram muito importante que todos os *pull requests* sejam sujeitos a revisões por parte da *core team*. De igual modo, a existência de erros não detetados poderia traduzir-se em custos elevados numa fase posterior do projeto, daí que a existência de um sistema de testes automatizados que assegurem a integração correta de novas funcionalidades e de alterações seja, igualmente, muito pertinente.
 
-#### <a name="tecnicas"></a>Técnicas
-
-O processo de [Validação](#validacao) utiliza técnicas padronizadas de forma a esmiuçar o máximo possível o plano recebido de forma a aceita-lo ou retornar uma lista com os problemas que devem ser resolvidos.
-
-* Revisão de requisitos: realização de uma análise aos requisitos nas reuniões realizadas pela *core team*, identificando individualmente problemas que deverão ser corrigidos.
-
-* Prototipagem: utilização de uma interface para avaliar de uma forma visual o *source code* que se pretende implementar.
-
-* Validação de modelos: validação individual dos novos modelos pela *core team*.
-
-* Geração de casos de teste: desenvolvimento de testes específicos para a validação como a análise de consistência automática do *source code* através da ferramenta **Travis IC**.
-
 ### <a name="conc"></a>Conclusões
 
-Este projeto apresenta um conceito de validação de recursos oposto ao esperado e estudado. Neste caso, não é a *core team* que procura os colaboradores e diz que *features* gostavam que fossem implementadas. São os colaboradores que desenvolvem as funcionalidades que acham que melhorariam o projeto e, só depois, fazem *pull request*. Após este passo, estas novas alterações são analisadas pelos responsáveis do projeto e caso sejam melhorias úteis para o projeto final, são introduzidas no repositório principal.
+O processo de Engenharia de Requisitos no desenvolvimento da biblioteca React apresenta algumas diferenças em relação ao processo estudado nas aulas teóricas da Unidade Curricular de Engenharia de Software, mas tal não significa que não seja igualmente metódico. Uma vez que o projeto segue um processo de desenvolvimento incremental, não são conhecidos os seus requisitos futuros, embora os autores deste relatório considerem que, para garantir a estabilidade do projeto a longo prazo, deve existir o seguinte "meta-requisito": a capacidade de adaptação a novos requisitos.
+
+Efetivamente, todos os requisitos, funcionais e não funcionais, exigidos ao React aquando da sua génese, descritos na secção [Levantamento de Requisitos](#levantamento), podem, atualmente, ser considerados objetivos satisfeitos. Contudo, novos requisitos para esta biblioteca surgem todos os dias, fruto da vontade da comunidade React em expandir a mesma com novas funcionalidades e da deteção de erros por parte dos utilizadores. Esta contínua variedade de novos requisitos conduz à necessidade de os analisar à luz de vários critérios, com vista à sua validação ou rejeição, e de os categorizar e priorizar.
+
+Para que os requisitos possam ser contextualizados e a fim de se avaliar o seu grau de relevância para o projeto, é necessário definir linhas orientadoras para o mesmo, tarefa que é realizada nas reuniões regulares entre os elementos da *core team*. Esta fase do processo é a que mais se assemelha à fase de especificação de requisitos definida no modelo teórico acima referido.
+
+Verifica-se que existem alguns critérios bem definidos para a validação de requisitos, nomeadamente a realização de testes automatizados sobre o código submetido em *pull requests*, que, não correspondendo aos testes de aceitação referidos pelo modelo teórico, constituem um critério de aceitação das alterações propostas pelos colaboradores.
+
+Uma das diferenças deste processo, em relação ao modelo teórico, que mais sobressaem é a inversão de papéis que se verifica no momento da validação de requisitos. Neste caso, é a própria equipa principal por trás do desenvolvimento do React, a *core team*, que decide se um dado requisito proposto por um utilizador final da biblioteca - que pode também contribuir para o seu desenvolvimento - é útil e relevante para o projeto, ao contrário do que acontece no contexto mais comum, em que a validação é realizada pelo cliente que encomendou o projeto.
+
+Apesar das diferenças acima mencionadas, a opinião dos autores deste relatório é a de que existem evidências suficientes para afirmar que o desenvolvimento da biblioteca React segue metodologias bem definidas para a gestão dos seus requisitos.
 
 ### <a name="info"></a>Informações
 
 ##### Autores:
 
 * António Casimiro (antonio.casimiro@fe.up.pt)
+** Número de horas despendidas: 12
+** Contribuição: 25%
 * Diogo Amaral (diogo.amaral@fe.up.pt)
+** Número de horas despendidas: 12
+** Contribuição: 25%
 * Pedro Silva (pedro.silva@fe.up.pt)
+** Número de horas despendidas: 12
+** Contribuição: 25%
 * Rui Cardoso (rui.peixoto@fe.up.pt)
+** Número de horas despendidas: 12
+** Contribuição: 25%
 
 Faculdade de Engenharia da Universidade do Porto - MIEIC
 
