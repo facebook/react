@@ -13,25 +13,17 @@
 
 var keyOf = require('keyOf');
 
-var ReactMount = require('ReactMount');
-var idToNode = {};
-var getID = ReactMount.getID;
-var setID = function(el, id) {
-  ReactMount.setID(el, id);
-  idToNode[id] = el;
-};
-var oldGetNode;
-var oldGetFirstReactDOM;
-
+var EventListener;
 var EventPluginHub;
 var EventPluginRegistry;
+var React;
 var ReactBrowserEventEmitter;
+var ReactDOMComponentTree;
 var ReactTestUtils;
 var TapEventPlugin;
-var EventListener;
 
 var tapMoveThreshold;
-var idCallOrder = [];
+var idCallOrder;
 var recordID = function(id) {
   idCallOrder.push(id);
 };
@@ -49,21 +41,9 @@ var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
 var ON_CHANGE_KEY = keyOf({onChange: null});
 var ON_MOUSE_ENTER_KEY = keyOf({onMouseEnter: null});
 
-
-/**
- * Since `ReactBrowserEventEmitter` is fairly well separated from the DOM, we
- * can test almost all of `ReactBrowserEventEmitter` without ever rendering
- * anything in the DOM. As long as we provide IDs that follow `React's`
- * conventional id namespace hierarchy. The only reason why we create these DOM
- * nodes is so that when we feed them into `ReactBrowserEventEmitter` (through
- * `ReactTestUtils`), the event handlers may receive a DOM node to inspect.
- */
-var CHILD = document.createElement('div');
-var PARENT = document.createElement('div');
-var GRANDPARENT = document.createElement('div');
-setID(CHILD, '.0.0.0.0');
-setID(PARENT, '.0.0.0');
-setID(GRANDPARENT, '.0.0');
+var GRANDPARENT;
+var PARENT;
+var CHILD;
 
 function registerSimpleTestHandler() {
   EventPluginHub.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);
@@ -72,38 +52,37 @@ function registerSimpleTestHandler() {
   return EventPluginHub.getListener(getID(CHILD), ON_CLICK_KEY);
 }
 
+function getID(node) {
+  return ReactDOMComponentTree.getInstanceFromNode(node)._rootNodeID;
+}
+
 
 describe('ReactBrowserEventEmitter', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
     LISTENER.mockClear();
+    EventListener = require('EventListener');
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
-    TapEventPlugin = require('TapEventPlugin');
-    ReactMount = require('ReactMount');
-    EventListener = require('EventListener');
+    React = require('React');
     ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactTestUtils = require('ReactTestUtils');
+    TapEventPlugin = require('TapEventPlugin');
 
-    oldGetNode = ReactMount.getNode;
-    oldGetFirstReactDOM = ReactMount.oldGetFirstReactDOM;
-    ReactMount.getNode = function(id) {
-      return idToNode[id];
-    };
-    ReactMount.getFirstReactDOM = function(node) {
-      return node;
-    };
+    ReactTestUtils.renderIntoDocument(
+      <div ref={(c) => GRANDPARENT = c}>
+        <div ref={(c) => PARENT = c}>
+          <div ref={(c) => CHILD = c} />
+        </div>
+      </div>
+    );
 
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin,
     });
-  });
-
-  afterEach(function() {
-    ReactMount.getNode = oldGetNode;
-    ReactMount.getFirstReactDOM = oldGetFirstReactDOM;
   });
 
   it('should store a listener correctly', function() {

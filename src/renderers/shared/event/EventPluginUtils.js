@@ -22,18 +22,44 @@ var warning = require('warning');
  */
 
 /**
+ * - `ComponentTree`: [required] Module that can convert between React instances
+ *   and actual node references.
  * - `Mount`: [required] Module that can convert between React dom IDs and
  *   actual node references.
  */
+var ComponentTree;
+var Mount;
+var TreeTraversal;
 var injection = {
-  Mount: null,
-  injectMount: function(InjectedMount) {
-    injection.Mount = InjectedMount;
+  injectComponentTree: function(Injected) {
+    ComponentTree = Injected;
     if (__DEV__) {
       warning(
-        InjectedMount && InjectedMount.getNode && InjectedMount.getID,
+        Injected &&
+        Injected.getNodeFromInstance &&
+        Injected.getInstanceFromNode,
+        'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
+        'module is missing getNodeFromInstance or getInstanceFromNode.'
+      );
+    }
+  },
+  injectMount: function(Injected) {
+    Mount = Injected;
+    if (__DEV__) {
+      warning(
+        Injected && Injected.getNode && Injected.getID,
         'EventPluginUtils.injection.injectMount(...): Injected Mount ' +
         'module is missing getNode or getID.'
+      );
+    }
+  },
+  injectTreeTraversal: function(Injected) {
+    TreeTraversal = Injected;
+    if (__DEV__) {
+      warning(
+        Injected && Injected.isAncestor && Injected.getLowestCommonAncestor,
+        'EventPluginUtils.injection.injectTreeTraversal(...): Injected ' +
+        'module is missing isAncestor or getLowestCommonAncestor.'
       );
     }
   },
@@ -86,7 +112,7 @@ if (__DEV__) {
  */
 function executeDispatch(event, simulated, listener, domID) {
   var type = event.type || 'unknown-event';
-  event.currentTarget = injection.Mount.getNode(domID);
+  event.currentTarget = EventPluginUtils.getNode(domID);
   if (simulated) {
     ReactErrorUtils.invokeGuardedCallbackWithCatch(
       type,
@@ -214,10 +240,19 @@ var EventPluginUtils = {
   hasDispatches: hasDispatches,
 
   getNode: function(id) {
-    return injection.Mount.getNode(id);
+    return Mount.getNode(id);
   },
-  getID: function(node) {
-    return injection.Mount.getID(node);
+  getInstanceFromNode: function(node) {
+    return ComponentTree.getInstanceFromNode(node);
+  },
+  isAncestor: function(a, b) {
+    return TreeTraversal.isAncestor(a, b);
+  },
+  getLowestCommonAncestor: function(a, b) {
+    return TreeTraversal.getLowestCommonAncestor(a, b);
+  },
+  getParentInstance: function(inst) {
+    return TreeTraversal.getParentInstance(inst);
   },
 
   injection: injection,

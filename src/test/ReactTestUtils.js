@@ -18,12 +18,12 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactDOM = require('ReactDOM');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -490,7 +490,7 @@ function makeSimulator(eventType) {
     // properly destroying any properties assigned from `eventData` upon release
     var event = new SyntheticEvent(
       dispatchConfig,
-      ReactMount.getID(node),
+      ReactDOMComponentTree.getInstanceFromNode(node),
       fakeNativeEvent,
       node
     );

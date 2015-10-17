@@ -148,6 +148,10 @@ function getInstanceFromNode(node) {
  * DOM node.
  */
 function getNodeFromInstance(inst) {
+  // Without this first invariant, passing a non-DOM-component causes the next
+  // invariant for a missing parent, which is super confusing.
+  invariant('_nativeNode' in inst, 'getNodeFromInstance: Invalid argument.');
+
   if (inst._nativeNode) {
     return inst._nativeNode;
   }
