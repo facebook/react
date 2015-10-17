@@ -165,7 +165,7 @@ var ReactDefaultPerf = {
         ].totalTime = performanceNow() - start;
         return rv;
       } else if (fnName === '_mountImageIntoNode' ||
-          moduleName === 'ReactBrowserEventEmitter' ||
+          moduleName === 'EventPluginHub' ||
           moduleName === 'ReactDOMIDOperations' ||
           moduleName === 'CSSPropertyOperations' ||
           moduleName === 'DOMChildrenOperations' ||
