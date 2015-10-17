@@ -97,17 +97,20 @@ A *core team* utiliza o método de etiquetação das *issues*, por forma a atrib
 Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
 
 
-#### <a name="tecnicas"></a>Técnicas ~~ Por corrigir/completar: Amaral ~~
+#### <a name="tecnicas"></a>Técnicas
 
-Existem várias técnicas relativas a validação de requesitos, sendo que algumas delas foram estudadas nas aulas teóricas, tais como: 
 
--Requirements reviews and inspections
--Prototyping
--Model validation
--Acceptance test case generation.
+O processo de [Validação](#validacao) utiliza técnicas padronizadas de forma a esmiuçar o máximo possível o plano recebido de forma a aceita-lo ou retornar uma lista com os problemas que devem ser resolvidos.
 
-Tendo em conta as opções listadas, o projeto React demonstra poucas evidências de uso das mesmas. A mais clara delas todas é mesmo o *prototyping*, dado que cada colaborador possui o seu fork.
-Através dos forks, os seus contribuidor podem fazer e testar as alterações desenvolvidas por si, como por exemplo uma *issue*, num programa à parte do principal. Depois de realizados todos os testes, esta nova versão poderá ser acoplada ao repositório principal atrás de um *pull request*. 
+
+* Revisão de requisitos: realização de uma análise aos requisitos nas reuniões realizadas pela *core team*, identificando individualmente problemas que deverão ser corriguidos.
+
+* Prototipagem: utilização de uma interface para avaliar de uma forma visual o *source code* que se pretende implementar.
+
+* Validação de modelos: validação individual dos novos modelos pela *core team*.
+
+* Geração de casos de teste: desenvolvimento de testes específicos para a validação como a análise de consistência automática do *source code* através da ferramenta **Travis IC**.
+
 
 ### <a name="conc"></a>Conclusões
 
