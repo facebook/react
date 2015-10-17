@@ -414,6 +414,17 @@ function trapBubbledEventsLocal() {
         ),
       ];
       break;
+    case 'input':
+    case 'select':
+    case 'textarea':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topInvalid,
+          'invalid',
+          node
+        ),
+      ];
+      break;
   }
 }
 
@@ -557,15 +568,13 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'video':
       case 'audio':
-        this._wrapperState = {
-          listeners: null,
-        };
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        this._setupTrapBubbledEventsLocal(transaction);
         break;
       case 'button':
         props = ReactDOMButton.getNativeProps(this, props, nativeParent);
         break;
       case 'input':
+        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMInput.mountWrapper(this, props, nativeParent);
         props = ReactDOMInput.getNativeProps(this, props);
         break;
@@ -574,10 +583,12 @@ ReactDOMComponent.Mixin = {
         props = ReactDOMOption.getNativeProps(this, props);
         break;
       case 'select':
+        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMSelect.mountWrapper(this, props, nativeParent);
         props = ReactDOMSelect.getNativeProps(this, props);
         break;
       case 'textarea':
+        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMTextarea.mountWrapper(this, props, nativeParent);
         props = ReactDOMTextarea.getNativeProps(this, props);
         break;
@@ -684,6 +695,19 @@ ReactDOMComponent.Mixin = {
     }
 
     return mountImage;
+  },
+
+  /**
+   * Setup this component to trap non-bubbling events locally
+   *
+   * @private
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   */
+  _setupTrapBubbledEventsLocal: function(transaction) {
+    this._wrapperState = {
+      listeners: null,
+    };
+    transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
   },
 
   /**
