@@ -80,7 +80,7 @@ Como demonstra a figura abaixo relativa aos *pull request* recebidos no último 
 ![Pull Requests no último mês do projeto React](./Resources/pull_requests_september-10_october-10.jpg)
 
 
-Inicialmente, os *pull request* são testados automaticamente, de forma a verificar se estão dentro dos requisitos exigidos, através da ferramenta **Travis IC** disponível no sítio [travis-ci.org](https://travis-ci.org/). Esta ferramenta, um serviço *hosted continuous integration* para projetos *open-source* e privados, executa testes de compilação e regista o sucesso ou não dos testes. A resposta da ferramenta **Travis IC** não é decisiva quanto à aceitação do *source code*, cabendo a decisão final à *core team*, porque mesmo que reprove nos testes, o *pull request* pode ser adicionado ao projeto. Esta ferramenta é uma mais valia para os colaboradores devido à grande densidade de solicitações de alterações que o projeto recebe. 
+Inicialmente, os *pull request* são testados automaticamente, de forma a verificar se estão dentro dos requisitos exigidos, através da ferramenta **Travis IC** disponível no sítio [travis-ci.org](https://travis-ci.org/). Esta ferramenta, um serviço *hosted continuous integration* para projetos *open-source* e privados, executa testes de compilação e regista o sucesso ou não dos testes. A resposta da ferramenta **Travis IC** não é decisiva quanto à aceitação do *source code*, cabendo a decisão final à *core team*, porque mesmo que reprove nos testes, o *pull request* pode ser adicionado ao projeto. Esta ferramenta é uma mais-valia para os colaboradores devido à grande densidade de solicitações de alterações que o projeto recebe. 
 
 
 O projeto **React** precisa também de validar o elevado número de *issues* que recebe, estando o último mês descriminado na seguinte imagem.
@@ -89,12 +89,12 @@ O projeto **React** precisa também de validar o elevado número de *issues* que
 ![Issues no último mês do projeto React](./Resources/issues_september-10_october-10.jpg)
 
 
-A *core team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização. Por exemplo, caso se constate que um *issue* possui uma ideia interessante, é marcado como *good first bug* pela *core team*, atribuíndo, desta forma, uma prioridade à resolução do *issue*.
+A *core team* utiliza o método de etiquetação das *issues*, por forma a atribuir diferentes significados/intenções aos *issues* e também para efeitos de organização. Por exemplo, caso se constate que um *issue* possui uma ideia interessante, é marcado como *good first bug* pela *core team*, atribuindo, desta forma, uma prioridade à resolução do *issue*.
 
 
 É de realçar a importância que a *core team* dá para a organização do código. São mais de cinco centenas de colaboradores e cinco milhares de *commits*, à presente data deste relatório, que tornam a sua gestão custosa. E, caso se consiga corrigir erros previamente, evitar-se-á elevados custos no futuro devido à elevada dimensão do projeto, como referido.
 
-Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projecto.
+Como se pode constatar, todos os requisitos expostos pela comunidade são escrutinados pela *core-team* por forma a determinar quais possuem prioridade e que contribuem significativamente para o resultado final do projeto.
 
 
 #### <a name="tecnicas"></a>Técnicas
@@ -103,7 +103,7 @@ Como se pode constatar, todos os requisitos expostos pela comunidade são escrut
 O processo de [Validação](#validacao) utiliza técnicas padronizadas de forma a esmiuçar o máximo possível o plano recebido de forma a aceita-lo ou retornar uma lista com os problemas que devem ser resolvidos.
 
 
-* Revisão de requisitos: realização de uma análise aos requisitos nas reuniões realizadas pela *core team*, identificando individualmente problemas que deverão ser corriguidos.
+* Revisão de requisitos: realização de uma análise aos requisitos nas reuniões realizadas pela *core team*, identificando individualmente problemas que deverão ser corrigidos.
 
 * Prototipagem: utilização de uma interface para avaliar de uma forma visual o *source code* que se pretende implementar.
 
