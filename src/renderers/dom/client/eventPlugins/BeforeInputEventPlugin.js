@@ -227,16 +227,11 @@ function getDataFromCustomEvent(nativeEvent) {
 var currentComposition = null;
 
 /**
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {DOMEventTarget} topLevelTarget The listening component root node.
- * @param {string} topLevelTargetID ID of `topLevelTarget`.
- * @param {object} nativeEvent Native browser event.
  * @return {?object} A SyntheticCompositionEvent.
  */
 function extractCompositionEvent(
   topLevelType,
-  topLevelTarget,
-  topLevelTargetID,
+  targetInst,
   nativeEvent,
   nativeEventTarget
 ) {
@@ -261,7 +256,8 @@ function extractCompositionEvent(
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
     if (!currentComposition && eventType === eventTypes.compositionStart) {
-      currentComposition = FallbackCompositionState.getPooled(topLevelTarget);
+      currentComposition =
+        FallbackCompositionState.getPooled(nativeEventTarget);
     } else if (eventType === eventTypes.compositionEnd) {
       if (currentComposition) {
         fallbackData = currentComposition.getData();
@@ -271,7 +267,7 @@ function extractCompositionEvent(
 
   var event = SyntheticCompositionEvent.getPooled(
     eventType,
-    topLevelTargetID,
+    targetInst,
     nativeEvent,
     nativeEventTarget
   );
@@ -403,16 +399,11 @@ function getFallbackBeforeInputChars(topLevelType, nativeEvent) {
  * Extract a SyntheticInputEvent for `beforeInput`, based on either native
  * `textInput` or fallback behavior.
  *
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {DOMEventTarget} topLevelTarget The listening component root node.
- * @param {string} topLevelTargetID ID of `topLevelTarget`.
- * @param {object} nativeEvent Native browser event.
  * @return {?object} A SyntheticInputEvent.
  */
 function extractBeforeInputEvent(
   topLevelType,
-  topLevelTarget,
-  topLevelTargetID,
+  targetInst,
   nativeEvent,
   nativeEventTarget
 ) {
@@ -432,7 +423,7 @@ function extractBeforeInputEvent(
 
   var event = SyntheticInputEvent.getPooled(
     eventTypes.beforeInput,
-    topLevelTargetID,
+    targetInst,
     nativeEvent,
     nativeEventTarget
   );
@@ -464,33 +455,22 @@ var BeforeInputEventPlugin = {
 
   eventTypes: eventTypes,
 
-  /**
-   * @param {string} topLevelType Record from `EventConstants`.
-   * @param {DOMEventTarget} topLevelTarget The listening component root node.
-   * @param {string} topLevelTargetID ID of `topLevelTarget`.
-   * @param {object} nativeEvent Native browser event.
-   * @return {*} An accumulation of synthetic events.
-   * @see {EventPluginHub.extractEvents}
-   */
   extractEvents: function(
     topLevelType,
-    topLevelTarget,
-    topLevelTargetID,
+    targetInst,
     nativeEvent,
     nativeEventTarget
   ) {
     return [
       extractCompositionEvent(
         topLevelType,
-        topLevelTarget,
-        topLevelTargetID,
+        targetInst,
         nativeEvent,
         nativeEventTarget
       ),
       extractBeforeInputEvent(
         topLevelType,
-        topLevelTarget,
-        topLevelTargetID,
+        targetInst,
         nativeEvent,
         nativeEventTarget
       ),

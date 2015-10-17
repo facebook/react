@@ -22,6 +22,10 @@ var forEachAccumulated = require('forEachAccumulated');
 var PropagationPhases = EventConstants.PropagationPhases;
 var getListener = EventPluginHub.getListener;
 
+function getID(inst) {
+  return inst ? inst._rootNodeID : '';
+}
+
 /**
  * Some event types have a notion of different registration names for different
  * "phases" of propagation. This finds listeners by a given phase.
@@ -64,7 +68,7 @@ function accumulateDirectionalDispatches(domID, upwards, event) {
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     EventPluginHub.injection.getInstanceHandle().traverseTwoPhase(
-      event.dispatchMarker,
+      getID(event._targetInst),
       accumulateDirectionalDispatches,
       event
     );
@@ -77,7 +81,7 @@ function accumulateTwoPhaseDispatchesSingle(event) {
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     EventPluginHub.injection.getInstanceHandle().traverseTwoPhaseSkipTarget(
-      event.dispatchMarker,
+      getID(event._targetInst),
       accumulateDirectionalDispatches,
       event
     );
@@ -109,7 +113,7 @@ function accumulateDispatches(id, ignoredDirection, event) {
  */
 function accumulateDirectDispatchesSingle(event) {
   if (event && event.dispatchConfig.registrationName) {
-    accumulateDispatches(event.dispatchMarker, null, event);
+    accumulateDispatches(getID(event._targetInst), null, event);
   }
 }
 
@@ -121,10 +125,10 @@ function accumulateTwoPhaseDispatchesSkipTarget(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
 }
 
-function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
+function accumulateEnterLeaveDispatches(leave, enter, from, to) {
   EventPluginHub.injection.getInstanceHandle().traverseEnterLeave(
-    fromID,
-    toID,
+    getID(from),
+    getID(to),
     accumulateDispatches,
     leave,
     enter

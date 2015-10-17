@@ -23,22 +23,15 @@ var ReactEventEmitterMixin = {
   /**
    * Streams a fired top-level event to `EventPluginHub` where plugins have the
    * opportunity to create `ReactEvent`s to be dispatched.
-   *
-   * @param {string} topLevelType Record from `EventConstants`.
-   * @param {object} topLevelTarget The listening component root node.
-   * @param {string} topLevelTargetID ID of `topLevelTarget`.
-   * @param {object} nativeEvent Native environment event.
    */
   handleTopLevel: function(
       topLevelType,
-      topLevelTarget,
-      topLevelTargetID,
+      targetInst,
       nativeEvent,
       nativeEventTarget) {
     var events = EventPluginHub.extractEvents(
       topLevelType,
-      topLevelTarget,
-      topLevelTargetID,
+      targetInst,
       nativeEvent,
       nativeEventTarget
     );
