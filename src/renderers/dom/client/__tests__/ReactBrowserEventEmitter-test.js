@@ -25,6 +25,7 @@ var oldGetNode;
 var oldGetFirstReactDOM;
 
 var EventPluginHub;
+var EventPluginRegistry;
 var ReactBrowserEventEmitter;
 var ReactTestUtils;
 var TapEventPlugin;
@@ -66,11 +67,10 @@ setID(PARENT, '.0.0.0');
 setID(GRANDPARENT, '.0.0');
 
 function registerSimpleTestHandler() {
-  ReactBrowserEventEmitter.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);
-  var listener =
-        ReactBrowserEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
+  EventPluginHub.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);
+  var listener = EventPluginHub.getListener(getID(CHILD), ON_CLICK_KEY);
   expect(listener).toEqual(LISTENER);
-  return ReactBrowserEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
+  return EventPluginHub.getListener(getID(CHILD), ON_CLICK_KEY);
 }
 
 
@@ -79,6 +79,7 @@ describe('ReactBrowserEventEmitter', function() {
     require('mock-modules').dumpCache();
     LISTENER.mockClear();
     EventPluginHub = require('EventPluginHub');
+    EventPluginRegistry = require('EventPluginRegistry');
     TapEventPlugin = require('TapEventPlugin');
     ReactMount = require('ReactMount');
     EventListener = require('EventListener');
@@ -108,23 +109,20 @@ describe('ReactBrowserEventEmitter', function() {
 
   it('should store a listener correctly', function() {
     registerSimpleTestHandler();
-    var listener =
-          ReactBrowserEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
+    var listener = EventPluginHub.getListener(getID(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', function() {
     registerSimpleTestHandler();
-    var listener =
-          ReactBrowserEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
+    var listener = EventPluginHub.getListener(getID(CHILD), ON_CLICK_KEY);
     expect(listener).toEqual(LISTENER);
   });
 
   it('should clear all handlers when asked to', function() {
     registerSimpleTestHandler();
-    ReactBrowserEventEmitter.deleteAllListeners(getID(CHILD));
-    var listener =
-          ReactBrowserEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
+    EventPluginHub.deleteAllListeners(getID(CHILD));
+    var listener = EventPluginHub.getListener(getID(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(undefined);
   });
 
@@ -148,17 +146,17 @@ describe('ReactBrowserEventEmitter', function() {
   );
 
   it('should bubble simply', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       recordID.bind(null, getID(CHILD))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(PARENT))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(GRANDPARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(GRANDPARENT))
@@ -171,12 +169,12 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should continue bubbling if an error is thrown', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       recordID.bind(null, getID(CHILD))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_CLICK_KEY,
       function() {
@@ -184,7 +182,7 @@ describe('ReactBrowserEventEmitter', function() {
         throw new Error('Handler interrupted');
       }
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(GRANDPARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(GRANDPARENT))
@@ -199,7 +197,7 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should set currentTarget', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       function(event) {
@@ -207,7 +205,7 @@ describe('ReactBrowserEventEmitter', function() {
         expect(event.currentTarget).toBe(CHILD);
       }
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_CLICK_KEY,
       function(event) {
@@ -215,7 +213,7 @@ describe('ReactBrowserEventEmitter', function() {
         expect(event.currentTarget).toBe(PARENT);
       }
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(GRANDPARENT),
       ON_CLICK_KEY,
       function(event) {
@@ -231,17 +229,17 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should support stopPropagation()', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       recordID.bind(null, getID(CHILD))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_CLICK_KEY,
       recordIDAndStopPropagation.bind(null, getID(PARENT))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(GRANDPARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(GRANDPARENT))
@@ -253,17 +251,17 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should stop after first dispatch if stopPropagation', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       recordIDAndStopPropagation.bind(null, getID(CHILD))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(PARENT))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(GRANDPARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(GRANDPARENT))
@@ -274,17 +272,17 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should not stopPropagation if false is returned', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       recordIDAndReturnFalse.bind(null, getID(CHILD))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(PARENT))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(GRANDPARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(GRANDPARENT))
@@ -310,14 +308,14 @@ describe('ReactBrowserEventEmitter', function() {
   it('should invoke handlers that were removed while bubbling', function() {
     var handleParentClick = mocks.getMockFunction();
     var handleChildClick = function(event) {
-      ReactBrowserEventEmitter.deleteAllListeners(getID(PARENT));
+      EventPluginHub.deleteAllListeners(getID(PARENT));
     };
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       handleChildClick
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_CLICK_KEY,
       handleParentClick
@@ -329,13 +327,13 @@ describe('ReactBrowserEventEmitter', function() {
   it('should not invoke newly inserted handlers while bubbling', function() {
     var handleParentClick = mocks.getMockFunction();
     var handleChildClick = function(event) {
-      ReactBrowserEventEmitter.putListener(
+      EventPluginHub.putListener(
         getID(PARENT),
         ON_CLICK_KEY,
         handleParentClick
       );
     };
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
       handleChildClick
@@ -345,7 +343,7 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should have mouse enter simulated by test utils', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_MOUSE_ENTER_KEY,
       recordID.bind(null, getID(CHILD))
@@ -356,7 +354,7 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should infer onTouchTap from a touchStart/End', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(CHILD))
@@ -374,7 +372,7 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should infer onTouchTap from when dragging below threshold', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(CHILD))
@@ -392,7 +390,7 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should not onTouchTap from when dragging beyond threshold', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(CHILD))
@@ -439,8 +437,7 @@ describe('ReactBrowserEventEmitter', function() {
       setEventListeners.push(captureCalls[i][1]);
     }
 
-    var module =
-          ReactBrowserEventEmitter.registrationNameModules[ON_CHANGE_KEY];
+    var module = EventPluginRegistry.registrationNameModules[ON_CHANGE_KEY];
     var dependencies = module.eventTypes.change.dependencies;
     expect(setEventListeners.length).toEqual(dependencies.length);
 
@@ -450,17 +447,17 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should bubble onTouchTap', function() {
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(CHILD))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(PARENT),
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(PARENT))
     );
-    ReactBrowserEventEmitter.putListener(
+    EventPluginHub.putListener(
       getID(GRANDPARENT),
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(GRANDPARENT))

@@ -62,12 +62,15 @@ if (__DEV__) {
    */
   if (typeof window !== 'undefined' &&
       typeof window.dispatchEvent === 'function' &&
-      typeof Event === 'function') {
+      typeof document !== 'undefined' &&
+      typeof document.createEvent === 'function') {
     var fakeNode = document.createElement('react');
     ReactErrorUtils.invokeGuardedCallback = function(name, func, a, b) {
       var boundFunc = func.bind(null, a, b);
       fakeNode.addEventListener(name, boundFunc, false);
-      fakeNode.dispatchEvent(new Event(name));
+      var evt = document.createEvent('Event');
+      evt.initEvent(name, false, false);
+      fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(name, boundFunc, false);
     };
   }

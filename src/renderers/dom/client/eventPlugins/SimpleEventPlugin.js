@@ -177,6 +177,12 @@ var eventTypes = {
       captured: keyOf({onInputCapture: true}),
     },
   },
+  invalid: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onInvalid: true}),
+      captured: keyOf({onInvalidCapture: true}),
+    },
+  },
   keyDown: {
     phasedRegistrationNames: {
       bubbled: keyOf({onKeyDown: true}),
@@ -404,6 +410,7 @@ var topLevelEventsToDispatchConfig = {
   topError:           eventTypes.error,
   topFocus:           eventTypes.focus,
   topInput:           eventTypes.input,
+  topInvalid:         eventTypes.invalid,
   topKeyDown:         eventTypes.keyDown,
   topKeyPress:        eventTypes.keyPress,
   topKeyUp:           eventTypes.keyUp,
@@ -480,6 +487,7 @@ var SimpleEventPlugin = {
       case topLevelTypes.topEnded:
       case topLevelTypes.topError:
       case topLevelTypes.topInput:
+      case topLevelTypes.topInvalid:
       case topLevelTypes.topLoad:
       case topLevelTypes.topLoadedData:
       case topLevelTypes.topLoadedMetadata:

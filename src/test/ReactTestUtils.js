@@ -14,6 +14,7 @@
 var ClientReactRootIndex = require('ClientReactRootIndex');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactDOM = require('ReactDOM');
@@ -237,7 +238,9 @@ var ReactTestUtils = {
   findRenderedDOMComponentWithTag: function(root, tagName) {
     var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
-      throw new Error('Did not find exactly one match for tag:' + tagName);
+      throw new Error('Did not find exactly one match ' +
+        '(found ' + all.length + ') for tag:' + tagName
+      );
     }
     return all[0];
   },
@@ -386,6 +389,10 @@ NoopInternalComponent.prototype = {
     this._currentElement = element;
   },
 
+  getNativeNode: function() {
+    return undefined;
+  },
+
   unmountComponent: function() {
   },
 
@@ -470,7 +477,7 @@ function makeSimulator(eventType) {
     }
 
     var dispatchConfig =
-      ReactBrowserEventEmitter.eventNameDispatchConfigs[eventType];
+      EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
@@ -501,7 +508,7 @@ function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
   var eventType;
-  for (eventType in ReactBrowserEventEmitter.eventNameDispatchConfigs) {
+  for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.

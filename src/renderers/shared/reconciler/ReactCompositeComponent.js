@@ -15,6 +15,7 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactNodeTypes = require('ReactNodeTypes');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
@@ -105,6 +106,7 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    this._renderedNodeType = null;
     this._renderedComponent = null;
 
     this._context = null;
@@ -290,6 +292,7 @@ var ReactCompositeComponentMixin = {
       renderedElement = this._renderValidatedComponent();
     }
 
+    this._renderedNodeType = ReactNodeTypes.getType(renderedElement);
     this._renderedComponent = this._instantiateReactComponent(
       renderedElement
     );
@@ -309,6 +312,10 @@ var ReactCompositeComponentMixin = {
     return markup;
   },
 
+  getNativeNode: function() {
+    return ReactReconciler.getNativeNode(this._renderedComponent);
+  },
+
   /**
    * Releases any resources allocated by `mountComponent`.
    *
@@ -322,8 +329,8 @@ var ReactCompositeComponentMixin = {
       inst.componentWillUnmount();
     }
 
-    var unmountedNativeNode =
-      ReactReconciler.unmountComponent(this._renderedComponent);
+    ReactReconciler.unmountComponent(this._renderedComponent);
+    this._renderedNodeType = null;
     this._renderedComponent = null;
     this._instance = null;
 
@@ -352,7 +359,6 @@ var ReactCompositeComponentMixin = {
     // TODO: inst.props = null;
     // TODO: inst.state = null;
     // TODO: inst.context = null;
-    return unmountedNativeNode;
   },
 
   /**
@@ -741,9 +747,16 @@ var ReactCompositeComponentMixin = {
         this._processChildContext(context)
       );
     } else {
-      var oldNativeNode =
-        ReactReconciler.unmountComponent(prevComponentInstance);
+      // TODO: This is currently necessary due to the unfortunate caching
+      // that ReactMount does which makes it exceedingly difficult to unmount
+      // a set of siblings without accidentally repopulating the node cache (see
+      // #5151). Once ReactMount no longer stores the nodes by ID, this method
+      // can go away.
+      var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
 
+      ReactReconciler.unmountComponent(prevComponentInstance);
+
+      this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );

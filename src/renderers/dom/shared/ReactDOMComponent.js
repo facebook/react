@@ -20,6 +20,8 @@ var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventConstants = require('EventConstants');
+var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
@@ -45,9 +47,9 @@ var shallowEqual = require('shallowEqual');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
-var deleteListener = ReactBrowserEventEmitter.deleteListener;
+var deleteListener = EventPluginHub.deleteListener;
 var listenTo = ReactBrowserEventEmitter.listenTo;
-var registrationNameModules = ReactBrowserEventEmitter.registrationNameModules;
+var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
@@ -312,7 +314,7 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
 
 function putListener() {
   var listenerToPut = this;
-  ReactBrowserEventEmitter.putListener(
+  EventPluginHub.putListener(
     listenerToPut.id,
     listenerToPut.registrationName,
     listenerToPut.listener
@@ -410,6 +412,17 @@ function trapBubbledEventsLocal() {
         ReactBrowserEventEmitter.trapBubbledEvent(
           EventConstants.topLevelTypes.topSubmit,
           'submit',
+          node
+        ),
+      ];
+      break;
+    case 'input':
+    case 'select':
+    case 'textarea':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topInvalid,
+          'invalid',
           node
         ),
       ];
@@ -557,15 +570,13 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'video':
       case 'audio':
-        this._wrapperState = {
-          listeners: null,
-        };
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        this._setupTrapBubbledEventsLocal(transaction);
         break;
       case 'button':
         props = ReactDOMButton.getNativeProps(this, props, nativeParent);
         break;
       case 'input':
+        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMInput.mountWrapper(this, props, nativeParent);
         props = ReactDOMInput.getNativeProps(this, props);
         break;
@@ -574,10 +585,12 @@ ReactDOMComponent.Mixin = {
         props = ReactDOMOption.getNativeProps(this, props);
         break;
       case 'select':
+        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMSelect.mountWrapper(this, props, nativeParent);
         props = ReactDOMSelect.getNativeProps(this, props);
         break;
       case 'textarea':
+        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMTextarea.mountWrapper(this, props, nativeParent);
         props = ReactDOMTextarea.getNativeProps(this, props);
         break;
@@ -687,6 +700,19 @@ ReactDOMComponent.Mixin = {
   },
 
   /**
+   * Setup this component to trap non-bubbling events locally
+   *
+   * @private
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   */
+  _setupTrapBubbledEventsLocal: function(transaction) {
+    this._wrapperState = {
+      listeners: null,
+    };
+    transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+  },
+
+  /**
    * Creates markup for the open tag and all attributes.
    *
    * This method has side effects because events get registered.
@@ -723,7 +749,7 @@ ReactDOMComponent.Mixin = {
             }
             propValue = this._previousStyleCopy = assign({}, props.style);
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
+          propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
@@ -1068,6 +1094,10 @@ ReactDOMComponent.Mixin = {
     }
   },
 
+  getNativeNode: function() {
+    return getNode(this);
+  },
+
   /**
    * Destroys all event registrations for this instance. Does not remove from
    * the DOM. That must be done by the parent.
@@ -1112,19 +1142,16 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    var nativeNode = getNode(this);
-    this._nativeNode = null;
     if (this._nodeHasLegacyProperties) {
-      nativeNode._reactInternalComponent = null;
+      this._nativeNode._reactInternalComponent = null;
     }
+    this._nativeNode = null;
 
     this.unmountChildren();
-    ReactBrowserEventEmitter.deleteAllListeners(this._rootNodeID);
+    EventPluginHub.deleteAllListeners(this._rootNodeID);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
     this._wrapperState = null;
-
-    return nativeNode;
   },
 
   getPublicInstance: function() {
@@ -1171,5 +1198,9 @@ assign(
   ReactDOMComponent.Mixin,
   ReactMultiChild.Mixin
 );
+
+assign(ReactDOMComponent, {
+  getNodeFromInstance: getNode,
+});
 
 module.exports = ReactDOMComponent;

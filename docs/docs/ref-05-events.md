@@ -138,6 +138,7 @@ Properties:
 DOMEventTarget relatedTarget
 ```
 
+These focus events work on all elements in the React DOM, not just form elements.
 
 ### Form Events
 

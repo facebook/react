@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactEmptyComponentRegistry = require('ReactEmptyComponentRegistry');
 var ReactReconciler = require('ReactReconciler');
 
 var assign = require('Object.assign');
@@ -40,7 +39,6 @@ assign(ReactEmptyComponent.prototype, {
     nativeContainerInfo,
     context
   ) {
-    ReactEmptyComponentRegistry.registerNullComponentID(rootID);
     this._rootNodeID = rootID;
     return ReactReconciler.mountComponent(
       this._renderedComponent,
@@ -53,12 +51,13 @@ assign(ReactEmptyComponent.prototype, {
   },
   receiveComponent: function() {
   },
+  getNativeNode: function() {
+    return ReactReconciler.getNativeNode(this._renderedComponent);
+  },
   unmountComponent: function(rootID, transaction, context) {
-    var nativeNode = ReactReconciler.unmountComponent(this._renderedComponent);
-    ReactEmptyComponentRegistry.deregisterNullComponentID(this._rootNodeID);
+    ReactReconciler.unmountComponent(this._renderedComponent);
     this._rootNodeID = null;
     this._renderedComponent = null;
-    return nativeNode;
   },
 });
 
