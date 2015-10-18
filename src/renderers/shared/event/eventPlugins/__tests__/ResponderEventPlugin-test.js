@@ -341,19 +341,6 @@ describe('ResponderEventPlugin', function() {
     ReactInstanceHandles = require('ReactInstanceHandles');
     ResponderEventPlugin = require('ResponderEventPlugin');
 
-    EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
-
-    // Only needed because SyntheticEvent supports the `currentTarget`
-    // property.
-    EventPluginUtils.injection.injectMount({
-      getNode: function(id) {
-        return id;
-      },
-      getID: function(nodeHandle) {
-        return nodeHandle;
-      },
-    });
-
     EventPluginUtils.injection.injectComponentTree({
       getInstanceFromNode: function(id) {
         return idToInstance[id];
@@ -384,6 +371,14 @@ describe('ResponderEventPlugin', function() {
         var id = inst._rootNodeID;
         var parentID = id.substr(0, id.lastIndexOf('.'));
         return idToInstance[parentID] || null;
+      },
+      traverseTwoPhase: function(target, fn, arg) {
+        ReactInstanceHandles.traverseTwoPhase(
+          target._rootNodeID,
+          function(id, upwards) {
+            fn(idToInstance[id], upwards, arg);
+          }
+        );
       },
     });
 

@@ -352,31 +352,12 @@ function setResponderAndExtractTransfer(
   } else {
     EventPropagators.accumulateTwoPhaseDispatches(shouldSetEvent);
   }
-  var wantsResponderID = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
+  var wantsResponderInst = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
   if (!shouldSetEvent.isPersistent()) {
     shouldSetEvent.constructor.release(shouldSetEvent);
   }
 
-  if (!wantsResponderID) {
-    return null;
-  }
-
-  // HACK: Temporary tree-crawling until executeDispatchesInOrderStopAtTrue
-  // returns the instance instead of the ID.
-  var wantsResponderInst;
-  for (
-    var inst = bubbleShouldSetFrom;
-    inst;
-    inst = EventPluginUtils.getParentInstance(inst)
-  ) {
-    if (wantsResponderID === inst._rootNodeID) {
-      wantsResponderInst = inst;
-      break;
-    }
-  }
-  invariant(wantsResponderInst, 'Requested responder instance not found.');
-
-  if (wantsResponderInst === responderInst) {
+  if (!wantsResponderInst || wantsResponderInst === responderInst) {
     return null;
   }
   var extracted;
