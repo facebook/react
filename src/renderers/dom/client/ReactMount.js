@@ -83,14 +83,12 @@ function internalGetID(node) {
  * Mounts this component and inserts it into the DOM.
  *
  * @param {ReactComponent} componentInstance The instance to mount.
- * @param {string} rootID DOM ID of the root node.
  * @param {DOMElement} container DOM element to mount into.
  * @param {ReactReconcileTransaction} transaction
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
 function mountComponentIntoNode(
   wrapperInstance,
-  rootID,
   container,
   transaction,
   shouldReuseMarkup,
@@ -98,7 +96,6 @@ function mountComponentIntoNode(
 ) {
   var markup = ReactReconciler.mountComponent(
     wrapperInstance,
-    rootID,
     transaction,
     null,
     ReactDOMContainerInfo(wrapperInstance, container),
@@ -118,13 +115,11 @@ function mountComponentIntoNode(
  * Batched mount.
  *
  * @param {ReactComponent} componentInstance The instance to mount.
- * @param {string} rootID DOM ID of the root node.
  * @param {DOMElement} container DOM element to mount into.
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
 function batchedMountComponentIntoNode(
   componentInstance,
-  rootID,
   container,
   shouldReuseMarkup,
   context
@@ -137,7 +132,6 @@ function batchedMountComponentIntoNode(
     mountComponentIntoNode,
     null,
     componentInstance,
-    rootID,
     container,
     transaction,
     shouldReuseMarkup,
@@ -311,7 +305,6 @@ var ReactMount = {
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
       componentInstance,
-      '',
       container,
       shouldReuseMarkup,
       context

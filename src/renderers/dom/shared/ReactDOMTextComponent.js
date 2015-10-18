@@ -66,13 +66,11 @@ assign(ReactDOMTextComponent.prototype, {
    * Creates the markup for this text node. This node is not intended to have
    * any features besides containing text content.
    *
-   * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} Markup for this text node.
    * @internal
    */
   mountComponent: function(
-    rootID,
     transaction,
     nativeParent,
     nativeContainerInfo,

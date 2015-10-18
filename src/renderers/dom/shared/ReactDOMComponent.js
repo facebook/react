@@ -543,7 +543,6 @@ ReactDOMComponent.Mixin = {
    * is not idempotent.
    *
    * @internal
-   * @param {string} rootID The root DOM ID for this node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?ReactDOMComponent} the containing DOM component instance
    * @param {?object} info about the native container
@@ -551,7 +550,6 @@ ReactDOMComponent.Mixin = {
    * @return {string} The computed markup.
    */
   mountComponent: function(
-    rootID,
     transaction,
     nativeParent,
     nativeContainerInfo,

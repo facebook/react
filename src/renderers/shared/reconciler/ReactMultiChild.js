@@ -251,7 +251,6 @@ var ReactMultiChild = {
           var child = children[name];
           var mountImage = ReactReconciler.mountComponent(
             child,
-            name,
             transaction,
             this,
             this._nativeContainerInfo,
@@ -394,8 +393,8 @@ var ReactMultiChild = {
             this._unmountChild(prevChild);
           }
           // The child must be instantiated before it's mounted.
-          this._mountChildByNameAtIndex(
-            nextChild, name, nextIndex, transaction, context
+          this._mountChildAtIndex(
+            nextChild, nextIndex, transaction, context
           );
         }
         nextIndex++;
@@ -502,15 +501,13 @@ var ReactMultiChild = {
      * @param {ReactReconcileTransaction} transaction
      * @private
      */
-    _mountChildByNameAtIndex: function(
+    _mountChildAtIndex: function(
       child,
-      name,
       index,
       transaction,
       context) {
       var mountImage = ReactReconciler.mountComponent(
         child,
-        name,
         transaction,
         this,
         this._nativeContainerInfo,

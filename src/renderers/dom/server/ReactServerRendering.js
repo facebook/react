@@ -43,7 +43,6 @@ function renderToStringImpl(element, makeStaticMarkup) {
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element, null);
       var markup = componentInstance.mountComponent(
-        '',
         transaction,
         null,
         ReactDOMContainerInfo(),
