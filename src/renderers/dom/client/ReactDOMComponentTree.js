@@ -77,7 +77,7 @@ function precacheChildNodes(inst, node) {
       continue;
     }
     var childInst = children[name];
-    var childID = childInst._rootNodeID;
+    var childID = getRenderedNativeOrTextFromComponent(childInst)._domID;
     if (childID == null) {
       // We're currently unmounting this child in ReactMultiChild; skip it.
       continue;
@@ -85,7 +85,7 @@ function precacheChildNodes(inst, node) {
     // We assume the child nodes are in the same order as the child instances.
     for (; childNode !== null; childNode = childNode.nextSibling) {
       if (childNode.nodeType === 1 &&
-          childNode.getAttribute(ATTR_NAME) === childID) {
+          childNode.getAttribute(ATTR_NAME) === String(childID)) {
         precacheNode(childInst, childNode);
         continue outer;
       }

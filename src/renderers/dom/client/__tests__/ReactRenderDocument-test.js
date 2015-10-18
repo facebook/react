@@ -33,14 +33,6 @@ describe('rendering React components at document', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
 
-    // Negative integer creator. So they won't get confused with
-    // the Client positive ids.
-    var ServerReactRootIndex = require('ServerReactRootIndex');
-    var serverId = -1;
-    ServerReactRootIndex.createReactRootIndex.mockImplementation(function() {
-      return serverId--;
-    });
-
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
@@ -221,8 +213,8 @@ describe('rendering React components at document', function() {
       'quirks by rendering at the document root. You should look for ' +
       'environment dependent code in your components and ensure ' +
       'the props are the same client and server side:\n' +
-      ' (client) ata-reactid=".-1.1">Hello world</body></\n' +
-      ' (server) ata-reactid=".-1.1">Goodbye world</body>'
+      ' (client) dy data-reactid="4">Hello world</body></\n' +
+      ' (server) dy data-reactid="4">Goodbye world</body>'
     );
   });
 

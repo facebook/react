@@ -15,8 +15,6 @@
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactPerf = require('ReactPerf');
 
@@ -60,7 +58,7 @@ assign(ReactDOMTextComponent.prototype, {
     this._nativeParent = null;
 
     // Properties
-    this._rootNodeID = null;
+    this._domID = null;
     this._mountIndex = 0;
   },
 
@@ -94,13 +92,14 @@ assign(ReactDOMTextComponent.prototype, {
       }
     }
 
-    this._rootNodeID = rootID;
+    var domID = nativeContainerInfo._idCounter++;
+    this._domID = domID;
     this._nativeParent = nativeParent;
     if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el = ownerDocument.createElement('span');
       ReactDOMComponentTree.precacheNode(this, el);
-      DOMPropertyOperations.setAttributeForID(el, rootID);
+      DOMPropertyOperations.setAttributeForID(el, domID);
       var lazyTree = DOMLazyTree(el);
       DOMLazyTree.queueText(lazyTree, this._stringText);
       return lazyTree;
@@ -115,7 +114,7 @@ assign(ReactDOMTextComponent.prototype, {
       }
 
       return (
-        '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
+        '<span ' + DOMPropertyOperations.createMarkupForID(domID) + '>' +
           escapedText +
         '</span>'
       );
@@ -148,8 +147,7 @@ assign(ReactDOMTextComponent.prototype, {
   },
 
   unmountComponent: function() {
-    this._nativeNode = null;
-    ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
+    ReactDOMComponentTree.uncacheNode(this);
   },
 
 });

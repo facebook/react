@@ -301,11 +301,11 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
     );
   }
   var containerInfo = inst._nativeContainerInfo;
-  if (!containerInfo) {
+  var doc = containerInfo._ownerDocument;
+  if (!doc) {
     // Server rendering.
     return;
   }
-  var doc = containerInfo._ownerDocument;
   listenTo(registrationName, doc);
   transaction.getReactMountReady().enqueue(putListener, {
     inst: inst,
@@ -494,6 +494,8 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
+var globalIdCounter = 1;
+
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -518,6 +520,7 @@ function ReactDOMComponent(tag) {
   this._nativeNode = null;
   this._nativeParent = null;
   this._rootNodeID = null;
+  this._domID = null;
   this._nativeContainerInfo = null;
   this._wrapperState = null;
   this._topLevelWrapper = null;
@@ -554,7 +557,8 @@ ReactDOMComponent.Mixin = {
     nativeContainerInfo,
     context
   ) {
-    this._rootNodeID = rootID;
+    this._rootNodeID = globalIdCounter++;
+    this._domID = nativeContainerInfo._idCounter++;
     this._nativeParent = nativeParent;
     this._nativeContainerInfo = nativeContainerInfo;
 
@@ -604,7 +608,7 @@ ReactDOMComponent.Mixin = {
     if (nativeParent != null) {
       namespaceURI = nativeParent._namespaceURI;
       parentTag = nativeParent._tag;
-    } else if (nativeContainerInfo != null) {
+    } else if (nativeContainerInfo._tag) {
       namespaceURI = nativeContainerInfo._namespaceURI;
       parentTag = nativeContainerInfo._tag;
     }
@@ -625,7 +629,7 @@ ReactDOMComponent.Mixin = {
       var parentInfo;
       if (nativeParent != null) {
         parentInfo = nativeParent._ancestorInfo;
-      } else if (nativeContainerInfo != null) {
+      } else if (nativeContainerInfo._tag) {
         parentInfo = nativeContainerInfo._ancestorInfo;
       }
       if (parentInfo) {
@@ -660,7 +664,10 @@ ReactDOMComponent.Mixin = {
       }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
-      DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
+      if (!this._nativeParent) {
+        DOMPropertyOperations.setAttributeForRoot(el);
+      }
+      DOMPropertyOperations.setAttributeForID(el, this._domID);
       this._updateDOMProperties(null, props, transaction);
       var lazyTree = DOMLazyTree(el);
       this._createInitialChildren(transaction, props, context, lazyTree);
@@ -757,8 +764,11 @@ ReactDOMComponent.Mixin = {
       return ret;
     }
 
-    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID;
+    if (!this._nativeParent) {
+      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+    }
+    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
+    return ret;
   },
 
   /**
@@ -1145,6 +1155,7 @@ ReactDOMComponent.Mixin = {
     EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
+    this._domID = null;
     this._wrapperState = null;
   },
 

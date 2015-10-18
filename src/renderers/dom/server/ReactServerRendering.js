@@ -11,15 +11,14 @@
  */
 'use strict';
 
+var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
 var ReactUpdates = require('ReactUpdates');
-var ServerReactRootIndex = require('ServerReactRootIndex');
 
 var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -39,18 +38,15 @@ function renderToStringImpl(element, makeStaticMarkup) {
   try {
     ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
 
-    var id = ReactInstanceHandles.createReactRootID(
-      ServerReactRootIndex.createReactRootIndex()
-    );
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element, null);
       var markup = componentInstance.mountComponent(
-        id,
+        '',
         transaction,
         null,
-        null,
+        ReactDOMContainerInfo(),
         emptyObject
       );
       if (!makeStaticMarkup) {

@@ -167,6 +167,7 @@ var defaultValueCache = {};
 var DOMProperty = {
 
   ID_ATTRIBUTE_NAME: 'data-reactid',
+  ROOT_ATTRIBUTE_NAME: 'data-reactroot',
 
   /**
    * Map from property "standard name" to an object with info about how to set
