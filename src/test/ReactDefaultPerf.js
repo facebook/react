@@ -203,7 +203,9 @@ var ReactDefaultPerf = {
         } else {
           // basic format
           var id = args[0];
-          if (typeof id === 'object') {
+          if (moduleName === 'EventPluginHub') {
+            id = id._rootNodeID;
+          } else if (typeof id === 'object') {
             id = ReactMount.getID(args[0]);
           }
           ReactDefaultPerf._recordWrite(

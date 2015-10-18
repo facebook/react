@@ -237,7 +237,7 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
           }
           return nodeConfig.returnVal;
         }.bind(null, readableID, nodeConfig);
-      EventPluginHub.putListener(id, registrationName, handler);
+      EventPluginHub.putListener(idToInstance[id], registrationName, handler);
     }
   };
   /*eslint-enable no-loop-func, no-shadow */

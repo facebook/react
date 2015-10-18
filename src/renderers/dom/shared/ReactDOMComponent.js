@@ -61,8 +61,6 @@ var CHILDREN = keyOf({children: null});
 var STYLE = keyOf({style: null});
 var HTML = keyOf({__html: null});
 
-var ELEMENT_NODE_TYPE = 1;
-
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
     var owner = internalInstance._currentElement._owner || null;
@@ -294,7 +292,7 @@ function assertValidProps(component, props) {
   );
 }
 
-function enqueuePutListener(id, registrationName, listener, transaction) {
+function enqueuePutListener(inst, registrationName, listener, transaction) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
     // bubble.
@@ -303,15 +301,15 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
       'This browser doesn\'t support the `onScroll` event'
     );
   }
-  var container = ReactMount.findReactContainerForID(id);
-  if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
-    listenTo(registrationName, doc);
+  var containerInfo = inst._nativeContainerInfo;
+  if (!containerInfo) {
+    // Server rendering.
+    return;
   }
+  var doc = containerInfo._ownerDocument;
+  listenTo(registrationName, doc);
   transaction.getReactMountReady().enqueue(putListener, {
-    id: id,
+    inst: inst,
     registrationName: registrationName,
     listener: listener,
   });
@@ -320,7 +318,7 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
 function putListener() {
   var listenerToPut = this;
   EventPluginHub.putListener(
-    listenerToPut.id,
+    listenerToPut.inst,
     listenerToPut.registrationName,
     listenerToPut.listener
   );
@@ -729,7 +727,7 @@ ReactDOMComponent.Mixin = {
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
-          enqueuePutListener(this._rootNodeID, propKey, propValue, transaction);
+          enqueuePutListener(this, propKey, propValue, transaction);
         }
       } else {
         if (propKey === STYLE) {
@@ -957,7 +955,7 @@ ReactDOMComponent.Mixin = {
           // Only call deleteListener if there was a listener previously or
           // else willDeleteListener gets called when there wasn't actually a
           // listener (e.g., onClick={null})
-          deleteListener(this._rootNodeID, propKey);
+          deleteListener(this, propKey);
         }
       } else if (
           DOMProperty.properties[propKey] ||
@@ -1012,9 +1010,9 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          enqueuePutListener(this._rootNodeID, propKey, nextProp, transaction);
+          enqueuePutListener(this, propKey, nextProp, transaction);
         } else if (lastProp) {
-          deleteListener(this._rootNodeID, propKey);
+          deleteListener(this, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
         if (propKey === CHILDREN) {
@@ -1147,7 +1145,7 @@ ReactDOMComponent.Mixin = {
 
     ReactDOMComponentTree.uncacheNode(this);
     this.unmountChildren();
-    EventPluginHub.deleteAllListeners(this._rootNodeID);
+    EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
     this._wrapperState = null;

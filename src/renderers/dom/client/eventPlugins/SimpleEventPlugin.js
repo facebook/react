@@ -14,7 +14,7 @@
 var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
 var EventPropagators = require('EventPropagators');
-var ReactMount = require('ReactMount');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
 var SyntheticEvent = require('SyntheticEvent');
 var SyntheticFocusEvent = require('SyntheticFocusEvent');
@@ -576,13 +576,14 @@ var SimpleEventPlugin = {
     return event;
   },
 
-  didPutListener: function(id, registrationName, listener) {
+  didPutListener: function(inst, registrationName, listener) {
     // Mobile Safari does not fire properly bubble click events on
     // non-interactive elements, which means delegated click listeners do not
     // fire. The workaround for this bug involves attaching an empty click
     // listener on the target node.
     if (registrationName === ON_CLICK_KEY) {
-      var node = ReactMount.getNode(id);
+      var id = inst._rootNodeID;
+      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
       if (!onClickListeners[id]) {
         onClickListeners[id] = EventListener.listen(
           node,
@@ -593,8 +594,9 @@ var SimpleEventPlugin = {
     }
   },
 
-  willDeleteListener: function(id, registrationName) {
+  willDeleteListener: function(inst, registrationName) {
     if (registrationName === ON_CLICK_KEY) {
+      var id = inst._rootNodeID;
       onClickListeners[id].remove();
       delete onClickListeners[id];
     }

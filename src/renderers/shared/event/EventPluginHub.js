@@ -102,7 +102,7 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {?function} listener The callback to store.
    */
-  putListener: function(id, registrationName, listener) {
+  putListener: function(inst, registrationName, listener) {
     invariant(
       typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',
@@ -111,12 +111,12 @@ var EventPluginHub = {
 
     var bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
-    bankForRegistrationName[id] = listener;
+    bankForRegistrationName[inst._rootNodeID] = listener;
 
     var PluginModule =
       EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.didPutListener) {
-      PluginModule.didPutListener(id, registrationName, listener);
+      PluginModule.didPutListener(inst, registrationName, listener);
     }
   },
 
@@ -125,9 +125,9 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @return {?function} The stored callback.
    */
-  getListener: function(id, registrationName) {
+  getListener: function(inst, registrationName) {
     var bankForRegistrationName = listenerBank[registrationName];
-    return bankForRegistrationName && bankForRegistrationName[id];
+    return bankForRegistrationName && bankForRegistrationName[inst._rootNodeID];
   },
 
   /**
@@ -136,17 +136,17 @@ var EventPluginHub = {
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
-  deleteListener: function(id, registrationName) {
+  deleteListener: function(inst, registrationName) {
     var PluginModule =
       EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.willDeleteListener) {
-      PluginModule.willDeleteListener(id, registrationName);
+      PluginModule.willDeleteListener(inst, registrationName);
     }
 
     var bankForRegistrationName = listenerBank[registrationName];
     // TODO: This should never be null -- when is it?
     if (bankForRegistrationName) {
-      delete bankForRegistrationName[id];
+      delete bankForRegistrationName[inst._rootNodeID];
     }
   },
 
@@ -155,19 +155,19 @@ var EventPluginHub = {
    *
    * @param {string} id ID of the DOM element.
    */
-  deleteAllListeners: function(id) {
+  deleteAllListeners: function(inst) {
     for (var registrationName in listenerBank) {
-      if (!listenerBank[registrationName][id]) {
+      if (!listenerBank[registrationName][inst._rootNodeID]) {
         continue;
       }
 
       var PluginModule =
         EventPluginRegistry.registrationNameModules[registrationName];
       if (PluginModule && PluginModule.willDeleteListener) {
-        PluginModule.willDeleteListener(id, registrationName);
+        PluginModule.willDeleteListener(inst, registrationName);
       }
 
-      delete listenerBank[registrationName][id];
+      delete listenerBank[registrationName][inst._rootNodeID];
     }
   },
 

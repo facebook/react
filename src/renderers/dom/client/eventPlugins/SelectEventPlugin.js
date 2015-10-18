@@ -213,7 +213,7 @@ var SelectEventPlugin = {
     return null;
   },
 
-  didPutListener: function(id, registrationName, listener) {
+  didPutListener: function(inst, registrationName, listener) {
     if (registrationName === ON_SELECT_KEY) {
       hasListener = true;
     }
