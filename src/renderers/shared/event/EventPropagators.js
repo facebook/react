@@ -29,7 +29,7 @@ var getListener = EventPluginHub.getListener;
 function listenerAtPhase(inst, event, propagationPhase) {
   var registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(inst._rootNodeID, registrationName);
+  return getListener(inst, registrationName);
 }
 
 /**
@@ -96,7 +96,7 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
 function accumulateDispatches(inst, ignoredDirection, event) {
   if (event && event.dispatchConfig.registrationName) {
     var registrationName = event.dispatchConfig.registrationName;
-    var listener = getListener(inst._rootNodeID, registrationName);
+    var listener = getListener(inst, registrationName);
     if (listener) {
       event._dispatchListeners =
         accumulateInto(event._dispatchListeners, listener);

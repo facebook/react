@@ -843,7 +843,7 @@ describe('ReactDOMComponent', function() {
   describe('unmountComponent', function() {
     it('should clean up listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var ReactMount = require('ReactMount');
+      var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
       var container = document.createElement('div');
       document.body.appendChild(container);
@@ -853,16 +853,16 @@ describe('ReactDOMComponent', function() {
       instance = ReactDOM.render(instance, container);
 
       var rootNode = ReactDOM.findDOMNode(instance);
-      var rootNodeID = ReactMount.getID(rootNode);
+      var inst = ReactDOMComponentTree.getInstanceFromNode(rootNode);
       expect(
-        EventPluginHub.getListener(rootNodeID, 'onClick')
+        EventPluginHub.getListener(inst, 'onClick')
       ).toBe(callback);
       expect(rootNode).toBe(ReactDOM.findDOMNode(instance));
 
       ReactDOM.unmountComponentAtNode(container);
 
       expect(
-        EventPluginHub.getListener(rootNodeID, 'onClick')
+        EventPluginHub.getListener(inst, 'onClick')
       ).toBe(undefined);
     });
   });
