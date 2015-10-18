@@ -27,8 +27,6 @@ var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
-var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactMount = require('ReactMount');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
@@ -53,10 +51,8 @@ function inject() {
    * Inject modules for resolving DOM hierarchy and plugin ordering.
    */
   ReactInjection.EventPluginHub.injectEventPluginOrder(DefaultEventPluginOrder);
-  ReactInjection.EventPluginHub.injectInstanceHandle(ReactInstanceHandles);
   ReactInjection.EventPluginUtils.injectComponentTree(ReactDOMComponentTree);
   ReactInjection.EventPluginUtils.injectTreeTraversal(ReactDOMTreeTraversal);
-  ReactInjection.EventPluginUtils.injectMount(ReactMount);
 
   /**
    * Some important event plugins included by default (without having to require

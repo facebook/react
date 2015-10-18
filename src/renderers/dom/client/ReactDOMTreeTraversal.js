@@ -70,14 +70,65 @@ function isAncestor(instA, instB) {
   return false;
 }
 
+/**
+ * Return the parent instance of the passed-in instance.
+ */
 function getParentInstance(inst) {
   invariant('_nativeNode' in inst, 'getParentInstance: Invalid argument.');
 
   return inst._nativeParent;
 }
 
+/**
+ * Simulates the traversal of a two-phase, capture/bubble event dispatch.
+ */
+function traverseTwoPhase(inst, fn, arg) {
+  var path = [];
+  while (inst) {
+    path.push(inst);
+    inst = inst._nativeParent;
+  }
+  var i;
+  for (i = path.length; i-- > 0;) {
+    fn(path[i], false, arg);
+  }
+  for (i = 0; i < path.length; i++) {
+    fn(path[i], true, arg);
+  }
+}
+
+/**
+ * Traverses the ID hierarchy and invokes the supplied `cb` on any IDs that
+ * should would receive a `mouseEnter` or `mouseLeave` event.
+ *
+ * Does not invoke the callback on the nearest common ancestor because nothing
+ * "entered" or "left" that element.
+ */
+function traverseEnterLeave(from, to, fn, argFrom, argTo) {
+  var common = from && to ? getLowestCommonAncestor(from, to) : null;
+  var pathFrom = [];
+  while (from && from !== common) {
+    pathFrom.push(from);
+    from = from._nativeParent;
+  }
+  var pathTo = [];
+  while (to && to !== common) {
+    pathTo.push(to);
+    to = to._nativeParent;
+  }
+  var i;
+  for (i = 0; i < pathFrom.length; i++) {
+    fn(pathFrom[i], true, argFrom);
+  }
+  for (i = pathTo.length; i-- > 0;) {
+    fn(pathTo[i], false, argTo);
+  }
+}
+
 module.exports = {
   isAncestor: isAncestor,
   getLowestCommonAncestor: getLowestCommonAncestor,
   getParentInstance: getParentInstance,
+  traverseTwoPhase: traverseTwoPhase,
+  traverseEnterLeave: traverseEnterLeave,
 };

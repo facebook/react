@@ -216,6 +216,51 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
+  describe('traverseTwoPhaseSkipTarget', function() {
+    it('should not traverse when traversing outside DOM', function() {
+      var targetID = '';
+      var expectedAggregation = [];
+      ReactInstanceHandles.traverseTwoPhaseSkipTarget(
+        targetID,
+        argAggregator,
+        ARG
+      );
+      expect(aggregatedArgs).toEqual(expectedAggregation);
+    });
+
+    it('should traverse two phase across component boundary', function() {
+      var parent = renderParentIntoDocument();
+      var targetID = getNodeID(parent.refs.P_P1_C1.refs.DIV_1);
+      var expectedAggregation = [
+        {id: getNodeID(parent.refs.P), isUp: false, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1), isUp: false, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: false, arg: ARG},
+
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG},
+      ];
+      ReactInstanceHandles.traverseTwoPhaseSkipTarget(
+        targetID,
+        argAggregator,
+        ARG
+      );
+      expect(aggregatedArgs).toEqual(expectedAggregation);
+    });
+
+    it('should traverse two phase at shallowest node', function() {
+      var parent = renderParentIntoDocument();
+      var targetID = getNodeID(parent.refs.P);
+      var expectedAggregation = [];
+      ReactInstanceHandles.traverseTwoPhaseSkipTarget(
+        targetID,
+        argAggregator,
+        ARG
+      );
+      expect(aggregatedArgs).toEqual(expectedAggregation);
+    });
+  });
+
   describe('traverseEnterLeave', function() {
     it('should not traverse when enter/leaving outside DOM', function() {
       var targetID = '';
