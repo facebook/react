@@ -36,13 +36,13 @@ describe('ReactDefaultPerf', function() {
 
     App = React.createClass({
       render: function() {
-        return <div><Box /><Box /></div>;
+        return <div><Box /><Box flip={this.props.flipSecond} /></div>;
       },
     });
 
     Box = React.createClass({
       render: function() {
-        return <div><input /></div>;
+        return <div key={!!this.props.flip}><input /></div>;
       },
     });
 
@@ -80,6 +80,28 @@ describe('ReactDefaultPerf', function() {
     expect(summary[1]['Owner > component']).toBe('App > Box');
     expect(summary[1]['Wasted time (ms)']).not.toBe(0);
     expect(summary[1]['Instances']).toBe(2);
+
+    /*eslint-enable dot-notation */
+  });
+
+  it('should count no-op update in child as waste', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<App />, container);
+
+    // Here, we add a Box -- two of the <Box /> updates are wasted time (but the
+    // addition of the third is not)
+    var measurements = measure(() => {
+      ReactDOM.render(<App flipSecond={true} />, container);
+    });
+
+    var summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    expect(summary.length).toBe(1);
+
+    /*eslint-disable dot-notation */
+
+    expect(summary[0]['Owner > component']).toBe('App > Box');
+    expect(summary[0]['Wasted time (ms)']).not.toBe(0);
+    expect(summary[0]['Instances']).toBe(1);
 
     /*eslint-enable dot-notation */
   });

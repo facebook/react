@@ -205,6 +205,9 @@ var ReactDefaultPerf = {
           var id = args[0];
           if (moduleName === 'EventPluginHub') {
             id = id._rootNodeID;
+          } else if (fnName === 'replaceNodeWithMarkup') {
+            // Old node is already unmounted; can't get its instance
+            id = ReactDOMComponentTree.getInstanceFromNode(args[1].node)._rootNodeID;
           } else if (typeof id === 'object') {
             id = ReactDOMComponentTree.getInstanceFromNode(args[0])._rootNodeID;
           }
