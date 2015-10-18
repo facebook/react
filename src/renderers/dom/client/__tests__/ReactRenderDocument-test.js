@@ -11,9 +11,6 @@
 
 'use strict';
 
-jest
-  .mock('ServerReactRootIndex');
-
 var React;
 var ReactDOM;
 var ReactDOMServer;

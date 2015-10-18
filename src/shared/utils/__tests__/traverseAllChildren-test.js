@@ -162,10 +162,10 @@ describe('traverseAllChildren', function() {
       traverseContext, div, '.$divNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, <span key="span/.$spanNode" />, '.1:0:$span/=1$spanNode'
+      traverseContext, <span key="span/.$spanNode" />, '.1:0:$span/.$spanNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, <a key="a/.$aNode" />, '.2:$a/=1$aNode'
+      traverseContext, <a key="a/.$aNode" />, '.2:$a/.$aNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext, 'string', '.3'
@@ -225,25 +225,25 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="firstHalfKey/.$keyZero" />,
-      '.0:$firstHalfKey/=1$keyZero'
+      '.0:$firstHalfKey/.$keyZero'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="firstHalfKey/.$keyTwo" />,
-      '.0:$firstHalfKey/=1$keyTwo'
+      '.0:$firstHalfKey/.$keyTwo'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="secondHalfKey/.$keyFour" />,
-      '.0:$secondHalfKey/=1$keyFour'
+      '.0:$secondHalfKey/.$keyFour'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="keyFive/.$keyFiveInner" />,
-      '.0:$keyFive/=1$keyFiveInner'
+      '.0:$keyFive/.$keyFiveInner'
     );
   });
 
