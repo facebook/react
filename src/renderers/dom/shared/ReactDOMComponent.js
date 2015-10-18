@@ -1180,9 +1180,9 @@ ReactDOMComponent.Mixin = {
 
 };
 
-ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {
+ReactPerf.measureMethods(ReactDOMComponent.Mixin, 'ReactDOMComponent', {
   mountComponent: 'mountComponent',
-  updateComponent: 'updateComponent',
+  receiveComponent: 'receiveComponent',
 });
 
 assign(

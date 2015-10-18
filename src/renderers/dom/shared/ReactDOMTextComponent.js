@@ -18,6 +18,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactPerf = require('ReactPerf');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -152,5 +153,14 @@ assign(ReactDOMTextComponent.prototype, {
   },
 
 });
+
+ReactPerf.measureMethods(
+  ReactDOMTextComponent.prototype,
+  'ReactDOMTextComponent',
+  {
+    mountComponent: 'mountComponent',
+    receiveComponent: 'receiveComponent',
+  }
+);
 
 module.exports = ReactDOMTextComponent;

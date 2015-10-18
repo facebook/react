@@ -28,9 +28,26 @@ function addValue(obj, key, val) {
   obj[key] = (obj[key] || 0) + val;
 }
 
+// Composites don't have any built-in ID: we have to make our own
+var compositeIDMap;
+var compositeIDCounter = 17000;
+function getIDOfComposite(inst) {
+  if (!compositeIDMap) {
+    compositeIDMap = new WeakMap();
+  }
+  if (compositeIDMap.has(inst)) {
+    return compositeIDMap.get(inst);
+  } else {
+    var id = compositeIDCounter++;
+    compositeIDMap.set(inst, id);
+    return id;
+  }
+}
+
 var ReactDefaultPerf = {
   _allMeasurements: [], // last item in the list is the current one
   _mountStack: [0],
+  _compositeStack: [],
   _injected: false,
 
   start: function() {
@@ -125,10 +142,10 @@ var ReactDefaultPerf = {
 
   _recordWrite: function(id, fnName, totalTime, args) {
     // TODO: totalTime isn't that useful since it doesn't count paints/reflows
-    var writes =
+    var entry =
       ReactDefaultPerf
-        ._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1]
-        .writes;
+        ._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1];
+    var writes = entry.writes;
     writes[id] = writes[id] || [];
     writes[id].push({
       type: fnName,
@@ -143,27 +160,30 @@ var ReactDefaultPerf = {
       var rv;
       var start;
 
+      var entry = ReactDefaultPerf._allMeasurements[
+        ReactDefaultPerf._allMeasurements.length - 1
+      ];
+
       if (fnName === '_renderNewRootComponent' ||
           fnName === 'flushBatchedUpdates') {
         // A "measurement" is a set of metrics recorded for each flush. We want
         // to group the metrics for a given flush together so we can look at the
         // components that rendered and the DOM operations that actually
         // happened to determine the amount of "wasted work" performed.
-        ReactDefaultPerf._allMeasurements.push({
+        ReactDefaultPerf._allMeasurements.push(entry = {
           exclusive: {},
           inclusive: {},
           render: {},
           counts: {},
           writes: {},
           displayNames: {},
+          hierarchy: {},
           totalTime: 0,
           created: {},
         });
         start = performanceNow();
         rv = func.apply(this, args);
-        ReactDefaultPerf._allMeasurements[
-          ReactDefaultPerf._allMeasurements.length - 1
-        ].totalTime = performanceNow() - start;
+        entry.totalTime = performanceNow() - start;
         return rv;
       } else if (fnName === '_mountImageIntoNode' ||
           moduleName === 'ReactDOMIDOperations' ||
@@ -228,16 +248,11 @@ var ReactDefaultPerf = {
           return func.apply(this, args);
         }
 
-        var rootNodeID = fnName === 'mountComponent' ?
-          args[0] :
-          this._rootNodeID;
+        var rootNodeID = getIDOfComposite(this);
         var isRender = fnName === '_renderValidatedComponent';
         var isMount = fnName === 'mountComponent';
 
         var mountStack = ReactDefaultPerf._mountStack;
-        var entry = ReactDefaultPerf._allMeasurements[
-          ReactDefaultPerf._allMeasurements.length - 1
-        ];
 
         if (isRender) {
           addValue(entry.counts, rootNodeID, 1);
@@ -246,9 +261,13 @@ var ReactDefaultPerf = {
           mountStack.push(0);
         }
 
+        ReactDefaultPerf._compositeStack.push(rootNodeID);
+
         start = performanceNow();
         rv = func.apply(this, args);
         totalTime = performanceNow() - start;
+
+        ReactDefaultPerf._compositeStack.pop();
 
         if (isRender) {
           addValue(entry.render, rootNodeID, totalTime);
@@ -268,6 +287,16 @@ var ReactDefaultPerf = {
             '<root>',
         };
 
+        return rv;
+      } else if (
+        (moduleName === 'ReactDOMComponent' ||
+         moduleName === 'ReactDOMTextComponent') &&
+        (fnName === 'mountComponent' ||
+         fnName === 'receiveComponent')) {
+
+        rv = func.apply(this, args);
+        entry.hierarchy[this._rootNodeID] =
+          ReactDefaultPerf._compositeStack.slice();
         return rv;
       } else {
         return func.apply(this, args);
