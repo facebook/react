@@ -18,7 +18,6 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactMount = require('ReactMount');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -99,10 +98,8 @@ assign(ReactDOMTextComponent.prototype, {
     if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el = ownerDocument.createElement('span');
-      this._nativeNode = el;
+      ReactDOMComponentTree.precacheNode(this, el);
       DOMPropertyOperations.setAttributeForID(el, rootID);
-      // Populate node cache
-      ReactMount.getID(el);
       var lazyTree = DOMLazyTree(el);
       DOMLazyTree.queueText(lazyTree, this._stringText);
       return lazyTree;

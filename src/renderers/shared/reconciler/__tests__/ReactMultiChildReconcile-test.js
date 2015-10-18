@@ -13,8 +13,8 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
 
 var mapObject = require('mapObject');
 
@@ -190,7 +190,8 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
   var i;
   var orderedDomIDs = [];
   for (i = 0; i < statusDisplayNodes.length; i++) {
-    orderedDomIDs.push(ReactMount.getID(statusDisplayNodes[i]));
+    var inst = ReactDOMComponentTree.getInstanceFromNode(statusDisplayNodes[i]);
+    orderedDomIDs.push(inst._rootNodeID);
   }
 
   var orderedLogicalIDs = [];

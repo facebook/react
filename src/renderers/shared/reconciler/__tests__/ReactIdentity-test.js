@@ -13,9 +13,9 @@
 
 var React;
 var ReactDOM;
+var ReactDOMComponentTree;
 var ReactFragment;
 var ReactTestUtils;
-var ReactMount;
 
 describe('ReactIdentity', function() {
 
@@ -23,14 +23,16 @@ describe('ReactIdentity', function() {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
-    ReactMount = require('ReactMount');
   });
 
   var idExp = /^\.[^.]+(.*)$/;
   function checkID(child, expectedID) {
-    var actual = idExp.exec(ReactMount.getID(child));
+    // TODO: Node IDs are not public API; rewrite these tests.
+    var rootID = ReactDOMComponentTree.getInstanceFromNode(child)._rootNodeID;
+    var actual = idExp.exec(rootID);
     var expected = idExp.exec(expectedID);
     expect(actual).toBeTruthy();
     expect(expected).toBeTruthy();
@@ -297,14 +299,16 @@ describe('ReactIdentity', function() {
     var wrapped = <TestContainer first={instance0} second={instance1} />;
 
     wrapped = ReactDOM.render(wrapped, document.createElement('div'));
+    var div = ReactDOM.findDOMNode(wrapped);
 
-    var beforeID = ReactMount.getID(ReactDOM.findDOMNode(wrapped).firstChild);
-
+    var beforeA = div.childNodes[0];
+    var beforeB = div.childNodes[1];
     wrapped.swap();
+    var afterA = div.childNodes[1];
+    var afterB = div.childNodes[0];
 
-    var afterID = ReactMount.getID(ReactDOM.findDOMNode(wrapped).firstChild);
-
-    expect(beforeID).not.toEqual(afterID);
+    expect(beforeA).toBe(afterA);
+    expect(beforeB).toBe(afterB);
 
   });
 

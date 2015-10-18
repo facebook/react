@@ -13,6 +13,7 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
@@ -175,8 +176,7 @@ var ReactDefaultPerf = {
         totalTime = performanceNow() - start;
 
         if (fnName === '_mountImageIntoNode') {
-          var mountID = ReactMount.getID(args[1]);
-          ReactDefaultPerf._recordWrite(mountID, fnName, totalTime, args[0]);
+          ReactDefaultPerf._recordWrite('', fnName, totalTime, args[0]);
         } else if (fnName === 'dangerouslyProcessChildrenUpdates') {
           // special format
           args[0].forEach(function(update) {
@@ -206,7 +206,7 @@ var ReactDefaultPerf = {
           if (moduleName === 'EventPluginHub') {
             id = id._rootNodeID;
           } else if (typeof id === 'object') {
-            id = ReactMount.getID(args[0]);
+            id = ReactDOMComponentTree.getInstanceFromNode(args[0])._rootNodeID;
           }
           ReactDefaultPerf._recordWrite(
             id,
