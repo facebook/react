@@ -16,7 +16,6 @@ var MorphingComponent;
 var React;
 var ReactDOM;
 var ReactCurrentOwner;
-var ReactMount;
 var ReactPropTypes;
 var ReactServerRendering;
 var ReactTestUtils;
@@ -34,7 +33,6 @@ describe('ReactCompositeComponent', function() {
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
-    ReactMount = require('ReactMount');
     ReactServerRendering = require('ReactServerRendering');
     ReactUpdates = require('ReactUpdates');
 
@@ -487,8 +485,6 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     var innerUnmounted = false;
 
-    spyOn(ReactMount, 'purgeID').andCallThrough();
-
     var Component = React.createClass({
       render: function() {
         return (
@@ -501,11 +497,6 @@ describe('ReactCompositeComponent', function() {
     });
     var Inner = React.createClass({
       componentWillUnmount: function() {
-        // It's important that ReactMount.purgeID is called after any component
-        // lifecycle methods, because a componentWillUnmount implementation is
-        // likely to call ReactDOM.findDOMNode(this), which will repopulate the
-        // node cache after it's been cleared, causing a memory leak.
-        expect(ReactMount.purgeID.calls.length).toBe(0);
         innerUnmounted = true;
       },
       render: function() {
@@ -516,12 +507,6 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Component />, container);
     ReactDOM.unmountComponentAtNode(container);
     expect(innerUnmounted).toBe(true);
-
-    // The text and both <div /> elements and their wrappers each call
-    // unmountIDFromEnvironment which calls purgeID, for a total of 3.
-    // TODO: Test the effect of this. E.g. does the node cache get repopulated
-    // after a getDOMNode call?
-    expect(ReactMount.purgeID.calls.length).toBe(3);
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {

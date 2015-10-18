@@ -13,7 +13,6 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var ReactMount = require('ReactMount');
 
 /**
  * Ensure that all callbacks are invoked, passing this unique argument.
@@ -72,89 +71,6 @@ describe('ReactInstanceHandles', function() {
   beforeEach(function() {
     ReactInstanceHandles = require('ReactInstanceHandles');
     aggregatedArgs = [];
-  });
-
-  describe('findComponentRoot', function() {
-    it('should find the correct node with prefix sibling IDs', function() {
-      var parentNode = ReactTestUtils.renderIntoDocument(
-        <div>
-          <div />
-          {[<div key="x" />]}
-        </div>
-      );
-      var childNodeB = parentNode.childNodes[1];
-
-      expect(
-        ReactMount.getNode(
-          getNodeID(childNodeB)
-        )
-      ).toBe(childNodeB);
-    });
-
-    it('should work around unidentified nodes', function() {
-      var parentNode = ReactTestUtils.renderIntoDocument(
-        <div>
-          {[<div key="x" />]}
-        </div>
-      );
-      var childNodeB = parentNode.childNodes[0];
-
-      // No ID on `childNodeA`.
-      var childNodeA = document.createElement('div');
-      parentNode.insertBefore(childNodeA, childNodeB);
-
-      expect(
-        ReactMount.getNode(
-          getNodeID(childNodeB)
-        )
-      ).toBe(childNodeB);
-    });
-
-    it('should throw if a rendered element cannot be found', function() {
-      spyOn(console, 'error');
-      var parentNode = ReactTestUtils.renderIntoDocument(
-        <table>
-          <tr />
-        </table>
-      );
-      var childNodeA = parentNode.childNodes[0];
-      var childNodeB;
-      if (childNodeA.tagName === 'TR') {
-        childNodeB = childNodeA;
-        // No ID on `childNodeA`, it was "rendered by the browser".
-        childNodeA = document.createElement('tbody');
-        childNodeA.appendChild(childNodeB);
-        parentNode.appendChild(childNodeA);
-      } else {
-        childNodeB = childNodeA.childNodes[0];
-      }
-      expect(childNodeA.tagName).toBe('TBODY');
-
-      expect(
-        ReactMount.getNode(
-          getNodeID(childNodeB)
-        )
-      ).toBe(childNodeB);
-
-      var junkID = getNodeID(childNodeB) + ':junk';
-      expect(function() {
-        ReactMount.getNode(
-          junkID
-        );
-      }).toThrow(
-        'findComponentRoot(..., ' + junkID + '): Unable to find element. ' +
-      'This probably means the DOM was unexpectedly mutated (e.g., by the ' +
-      'browser), usually due to forgetting a <tbody> when using tables, ' +
-      'nesting tags like <form>, <p>, or <a>, or using non-SVG elements in ' +
-      'an <svg> parent. Try inspecting the child nodes of the element with ' +
-      'React ID ``.'
-      );
-
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain(
-        '<tr> cannot appear as a child of <table>'
-      );
-    });
   });
 
   describe('getReactRootIDFromNodeID', function() {

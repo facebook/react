@@ -218,61 +218,6 @@ describe('ReactMount', function() {
     );
   });
 
-  it('should not crash in node cache when unmounting', function() {
-    var Component = React.createClass({
-      render: function() {
-        // Add refs to some nodes so that they get traversed and cached
-        return (
-          <div ref="a">
-            <div ref="b">b</div>
-            {this.props.showC && <div>c</div>}
-          </div>
-        );
-      },
-    });
-
-    var container = document.createElement('container');
-
-    ReactDOM.render(<div><Component showC={false} /></div>, container);
-
-    // Right now, A and B are in the cache. When we add C, it won't get added to
-    // the cache (assuming markup-string mode).
-    ReactDOM.render(<div><Component showC={true} /></div>, container);
-
-    // Remove A, B, and C. Unmounting C shouldn't cause B to get recached.
-    ReactDOM.render(<div></div>, container);
-
-    // Add them back -- this shouldn't cause a cached node collision.
-    ReactDOM.render(<div><Component showC={true} /></div>, container);
-
-    ReactDOM.unmountComponentAtNode(container);
-  });
-
-  it('should not crash in node cache when unmounting, case 2', function() {
-    var A = React.createClass({
-      render: function() {
-        return <a key={this.props.innerKey}>{this.props.innerKey}</a>;
-      },
-    });
-    var Component = React.createClass({
-      render: function() {
-        return (
-          <b>
-            <i>{this.props.step === 1 && <q />}</i>
-            {this.props.step === 1 && <A innerKey={this.props.step} />}
-          </b>
-        );
-      },
-    });
-
-    var container = document.createElement('container');
-
-    ReactDOM.render(<Component step={1} />, container);
-    ReactDOM.render(<Component step={2} />, container);
-    ReactDOM.render(<Component step={1} />, container);
-    ReactMount.getID(container.querySelector('a'));
-  });
-
   it('passes the correct callback context', function() {
     var container = document.createElement('div');
     var calls = 0;

@@ -14,7 +14,6 @@
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
@@ -189,18 +188,12 @@ function _handleChange(event) {
       // This will throw if radio buttons rendered by different copies of React
       // and the same name are rendered into the same form (same as #1939).
       // That's probably okay; we don't support it just as we don't support
-      // mixing React with non-React.
-      var otherID = ReactMount.getID(otherNode);
-      invariant(
-        otherID,
-        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-        'same `name` is not supported.'
-      );
-      var otherInstance = instancesByReactID[otherID];
+      // mixing React radio buttons with non-React ones.
+      var otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
       invariant(
         otherInstance,
-        'ReactDOMInput: Unknown radio button ID %s.',
-        otherID
+        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+        'same `name` is not supported.'
       );
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
