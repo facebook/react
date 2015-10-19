@@ -7,6 +7,67 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Reactiflux is moving to Discord</title>
+				<description>&lt;p&gt;TL;DR: Slack decided that Reactiflux had too many members and disabled new invites. Reactiflux is moving to Discord. Join us: &lt;a href=&quot;http://join.reactiflux.com/&quot;&gt;http://join.reactiflux.com&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-happened-with-slack&quot;&gt;&lt;/a&gt;What happened with Slack? &lt;a class=&quot;hash-link&quot; href=&quot;#what-happened-with-slack&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;A few weeks ago, Reactiflux reached 7,500 members on Slack. Shortly after, Slack decided we were too big and disabled invites. There was no way for new users to join. Many of us were sad and upset. We loved Slack.  Our community was built around it.&lt;/p&gt;
+
+&lt;p&gt;We reached out to Slack several times, but their decision was firm. Our large community caused performance issues. Slack wants to focus on building a great product for teams, not necessarily large open communities. Losing focus and building for too many use cases always leads to product bloat, and eventually a decrease in quality.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;so-why-discord&quot;&gt;&lt;/a&gt;So… why Discord? &lt;a class=&quot;hash-link&quot; href=&quot;#so-why-discord&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;After a &lt;a href=&quot;https://github.com/reactiflux/volunteers/issues/25&quot;&gt;long and thorough debate&lt;/a&gt;, Discord quickly emerged as the most promising service. After just a few days, 400 members had joined the Discord server, and many already loved it.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;easiest-to-join&quot;&gt;&lt;/a&gt;Easiest to join &lt;a class=&quot;hash-link&quot; href=&quot;#easiest-to-join&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Discord is the easiest platform we tested to join. New users can immediately join our conversations without having to create an account. All they need to do is provide a name. No permission granting, no password, no email confirmation.&lt;/p&gt;
+
+&lt;p&gt;This is critically useful for us, and will make Reactiflux even more open and accessible.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;great-apps&quot;&gt;&lt;/a&gt;Great apps &lt;a class=&quot;hash-link&quot; href=&quot;#great-apps&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Out of all of the services we’ve tried, Discord’s apps are by far the most polished. They are well designed, easy to use, and surprisingly fast. In addition to the web app, they have mobile apps on both iOS and Android as well as desktop apps for OS X and Windows, with Linux support coming soon.&lt;/p&gt;
+
+&lt;p&gt;Their desktop apps are built with React and Electron, and their iOS app is built with React Native.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;moderation-tools&quot;&gt;&lt;/a&gt;Moderation tools &lt;a class=&quot;hash-link&quot; href=&quot;#moderation-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;So far, we’ve been fortunate not to have to deal with spammers and trolls. As our community continues to grow, that might change. Unsurprisingly, Discord is the only app we’ve seen with legitimate moderation tools. It was built for gaming communities, after all.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;great-multiple-server-support&quot;&gt;&lt;/a&gt;Great multiple Server support &lt;a class=&quot;hash-link&quot; href=&quot;#great-multiple-server-support&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Your  Discord account works with every Discord server, which is the equivalent of a Slack team. You don’t need to create a new account every time you join a new team. You can join new servers in one click, and it’s very easy to switch between them. Discord messages also work across servers, so your personal conversations are not scoped to a single server.&lt;/p&gt;
+
+&lt;p&gt;Instead of having one huge, crowded Reactiflux server, we can branch off closely related channels into sub-servers. Communities will start overlapping, and it will be easy to interact with non-Reactiflux channels.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;its-hosted&quot;&gt;&lt;/a&gt;It’s hosted &lt;a class=&quot;hash-link&quot; href=&quot;#its-hosted&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Self-hosted apps require maintenance. We’re all busy, and we can barely find the time to keep our landing page up to date and running smoothly. More than anything, we need a stable platform, and we don’t have the resources to guarantee that right now.&lt;/p&gt;
+
+&lt;p&gt;It’s a much safer bet to offload the hosting to Discord, who is already keeping the lights on for all their users.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;we-like-the-team&quot;&gt;&lt;/a&gt;We like the team &lt;a class=&quot;hash-link&quot; href=&quot;#we-like-the-team&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;And they seem to like us back. They are excited for us to join them, and they’ve been very responsive to our feedback and suggestions.&lt;/p&gt;
+
+&lt;p&gt;They implemented code syntax highlighting just a few days after we told them we needed it.&lt;/p&gt;
+
+&lt;p&gt;Discord’s team has already built a solid suite of apps, and they have shown us how much they care about their users. We’re excited to see how they will continue to improve their product.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;and-whats-the-catch&quot;&gt;&lt;/a&gt;And what’s the catch? &lt;a class=&quot;hash-link&quot; href=&quot;#and-whats-the-catch&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Choosing the best chat service is subjective. There are a million reasons why Discord &lt;em&gt;might be&lt;/em&gt; a terrible idea. Here are the ones that we’re most worried about:&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;difficult-channel-management&quot;&gt;&lt;/a&gt;Difficult channel management &lt;a class=&quot;hash-link&quot; href=&quot;#difficult-channel-management&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Channel management seems to be the biggest issue. There is no way to opt out of channels; you can only mute them. And you can only mute channels one by one. There is no way to star channels, and channels can only be sorted on the server level. Each user will see the list of channels in the same order.&lt;/p&gt;
+
+&lt;p&gt;As the number of channels grow, it will be challenging to keep things in order. Branching off sub-servers will help, and we will keep an easily accessible directory of channels across our main server and all of the sub-servers.&lt;/p&gt;
+
+&lt;p&gt;We can build simple tools to make channel lookup easier, and the Discord team is working on improvements that should make this more manageable.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;no-search&quot;&gt;&lt;/a&gt;No Search &lt;a class=&quot;hash-link&quot; href=&quot;#no-search&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Lack of search is clearly a bummer, but Discord is working on it. Search is coming!&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;firewall&quot;&gt;&lt;/a&gt;Firewall &lt;a class=&quot;hash-link&quot; href=&quot;#firewall&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;A couple of users aren’t able to access Discord at work since other corporate filters classify it as a gaming application. This sucks, but it seems to be a  rare case. So far, it seems only to affect 0.6% of our current community (3/500).&lt;/p&gt;
+
+&lt;p&gt;We hope that these users can get Discord&amp;#39;s domains whitelisted, and we’ll try to find a solution if this is a widespread issue. The Discord team is aware of the issue as well.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;is-discord-going-to-disappear-tomorrow&quot;&gt;&lt;/a&gt;Is Discord going to disappear tomorrow? &lt;a class=&quot;hash-link&quot; href=&quot;#is-discord-going-to-disappear-tomorrow&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Probably not tomorrow. They have 14 people &lt;a href=&quot;https://discordapp.com/company&quot;&gt;full time&lt;/a&gt;, and they’ve raised money from some of the best investors in Silicon Valley, including &lt;a href=&quot;http://www.benchmark.com/&quot;&gt;Benchmark&lt;/a&gt; and &lt;a href=&quot;http://www.accel.com/companies/&quot;&gt;Accel&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;By focusing on gaming communities, Discord has differentiated itself from the many other communication apps. Discord is well received and has a rapidly growing user base.  They plan to keep their basic offerings free for unlimited users and hope_ _to make money with premium offerings (themes, add-ons, content, and more).&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;join-us&quot;&gt;&lt;/a&gt;Join us! &lt;a class=&quot;hash-link&quot; href=&quot;#join-us&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;More than 500 of us have already migrated to the new Reactiflux.  Join us, we&amp;#39;re one click away: &lt;a href=&quot;http://join.reactiflux.com/&quot;&gt;http://join.reactiflux.com&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note: Jordan Hawker’s thorough &lt;a href=&quot;http://jhawk.co/team-chat-comparison&quot;&gt;research&lt;/a&gt; made our decision a lot easier.&lt;/em&gt;&lt;/p&gt;
+</description>
+				<pubDate>2015-10-19T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/10/19/reactiflux-is-moving-to-discord.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/10/19/reactiflux-is-moving-to-discord.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.14</title>
 				<description>&lt;p&gt;We’re happy to announce the release of React 0.14 today! This release has a few major changes, primarily designed to simplify the code you write every day and to better support environments like React Native.&lt;/p&gt;
 
@@ -823,31 +884,6 @@ for more info.&lt;/p&gt;
 				<pubDate>2015-07-03T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/07/03/react-v0.14-beta-1.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/07/03/react-v0.14-beta-1.html</guid>
-			</item>
-		
-			<item>
-				<title>Deprecating JSTransform and react-tools</title>
-				<description>&lt;p&gt;Today we&amp;#39;re announcing the deprecation of react-tools and JSTransform.&lt;/p&gt;
-
-&lt;p&gt;As many people have noticed already, React and React Native have both switched their respective build systems to make use of &lt;a href=&quot;http://babeljs.io/&quot;&gt;Babel&lt;/a&gt;. This replaced &lt;a href=&quot;https://github.com/facebook/jstransform&quot;&gt;JSTransform&lt;/a&gt;, the source transformation tool that we wrote at Facebook. JSTransform has been really good for us over the past several years, however as the JavaScript language continues to evolve, the architecture we used has begun to show its age. We&amp;#39;ve faced maintenance issues and lagged behind implementing new language features. Last year, Babel (previously 6to5) exploded onto the scene, implementing new features at an amazing pace. Since then it has evolved a solid plugin API, and implemented some of our non-standard language features (JSX and Flow type annotations).&lt;/p&gt;
-
-&lt;p&gt;react-tools has always been a very thin wrapper around JSTransform. It has served as a great tool for the community to get up and running, but at this point we&amp;#39;re ready to &lt;a href=&quot;https://www.youtube.com/watch?v=moSFlvxnbgk&quot;&gt;let it go&lt;/a&gt;. We won&amp;#39;t ship a new version for v0.14.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;migrating-to-babel&quot;&gt;&lt;/a&gt;Migrating to Babel &lt;a class=&quot;hash-link&quot; href=&quot;#migrating-to-babel&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Many people in the React and broader JavaScript community have already adopted Babel. It has &lt;a href=&quot;http://babeljs.io/docs/setup/&quot;&gt;integrations with a number of tools&lt;/a&gt;. Depending on your tool, you&amp;#39;ll want to read up on the instructions.&lt;/p&gt;
-
-&lt;p&gt;We&amp;#39;ve been working with the Babel team as we started making use of it and we&amp;#39;re confident that it will be the right tool to use with React.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;other-deprecations&quot;&gt;&lt;/a&gt;Other Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#other-deprecations&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;esprima-fb&quot;&gt;&lt;/a&gt;esprima-fb &lt;a class=&quot;hash-link&quot; href=&quot;#esprima-fb&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork (&lt;a href=&quot;https://github.com/facebook/esprima/&quot;&gt;esprima-fb&lt;/a&gt;). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parser, we encourage you to look into using one of those.&lt;/p&gt;
-
-&lt;p&gt;Alternatively, if you need to parse JSX, take a look at &lt;a href=&quot;https://github.com/marijnh/acorn&quot;&gt;acorn&lt;/a&gt; parser in combination with &lt;a href=&quot;https://github.com/RReverser/acorn-jsx&quot;&gt;acorn-jsx&lt;/a&gt; plugin which is used inside of Babel and thus always supports the latest syntax.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsxtransformer&quot;&gt;&lt;/a&gt;JSXTransformer &lt;a class=&quot;hash-link&quot; href=&quot;#jsxtransformer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; tags with &lt;code&gt;type=&amp;quot;text/jsx&amp;quot;&lt;/code&gt; and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with &lt;a href=&quot;https://babeljs.io/docs/usage/browser/&quot;&gt;a nearly identical tool&lt;/a&gt;, which has already been integrated into &lt;a href=&quot;https://jsbin.com/&quot;&gt;JS Bin&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;We&amp;#39;ll be deprecating JSXTransformer, however the current version will still be available from various CDNs and Bower.&lt;/p&gt;
-</description>
-				<pubDate>2015-06-12T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html</guid>
 			</item>
 		
 	</channel>
