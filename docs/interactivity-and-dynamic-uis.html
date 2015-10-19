@@ -452,7 +452,7 @@
 <ul>
 <li><strong>Computed data:</strong> Don&#39;t worry about precomputing values based on state — it&#39;s easier to ensure that your UI is consistent if you do all computation within <code>render()</code>. For example, if you have an array of list items in state and you want to render the count as a string, simply render <code>this.state.listItems.length + &#39; list items&#39;</code> in your <code>render()</code> method rather than storing it on state.</li>
 <li><strong>React components:</strong> Build them in <code>render()</code> based on underlying props and state.</li>
-<li><strong>Duplicated data from props:</strong> Try to use props as the source of truth where possible. One valid use to store props in state is to be able to know its previous values, because props can change over time.</li>
+<li><strong>Duplicated data from props:</strong> Try to use props as the source of truth where possible. One valid use to store props in state is to be able to know its previous values, because props may change as the result of a parent component re-rendering.</li>
 </ul>
 
 

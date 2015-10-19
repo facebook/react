@@ -409,8 +409,23 @@
 <li><strong><a href="https://jsfiddle.net/reactjs/69z2wepo/">React JSFiddle</a></strong></li>
 <li><a href="https://jsfiddle.net/reactjs/5vjqabv3/">React JSFiddle without JSX</a></li>
 </ul>
-<h2><a class="anchor" name="-starter-kit"></a>入门教程包 (Starter Kit) <a class="hash-link" href="#-starter-kit">#</a></h2>
-<p>开始先下载入门教程包。</p>
+<h2><a class="anchor" name="-npm--react"></a>通过 npm 使用 React <a class="hash-link" href="#-npm--react">#</a></h2>
+<p>我们建议在 React 中使用 CommonJS 模块系统，比如 <a href="http://browserify.org/">browserify</a> 或 <a href="https://webpack.github.io/">webpack</a>。使用 <a href="https://www.npmjs.com/package/react"><code>react</code></a> 和 <a href="https://www.npmjs.com/package/react-dom"><code>react-dom</code></a> npm 包.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// main.js</span>
+<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ReactDOM</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom&#39;</span><span class="p">);</span>
+
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>在安装 browserify 之后安装 React DOM 和构建你的应用包。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom
+<span class="nv">$ </span>browserify -t babelify main.js -o bundle.js
+</code></pre></div><h2><a class="anchor" name="-npm-"></a>不使用 npm 快速开始 <a class="hash-link" href="#-npm-">#</a></h2>
+<p>If you&#39;re not ready to use npm yet, you can download the starter kit which includes prebuilt copies of React and React DOM.
+如果你没有做好使用 npm 的准备，你可以下载包含了 React 和 ReactDOM 预生成包的入门教程包。</p>
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-0.14.0.zip" class="button">
@@ -418,13 +433,14 @@
   </a>
 </div>
 
-<p>在入门教程包的根目录，创建一个含有下面代码的 <code>helloworld.html</code>。</p>
+<p>在入门教程包的根目录，创建一个含有如下代码的 <code>helloworld.html</code>。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
@@ -438,7 +454,7 @@
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
-<p>在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 <a href="/react/docs/jsx-in-depth.html">JSX 语法</a> 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> 标签包裹着含有 JSX 的代码，然后引入 <code>JSXTransformer.js</code> 库来实现在浏览器里的代码转换。</p>
+<p>在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 <a href="/react/docs/jsx-in-depth.html">JSX 语法</a> 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 <code>&lt;script type=&quot;text/babel&quot;&gt;</code> 标签，并引入 Babel 来完成在浏览器里的代码转换。</p>
 <h3><a class="anchor" name=""></a>分离文件 <a class="hash-link" href="#">#</a></h3>
 <p>你的 React JSX 代码文件可以写在另外的文件里。新建下面的 <code>src/helloworld.js</code>。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
@@ -448,14 +464,16 @@
 </code></pre></div>
 <p>然后在 <code>helloworld.html</code> 引用该文件：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div><h3><a class="anchor" name=""></a>离线转换 <a class="hash-link" href="#">#</a></h3>
-<p>先安装命令行工具（依赖 <a href="https://www.npmjs.com/">npm</a>）：</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install -g react-tools
+</code></pre></div>
+<p>注意一些浏览器（比如 Chrome ）会在使用 HTTP 以外的协议加载文件时失败。</p>
+<h3><a class="anchor" name=""></a>离线转换 <a class="hash-link" href="#">#</a></h3>
+<p>先安装<a href="http://babeljs.io/">Babel</a>命令行工具（依赖 <a href="https://www.npmjs.com/">npm</a>）：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install --global babel
 </code></pre></div>
 <p>然后把你的 <code>src/helloworld.js</code> 文件转成标准的 JavaScript:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">jsx --watch src/ build/
+<div class="highlight"><pre><code class="language-text" data-lang="text">babel src --watch --out-dir build
 </code></pre></div>
-<p>只要你修改了， <code>build/helloworld.js</code> 文件会自动生成。</p>
+<p><code>build/helloworld.js</code> 会在你对文件进行修改时自动生成。 阅读 <a href="http://babeljs.io/docs/usage/cli/">Babel CLI 文档</a> 了解高级用法。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
 <span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello, world!&#39;</span><span class="p">),</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
@@ -475,9 +493,7 @@
 <span class="hll">    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span>  <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-</code></pre></div><h2><a class="anchor" name="-commonjs"></a>想用 CommonJS？ <a class="hash-link" href="#-commonjs">#</a></h2>
-<p>如果你想在 <a href="http://browserify.org/">browserify</a>，<a href="https://webpack.github.io/">webpack</a> 或者或其它兼容CommonJS的模块系统里使用 React，只要使用 <a href="https://www.npmjs.com/package/react"><code>react</code> npm 包</a> 即可。而且，<code>jsx</code> 转换工具可以很轻松的地集成到大部分打包系统里（不仅仅是 CommonJS）。</p>
-<h2><a class="anchor" name=""></a>下一步 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name=""></a>下一步 <a class="hash-link" href="#">#</a></h2>
 <p>去看看<a href="/react/docs/tutorial.html">入门教程</a> 和入门教程包 <code>examples</code> 目录下的其它例子学习更多。</p>
 
 <p>我们还有一个社区开发者共建的 Wiki：<a href="https://github.com/facebook/react/wiki/Complementary-Tools">workflows, UI-components, routing, data management etc.</a></p>
