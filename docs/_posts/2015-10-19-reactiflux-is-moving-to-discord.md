@@ -77,7 +77,7 @@ We hope that these users can get Discord's domains whitelisted, and we’ll try 
 
 Probably not tomorrow. They have 14 people [full time](https://discordapp.com/company), and they’ve raised money from some of the best investors in Silicon Valley, including [Benchmark](http://www.benchmark.com/) and [Accel](http://www.accel.com/companies/).
 
-By focusing on gaming communities, Discord has differentiated itself from the many other communication apps. Discord is well received and has a rapidly growing user base.  They plan to keep their basic offerings free for unlimited users and hope_ _to make money with premium offerings (themes, add-ons, content, and more).
+By focusing on gaming communities, Discord has differentiated itself from the many other communication apps. Discord is well received and has a rapidly growing user base.  They plan to keep their basic offerings free for unlimited users and hope to make money with premium offerings (themes, add-ons, content, and more).
 
 ## Join us!
 
