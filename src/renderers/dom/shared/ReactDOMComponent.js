@@ -570,29 +570,32 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'video':
       case 'audio':
-        this._setupTrapBubbledEventsLocal(transaction);
+        this._wrapperState = {
+          listeners: null,
+        };
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
       case 'button':
         props = ReactDOMButton.getNativeProps(this, props, nativeParent);
         break;
       case 'input':
-        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMInput.mountWrapper(this, props, nativeParent);
         props = ReactDOMInput.getNativeProps(this, props);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
       case 'option':
         ReactDOMOption.mountWrapper(this, props, nativeParent);
         props = ReactDOMOption.getNativeProps(this, props);
         break;
       case 'select':
-        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMSelect.mountWrapper(this, props, nativeParent);
         props = ReactDOMSelect.getNativeProps(this, props);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
       case 'textarea':
-        this._setupTrapBubbledEventsLocal(transaction);
         ReactDOMTextarea.mountWrapper(this, props, nativeParent);
         props = ReactDOMTextarea.getNativeProps(this, props);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
     }
 
@@ -697,19 +700,6 @@ ReactDOMComponent.Mixin = {
     }
 
     return mountImage;
-  },
-
-  /**
-   * Setup this component to trap non-bubbling events locally
-   *
-   * @private
-   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   */
-  _setupTrapBubbledEventsLocal: function(transaction) {
-    this._wrapperState = {
-      listeners: null,
-    };
-    transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
   },
 
   /**

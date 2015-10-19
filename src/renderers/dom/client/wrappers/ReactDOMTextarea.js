@@ -128,6 +128,7 @@ var ReactDOMTextarea = {
       // The initial value can be a boolean or object so that's why it's
       // forced to be a string.
       initialValue: '' + (value != null ? value : defaultValue),
+      listeners: null,
       onChange: _handleChange.bind(inst),
     };
   },
