@@ -39,7 +39,7 @@ if (ExecutionEnvironment.canUseDOM) {
 
 var HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
-    /^(data|aria)-[a-z_][a-z\d_.\-]*$/
+    new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$')
   ),
   Properties: {
     /**
