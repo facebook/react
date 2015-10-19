@@ -16,6 +16,7 @@ describe('ReactDefaultPerf', function() {
   var ReactDOM;
   var ReactDefaultPerf;
   var ReactTestUtils;
+  var ReactDefaultPerfAnalysis;
 
   var App;
   var Box;
@@ -31,6 +32,7 @@ describe('ReactDefaultPerf', function() {
     ReactDOM = require('ReactDOM');
     ReactDefaultPerf = require('ReactDefaultPerf');
     ReactTestUtils = require('ReactTestUtils');
+    ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
 
     App = React.createClass({
       render: function() {
@@ -142,14 +144,6 @@ describe('ReactDefaultPerf', function() {
     });
   });
 
-  it('should not count listener update as waste', function() {
-    var container = document.createElement('div');
-    ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
-    expectNoWaste(() => {
-      ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
-    });
-  });
-
   it('should not count property removal as waste', function() {
     var container = document.createElement('div');
     ReactDOM.render(<Div className="yellow">hey</Div>, container);
@@ -186,6 +180,28 @@ describe('ReactDefaultPerf', function() {
     expectNoWaste(() => {
       ReactDOM.render(<Div>{'hello'}{'friend'}</Div>, container);
     });
+  });
+
+  it('putListener should not be instrumented', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
+    var measurements = measure(() => {
+      ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
+    });
+
+    var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
+    expect(summary).toEqual([]);
+  });
+
+  it('deleteListener should not be instrumented', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
+    var measurements = measure(() => {
+      ReactDOM.render(<Div>hey</Div>, container);
+    });
+
+    var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
+    expect(summary).toEqual([]);
   });
 
 });
