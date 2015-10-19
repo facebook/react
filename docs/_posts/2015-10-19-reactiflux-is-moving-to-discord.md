@@ -17,7 +17,7 @@ After a [long and thorough debate](https://github.com/reactiflux/volunteers/issu
 
 ### Easiest to join
 
-Discord is the easiest platform we tested to join. New users can immediately join our conversations without having to create an account. All they need to do is provide a name. No permission granting, no password, no email confirmation.
+Discord is the easiest platform to join. New users can immediately join our conversations without having to create an account. All they need to do is provide a name. No permission granting, no password, no email confirmation.
 
 This is critically useful for us, and will make Reactiflux even more open and accessible.
 
