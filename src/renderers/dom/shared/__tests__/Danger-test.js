@@ -79,7 +79,7 @@ describe('Danger', function() {
       expect(function() {
         Danger.dangerouslyRenderMarkup(['']);
       }).toThrow(
-        'Invariant Violation: dangerouslyRenderMarkup(...): Missing markup.'
+        'dangerouslyRenderMarkup(...): Missing markup.'
       );
 
       spyOn(console, 'error');

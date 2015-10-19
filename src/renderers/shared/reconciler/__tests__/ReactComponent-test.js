@@ -31,15 +31,13 @@ describe('ReactComponent', function() {
     expect(function() {
       ReactDOM.render(<div></div>, [container]);
     }).toThrow(
-      'Invariant Violation: _registerComponent(...): Target container ' +
-      'is not a DOM element.'
+      '_registerComponent(...): Target container is not a DOM element.'
     );
 
     expect(function() {
       ReactDOM.render(<div></div>, null);
     }).toThrow(
-      'Invariant Violation: _registerComponent(...): Target container ' +
-      'is not a DOM element.'
+      '_registerComponent(...): Target container is not a DOM element.'
     );
   });
 
@@ -295,23 +293,20 @@ describe('ReactComponent', function() {
 
     var X = undefined;
     expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: undefined.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: undefined.'
     );
 
     var Y = null;
     expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: null.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: null.'
     );
 
     var Z = {};
     expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: object.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: object.'
     );
 
     // One warning for each element creation

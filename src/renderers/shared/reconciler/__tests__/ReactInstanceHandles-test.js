@@ -142,13 +142,12 @@ describe('ReactInstanceHandles', function() {
           junkID
         );
       }).toThrow(
-        'Invariant Violation: findComponentRoot(..., ' + junkID + '): ' +
-        'Unable to find element. This probably means the DOM was ' +
-        'unexpectedly mutated (e.g., by the browser), usually due to ' +
-        'forgetting a <tbody> when using tables, nesting tags ' +
-        'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
-        'parent. ' +
-        'Try inspecting the child nodes of the element with React ID ``.'
+        'findComponentRoot(..., ' + junkID + '): Unable to find element. ' +
+      'This probably means the DOM was unexpectedly mutated (e.g., by the ' +
+      'browser), usually due to forgetting a <tbody> when using tables, ' +
+      'nesting tags like <form>, <p>, or <a>, or using non-SVG elements in ' +
+      'an <svg> parent. Try inspecting the child nodes of the element with ' +
+      'React ID ``.'
       );
 
       expect(console.error.argsForCall.length).toBe(1);

@@ -176,8 +176,7 @@ describe('ReactES6Class', function() {
         }
       }
       expect(() => test(<Foo />, 'span', '')).toThrow(
-        'Invariant Violation: Foo.state: ' +
-        'must be set to an object or null'
+        'Foo.state: must be set to an object or null'
       );
     });
   });

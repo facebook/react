@@ -62,15 +62,15 @@ describe('ReactTestUtils', function() {
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     expect(() => shallowRenderer.render(SomeComponent)).toThrow(
-      'Invariant Violation: ReactShallowRenderer render(): Invalid component ' +
-      'element. Instead of passing a component class, make sure to ' +
-      'instantiate it by passing it to React.createElement.'
+      'ReactShallowRenderer render(): Invalid component element. Instead of ' +
+      'passing a component class, make sure to instantiate it by passing it ' +
+      'to React.createElement.'
     );
     expect(() => shallowRenderer.render(<div />)).toThrow(
-      'Invariant Violation: ReactShallowRenderer render(): Shallow rendering ' +
-      'works only with custom components, not primitives (div). Instead of ' +
-      'calling `.render(el)` and inspecting the rendered output, look at ' +
-      '`el.props` directly instead.'
+      'ReactShallowRenderer render(): Shallow rendering works only with ' +
+      'custom components, not primitives (div). Instead of calling ' +
+      '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
+      'directly instead.'
     );
   });
 
