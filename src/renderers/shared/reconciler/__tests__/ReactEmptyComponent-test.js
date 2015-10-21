@@ -173,8 +173,7 @@ describe('ReactEmptyComponent', function() {
       expect(console.log.argsForCall[1][0]).toBe(null);
       expect(console.log.argsForCall[2][0]).toBe(null);
       expect(console.log.argsForCall[3][0].tagName).toBe('DIV');
-    }
-  );
+    });
 
   it('works when switching components', function() {
     var assertions = 0;

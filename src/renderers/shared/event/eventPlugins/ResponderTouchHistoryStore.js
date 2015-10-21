@@ -37,7 +37,7 @@ var MAX_TOUCH_BANK = 20;
  * }
  */
 var touchHistory = {
-  touchBank: [ ],
+  touchBank: [],
   numberActiveTouches: 0,
   // If there is only one active touch, we remember its location. This prevents
   // us having to loop through all of the touches all the time in the most
