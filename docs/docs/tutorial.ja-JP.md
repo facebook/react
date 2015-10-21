@@ -42,6 +42,7 @@ next: thinking-in-react-ja-JP.html
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
@@ -339,7 +340,7 @@ var CommentList = React.createClass({
 ```javascript{3}
 // tutorial11.js
 ReactDOM.render(
-  <CommentBox url="comments.json" />,
+  <CommentBox url="api/comments" />,
   document.getElementById('content')
 );
 ```
