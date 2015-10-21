@@ -96,7 +96,7 @@ Let's go through each one and figure out which one is state. Simply ask three qu
   2. Does it change over time? If not, it probably isn't state.
   3. Can you compute it based on any other state or props in your component? If so, it's not state.
 
-The original list of products is passed in as props, so that's not state. The search text and the checkbox seem to be state since they change over time and can't be computed from anything. And finally, the filtered list of products isn't state because it can be computed by combining the original list of products with the search text and value of the checkbox.
+The original list of products is passed in as props, so that's not state. The search text and the checkbox seem to be state since they don't change over time and can't be computed from anything. And finally, the filtered list of products isn't state because it can be computed by combining the original list of products with the search text and value of the checkbox.
 
 So finally, our state is:
 
