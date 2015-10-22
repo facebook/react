@@ -1,25 +1,22 @@
 ﻿# Relatório 3 - ESOF
 ## Facebook/React - Arquitetura de *Software*
 
+### <a name="introducao"></a>Introdução
+
 
 ### <a name="logica"></a>Vista Lógica
 
 
 ### <a name="implementacao"></a>Vista de Implementação
 
+O seguinte diagrama de componentes mostra a vista de implementação referente ao projeto React.
+
+![Diagrama de Componentes](./Resources/component_diagram.jpg)
 
 ### <a name="processo"></a>Vista de Processo
 
 
 ### <a name="deployment"></a>Vista de *Deployment*
-
-
-
-
-
-
-
-
 
 
 ### <a name="info"></a>Informações
