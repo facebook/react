@@ -2,6 +2,16 @@
 ## Facebook/React - Arquitetura de *Software*
 
 
+### <a name="logica"></a>Vista Lógica
+
+
+### <a name="implementacao"></a>Vista de Implementação
+
+
+### <a name="processo"></a>Vista de Processo
+
+
+### <a name="deployment"></a>Vista de *Deployment*
 
 
 
