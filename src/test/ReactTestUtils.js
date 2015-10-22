@@ -427,9 +427,7 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   if (!context) {
     context = emptyObject;
   }
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
-  this._render(element, transaction, context);
-  ReactUpdates.ReactReconcileTransaction.release(transaction);
+  ReactUpdates.batchedUpdates(_batchedRender, this, element, context);
 
   return this.getRenderOutput();
 };
@@ -447,6 +445,12 @@ ReactShallowRenderer.prototype.unmount = function() {
     this._instance.unmountComponent();
   }
 };
+
+function _batchedRender(renderer, element, context) {
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
+  renderer._render(element, transaction, context);
+  ReactUpdates.ReactReconcileTransaction.release(transaction);
+}
 
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
   if (this._instance) {
