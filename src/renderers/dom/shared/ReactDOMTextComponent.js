@@ -13,6 +13,7 @@
 'use strict';
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
+var DOMLazyTree = require('DOMLazyTree');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
@@ -106,7 +107,7 @@ assign(ReactDOMTextComponent.prototype, {
       // Populate node cache
       ReactMount.getID(el);
       setTextContent(el, this._stringText);
-      return el;
+      return DOMLazyTree(el);
     } else {
       var escapedText = escapeTextContentForBrowser(this._stringText);
 

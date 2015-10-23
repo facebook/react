@@ -12,6 +12,7 @@
 
 'use strict';
 
+var DOMLazyTree = require('DOMLazyTree');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var createNodesFromMarkup = require('createNodesFromMarkup');
@@ -172,13 +173,12 @@ var Danger = {
       'server rendering. See ReactDOMServer.renderToString().'
     );
 
-    var newChild;
     if (typeof markup === 'string') {
-      newChild = createNodesFromMarkup(markup, emptyFunction)[0];
+      var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
+      oldChild.parentNode.replaceChild(newChild, oldChild);
     } else {
-      newChild = markup;
+      DOMLazyTree.replaceChildWithTree(oldChild, markup);
     }
-    oldChild.parentNode.replaceChild(newChild, oldChild);
   },
 
 };
