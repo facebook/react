@@ -21,7 +21,7 @@ O seguinte diagrama de componentes mostra a vista de implementação referente a
 
 ### <a name="deployment"></a>Vista de *Deployment*
 
-O seguinte diagrama de *deployment* mostra a vista de deployment referente ao projeto React.
+O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao projeto React.
 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
