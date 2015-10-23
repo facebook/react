@@ -163,7 +163,8 @@ var HTMLDOMPropertyConfig = {
     tabIndex: null,
     target: null,
     title: null,
-    type: null,
+    // Setting .type throws on non-<input> tags
+    type: MUST_USE_ATTRIBUTE,
     useMap: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
