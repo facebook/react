@@ -937,7 +937,8 @@ ReactDOMComponent.Mixin = {
     var styleUpdates;
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey)) {
+         !lastProps.hasOwnProperty(propKey) ||
+         lastProps[propKey] == null) {
         continue;
       }
       if (propKey === STYLE) {
@@ -967,7 +968,9 @@ ReactDOMComponent.Mixin = {
       var lastProp = propKey === STYLE ?
         this._previousStyleCopy :
         lastProps[propKey];
-      if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
+      if (!nextProps.hasOwnProperty(propKey) ||
+          nextProp === lastProp ||
+          nextProp == null && lastProp == null) {
         continue;
       }
       if (propKey === STYLE) {
