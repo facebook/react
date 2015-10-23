@@ -6,6 +6,9 @@
 
 ### <a name="logica"></a>Vista Lógica
 
+O seguinte diagrama de pacotes mostra a vista lógica referente ao projeto React.
+
+![Diagrama de Pacotes](./Resources/package_diagram.jpg)
 
 ### <a name="implementacao"></a>Vista de Implementação
 
