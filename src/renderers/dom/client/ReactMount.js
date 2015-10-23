@@ -12,6 +12,7 @@
 'use strict';
 
 var ClientReactRootIndex = require('ClientReactRootIndex');
+var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -1038,7 +1039,7 @@ var ReactMount = {
       while (container.lastChild) {
         container.removeChild(container.lastChild);
       }
-      container.appendChild(markup);
+      DOMLazyTree.insertTreeBefore(container, markup, null);
     } else {
       setInnerHTML(container, markup);
     }

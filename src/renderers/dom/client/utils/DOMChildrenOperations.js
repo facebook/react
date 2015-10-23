@@ -12,6 +12,7 @@
 
 'use strict';
 
+var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactPerf = require('ReactPerf');
@@ -29,21 +30,27 @@ var invariant = require('invariant');
  * @internal
  */
 function insertChildAt(parentNode, childNode, index) {
-  // By exploiting arrays returning `undefined` for an undefined index, we can
-  // rely exclusively on `insertBefore(node, null)` instead of also using
-  // `appendChild(node)`. However, using `undefined` is not allowed by all
-  // browsers so we must replace it with `null`.
+  // We can rely exclusively on `insertBefore(node, null)` instead of also using
+  // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
+  // we are careful to use `null`.)
 
-  // fix render order error in safari
-  // IE8 will throw error when index out of list size.
-  var beforeChild = index >= parentNode.childNodes.length ?
-                    null :
-                    parentNode.childNodes.item(index);
+  // In Safari, .childNodes[index] can return a DOM node with id={index} so we
+  // use .item() instead which is immune to this bug. (See #3560.) In contrast
+  // to the spec, IE8 throws an error if index is larger than the list size.
+  var referenceNode =
+    index < parentNode.childNodes.length ?
+    parentNode.childNodes.item(index) : null;
 
-  parentNode.insertBefore(
-    childNode,
-    beforeChild
-  );
+  parentNode.insertBefore(childNode, referenceNode);
+}
+
+function insertLazyTreeChildAt(parentNode, childTree, index) {
+  // See above.
+  var referenceNode =
+    index < parentNode.childNodes.length ?
+    parentNode.childNodes.item(index) : null;
+
+  DOMLazyTree.insertTreeBefore(parentNode, childTree, referenceNode);
 }
 
 /**
@@ -99,9 +106,10 @@ var DOMChildrenOperations = {
       }
     }
 
-    var renderedMarkup;
     // markupList is either a list of markup or just a list of elements
-    if (markupList.length && typeof markupList[0] === 'string') {
+    var isHTML = markupList.length && typeof markupList[0] === 'string';
+    var renderedMarkup;
+    if (isHTML) {
       renderedMarkup = Danger.dangerouslyRenderMarkup(markupList);
     } else {
       renderedMarkup = markupList;
@@ -118,11 +126,19 @@ var DOMChildrenOperations = {
       update = updates[k];
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
-          insertChildAt(
-            update.parentNode,
-            renderedMarkup[update.markupIndex],
-            update.toIndex
-          );
+          if (isHTML) {
+            insertChildAt(
+              update.parentNode,
+              renderedMarkup[update.markupIndex],
+              update.toIndex
+            );
+          } else {
+            insertLazyTreeChildAt(
+              update.parentNode,
+              renderedMarkup[update.markupIndex],
+              update.toIndex
+            );
+          }
           break;
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           insertChildAt(
