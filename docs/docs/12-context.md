@@ -48,7 +48,7 @@ var MessageList = React.createClass({
   render: function() {
     var color = "purple";
     var children = this.props.messages.map(function(message) {
-      return <Message text={message.text} color={color} />;
+      return <Message key={message} text={message.text} color={color} />;
     });
     return <div>{children}</div>;
   }
@@ -90,7 +90,7 @@ var MessageList = React.createClass({
   },
   render: function() {
     var children = this.props.messages.map(function(message) {
-      return <Message text={message.text} />;
+      return <Message key={message} text={message.text} />;
     });
     return <div>{children}</div>;
   }
