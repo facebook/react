@@ -426,6 +426,24 @@ describe('ReactDOMComponent', function() {
       ReactDOM.render(<button is="test" cowabunga="chevynova"/>, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
     });
+
+    it('should not update when switching between null/undefined', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<div />, container);
+
+      var setter = mocks.getMockFunction();
+      Object.defineProperty(node, 'dir', {
+        get: function() {},
+        set: setter,
+      });
+
+      ReactDOM.render(<div dir={null} />, container);
+      ReactDOM.render(<div dir={undefined} />, container);
+      ReactDOM.render(<div />, container);
+      expect(setter.mock.calls.length).toBe(0);
+      ReactDOM.render(<div dir="ltr" />, container);
+      expect(setter.mock.calls.length).toBe(1);
+    });
   });
 
   describe('createOpenTagMarkup', function() {
