@@ -21,7 +21,7 @@ var HelloMessage = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <HelloMessage name="John" />,
   document.getElementById('container')
 );
