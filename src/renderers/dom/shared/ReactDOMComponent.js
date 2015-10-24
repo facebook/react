@@ -665,7 +665,7 @@ ReactDOMComponent.Mixin = {
       DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
       // Populate node cache
       ReactMount.getID(el);
-      this._updateDOMProperties({}, props, transaction);
+      this._updateDOMProperties(null, props, transaction);
       var lazyTree = DOMLazyTree(el);
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
@@ -964,9 +964,9 @@ ReactDOMComponent.Mixin = {
     }
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
-      var lastProp = propKey === STYLE ?
-        this._previousStyleCopy :
-        lastProps[propKey];
+      var lastProp =
+        propKey === STYLE ? this._previousStyleCopy :
+        lastProps != null ? lastProps[propKey] : undefined;
       if (!nextProps.hasOwnProperty(propKey) ||
           nextProp === lastProp ||
           nextProp == null && lastProp == null) {
