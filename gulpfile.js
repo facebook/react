@@ -189,6 +189,38 @@ gulp.task('browserify', [
 gulp.task('build-modules', ['react:modules']);
 gulp.task('delete-build-modules', ['react:clean']);
 
+gulp.task('version-check', function(done) {
+  var failed = false;
+  var versions = {
+    'packages/react/package.json':
+      require('./packages/react/package.json').version,
+    'packages/react-dom/package.json':
+      require('./packages/react-dom/package.json').version,
+    'packages/react-addons/package.json (version)':
+      require('./packages/react-addons/package.json').version,
+    'packages/react-addons/package.json (react dependency)':
+      // Get the "version" without the range bit
+      require('./packages/react-addons/package.json').peerDependencies.react.slice(1),
+    'src/ReactVersion.js':
+      require('./src/ReactVersion'),
+  };
+  Object.keys(versions).forEach(function(name) {
+    if (versions[name] !== packageJson.version) {
+      failed = true;
+      gutil.log(
+        '%s version does not match package.json. Expected %s, saw %s.',
+        name,
+        packageJson.version,
+        versions[name]
+      );
+    }
+  });
+  if (failed) {
+    process.exit(1);
+  }
+  done();
+});
+
 gulp.task('eslint', function(cb) {
   spawn(
     process.execPath,
