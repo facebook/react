@@ -432,10 +432,7 @@ describe('ReactDOMComponent', function() {
       var node = ReactDOM.render(<div />, container);
 
       var setter = mocks.getMockFunction();
-      Object.defineProperty(node, 'dir', {
-        get: function() {},
-        set: setter,
-      });
+      node.setAttribute = setter;
 
       ReactDOM.render(<div dir={null} />, container);
       ReactDOM.render(<div dir={undefined} />, container);
