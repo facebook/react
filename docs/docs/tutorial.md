@@ -260,7 +260,7 @@ But there's a problem! Our rendered comments look like this in the browser: "`<p
 
 That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/Cross-site_scripting). There's a way to get around it but the framework warns you not to use it:
 
-```javascript{4,10}
+```javascript{4,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
