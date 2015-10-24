@@ -9,16 +9,33 @@
 
 'use strict';
 
+var UglifyJS = require('uglify-js');
 var babel = require('gulp-babel');
+var browserify = require('browserify');
+var bundleCollapser = require('bundle-collapser/plugin');
 var del = require('del');
+var derequire = require('derequire/plugin');
+var envify = require('envify');
 var flatten = require('gulp-flatten');
+var fs = require('fs');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var path = require('path');
+var source = require('vinyl-source-buffer');
 var spawn = require('child_process').spawn;
+var through = require('through2');
+var unreachableBranchTransform = require('unreachable-branch-transform');
+
+var packageJson = require('./package.json');
 
 var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
 var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
+
+var SIMPLE_TEMPLATE =
+  fs.readFileSync('./grunt/data/header-template-short.txt', 'utf8');
+
+var LICENSE_TEMPLATE =
+  fs.readFileSync('./grunt/data/header-template-extended.txt', 'utf8');
 
 var paths = {
   react: {
@@ -43,6 +60,131 @@ var babelOpts = {
   ignore: ['third_party'],
   _moduleMap: require('fbjs/module-map'),
 };
+
+gulp.task('browserify:basic', ['react:modules'], function() {
+  var b = browserify({
+    entries: [path.join(__dirname, 'build/modules/React.js')],
+    debug: false,
+    detectGlobals: false,
+    standalone: 'React',
+    packageFilter: function(pkg, dir) {
+      // Ensure all dependencies get built with this NODE_ENV
+      pkg.browserify = {transform: [[envify, {NODE_ENV:'development'}]]};
+      return pkg;
+    },
+  });
+  b.plugin(bundleCollapser);
+  b.plugin(derequire);
+
+  var banner = through();
+  banner.push(new Buffer(
+    SIMPLE_TEMPLATE
+      .replace('<%= package %>', 'React')
+      .replace('<%= version %>', packageJson.version)
+  ));
+
+  return b.bundle()
+    .pipe(banner)
+    .pipe(source('react.js'))
+    .pipe(gulp.dest('build'));
+});
+
+gulp.task('browserify:min', ['react:modules'], function() {
+  var b = browserify({
+    entries: [path.join(__dirname, 'build/modules/React.js')],
+    debug: false,
+    detectGlobals: false,
+    standalone: 'React',
+    packageFilter: function(pkg, dir) {
+      // Ensure all dependencies get built with this NODE_ENV
+      pkg.browserify = {transform: [[envify, {NODE_ENV:'production'}]]};
+      return pkg;
+    },
+  });
+  b.transform(unreachableBranchTransform);
+  b.plugin(bundleCollapser);
+  b.plugin(packReduce(function(src) {
+    return UglifyJS.minify(src, {fromString: true}).code;
+  }));
+
+  var banner = through();
+  banner.push(new Buffer(
+    LICENSE_TEMPLATE
+      .replace('<%= package %>', 'React')
+      .replace('<%= version %>', packageJson.version)
+  ));
+
+  return b.bundle()
+    .pipe(banner)
+    .pipe(source('react.min.js'))
+    .pipe(gulp.dest('build'));
+});
+
+gulp.task('browserify:addons', ['react:modules'], function() {
+  var b = browserify({
+    entries: [path.join(__dirname, 'build/modules/ReactWithAddons.js')],
+    debug: false,
+    detectGlobals: false,
+    standalone: 'React',
+    packageFilter: function(pkg, dir) {
+      // Ensure all dependencies get built with this NODE_ENV
+      pkg.browserify = {transform: [[envify, {NODE_ENV:'development'}]]};
+      return pkg;
+    },
+  });
+  b.plugin(bundleCollapser);
+  b.plugin(derequire);
+
+  var banner = through();
+  banner.push(new Buffer(
+    SIMPLE_TEMPLATE
+      .replace('<%= package %>', 'React (with addons)')
+      .replace('<%= version %>', packageJson.version)
+  ));
+
+  return b.bundle()
+    .pipe(banner)
+    .pipe(source('react-with-addons.js'))
+    .pipe(gulp.dest('build'));
+});
+
+gulp.task('browserify:addonsMin', ['react:modules'], function() {
+  var b = browserify({
+    entries: [path.join(__dirname, 'build/modules/ReactWithAddons.js')],
+    debug: false,
+    detectGlobals: false,
+    standalone: 'React',
+    packageFilter: function(pkg, dir) {
+      // Ensure all dependencies get built with this NODE_ENV
+      pkg.browserify = {transform: [[envify, {NODE_ENV:'development'}]]};
+      return pkg;
+    },
+  });
+  b.transform(unreachableBranchTransform);
+  b.plugin(bundleCollapser);
+  b.plugin(packReduce(function(src) {
+    return UglifyJS.minify(src, {fromString: true}).code;
+  }));
+
+  var banner = through();
+  banner.push(new Buffer(
+    LICENSE_TEMPLATE
+      .replace('<%= package %>', 'React (with addons)')
+      .replace('<%= version %>', packageJson.version)
+  ));
+
+  return b.bundle()
+    .pipe(banner)
+    .pipe(source('react-with-addons.min.js'))
+    .pipe(gulp.dest('build'));
+});
+
+gulp.task('browserify', [
+  'browserify:basic',
+  'browserify:min',
+  'browserify:addons',
+  'browserify:addonsMin',
+]);
 
 gulp.task('eslint', function(cb) {
   spawn(
@@ -93,3 +235,17 @@ gulp.task('jest', function(cb) {
 gulp.task('test', ['jest']);
 
 gulp.task('default', ['react:modules']);
+
+function packReduce(fn) {
+  return function(b) {
+    var chunks = [];
+    b.pipeline.get('pack').push(through(function(chunk, enc, next) {
+      chunks.push(chunk);
+      next();
+    }, function(next) {
+      var src = String(Buffer.concat(chunks));
+      this.push(fn(src));
+      next();
+    }));
+  };
+}
