@@ -44,6 +44,24 @@ var babelOpts = {
   _moduleMap: require('fbjs/module-map'),
 };
 
+gulp.task('eslint', function(cb) {
+  spawn(
+    process.execPath,
+    [path.join('node_modules', '.bin', 'eslint'), '.'],
+    {stdio: 'inherit'}
+  ).on('close', function(code) {
+    if (code === 0) {
+      gutil.log('Lint passed');
+      cb();
+    } else {
+      gutil.log('Lint failed');
+      process.exit(code);
+    }
+  });
+});
+
+gulp.task('lint', ['eslint']);
+
 gulp.task('react:clean', function(cb) {
   del([paths.react.lib], cb);
 });
