@@ -186,6 +186,9 @@ gulp.task('browserify', [
   'browserify:addonsMin',
 ]);
 
+gulp.task('build-modules', ['react:modules']);
+gulp.task('delete-build-modules', ['react:clean']);
+
 gulp.task('eslint', function(cb) {
   spawn(
     process.execPath,
