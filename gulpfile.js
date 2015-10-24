@@ -9,10 +9,13 @@
 
 'use strict';
 
-var gulp = require('gulp');
 var babel = require('gulp-babel');
-var flatten = require('gulp-flatten');
 var del = require('del');
+var flatten = require('gulp-flatten');
+var gulp = require('gulp');
+var gutil = require('gulp-util');
+var path = require('path');
+var spawn = require('child_process').spawn;
 
 var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
 var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
@@ -52,5 +55,23 @@ gulp.task('react:modules', function() {
     .pipe(flatten())
     .pipe(gulp.dest(paths.react.lib));
 });
+
+gulp.task('jest', function(cb) {
+  spawn(
+    process.execPath,
+    ['--harmony', path.join('node_modules', '.bin', 'jest')],
+    {stdio: 'inherit', env: {NODE_ENV: 'test'}}
+  ).on('close', function(code) {
+    if (code === 0) {
+      gutil.log('jest passed');
+      cb();
+    } else {
+      gutil.log('jest failed');
+      process.exit(code);
+    }
+  });
+});
+
+gulp.task('test', ['jest']);
 
 gulp.task('default', ['react:modules']);
