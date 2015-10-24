@@ -37,29 +37,6 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
   grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
 
-  grunt.registerTask('build:basic', [
-    // 'build-modules',
-    // 'version-check',
-    // 'browserify:basic',
-  ]);
-  grunt.registerTask('build:addons', [
-    // 'build-modules',
-    // 'browserify:addons',
-  ]);
-  grunt.registerTask('build:min', [
-    // 'build-modules',
-    // 'version-check',
-    // 'browserify:min',
-  ]);
-  grunt.registerTask('build:addons-min', [
-    // 'build-modules',
-    // 'browserify:addonsMin',
-  ]);
-  grunt.registerTask('build:npm-react', [
-    // 'version-check',
-    // 'build-modules',
-    'npm-react:release',
-  ]);
   grunt.registerTask('build:react-dom', require('./grunt/tasks/react-dom'));
 
   grunt.registerTask('npm:test', ['build', 'npm:pack']);

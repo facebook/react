@@ -189,6 +189,11 @@ gulp.task('browserify', [
 gulp.task('build-modules', ['react:modules']);
 gulp.task('delete-build-modules', ['react:clean']);
 
+gulp.task('build:basic', ['version-check', 'browserify:basic']);
+gulp.task('build:addons', ['browserify:addons']);
+gulp.task('build:min', ['version-check', 'browserify:min']);
+gulp.task('build:addons-min', ['version-check', 'browserify:addonsMin']);
+
 gulp.task('version-check', function(done) {
   var failed = false;
   var versions = {
