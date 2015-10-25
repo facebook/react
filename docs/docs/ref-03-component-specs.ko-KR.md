@@ -122,7 +122,7 @@ void componentWillMount()
 void componentDidMount()
 ```
 
-최초 렌더링이 일어난 다음 클라이언트에서만 한번 호출됩니다. (서버에서는 호출되지 않습니다.) 이 시점에 컴포넌트는 `ReactDOM.findDOMNode(this)`로 접근 가능한 DOM 표현을 가집니다.
+최초 렌더링이 일어난 다음 클라이언트에서만 한번 호출됩니다. (서버에서는 호출되지 않습니다.) 이 시점에 자식의 refs들에 접근 할 수 있습니다. (기본 DOM 표현에 접근하는 등). 자식 컴포넌트의 `componentDidMount()` 메소드는 부모 컴포넌트보다 먼저 호출됩니다.
 
 다른 JavaScript 프레임워크를 연동하거나, `setTimeout`/`setInterval`로 타이머를 설정하고 AJAX 요청을 보내는 등의 작업을 이 메소드에서 합니다.
 
@@ -130,7 +130,9 @@ void componentDidMount()
 ### 업데이트 시: componentWillReceiveProps
 
 ```javascript
-void componentWillReceiveProps(object nextProps)
+void componentWillReceiveProps(
+  object nextProps
+)
 ```
 
 컴포넌트가 새로운 props를 받을 때 호출됩니다. 이 메소드는 최초 렌더링 시에는 호출되지 않습니다.
@@ -154,7 +156,9 @@ componentWillReceiveProps: function(nextProps) {
 ### 업데이트 시: shouldComponentUpdate
 
 ```javascript
-boolean shouldComponentUpdate(object nextProps, object nextState)
+boolean shouldComponentUpdate(
+  object nextProps, object nextState
+)
 ```
 
 새로운 props 또는 state를 받아 렌더링을 하기 전에 호출됩니다. 최초 렌더링 시나 `forceUpdate`를 사용하는 경우에는 호출되지 않습니다.
@@ -168,9 +172,9 @@ shouldComponentUpdate: function(nextProps, nextState) {
 }
 ```
 
-`shouldComponentUpdate`가 false를 리턴하면, 다음에 state가 바뀌기 전까지 `render()`가 완전히 호출되지 않고 넘어갑니다. (그리고 `componentWillUpdate`와 `componentDidUpdate` 또한 호출되지 않습니다.)
+`shouldComponentUpdate`가 false를 리턴하면, 다음에 state가 바뀌기 전까지 `render()`가 완전히 호출되지 않고 넘어갑니다. `componentWillUpdate`와 `componentDidUpdate` 또한 호출되지 않습니다.
 
-기본적으로 `shouldComponentUpdate`는 항상 true를 리턴합니다. `state`가 제자리에서(in place) 바뀐 경우에 발생하는 파악하기 힘든 버그를 막기 위함입니다. 하지만 `state`가 항상 변경 불가능하도록 주의하고 `render()`에서 `props`와 `state`를 읽기만 하면 이전 props 및 state와 바뀌는 값을 비교하는 `shouldComponentUpdate`를 직접 구현할 수 있습니다.
+기본적으로 `shouldComponentUpdate`는 항상 `true`를 리턴합니다. `state`가 제자리에서(in place) 바뀐 경우에 발생하는 파악하기 힘든 버그를 막기 위함입니다. 하지만 `state`가 항상 변경 불가능하도록 주의하고 `render()`에서 `props`와 `state`를 읽기만 하면 이전 props 및 state와 바뀌는 값을 비교하는 `shouldComponentUpdate`를 직접 구현할 수 있습니다.
 
 성능에 병목이 있다면, 특히 컴포넌트가 매우 많은 경우 `shouldComponentUpdate`를 사용하여 앱을 빠르게 만들 수 있습니다.
 
@@ -178,7 +182,9 @@ shouldComponentUpdate: function(nextProps, nextState) {
 ### 업데이트 시: componentWillUpdate
 
 ```javascript
-void componentWillUpdate(object nextProps, object nextState)
+void componentWillUpdate(
+  object nextProps, object nextState
+)
 ```
 
 새로운 props나 state를 받았을 때 렌더링 직전에 호출됩니다. 최초 렌더링 시에는 호출되지 않습니다.
@@ -193,7 +199,9 @@ void componentWillUpdate(object nextProps, object nextState)
 ### 업데이트 시: componentDidUpdate
 
 ```javascript
-void componentDidUpdate(object prevProps, object prevState)
+void componentDidUpdate(
+  object prevProps, object prevState
+)
 ```
 
 컴포넌트의 업데이트가 DOM에 반영된 직후에 호출됩니다. 최초 렌더링 시에는 호출되지 않습니다.
