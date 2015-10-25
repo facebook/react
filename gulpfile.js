@@ -194,6 +194,29 @@ gulp.task('build:addons', ['browserify:addons']);
 gulp.task('build:min', ['version-check', 'browserify:min']);
 gulp.task('build:addons-min', ['version-check', 'browserify:addonsMin']);
 
+gulp.task('build:react-dom', function() {
+  var header = LICENSE_TEMPLATE
+    .replace('<%= package %>', 'ReactDOM')
+    .replace('<%= version %>', packageJson.version);
+  var src = fs.readFileSync('vendor/react-dom.js', 'utf8');
+
+  var dist = new gutil.File({
+    path: 'react-dom.js',
+    contents: new Buffer(header + src),
+  });
+
+  var min = new gutil.File({
+    path: 'react-dom.min.js',
+    contents: new Buffer(header + UglifyJS.minify(src, {fromString: true}).code),
+  });
+
+  var out = through.obj();
+  out.push(dist);
+  out.push(min);
+
+  return out.pipe(gulp.dest('build'));
+});
+
 gulp.task('version-check', function(done) {
   var failed = false;
   var versions = {
