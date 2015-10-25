@@ -33,10 +33,6 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-dom:release', npmReactDOMTasks.buildRelease);
   grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
 
-  var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
-  grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
-  grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
-
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
@@ -54,8 +50,8 @@ module.exports = function(grunt) {
     'npm-react:pack',
     'npm-react-dom:release',
     'npm-react-dom:pack',
-    'npm-react-addons:release',
-    'npm-react-addons:pack',
+    // 'npm-react-addons:release',
+    // 'npm-react-addons:pack',
     'compare_size',
   ]);
 
