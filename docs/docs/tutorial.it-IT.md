@@ -41,6 +41,7 @@ Per questo tutorial renderemo il tutto il più semplice possibile. Incluso nel p
     <meta charset="utf-8" />
     <title>React Tutorial</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
@@ -220,12 +221,13 @@ Il Markdown è una maniera semplice di formattare il tuo testo in linea. Ad esem
 
 Per prima cosa, aggiungiamo la libreria di terze parti **marked** alla tua applicazione. Questa è una libreria JavaScript che prende il testo Markdown e lo converte in HTML nativo. Per fare ciò è richiesto un tag script nel tag head (che abbiamo già incluso nel playground React):
 
-```html{8}
+```html{9}
 <!-- index.html -->
 <head>
   <meta charset="utf-8" />
   <title>React Tutorial</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
