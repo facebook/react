@@ -41,6 +41,7 @@ next: thinking-in-react-zh-CN.html
     <meta charset="utf-8" />
     <title>React Tutorial</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
@@ -220,12 +221,13 @@ Markdown 是一种简单的内联格式化你的文字的方法。例如，用�
 
 首先，添加第三方库 **marked** 到你的应用。这是一个JavaScript库，接受 Markdown 文本并且转换为原始的 HTML。这需要在你的头部有一个 script 标签（那个我们已经在 React 操场上包含了的标签）：
 
-```html{8}
+```html{9}
 <!-- index.html -->
 <head>
   <meta charset="utf-8" />
   <title>React Tutorial</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
