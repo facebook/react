@@ -9,7 +9,7 @@ Wir haben React für folgende Aufgabe entwickelt: **umfangreiche Anwendungen zu 
 
 ## Einfach
 
-Beschreibe, wie sich Deine App zu jedem gewünschten Zeitpunkt präsentieren soll und React kümmert sich um alle Benutzeroberflächen-Änderungen sobald sich die zugrundliegenden Daten ändern.
+Beschreibe, wie sich Deine App zu jedem gewünschten Zeitpunkt präsentieren soll und React kümmert sich um alle Benutzeroberflächen-Änderungen sobald sich die zugrundeliegenden Daten ändern.
 
 ## Deklarativ
 
