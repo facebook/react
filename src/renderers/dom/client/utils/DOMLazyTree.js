@@ -11,6 +11,8 @@
 
 'use strict';
 
+var setTextContent = require('setTextContent');
+
 /**
  * In IE (8-11) and Edge, appending nodes with no children is dramatically
  * faster than appending a full subtree, so we essentially queue up the
@@ -43,6 +45,8 @@ function insertTreeChildren(tree) {
     }
   } else if (tree.html != null) {
     node.innerHTML = tree.html;
+  } else if (tree.text != null) {
+    setTextContent(node, tree.text);
   }
 }
 
@@ -72,11 +76,20 @@ function queueHTML(tree, html) {
   }
 }
 
+function queueText(tree, text) {
+  if (enableLazy) {
+    tree.text = text;
+  } else {
+    setTextContent(tree.node, text);
+  }
+}
+
 function DOMLazyTree(node) {
   return {
     node: node,
     children: [],
     html: null,
+    text: null,
   };
 }
 
@@ -84,5 +97,6 @@ DOMLazyTree.insertTreeBefore = insertTreeBefore;
 DOMLazyTree.replaceChildWithTree = replaceChildWithTree;
 DOMLazyTree.queueChild = queueChild;
 DOMLazyTree.queueHTML = queueHTML;
+DOMLazyTree.queueText = queueText;
 
 module.exports = DOMLazyTree;
