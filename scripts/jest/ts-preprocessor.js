@@ -37,7 +37,7 @@ function compile(content, contentFilename) {
         try {
           source = fs.readFileSync(filename).toString();
         } catch (e) {
-          if (e.code == 'ENOENT') {
+          if (e.code === 'ENOENT') {
             return undefined;
           }
           throw e;
