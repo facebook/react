@@ -54,6 +54,7 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
+var HTML = keyOf({__html: null});
 
 var ELEMENT_NODE_TYPE = 1;
 
@@ -259,7 +260,7 @@ function assertValidProps(component, props) {
     );
     invariant(
       typeof props.dangerouslySetInnerHTML === 'object' &&
-      '__html' in props.dangerouslySetInnerHTML,
+      HTML in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
       'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
       'for more information.'
