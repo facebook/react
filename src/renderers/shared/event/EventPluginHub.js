@@ -14,7 +14,6 @@
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactErrorUtils = require('ReactErrorUtils');
-var ReactPerf = require('ReactPerf');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
@@ -307,10 +306,5 @@ var EventPluginHub = {
   },
 
 };
-
-ReactPerf.measureMethods(EventPluginHub, 'EventPluginHub', {
-  putListener: 'putListener',
-  deleteListener: 'deleteListener',
-});
 
 module.exports = EventPluginHub;
