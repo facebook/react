@@ -299,4 +299,44 @@ describe('ReactMount', function() {
     ReactDOM.render(<Component step={1} />, container);
     ReactMount.getID(container.querySelector('a'));
   });
+
+  it('passes the correct callback context', function() {
+    var container = document.createElement('div');
+    var calls = 0;
+
+    ReactDOM.render(<div />, container, function() {
+      expect(this.nodeName).toBe('DIV');
+      calls++;
+    });
+
+    // Update, no type change
+    ReactDOM.render(<div />, container, function() {
+      expect(this.nodeName).toBe('DIV');
+      calls++;
+    });
+
+    // Update, type change
+    ReactDOM.render(<span />, container, function() {
+      expect(this.nodeName).toBe('SPAN');
+      calls++;
+    });
+
+    // Batched update, no type change
+    ReactDOM.unstable_batchedUpdates(function() {
+      ReactDOM.render(<span />, container, function() {
+        expect(this.nodeName).toBe('SPAN');
+        calls++;
+      });
+    });
+
+    // Batched update, type change
+    ReactDOM.unstable_batchedUpdates(function() {
+      ReactDOM.render(<article />, container, function() {
+        expect(this.nodeName).toBe('ARTICLE');
+        calls++;
+      });
+    });
+
+    expect(calls).toBe(5);
+  });
 });
