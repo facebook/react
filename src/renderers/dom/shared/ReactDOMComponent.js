@@ -259,7 +259,7 @@ function assertValidProps(component, props) {
     );
     invariant(
       typeof props.dangerouslySetInnerHTML === 'object' &&
-      '__html' in props.dangerouslySetInnerHTML,
+      keyOf({ __html: null }) in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
       'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
       'for more information.'
