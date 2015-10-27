@@ -299,4 +299,45 @@ describe('ReactMount', function() {
     ReactDOM.render(<Component step={1} />, container);
     ReactMount.getID(container.querySelector('a'));
   });
+
+  it('should specify correct context in callback when update', function() {
+    var Component = React.createClass({
+      componentDidUpdate() {
+        var self = this;
+        var node = ReactDOM.render(<div data-id="2"></div>, self.div, function() {
+          expect(this).toBe(self.div.firstChild);
+          expect(this.getAttribute && this.getAttribute('data-id')).toBe('2');
+        });
+        expect(node.getAttribute('data-id')).toBe('1');
+      },
+      componentDidMount() {
+        var div = document.createElement('div');
+        document.body.appendChild(div);
+        // this applies to custom component too!
+        var node = ReactDOM.render(<div data-id="1"></div>, div, function() {
+          expect(this).toBe(div.firstChild);
+          expect(this.getAttribute('data-id')).toBe('1');
+        });
+        expect(node.getAttribute('data-id')).toBe('1');
+        this.div = div;
+      },
+      componentWillUnmount() {
+        if (this.div) {
+          ReactDOM.unmountComponentAtNode(this.div);
+          document.body.removeChild(this.div);
+        }
+      },
+      render() {
+        return <div></div>;
+      },
+    });
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    var root = ReactDOM.render(<Component />, container);
+    root.setState({
+      time: 1,
+    });
+    ReactDOM.unmountComponentAtNode(container);
+    document.body.removeChild(container);
+  });
 });

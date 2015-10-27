@@ -610,11 +610,14 @@ var ReactMount = {
       var prevWrappedElement = prevComponent._currentElement;
       var prevElement = prevWrappedElement.props;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
+        var updatedCallback = callback && function() {
+          callback.call(prevComponent._renderedComponent.getPublicInstance());
+        };
         return ReactMount._updateRootComponent(
           prevComponent,
           nextWrappedElement,
           container,
-          callback
+          updatedCallback
         )._renderedComponent.getPublicInstance();
       } else {
         ReactMount.unmountComponentAtNode(container);
