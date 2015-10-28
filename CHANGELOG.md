@@ -1,4 +1,23 @@
-## 0.14 (October 7, 2015)
+## 0.14.1 (October 28, 2015)
+
+### React DOM
+- Fixed bug where events wouldn't fire in old browsers when using React in development mode
+- Fixed bug preventing use of `dangerouslySetInnerHTML` with Closure Compiler Advanced mode
+- Added support for `srcLang`, `default`, and `kind` attributes for `<track>` elements
+- Added support for `color` attribute
+- Ensured legacy `.props` access on DOM nodes is updated on re-renders
+
+### React TestUtils Add-on
+- Fixed `scryRenderedDOMComponentsWithClass` so it works with SVG
+
+### React CSSTransitionGroup Add-on
+- Fix bug preventing `0` to be used as a timeout value
+
+### React on Bower
+- Added `react-dom.js` to `main` to improve compatibility with tooling
+
+
+## 0.14.0 (October 7, 2015)
 
 ### Major changes
 
