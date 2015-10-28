@@ -11,4 +11,5 @@ docs/vendor/bundle/
 examples/
 # Ignore built files.
 build/
+scripts/bench/bench-*.js
 vendor/react-dom.js
