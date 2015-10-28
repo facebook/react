@@ -876,7 +876,6 @@ ReactDOMComponent.Mixin = {
         nextProps = ReactDOMButton.getNativeProps(this, nextProps);
         break;
       case 'input':
-        ReactDOMInput.updateWrapper(this);
         lastProps = ReactDOMInput.getNativeProps(this, lastProps);
         nextProps = ReactDOMInput.getNativeProps(this, nextProps);
         break;
