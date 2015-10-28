@@ -46,13 +46,14 @@ var trackedTouchCount = 0;
  */
 var previousActiveTouches = 0;
 
-var changeResponder = function(nextResponderInst) {
+var changeResponder = function(nextResponderInst, blockNativeResponder) {
   var oldResponderInst = responderInst;
   responderInst = nextResponderInst;
   if (ResponderEventPlugin.GlobalResponderHandler !== null) {
     ResponderEventPlugin.GlobalResponderHandler.onChange(
       oldResponderInst,
-      nextResponderInst
+      nextResponderInst,
+      blockNativeResponder
     );
   }
 };
@@ -370,6 +371,7 @@ function setResponderAndExtractTransfer(
   grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
   EventPropagators.accumulateDirectDispatches(grantEvent);
+  var blockNativeResponder = executeDirectDispatch(grantEvent) === true;
   if (responderInst) {
 
     var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
@@ -396,7 +398,7 @@ function setResponderAndExtractTransfer(
       terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(terminateEvent);
       extracted = accumulate(extracted, [grantEvent, terminateEvent]);
-      changeResponder(wantsResponderInst);
+      changeResponder(wantsResponderInst, blockNativeResponder);
     } else {
       var rejectEvent = ResponderSyntheticEvent.getPooled(
         eventTypes.responderReject,
@@ -410,7 +412,7 @@ function setResponderAndExtractTransfer(
     }
   } else {
     extracted = accumulate(extracted, grantEvent);
-    changeResponder(wantsResponderInst);
+    changeResponder(wantsResponderInst, blockNativeResponder);
   }
   return extracted;
 }
@@ -423,9 +425,13 @@ function setResponderAndExtractTransfer(
  * @param {string} topLevelType Record from `EventConstants`.
  * @return {boolean} True if a transfer of responder could possibly occur.
  */
-function canTriggerTransfer(topLevelType, targetInst) {
-  return !!targetInst && (
-    topLevelType === EventConstants.topLevelTypes.topScroll ||
+function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {
+  return topLevelInst && (
+    // responderIgnoreScroll: We are trying to migrate away from specifically
+    // tracking native scroll events here and responderIgnoreScroll indicates we
+    // will send topTouchCancel to handle canceling touch events instead
+    (topLevelType === EventConstants.topLevelTypes.topScroll &&
+      !nativeEvent.responderIgnoreScroll) ||
     (trackedTouchCount > 0 &&
       topLevelType === EventConstants.topLevelTypes.topSelectionChange) ||
     isStartish(topLevelType) ||
@@ -492,7 +498,7 @@ var ResponderEventPlugin = {
 
     ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent, nativeEventTarget);
 
-    var extracted = canTriggerTransfer(topLevelType, targetInst) ?
+    var extracted = canTriggerTransfer(topLevelType, targetInst, nativeEvent) ?
       setResponderAndExtractTransfer(
         topLevelType,
         targetInst,
