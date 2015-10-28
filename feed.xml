@@ -7,6 +7,53 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.14.1</title>
+				<description>&lt;p&gt;After a couple weeks of having more people use v0.14, we&amp;#39;re ready to ship a patch release addressing a few issues. Thanks to everybody who has reported issues and written patches!&lt;/p&gt;
+
+&lt;p&gt;The release is now available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.1.js&quot;&gt;https://fb.me/react-0.14.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.1.min.js&quot;&gt;https://fb.me/react-0.14.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.1.js&quot;&gt;https://fb.me/react-with-addons-0.14.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.1.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.1.js&quot;&gt;https://fb.me/react-dom-0.14.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.1.min.js&quot;&gt;https://fb.me/react-dom-0.14.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed bug where events wouldn&amp;#39;t fire in old browsers when using React in development mode&lt;/li&gt;
+&lt;li&gt;Fixed bug preventing use of &lt;code&gt;dangerouslySetInnerHTML&lt;/code&gt; with Closure Compiler Advanced mode&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;srcLang&lt;/code&gt;, &lt;code&gt;default&lt;/code&gt;, and &lt;code&gt;kind&lt;/code&gt; attributes for &lt;code&gt;&amp;lt;track&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;color&lt;/code&gt; attribute&lt;/li&gt;
+&lt;li&gt;Ensured legacy &lt;code&gt;.props&lt;/code&gt; access on DOM nodes is updated on re-renders&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-testutils-add-on&quot;&gt;&lt;/a&gt;React TestUtils Add-on &lt;a class=&quot;hash-link&quot; href=&quot;#react-testutils-add-on&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed &lt;code&gt;scryRenderedDOMComponentsWithClass&lt;/code&gt; so it works with SVG&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-csstransitiongroup-add-on&quot;&gt;&lt;/a&gt;React CSSTransitionGroup Add-on &lt;a class=&quot;hash-link&quot; href=&quot;#react-csstransitiongroup-add-on&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fix bug preventing &lt;code&gt;0&lt;/code&gt; to be used as a timeout value&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-on-bower&quot;&gt;&lt;/a&gt;React on Bower &lt;a class=&quot;hash-link&quot; href=&quot;#react-on-bower&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added &lt;code&gt;react-dom.js&lt;/code&gt; to &lt;code&gt;main&lt;/code&gt; to improve compatibility with tooling&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-10-28T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/10/28/react-v0.14.1.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/10/28/react-v0.14.1.html</guid>
+			</item>
+		
+			<item>
 				<title>Reactiflux is moving to Discord</title>
 				<description>&lt;p&gt;TL;DR: Slack decided that Reactiflux had too many members and disabled new invites. Reactiflux is moving to Discord. Join us: &lt;a href=&quot;http://join.reactiflux.com/&quot;&gt;http://join.reactiflux.com&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-happened-with-slack&quot;&gt;&lt;/a&gt;What happened with Slack? &lt;a class=&quot;hash-link&quot; href=&quot;#what-happened-with-slack&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -816,74 +863,6 @@ for more info.&lt;/p&gt;
 				<pubDate>2015-08-03T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/08/03/new-react-devtools-beta.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/08/03/new-react-devtools-beta.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.14 Beta 1</title>
-				<description>&lt;p&gt;This week, many people in the React community are at &lt;a href=&quot;https://www.react-europe.org/&quot;&gt;ReactEurope&lt;/a&gt; in the beautiful (and very warm) city of Paris, the second React conference that&amp;#39;s been held to date. At our last conference, we released the first beta of React 0.13, and we figured we&amp;#39;d do the same today with our first beta of React 0.14, giving you something to play with if you&amp;#39;re not at the conference or you&amp;#39;re looking for something to do on the way home.&lt;/p&gt;
-
-&lt;p&gt;With React 0.14, we&amp;#39;re continuing to let React mature and to make minor changes as the APIs continue to settle down. I&amp;#39;ll talk only about the two largest changes in this blog post; when we publish the final release we&amp;#39;ll be sure to update all of our documentation and include a full changelog.&lt;/p&gt;
-
-&lt;p&gt;You can install the new beta with &lt;code&gt;npm install react@0.14.0-beta1&lt;/code&gt; and &lt;code&gt;npm install react-dom@0.14.0-beta1&lt;/code&gt;. As mentioned in &lt;a href=&quot;https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html&quot;&gt;Deprecating react-tools&lt;/a&gt;, we&amp;#39;re no longer updating the react-tools package so this release doesn&amp;#39;t include a new version of it. Please try the new version out and let us know what you think, and please do file issues on our GitHub repo if you run into any problems.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;two-packages&quot;&gt;&lt;/a&gt;Two Packages &lt;a class=&quot;hash-link&quot; href=&quot;#two-packages&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;As we look at packages like &lt;a href=&quot;https://github.com/facebook/react-native&quot;&gt;react-native&lt;/a&gt;, &lt;a href=&quot;https://github.com/reactjs/react-art&quot;&gt;react-art&lt;/a&gt;, &lt;a href=&quot;https://github.com/Flipboard/react-canvas&quot;&gt;react-canvas&lt;/a&gt;, and &lt;a href=&quot;https://github.com/Izzimach/react-three&quot;&gt;react-three&lt;/a&gt;, it&amp;#39;s become clear that the beauty and essence of React has nothing to do with browsers or the DOM.&lt;/p&gt;
-
-&lt;p&gt;We think the true foundations of React are simply ideas of components and elements: being able to describe what you want to render in a declarative way. These are the pieces shared by all of these different packages. The parts of React specific to certain rendering targets aren&amp;#39;t usually what we think of when we think of React. As one example, DOM diffing currently enables us to build React for the browser and make it fast enough to be useful, but if the DOM didn&amp;#39;t have a stateful, imperative API, we might not need diffing at all.&lt;/p&gt;
-
-&lt;p&gt;To make this more clear and to make it easier to build more environments that React can render to, we&amp;#39;re splitting the main &lt;code&gt;react&lt;/code&gt; package into two: &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-dom&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code&gt;react&lt;/code&gt; package contains &lt;code&gt;React.createElement&lt;/code&gt;, &lt;code&gt;React.createClass&lt;/code&gt; and &lt;code&gt;React.Component&lt;/code&gt;, &lt;code&gt;React.PropTypes&lt;/code&gt;, &lt;code&gt;React.Children&lt;/code&gt;, and the other helpers related to elements and component classes. We think of these as the &lt;a href=&quot;http://nerds.airbnb.com/isomorphic-javascript-future-web-apps/&quot;&gt;&lt;em&gt;isomorphic&lt;/em&gt;&lt;/a&gt; or &lt;a href=&quot;https://medium.com/@mjackson/universal-javascript-4761051b7ae9&quot;&gt;&lt;em&gt;universal&lt;/em&gt;&lt;/a&gt; helpers that you need to build components.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code&gt;react-dom&lt;/code&gt; package contains &lt;code&gt;ReactDOM.render&lt;/code&gt;, &lt;code&gt;ReactDOM.unmountComponentAtNode&lt;/code&gt;, and &lt;code&gt;ReactDOM.findDOMNode&lt;/code&gt;, and in &lt;code&gt;react-dom/server&lt;/code&gt; we have server-side rendering support with &lt;code&gt;ReactDOMServer.renderToString&lt;/code&gt; and &lt;code&gt;ReactDOMServer.renderToStaticMarkup&lt;/code&gt;.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react-dom&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Hello&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;World&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;We anticipate that most components will need to depend only on the &lt;code&gt;react&lt;/code&gt; package, which is lightweight and doesn&amp;#39;t include any of the actual rendering logic. To start, we expect people to render DOM-based components with our &lt;code&gt;react-dom&lt;/code&gt; package, but there&amp;#39;s nothing stopping someone from diving deep on performance and writing a &lt;code&gt;awesome-faster-react-dom&lt;/code&gt; package which can render &lt;em&gt;the exact same DOM-based components&lt;/em&gt;. By decoupling the component definitions from the rendering, this becomes possible.&lt;/p&gt;
-
-&lt;p&gt;More importantly, this paves the way to writing components that can be shared between the web version of React and React Native. This isn&amp;#39;t yet easily possible, but we intend to make this easy in a future version so you can share React code between your website and native apps.&lt;/p&gt;
-
-&lt;p&gt;The addons have moved to separate packages as well: &lt;code&gt;react-addons-clone-with-props&lt;/code&gt;, &lt;code&gt;react-addons-create-fragment&lt;/code&gt;, &lt;code&gt;react-addons-css-transition-group&lt;/code&gt;, &lt;code&gt;react-addons-linked-state-mixin&lt;/code&gt;, &lt;code&gt;react-addons-pure-render-mixin&lt;/code&gt;, &lt;code&gt;react-addons-shallow-compare&lt;/code&gt;, &lt;code&gt;react-addons-transition-group&lt;/code&gt;, and &lt;code&gt;react-addons-update&lt;/code&gt;, plus &lt;code&gt;ReactDOM.unstable_batchedUpdates&lt;/code&gt; in &lt;code&gt;react-dom&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;For now, please use the same version of &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-dom&lt;/code&gt; in your apps to avoid versioning problems -- but we plan to remove this requirement later. (This release includes the old methods in the &lt;code&gt;react&lt;/code&gt; package with a deprecation warning, but they&amp;#39;ll be removed completely in 0.15.)&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;dom-node-refs&quot;&gt;&lt;/a&gt;DOM node refs &lt;a class=&quot;hash-link&quot; href=&quot;#dom-node-refs&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The other big change we&amp;#39;re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a &lt;code&gt;ref&lt;/code&gt; to a DOM component and realized that the only useful thing you can do with it is call &lt;code&gt;this.refs.giraffe.getDOMNode()&lt;/code&gt; to get the underlying DOM node. In this release, &lt;code&gt;this.refs.giraffe&lt;/code&gt; &lt;em&gt;is&lt;/em&gt; the actual DOM node.&lt;/p&gt;
-
-&lt;p&gt;Refs to custom component classes work exactly as before.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Zoo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;Giraffe&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;giraffe&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-
-  &lt;span class=&quot;nx&quot;&gt;showName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Previously:&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// var input = this.refs.giraffe.getDOMNode();&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;refs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;giraffe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-    &lt;span class=&quot;nx&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This change also applies to the return result of &lt;code&gt;ReactDOM.render&lt;/code&gt; when passing a DOM node as the top component. As with refs, this change does not affect custom components (eg. &lt;code&gt;&amp;lt;MyFancyMenu&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;MyContextProvider&amp;gt;&lt;/code&gt;), which remain unaffected by this change.&lt;/p&gt;
-
-&lt;p&gt;Along with this change, we&amp;#39;re also replacing &lt;code&gt;component.getDOMNode()&lt;/code&gt; with &lt;code&gt;ReactDOM.findDOMNode(component)&lt;/code&gt;. The &lt;code&gt;findDOMNode&lt;/code&gt; method drills down to find which DOM node was rendered by a component, but it returns its argument when passed a DOM node so it&amp;#39;s safe to call on a DOM component too. We introduced this function quietly in the last release, but now we&amp;#39;re deprecating &lt;code&gt;.getDOMNode()&lt;/code&gt; completely: it should be easy to change all existing calls in your code to be &lt;code&gt;ReactDOM.findDOMNode&lt;/code&gt;. We also have an &lt;a href=&quot;https://www.npmjs.com/package/react-codemod&quot;&gt;automated codemod script&lt;/a&gt; to help you with this transition. Note that the &lt;code&gt;findDOMNode&lt;/code&gt; calls are unnecessary when you already have a DOM component ref (as in the example above), so you can (and should) skip them in most cases going forward.&lt;/p&gt;
-
-&lt;p&gt;We hope you&amp;#39;re as excited about this release as we are! Let us know what you think of it.&lt;/p&gt;
-</description>
-				<pubDate>2015-07-03T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/07/03/react-v0.14-beta-1.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/07/03/react-v0.14-beta-1.html</guid>
 			</item>
 		
 	</channel>
