@@ -27,7 +27,7 @@
     "gulp-flatten": "^0.1.0",
     "gulp-util": "^3.0.5",
     "gzip-js": "~0.3.2",
-    "jest-cli": "^0.5.7",
+    "jest-cli": "^0.6.1",
     "jstransform": "^11.0.0",
     "object-assign": "^3.0.0",
     "optimist": "^0.6.1",
