@@ -14,7 +14,7 @@
 var canDefineProperty = false;
 if (__DEV__) {
   try {
-    Object.defineProperty({}, 'x', {});
+    Object.defineProperty({}, 'x', {get: function() {}});
     canDefineProperty = true;
   } catch (x) {
     // IE will fail on defineProperty
