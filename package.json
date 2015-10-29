@@ -37,7 +37,8 @@
     "tmp": "~0.0.18",
     "typescript": "~1.4.0",
     "uglify-js": "^2.4.23",
-    "uglifyify": "^3.0.1"
+    "uglifyify": "^3.0.1",
+    "unreachable-branch-transform": "^0.5.0"
   },
   "devEngines": {
     "node": "4.x",
