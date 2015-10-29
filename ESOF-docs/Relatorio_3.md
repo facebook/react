@@ -28,11 +28,8 @@ A biblioteca React pode ser dividida em dois componentes essenciais: o component
 ### <a name="processo"></a>Vista de Processo
 
 
-O seguinte diagrama de componentes mostra a vista de processo referente ao projeto React.
+Vai-se, de seguida, apresentar o diagrama relativo aos aspectos dinâmicos da Biblioteca React. Dado que a biblioteca possui uma estrutura bastante complexa, e que, neste relatório, não se pretende, exaustivamente, detalhar o comportamento da mesma, é focalizado, nesta secção, a execução no lado do cliente, como, por exemplo, num browser.
 
-A biblioteca React é uma estrutura bastante complexa e passível 
-
-Vamos focalizar-nos no fluxo de actividades que ocorre no cliente, isto é, num browser:
 ![Diagrama de Actividade](./Resources/Client Activity Diagram.jpg)
 
 Uma das principais vantagens desta biblioteca é que apenas renderiza a parte que fora modificada, sendo este processo bastante optimizado.
