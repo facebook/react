@@ -18,6 +18,14 @@ O seguinte diagrama de componentes mostra a vista de implementação referente a
 
 ### <a name="processo"></a>Vista de Processo
 
+O seguinte diagrama de componentes mostra a vista de processo referente ao projeto React.
+
+A biblioteca React é uma estrutura bastante complexa e passível 
+
+Vamos focalizar-nos no fluxo de actividades que ocorre no cliente, isto é, num browser:
+![Diagrama de Actividade](./Resources/Client Activity Diagram.jpg)
+
+Uma das principais vantagens desta biblioteca é que apenas renderiza apenas a parte que fora modificada.
 
 ### <a name="deployment"></a>Vista de *Deployment*
 
