@@ -18,12 +18,13 @@ O seguinte diagrama de componentes mostra a vista de implementação referente a
 
 ![Diagrama de Componentes](./Resources/component_diagram.jpg)
 
-A biblioteca React pode ser dividida em dois componentes essenciais: o componente que trata a árvore DOM da página, que é o componente central da funcionalidade da biblioteca, e o interpretador da sintaxe JSX.
-
 #### <a name="descricao-implementacao"></a>Descrição
 
+De acordo com a interpretação dos autores deste relatório, a biblioteca React pode ser dividida em dois componentes essenciais. O primeiro componente incorpora a árvore DOM da página, que é o componente central da funcionalidade da biblioteca. Este componente trata os elementos definidos pelo utilizador (ver [Relatório 2](./Relatorio_2.md#casos-de-uso)), traduzindo-os numa árvore DOM que pode ser renderizada pelo *browser*. Como já foi referido em [relatórios anteriores](./Relatorio_2.md#isomorfismo-server-side-rendering), o processo de construção da árvore DOM é feito de forma muito eficiente, baseando-se na [determinação das diferenças](https://facebook.github.io/react/blog/2013/06/05/why-react.html#reactive-updates-are-dead-simple.) sofridas por cada elemento da interface.
 
+O segundo componente integra o interpretador (*transformer*) de [JSX](https://facebook.github.io/react/docs/jsx-in-depth.html), uma extensão sintática semelhante a XML. Não é obrigatório recorrer à sintaxe JSX, embora a mesma permita definir a estrutura da árvore do documento de forma concisa e usando uma sintaxe com a qual a maior parte dos programadores está familiarizada. A sintaxe JSX é, depois, [transformada](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) em código JavaScript, pronto a ser executado pela aplicação cliente.
 
+É do entender dos autores deste relatório que existem distinções suficientes entre estes dois conjuntos de funcionalidades, justificando a sua classificação em dois componentes diferentes.
 
 ### <a name="processo"></a>Vista de Processo
 
@@ -50,6 +51,8 @@ O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
 #### <a name="descricao-deployment"></a>Descrição
+
+#### <a name="analise"></a>Análise Crítica
 
 ### <a name="info"></a>Informações
 
