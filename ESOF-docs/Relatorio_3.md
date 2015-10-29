@@ -29,11 +29,8 @@ O segundo componente integra o interpretador (*transformer*) de [JSX](https://fa
 ### <a name="processo"></a>Vista de Processo
 
 
-O seguinte diagrama de componentes mostra a vista de processo referente ao projeto React.
+Vai-se, de seguida, apresentar o diagrama relativo aos aspectos dinâmicos da Biblioteca React. Dado que a biblioteca possui uma estrutura bastante complexa, e que, neste relatório, não se pretende, exaustivamente, detalhar o comportamento da mesma, é focalizada, nesta secção, a execução no lado do cliente, como, por exemplo, num browser.
 
-A biblioteca React é uma estrutura bastante complexa e passível 
-
-Vamos focalizar-nos no fluxo de actividades que ocorre no cliente, isto é, num browser:
 ![Diagrama de Actividade](./Resources/Client Activity Diagram.jpg)
 
 Uma das principais vantagens desta biblioteca é que apenas renderiza a parte que fora modificada, sendo este processo bastante optimizado.
@@ -51,6 +48,9 @@ O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
 #### <a name="descricao-deployment"></a>Descrição
+Do nosso ponto de vista, o diagrama anterior mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes.
+
+Contudo, o React apresenta uma funcionalidade muito útil. Quando a página é carregada pela primeira vez, a *DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Com isto, poupam-se recursos ao cliente porque o processo de *parsing* da árvore é todo feito no servidor,não sobrecarregando o cliente.
 
 #### <a name="analise"></a>Análise Crítica
 
