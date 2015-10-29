@@ -48,6 +48,7 @@ O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao 
 
 #### <a name="descricao-deployment"></a>Descrição
 Do nosso ponto de vista, o diagrama anterior mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes.
+
 Contudo, o React apresenta uma funcionalidade muito útil. Quando a página é carregada pela primeira vez, a *DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Com isto, poupam-se recursos ao cliente porque o processo de *parsing* da árvore é todo feito no servidor,não sobrecarregando o cliente.
 
 ### <a name="info"></a>Informações
