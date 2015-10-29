@@ -115,7 +115,7 @@ var expectClickLogsLengthToBe = function(instance, length) {
 
 describe('reactiverefs', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   /**
@@ -158,7 +158,7 @@ describe('reactiverefs', function() {
  */
 describe('ref swapping', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   var RefHopsAround = React.createClass({

@@ -11,7 +11,7 @@
 
 'use strict';
 
-require('mock-modules')
+jest
   .dontMock('accumulateInto');
 
 var accumulateInto;

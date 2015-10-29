@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -46,7 +44,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should copy prop types onto the Constructor', function() {
-    var propValidator = mocks.getMockFunction();
+    var propValidator = jest.genMockFn();
     var TestComponent = React.createClass({
       propTypes: {
         value: propValidator,
@@ -63,7 +61,7 @@ describe('ReactClass-spec', function() {
 
   it('should warn on invalid prop types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
 
       React.createClass({
@@ -87,7 +85,7 @@ describe('ReactClass-spec', function() {
 
   it('should warn on invalid context types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
       React.createClass({
         displayName: 'Component',
@@ -110,7 +108,7 @@ describe('ReactClass-spec', function() {
 
   it('should throw on invalid child context types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
       React.createClass({
         displayName: 'Component',

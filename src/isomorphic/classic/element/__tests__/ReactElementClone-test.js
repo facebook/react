@@ -11,8 +11,6 @@
 
 'use strict';
 
-require('mock-modules');
-
 var React;
 var ReactDOM;
 var ReactTestUtils;

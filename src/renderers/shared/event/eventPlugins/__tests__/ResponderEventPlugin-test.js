@@ -330,7 +330,7 @@ var siblings = {
 
 describe('ResponderEventPlugin', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     EventConstants = require('EventConstants');
     EventPluginHub = require('EventPluginHub');

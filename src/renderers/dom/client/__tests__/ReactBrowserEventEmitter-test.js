@@ -12,7 +12,6 @@
 'use strict';
 
 var keyOf = require('keyOf');
-var mocks = require('mocks');
 
 var ReactMount = require('ReactMount');
 var idToNode = {};
@@ -44,7 +43,7 @@ var recordIDAndReturnFalse = function(id, event) {
   recordID(id);
   return false;
 };
-var LISTENER = mocks.getMockFunction();
+var LISTENER = jest.genMockFn();
 var ON_CLICK_KEY = keyOf({onClick: null});
 var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
 var ON_CHANGE_KEY = keyOf({onChange: null});
@@ -76,7 +75,7 @@ function registerSimpleTestHandler() {
 
 describe('ReactBrowserEventEmitter', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     LISTENER.mockClear();
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
@@ -306,7 +305,7 @@ describe('ReactBrowserEventEmitter', function() {
    */
 
   it('should invoke handlers that were removed while bubbling', function() {
-    var handleParentClick = mocks.getMockFunction();
+    var handleParentClick = jest.genMockFn();
     var handleChildClick = function(event) {
       EventPluginHub.deleteAllListeners(getID(PARENT));
     };
@@ -325,7 +324,7 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should not invoke newly inserted handlers while bubbling', function() {
-    var handleParentClick = mocks.getMockFunction();
+    var handleParentClick = jest.genMockFn();
     var handleChildClick = function(event) {
       EventPluginHub.putListener(
         getID(PARENT),

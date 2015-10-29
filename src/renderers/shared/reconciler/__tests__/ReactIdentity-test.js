@@ -20,7 +20,7 @@ var ReactMount;
 describe('ReactIdentity', function() {
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');

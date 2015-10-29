@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 
 var EVENT_TARGET_PARAM = 1;
 
@@ -27,7 +25,7 @@ describe('ReactEventListener', function() {
   var handleTopLevel;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
 
     ReactDOM = require('ReactDOM');
@@ -36,7 +34,7 @@ describe('ReactEventListener', function() {
     ReactEventListener = require('ReactEventListener');
     ReactTestUtils = require('ReactTestUtils');
 
-    handleTopLevel = mocks.getMockFunction();
+    handleTopLevel = jest.genMockFn();
     ReactEventListener._handleTopLevel = handleTopLevel;
   });
 

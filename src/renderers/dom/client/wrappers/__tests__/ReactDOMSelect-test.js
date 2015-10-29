@@ -12,8 +12,6 @@
 'use strict';
 
 
-var mocks = require('mocks');
-
 describe('ReactDOMSelect', function() {
   var React;
   var ReactDOM;
@@ -350,7 +348,7 @@ describe('ReactDOMSelect', function() {
   });
 
   it('should support ReactLink', function() {
-    var link = new ReactLink('giraffe', mocks.getMockFunction());
+    var link = new ReactLink('giraffe', jest.genMockFn());
     var stub =
       <select valueLink={link}>
         <option value="monkey">A monkey!</option>

@@ -61,15 +61,13 @@ describe('SelectEventPlugin', function() {
   });
 
   it('should extract if an `onSelect` listener is present', function() {
-    var mocks = require('mocks');
-
     var WithSelect = React.createClass({
       render: function() {
         return <input type="text" onSelect={this.props.onSelect} />;
       },
     });
 
-    var cb = mocks.getMockFunction();
+    var cb = jest.genMockFn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />

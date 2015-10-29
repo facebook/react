@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
 var ReactTestUtils;
 
@@ -27,8 +25,8 @@ describe('ReactClass-mixin', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    mixinPropValidator = mocks.getMockFunction();
-    componentPropValidator = mocks.getMockFunction();
+    mixinPropValidator = jest.genMockFn();
+    componentPropValidator = jest.genMockFn();
 
     var MixinA = {
       propTypes: {
@@ -109,7 +107,7 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should support merging propTypes and statics', function() {
-    var listener = mocks.getMockFunction();
+    var listener = jest.genMockFn();
     var instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -124,7 +122,7 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should support chaining delegate functions', function() {
-    var listener = mocks.getMockFunction();
+    var listener = jest.genMockFn();
     var instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -137,7 +135,7 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should chain functions regardless of spec property order', function() {
-    var listener = mocks.getMockFunction();
+    var listener = jest.genMockFn();
     var instance = <TestComponentWithReverseSpec listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 

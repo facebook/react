@@ -24,7 +24,7 @@ describe('ReactDefaultPerf', function() {
 
   beforeEach(function() {
     var now = 0;
-    require('mock-modules').setMock('performanceNow', function() {
+    jest.setMock('performanceNow', function() {
       return now++;
     });
 

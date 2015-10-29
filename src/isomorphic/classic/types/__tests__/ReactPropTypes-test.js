@@ -764,7 +764,7 @@ describe('ReactPropTypes', function() {
 
   describe('Custom validator', function() {
     beforeEach(function() {
-      require('mock-modules').dumpCache();
+      jest.resetModuleRegistry();
       spyOn(console, 'error');
     });
 

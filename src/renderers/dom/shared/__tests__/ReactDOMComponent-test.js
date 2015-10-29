@@ -12,7 +12,6 @@
 'use strict';
 
 var assign = require('Object.assign');
-var mocks = require('mocks');
 
 describe('ReactDOMComponent', function() {
   var React;
@@ -21,7 +20,7 @@ describe('ReactDOMComponent', function() {
   var ReactDOMServer;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
@@ -404,7 +403,7 @@ describe('ReactDOMComponent', function() {
 
       var node = container.firstChild;
       var nodeValue = ''; // node.value always returns undefined
-      var nodeValueSetter = mocks.getMockFunction();
+      var nodeValueSetter = jest.genMockFn();
       Object.defineProperty(node, 'value', {
         get: function() {
           return nodeValue;
@@ -431,7 +430,7 @@ describe('ReactDOMComponent', function() {
       var container = document.createElement('div');
       var node = ReactDOM.render(<div />, container);
 
-      var setter = mocks.getMockFunction();
+      var setter = jest.genMockFn();
       node.setAttribute = setter;
 
       ReactDOM.render(<div dir={null} />, container);
@@ -659,8 +658,8 @@ describe('ReactDOMComponent', function() {
     it('should execute custom event plugin listening behavior', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
-      SimpleEventPlugin.didPutListener = mocks.getMockFunction();
-      SimpleEventPlugin.willDeleteListener = mocks.getMockFunction();
+      SimpleEventPlugin.didPutListener = jest.genMockFn();
+      SimpleEventPlugin.willDeleteListener = jest.genMockFn();
 
       var container = document.createElement('div');
       ReactDOM.render(
@@ -678,8 +677,8 @@ describe('ReactDOMComponent', function() {
     it('should handle null and missing properly with event hooks', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
-      SimpleEventPlugin.didPutListener = mocks.getMockFunction();
-      SimpleEventPlugin.willDeleteListener = mocks.getMockFunction();
+      SimpleEventPlugin.didPutListener = jest.genMockFn();
+      SimpleEventPlugin.willDeleteListener = jest.genMockFn();
       var container = document.createElement('div');
 
       ReactDOM.render(<div onClick={false} />, container);
@@ -858,8 +857,7 @@ describe('ReactDOMComponent', function() {
     it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
       // Mock this here so we can mimic IE8 support. We require isEventSupported
       // before React so it's pre-mocked before React qould require it.
-      require('mock-modules')
-        .dumpCache()
+      jest.resetModuleRegistry()
         .mock('isEventSupported');
       var isEventSupported = require('isEventSupported');
       isEventSupported.mockReturnValueOnce(false);

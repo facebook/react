@@ -11,15 +11,13 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 describe('ReactMultiChild', function() {
   var React;
 
   var ReactDOM;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
   });
@@ -28,9 +26,9 @@ describe('ReactMultiChild', function() {
     it('should update children when possible', function() {
       var container = document.createElement('div');
 
-      var mockMount = mocks.getMockFunction();
-      var mockUpdate = mocks.getMockFunction();
-      var mockUnmount = mocks.getMockFunction();
+      var mockMount = jest.genMockFn();
+      var mockUpdate = jest.genMockFn();
+      var mockUnmount = jest.genMockFn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,
@@ -61,8 +59,8 @@ describe('ReactMultiChild', function() {
     it('should replace children with different constructors', function() {
       var container = document.createElement('div');
 
-      var mockMount = mocks.getMockFunction();
-      var mockUnmount = mocks.getMockFunction();
+      var mockMount = jest.genMockFn();
+      var mockUnmount = jest.genMockFn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,
@@ -89,8 +87,8 @@ describe('ReactMultiChild', function() {
     it('should NOT replace children with different owners', function() {
       var container = document.createElement('div');
 
-      var mockMount = mocks.getMockFunction();
-      var mockUnmount = mocks.getMockFunction();
+      var mockMount = jest.genMockFn();
+      var mockUnmount = jest.genMockFn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,
@@ -126,8 +124,8 @@ describe('ReactMultiChild', function() {
     it('should replace children with different keys', function() {
       var container = document.createElement('div');
 
-      var mockMount = mocks.getMockFunction();
-      var mockUnmount = mocks.getMockFunction();
+      var mockMount = jest.genMockFn();
+      var mockUnmount = jest.genMockFn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,

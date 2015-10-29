@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var ExecutionEnvironment;
 var React;
 var ReactDOM;
@@ -25,7 +23,7 @@ var ID_ATTRIBUTE_NAME;
 
 describe('ReactServerRendering', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -74,7 +72,7 @@ describe('ReactServerRendering', function() {
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = mocks.getMockFunction();
+      var cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -288,7 +286,7 @@ describe('ReactServerRendering', function() {
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = mocks.getMockFunction();
+      var cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
