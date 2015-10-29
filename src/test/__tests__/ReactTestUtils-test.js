@@ -16,13 +16,9 @@ var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 
-var mocks;
-
 describe('ReactTestUtils', function() {
 
   beforeEach(function() {
-    mocks = require('mocks');
-
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');

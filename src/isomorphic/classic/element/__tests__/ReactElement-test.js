@@ -369,23 +369,14 @@ describe('ReactElement', function() {
 });
 
 describe('comparing jsx vs .createFactory() vs .createElement()', function() {
-  var Child, mocks;
+  var Child;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
-    mocks = require('mocks');
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-
-    var metaData = mocks.getMetadata(React.createClass({
-      render: function() {
-        return React.createElement('div');
-      },
-    }));
-
-    Child = mocks.generateFromMetadata(metaData);
-
+    Child = jest.genMockFromModule('ReactElementTestChild');
   });
 
 

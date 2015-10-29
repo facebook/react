@@ -15,8 +15,6 @@ describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
 
-  var mocks;
-
   beforeEach(function() {
     jest.resetModuleRegistry();
     var ReactDefaultInjection = require('ReactDefaultInjection');
@@ -24,8 +22,6 @@ describe('DOMPropertyOperations', function() {
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
-
-    mocks = require('mocks');
   });
 
   describe('createMarkupForProperty', function() {

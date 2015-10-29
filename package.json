@@ -70,6 +70,7 @@
     ],
     "testPathDirs": [
       "<rootDir>/eslint-rules",
+      "<rootDir>/mocks",
       "<rootDir>/src",
       "node_modules/fbjs"
     ],
