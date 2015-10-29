@@ -396,6 +396,9 @@ NoopInternalComponent.prototype = {
   unmountComponent: function() {
   },
 
+  getPublicInstance: function() {
+    return null;
+  },
 };
 
 var ShallowComponentWrapper = function() { };
