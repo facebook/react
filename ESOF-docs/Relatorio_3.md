@@ -52,7 +52,7 @@ Do nosso ponto de vista, o diagrama anterior mostra-nos que o funcionamento da b
 
 Contudo, o React apresenta uma funcionalidade muito útil. Quando a página é carregada pela primeira vez, a *DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Com isto, poupam-se recursos ao cliente porque o processo de *parsing* da árvore é todo feito no servidor,não sobrecarregando o cliente.
 
-#### <a name="analise"></a>Análise Crítica
+### <a name="analise"></a>Análise Crítica
 
 ### <a name="info"></a>Informações
 
