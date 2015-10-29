@@ -18,6 +18,8 @@ O seguinte diagrama de componentes mostra a vista de implementação referente a
 
 ![Diagrama de Componentes](./Resources/component_diagram.jpg)
 
+A biblioteca React pode ser dividida em dois componentes essenciais: o componente que trata a árvore DOM da página, que é o componente central da funcionalidade da biblioteca, e o interpretador da sintaxe JSX.
+
 #### <a name="descricao-implementacao"></a>Descrição
 
 ### <a name="processo"></a>Vista de Processo
