@@ -45,6 +45,22 @@ var content = React.createElement(
 
 A comparação entre estes dois blocos de código mostra a vantagem da utilização da sintaxe JSX, que permite escrever código mais conciso e intuitivo.
 
+### <a name="implementacao"></a>Vista de Implementação
+
+Um [diagrama de componentes](https://en.wikipedia.org/wiki/Component_diagram) representa o modo como os componentes de um sistema de *software* estão relacionados entre si. Os componentes podem ser ligados por meio de um conector designado de *assembly connector*, que indica quais as interfaces fornecidas por um dado componente que são usadas por outros.
+
+O diagrama de componentes seguinte concretiza a vista de implementação referente à biblioteca React.
+
+![Diagrama de Componentes](./Resources/component_diagram.jpg)
+
+#### <a name="interpretacao-implementacao"></a>Interpretação
+
+De acordo com a interpretação dos autores deste relatório, a biblioteca React pode ser dividida em dois componentes essenciais. O primeiro componente incorpora as funcionalidades sobre as árvores DOM da página - a [árvore virtual](#virtual-dom) e a árvore do *browser* -, aspeto central na definição da biblioteca. Este componente trata os elementos definidos pelo utilizador - conforme explicado no [Relatório 2](./Relatorio_2.md#casos-de-uso) -, traduzindo-os numa árvore DOM que pode ser renderizada pelo *browser*. Como já foi referido em [relatórios anteriores](./Relatorio_2.md#isomorfismo-server-side-rendering), o processo de construção e atualização da árvore DOM é feito de forma muito eficiente, baseando-se na [determinação das diferenças](https://facebook.github.io/react/blog/2013/06/05/why-react.html#reactive-updates-are-dead-simple.) sofridas por cada elemento da interface.
+
+O segundo componente integra o interpretador (*transformer*) de [JSX](https://facebook.github.io/react/docs/jsx-in-depth.html). A sintaxe JSX é [transformada](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) em código JavaScript puro, pronto a ser executado pela aplicação cliente, conforme [já foi referido](#jsx).
+
+É do entender dos autores deste relatório que existem distinções suficientes entre estes dois conjuntos de funcionalidades, justificando a sua classificação em dois componentes diferentes.
+
 ### <a name="logica"></a>Vista Lógica
 
 O seguinte diagrama de pacotes apresenta as principais abstrações do sistema, ilustrando os pacotes definidos e as dependências entre si e caracterizando a vista lógica referente ao projeto em estudo, o React.
@@ -64,22 +80,6 @@ O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/
 O pacote **react-addons** ...
 
 O [pacote **jsx_orphaned_brackets_transformer**](https://github.com/facebook/react/tree/master/packages/jsx_orphaned_brackets_transformer) implementa a transformação da sintaxe JSX para JavaScript puro.
-
-### <a name="implementacao"></a>Vista de Implementação
-
-Um [diagrama de componentes](https://en.wikipedia.org/wiki/Component_diagram) representa o modo como os componentes de um sistema de *software* estão relacionados entre si. Os componentes podem ser ligados por meio de um conector designado de *assembly connector*, que indica quais as interfaces fornecidas e usadas por um dado componente.
-
-O diagrama de componentes seguinte concretiza a vista de implementação referente à biblioteca React.
-
-![Diagrama de Componentes](./Resources/component_diagram.jpg)
-
-#### <a name="interpretacao-implementacao"></a>Interpretação
-
-De acordo com a interpretação dos autores deste relatório, a biblioteca React pode ser dividida em dois componentes essenciais. O primeiro componente incorpora a árvore DOM da página, que é o componente central da funcionalidade da biblioteca. Este componente trata os elementos definidos pelo utilizador (ver [Relatório 2](./Relatorio_2.md#casos-de-uso)), traduzindo-os numa árvore DOM que pode ser renderizada pelo *browser*. Como já foi referido em [relatórios anteriores](./Relatorio_2.md#isomorfismo-server-side-rendering), o processo de construção da árvore DOM é feito de forma muito eficiente, baseando-se na [determinação das diferenças](https://facebook.github.io/react/blog/2013/06/05/why-react.html#reactive-updates-are-dead-simple.) sofridas por cada elemento da interface.
-
-O segundo componente integra o interpretador (*transformer*) de [JSX](https://facebook.github.io/react/docs/jsx-in-depth.html). Não é obrigatório recorrer à sintaxe JSX, embora a mesma permita definir a estrutura da árvore do documento de forma concisa e usando uma sintaxe com a qual a maior parte dos programadores está familiarizada. A sintaxe JSX é, depois, [transformada](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) em código JavaScript, pronto a ser executado pela aplicação cliente.
-
-É do entender dos autores deste relatório que existem distinções suficientes entre estes dois conjuntos de funcionalidades, justificando a sua classificação em dois componentes diferentes.
 
 ### <a name="processo"></a>Vista de Processo
 
