@@ -19,15 +19,14 @@ function compile(content, contentFilename) {
   var output = null;
   var compilerHost = {
     getSourceFile: function(filename, languageVersion) {
-      var source, reactRegex;
+      var source;
 
-      // Accomodations for backslashes in Windows file paths.
-      if (process.platform === 'win32') {
-        filename = filename.replace(/\//g, '\\');
-        reactRegex = /\\(?:React|ReactDOM)(?:\.d)?\.ts$/;
-      } else {
-        reactRegex = /\/(?:React|ReactDOM)(?:\.d)?\.ts$/;
-      }
+      // `path.normalize` and `path.join` are used to turn forward slashes in
+      // the file path into backslashes on Windows.
+      filename = path.normalize(filename);
+      var reactRegex = new RegExp(
+        path.join('/', '(?:React|ReactDOM)(?:\.d)?\.ts$')
+      );
 
       if (filename === 'lib.d.ts') {
         source = fs.readFileSync(
