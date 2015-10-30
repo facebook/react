@@ -199,7 +199,7 @@ var ReactCompositeComponentMixin = {
 
     // These should be set up in the constructor, but as a convenience for
     // simpler class abstractions, we set them up after the fact.
-    inst.props = inst.props || publicProps;
+    inst.props = publicProps;
     inst.context = publicContext;
     inst.refs = emptyObject;
     inst.updater = ReactUpdateQueue;
