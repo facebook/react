@@ -21,7 +21,7 @@ var topLevelTypes;
 
 describe('EnterLeaveEventPlugin', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     EventConstants = require('EventConstants');

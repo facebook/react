@@ -22,7 +22,7 @@ describe('ReactElementValidator', function() {
   var ComponentClass;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
     ReactDOM = require('ReactDOM');

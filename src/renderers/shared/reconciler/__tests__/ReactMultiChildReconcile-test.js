@@ -11,8 +11,6 @@
 
 'use strict';
 
-require('mock-modules');
-
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -237,7 +235,7 @@ function testPropsSequence(sequence) {
 
 describe('ReactMultiChildReconcile', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   it('should reset internal state if removed then readded', function() {

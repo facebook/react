@@ -12,7 +12,6 @@
 'use strict';
 
 var emptyFunction = require('emptyFunction');
-var mocks = require('mocks');
 
 describe('ReactDOMTextarea', function() {
   var React;
@@ -238,7 +237,7 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should support ReactLink', function() {
-    var link = new ReactLink('yolo', mocks.getMockFunction());
+    var link = new ReactLink('yolo', jest.genMockFn());
     var instance = <textarea valueLink={link} />;
 
     spyOn(console, 'error');

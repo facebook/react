@@ -15,17 +15,13 @@ describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
 
-  var mocks;
-
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     var ReactDefaultInjection = require('ReactDefaultInjection');
     ReactDefaultInjection.inject();
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
-
-    mocks = require('mocks');
   });
 
   describe('createMarkupForProperty', function() {
@@ -270,7 +266,7 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should use mutation method where applicable', function() {
-      var foobarSetter = mocks.getMockFunction();
+      var foobarSetter = jest.genMockFn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: null},

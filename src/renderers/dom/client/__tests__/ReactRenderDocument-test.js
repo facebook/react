@@ -11,7 +11,7 @@
 
 'use strict';
 
-require('mock-modules')
+jest
   .mock('ServerReactRootIndex');
 
 var React;
@@ -33,7 +33,7 @@ var UNMOUNT_INVARIANT_MESSAGE =
 
 describe('rendering React components at document', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     // Negative integer creator. So they won't get confused with
     // the Client positive ids.

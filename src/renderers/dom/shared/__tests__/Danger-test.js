@@ -17,7 +17,7 @@ describe('Danger', function() {
     var Danger;
 
     beforeEach(function() {
-      require('mock-modules').dumpCache();
+      jest.resetModuleRegistry();
       Danger = require('Danger');
     });
 

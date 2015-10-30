@@ -11,8 +11,6 @@
 
 'use strict';
 
-require('mock-modules');
-
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');

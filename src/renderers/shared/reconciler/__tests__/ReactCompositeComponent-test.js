@@ -27,7 +27,7 @@ var reactComponentExpect;
 describe('ReactCompositeComponent', function() {
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactDOM = require('ReactDOM');

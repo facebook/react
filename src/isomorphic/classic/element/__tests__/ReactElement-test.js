@@ -23,7 +23,7 @@ describe('ReactElement', function() {
   var originalSymbol;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     // Delete the native Symbol if we have one to ensure we test the
     // unpolyfilled environment.
@@ -339,7 +339,7 @@ describe('ReactElement', function() {
       return OTHER_SYMBOL;
     };
 
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
 
@@ -369,23 +369,14 @@ describe('ReactElement', function() {
 });
 
 describe('comparing jsx vs .createFactory() vs .createElement()', function() {
-  var Child, mocks;
+  var Child;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
-    mocks = require('mocks');
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-
-    var metaData = mocks.getMetadata(React.createClass({
-      render: function() {
-        return React.createElement('div');
-      },
-    }));
-
-    Child = mocks.generateFromMetadata(metaData);
-
+    Child = jest.genMockFromModule('ReactElementTestChild');
   });
 
 

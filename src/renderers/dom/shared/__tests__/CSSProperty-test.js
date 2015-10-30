@@ -15,7 +15,7 @@ describe('CSSProperty', function() {
   var CSSProperty;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     CSSProperty = require('CSSProperty');
   });
 

@@ -23,7 +23,7 @@ describe('ReactCSSTransitionGroup', function() {
   var container;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');

@@ -134,7 +134,7 @@ var extractUniqueID = function(entity) {
 
 describe('OrderedMap', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     OrderedMap = require('OrderedMap');
   });
 

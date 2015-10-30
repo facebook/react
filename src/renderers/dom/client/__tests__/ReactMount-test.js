@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 describe('ReactMount', function() {
   var React = require('React');
   var ReactDOM = require('ReactDOM');
@@ -81,8 +79,8 @@ describe('ReactMount', function() {
   it('should unmount and remount if the key changes', function() {
     var container = document.createElement('container');
 
-    var mockMount = mocks.getMockFunction();
-    var mockUnmount = mocks.getMockFunction();
+    var mockMount = jest.genMockFn();
+    var mockUnmount = jest.genMockFn();
 
     var Component = React.createClass({
       componentDidMount: mockMount,
@@ -199,9 +197,9 @@ describe('ReactMount', function() {
   }
 
   it('warns when using two copies of React before throwing', function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     var RD1 = require('ReactDOM');
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     var RD2 = require('ReactDOM');
 
     var X = React.createClass({

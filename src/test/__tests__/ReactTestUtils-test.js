@@ -16,13 +16,9 @@ var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 
-var mocks;
-
 describe('ReactTestUtils', function() {
 
   beforeEach(function() {
-    mocks = require('mocks');
-
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
@@ -75,7 +71,7 @@ describe('ReactTestUtils', function() {
   });
 
   it('should have shallow unmounting', function() {
-    var componentWillUnmount = mocks.getMockFunction();
+    var componentWillUnmount = jest.genMockFn();
 
     var SomeComponent = React.createClass({
       render: function() {
