@@ -57,13 +57,15 @@ A interpretação dos autores deste relatório referente a uma visão lógica da
 
 A [Vista Lógica](#logica) é constituída por quarto pacotes fundamentais à estruturação e funcionamento do projeto em estudo que são apresentandos de seguida.
 
-O pacote **react** é um *npm package*, isto significa [Node Package Manager](https://en.wikipedia.org/wiki/Npm_(software)) que consiste num gestor de pacotes por defeito para a biblioteca *Node.js* de *JavaScript*. Desta forma, este pacote consegue imediato acesso ao [React](https://facebook.github.io/react), sem requerer transformações *JSX*, uma extensão sintática semelhante a XML que será explicado mais [à frente](#interpretacao-implementacao). Este aspeto é especialmente útil para casos onde é desejado *browserify* - requerer módulos no *browser* -  usando React.
+O pacote **react** é um *npm package*, isto significa [Node Package Manager](https://en.wikipedia.org/wiki/Npm_(software)) que consiste num gestor de pacotes por defeito para a biblioteca *Node.js* de *JavaScript*. Desta forma, este pacote consegue imediato acesso ao [React](https://facebook.github.io/react), sem requerer transformações *JSX*, uma extensão sintática semelhante a XML, como foi [explicado acima](#jsx). Este aspeto é especialmente útil para casos onde é desejado *browserify* - requerer módulos no *browser* -  usando React.
 
 O pacote **react-dom** serve como ponto de entrada do DOM que vai traduzir a árvore [Virtual DOM](#virtual-dom) no DOM do *browser*. Destina-se a ser emparelhado usando isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering), que serão enviados como *npm*:
 
 > npm install react react-dom
 
 O pacote **react-addons** ...
+
+O pacote **jsx_orphaned_brackets_transformer** traduz o JSX em JavaScript.
 
 ### <a name="implementacao"></a>Vista de Implementação
 
