@@ -117,6 +117,10 @@ Através desta funcionaliade, é possível pouparem-se recursos ao cliente na ge
 
 ### <a name="analise"></a>Análise Crítica
 
+É importante reiterar a ideia que foi já referida ao longo do relatório. Todos os diagramas apresentados neste relatório foram construídos pelos autores do mesmo, os quais se basearam unicamente na sua interpretação acerca dos diversos aspetos do projeto. É possível que interpretações distintas pudessem conduzir a diagramas diferentes.
+
+Relativamente à vista de implementação, expressa por um diagrama de componentes, parece-nos existir uma clara distinção entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
+
 ### <a name="info"></a>Informações
 
 ##### Autores:
