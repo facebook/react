@@ -401,7 +401,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance2.state.value).toBe(1);
   });
 
-  iit('should not warn about external `setState` triggered from component constructor', function() {
+  it('should not warn about external `setState` triggered from component constructor', function() {
     var container = document.createElement('div');
     var instance;
 
