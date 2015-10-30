@@ -67,7 +67,9 @@ O pacote **react-addons** ...
 
 ### <a name="implementacao"></a>Vista de Implementação
 
-O seguinte diagrama de componentes mostra a vista de implementação referente ao projeto React.
+Um [diagrama de componentes](https://en.wikipedia.org/wiki/Component_diagram) representa o modo como os componentes de um sistema de *software* estão relacionados entre si. Os componentes podem ser ligados por meio de um conector designado de *assembly connector*, que indica quais as interfaces fornecidas e usadas por um dado componente.
+
+O diagrama de componentes seguinte concretiza a vista de implementação referente à biblioteca React.
 
 ![Diagrama de Componentes](./Resources/component_diagram.jpg)
 
