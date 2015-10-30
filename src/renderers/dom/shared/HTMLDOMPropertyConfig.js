@@ -231,6 +231,7 @@ var HTMLDOMPropertyConfig = {
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
+    srcLang: 'srclang',
     srcSet: 'srcset',
   },
 };
