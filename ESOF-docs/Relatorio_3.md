@@ -123,26 +123,30 @@ Através desta funcionaliade, é possível pouparem-se recursos ao cliente na ge
 
 Relativamente à vista de implementação, expressa por um diagrama de componentes, parece-nos existir uma clara distinção entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
 
+A vista lógica é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *addons* adicionais.
+
 Quanto à vista de processo, esta biblioteca é rica em múltiplas actividades computacionais. Todavia, uma análise profunda e exaustiva não faz parte do âmbito desta unidade curricular. É do ponto de vista dos autores que o conjunto de actividades que ocorrem em client-side possuem uma relevância considerável, o qual premite a sua inclusão e descrição neste relatório. 
 
-A vista lógica é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *addons* adicionais.
+Com o diagrama de *deployment*, pretendeu-se mostrar de que modo são distribuídos os artefactos correspondentes aos componentes de *software*, especificados na vista de implementação, em componentes de *hardware*, o que contribuiu para uma melhor noção acerca do modo de funcionamento de cada um.
+
+De uma forma geral, parece-nos que a biblioteca React está bem desenhada e organizada do ponto de vista arquitetural, tendo sido relativamente fácil extrair a informação necessária à construção dos diagramas apresentados neste relatório a partir do projeto.
 
 ### <a name="info"></a>Informações
 
 ##### Autores:
 
 * António Casimiro (antonio.casimiro@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas: 6
+	* Contribuição: 25%
 * Diogo Amaral (diogo.amaral@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas: 6
+	* Contribuição: 25%
 * Pedro Silva (pedro.silva@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas: 6
+	* Contribuição: 25%
 * Rui Cardoso (rui.peixoto@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas: 6
+	* Contribuição: 25%
 
 Faculdade de Engenharia da Universidade do Porto - MIEIC
 
