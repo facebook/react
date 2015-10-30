@@ -21,11 +21,14 @@ Esta árvore será posteriormente traduzida numa árvore DOM inteligível pelo *
 
 ### <a name="logica"></a>Vista Lógica
 
-O seguinte diagrama de pacotes mostra a vista lógica referente ao projeto React.
+O seguinte diagrama exprime os pacotes e as suas dependências, representação das abstrações chave do sistema, caracterizando a vista lógica referente ao projeto em estudo, React.
 
 ![Diagrama de Pacotes](./Resources/package_diagram.jpg)
 
 #### <a name="interpretacao-logica"></a>Interpretação
+
+A interpretação dos autores deste relatório referente a uma visão lógica da biblioteca JavaScript React foi traduzida no [diagrama de pacotes](#logica) anterior após esmiuçar a informação presente no [GitHub da biblioteca](https://github.com/facebook/react/tree/master/packages).
+
 
 ### <a name="implementacao"></a>Vista de Implementação
 
@@ -62,15 +65,17 @@ Após a aplicação dessas alterações, o browser procede à construção da DO
 
 ### <a name="deployment"></a>Vista de *Deployment*
 
-O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao projeto React.
+Antes da apresentação do diagrama de *deployment*, faz sentido explicar em que consiste este conceito para uma melhor interpretação das conclusões obtidas.
+Este tipo de esquema, permite ao programador mostrar aos interessados, que usem o seu projecto, qual é o seu processo de funcionamento ao mais alto nível em *run time*. Para isso, são apresentados os componentes e *devices* usados, unidos entre si (nos casos em que isso faça sentido) representando as ligações que ocorrem quando está em funcionamento.
+
+Em seguida, é apresentado este tipo de diagrama para a biblioteca em estudo, o React.
 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
-#### <a name="interpretacao-deployment"></a>Interpretação
+#### <a name="descricao-deployment"></a>Descrição
+De acordo com a análise do diagrama anterior, o mesmo mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes. O cliente quando, por intermédio de alguma ação, ativa algum evento, faz um pedido ao servidor. Em seguida, cabe ao servidor processar esse pedido e enviar a resposta.
 
-Do nosso ponto de vista, o diagrama anterior mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes.
-
-Contudo, o React apresenta uma funcionalidade muito útil. Quando a página é carregada pela primeira vez, a *DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Com isto, poupam-se recursos ao cliente porque o processo de *parsing* da árvore é todo feito no servidor,não sobrecarregando o cliente.
+Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente do usual. Quando a página é carregada pela primeira vez, a *virtual DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Através desta inovação, é possível pouparem-se recursos ao cliente na geração da mesma. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão levar a alterações apenas à *DOM tree* do cliente. Todo este processo já foi descrito na [secção anterior](#interpretacao-processo).
 
 ### <a name="analise"></a>Análise Crítica
 
