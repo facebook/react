@@ -57,13 +57,15 @@ A interpretação dos autores deste relatório referente a uma visão lógica da
 
 A [Vista Lógica](#logica) é constituída por quarto pacotes fundamentais à estruturação e funcionamento do projeto em estudo que são apresentandos de seguida.
 
-O pacote **react** é um *npm package*, isto significa [Node Package Manager](https://en.wikipedia.org/wiki/Npm_(software)) que consiste num gestor de pacotes por defeito para a biblioteca *Node.js* de *JavaScript*. Desta forma, este pacote consegue imediato acesso ao [React](https://facebook.github.io/react), sem requerer transformações *JSX*, uma extensão sintática semelhante a XML que será explicado mais [à frente](#interpretacao-implementacao). Este aspeto é especialmente útil para casos onde é desejado *browserify* - requerer módulos no *browser* -  usando React.
+O pacote **react** é um *npm package*, isto significa [Node Package Manager](https://en.wikipedia.org/wiki/Npm_(software)) que consiste num gestor de pacotes por defeito para a biblioteca *Node.js* de *JavaScript*. Desta forma, este pacote consegue imediato acesso ao [React](https://facebook.github.io/react), sem requerer transformações *JSX*, uma extensão sintática semelhante a XML, como foi [explicado acima](#jsx). Este aspeto é especialmente útil para casos onde é desejado *browserify* - requerer módulos no *browser* -  usando React.
 
 O pacote **react-dom** serve como ponto de entrada do DOM que vai traduzir a árvore [Virtual DOM](#virtual-dom) no DOM do *browser*. Destina-se a ser emparelhado usando isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering), que serão enviados como *npm*:
 
 > npm install react react-dom
 
 O pacote **react-addons** ...
+
+O pacote **jsx_orphaned_brackets_transformer** traduz o JSX em JavaScript.
 
 ### <a name="implementacao"></a>Vista de Implementação
 
@@ -120,6 +122,8 @@ Através desta funcionaliade, é possível pouparem-se recursos ao cliente na ge
 É importante reiterar a ideia que foi já referida ao longo do relatório. Todos os diagramas apresentados neste relatório foram construídos pelos autores do mesmo, os quais se basearam unicamente na sua interpretação acerca dos diversos aspetos do projeto. É possível que interpretações distintas pudessem conduzir a diagramas diferentes.
 
 Relativamente à vista de implementação, expressa por um diagrama de componentes, parece-nos existir uma clara distinção entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
+
+Quanto à vista de processo, esta biblioteca é rica em múltiplas actividades computacionais. Todavia, uma análise profunda e exaustiva não faz parte do âmbito desta unidade curricular. É do ponto de vista dos autores que o conjunto de actividades que ocorrem em client-side possuem uma relevância considerável, o qual premite a sua inclusão e descrição neste relatório. 
 
 A vista lógica é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *addons* adicionais.
 
