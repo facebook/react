@@ -237,6 +237,18 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('');
     });
 
+    it('should skip child object attribute on web components', function() {
+      var container = document.createElement('div');
+
+      // Test intial render to null
+      ReactDOM.render(<my-component children={['foo']} />, container);
+      expect(container.firstChild.hasAttribute('children')).toBe(false);
+
+      // Test updates to null
+      ReactDOM.render(<my-component children={['foo']} />, container);
+      expect(container.firstChild.hasAttribute('children')).toBe(false);
+    });
+
     it('should remove attributes', function() {
       var container = document.createElement('div');
       ReactDOM.render(<img height="17" />, container);
