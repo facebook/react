@@ -39,24 +39,23 @@ O segundo componente integra o interpretador (*transformer*) de [JSX](https://fa
 
 É do entender dos autores deste relatório que existem distinções suficientes entre estes dois conjuntos de funcionalidades, justificando a sua classificação em dois componentes diferentes.
 
+
 ### <a name="processo"></a>Vista de Processo
 
-Apresenta-se, de seguida, o diagrama de atividade da biblioteca React. Dado que a biblioteca possui uma estrutura bastante complexa, e que, neste relatório, não se pretende, exaustivamente, detalhar o comportamento da mesma, é focalizado, nesta secção, a execução no lado do cliente (client-side scripting), como, por exemplo, num browser.
+Nesta diagrama, pretende-se focalizar os vários aspectos dinâmicos da arquitectura do React, isto é, detalhar o comportamento que a biblioteca pode ter ao longo da sua execução. Dado que a biblioteca possui uma estrutura bastante complexa, e que, neste relatório, não se pretende detalhar exaustivamente o comportamento da mesma, é focalizada, nesta secção, a execução no lado do cliente ([client-side](https://en.wikipedia.org/wiki/Client-side)), que pode ser manifestada num *browser*.
 
 ![Diagrama de Actividade](./Resources/Client Activity Diagram.jpg)
 
-Uma das principais vantagens desta biblioteca é que apenas renderiza a parte que fora modificada, sendo este processo bastante optimizado.
-
 #### <a name="interpretacao-processo"></a>Interpretação
 
-No ponto de vista dos autores do relatório, o conjunto de actividades que ocorrem no lado do cliente é aquele que aparenta possuir uma maior relevância, tendo em conta o âmbito e objectivo deste relatório. Desta forma, será descrito esse mesmo conjunto de seguida. 
+Como já fora referido no [relatório anterior](./Relatorio_2.md#isomorfismo-server-side-rendering), pode recorrer-se ao **isomorfismo** por forma a acelerar todo o processo de renderização da página. Utilizando esta propriedade, a primeira versão da *web page* é renderizada no servidor, e as subsequentes modificações serão renderizadas no lado do cliente. Desta forma, no *client-side*, apenas se procede a alterações na estrutura da árvore virtual DOM (*Virtual DOM Tree*), ao invés de a construir na totalidade, tornando, assim, o processo mais eficiente. Posteriormente, a *Virtual DOM Tree* é convertida numa *DOM Tree* que possa ser avaliada pelo browser.
 
-Como já fora referido no Relatório 2, pode usar-se *isomorfismo* por forma a acelerar todo o processo de renderização da página, isto é, proceder-se à utilização do mesmo código quer no cliente, quer no servidor. Assim, é possível que o cliente apenas proceda a alterações na estrutura da árvore virtual DOM, ao invés de a construir na totalidade. 
-Desta forma, inicialmente, o cliente recebe essa árvore originária do servidor, e, seguidamente, no lado do cliente, proceder-se à construção da DOM Tree, que irá ser utilizada, posteriormente, pelo browser, de maneira a construir a página web.
+Na eventualidade de um dado elemento da página sofrer alterações quer externas (causadas por acções do utilizador) quer internas (devido a interrupções periódicas, por exemplo), a *virtual DOM Tree* é, de novo, renderizada, através da invocação do método *render* da *ReactDOM*. Contudo, em vez de se renderizar a árvore na totalidade, apenas se altera os elementos que sofreram as tais alterações, evitando, desta forma, a realização de computações desnecessárias, tornando o processo de actualização mais eficiente.
 
-Na eventualidade de a página ser alterada, é invocado o método 'render' do componente em questão, que retorna uma Virtual DOM Tree actualizada desse mesmo componente. Subsequentemente, possuindo todas as Virtual DOM Trees de todos os componentes que sofreram alterações, cada uma dessas árvores é comparada, utilizando uma versão modificada do utilitário 'diff', com a árvore corrente do respectivo componente. O resultado será a construção de um conjunto de alterações a serem realizadas na Virtual DOM Tree actual.
+Neste método, é invocado o método 'render' de cada elemento, que retorna uma *Virtual DOM Tree* actualizada desse mesmo elemento. Subsequentemente, possuindo todas as *Virtual DOM Trees* de todos os elemntos da página, cada uma dessas árvores é comparada com a versão actual do respectivo elemento(isto é, ainda não actualizada), utilizando uma versão modificada do utilitário 'diff'. O resultado será um conjunto de alterações a serem realizadas na DOM Tree actual. Após a aplicação dessas alterações, a página actual será actualizada.
 
-Após a aplicação dessas alterações, o browser procede à construção da DOM Tree já actualizada, actualizando, desta forma, o conteúdo actual a ser mostrado.
+Note-se que esta actualização **parcial** da DOM Tree, com recurso a [heurísticas](http://facebook.github.io/react/docs/reconciliation.html), é uma das características que torna esta biblioteca diferente das outras, garantindo, desta forma, uma maior eficiência na actualização da página.
+
 
 ### <a name="deployment"></a>Vista de *Deployment*
 
