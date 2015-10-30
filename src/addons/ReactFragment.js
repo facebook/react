@@ -20,7 +20,7 @@ var warning = require('warning');
 
 /**
  * We used to allow keyed objects to serve as a collection of ReactElements,
- * or nested sets. This allowed us a way to explicitly key a set a fragment of
+ * or nested sets. This allowed us a way to explicitly key a set or fragment of
  * components. This is now being replaced with an opaque data structure.
  * The upgrade path is to call React.addons.createFragment({ key: value }) to
  * create a keyed fragment. The resulting data structure is an array.
