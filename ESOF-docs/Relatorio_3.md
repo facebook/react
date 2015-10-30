@@ -19,13 +19,13 @@ Nesta secção, serão explorados alguns conceitos importantes para a compreens�
 
 ### <a name="logica"></a>Vista Lógica
 
-O seguinte diagrama exprime os pacotes do sistema, que representam grupos de classes, caracterizando a vista lógica referente ao projeto em estudo, React.
+O seguinte diagrama exprime os pacotes e as suas dependências, representação das abstrações chave do sistema, caracterizando a vista lógica referente ao projeto em estudo, React.
 
 ![Diagrama de Pacotes](./Resources/package_diagram.jpg)
 
 #### <a name="interpretacao-logica"></a>Interpretação
 
-A interpretação dos autores deste relatório referente a uma visão lógica da biblioteca React foi traduzida no [diagrama de pacotes](#descricao-logica) anterior.
+A interpretação dos autores deste relatório referente a uma visão lógica da biblioteca JavaScript React foi traduzida no [diagrama de pacotes](#logica) anterior após esmiuçar a informação presente no [GitHub da biblioteca](https://github.com/facebook/react/tree/master/packages).
 
 
 ### <a name="implementacao"></a>Vista de Implementação
