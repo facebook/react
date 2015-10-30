@@ -1241,4 +1241,39 @@ describe('ReactCompositeComponent', function() {
 
   });
 
+  it('should not overwrite mutated properties', function() {
+    class Moo extends React.Component {
+      render() {
+        return <span />;
+      }
+    }
+    Moo.defaultProps = { idx: 'moo' };
+
+    function Foo(props) {
+      var _props = { idx: this.constructor.defaultProps.idx + '?' };
+
+      React.Component.call(this, _props);
+    }
+    Foo.prototype = Object.create(React.Component.prototype, {
+      constructor: {
+        value: Foo,
+      },
+    });
+    Foo.prototype.render = function() {
+      return <span />;
+    };
+    Foo.defaultProps = { idx: 'foo' };
+
+    class Bar extends Foo {}
+    Bar.defaultProps = { idx: 'bar' };
+
+    var moo = ReactTestUtils.renderIntoDocument(<Moo />);
+    expect(moo.props.idx).toBe('moo');
+
+    var foo = ReactTestUtils.renderIntoDocument(<Foo />);
+    expect(foo.props.idx).toBe('foo?');
+
+    var bar = ReactTestUtils.renderIntoDocument(<Bar />);
+    expect(bar.props.idx).toBe('bar?');
+  });
 });
