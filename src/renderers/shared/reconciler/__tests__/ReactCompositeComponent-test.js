@@ -430,9 +430,6 @@ describe('ReactCompositeComponent', function() {
     instance = ReactDOM.render(<ComponentB />, container);
     instance.setState({ toggle: true });
 
-    if (console.error.calls.length) {
-      console.log(console.error.argsForCall[0][0]);
-    }
     expect(console.error.calls.length).toBe(0);
   });
 
