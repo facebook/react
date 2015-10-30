@@ -70,7 +70,7 @@ O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao 
 #### <a name="descricao-deployment"></a>Descrição
 De acordo com a análise do diagrama anterior, o mesmo mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes. O cliente quando, por intermédio de alguma ação, ativa algum evento, faz um pedido ao servidor. Em seguida, cabe ao servidor processar esse pedido e enviar a resposta.
 
-Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente do usual. Quando a página é carregada pela primeira vez, a *virtual DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Através desta inovação, é possível pouparem-se recursos ao cliente na geração da mesma. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão levar a alterações apenas à *DOM tree* do cliente. Todo este processo já foi descrito na [secção anterior](#descricao-processo).
+Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente do usual. Quando a página é carregada pela primeira vez, a *virtual DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Através desta inovação, é possível pouparem-se recursos ao cliente na geração da mesma. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão levar a alterações apenas à *DOM tree* do cliente. Todo este processo já foi descrito na [secção anterior](#interpretacao-processo).
 
 ### <a name="analise"></a>Análise Crítica
 
