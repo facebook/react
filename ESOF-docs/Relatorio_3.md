@@ -27,7 +27,9 @@ O seguinte diagrama exprime os pacotes e as suas dependências, representação 
 
 #### <a name="interpretacao-logica"></a>Interpretação
 
-A interpretação dos autores deste relatório referente a uma visão lógica da biblioteca JavaScript React foi traduzida no [diagrama de pacotes](#logica) anterior após esmiuçar a informação presente no [GitHub da biblioteca](https://github.com/facebook/react/tree/master/packages).
+A interpretação dos autores deste relatório referente a uma visão lógica da biblioteca *JavaScript* React foi traduzida no [diagrama de pacotes](#logica) anterior após esmiuçar a informação presente no [GitHub da biblioteca](https://github.com/facebook/react/tree/master/packages).
+
+A [Vista Lógica](#logica) é constituída por quarto pacotes fundamentais à estruturação e funcionamento do projeto em estudo. O pacote **react** é um *npm package*, isto significa [Node Package Manager](https://en.wikipedia.org/wiki/Npm_(software)) que consiste num gestor de pacotes por defeito para a biblioteca de *JavaScript* *Node.js*.
 
 
 ### <a name="implementacao"></a>Vista de Implementação
