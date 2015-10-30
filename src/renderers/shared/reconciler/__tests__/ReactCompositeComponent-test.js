@@ -401,6 +401,41 @@ describe('ReactCompositeComponent', function() {
     expect(instance2.state.value).toBe(1);
   });
 
+  iit('should not warn about external `setState` triggered from component constructor', function() {
+    var container = document.createElement('div');
+    var instance;
+
+    class ComponentA extends React.Component {
+      constructor(props) {
+        super(props);
+        instance.setState({ toggle: false });
+      }
+
+      render() {
+        return null;
+      }
+    }
+
+    class ComponentB extends React.Component {
+      constructor() {
+        super();
+        this.state = { toggle: false };
+      }
+
+      render() {
+        return this.state.toggle ? <ComponentA /> : null;
+      }
+    }
+
+    instance = ReactDOM.render(<ComponentB />, container);
+    instance.setState({ toggle: true });
+
+    if (console.error.calls.length) {
+      console.log(console.error.argsForCall[0][0]);
+    }
+    expect(console.error.calls.length).toBe(0);
+  });
+
   it('should not allow `setProps` on unmounted components', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
