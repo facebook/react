@@ -1242,17 +1242,11 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should not overwrite mutated properties', function() {
-    function Moo(props) {
-      React.Component.call(this, props);
+    class Moo extends React.Component {
+      render() {
+        return <span />;
+      }
     }
-    Moo.prototype = Object.create(React.Component.prototype, {
-      constructor: {
-        value: Moo,
-      },
-    });
-    Moo.prototype.render = function() {
-      return <span />;
-    };
     Moo.defaultProps = { idx: 'moo' };
 
     function Foo(props) {
@@ -1270,15 +1264,7 @@ describe('ReactCompositeComponent', function() {
     };
     Foo.defaultProps = { idx: 'foo' };
 
-    function Bar() {
-      Foo.call(this);
-    }
-
-    Bar.prototype = Object.create(Foo.prototype, {
-      constructor: {
-        value: Bar,
-      },
-    });
+    class Bar extends Foo {}
     Bar.defaultProps = { idx: 'bar' };
 
     var moo = ReactTestUtils.renderIntoDocument(<Moo />);
