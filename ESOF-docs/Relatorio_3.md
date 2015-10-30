@@ -3,8 +3,17 @@
 
 ### <a name="introducao"></a>Introdução
 
---> Esclarecimento do conceito de "Virtual DOM Tree".
+O objetivo deste relatório é a explicitação de alguns aspetos relativos à arquitetura do projeto React, seguindo o [modelo de vista 4+1](https://en.wikipedia.org/wiki/4%2B1_architectural_view_model). Serão apresentados vários diagramas exemplificativos.
 
+Numa primeira fase, serão apresentados alguns conceitos sobre a biblioteca React considerados pertinentes para a compreensão do resto do relatório.
+
+Numa segunda fase, serão apresentadas quatro componentes do modelo de vista acima referido, nomeadamente o diagrama de pacotes do projeto, referente à **vista lógica**, o diagrama de componentes, referente à **vista de implementação**, o diagrama de atividades, referente à **vista de processo**, e o diagrama de *deployment*, referente à **vista de _deployment_**, isto é, à vista de distribuição dos componentes de *software* do projeto em componentes de *hardware*.
+
+### <a name="conceitos"></a>Conceitos
+
+Nesta secção, serão explorados alguns conceitos importantes para a compreensão dos diagramas apresentados neste relatório.
+
+#### <a name="virtual-dom"></a>*Virtual* DOM
 
 
 
@@ -14,7 +23,7 @@ O seguinte diagrama de pacotes mostra a vista lógica referente ao projeto React
 
 ![Diagrama de Pacotes](./Resources/package_diagram.jpg)
 
-#### <a name="descricao-logica"></a>Descrição
+#### <a name="interpretacao-logica"></a>Interpretação
 
 ### <a name="implementacao"></a>Vista de Implementação
 
@@ -22,7 +31,7 @@ O seguinte diagrama de componentes mostra a vista de implementação referente a
 
 ![Diagrama de Componentes](./Resources/component_diagram.jpg)
 
-#### <a name="descricao-implementacao"></a>Descrição
+#### <a name="interpretacao-implementacao"></a>Interpretação
 
 De acordo com a interpretação dos autores deste relatório, a biblioteca React pode ser dividida em dois componentes essenciais. O primeiro componente incorpora a árvore DOM da página, que é o componente central da funcionalidade da biblioteca. Este componente trata os elementos definidos pelo utilizador (ver [Relatório 2](./Relatorio_2.md#casos-de-uso)), traduzindo-os numa árvore DOM que pode ser renderizada pelo *browser*. Como já foi referido em [relatórios anteriores](./Relatorio_2.md#isomorfismo-server-side-rendering), o processo de construção da árvore DOM é feito de forma muito eficiente, baseando-se na [determinação das diferenças](https://facebook.github.io/react/blog/2013/06/05/why-react.html#reactive-updates-are-dead-simple.) sofridas por cada elemento da interface.
 
@@ -32,16 +41,13 @@ O segundo componente integra o interpretador (*transformer*) de [JSX](https://fa
 
 ### <a name="processo"></a>Vista de Processo
 
-
-
-Vai-se, de seguida, apresentar o diagrama relativo aos aspectos dinâmicos da Biblioteca React. Dado que a biblioteca possui uma estrutura bastante complexa, e que, neste relatório, não se pretende, exaustivamente, detalhar o comportamento da mesma, é focalizado, nesta secção, a execução no lado do cliente (client-side scripting), como, por exemplo, num browser.
-
+Apresenta-se, de seguida, o diagrama de atividade da biblioteca React. Dado que a biblioteca possui uma estrutura bastante complexa, e que, neste relatório, não se pretende, exaustivamente, detalhar o comportamento da mesma, é focalizado, nesta secção, a execução no lado do cliente (client-side scripting), como, por exemplo, num browser.
 
 ![Diagrama de Actividade](./Resources/Client Activity Diagram.jpg)
 
 Uma das principais vantagens desta biblioteca é que apenas renderiza a parte que fora modificada, sendo este processo bastante optimizado.
 
-#### <a name="descricao-processo"></a>Descrição
+#### <a name="interpretacao-processo"></a>Interpretação
 
 No ponto de vista dos autores do relatório, o conjunto de actividades que ocorrem no lado do cliente é aquele que aparenta possuir uma maior relevância, tendo em conta o âmbito e objectivo deste relatório. Desta forma, será descrito esse mesmo conjunto de seguida. 
 
@@ -52,16 +58,14 @@ Na eventualidade de a página ser alterada, é invocado o método 'render' do co
 
 Após a aplicação dessas alterações, o browser procede à construção da DOM Tree já actualizada, actualizando, desta forma, o conteúdo actual a ser mostrado.
 
-
-
-
 ### <a name="deployment"></a>Vista de *Deployment*
 
 O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao projeto React.
 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
-#### <a name="descricao-deployment"></a>Descrição
+#### <a name="interpretacao-deployment"></a>Interpretação
+
 Do nosso ponto de vista, o diagrama anterior mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes.
 
 Contudo, o React apresenta uma funcionalidade muito útil. Quando a página é carregada pela primeira vez, a *DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Com isto, poupam-se recursos ao cliente porque o processo de *parsing* da árvore é todo feito no servidor,não sobrecarregando o cliente.
