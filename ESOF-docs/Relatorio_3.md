@@ -63,7 +63,10 @@ Após a aplicação dessas alterações, o browser procede à construção da DO
 
 ### <a name="deployment"></a>Vista de *Deployment*
 
-O seguinte diagrama de *deployment* mostra a vista de *deployment* referente ao projeto React.
+Antes da apresentação do diagrama de *deployment*, faz sentido explicar em que consiste este conceito para uma melhor interpretação das conclusões obtidas.
+Este tipo de esquema, permite ao programador mostrar aos interessados, que usem o seu projecto, qual é o seu processo de funcionamento ao mais alto nível em *run time*. Para isso, são apresentados os componentes e *devices* usados, unidos entre si (nos casos em que isso faça sentido) representando as ligações que ocorrem quando está em funcionamento.
+
+Em seguida, é apresentado este tipo de diagrama para a biblioteca React, em estudo.
 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
