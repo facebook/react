@@ -63,7 +63,7 @@ O segundo componente integra o interpretador (*transformer*) de [JSX](https://fa
 
 ### <a name="logica"></a>Vista Lógica
 
-O seguinte diagrama de pacotes apresenta as principais abstrações do sistema, ilustrando os pacotes definidos e as dependências entre si e caracterizando a vista lógica referente ao projeto em estudo, o React.
+O seguinte [diagrama de pacotes](https://en.wikipedia.org/wiki/Package_diagram) apresenta as principais abstrações do sistema, ilustrando os pacotes definidos e as dependências entre si e caracterizando a vista lógica referente ao projeto em estudo, o React.
 
 ![Diagrama de Pacotes](./Resources/package_diagram.jpg)
 
@@ -83,49 +83,51 @@ O [pacote **jsx_orphaned_brackets_transformer**](https://github.com/facebook/rea
 
 ### <a name="processo"></a>Vista de Processo
 
-Nesta diagrama, pretende-se focalizar os vários aspectos dinâmicos da arquitectura do React, isto é, detalhar o comportamento que a biblioteca pode ter ao longo da sua execução. Dado que a biblioteca possui uma estrutura bastante complexa, e que, neste relatório, não se pretende detalhar exaustivamente o comportamento da mesma, é salientada, nesta secção, a execução no lado do cliente ([client-side](https://en.wikipedia.org/wiki/Client-side)).
+Neste [diagrama de atividades](https://en.wikipedia.org/wiki/Activity_diagram), pretende-se focalizar os aspetos dinâmicos do funcionamento do React, isto é, detalhar o comportamento da biblioteca ao longo da execução de uma aplicação que a integre. Nesta secção, apenas se salienta o comportamento da biblioteca quando executada no lado do cliente, uma vez que esse é o seu aspeto mais relevante.
 
-![Diagrama de Actividade](./Resources/Client Activity Diagram.jpg)
+![Diagrama de Atividades](./Resources/Client Activity Diagram.jpg)
 
 #### <a name="interpretacao-processo"></a>Interpretação
 
-Como já fora referido no [relatório anterior](./Relatorio_2.md#isomorfismo-server-side-rendering), pode recorrer-se ao **isomorfismo** por forma a acelerar todo o processo de renderização da página. Utilizando esta propriedade, a primeira versão da *web page* é renderizada no servidor, e as subsequentes modificações serão renderizadas no lado do cliente. Desta forma, no *client-side*, apenas se procede a alterações na estrutura da árvore virtual DOM, ao invés de a construir na totalidade, tornando, assim, o processo mais eficiente. Posteriormente, a *Virtual DOM Tree* é convertida numa *DOM Tree*, para que possa ser avaliada pelo browser.
+Como já fora referido no [relatório anterior](./Relatorio_2.md#isomorfismo-server-side-rendering), pode recorrer-se ao **isomorfismo** por forma a acelerar todo o processo de renderização da página durante o carregamento inicial. Utilizando esta propriedade, a primeira versão da *webpage* é renderizada no servidor, e as subsequentes modificações serão realizadas no lado do cliente. No lado do cliente, é gerado um conjunto de alterações a realizar sobre a árvore DOM da página de cada vez que é assinalada uma alteração à sua [representação interna à biblioteca](#virtual-dom).
 
-Na eventualidade de um dado elemento da página sofrer alterações quer externas (causadas por acções do utilizador) quer internas (devido a interrupções periódicas, por exemplo), a *virtual DOM Tree* é, de novo, renderizada, através da invocação do método *render* de *ReactDOM*. Contudo, em vez de se renderizar a árvore na totalidade, apenas se altera os elementos que sofreram as tais alterações, evitando, desta forma, a realização de computações desnecessárias, e tornando o processo de actualização mais eficiente.
+Na eventualidade de um dado elemento da página sofrer alterações, sejam externas (causadas por ações do utilizador) ou internas (devido a interrupções periódicas, por exemplo), o DOM do documento é atualizado a partir da sua árvore DOM virtual, através da invocação do método **render()** da classe [ReactDOM](https://facebook.github.io/react/docs/glossary.html#formal-type-definitions). Note-se que o DOM não é reconstruído na totalidade, sendo apenas integradas as alterações necessárias, o que torna o processo de atualização mais eficiente.
 
-Neste método, é invocado o método 'render' de cada elemento, que retorna uma *Virtual DOM Tree* actualizada desse mesmo elemento. Subsequentemente, possuindo todas as *Virtual DOM Trees* de todos os elemntos da página, cada uma dessas árvores é comparada com a versão actual do respectivo elemento (isto é, ainda não actualizada), utilizando uma [versão modificada do utilitário 'diff'](http://facebook.github.io/react/docs/reconciliation.html). O resultado será um conjunto de alterações a serem realizadas na DOM Tree actual. Após a aplicação dessas alterações, a página actual estará, desta forma, actualizada.
-
-Note-se que esta actualização **parcial** da DOM Tree, com recurso a [heurísticas](http://facebook.github.io/react/docs/reconciliation.html), é uma das características que torna esta biblioteca diferente das outras, garantindo, desta forma, uma maior eficiência na actualização da página.
+Note-se que este processo de atualização parcial do DOM, com recurso a [heurísticas](http://facebook.github.io/react/docs/reconciliation.html), é uma das características que diferencia esta biblioteca das outras, oferecendo uma maior eficiência.
 
 ### <a name="deployment"></a>Vista de *Deployment*
 
-Antes da apresentação do diagrama de *deployment*, faz sentido explicar em que consiste este conceito para uma melhor interpretação das conclusões obtidas.
-Este tipo de esquema, permite ao programador mostrar aos interessados, que usem o seu projecto, qual é o seu processo de funcionamento ao mais alto nível em *run time*. Para isso, são apresentados os componentes e *devices* usados, unidos entre si (nos casos em que isso faça sentido) representando as ligações que ocorrem quando está em funcionamento.
+Um [diagrama de *deployment*](https://en.wikipedia.org/wiki/Deployment_diagram) permite mostrar de que modo os artefactos de um sistema são distribuídos em nós de *hardware*. Os artefactos de um sistema são manifestações físicas dos seus [componentes de *software*](#implementacao), e relacionam-se com determinados componentes de *hardware*.
 
-Em seguida, é apresentado este tipo de diagrama para a biblioteca em estudo, o React.
+O seguinte é o diagrama de *deployment* da biblioteca em estudo, o React.
 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
 #### <a name="descricao-deployment"></a>Interpretação
 
-De acordo com a análise do diagrama anterior, o mesmo mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes. O cliente, quando, por intermédio de alguma ação, ativa algum evento, realiza um pedido ao servidor. Em seguida, cabe ao servidor processar esse pedido e enviar a resposta.
+O diagrama anterior mostra a forma como a biblioteca React pode correr tanto do lado do cliente como do lado do servidor.
 
-Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente. Quando a página é carregada pela primeira vez, é criada, pelo servidor, uma *virtual DOM tree*, que será sujeita a posteriores alterações, ao longo da utilização, no browser. Em seguida, ela é enviada ao cliente para o mesmo criar a *DOM tree*, no fim do processo de criação é invocado o método render para a informação guardada na árvore ser mostrada no browser.
-Através desta funcionaliade, é possível pouparem-se recursos ao cliente na geração da *virtual DOM tree* base, porque todo o seu processamento é feito pelo servidor. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão gerar alterações. Tendo em conta estas alterações, é calculado o mínimo de mudanças à *DOM tree* do cliente de modo a que sejam representadas as mudanças requeridas pelo cliente. Fazendo-se apenas as mudanças na árvore do cliente, evita a necessidade de um processamento completo de uma nova árvore, o que tornaria todo o processo menos eficiente, o qual está descrito na [secção anterior](#interpretacao-processo).
+Ao nível do servidor, o React apresenta uma funcionalidade diferente da usual, no que diz respeito a aplicações Web. Quando a página é carregada pela primeira vez, é criada, pelo servidor, uma [árvore DOM virtual](#virtual-dom) que é, em seguida, enviada à aplicação cliente, que, com esta informação, criará uma árvore DOM que será utilizada pelo *browser* para renderizar a página. Estas operações implementam o conceito de isomorfismo, já analisado em [relatórios anteriores](Relatorio_2.md#isomorfismo-server-side-rendering).
+
+Deste modo, a aplicação cliente poupa recursos na geração da árvore DOM virtual no carregamento inicial, uma vez que as operações são realizadas no servidor. A partir deste momento, sempre que forem assinaladas alterações à árvore DOM virtual, é calculado o número mínimo de alterações a realizar ao DOM do *browser*, como já foi descrito anteriormente.
+
+Tanto no lado do cliente como do servidor, pode ser usada a sintaxe JSX, que tem de ser transformada em JavaScript puro, como já foi explicado anteriormente.
+
+Cada artefacto correspondente a um componente de *software* é, neste caso, distribuído em ambos os nós de *hardware*.
 
 ### <a name="analise"></a>Conclusões e Análise Crítica
 
-É importante reiterar a ideia que foi já referida ao longo do relatório. Todos os diagramas apresentados neste relatório foram construídos pelos autores do mesmo, os quais se basearam unicamente na sua interpretação acerca dos diversos aspetos do projeto. É possível que interpretações distintas pudessem conduzir a diagramas diferentes.
+É importante reiterar a ideia que foi já referida ao longo do relatório. Todos os diagramas apresentados foram construídos pelos autores deste relatório, os quais se basearam unicamente na sua interpretação acerca dos diversos aspetos do projeto. É possível que interpretações distintas pudessem conduzir a diagramas diferentes.
 
-Relativamente à vista de implementação, expressa por um diagrama de componentes, parece-nos existir uma clara distinção entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
+Relativamente à [vista de implementação](#implementacao), expressa por um diagrama de componentes, parece existir uma distinção suficientemente clara entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
 
-A vista lógica é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *addons* adicionais.
+A [vista lógica](#logica) é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *addons* adicionais. Os pacotes são descritos de forma explícita no [repositório do projeto](https://github.com/facebook/react/tree/master/packages).
 
-Quanto à vista de processo, esta biblioteca é rica em múltiplas actividades computacionais. Todavia, uma análise profunda e exaustiva não faz parte do âmbito desta unidade curricular. É do ponto de vista dos autores que o conjunto de actividades que ocorrem em client-side possuem uma relevância considerável, o qual premite a sua inclusão e descrição neste relatório. 
+Quanto à [vista de processo](#processo), é do entender dos autores que o conjunto de atividades que são executadas no lado do cliente são as que possuem uma maior relevância, justificando-se a sua inclusão neste relatório, ainda que outras pudessem ser identificadas, nomeadamente no lado do servidor. 
 
-Com o diagrama de *deployment*, pretendeu-se mostrar de que modo são distribuídos os artefactos correspondentes aos componentes de *software*, especificados na vista de implementação, em componentes de *hardware*, o que contribuiu para uma melhor noção acerca do modo de funcionamento de cada um.
+Com a [vista de *deployment*](#deployment), pretendeu-se mostrar de que modo são distribuídos os artefactos correspondentes aos componentes de *software*, especificados na vista de implementação, em componentes de *hardware*, o que contribuiu para uma melhor noção acerca do modo de funcionamento de cada um. No entanto, não existe distinção entre os dois nós de *hardware*, o cliente e o servidor, relativamente aos artefactos que neles são distribuídos, uma vez que cada um destes é distribuído em ambos os nós.
 
-De uma forma geral, parece-nos que a biblioteca React está bem desenhada e organizada do ponto de vista arquitetural, tendo sido relativamente fácil extrair a informação necessária à construção dos diagramas apresentados neste relatório a partir do projeto.
+De uma forma geral, é da opinião dos autores deste relatório que a biblioteca React está bem desenhada e organizada do ponto de vista arquitetural, tendo sido relativamente fácil extrair a informação necessária à construção dos diagramas aqui apresentados a partir do repositório e da documentação do projeto.
 
 ### <a name="info"></a>Informações
 
