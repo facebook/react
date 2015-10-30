@@ -20,6 +20,14 @@ function compile(content, contentFilename) {
   var compilerHost = {
     getSourceFile: function(filename, languageVersion) {
       var source;
+
+      // `path.normalize` and `path.join` are used to turn forward slashes in
+      // the file path into backslashes on Windows.
+      filename = path.normalize(filename);
+      var reactRegex = new RegExp(
+        path.join('/', '(?:React|ReactDOM)(?:\.d)?\.ts$')
+      );
+
       if (filename === 'lib.d.ts') {
         source = fs.readFileSync(
           require.resolve('typescript/bin/lib.d.ts')
@@ -30,7 +38,7 @@ function compile(content, contentFilename) {
         ).toString();
       } else if (filename === contentFilename) {
         source = content;
-      } else if (/\/(?:React|ReactDOM)(?:\.d)?\.ts$/.test(filename)) {
+      } else if (reactRegex.test(filename)) {
         // TypeScript will look for the .d.ts files in each ancestor directory,
         // so there may not be a file at the referenced path as it climbs the
         // hierarchy.
