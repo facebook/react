@@ -115,11 +115,13 @@ De acordo com a análise do diagrama anterior, o mesmo mostra-nos que o funciona
 Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente. Quando a página é carregada pela primeira vez, é criada, pelo servidor, uma *virtual DOM tree*, que será sujeita a posteriores alterações, ao longo da utilização, no browser. Em seguida, ela é enviada ao cliente para o mesmo criar a *DOM tree*, no fim do processo de criação é invocado o método render para a informação guardada na árvore ser mostrada no browser.
 Através desta funcionaliade, é possível pouparem-se recursos ao cliente na geração da *virtual DOM tree* base, porque todo o seu processamento é feito pelo servidor. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão gerar alterações. Tendo em conta estas alterações, é calculado o mínimo de mudanças à *DOM tree* do cliente de modo a que sejam representadas as mudanças requeridas pelo cliente. Fazendo-se apenas as mudanças na árvore do cliente, evita a necessidade de um processamento completo de uma nova árvore, o que tornaria todo o processo menos eficiente, o qual está descrito na [secção anterior](#interpretacao-processo).
 
-### <a name="analise"></a>Análise Crítica
+### <a name="analise"></a>Conclusões e Análise Crítica
 
 É importante reiterar a ideia que foi já referida ao longo do relatório. Todos os diagramas apresentados neste relatório foram construídos pelos autores do mesmo, os quais se basearam unicamente na sua interpretação acerca dos diversos aspetos do projeto. É possível que interpretações distintas pudessem conduzir a diagramas diferentes.
 
 Relativamente à vista de implementação, expressa por um diagrama de componentes, parece-nos existir uma clara distinção entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
+
+A vista lógica é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *addons* adicionais.
 
 ### <a name="info"></a>Informações
 
