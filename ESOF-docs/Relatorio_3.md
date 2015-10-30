@@ -9,6 +9,8 @@ Numa primeira fase, serão apresentados alguns conceitos sobre a biblioteca Reac
 
 Numa segunda fase, serão apresentadas quatro componentes do modelo de vista acima referido, nomeadamente o diagrama de pacotes do projeto, referente à **vista lógica**, o diagrama de componentes, referente à **vista de implementação**, o diagrama de atividades, referente à **vista de processo**, e o diagrama de *deployment*, referente à **vista de _deployment_**, isto é, à vista de distribuição dos componentes de *software* do projeto em componentes de *hardware*.
 
+Note-se que o diagrama de casos de uso, correspondente à vista com a mesma designação, já foi apresentado no [relatório anterior](Relatorio_2.md#casos-de-uso).
+
 ### <a name="conceitos"></a>Conceitos
 
 Nesta secção, serão explorados alguns conceitos importantes para a compreensão dos diagramas apresentados neste relatório.
@@ -18,6 +20,30 @@ Nesta secção, serão explorados alguns conceitos importantes para a compreens�
 A biblioteca React mantém uma representação em árvore dos elementos que serão mostrados pela aplicação, num conceito que é genericamente conhecido como [*Virtual* DOM](https://facebook.github.io/react/docs/glossary.html). Os [nós](https://facebook.github.io/react/docs/glossary.html#react-nodes) desta árvore podem ser [elementos](https://facebook.github.io/react/docs/glossary.html#react-elements), texto, valores numéricos ou um *array* de outros nós. Cada elemento pode conter descendentes, o que resulta numa estrutura em árvore. Como já foi referido no [relatório anterior](Relatorio_2.md#casos-de-uso), os elementos podem corresponder a *tags* de HTML ou, numa perspetiva mais interessante para quem utiliza a biblioteca, a [tipos de dados definidos pelo programador](https://facebook.github.io/react/docs/glossary.html#react-components).
 
 Esta árvore será posteriormente traduzida numa árvore DOM inteligível pelo *browser*, que procederá à sua renderização com vista à apresentação da interface da aplicação. Esta tarefa de tradução da árvore virtual no DOM do documento é realizada pela classe [ReactDOM](https://facebook.github.io/react/docs/glossary.html#formal-type-definitions).
+
+#### <a name="jsx"></a>Sintaxe JSX
+
+[JSX](https://facebook.github.io/jsx/) é uma extensão sintática para JavaScript semelhante a XML, apresentado a vantagem de ser mais [intuitivo e familiar](https://facebook.github.io/jsx/#rationale) para a maior parte dos programadores, permitindo uma compreensão mais fácil da estrutura em árvore do DOM virtual da aplicação, devido ao equilíbro de *tags* de início e de fim.
+
+O recurso a esta sintaxe é recomendado, mas não [obrigatório](https://facebook.github.io/react/docs/jsx-in-depth.html#why-jsx). Na realidade, o React [transformará a sintaxe JSX](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) em JavaScript puro, pelo que a sua utilização tem como único objetivo acelerar o processo de desenvolvimento das aplicações que façam uso da biblioteca.
+
+O [exemplo seguinte](https://facebook.github.io/react/docs/jsx-in-depth.html#child-expressions) ilustra a utlização da sintaxe JSX.
+
+```javascript
+var content = <Container>{window.isLoggedIn ? <Nav /> : <Login />}</Container>;
+```
+
+O código anterior é traduzido no seguinte código em JavaScript puro.
+
+```javascript
+var content = React.createElement(
+  Container,
+  null,
+  window.isLoggedIn ? React.createElement(Nav) : React.createElement(Login)
+);
+```
+
+A comparação entre estes dois blocos de código mostra a vantagem da utilização da sintaxe JSX, que permite escrever código mais conciso e intuitivo.
 
 ### <a name="logica"></a>Vista Lógica
 
@@ -73,6 +99,7 @@ Em seguida, é apresentado este tipo de diagrama para a biblioteca em estudo, o 
 ![Diagrama de Deployment](./Resources/Deployment_View.png)
 
 #### <a name="descricao-deployment"></a>Descrição
+
 De acordo com a análise do diagrama anterior, o mesmo mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes. O cliente quando, por intermédio de alguma ação, ativa algum evento, faz um pedido ao servidor. Em seguida, cabe ao servidor processar esse pedido e enviar a resposta.
 
 Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente do usual. Quando a página é carregada pela primeira vez, a *virtual DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Através desta inovação, é possível pouparem-se recursos ao cliente na geração da mesma. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão levar a alterações apenas à *DOM tree* do cliente. Todo este processo já foi descrito na [secção anterior](#interpretacao-processo).
