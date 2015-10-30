@@ -53,8 +53,17 @@ O seguinte diagrama exprime os pacotes e as suas dependências, representação 
 
 #### <a name="interpretacao-logica"></a>Interpretação
 
-A interpretação dos autores deste relatório referente a uma visão lógica da biblioteca JavaScript React foi traduzida no [diagrama de pacotes](#logica) anterior após esmiuçar a informação presente no [GitHub da biblioteca](https://github.com/facebook/react/tree/master/packages).
+A interpretação dos autores deste relatório referente a uma visão lógica da biblioteca *JavaScript* React foi traduzida no [diagrama de pacotes](#logica) anterior após esmiuçar a informação presente no [GitHub da biblioteca](https://github.com/facebook/react/tree/master/packages).
 
+A [Vista Lógica](#logica) é constituída por quarto pacotes fundamentais à estruturação e funcionamento do projeto em estudo que são apresentandos de seguida.
+
+O pacote **react** é um *npm package*, isto significa [Node Package Manager](https://en.wikipedia.org/wiki/Npm_(software)) que consiste num gestor de pacotes por defeito para a biblioteca *Node.js* de *JavaScript*. Desta forma, este pacote consegue imediato acesso ao [React](https://facebook.github.io/react), sem requerer transformações *JSX*, uma extensão sintática semelhante a XML que será explicado mais [à frente](#interpretacao-implementacao). Este aspeto é especialmente útil para casos onde é desejado *browserify* - requerer módulos no *browser* -  usando React.
+
+O pacote **react-dom** serve como ponto de entrada do DOM que vai traduzir a árvore [Virtual DOM](#virtual-dom) no DOM do *browser*. Destina-se a ser emparelhado usando isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering), que serão enviados como *npm*:
+
+> npm install react react-dom
+
+O pacote **react-addons** ...
 
 ### <a name="implementacao"></a>Vista de Implementação
 
@@ -66,7 +75,7 @@ O seguinte diagrama de componentes mostra a vista de implementação referente a
 
 De acordo com a interpretação dos autores deste relatório, a biblioteca React pode ser dividida em dois componentes essenciais. O primeiro componente incorpora a árvore DOM da página, que é o componente central da funcionalidade da biblioteca. Este componente trata os elementos definidos pelo utilizador (ver [Relatório 2](./Relatorio_2.md#casos-de-uso)), traduzindo-os numa árvore DOM que pode ser renderizada pelo *browser*. Como já foi referido em [relatórios anteriores](./Relatorio_2.md#isomorfismo-server-side-rendering), o processo de construção da árvore DOM é feito de forma muito eficiente, baseando-se na [determinação das diferenças](https://facebook.github.io/react/blog/2013/06/05/why-react.html#reactive-updates-are-dead-simple.) sofridas por cada elemento da interface.
 
-O segundo componente integra o interpretador (*transformer*) de [JSX](https://facebook.github.io/react/docs/jsx-in-depth.html), uma extensão sintática semelhante a XML. Não é obrigatório recorrer à sintaxe JSX, embora a mesma permita definir a estrutura da árvore do documento de forma concisa e usando uma sintaxe com a qual a maior parte dos programadores está familiarizada. A sintaxe JSX é, depois, [transformada](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) em código JavaScript, pronto a ser executado pela aplicação cliente.
+O segundo componente integra o interpretador (*transformer*) de [JSX](https://facebook.github.io/react/docs/jsx-in-depth.html). Não é obrigatório recorrer à sintaxe JSX, embora a mesma permita definir a estrutura da árvore do documento de forma concisa e usando uma sintaxe com a qual a maior parte dos programadores está familiarizada. A sintaxe JSX é, depois, [transformada](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) em código JavaScript, pronto a ser executado pela aplicação cliente.
 
 É do entender dos autores deste relatório que existem distinções suficientes entre estes dois conjuntos de funcionalidades, justificando a sua classificação em dois componentes diferentes.
 
@@ -102,7 +111,8 @@ Em seguida, é apresentado este tipo de diagrama para a biblioteca em estudo, o 
 
 De acordo com a análise do diagrama anterior, o mesmo mostra-nos que o funcionamento da biblioteca React, na sua relação cliente-servidor, segue o padrão usado noutras arquiteturas semelhantes. O cliente quando, por intermédio de alguma ação, ativa algum evento, faz um pedido ao servidor. Em seguida, cabe ao servidor processar esse pedido e enviar a resposta.
 
-Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente do usual. Quando a página é carregada pela primeira vez, a *virtual DOM tree* é gerada pelo servidor e só depois enviada ao cliente. Através desta inovação, é possível pouparem-se recursos ao cliente na geração da mesma. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão levar a alterações apenas à *DOM tree* do cliente. Todo este processo já foi descrito na [secção anterior](#interpretacao-processo).
+Contudo, o React, ao nível do servidor, apresenta uma funcionalidade diferente. Quando a página é carregada pela primeira vez, é criada, pelo servidor, uma *virtual DOM tree*, que vai ser a base de todas as próximas árvores criadas, ao longo da utilização, no browser. Em seguida, ela é enviada ao cliente para o mesmo criar a *DOM tree*, no fim do processo de criação é invocado o método render para a informação guardada na árvore ser mostrada no browser.
+Através desta funcionaliade, é possível pouparem-se recursos ao cliente na geração da *virtual DOM tree* base, porque todo o seu processamento é feito pelo servidor. A partir deste momento, todos pedidos feitos pelo cliente e respetivas respostas do servidor vão gerar alterações. Tendo em conta estas alterações, é calculado o mínimo de mudanças à *DOM tree* do cliente de modo a que sejam representadas as mudanças requeridas pelo cliente. Fazendo-se apenas as mudanças na árvore do cliente, evita a necessidade de um processamento completo de uma nova árvore, o que tornaria todo o processo menos eficiente, o qual está descrito na [secção anterior](#interpretacao-processo).
 
 ### <a name="analise"></a>Análise Crítica
 
