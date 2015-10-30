@@ -121,6 +121,8 @@ Através desta funcionaliade, é possível pouparem-se recursos ao cliente na ge
 
 Relativamente à vista de implementação, expressa por um diagrama de componentes, parece-nos existir uma clara distinção entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
 
+Quanto à vista de processo, esta biblioteca é rica em múltiplas actividades computacionais. Todavia, uma análise profunda e exaustiva não faz parte do âmbito desta unidade curricular. É do ponto de vista dos autores que o conjunto de actividades que ocorrem em client-side possuem uma relevância considerável, o qual premite a sua inclusão e descrição neste relatório. 
+
 ### <a name="info"></a>Informações
 
 ##### Autores:
