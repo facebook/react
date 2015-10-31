@@ -13,7 +13,8 @@
 
 /**
  * Keeps track of the currently rendering component. Not always the same as
- * the current owner, which is also set on component initialization.
+ * the current owner, which is also set on component initialization. Should
+ * only be updated in development, since it's only used for warnings.
  */
 var ReactCurrentRender = {
 

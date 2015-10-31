@@ -810,13 +810,17 @@ var ReactCompositeComponentMixin = {
   _renderValidatedComponent: function() {
     var renderedComponent;
     ReactCurrentOwner.current = this;
-    ReactCurrentRender.current = this;
+    if (__DEV__) {
+      ReactCurrentRender.current = this;
+    }
     try {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
     } finally {
       ReactCurrentOwner.current = null;
-      ReactCurrentRender.current = null;
+      if (__DEV__) {
+        ReactCurrentRender.current = null;
+      }
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
