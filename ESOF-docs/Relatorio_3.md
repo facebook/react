@@ -23,7 +23,7 @@ Esta árvore será posteriormente traduzida numa árvore DOM inteligível pelo *
 
 #### <a name="jsx"></a>Sintaxe JSX
 
-[JSX](https://facebook.github.io/jsx/) é uma extensão sintática para JavaScript semelhante a XML, apresentado a vantagem de ser mais [intuitiva e familiar](https://facebook.github.io/jsx/#rationale) para a maior parte dos programadores, permitindo uma compreensão mais fácil da estrutura em árvore do DOM virtual da aplicação, devido ao equilíbrio de *tags* de início e de fim.
+[JSX](https://facebook.github.io/jsx/) é uma extensão sintática para JavaScript semelhante a XML, apresentando a vantagem de ser mais [intuitiva e familiar](https://facebook.github.io/jsx/#rationale) para a maior parte dos programadores, permitindo uma compreensão mais fácil da estrutura em árvore do DOM virtual da aplicação, devido ao equilíbrio de *tags* de início e de fim.
 
 O recurso a esta sintaxe é recomendado, mas não [obrigatório](https://facebook.github.io/react/docs/jsx-in-depth.html#why-jsx). Na realidade, o React [transformará a sintaxe JSX](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) em JavaScript puro, pelo que a sua utilização tem como único objetivo acelerar o processo de desenvolvimento de aplicações que façam uso da biblioteca.
 
@@ -73,7 +73,7 @@ A interpretação dos autores deste relatório no que diz respeito à visão ló
 
 O projeto é constituído por [quatro pacotes](#logica) que definem a sua estrutura. Os mesmos são apresentados de seguida.
 
-O [pacote **react**](https://github.com/facebook/react/tree/master/packages/react) é responsável pela implementação das funcionalidades de acesso imediato ao React, não recorrendo a transformações da [sintaxe JSX](#jsx). Note-se que o mesmo pode ser distribuído com o [**npm** (*node package manager*)](https://www.npmjs.com/), uma [ferramenta](https://en.wikipedia.org/wiki/Npm_(software)) que permite a gestão de dependências. Este pacote permite a utilização de [*browserify*](http://browserify.org/) com o objectivo de indicar dependências em relação a outros módulos, usando uma sintaxe idêntica à que é usada pela biblioteca [Node.js](https://nodejs.org/en/).
+O [pacote **react**](https://github.com/facebook/react/tree/master/packages/react) é responsável pela implementação das funcionalidades de acesso imediato ao React, não recorrendo a transformações da [sintaxe JSX](#jsx). Note-se que o mesmo pode ser distribuído com o [**npm** (*node package manager*)](https://www.npmjs.com/), uma [ferramenta](https://en.wikipedia.org/wiki/Npm_(software)) que permite a gestão de dependências. Este pacote permite a utilização de [*browserify*](http://browserify.org/) com o objetivo de indicar dependências em relação a outros módulos, usando uma sintaxe idêntica à que é usada pela biblioteca [Node.js](https://nodejs.org/en/).
 
 O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/react-dom) envolve as operações relacionadas com a tradução do [DOM virtual](#virtual-dom) da aplicação na árvore DOM do *browser*. São, também, implementadas as operações relacionadas com isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering).
 
