@@ -81,7 +81,7 @@ O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/
 
 A *core team* decidiu clarificar e simplificar a forma de construir mais ambientes que o React pode compilar, e, para tal, decidiram dividir um pacote *main* **react** nos dois pacotes falados anteriormente: **react** e **react-dom**. Assim, abriu-se caminho para componentes de escrita que podem ser compartilhados entre versões web de React e React Native. 
 
-O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua coleção de módulos úteis para compilar aplicações React. Estes devem ser considerados experimentais tendendo assim a mudar com elevada frequência. Para conseguir obter os *addons*, é necessário instalá-los individualmente a partir do *npm*, usando, para tal, a instrução apresentada abaixo.
+O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua coleção de módulos úteis para compilar aplicações React. Estes devem ser considerados experimentais, e, por isso, são sujeitos a um grande número de alterações. Para conseguir obter os *add-ons*, é necessário instalá-los individualmente a partir do *npm*. Por exemplo, caso se pretenda instalar o *add-on* *PureRenderMixin*, capaz de introduzir, na maior parte dos casos, uma maior performance na renderização, pode utilizar-se, para tal, a instrução apresentada abaixo.
 
 > $ npm install react-addons-pure-render-mixin
 
@@ -131,7 +131,7 @@ Cada artefacto correspondente a um componente de *software* é, neste caso, dist
 
 Relativamente à [vista de implementação](#implementacao), expressa por um diagrama de componentes, parece existir uma distinção suficientemente clara entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
 
-A [vista lógica](#logica) é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *addons* adicionais. Os pacotes são descritos de forma explícita no [repositório do projeto](https://github.com/facebook/react/tree/master/packages).
+A [vista lógica](#logica) é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *add-ons* adicionais. Os pacotes são descritos de forma explícita no [repositório do projeto](https://github.com/facebook/react/tree/master/packages).
 
 Quanto à [vista de processo](#processo), é do entender dos autores que o conjunto de atividades que são executadas no lado do cliente são as que possuem uma maior relevância, justificando-se a sua inclusão neste relatório, ainda que outras pudessem ser identificadas, nomeadamente no lado do servidor. 
 
