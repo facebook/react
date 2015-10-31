@@ -69,23 +69,21 @@ O seguinte [diagrama de pacotes](https://en.wikipedia.org/wiki/Package_diagram) 
 
 #### <a name="interpretacao-logica"></a>Interpretação
 
-A interpretação dos autores deste relatório referente à visão lógica aplicada à biblioteca React foi traduzida no [diagrama de pacotes](#logica) anterior, após análise cuidada da informação que é possível obter a partir do [repositório do projeto](https://github.com/facebook/react/tree/master/packages).
+A interpretação dos autores deste relatório no que diz respeito à visão lógica foi traduzida no [diagrama de pacotes](#logica) anterior, após análise cuidada da informação que é possível obter a partir do [repositório do projeto](https://github.com/facebook/react/tree/master/packages).
 
-O [projeto](#logica) é constituído por quatro pacotes que definem a estrutura do projeto em estudo. Os mesmos são apresentados de seguida.
+O projeto é constituído por [quatro pacotes](#logica) que definem a sua estrutura. Os mesmos são apresentados de seguida.
 
-O [pacote **react**](https://github.com/facebook/react/tree/master/packages/react) é responsável pela implementação das funcionalidades de acesso imediato ao React, não recorrendo a transformações da [sintaxe JSX](#jsx). Note-se que o mesmo pode ser distribuído com o [*npm (node package manager)*](https://www.npmjs.com/), uma [ferramenta](https://en.wikipedia.org/wiki/Npm_(software)) que permite a gestão de dependências. Este pacote permite a utilização de [*browserify*](http://browserify.org/), com o objectivo de indicar dependências em relação a outros módulos, usando uma sintaxe idêntica à que é usada pela biblioteca [Node.js](https://nodejs.org/en/).
+O [pacote **react**](https://github.com/facebook/react/tree/master/packages/react) é responsável pela implementação das funcionalidades de acesso imediato ao React, não recorrendo a transformações da [sintaxe JSX](#jsx). Note-se que o mesmo pode ser distribuído com o [**npm** (*node package manager*)](https://www.npmjs.com/), uma [ferramenta](https://en.wikipedia.org/wiki/Npm_(software)) que permite a gestão de dependências. Este pacote permite a utilização de [*browserify*](http://browserify.org/) com o objectivo de indicar dependências em relação a outros módulos, usando uma sintaxe idêntica à que é usada pela biblioteca [Node.js](https://nodejs.org/en/).
 
-O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/react-dom) envolve as operações relacionadas com a tradução do [DOM virtual](#virtual-dom) da aplicação na árvore DOM do *browser*. São, também, implementadas as operações relacionadas com isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering). A sua instalação traduz-se da seguinte forma.
+O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/react-dom) envolve as operações relacionadas com a tradução do [DOM virtual](#virtual-dom) da aplicação na árvore DOM do *browser*. São, também, implementadas as operações relacionadas com isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering).
 
-> $ npm install react react-dom
+A divisão entre os dois pacotes anteriores justifica-se pela necessidade de separação entre os conceitos de [DOM virtual](#virtual-dom) e DOM do *browser*.
 
-A *core team* decidiu clarificar e simplificar a forma de construir mais ambientes que o React pode compilar, e, para tal, decidiram dividir um pacote *main* **react** nos dois pacotes falados anteriormente: **react** e **react-dom**. Assim, abriu-se caminho para componentes de escrita que podem ser compartilhados entre versões web de React e React Native. 
-
-O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua coleção de módulos úteis para compilar aplicações React. Estes devem ser considerados experimentais, e, por isso, são sujeitos a um grande número de alterações. Para conseguir obter os *add-ons*, é necessário instalá-los individualmente a partir do *npm*. Por exemplo, caso se pretenda instalar o *add-on* *PureRenderMixin*, capaz de introduzir, na maior parte dos casos, uma maior performance na renderização, pode utilizar-se, para tal, a instrução apresentada abaixo.
+O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua [coleção de módulos](https://facebook.github.io/react/docs/addons.html) úteis para a construção de aplicações React. Estes módulos devem ser considerados experimentais, podendo ser sujeitos a várias alterações. Os *addons* podem ser obtidos individualmente através do **npm**. Por exemplo, caso se pretenda instalar o *addon* [**PureRenderMixin**](https://facebook.github.io/react/docs/pure-render-mixin.html), capaz de melhorar, em determinadas situações, o desempenho da aplicação, pode utilizar-se a instrução apresentada abaixo.
 
 > $ npm install react-addons-pure-render-mixin
 
-O [pacote **jsx_orphaned_brackets_transformer**](https://github.com/facebook/react/tree/master/packages/jsx_orphaned_brackets_transformer) implementa a transformação da sintaxe JSX para JavaScript puro. Este módulo envia um executável que transforma um ficheiro ou um diretório de ficheiros. Clarifica-se a sua utilização com o seguinte exemplo que demonstra a sua instalação e execução.
+O [pacote **jsx_orphaned_brackets_transformer**](https://github.com/facebook/react/tree/master/packages/jsx_orphaned_brackets_transformer) implementa a [transformação](https://facebook.github.io/react/docs/jsx-in-depth.html#the-transform) da sintaxe JSX para JavaScript puro. O seguinte [exemplo](https://github.com/facebook/react/tree/master/packages/jsx_orphaned_brackets_transformer#usage) demonstra a sua instalação e utilização.
 
 > $ npm -g install jsx_orphaned_brackets_transformer
 
