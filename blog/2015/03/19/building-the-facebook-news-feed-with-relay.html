@@ -146,20 +146,18 @@
 <h2><a class="anchor" name="the-ltstorygt-begins"></a>The <code>&lt;Story&gt;</code> Begins <a class="hash-link" href="#the-ltstorygt-begins">#</a></h2>
 <p>The first step is a React <code>&lt;Story&gt;</code> component that accepts a <code>story</code> prop with the story&#39;s text and author information. Note that all examples uses ES6 syntax and elide presentation details to focus on the pattern of data access.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
-<span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">story</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">;</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">View</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">Image</span> <span class="nx">uri</span><span class="o">=</span><span class="p">{</span><span class="nx">story</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">profile_picture</span><span class="p">.</span><span class="nx">uri</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Image</span> <span class="nx">uri</span><span class="o">=</span><span class="p">{</span><span class="nx">story</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">profilePicture</span><span class="p">.</span><span class="nx">uri</span><span class="p">}</span> <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">story</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
         <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">story</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
       <span class="o">&lt;</span><span class="err">/View&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Story</span><span class="p">;</span>
 </code></pre></div>
 <p><br/></p>
 <h2><a class="anchor" name="whats-the-ltstorygt"></a>What&#39;s the <code>&lt;Story&gt;</code>? <a class="hash-link" href="#whats-the-ltstorygt">#</a></h2>
@@ -167,37 +165,37 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
 <span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
 
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">Story</span><span class="p">,</span> <span class="p">{</span>
-  <span class="nx">queries</span><span class="o">:</span> <span class="p">{</span>
+<span class="kr">export</span> <span class="k">default</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">Story</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">fragments</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">story</span><span class="o">:</span> <span class="cm">/* TODO */</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Before adding the GraphQL query, let&#39;s look at the component hierarchy this creates:</p>
+<p>Before adding the GraphQL fragment, let&#39;s look at the component hierarchy this creates:</p>
 
 <p><img src="/react/img/blog/relay-components/relay-containers.png" width="397" alt="React Container Data Flow" /></p>
 
-<p>Most props will be passed through from the container to the original component. However, Relay will return the query results for a prop whenever a query is defined. In this case we&#39;ll add a GraphQL query for <code>story</code>:</p>
+<p>Most props will be passed through from the container to the original component. However, Relay will return the query results for a prop whenever a fragment is defined. In this case we&#39;ll add a GraphQL fragment for <code>story</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
 <span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
 
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">Story</span><span class="p">,</span> <span class="p">{</span>
-  <span class="nx">queries</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">story</span><span class="o">:</span> <span class="nx">graphql</span><span class="err">`</span>
-      <span class="nx">Story</span> <span class="p">{</span>
+<span class="kr">export</span> <span class="k">default</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">Story</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">fragments</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">story</span><span class="o">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">QL</span><span class="err">`</span>
+      <span class="nx">fragment</span> <span class="nx">on</span> <span class="nx">Story</span> <span class="p">{</span>
         <span class="nx">author</span> <span class="p">{</span>
-          <span class="nx">name</span><span class="p">,</span>
-          <span class="nx">profile_picture</span> <span class="p">{</span>
+          <span class="nx">name</span>
+          <span class="nx">profilePicture</span> <span class="p">{</span>
             <span class="nx">uri</span>
           <span class="p">}</span>
-        <span class="p">},</span>
+        <span class="p">}</span>
         <span class="nx">text</span>
       <span class="p">}</span>
-    <span class="err">`</span>
-  <span class="p">}</span>
+    <span class="err">`</span><span class="p">,</span>
+  <span class="p">},</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Queries use ES6 template literals tagged with the <code>graphql</code> function. Similar to how JSX transpiles to plain JavaScript objects and function calls, these template literals transpile to plain objects that describe queries. Note that the query&#39;s structure closely matches the object structure that we expected in <code>&lt;Story&gt;</code>&#39;s render function.</p>
+<p>Queries use ES6 template literals tagged with the <code>Relay.QL</code> function. Similar to how JSX transpiles to plain JavaScript objects and function calls, these template literals transpile to plain objects that describe fragments. Note that the fragment&#39;s structure closely matches the object structure that we expected in <code>&lt;Story&gt;</code>&#39;s render function.</p>
 
 <p><br/></p>
 <h2><a class="anchor" name="ltstorygts-on-demand"></a><code>&lt;Story&gt;</code>s on Demand <a class="hash-link" href="#ltstorygts-on-demand">#</a></h2>
@@ -205,7 +203,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
   <span class="nx">author</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;Greg&quot;</span><span class="p">,</span>
-    <span class="nx">profile_picture</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">profilePicture</span><span class="o">:</span> <span class="p">{</span>
       <span class="nx">uri</span><span class="o">:</span> <span class="s2">&quot;https://…&quot;</span>
     <span class="p">}</span>
   <span class="p">},</span>
@@ -244,47 +242,47 @@
 <h2><a class="anchor" name="all-the-news-fit-to-be-relayed"></a>All the News Fit to be Relayed <a class="hash-link" href="#all-the-news-fit-to-be-relayed">#</a></h2>
 <p><code>&lt;NewsFeed&gt;</code> has two new requirements: it composes <code>&lt;Story&gt;</code> and requests more data at runtime.</p>
 
-<p>Just as React views can be nested, Relay queries can compose queries from child components. Composition in GraphQL uses ES6 template literal substitution: <code>${Component.getQuery(&#39;prop&#39;)}</code>. Pagination can be accomplished with a query parameter, specified with <code>&lt;param&gt;</code> (as in <code>stories(first: &lt;count&gt;)</code>):</p>
+<p>Just as React views can be nested, Relay components can compose query fragments from child components. Composition in GraphQL uses ES6 template literal substitution: <code>${Component.getFragment(&#39;prop&#39;)}</code>. Pagination can be accomplished with a variable, specified with <code>$variable</code> (as in <code>stories(first: $count)</code>):</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// NewsFeed.react.js</span>
 <span class="kr">class</span> <span class="nx">NewsFeed</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
 
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">NewsFeed</span><span class="p">,</span> <span class="p">{</span>
-  <span class="nx">queryParams</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">count</span><span class="o">:</span> <span class="mi">3</span>                             <span class="cm">/* default to 3 stories */</span>
+<span class="kr">export</span> <span class="k">default</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">NewsFeed</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">initialVariables</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">count</span><span class="o">:</span> <span class="mi">3</span>                                <span class="cm">/* default to 3 stories */</span>
   <span class="p">},</span>
-  <span class="nx">queries</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">viewer</span><span class="o">:</span> <span class="nx">graphql</span><span class="err">`</span>
-      <span class="nx">Viewer</span> <span class="p">{</span>
-        <span class="nx">stories</span><span class="p">(</span><span class="nx">first</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">count</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>        <span class="cm">/* fetch viewer&#39;s stories */</span>
-          <span class="nx">edges</span> <span class="p">{</span>                        <span class="cm">/* traverse the graph */</span>
+  <span class="nx">fragments</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">viewer</span><span class="o">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">QL</span><span class="err">`</span>
+      <span class="nx">fragment</span> <span class="nx">on</span> <span class="nx">Viewer</span> <span class="p">{</span>
+        <span class="nx">stories</span><span class="p">(</span><span class="nx">first</span><span class="o">:</span> <span class="nx">$count</span><span class="p">)</span> <span class="p">{</span>            <span class="cm">/* fetch viewer&#39;s stories */</span>
+          <span class="nx">edges</span> <span class="p">{</span>                           <span class="cm">/* traverse the graph */</span>
             <span class="nx">node</span> <span class="p">{</span>
-              <span class="nx">$</span><span class="p">{</span><span class="nx">Story</span><span class="p">.</span><span class="nx">getQuery</span><span class="p">(</span><span class="s1">&#39;story&#39;</span><span class="p">)}</span> <span class="cm">/* compose child query */</span>
+              <span class="nx">$</span><span class="p">{</span><span class="nx">Story</span><span class="p">.</span><span class="nx">getFragment</span><span class="p">(</span><span class="s1">&#39;story&#39;</span><span class="p">)}</span> <span class="cm">/* compose child fragment */</span>
             <span class="p">}</span>
           <span class="p">}</span>
         <span class="p">}</span>
       <span class="p">}</span>
-    <span class="err">`</span>
-  <span class="p">}</span>
+    <span class="err">`</span><span class="p">,</span>
+  <span class="p">},</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Whenever <code>&lt;NewsFeed&gt;</code> is rendered, Relay will recursively expand all the composed queries and fetch them in a single trip to the server. In this case, the <code>text</code> and <code>author</code> data will be fetched for each of the 3 story nodes.</p>
+<p>Whenever <code>&lt;NewsFeed&gt;</code> is rendered, Relay will recursively expand all the composed fragments and fetch the queries in a single trip to the server. In this case, the <code>text</code> and <code>author</code> data will be fetched for each of the 3 story nodes.</p>
 
-<p>Query parameters are available to components as <code>props.queryParams</code> and can be modified with <code>props.setQueryParams(nextParams)</code>. We can use these to implement pagination:</p>
+<p>Query variables are available to components as <code>props.relay.variables</code> and can be modified with <code>props.relay.setVariables(nextVariables)</code>. We can use these to implement pagination:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// NewsFeed.react.js</span>
 <span class="kr">class</span> <span class="nx">NewsFeed</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
 
   <span class="nx">loadMore</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// read current params</span>
-    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">queryParams</span><span class="p">.</span><span class="nx">count</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">relay</span><span class="p">.</span><span class="nx">variables</span><span class="p">.</span><span class="nx">count</span><span class="p">;</span>
     <span class="c1">// update params</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">setQueryParams</span><span class="p">({</span>
-      <span class="nx">count</span><span class="o">:</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">5</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">relay</span><span class="p">.</span><span class="nx">setVariables</span><span class="p">({</span>
+      <span class="nx">count</span><span class="o">:</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span>
     <span class="p">});</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Now when <code>loadMore()</code> is called, Relay will send a GraphQL request for the additional five stories. When these stories are fetched, the component will re-render with the new stories available in <code>props.viewer.stories</code> and the updated count reflected in <code>props.queryParams.count</code>.</p>
+<p>Now when <code>loadMore()</code> is called, Relay will send a GraphQL request for the additional five stories. When these stories are fetched, the component will re-render with the new stories available in <code>props.viewer.stories</code> and the updated count reflected in <code>props.relay.variables.count</code>.</p>
 
 <p><br/></p>
 <h2><a class="anchor" name="in-conclusion"></a>In Conclusion <a class="hash-link" href="#in-conclusion">#</a></h2>
