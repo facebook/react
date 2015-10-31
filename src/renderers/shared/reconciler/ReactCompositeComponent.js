@@ -122,6 +122,9 @@ var ReactCompositeComponentMixin = {
    *
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {?object} nativeParent
+   * @param {?object} nativeContainerInfo
+   * @param {?object} context
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -370,13 +373,12 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _maskContext: function(context) {
-    var maskedContext = null;
     var Component = this._currentElement.type;
     var contextTypes = Component.contextTypes;
     if (!contextTypes) {
       return emptyObject;
     }
-    maskedContext = {};
+    var maskedContext = {};
     for (var contextName in contextTypes) {
       maskedContext[contextName] = context[contextName];
     }
