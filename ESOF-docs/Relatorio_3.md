@@ -81,7 +81,7 @@ O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/
 
 A *core team* decidiu clarificar e simplificar a forma de construir mais ambientes que o React pode compilar e para tal decidiram dividir um pacote *main* **react** nos dois pacotes falados anteriormente: **react** e **react-dom**. Assim, abriu-se caminho para componentes de escrita que podem ser compartilhados entre versões web de React e React Native. 
 
-O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua coleção de módulos úteis para compilar aplicações React. Estes devem ser considerados experimentais tendendo assim a mudar com elevada frequência. Para conseguir obter os *addons* é necessário instala-los individualmente a partir do *npm* usando a instrução apresentada abaixo.
+O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua coleção de módulos úteis para compilar aplicações React. Estes devem ser considerados experimentais tendendo assim a mudar com elevada frequência. Para conseguir obter os *addons*, é necessário instalá-los individualmente a partir do *npm*, usando, para tal, a instrução apresentada abaixo.
 
 > $ npm install react-addons-pure-render-mixin
 
