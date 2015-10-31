@@ -79,7 +79,7 @@ O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/
 
 A divisão entre os dois pacotes anteriores justifica-se pela necessidade de separação entre os conceitos de [DOM virtual](#virtual-dom) e DOM do *browser*.
 
-O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua [coleção de módulos](https://facebook.github.io/react/docs/addons.html) úteis para a construção de aplicações React. Estes módulos devem ser considerados experimentais, podendo ser sujeitos a várias alterações. Os *addons* podem ser obtidos individualmente através do **npm**. Por exemplo, caso se pretenda instalar o *addon* [**PureRenderMixin**](https://facebook.github.io/react/docs/pure-render-mixin.html), capaz de melhorar, em determinadas situações, o desempenho da aplicação, pode utilizar-se a instrução apresentada abaixo.
+O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua [coleção de módulos adicionais](https://facebook.github.io/react/docs/addons.html) úteis para a construção de aplicações React. Estes módulos devem ser considerados experimentais, podendo ser sujeitos a várias alterações. Os *addons* podem ser obtidos individualmente através do **npm**. Por exemplo, caso se pretenda instalar o *addon* [**PureRenderMixin**](https://facebook.github.io/react/docs/pure-render-mixin.html), capaz de melhorar, em determinadas situações, o desempenho da aplicação, pode utilizar-se a instrução apresentada abaixo.
 
 > $ npm install react-addons-pure-render-mixin
 
@@ -123,15 +123,15 @@ De igual modo, a sintaxe JSX pode ser usada tanto do lado do cliente como do lad
 
 ### <a name="analise"></a>Conclusões e Análise Crítica
 
-É importante reiterar a ideia que foi já referida ao longo do relatório. Todos os diagramas apresentados foram construídos pelos autores deste relatório, os quais se basearam unicamente na sua interpretação acerca dos diversos aspetos do projeto. É possível que interpretações distintas pudessem conduzir a diagramas diferentes.
+É importante reiterar a ideia que foi já referida ao longo do relatório. Todos os diagramas apresentados foram construídos pelos autores deste relatório, os quais se basearam unicamente na sua interpretação acerca dos diversos aspetos do projeto. É possível que interpretações distintas possam conduzir a diagramas diferentes.
 
-Relativamente à [vista de implementação](#implementacao), expressa por um diagrama de componentes, parece existir uma distinção suficientemente clara entre as funções de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
+Relativamente à [vista de implementação](#implementacao), expressa por um diagrama de componentes, parece existir uma distinção suficientemente clara entre as funcionalidades de interpretação da sintaxe JSX e de tratamento da árvore DOM da página, justificando-se a sua divisão em dois componentes diferentes.
 
-A [vista lógica](#logica) é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e *add-ons* adicionais. Os pacotes são descritos de forma explícita no [repositório do projeto](https://github.com/facebook/react/tree/master/packages).
+A [vista lógica](#logica) é expressa por um diagrama de pacotes, o qual mostra as várias unidades lógicas da biblioteca e as dependências entre si. Os pacotes estão divididos de acordo com as funcionalidades que implementam, nomeadamente as funcionalidades centrais do React, as funcionalidades relacionadas com o DOM da aplicação, o transformador da sintaxe JSX e módulos adicionais (*addons*). Os pacotes são descritos de forma explícita no [repositório do projeto](https://github.com/facebook/react/tree/master/packages).
 
 Quanto à [vista de processo](#processo), é do entender dos autores que o conjunto de atividades que são executadas no lado do cliente são as que possuem uma maior relevância, justificando-se a sua inclusão neste relatório, ainda que outras pudessem ser identificadas, nomeadamente no lado do servidor. 
 
-Com a [vista de *deployment*](#deployment), pretendeu-se mostrar de que modo são distribuídos os artefactos correspondentes aos componentes de *software*, especificados na vista de implementação, em componentes de *hardware*, o que contribuiu para uma melhor noção acerca do modo de funcionamento de cada um. No entanto, não existe distinção entre os dois nós de *hardware*, o cliente e o servidor, relativamente aos artefactos que neles são distribuídos, uma vez que cada um destes é distribuído em ambos os nós.
+Com a [vista de *deployment*](#deployment), pretendeu-se mostrar de que modo são distribuídos os artefactos correspondentes aos componentes de *software*, especificados na [vista de implementação](#implementacao), em componentes de *hardware*, o que contribui para uma melhor noção acerca do modo de funcionamento da biblioteca. No entanto, não existe distinção entre os dois nós de *hardware*, o cliente e o servidor, relativamente aos artefactos que neles são distribuídos, uma vez que cada um destes é distribuído em ambos os nós.
 
 De uma forma geral, é da opinião dos autores deste relatório que a biblioteca React está bem desenhada e organizada do ponto de vista arquitetural, tendo sido relativamente fácil extrair a informação necessária à construção dos diagramas aqui apresentados a partir do repositório e da documentação do projeto.
 
