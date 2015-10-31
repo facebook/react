@@ -77,9 +77,18 @@ O [pacote **react**](https://github.com/facebook/react/tree/master/packages/reac
 
 O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/react-dom) envolve as operações relacionadas com a tradução do [DOM virtual](#virtual-dom) da aplicação na árvore DOM do *browser*. São, também, implementadas as operações relacionadas com isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering).
 
-O pacote **react-addons** ...
+> npm install react react-dom
 
-O [pacote **jsx_orphaned_brackets_transformer**](https://github.com/facebook/react/tree/master/packages/jsx_orphaned_brackets_transformer) implementa a transformação da sintaxe JSX para JavaScript puro.
+A core team decidiu clarificar e simplificar a forma de construir mais ambientes que o React pode compilar e para tal decidiram dividir um pacote *main* **react** nos dois pacotes falados anteriormente: **react** e **react-dom**. Assim, abre-se caminho para componentes de escrita que podem ser compartilhados entre versões web de React e React Native. 
+
+O pacote **react-addons** é caracterizado pela sua coleção de módulos úteis para compilar aplicações React. Estes devem ser considerados experimentais tendendo assim a mudar com elevada frequência. Para conseguir dos *addons* é necessário instala-los individualmente a partir do *npm* usando a instrução apresentada à abaixo.
+
+> npm install react-addons-pure-render-mixin
+
+O [pacote **jsx_orphaned_brackets_transformer**](https://github.com/facebook/react/tree/master/packages/jsx_orphaned_brackets_transformer) implementa a transformação da sintaxe JSX para JavaScript puro. Este módulo envia um executável que transforma um ficheiro ou um diretório de ficheiros. Clarifica-se a sua utilização com o seguinte exemplo que demonstra a sua instalação e execução.
+
+> npm -g install jsx_orphaned_brackets_transformer
+> jsx_orphaned_brackets_transformer <path_to_file_or_files>
 
 ### <a name="processo"></a>Vista de Processo
 
