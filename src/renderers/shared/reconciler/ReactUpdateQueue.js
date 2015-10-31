@@ -46,8 +46,18 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   }
 
   if (__DEV__) {
+    var hasOwner = ReactCurrentOwner.current != null;
+    var isRendering = ReactCurrentRender.current != null;
+
     warning(
-      ReactCurrentRender.current == null,
+      !hasOwner || isRendering,
+      '%s(...): Cannot trigger update from another component\'s constructor. ' +
+      'Move constructor side-effects into `componentWillMount`.',
+      callerName
+    );
+
+    warning(
+      !isRendering,
       '%s(...): Cannot update during an existing state transition ' +
       '(such as within `render`). Render methods should be a pure function ' +
       'of props and state.',
