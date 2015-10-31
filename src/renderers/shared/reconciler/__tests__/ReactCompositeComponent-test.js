@@ -1241,4 +1241,31 @@ describe('ReactCompositeComponent', function() {
 
   });
 
+  it('should warn when mutated props are passed', function() {
+
+    var container = document.createElement('div');
+
+    class Foo extends React.Component {
+      constructor(props) {
+        var _props = { idx: props.idx + '!' };
+        super(_props);
+      }
+
+      render() {
+        return <span />;
+      }
+    }
+
+    expect(console.error.calls.length).toBe(0);
+
+    ReactDOM.render(<Foo idx="qwe" />, container);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Foo(...): When calling super() in `Foo`, make sure to pass ' +
+        'up the same props that your component\'s constructor was passed.'
+    );
+
+  });
+
 });

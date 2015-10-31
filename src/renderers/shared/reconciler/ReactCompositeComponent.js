@@ -195,6 +195,18 @@ var ReactCompositeComponentMixin = {
           Component.displayName || Component.name || 'Component'
         );
       }
+
+      var propsMutated = inst.props !== publicProps;
+      var componentName =
+            Component.displayName || Component.name || 'Component';
+
+      warning(
+        typeof inst.props === 'undefined' ||
+          !propsMutated,
+        '%s(...): When calling super() in `%s`, make sure to pass ' +
+          'up the same props that your component\'s constructor was passed.',
+        componentName, componentName
+      );
     }
 
     // These should be set up in the constructor, but as a convenience for
