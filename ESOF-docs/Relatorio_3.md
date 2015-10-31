@@ -88,7 +88,8 @@ O pacote **react-addons** é caracterizado pela sua coleção de módulos úteis
 O [pacote **jsx_orphaned_brackets_transformer**](https://github.com/facebook/react/tree/master/packages/jsx_orphaned_brackets_transformer) implementa a transformação da sintaxe JSX para JavaScript puro. Este módulo envia um executável que transforma um ficheiro ou um diretório de ficheiros. Clarifica-se a sua utilização com o seguinte exemplo que demonstra a sua instalação e execução.
 
 > npm -g install jsx_orphaned_brackets_transformer
-> jsx_orphaned_brackets_transformer <path_to_file_or_files>
+
+> jsx_orphaned_brackets_transformer [path_to_file_or_files]
 
 ### <a name="processo"></a>Vista de Processo
 
