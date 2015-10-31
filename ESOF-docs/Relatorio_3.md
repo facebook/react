@@ -73,13 +73,13 @@ A interpretação dos autores deste relatório referente à visão lógica aplic
 
 O [projeto](#logica) é constituído por quatro pacotes que definem a estrutura do projeto em estudo. Os mesmos são apresentados de seguida.
 
-O [pacote **react**](https://github.com/facebook/react/tree/master/packages/react) é o pacote que implementa as funcionalidades de acesso imediato ao React, não recorrendo a transformações da [sintaxe JSX](#jsx). O pacote pode ser distribuído com o [*npm (node package manager)*](https://www.npmjs.com/), uma [ferramenta](https://en.wikipedia.org/wiki/Npm_(software)) que permite a gestão de dependências. Este pacote permite a utilização de [*browserify*](http://browserify.org/), uma forma de indicar dependências em relação a outros módulos usando uma sintaxe idêntica à que é usada pela biblioteca [Node.js](https://nodejs.org/en/).
+O [pacote **react**](https://github.com/facebook/react/tree/master/packages/react) é responsável pela implementação das funcionalidades de acesso imediato ao React, não recorrendo a transformações da [sintaxe JSX](#jsx). Note-se que o mesmo pode ser distribuído com o [*npm (node package manager)*](https://www.npmjs.com/), uma [ferramenta](https://en.wikipedia.org/wiki/Npm_(software)) que permite a gestão de dependências. Este pacote permite a utilização de [*browserify*](http://browserify.org/), com o objectivo de indicar dependências em relação a outros módulos, usando uma sintaxe idêntica à que é usada pela biblioteca [Node.js](https://nodejs.org/en/).
 
 O [pacote **react-dom**](https://github.com/facebook/react/tree/master/packages/react-dom) envolve as operações relacionadas com a tradução do [DOM virtual](#virtual-dom) da aplicação na árvore DOM do *browser*. São, também, implementadas as operações relacionadas com isomorfismo, um [conceito abordado no Relatório 2](./Relatorio_2.md#isomorfismo-server-side-rendering). A sua instalação traduz-se da seguinte forma.
 
 > $ npm install react react-dom
 
-A *core team* decidiu clarificar e simplificar a forma de construir mais ambientes que o React pode compilar e para tal decidiram dividir um pacote *main* **react** nos dois pacotes falados anteriormente: **react** e **react-dom**. Assim, abriu-se caminho para componentes de escrita que podem ser compartilhados entre versões web de React e React Native. 
+A *core team* decidiu clarificar e simplificar a forma de construir mais ambientes que o React pode compilar, e, para tal, decidiram dividir um pacote *main* **react** nos dois pacotes falados anteriormente: **react** e **react-dom**. Assim, abriu-se caminho para componentes de escrita que podem ser compartilhados entre versões web de React e React Native. 
 
 O [pacote **react-addons**](https://github.com/facebook/react/tree/master/packages/react-addons) é caracterizado pela sua coleção de módulos úteis para compilar aplicações React. Estes devem ser considerados experimentais tendendo assim a mudar com elevada frequência. Para conseguir obter os *addons*, é necessário instalá-los individualmente a partir do *npm*, usando, para tal, a instrução apresentada abaixo.
 
