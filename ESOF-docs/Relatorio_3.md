@@ -115,11 +115,11 @@ O diagrama anterior mostra a forma como a biblioteca React pode correr tanto do 
 
 Ao nível do servidor, o React apresenta uma funcionalidade diferente da usual, no que diz respeito a aplicações Web. Quando a página é carregada pela primeira vez, é criada, pelo servidor, uma [árvore DOM virtual](#virtual-dom) que é, em seguida, enviada à aplicação cliente, que, com esta informação, criará uma árvore DOM que será utilizada pelo *browser* para renderizar a página. Estas operações implementam o conceito de isomorfismo, já analisado em [relatórios anteriores](Relatorio_2.md#isomorfismo-server-side-rendering).
 
-Deste modo, a aplicação cliente poupa recursos na geração da árvore DOM virtual no carregamento inicial, uma vez que as operações são realizadas no servidor. A partir deste momento, sempre que forem assinaladas alterações à árvore DOM virtual, é calculado o número mínimo de alterações a realizar ao DOM do *browser*, como já foi descrito anteriormente.
+Deste modo, a aplicação cliente poupa recursos na geração da árvore DOM virtual no carregamento inicial, uma vez que as operações são realizadas no servidor. A partir deste momento, sempre que forem assinaladas alterações à árvore DOM virtual, é calculado o número mínimo de alterações a realizar sobre o DOM do *browser*, conforme já foi descrito anteriormente.
 
-Tanto no lado do cliente como do servidor, pode ser usada a sintaxe JSX, que tem de ser transformada em JavaScript puro, como já foi explicado anteriormente.
+Assim, tanto o cliente como o servidor executam operações relacionadas com o DOM da aplicação, daí que o artefacto correspondente seja distribuído em ambos os nós.
 
-Cada artefacto correspondente a um componente de *software* é, neste caso, distribuído em ambos os nós de *hardware*.
+De igual modo, a sintaxe JSX pode ser usada tanto do lado do cliente como do lado do servidor, pelo que o artefacto que corresponde a esta funcionalidade também é distribuído em ambos os nós.
 
 ### <a name="analise"></a>Conclusões e Análise Crítica
 
