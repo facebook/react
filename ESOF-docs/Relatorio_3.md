@@ -97,11 +97,9 @@ Neste [diagrama de atividades](https://en.wikipedia.org/wiki/Activity_diagram), 
 
 #### <a name="interpretacao-processo"></a>Interpretação
 
-Como já fora referido no [relatório anterior](./Relatorio_2.md#isomorfismo-server-side-rendering), pode recorrer-se ao **isomorfismo** por forma a acelerar todo o processo de renderização da página durante o carregamento inicial. Utilizando esta propriedade, a primeira versão da *webpage* é renderizada no servidor, e as subsequentes modificações serão realizadas no lado do cliente, que, por sua vez, gera um conjunto de alterações a realizar sobre a árvore DOM da página de cada vez que é assinalada uma alteração à sua [representação interna à biblioteca](#virtual-dom).
+Como já foi referido no [relatório anterior](./Relatorio_2.md#isomorfismo-server-side-rendering), pode recorrer-se ao **isomorfismo** por forma a acelerar todo o processo de renderização da página durante o carregamento inicial. Utilizando esta propriedade, a primeira versão da *webpage* é renderizada no servidor e as subsequentes modificações são realizadas no lado do cliente. Este gera um conjunto de alterações a realizar sobre a árvore DOM do *browser* de cada vez que é assinalada uma alteração sobre [a árvore virtual](#virtual-dom) da aplicação.
 
-Na eventualidade de um dado elemento da página sofrer alterações, sejam externas (causadas por ações do utilizador) ou internas (devido a interrupções periódicas, por exemplo), o DOM do documento é atualizado a partir da sua árvore DOM virtual, através da invocação do método **render()** da classe [ReactDOM](https://facebook.github.io/react/docs/glossary.html#formal-type-definitions). Note-se que o DOM não é reconstruído na totalidade, sendo apenas integradas as alterações necessárias, o que torna o processo de atualização mais eficiente.
-
-Note-se que este processo de atualização parcial do DOM, com recurso a [heurísticas](http://facebook.github.io/react/docs/reconciliation.html), é uma das características que diferencia esta biblioteca das outras, oferecendo uma maior eficiência.
+Na eventualidade de um dado elemento da página sofrer alterações, sejam externas (causadas por ações do utilizador) ou internas (devido a interrupções periódicas, por exemplo), o DOM do documento é atualizado a partir da sua árvore DOM virtual, através da invocação do método **render()** da classe [ReactDOM](https://facebook.github.io/react/docs/glossary.html#formal-type-definitions). Note-se que o DOM não é reconstruído na totalidade, sendo apenas integradas as alterações necessárias, o que torna o processo de atualização mais eficiente, fator que distingue esta biblioteca das restantes.
 
 ### <a name="deployment"></a>Vista de *Deployment*
 
