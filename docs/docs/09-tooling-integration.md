@@ -30,9 +30,13 @@ If you like using JSX, Babel provides an [in-browser ES6 and JSX transformer for
 
 ### Productionizing: Precompiled JSX
 
-If you have [npm](https://www.npmjs.com/), you can run `npm install -g babel`. Babel has built-in support for React v0.12 and v0.13. Tags are automatically transformed to their equivalent `React.createElement(...)`, `displayName` is automatically inferred and added to all React.createClass calls.
+If you have [npm](https://www.npmjs.com/), you can run `npm install -g babel`. Babel has built-in support for React v0.12+. Tags are automatically transformed to their equivalent `React.createElement(...)`, `displayName` is automatically inferred and added to all React.createClass calls.
 
 This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: `babel --watch src/ --out-dir lib/`.
+
+> Note:
+>
+> If you are using babel 6.x, you will need to install the relevant preset/plugins. To get started, you can run `npm install -g babel babel-preset-react` and then run `babel --presets react --watch src/ --out-dir lib/`. For more information: check out the [babel 6 blog post](http://babeljs.io/blog/2015/10/29/6.0.0/)
 
 By default JSX files with a `.js` extension are transformed. Run `babel --help` for more information on how to use Babel.
 
