@@ -26,7 +26,7 @@ module.exports = function() {
   });
 
   args.push.apply(args, rootIDs);
-  args.push('--config' /* from stdin */);
+  args.push('--config'/* from stdin */);
 
   var child = spawn({
     cmd: 'node',

@@ -23,9 +23,7 @@ module.exports = function(grunt) {
       './examples/shared/*.js',
       '.module-cache',
     ],
-    /*eslint-disable camelcase */
-    compare_size: require('./grunt/config/compare_size'),
-    /*eslint-enable camelcase */
+    'compare-size': require('./grunt/config/compare-size'),
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
@@ -135,7 +133,7 @@ module.exports = function(grunt) {
     'npm-react-dom:pack',
     'npm-react-addons:release',
     'npm-react-addons:pack',
-    'compare_size',
+    'compare-size',
   ]);
 
   // Automate the release!
