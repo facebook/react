@@ -7,6 +7,41 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.14.2</title>
+				<description>&lt;p&gt;We have a quick update following the release of 0.14.1 last week. It turns out we broke a couple things in the development build of React when using Internet Explorer. Luckily it was only the development build, so your production applications were unaffected. This release is mostly to address those issues. There is one notable change if consuming React from npm. For the &lt;code&gt;react-dom&lt;/code&gt; package, we moved &lt;code&gt;react&lt;/code&gt; from a regular dependency to a peer dependency. This will impact very few people as these two are typically installed together at the top level, but it will fix some issues with dependencies of installed components also using &lt;code&gt;react&lt;/code&gt; as a peer dependency.&lt;/p&gt;
+
+&lt;p&gt;The release is now available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.2.js&quot;&gt;https://fb.me/react-0.14.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.2.min.js&quot;&gt;https://fb.me/react-0.14.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.2.js&quot;&gt;https://fb.me/react-with-addons-0.14.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.2.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.2.js&quot;&gt;https://fb.me/react-dom-0.14.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.2.min.js&quot;&gt;https://fb.me/react-dom-0.14.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed bug with development build preventing events from firing in some versions of Internet Explorer &amp;amp; Edge&lt;/li&gt;
+&lt;li&gt;Fixed bug with development build when using es5-sham in older versions of Internet Explorer&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;integrity&lt;/code&gt; attribute&lt;/li&gt;
+&lt;li&gt;Fixed bug resulting in &lt;code&gt;children&lt;/code&gt; prop being coerced to a string for custom elements, which was not the desired behavior.&lt;/li&gt;
+&lt;li&gt;Moved &lt;code&gt;react&lt;/code&gt; from &lt;code&gt;dependencies&lt;/code&gt; to &lt;code&gt;peerDependencies&lt;/code&gt; to match expectations and align with &lt;code&gt;react-addons-*&lt;/code&gt; packages&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-11-02T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/11/02/react-v0.14.2.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/11/02/react-v0.14.2.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.14.1</title>
 				<description>&lt;p&gt;After a couple weeks of having more people use v0.14, we&amp;#39;re ready to ship a patch release addressing a few issues. Thanks to everybody who has reported issues and written patches!&lt;/p&gt;
 
@@ -780,89 +815,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.0-r
 				<pubDate>2015-08-11T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html</guid>
-			</item>
-		
-			<item>
-				<title>New React Devtools Beta</title>
-				<description>&lt;p&gt;We&amp;#39;ve made an entirely new version of the devtools, and we want you to try it
-out!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/devtools-full.gif&quot; alt=&quot;The full devtools gif&quot;&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;why-entirely-new&quot;&gt;&lt;/a&gt;Why entirely new? &lt;a class=&quot;hash-link&quot; href=&quot;#why-entirely-new&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Perhaps the biggest reason was to create a defined API for dealing with
-internals, so that other tools could benefit as well and not have to depend on
-implementation details. This gives us more freedom to refactor things
-internally without worrying about breaking tooling.&lt;/p&gt;
-
-&lt;p&gt;The current version of the devtools is a fork of Blink&amp;#39;s &amp;quot;Elements&amp;quot; pane, and
-is imperative, mutation-driven, and tightly integrated with Chrome-specific
-APIs. The new devtools are much less coupled to Chrome, and easier to reason
-about thanks to React.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-are-the-benefits&quot;&gt;&lt;/a&gt;What are the benefits? &lt;a class=&quot;hash-link&quot; href=&quot;#what-are-the-benefits&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;100% React&lt;/li&gt;
-&lt;li&gt;Firefox compatible&lt;/li&gt;
-&lt;li&gt;React Native compatible&lt;/li&gt;
-&lt;li&gt;more extensible &amp;amp; hackable&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;are-there-any-new-features&quot;&gt;&lt;/a&gt;Are there any new features? &lt;a class=&quot;hash-link&quot; href=&quot;#are-there-any-new-features&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Yeah!&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-tree-view&quot;&gt;&lt;/a&gt;The Tree View &lt;a class=&quot;hash-link&quot; href=&quot;#the-tree-view&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/devtools-tree-view.png&quot; alt=&quot;The new tree view of the devtools&quot;&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Much richer view of your props, including the contents of objects and arrays&lt;/li&gt;
-&lt;li&gt;Custom components are emphasized, native components are de-emphasized&lt;/li&gt;
-&lt;li&gt;Stateful components have a red collapser&lt;/li&gt;
-&lt;li&gt;Improved keyboard navigation (hjkl or arrow keys)&lt;/li&gt;
-&lt;li&gt;Selected component is available in the console as &lt;code&gt;$r&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Props that change highlight in green&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Right-click menu&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Scroll node into view&lt;/li&gt;
-&lt;li&gt;Show the source for a component in the &amp;quot;Sources&amp;quot; pane&lt;/li&gt;
-&lt;li&gt;Show the element in the &amp;quot;Elements&amp;quot; pane&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;searching&quot;&gt;&lt;/a&gt;Searching &lt;a class=&quot;hash-link&quot; href=&quot;#searching&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Select the search bar (or press &amp;quot;/&amp;quot;), and start searching for a component by
-name.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/devtools-search.gif&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-side-pane&quot;&gt;&lt;/a&gt;The Side Pane &lt;a class=&quot;hash-link&quot; href=&quot;#the-side-pane&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Now shows the &lt;code&gt;context&lt;/code&gt; for a component&lt;/li&gt;
-&lt;li&gt;Right-click to store a prop/state value as a global variable&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/devtools-side-pane.gif&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;how-do-i-install-it&quot;&gt;&lt;/a&gt;How do I install it? &lt;a class=&quot;hash-link&quot; href=&quot;#how-do-i-install-it&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;First, disable the Chrome web store version, or it will break things. Then
-&lt;a href=&quot;https://github.com/facebook/react-devtools/releases&quot;&gt;download the .crx&lt;/a&gt; and
-drag it into your &lt;code&gt;chrome://extensions&lt;/code&gt; page. If it&amp;#39;s not working to drag it
-from the downloads bar, try opening your downloads folder and drag it from
-there.&lt;/p&gt;
-
-&lt;p&gt;Once we&amp;#39;ve determined that there aren&amp;#39;t any major regressions, we&amp;#39;ll update
-the official web store version, and everyone will be automatically upgraded.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;also-firefox&quot;&gt;&lt;/a&gt;Also Firefox! &lt;a class=&quot;hash-link&quot; href=&quot;#also-firefox&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;We also have an initial version of the devtools for Firefox, which you can
-download from the same &lt;a href=&quot;https://github.com/facebook/react-devtools/releases&quot;&gt;release page&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;feedback-welcome&quot;&gt;&lt;/a&gt;Feedback welcome &lt;a class=&quot;hash-link&quot; href=&quot;#feedback-welcome&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Let us know what issues you run into
-&lt;a href=&quot;https://github.com/facebook/react-devtools/issues&quot;&gt;on GitHub&lt;/a&gt;, and check out
-&lt;a href=&quot;https://github.com/facebook/react-devtools/tree/devtools-next&quot;&gt;the README&lt;/a&gt;
-for more info.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;update&quot;&gt;&lt;/a&gt;Update &lt;a class=&quot;hash-link&quot; href=&quot;#update&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;em&gt;August 12, 2015&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;A second beta is out, with a number of bugfixes. It is also listed on the
-&lt;a href=&quot;https://github.com/facebook/react-devtools/releases&quot;&gt;releases page&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>2015-08-03T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/08/03/new-react-devtools-beta.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/08/03/new-react-devtools-beta.html</guid>
 			</item>
 		
 	</channel>
