@@ -15,7 +15,7 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
-  "dependencies": {
+  "peerDependencies": {
     "react": "^0.15.0-alpha"
   }
 }
