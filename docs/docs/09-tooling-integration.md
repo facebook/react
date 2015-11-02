@@ -36,7 +36,7 @@ This tool will translate files that use JSX syntax to plain JavaScript files tha
 
 > Note:
 >
-> If you are using babel 6.x, you will need to install the relevant preset/plugins. To get started, you can run `npm install -g babel babel-preset-react` and then run `babel --presets react --watch src/ --out-dir lib/`. For more information: check out the [babel 6 blog post](http://babeljs.io/blog/2015/10/29/6.0.0/)
+> If you are using babel 6.x, you will need to install the relevant preset/plugins. To get started, you can run `npm install -g babel-cli`, then `npm i babel-preset-react` and finally run `babel --presets react --watch src/ --out-dir lib/`. For more information: check out the [babel 6 blog post](http://babeljs.io/blog/2015/10/29/6.0.0/)
 
 By default JSX files with a `.js` extension are transformed. Run `babel --help` for more information on how to use Babel.
 
