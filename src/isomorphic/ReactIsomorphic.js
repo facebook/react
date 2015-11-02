@@ -61,9 +61,9 @@ var React = {
     return mixin;
   },
 
-  // This looks DOM specific but these are actually isomorphic helpers
+  // These are actually isomorphic helpers
   // since they are just generating DOM strings.
-  DOM: ReactDOMFactories,
+  ...ReactDOMFactories,
 
   version: ReactVersion,
 
