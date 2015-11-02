@@ -94,7 +94,7 @@ Note that some browsers (Chrome, e.g.) will fail to load the file unless it's se
 First install the [Babel](http://babeljs.io/) command-line tools (requires [npm](https://www.npmjs.com/)):
 
 ```
-npm install --global babel
+npm install --global babel-cli
 ```
 
 Then, translate your `src/helloworld.js` file to plain JavaScript:
