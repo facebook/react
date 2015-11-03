@@ -37,7 +37,8 @@ assign(ReactEmptyComponent.prototype, {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    debugPath
   ) {
     this._rootNodeID = rootID;
     return ReactReconciler.mountComponent(

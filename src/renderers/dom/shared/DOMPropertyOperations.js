@@ -61,7 +61,7 @@ if (__DEV__) {
   };
   var warnedProperties = {};
 
-  var warnUnknownProperty = function(name) {
+  var warnUnknownProperty = function(name, debugPath) {
     if (reactProps.hasOwnProperty(name) && reactProps[name] ||
         warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return;
@@ -83,8 +83,9 @@ if (__DEV__) {
     // logging too much when using transferPropsTo.
     warning(
       standardName == null,
-      'Unknown DOM property %s. Did you mean %s?',
+      'Unknown DOM property %s of `%s`. Did you mean %s?',
       name,
+      debugPath != null ? debugPath.toString() : 'DOM component',
       standardName
     );
 
@@ -132,7 +133,7 @@ var DOMPropertyOperations = {
    * @param {*} value
    * @return {?string} Markup string, or null if the property was invalid.
    */
-  createMarkupForProperty: function(name, value) {
+  createMarkupForProperty: function(name, value, debugPath) {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -151,7 +152,7 @@ var DOMPropertyOperations = {
       }
       return name + '=' + quoteAttributeValueForBrowser(value);
     } else if (__DEV__) {
-      warnUnknownProperty(name);
+      warnUnknownProperty(name, debugPath);
     }
     return null;
   },
@@ -177,7 +178,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    * @param {*} value
    */
-  setValueForProperty: function(node, name, value) {
+  setValueForProperty: function(node, name, value, debugPath) {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -213,7 +214,7 @@ var DOMPropertyOperations = {
     } else if (DOMProperty.isCustomAttribute(name)) {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
     } else if (__DEV__) {
-      warnUnknownProperty(name);
+      warnUnknownProperty(name, debugPath);
     }
   },
 
@@ -234,7 +235,7 @@ var DOMPropertyOperations = {
    * @param {DOMElement} node
    * @param {string} name
    */
-  deleteValueForProperty: function(node, name) {
+  deleteValueForProperty: function(node, name, debugPath) {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -257,7 +258,7 @@ var DOMPropertyOperations = {
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
     } else if (__DEV__) {
-      warnUnknownProperty(name);
+      warnUnknownProperty(name, debugPath);
     }
   },
 

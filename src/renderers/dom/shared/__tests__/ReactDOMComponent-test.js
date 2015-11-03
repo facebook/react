@@ -907,6 +907,24 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('unknown attributes', function() {
+    var ReactTestUtils;
+
+    beforeEach(function() {
+      ReactTestUtils = require('ReactTestUtils');
+    });
+
+    it('should warn for incorrect case', () => {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div><span><a HREF="">link</a></span></div>);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: Unknown DOM property HREF of `TopLevelWrapper > div > span > a`. Did you mean href?'
+      );
+    });
+  });
+
   describe('nesting validation', function() {
     var ReactTestUtils;
 
