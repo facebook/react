@@ -62,18 +62,13 @@ PooledClass.addPoolingTo(
 );
 
 function handleTopLevelImpl(bookKeeping) {
-  // TODO: Re-enable event.path handling
-  //
-  // if (bookKeeping.nativeEvent.path && bookKeeping.nativeEvent.path.length > 1) {
-  //   // New browsers have a path attribute on native events
-  //   handleTopLevelWithPath(bookKeeping);
-  // } else {
-  //   // Legacy browsers don't have a path attribute on native events
-  //   handleTopLevelWithoutPath(bookKeeping);
-  // }
-
-  void handleTopLevelWithPath;  // temporarily unused
-  handleTopLevelWithoutPath(bookKeeping);
+  if (bookKeeping.nativeEvent.path && bookKeeping.nativeEvent.path.length > 1) {
+    // New browsers have a path attribute on native events
+    handleTopLevelWithPath(bookKeeping);
+  } else {
+    // Legacy browsers don't have a path attribute on native events
+    handleTopLevelWithoutPath(bookKeeping);
+  }
 }
 
 // Legacy browsers don't have a path attribute on native events
@@ -135,10 +130,9 @@ function handleTopLevelWithPath(bookKeeping) {
       );
 
       // Jump to the root of this React render tree
-      while (currentPathElementID !== newRootID) {
+      var container = ReactMount.findReactContainerForID(newRootID);
+      while (i + 1 < path.length && path[i + 1] !== container) {
         i++;
-        currentPathElement = path[i];
-        currentPathElementID = ReactMount.getID(currentPathElement);
       }
     }
   }
