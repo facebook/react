@@ -416,16 +416,16 @@
 <p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
 </blockquote>
 <h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
-<p>If you have <a href="https://www.npmjs.com/">npm</a>, you can run <code>npm install -g babel</code>. Babel has built-in support for React v0.12+. Tags are automatically transformed to their equivalent <code>React.createElement(...)</code>, <code>displayName</code> is automatically inferred and added to all React.createClass calls.</p>
+<p>If you have <a href="https://www.npmjs.com/">npm</a>, you can run <code>npm install -g babel-cli</code>. Babel has built-in support for React v0.12+. Tags are automatically transformed to their equivalent <code>React.createElement(...)</code>, <code>displayName</code> is automatically inferred and added to all <code>React.createClass</code> calls.</p>
 
 <p>This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>babel --watch src/ --out-dir lib/</code>.</p>
 
-<blockquote>
-<p>Note:</p>
+<p>Beginning with Babel 6, there are no transforms included by default. This means that options must be specified when running the <code>babel</code> command, or a <code>.babelrc</code> must specify options. Additional packages must also be installed which bundle together a number of transforms, called presets. The most common use when working with React will be to include the <code>es2015</code> and <code>react</code> presets. More information about the changes to Babel can be found in <a href="http://babeljs.io/blog/2015/10/29/6.0.0/">their blog post announcing Babel 6</a>.</p>
 
-<p>If you are using babel 6.x, you will need to install the relevant preset/plugins. To get started, you can run <code>npm install -g babel babel-preset-react</code> and then run <code>babel --presets react --watch src/ --out-dir lib/</code>. For more information: check out the <a href="http://babeljs.io/blog/2015/10/29/6.0.0/">babel 6 blog post</a></p>
-</blockquote>
-
+<p>Here is an example of what you will do if using ES2015 syntax and React:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install babel-preset-es2015 babel-preset-react
+babel --presets es2015,react --watch src/ --out-dir lib/
+</code></pre></div>
 <p>By default JSX files with a <code>.js</code> extension are transformed. Run <code>babel --help</code> for more information on how to use Babel.</p>
 
 <p>Example output:</p>
