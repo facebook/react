@@ -421,6 +421,27 @@ describe('ReactTestUtils', function() {
     expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
   });
 
+  it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', function() {
+    var SomeComponent = React.createClass({
+      render: function() {
+        return (
+          <div onClick={this.props.handleClick}>
+            hello, world.
+          </div>
+        );
+      },
+    });
+    var handler = jasmine.createSpy('spy');
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SomeComponent handleClick={handler} />);
+    var result = shallowRenderer.getRenderOutput();
+    expect(() => ReactTestUtils.Simulate.click(result)).toThrow(
+      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
+      'TestUtils.Simulate will not work if you are using shallow rendering.'
+    );
+    expect(handler).not.toHaveBeenCalled();
+  });
+
   it('can scry with stateless components involved', function() {
     var Stateless = () => <div><hr /></div>;
     var SomeComponent = React.createClass({

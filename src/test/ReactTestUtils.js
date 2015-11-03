@@ -470,6 +470,11 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
 function makeSimulator(eventType) {
   return function(domComponentOrNode, eventData) {
     var node;
+    invariant(
+      !React.isValidElement(domComponentOrNode),
+      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
+      'TestUtils.Simulate will not work if you are using shallow rendering.'
+    );
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       node = findDOMNode(domComponentOrNode);
     } else if (domComponentOrNode.tagName) {
