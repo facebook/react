@@ -87,6 +87,46 @@ describe('ReactTestUtils', function() {
     expect(componentWillUnmount).toBeCalled();
   });
 
+  it('should run all lifecycle methods', function() {
+    var componentWillMount = mocks.getMockFunction();
+    var componentDidMount = mocks.getMockFunction();
+    var componentWillReceiveProps = mocks.getMockFunction();
+    var shouldComponentUpdate = mocks.getMockFunction();
+    var componentWillUpdate = mocks.getMockFunction();
+    var componentDidUpdate = mocks.getMockFunction();
+    var componentWillUnmount = mocks.getMockFunction();
+
+    var SomeComponent = React.createClass({
+      render: function() {
+        return <SomeComponent onChange={() => this.setState({a: 1})} />;
+      },
+      componentWillMount,
+      componentDidMount,
+      componentWillReceiveProps,
+      shouldComponentUpdate() {
+        shouldComponentUpdate();
+        return true;
+      },
+      componentWillUpdate,
+      componentDidUpdate,
+      componentWillUnmount,
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.getRenderOutput().props.onChange();
+    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.unmount();
+
+    expect(componentWillMount).toBeCalled();
+    expect(componentDidMount).toBeCalled();
+    expect(componentWillReceiveProps).toBeCalled();
+    expect(shouldComponentUpdate).toBeCalled();
+    expect(componentWillUpdate).toBeCalled();
+    expect(componentDidUpdate).toBeCalled();
+    expect(componentWillUnmount).toBeCalled();
+  });
+
   it('can shallow render to null', function() {
     var SomeComponent = React.createClass({
       render: function() {
