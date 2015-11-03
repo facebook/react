@@ -88,13 +88,13 @@ describe('ReactTestUtils', function() {
   });
 
   it('should run all lifecycle methods', function() {
-    var componentWillMount = mocks.getMockFunction();
-    var componentDidMount = mocks.getMockFunction();
-    var componentWillReceiveProps = mocks.getMockFunction();
-    var shouldComponentUpdate = mocks.getMockFunction();
-    var componentWillUpdate = mocks.getMockFunction();
-    var componentDidUpdate = mocks.getMockFunction();
-    var componentWillUnmount = mocks.getMockFunction();
+    var componentWillMount = jest.genMockFn();
+    var componentDidMount = jest.genMockFn();
+    var componentWillReceiveProps = jest.genMockFn();
+    var shouldComponentUpdate = jest.genMockFn();
+    var componentWillUpdate = jest.genMockFn();
+    var componentDidUpdate = jest.genMockFn();
+    var componentWillUnmount = jest.genMockFn();
 
     var SomeComponent = React.createClass({
       render: function() {
