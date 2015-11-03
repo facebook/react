@@ -43,7 +43,7 @@ $ browserify -t babelify main.js -o bundle.js
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
-    Download Starter Kit {{site.react_version}}
+   초심자용 키트 내려받기 {{site.react_version}}
   </a>
 </div>
 
@@ -71,7 +71,7 @@ $ browserify -t babelify main.js -o bundle.js
 </html>
 ```
 
-JavaScript 안에 보이는 XML 구문은 JSX라고 합니다; 더 자세한 내용은 [JSX syntax](/react/docs/jsx-in-depth-ko-KR.html)을 확인하세요. vanilla JavaScript로 번역하기 위해 `<script type="text/babel">`를 사용하고 Babel을 포함하는 것으로 실제로 브라우저에서 변환작업을 수행합니다.
+JavaScript 안에 보이는 XML 구문은 JSX라고 합니다; 더 자세한 내용은 [JSX syntax](/react/docs/jsx-in-depth-ko-KR.html)을 확인하세요. 일반적인 JavaScript로 번역하기 위해 `<script type="text/babel">`를 사용하고 Babel을 포함하는 것으로 실제로 브라우저에서 변환작업을 수행합니다.
 
 ### 파일의 분리
 
@@ -107,7 +107,7 @@ babel src --watch --out-dir build
 
 ```
 
-수정할 때마다 `build/helloworld.js` 파일이 자동생성됩니다. 더 깊이 사용하고 싶으면 [Babel CLI documentation](http://babeljs.io/docs/usage/cli/)를 읽어보세요.
+수정할 때마다 `build/helloworld.js` 파일이 자동생성됩니다. 더 자세한 사용법은 [Babel CLI documentation](http://babeljs.io/docs/usage/cli/)를 읽어보세요.
 
 ```javascript{2}
 ReactDOM.render(
