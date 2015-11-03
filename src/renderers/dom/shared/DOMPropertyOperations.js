@@ -13,6 +13,7 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
+var EventPluginRegistry = require('EventPluginRegistry');
 var ReactPerf = require('ReactPerf');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
@@ -87,6 +88,20 @@ if (__DEV__) {
       standardName
     );
 
+    var registrationName = (
+      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+        lowerCasedName
+      ) ?
+      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
+      null
+    );
+
+    warning(
+      registrationName == null,
+      'Unknown event handler property %s. Did you mean `%s`?',
+      name,
+      registrationName
+    );
   };
 }
 
