@@ -20,15 +20,19 @@ var BootstrapModal = React.createClass({
     // When the component is added, turn it into a modal
     $(this.refs.root).modal({backdrop: 'static', keyboard: false, show: false});
   },
+
   componentWillUnmount: function() {
     $(this.refs.root).off('hidden', this.handleHidden);
   },
+
   close: function() {
     $(this.refs.root).modal('hide');
   },
+
   open: function() {
     $(this.refs.root).modal('show');
   },
+
   render: function() {
     var confirmButton = null;
     var cancelButton = null;
@@ -42,6 +46,7 @@ var BootstrapModal = React.createClass({
         </BootstrapButton>
       );
     }
+
     if (this.props.cancel) {
       cancelButton = (
         <BootstrapButton onClick={this.handleCancel} className="btn-default">
@@ -75,11 +80,13 @@ var BootstrapModal = React.createClass({
       </div>
     );
   },
+
   handleCancel: function() {
     if (this.props.onCancel) {
       this.props.onCancel();
     }
   },
+
   handleConfirm: function() {
     if (this.props.onConfirm) {
       this.props.onConfirm();
@@ -93,6 +100,7 @@ var Example = React.createClass({
       this.refs.modal.close();
     }
   },
+
   render: function() {
     var modal = null;
     modal = (
@@ -115,9 +123,11 @@ var Example = React.createClass({
       </div>
     );
   },
+
   openModal: function() {
     this.refs.modal.open();
   },
+  
   closeModal: function() {
     this.refs.modal.close();
   }
