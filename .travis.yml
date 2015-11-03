@@ -54,6 +54,8 @@ script:
           -F "react-with-addons.min=@build/react-with-addons.min.js" \
           -F "react-dom=@build/react-dom.js" \
           -F "react-dom.min=@build/react-dom.min.js" \
+          -F "react-dom-server=@build/react-dom-server.js"
+          -F "react-dom-server.min=@build/react-dom-server.min.js"
           -F "npm-react=@build/packages/react.tgz" \
           -F "npm-react-dom=@build/packages/react-dom.tgz" \
           -F "commit=$TRAVIS_COMMIT" \

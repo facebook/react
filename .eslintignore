@@ -13,3 +13,4 @@ examples/
 build/
 scripts/bench/bench-*.js
 vendor/react-dom.js
+vendor/react-dom-server.js
