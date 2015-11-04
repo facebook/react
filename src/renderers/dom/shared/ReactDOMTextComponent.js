@@ -17,19 +17,13 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactMount = require('ReactMount');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var validateDOMNesting = require('validateDOMNesting');
 
-function getNode(inst) {
-  if (inst._nativeNode) {
-    return inst._nativeNode;
-  } else {
-    return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
-  }
-}
+var getNode = ReactDOMComponentTree.getNodeFromInstance;
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -61,6 +55,8 @@ assign(ReactDOMTextComponent.prototype, {
     this._currentElement = text;
     this._stringText = '' + text;
     this._nativeNode = null;
+    // ReactDOMComponentTree uses this:
+    this._nativeParent = null;
 
     // Properties
     this._rootNodeID = null;
@@ -98,13 +94,12 @@ assign(ReactDOMTextComponent.prototype, {
     }
 
     this._rootNodeID = rootID;
+    this._nativeParent = nativeParent;
     if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el = ownerDocument.createElement('span');
-      this._nativeNode = el;
+      ReactDOMComponentTree.precacheNode(this, el);
       DOMPropertyOperations.setAttributeForID(el, rootID);
-      // Populate node cache
-      ReactMount.getID(el);
       var lazyTree = DOMLazyTree(el);
       DOMLazyTree.queueText(lazyTree, this._stringText);
       return lazyTree;

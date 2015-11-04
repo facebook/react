@@ -51,15 +51,15 @@ var markupQueue = [];
 /**
  * Enqueues markup to be rendered and inserted at a supplied index.
  *
- * @param {string} parentID ID of the parent component.
+ * @param {object} parentInst parent component.
  * @param {string} markup Markup that renders into an element.
  * @param {number} toIndex Destination index.
  * @private
  */
-function enqueueInsertMarkup(parentID, markup, toIndex) {
+function enqueueInsertMarkup(parentInst, markup, toIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentID: parentID,
+    parentInst: parentInst,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
     markupIndex: markupQueue.push(markup) - 1,
@@ -72,15 +72,15 @@ function enqueueInsertMarkup(parentID, markup, toIndex) {
 /**
  * Enqueues moving an existing element to another index.
  *
- * @param {string} parentID ID of the parent component.
+ * @param {object} parentInst parent component.
  * @param {number} fromIndex Source index of the existing element.
  * @param {number} toIndex Destination index of the element.
  * @private
  */
-function enqueueMove(parentID, fromIndex, toIndex) {
+function enqueueMove(parentInst, fromIndex, toIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentID: parentID,
+    parentInst: parentInst,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
     markupIndex: null,
@@ -93,14 +93,14 @@ function enqueueMove(parentID, fromIndex, toIndex) {
 /**
  * Enqueues removing an element at an index.
  *
- * @param {string} parentID ID of the parent component.
+ * @param {object} parentInst parent component.
  * @param {number} fromIndex Index of the element to remove.
  * @private
  */
-function enqueueRemove(parentID, fromIndex) {
+function enqueueRemove(parentInst, fromIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentID: parentID,
+    parentInst: parentInst,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.REMOVE_NODE,
     markupIndex: null,
@@ -113,14 +113,14 @@ function enqueueRemove(parentID, fromIndex) {
 /**
  * Enqueues setting the markup of a node.
  *
- * @param {string} parentID ID of the parent component.
+ * @param {object} parentInst parent component.
  * @param {string} markup Markup that renders into an element.
  * @private
  */
-function enqueueSetMarkup(parentID, markup) {
+function enqueueSetMarkup(parentInst, markup) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentID: parentID,
+    parentInst: parentInst,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.SET_MARKUP,
     markupIndex: null,
@@ -133,14 +133,14 @@ function enqueueSetMarkup(parentID, markup) {
 /**
  * Enqueues setting the text content.
  *
- * @param {string} parentID ID of the parent component.
+ * @param {object} parentInst parent component.
  * @param {string} textContent Text content to set.
  * @private
  */
-function enqueueTextContent(parentID, textContent) {
+function enqueueTextContent(parentInst, textContent) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentID: parentID,
+    parentInst: parentInst,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
     markupIndex: null,
@@ -371,7 +371,6 @@ var ReactMultiChild = {
       var nextChildren = this._reconcilerUpdateChildren(
         prevChildren, nextNestedChildrenElements, transaction, context
       );
-      this._renderedChildren = nextChildren;
       if (!nextChildren && !prevChildren) {
         return;
       }
@@ -410,6 +409,7 @@ var ReactMultiChild = {
           this._unmountChild(prevChildren[name]);
         }
       }
+      this._renderedChildren = nextChildren;
     },
 
     /**
@@ -425,6 +425,14 @@ var ReactMultiChild = {
     },
 
     /**
+     * Hook used by the DOM implementation to precache the nodes before we apply
+     * any reorders here.
+     */
+    prepareToManageChildren: function() {
+      // TODO: This sucks. Figure out a better design here.
+    },
+
+    /**
      * Moves a child component to the supplied index.
      *
      * @param {ReactComponent} child Component to move.
@@ -437,7 +445,8 @@ var ReactMultiChild = {
       // be moved. Otherwise, we do not need to move it because a child will be
       // inserted or moved before `child`.
       if (child._mountIndex < lastIndex) {
-        enqueueMove(this._rootNodeID, child._mountIndex, toIndex);
+        this.prepareToManageChildren();
+        enqueueMove(this, child._mountIndex, toIndex);
       }
     },
 
@@ -449,7 +458,8 @@ var ReactMultiChild = {
      * @protected
      */
     createChild: function(child, mountImage) {
-      enqueueInsertMarkup(this._rootNodeID, mountImage, child._mountIndex);
+      this.prepareToManageChildren();
+      enqueueInsertMarkup(this, mountImage, child._mountIndex);
     },
 
     /**
@@ -459,7 +469,8 @@ var ReactMultiChild = {
      * @protected
      */
     removeChild: function(child) {
-      enqueueRemove(this._rootNodeID, child._mountIndex);
+      this.prepareToManageChildren();
+      enqueueRemove(this, child._mountIndex);
     },
 
     /**
@@ -469,7 +480,7 @@ var ReactMultiChild = {
      * @protected
      */
     setTextContent: function(textContent) {
-      enqueueTextContent(this._rootNodeID, textContent);
+      enqueueTextContent(this, textContent);
     },
 
     /**
@@ -479,7 +490,7 @@ var ReactMultiChild = {
      * @protected
      */
     setMarkup: function(markup) {
-      enqueueSetMarkup(this._rootNodeID, markup);
+      enqueueSetMarkup(this, markup);
     },
 
     /**

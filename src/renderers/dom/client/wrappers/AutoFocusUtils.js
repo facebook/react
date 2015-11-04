@@ -12,13 +12,13 @@
 
 'use strict';
 
-var ReactMount = require('ReactMount');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 var focusNode = require('focusNode');
 
 var AutoFocusUtils = {
   focusDOMComponent: function() {
-    focusNode(ReactMount.getNode(this._rootNodeID));
+    focusNode(ReactDOMComponentTree.getNodeFromInstance(this));
   },
 };
 

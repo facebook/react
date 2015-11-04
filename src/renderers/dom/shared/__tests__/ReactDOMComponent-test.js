@@ -51,7 +51,7 @@ describe('ReactDOMComponent', function() {
       var stubStyle = container.firstChild.style;
 
       // set initial style
-      var setup = {display: 'block', left: '1', top: 2, fontFamily: 'Arial'};
+      var setup = {display: 'block', left: '1px', top: 2, fontFamily: 'Arial'};
       ReactDOM.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
@@ -152,7 +152,9 @@ describe('ReactDOMComponent', function() {
       var div = document.createElement('div');
       var One = React.createClass({
         render: function() {
-          return this.props.inline ? <span style={{fontSize: '1'}} /> : <div style={{fontSize: '1'}} />;
+          return this.props.inline ?
+            <span style={{fontSize: '1'}} /> :
+            <div style={{fontSize: '1'}} />;
         },
       });
       var Two = React.createClass({
@@ -841,7 +843,7 @@ describe('ReactDOMComponent', function() {
   describe('unmountComponent', function() {
     it('should clean up listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var ReactMount = require('ReactMount');
+      var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
       var container = document.createElement('div');
       document.body.appendChild(container);
@@ -851,16 +853,16 @@ describe('ReactDOMComponent', function() {
       instance = ReactDOM.render(instance, container);
 
       var rootNode = ReactDOM.findDOMNode(instance);
-      var rootNodeID = ReactMount.getID(rootNode);
+      var inst = ReactDOMComponentTree.getInstanceFromNode(rootNode);
       expect(
-        EventPluginHub.getListener(rootNodeID, 'onClick')
+        EventPluginHub.getListener(inst, 'onClick')
       ).toBe(callback);
       expect(rootNode).toBe(ReactDOM.findDOMNode(instance));
 
       ReactDOM.unmountComponentAtNode(container);
 
       expect(
-        EventPluginHub.getListener(rootNodeID, 'onClick')
+        EventPluginHub.getListener(inst, 'onClick')
       ).toBe(undefined);
     });
   });

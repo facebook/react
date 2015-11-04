@@ -50,12 +50,13 @@ var EventInterface = {
  * DOM interface; custom application-specific events can also subclass this.
  *
  * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {string} dispatchMarker Marker identifying the event target.
+ * @param {*} targetInst Marker identifying the event target.
  * @param {object} nativeEvent Native browser event.
  */
-function SyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
   this.dispatchConfig = dispatchConfig;
-  this.dispatchMarker = dispatchMarker;
+  this._targetInst = targetInst;
+
   this.nativeEvent = nativeEvent;
   this.target = nativeEventTarget;
   this.currentTarget = nativeEventTarget;
@@ -158,7 +159,7 @@ assign(SyntheticEvent.prototype, {
       this[propName] = null;
     }
     this.dispatchConfig = null;
-    this.dispatchMarker = null;
+    this._targetInst = null;
     this.nativeEvent = null;
   },
 

@@ -14,7 +14,7 @@
 var EventConstants;
 var React;
 var ReactDOM;
-var ReactMount;
+var ReactDOMComponentTree;
 var ReactTestUtils;
 var SelectEventPlugin;
 
@@ -24,8 +24,7 @@ describe('SelectEventPlugin', function() {
   function extract(node, topLevelEvent) {
     return SelectEventPlugin.extractEvents(
       topLevelEvent,
-      node,
-      ReactMount.getID(node),
+      ReactDOMComponentTree.getInstanceFromNode(node),
       {target: node},
       node
     );
@@ -35,7 +34,7 @@ describe('SelectEventPlugin', function() {
     EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactMount = require('ReactMount');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
 
