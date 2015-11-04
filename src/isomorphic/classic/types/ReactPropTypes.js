@@ -144,6 +144,11 @@ function createAnyTypeChecker() {
 
 function createArrayOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Invalid argument \`${propFullName}\` supplied to \`${componentName}\`, expected valid PropType.`
+      );
+    }
     var propValue = props[propName];
     if (!Array.isArray(propValue)) {
       var locationName = ReactPropTypeLocationNames[location];
@@ -230,6 +235,11 @@ function createEnumTypeChecker(expectedValues) {
 
 function createObjectOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Invalid argument \`${propFullName}\` supplied to \`${componentName}\`, expected valid PropType.`
+      );
+    }
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== 'object') {
