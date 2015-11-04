@@ -11,19 +11,17 @@
 
 'use strict';
 
-var ClientReactRootIndex = require('ClientReactRootIndex');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactDOM = require('ReactDOM');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -432,7 +430,7 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   if (!context) {
     context = emptyObject;
   }
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(false);
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   transaction.perform(this._render, this, element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
 };
@@ -447,13 +445,10 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
   if (this._instance) {
     this._instance.receiveComponent(element, transaction, context);
   } else {
-    var rootID = ReactInstanceHandles.createReactRootID(
-      ClientReactRootIndex.createReactRootIndex()
-    );
     var instance = new ShallowComponentWrapper(element.type);
     instance.construct(element);
 
-    instance.mountComponent(rootID, transaction, null, null, context);
+    instance.mountComponent(transaction, null, null, context);
 
     this._instance = instance;
   }
@@ -490,7 +485,7 @@ function makeSimulator(eventType) {
     // properly destroying any properties assigned from `eventData` upon release
     var event = new SyntheticEvent(
       dispatchConfig,
-      ReactMount.getID(node),
+      ReactDOMComponentTree.getInstanceFromNode(node),
       fakeNativeEvent,
       node
     );

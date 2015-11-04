@@ -16,10 +16,8 @@ var EVENT_TARGET_PARAM = 1;
 
 describe('ReactEventListener', function() {
   var React;
-
   var ReactDOM;
-
-  var ReactMount;
+  var ReactDOMComponentTree;
   var ReactEventListener;
   var ReactTestUtils;
   var handleTopLevel;
@@ -27,10 +25,8 @@ describe('ReactEventListener', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
-
     ReactDOM = require('ReactDOM');
-
-    ReactMount = require('ReactMount');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactEventListener = require('ReactEventListener');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -40,7 +36,7 @@ describe('ReactEventListener', function() {
 
   it('should dispatch events from outside React tree', function() {
     var otherNode = document.createElement('h1');
-    var component = ReactMount.render(<div />, document.createElement('div'));
+    var component = ReactDOM.render(<div />, document.createElement('div'));
     expect(handleTopLevel.mock.calls.length).toBe(0);
     ReactEventListener.dispatchEvent(
       'topMouseOut',
@@ -64,9 +60,9 @@ describe('ReactEventListener', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      childControl = ReactMount.render(childControl, childContainer);
+      childControl = ReactDOM.render(childControl, childContainer);
       parentControl =
-        ReactMount.render(parentControl, parentContainer);
+        ReactDOM.render(parentControl, parentContainer);
       ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
@@ -77,9 +73,9 @@ describe('ReactEventListener', function() {
       var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(2);
       expect(calls[0][EVENT_TARGET_PARAM])
-        .toBe(ReactDOM.findDOMNode(childControl));
+        .toBe(ReactDOMComponentTree.getInstanceFromNode(childControl));
       expect(calls[1][EVENT_TARGET_PARAM])
-        .toBe(ReactDOM.findDOMNode(parentControl));
+        .toBe(ReactDOMComponentTree.getInstanceFromNode(parentControl));
     });
 
     it('should propagate events two levels down', function() {
@@ -89,11 +85,11 @@ describe('ReactEventListener', function() {
       var parentControl = <div>Parent</div>;
       var grandParentContainer = document.createElement('div');
       var grandParentControl = <div>Parent</div>;
-      childControl = ReactMount.render(childControl, childContainer);
+      childControl = ReactDOM.render(childControl, childContainer);
       parentControl =
-        ReactMount.render(parentControl, parentContainer);
+        ReactDOM.render(parentControl, parentContainer);
       grandParentControl =
-        ReactMount.render(grandParentControl, grandParentContainer);
+        ReactDOM.render(grandParentControl, grandParentContainer);
       ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
       ReactDOM.findDOMNode(grandParentControl).appendChild(parentContainer);
 
@@ -105,11 +101,11 @@ describe('ReactEventListener', function() {
       var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(3);
       expect(calls[0][EVENT_TARGET_PARAM])
-        .toBe(ReactDOM.findDOMNode(childControl));
+        .toBe(ReactDOMComponentTree.getInstanceFromNode(childControl));
       expect(calls[1][EVENT_TARGET_PARAM])
-        .toBe(ReactDOM.findDOMNode(parentControl));
+        .toBe(ReactDOMComponentTree.getInstanceFromNode(parentControl));
       expect(calls[2][EVENT_TARGET_PARAM])
-        .toBe(ReactDOM.findDOMNode(grandParentControl));
+        .toBe(ReactDOMComponentTree.getInstanceFromNode(grandParentControl));
     });
 
     it('should not get confused by disappearing elements', function() {
@@ -117,9 +113,9 @@ describe('ReactEventListener', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      childControl = ReactMount.render(childControl, childContainer);
+      childControl = ReactDOM.render(childControl, childContainer);
       parentControl =
-        ReactMount.render(parentControl, parentContainer);
+        ReactDOM.render(parentControl, parentContainer);
       ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
 
       // ReactBrowserEventEmitter.handleTopLevel might remove the
@@ -130,7 +126,7 @@ describe('ReactEventListener', function() {
       handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
           if (topLevelTarget === childNode) {
-            ReactMount.unmountComponentAtNode(childContainer);
+            ReactDOM.unmountComponentAtNode(childContainer);
           }
         }
       );
@@ -142,19 +138,20 @@ describe('ReactEventListener', function() {
 
       var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(2);
-      expect(calls[0][EVENT_TARGET_PARAM]).toBe(childNode);
+      expect(calls[0][EVENT_TARGET_PARAM])
+        .toBe(ReactDOMComponentTree.getInstanceFromNode(childNode));
       expect(calls[1][EVENT_TARGET_PARAM])
-        .toBe(ReactDOM.findDOMNode(parentControl));
+        .toBe(ReactDOMComponentTree.getInstanceFromNode(parentControl));
     });
 
     it('should batch between handlers from different roots', function() {
       var childContainer = document.createElement('div');
       var parentContainer = document.createElement('div');
-      var childControl = ReactMount.render(
+      var childControl = ReactDOM.render(
         <div>Child</div>,
         childContainer
       );
-      var parentControl = ReactMount.render(
+      var parentControl = ReactDOM.render(
         <div>Parent</div>,
         parentContainer
       );
@@ -165,7 +162,7 @@ describe('ReactEventListener', function() {
       var childNode = ReactDOM.findDOMNode(childControl);
       handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
-          ReactMount.render(
+          ReactDOM.render(
             <div>{topLevelTarget === childNode ? '1' : '2'}</div>,
             childContainer
           );
@@ -210,6 +207,6 @@ describe('ReactEventListener', function() {
     var calls = handleTopLevel.mock.calls;
     expect(calls.length).toBe(1);
     expect(calls[0][EVENT_TARGET_PARAM])
-      .toBe(ReactDOM.findDOMNode(instance.getInner()));
+      .toBe(ReactDOMComponentTree.getInstanceFromNode(instance.getInner()));
   });
 });

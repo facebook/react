@@ -18,6 +18,8 @@ var TogglingComponent;
 
 var reactComponentExpect;
 
+var log;
+
 describe('ReactEmptyComponent', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -28,16 +30,18 @@ describe('ReactEmptyComponent', function() {
 
     reactComponentExpect = require('reactComponentExpect');
 
+    log = jasmine.createSpy();
+
     TogglingComponent = React.createClass({
       getInitialState: function() {
         return {component: this.props.firstComponent};
       },
       componentDidMount: function() {
-        console.log(ReactDOM.findDOMNode(this));
+        log(ReactDOM.findDOMNode(this));
         this.setState({component: this.props.secondComponent});
       },
       componentDidUpdate: function() {
-        console.log(ReactDOM.findDOMNode(this));
+        log(ReactDOM.findDOMNode(this));
       },
       render: function() {
         var Component = this.state.component;
@@ -81,8 +85,6 @@ describe('ReactEmptyComponent', function() {
   });
 
   it('should be able to switch between rendering null and a normal tag', () => {
-    spyOn(console, 'log');
-
     var instance1 =
       <TogglingComponent
         firstComponent={null}
@@ -97,17 +99,15 @@ describe('ReactEmptyComponent', function() {
     ReactTestUtils.renderIntoDocument(instance1);
     ReactTestUtils.renderIntoDocument(instance2);
 
-    expect(console.log.argsForCall.length).toBe(4);
-    expect(console.log.argsForCall[0][0]).toBe(null);
-    expect(console.log.argsForCall[1][0].tagName).toBe('DIV');
-    expect(console.log.argsForCall[2][0].tagName).toBe('DIV');
-    expect(console.log.argsForCall[3][0]).toBe(null);
+    expect(log.argsForCall.length).toBe(4);
+    expect(log.argsForCall[0][0]).toBe(null);
+    expect(log.argsForCall[1][0].tagName).toBe('DIV');
+    expect(log.argsForCall[2][0].tagName).toBe('DIV');
+    expect(log.argsForCall[3][0]).toBe(null);
   });
 
   it('should distinguish between a script placeholder and an actual script tag',
     () => {
-      spyOn(console, 'log');
-
       var instance1 =
         <TogglingComponent
           firstComponent={null}
@@ -126,19 +126,17 @@ describe('ReactEmptyComponent', function() {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
-      expect(console.log.argsForCall.length).toBe(4);
-      expect(console.log.argsForCall[0][0]).toBe(null);
-      expect(console.log.argsForCall[1][0].tagName).toBe('SCRIPT');
-      expect(console.log.argsForCall[2][0].tagName).toBe('SCRIPT');
-      expect(console.log.argsForCall[3][0]).toBe(null);
+      expect(log.argsForCall.length).toBe(4);
+      expect(log.argsForCall[0][0]).toBe(null);
+      expect(log.argsForCall[1][0].tagName).toBe('SCRIPT');
+      expect(log.argsForCall[2][0].tagName).toBe('SCRIPT');
+      expect(log.argsForCall[3][0]).toBe(null);
     }
   );
 
   it('should have getDOMNode return null when multiple layers of composite ' +
     'components render to the same null placeholder',
     () => {
-      spyOn(console, 'log');
-
       var GrandChild = React.createClass({
         render: function() {
           return null;
@@ -169,11 +167,11 @@ describe('ReactEmptyComponent', function() {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
-      expect(console.log.argsForCall.length).toBe(4);
-      expect(console.log.argsForCall[0][0].tagName).toBe('DIV');
-      expect(console.log.argsForCall[1][0]).toBe(null);
-      expect(console.log.argsForCall[2][0]).toBe(null);
-      expect(console.log.argsForCall[3][0].tagName).toBe('DIV');
+      expect(log.argsForCall.length).toBe(4);
+      expect(log.argsForCall[0][0].tagName).toBe('DIV');
+      expect(log.argsForCall[1][0]).toBe(null);
+      expect(log.argsForCall[2][0]).toBe(null);
+      expect(log.argsForCall[3][0].tagName).toBe('DIV');
     }
   );
 

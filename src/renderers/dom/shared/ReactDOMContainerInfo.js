@@ -15,15 +15,19 @@ var validateDOMNesting = require('validateDOMNesting');
 
 var DOC_NODE_TYPE = 9;
 
-function ReactDOMContainerInfo(node) {
+function ReactDOMContainerInfo(topLevelWrapper, node) {
   var info = {
-    _ownerDocument: node.nodeType === DOC_NODE_TYPE ? node : node.ownerDocument,
-    _tag: node.nodeName.toLowerCase(),
-    _namespaceURI: node.namespaceURI,
+    _topLevelWrapper: topLevelWrapper,
+    _idCounter: 1,
+    _ownerDocument: node ?
+      node.nodeType === DOC_NODE_TYPE ? node : node.ownerDocument :
+      null,
+    _tag: node ? node.nodeName.toLowerCase() : null,
+    _namespaceURI: node ? node.namespaceURI : null,
   };
   if (__DEV__) {
-    info._ancestorInfo =
-      validateDOMNesting.updatedAncestorInfo(null, info._tag, null);
+    info._ancestorInfo = node ?
+      validateDOMNesting.updatedAncestorInfo(null, info._tag, null) : null;
   }
   return info;
 }

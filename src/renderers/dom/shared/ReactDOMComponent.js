@@ -27,11 +27,12 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMButton = require('ReactDOMButton');
+var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
-var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 var ReactUpdateQueue = require('ReactUpdateQueue');
@@ -46,7 +47,9 @@ var shallowEqual = require('shallowEqual');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
+var Flags = ReactDOMComponentFlags;
 var deleteListener = EventPluginHub.deleteListener;
+var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
@@ -56,8 +59,6 @@ var CONTENT_TYPES = {'string': true, 'number': true};
 var CHILDREN = keyOf({children: null});
 var STYLE = keyOf({style: null});
 var HTML = keyOf({__html: null});
-
-var ELEMENT_NODE_TYPE = 1;
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -78,7 +79,7 @@ if (__DEV__) {
     props: {
       enumerable: false,
       get: function() {
-        var component = this._reactInternalComponent;
+        var component = ReactDOMComponentTree.getInstanceFromNode(this);
         warning(
           false,
           'ReactDOMComponent: Do not access .props of a DOM node; instead, ' +
@@ -95,7 +96,7 @@ if (__DEV__) {
 
 function legacyGetDOMNode() {
   if (__DEV__) {
-    var component = this._reactInternalComponent;
+    var component = ReactDOMComponentTree.getInstanceFromNode(this);
     warning(
       false,
       'ReactDOMComponent: Do not access .getDOMNode() of a DOM node; ' +
@@ -107,7 +108,7 @@ function legacyGetDOMNode() {
 }
 
 function legacyIsMounted() {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
@@ -120,7 +121,7 @@ function legacyIsMounted() {
 
 function legacySetStateEtc() {
   if (__DEV__) {
-    var component = this._reactInternalComponent;
+    var component = ReactDOMComponentTree.getInstanceFromNode(this);
     warning(
       false,
       'ReactDOMComponent: Do not access .setState(), .replaceState(), or ' +
@@ -131,7 +132,7 @@ function legacySetStateEtc() {
 }
 
 function legacySetProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
@@ -150,7 +151,7 @@ function legacySetProps(partialProps, callback) {
 }
 
 function legacyReplaceProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
@@ -290,7 +291,7 @@ function assertValidProps(component, props) {
   );
 }
 
-function enqueuePutListener(id, registrationName, listener, transaction) {
+function enqueuePutListener(inst, registrationName, listener, transaction) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
     // bubble.
@@ -299,15 +300,15 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
       'This browser doesn\'t support the `onScroll` event'
     );
   }
-  var container = ReactMount.findReactContainerForID(id);
-  if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
-    listenTo(registrationName, doc);
+  var containerInfo = inst._nativeContainerInfo;
+  var doc = containerInfo._ownerDocument;
+  if (!doc) {
+    // Server rendering.
+    return;
   }
+  listenTo(registrationName, doc);
   transaction.getReactMountReady().enqueue(putListener, {
-    id: id,
+    inst: inst,
     registrationName: registrationName,
     listener: listener,
   });
@@ -316,7 +317,7 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
 function putListener() {
   var listenerToPut = this;
   EventPluginHub.putListener(
-    listenerToPut.id,
+    listenerToPut.inst,
     listenerToPut.registrationName,
     listenerToPut.listener
   );
@@ -493,13 +494,7 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-function getNode(inst) {
-  if (inst._nativeNode) {
-    return inst._nativeNode;
-  } else {
-    return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
-  }
-}
+var globalIdCounter = 1;
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -523,11 +518,13 @@ function ReactDOMComponent(tag) {
   this._previousStyle = null;
   this._previousStyleCopy = null;
   this._nativeNode = null;
+  this._nativeParent = null;
   this._rootNodeID = null;
+  this._domID = null;
   this._nativeContainerInfo = null;
   this._wrapperState = null;
   this._topLevelWrapper = null;
-  this._nodeHasLegacyProperties = false;
+  this._flags = 0;
   if (__DEV__) {
     this._ancestorInfo = null;
   }
@@ -546,7 +543,6 @@ ReactDOMComponent.Mixin = {
    * is not idempotent.
    *
    * @internal
-   * @param {string} rootID The root DOM ID for this node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?ReactDOMComponent} the containing DOM component instance
    * @param {?object} info about the native container
@@ -554,13 +550,14 @@ ReactDOMComponent.Mixin = {
    * @return {string} The computed markup.
    */
   mountComponent: function(
-    rootID,
     transaction,
     nativeParent,
     nativeContainerInfo,
     context
   ) {
-    this._rootNodeID = rootID;
+    this._rootNodeID = globalIdCounter++;
+    this._domID = nativeContainerInfo._idCounter++;
+    this._nativeParent = nativeParent;
     this._nativeContainerInfo = nativeContainerInfo;
 
     var props = this._currentElement.props;
@@ -609,7 +606,7 @@ ReactDOMComponent.Mixin = {
     if (nativeParent != null) {
       namespaceURI = nativeParent._namespaceURI;
       parentTag = nativeParent._tag;
-    } else if (nativeContainerInfo != null) {
+    } else if (nativeContainerInfo._tag) {
       namespaceURI = nativeContainerInfo._namespaceURI;
       parentTag = nativeContainerInfo._tag;
     }
@@ -630,7 +627,7 @@ ReactDOMComponent.Mixin = {
       var parentInfo;
       if (nativeParent != null) {
         parentInfo = nativeParent._ancestorInfo;
-      } else if (nativeContainerInfo != null) {
+      } else if (nativeContainerInfo._tag) {
         parentInfo = nativeContainerInfo._ancestorInfo;
       }
       if (parentInfo) {
@@ -663,10 +660,11 @@ ReactDOMComponent.Mixin = {
           this._currentElement.type
         );
       }
-      this._nativeNode = el;
-      DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
-      // Populate node cache
-      ReactMount.getID(el);
+      ReactDOMComponentTree.precacheNode(this, el);
+      this._flags |= Flags.hasCachedChildNodes;
+      if (!this._nativeParent) {
+        DOMPropertyOperations.setAttributeForRoot(el);
+      }
       this._updateDOMProperties(null, props, transaction);
       var lazyTree = DOMLazyTree(el);
       this._createInitialChildren(transaction, props, context, lazyTree);
@@ -730,7 +728,7 @@ ReactDOMComponent.Mixin = {
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
-          enqueuePutListener(this._rootNodeID, propKey, propValue, transaction);
+          enqueuePutListener(this, propKey, propValue, transaction);
         }
       } else {
         if (propKey === STYLE) {
@@ -763,8 +761,11 @@ ReactDOMComponent.Mixin = {
       return ret;
     }
 
-    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID;
+    if (!this._nativeParent) {
+      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+    }
+    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
+    return ret;
   },
 
   /**
@@ -907,7 +908,7 @@ ReactDOMComponent.Mixin = {
       context
     );
 
-    if (!canDefineProperty && this._nodeHasLegacyProperties) {
+    if (!canDefineProperty && this._flags & Flags.nodeHasLegacyProperties) {
       this._nativeNode.props = nextProps;
     }
 
@@ -958,7 +959,7 @@ ReactDOMComponent.Mixin = {
           // Only call deleteListener if there was a listener previously or
           // else willDeleteListener gets called when there wasn't actually a
           // listener (e.g., onClick={null})
-          deleteListener(this._rootNodeID, propKey);
+          deleteListener(this, propKey);
         }
       } else if (
           DOMProperty.properties[propKey] ||
@@ -1013,9 +1014,9 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          enqueuePutListener(this._rootNodeID, propKey, nextProp, transaction);
+          enqueuePutListener(this, propKey, nextProp, transaction);
         } else if (lastProp) {
-          deleteListener(this._rootNodeID, propKey);
+          deleteListener(this, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
         if (propKey === CHILDREN) {
@@ -1041,7 +1042,11 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      CSSPropertyOperations.setValueForStyles(getNode(this), styleUpdates);
+      CSSPropertyOperations.setValueForStyles(
+        getNode(this),
+        styleUpdates,
+        this
+      );
     }
   },
 
@@ -1142,25 +1147,20 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    if (this._nodeHasLegacyProperties) {
-      this._nativeNode._reactInternalComponent = null;
-    }
-    this._nativeNode = null;
-
+    ReactDOMComponentTree.uncacheNode(this);
     this.unmountChildren();
-    EventPluginHub.deleteAllListeners(this._rootNodeID);
+    EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
+    this._domID = null;
     this._wrapperState = null;
   },
 
   getPublicInstance: function() {
-    if (this._nodeHasLegacyProperties) {
-      return this._nativeNode;
+    var node = getNode(this);
+    if (this._flags & Flags.nodeHasLegacyProperties) {
+      return node;
     } else {
-      var node = getNode(this);
-
-      node._reactInternalComponent = this;
       node.getDOMNode = legacyGetDOMNode;
       node.isMounted = legacyIsMounted;
       node.setState = legacySetStateEtc;
@@ -1181,26 +1181,30 @@ ReactDOMComponent.Mixin = {
         node.props = this._currentElement.props;
       }
 
-      this._nodeHasLegacyProperties = true;
+      this._flags |= Flags.nodeHasLegacyProperties;
       return node;
     }
   },
 
 };
 
-ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {
+ReactPerf.measureMethods(ReactDOMComponent.Mixin, 'ReactDOMComponent', {
   mountComponent: 'mountComponent',
-  updateComponent: 'updateComponent',
+  receiveComponent: 'receiveComponent',
 });
 
 assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
-  ReactMultiChild.Mixin
+  ReactMultiChild.Mixin,
+  {
+    prepareToManageChildren: function() {
+      // Before we add, remove, or reorder the children of a node, make sure
+      // we have references to all of its children so we don't lose them, even
+      // if nefarious browser plugins add extra nodes to our tree.
+      ReactDOMComponentTree.precacheChildNodes(this, getNode(this));
+    },
+  }
 );
-
-assign(ReactDOMComponent, {
-  getNodeFromInstance: getNode,
-});
 
 module.exports = ReactDOMComponent;

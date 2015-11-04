@@ -13,55 +13,13 @@
 'use strict';
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactMount = require('ReactMount');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactPerf = require('ReactPerf');
-
-var invariant = require('invariant');
-
-/**
- * Errors for properties that should not be updated with `updatePropertyByID()`.
- *
- * @type {object}
- * @private
- */
-var INVALID_PROPERTY_ERRORS = {
-  dangerouslySetInnerHTML:
-    '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
-  style: '`style` must be set using `updateStylesByID()`.',
-};
 
 /**
  * Operations used to process updates to DOM nodes.
  */
 var ReactDOMIDOperations = {
-
-  /**
-   * Updates a DOM node with new property values. This should only be used to
-   * update DOM properties in `DOMProperty`.
-   *
-   * @param {string} id ID of the node to update.
-   * @param {string} name A valid property name, see `DOMProperty`.
-   * @param {*} value New value of the property.
-   * @internal
-   */
-  updatePropertyByID: function(id, name, value) {
-    var node = ReactMount.getNode(id);
-    invariant(
-      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-      'updatePropertyByID(...): %s',
-      INVALID_PROPERTY_ERRORS[name]
-    );
-
-    // If we're updating to null or undefined, we should remove the property
-    // from the DOM node instead of inadvertantly setting to a string. This
-    // brings us in line with the same behavior we have on initial render.
-    if (value != null) {
-      DOMPropertyOperations.setValueForProperty(node, name, value);
-    } else {
-      DOMPropertyOperations.deleteValueForProperty(node, name);
-    }
-  },
 
   /**
    * Updates a component's children by processing a series of updates.
@@ -72,7 +30,9 @@ var ReactDOMIDOperations = {
    */
   dangerouslyProcessChildrenUpdates: function(updates, markup) {
     for (var i = 0; i < updates.length; i++) {
-      updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
+      var update = updates[i];
+      var node = ReactDOMComponentTree.getNodeFromInstance(update.parentInst);
+      update.parentNode = node;
     }
     DOMChildrenOperations.processUpdates(updates, markup);
   },

@@ -13,7 +13,6 @@
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
 /**
@@ -37,7 +36,6 @@ var ReactComponentBrowserEnvironment = {
    * @private
    */
   unmountIDFromEnvironment: function(rootNodeID) {
-    ReactMount.purgeID(rootNodeID);
   },
 
 };

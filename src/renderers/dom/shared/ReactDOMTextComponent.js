@@ -15,21 +15,14 @@
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
-var ReactMount = require('ReactMount');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactPerf = require('ReactPerf');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var validateDOMNesting = require('validateDOMNesting');
 
-function getNode(inst) {
-  if (inst._nativeNode) {
-    return inst._nativeNode;
-  } else {
-    return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
-  }
-}
+var getNode = ReactDOMComponentTree.getNodeFromInstance;
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -61,9 +54,11 @@ assign(ReactDOMTextComponent.prototype, {
     this._currentElement = text;
     this._stringText = '' + text;
     this._nativeNode = null;
+    // ReactDOMComponentTree uses this:
+    this._nativeParent = null;
 
     // Properties
-    this._rootNodeID = null;
+    this._domID = null;
     this._mountIndex = 0;
   },
 
@@ -71,13 +66,11 @@ assign(ReactDOMTextComponent.prototype, {
    * Creates the markup for this text node. This node is not intended to have
    * any features besides containing text content.
    *
-   * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} Markup for this text node.
    * @internal
    */
   mountComponent: function(
-    rootID,
     transaction,
     nativeParent,
     nativeContainerInfo,
@@ -97,14 +90,13 @@ assign(ReactDOMTextComponent.prototype, {
       }
     }
 
-    this._rootNodeID = rootID;
+    var domID = nativeContainerInfo._idCounter++;
+    this._domID = domID;
+    this._nativeParent = nativeParent;
     if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el = ownerDocument.createElement('span');
-      this._nativeNode = el;
-      DOMPropertyOperations.setAttributeForID(el, rootID);
-      // Populate node cache
-      ReactMount.getID(el);
+      ReactDOMComponentTree.precacheNode(this, el);
       var lazyTree = DOMLazyTree(el);
       DOMLazyTree.queueText(lazyTree, this._stringText);
       return lazyTree;
@@ -119,7 +111,7 @@ assign(ReactDOMTextComponent.prototype, {
       }
 
       return (
-        '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
+        '<span ' + DOMPropertyOperations.createMarkupForID(domID) + '>' +
           escapedText +
         '</span>'
       );
@@ -152,10 +144,18 @@ assign(ReactDOMTextComponent.prototype, {
   },
 
   unmountComponent: function() {
-    this._nativeNode = null;
-    ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
+    ReactDOMComponentTree.uncacheNode(this);
   },
 
 });
+
+ReactPerf.measureMethods(
+  ReactDOMTextComponent.prototype,
+  'ReactDOMTextComponent',
+  {
+    mountComponent: 'mountComponent',
+    receiveComponent: 'receiveComponent',
+  }
+);
 
 module.exports = ReactDOMTextComponent;

@@ -27,7 +27,6 @@ var ReactReconciler = {
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {ReactComponent} internalInstance
-   * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?object} the containing native component instance
    * @param {?object} info about the native container
@@ -37,14 +36,12 @@ var ReactReconciler = {
    */
   mountComponent: function(
     internalInstance,
-    rootID,
     transaction,
     nativeParent,
     nativeContainerInfo,
     context
   ) {
     var markup = internalInstance.mountComponent(
-      rootID,
       transaction,
       nativeParent,
       nativeContainerInfo,

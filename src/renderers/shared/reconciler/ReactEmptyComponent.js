@@ -26,23 +26,19 @@ var ReactEmptyComponentInjection = {
 
 var ReactEmptyComponent = function(instantiate) {
   this._currentElement = null;
-  this._rootNodeID = null;
   this._renderedComponent = instantiate(placeholderElement);
 };
 assign(ReactEmptyComponent.prototype, {
   construct: function(element) {
   },
   mountComponent: function(
-    rootID,
     transaction,
     nativeParent,
     nativeContainerInfo,
     context
   ) {
-    this._rootNodeID = rootID;
     return ReactReconciler.mountComponent(
       this._renderedComponent,
-      rootID,
       transaction,
       nativeParent,
       nativeContainerInfo,
@@ -54,9 +50,8 @@ assign(ReactEmptyComponent.prototype, {
   getNativeNode: function() {
     return ReactReconciler.getNativeNode(this._renderedComponent);
   },
-  unmountComponent: function(rootID, transaction, context) {
+  unmountComponent: function() {
     ReactReconciler.unmountComponent(this._renderedComponent);
-    this._rootNodeID = null;
     this._renderedComponent = null;
   },
 });

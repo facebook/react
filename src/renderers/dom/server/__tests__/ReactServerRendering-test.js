@@ -20,6 +20,7 @@ var ReactTestUtils;
 var ReactServerRendering;
 
 var ID_ATTRIBUTE_NAME;
+var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactServerRendering', function() {
   beforeEach(function() {
@@ -36,7 +37,7 @@ describe('ReactServerRendering', function() {
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-    spyOn(console, 'error');
+    ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
   describe('renderToString', function() {
@@ -45,7 +46,8 @@ describe('ReactServerRendering', function() {
         <span>hello world</span>
       );
       expect(response).toMatch(
-        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
       );
     });
@@ -55,7 +57,8 @@ describe('ReactServerRendering', function() {
         <img />
       );
       expect(response).toMatch(
-        '<img ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
       );
     });
@@ -65,7 +68,8 @@ describe('ReactServerRendering', function() {
         <img data-attr=">" />
       );
       expect(response).toMatch(
-        '<img data-attr="&gt;" ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
       );
     });
@@ -95,7 +99,8 @@ describe('ReactServerRendering', function() {
         <Parent />
       );
       expect(response).toMatch(
-        '<div ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
           '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">My name is </span>' +
@@ -145,7 +150,8 @@ describe('ReactServerRendering', function() {
         );
 
         expect(response).toMatch(
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+          '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+            ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
@@ -225,6 +231,7 @@ describe('ReactServerRendering', function() {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
+      spyOn(console, 'error');
       var instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expect(console.error.argsForCall.length).toBe(1);

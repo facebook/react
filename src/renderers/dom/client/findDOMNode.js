@@ -13,26 +13,12 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMComponent = require('ReactDOMComponent');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNodeTypes = require('ReactNodeTypes');
 
+var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
 var invariant = require('invariant');
 var warning = require('warning');
-
-function getNativeComponentFromComposite(inst) {
-  var type;
-
-  while ((type = inst._renderedNodeType) === ReactNodeTypes.COMPOSITE) {
-    inst = inst._renderedComponent;
-  }
-
-  if (type === ReactNodeTypes.NATIVE) {
-    return inst._renderedComponent;
-  } else if (type === ReactNodeTypes.EMPTY) {
-    return null;
-  }
-}
 
 /**
  * Returns the DOM node rendered by this element.
@@ -66,7 +52,7 @@ function findDOMNode(componentOrElement) {
   var inst = ReactInstanceMap.get(componentOrElement);
   if (inst) {
     inst = getNativeComponentFromComposite(inst);
-    return inst ? ReactDOMComponent.getNodeFromInstance(inst) : null;
+    return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
   }
 
   if (typeof componentOrElement.render === 'function') {

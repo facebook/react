@@ -13,8 +13,8 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
 
 var mapObject = require('mapObject');
 
@@ -122,7 +122,7 @@ var FriendsStatusDisplay = React.createClass({
 });
 
 
-function getInteralStateByUserName(statusDisplays) {
+function getInternalStateByUserName(statusDisplays) {
   return mapObject(statusDisplays, function(statusDisplay, key) {
     return statusDisplay.getInternalState();
   });
@@ -190,7 +190,8 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
   var i;
   var orderedDomIDs = [];
   for (i = 0; i < statusDisplayNodes.length; i++) {
-    orderedDomIDs.push(ReactMount.getID(statusDisplayNodes[i]));
+    var inst = ReactDOMComponentTree.getInstanceFromNode(statusDisplayNodes[i]);
+    orderedDomIDs.push(inst._rootNodeID);
   }
 
   var orderedLogicalIDs = [];
@@ -200,7 +201,9 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
       continue;
     }
     var statusDisplay = statusDisplays[username];
-    orderedLogicalIDs.push(ReactInstanceMap.get(statusDisplay)._rootNodeID);
+    orderedLogicalIDs.push(
+      ReactInstanceMap.get(statusDisplay)._renderedComponent._rootNodeID
+    );
   }
   expect(orderedDomIDs).toEqual(orderedLogicalIDs);
 }
@@ -216,7 +219,7 @@ function testPropsSequence(sequence) {
     container
   );
   var statusDisplays = parentInstance.getStatusDisplays();
-  var lastInternalStates = getInteralStateByUserName(statusDisplays);
+  var lastInternalStates = getInternalStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
   for (i = 1; i < sequence.length; i++) {
@@ -229,7 +232,7 @@ function testPropsSequence(sequence) {
     verifyStatesPreserved(lastInternalStates, statusDisplays);
     verifyDomOrderingAccurate(parentInstance, statusDisplays);
 
-    lastInternalStates = getInteralStateByUserName(statusDisplays);
+    lastInternalStates = getInternalStateByUserName(statusDisplays);
   }
 }
 

@@ -11,14 +11,9 @@
 
 'use strict';
 
-jest
-  .mock('ServerReactRootIndex');
-
 var React;
 var ReactDOM;
 var ReactDOMServer;
-var ReactInstanceMap;
-var ReactMount;
 
 var getTestDocument;
 
@@ -35,25 +30,15 @@ describe('rendering React components at document', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
 
-    // Negative integer creator. So they won't get confused with
-    // the Client positive ids.
-    var ServerReactRootIndex = require('ServerReactRootIndex');
-    var serverId = -1;
-    ServerReactRootIndex.createReactRootIndex.mockImplementation(function() {
-      return serverId--;
-    });
-
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
-    ReactInstanceMap = require('ReactInstanceMap');
-    ReactMount = require('ReactMount');
     getTestDocument = require('getTestDocument');
 
     testDocument = getTestDocument();
   });
 
-  it('should be able to get root component id for document node', function() {
+  it('should be able to adopt server markup', function() {
     expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
@@ -64,22 +49,24 @@ describe('rendering React components at document', function() {
               <title>Hello World</title>
             </head>
             <body>
-              Hello world
+              {'Hello ' + this.props.hello}
             </body>
           </html>
         );
       },
     });
 
-    var markup = ReactDOMServer.renderToString(<Root />);
+    var markup = ReactDOMServer.renderToString(<Root hello="world" />);
     testDocument = getTestDocument(markup);
-    var component = ReactDOM.render(<Root />, testDocument);
+    var body = testDocument.body;
+
+    ReactDOM.render(<Root hello="world" />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
-    // TODO: This is a bad test. I have no idea what this is testing.
-    // Node IDs is an implementation detail and not part of the public API.
-    var componentID = ReactMount.getReactRootID(testDocument);
-    expect(componentID).toBe(ReactInstanceMap.get(component)._rootNodeID);
+    ReactDOM.render(<Root hello="moon" />, testDocument);
+    expect(testDocument.body.innerHTML).toBe('Hello moon');
+
+    expect(body).toBe(testDocument.body);
   });
 
   it('should not be able to unmount component from document node', function() {
@@ -223,8 +210,8 @@ describe('rendering React components at document', function() {
       'quirks by rendering at the document root. You should look for ' +
       'environment dependent code in your components and ensure ' +
       'the props are the same client and server side:\n' +
-      ' (client) ata-reactid=".-1.1">Hello world</body></\n' +
-      ' (server) ata-reactid=".-1.1">Goodbye world</body>'
+      ' (client) dy data-reactid="4">Hello world</body></\n' +
+      ' (server) dy data-reactid="4">Goodbye world</body>'
     );
   });
 
