@@ -4,7 +4,7 @@ title: 컴포넌트 함수 드러내기
 layout: tips
 permalink: expose-component-functions-ko-KR.html
 prev: communicate-between-components-ko-KR.html
-next: references-to-components-ko-KR.html
+next: children-undefined-ko-KR.html
 ---
 
 [컴포넌트간의 통신](/react/tips/communicate-between-components-ko-KR.html)을 위한 (일반적이지 않은) 또다른 방법이 있습니다: 단순히 부모의 호출을 위해 자식 컴포넌트의 메소드를 노출하는 겁니다. 

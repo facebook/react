@@ -31,8 +31,33 @@ string type
 
 > 주의:
 >
-> v0.12 시점에서, 이벤트 핸들러에서 `false` 를 리턴하는 것은 더 이상 이벤트의 전달(propagation)을 멈추지 않습니다. 대신, `e.stopPropagation()`나 `e.preventDefault()`로 적절히 수동으로 트리거해야 합니다.
+> v0.14 시점에서, 이벤트 핸들러에서 `false` 를 리턴하는 것은 더 이상 이벤트의 전달(propagation)을 멈추지 않습니다. 대신, `e.stopPropagation()`나 `e.preventDefault()`로 적절히 수동으로 트리거해야 합니다.
 
+## 이벤트 풀링
+
+`SyntheticEvent`는 풀링됩니다. 이는 `SyntheticEvent` 객체가 재사용될 것이며 이벤트 콜백이 호출된 후 모든 프로퍼티가 null 값을 갖게 된다는 것을 뜻합니다.
+이는 성능을 위한 동작입니다.
+이 때문에, 비동기 방식으로는 이벤트에 접근할 수 없습니다.
+
+```javascript
+function onClick(event) {
+  console.log(event); // => null이 된 객체.
+  console.log(event.type); // => "click"
+  var eventType = event.type; // => "click"
+
+  setTimeout(function() {
+    console.log(event.type); // => null
+    console.log(eventType); // => "click"
+  }, 0);
+
+  this.setState({clickEvent: event}); // 작동하지 않습니다. this.state.clickEvent 는 null값들만을 갖고 있습니다.
+  this.setState({eventType: event.type}); // 여전히 이벤트 프로퍼티를 내보낼 수 있습니다.
+}
+```
+
+> 주의:
+>
+> 만약 비동기 방식으로 이벤트 프로퍼티에 접근하길 원한다면, 이벤트의 `event.persist()`를 호출해야 합니다, 이는 풀로부터 통합적인 이벤트를 제거하고 이벤트에 대한 참조는 사용자의 코드에 의해 유지 될 수 있도록 합니다.
 
 ## 지원되는 이벤트
 
@@ -53,6 +78,22 @@ onCopy onCut onPaste
 
 ```javascript
 DOMDataTransfer clipboardData
+```
+
+
+### Composition Events
+
+이벤트 이름:
+
+```
+onCompositionEnd onCompositionStart onCompositionUpdate
+```
+
+프로퍼티:
+
+```javascript
+string data
+
 ```
 
 
@@ -96,6 +137,7 @@ onFocus onBlur
 DOMEventTarget relatedTarget
 ```
 
+이 포커스 이벤트는 폼 엘리먼트뿐만 아니라 모든 React DOM 엘리먼트에서 작동합니다.
 
 <a name="form-events"></a>
 ### 폼 이벤트
@@ -114,11 +156,12 @@ onChange 이벤트에 대한 더 자세한 정보는 [폼](/react/docs/forms-ko-
 이벤트 이름:
 
 ```
-onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
+onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
+onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 
-`onMouseEnter`와 `onMouseLeave` 이벤트는 평범하게 일어나는(bubbling) 대신 입력된 컴포넌트에 남겨지도록 컴포넌트에서 전달되고 캡쳐 단계가 없습니다.
+`onMouseEnter`와 `onMouseLeave` 이벤트는 평범하게 일어나는(bubbling) 대신 입력된 엘리먼트에 남겨지도록 엘리먼트에서 전달되고 캡쳐 단계가 없습니다.
 
 프로퍼티:
 
@@ -137,6 +180,15 @@ DOMEventTarget relatedTarget
 number screenX
 number screenY
 boolean shiftKey
+```
+
+
+### 셀렉션 이벤트
+
+이벤트 이름:
+
+```
+onSelect
 ```
 
 
@@ -201,4 +253,12 @@ number deltaZ
 
 ```
 onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+```
+
+### 이미지 이벤트
+
+이벤트 이름:
+
+```
+onLoad onError
 ```

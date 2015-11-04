@@ -44,7 +44,7 @@ var root = <ul className="my-list">
 ReactDOM.render(root, document.getElementById('example'));
 ```
 
-__팩토리__
+### 팩토리
 
 `ReactElement` 팩토리는 그저 특정한 `type` 프로퍼티를 가지는 `ReactElement`를 만들어주는 함수입니다. React에는 팩토리를 만드는 헬퍼가 내장되어 있습니다. 그 함수는 사실상 다음과 같습니다:
 
@@ -105,7 +105,7 @@ var MyComponent = React.createClass({
 var component = new MyComponent(props); // 절대 하지 마세요.
 ```
 
-테스트 목적이 아니라면 __절대__ 이 생성자를 직접 호출하지 마십시오. React가 알아서 호출해줍니다.
+테스트 목적이 아니라면 *절대* 이 생성자를 직접 호출하지 마십시오. React가 알아서 호출해줍니다.
 
 대신 `ReactComponent` 클래스를 `createElement`에 넘겨 `ReactElement`를 받을 수 있습니다.
 
@@ -140,13 +140,13 @@ componentA === componentB; // true
 
 ## 형식 타입 정의
 
-__진입점__
+### 진입점
 
 ```
 ReactDOM.render = (ReactElement, HTMLElement | SVGElement) => ReactComponent;
 ```
 
-__노드와 엘리먼트__
+### 노드와 엘리먼트
 
 ```
 type ReactNode = ReactElement | ReactFragment | ReactText;
@@ -180,7 +180,7 @@ type ReactText = string | number;
 type ReactEmpty = null | undefined | boolean;
 ```
 
-__클래스와 컴포넌트__
+### 클래스와 컴포넌트
 
 ```
 type ReactClass<TProps> = (TProps) => ReactComponent<TProps>;
