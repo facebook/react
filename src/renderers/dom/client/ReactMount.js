@@ -175,12 +175,11 @@ function unmountComponentFromNode(instance, container) {
  * @internal
  */
 function hasNonRootReactChild(container) {
-  var rootElement = getReactRootElementInContainer(container);
-  return !!(
-    rootElement &&
-    internalGetID(rootElement) &&
-    !rootElement.hasAttribute(ROOT_ATTR_NAME)
-  );
+  var rootEl = getReactRootElementInContainer(container);
+  if (rootEl) {
+    var inst = ReactDOMComponentTree.getInstanceFromNode(rootEl);
+    return !!(inst && inst._nativeParent);
+  }
 }
 
 function getNativeRootInstanceInContainer(container) {

@@ -97,7 +97,6 @@ assign(ReactDOMTextComponent.prototype, {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el = ownerDocument.createElement('span');
       ReactDOMComponentTree.precacheNode(this, el);
-      DOMPropertyOperations.setAttributeForID(el, domID);
       var lazyTree = DOMLazyTree(el);
       DOMLazyTree.queueText(lazyTree, this._stringText);
       return lazyTree;

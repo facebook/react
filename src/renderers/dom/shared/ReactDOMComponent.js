@@ -665,7 +665,6 @@ ReactDOMComponent.Mixin = {
       if (!this._nativeParent) {
         DOMPropertyOperations.setAttributeForRoot(el);
       }
-      DOMPropertyOperations.setAttributeForID(el, this._domID);
       this._updateDOMProperties(null, props, transaction);
       var lazyTree = DOMLazyTree(el);
       this._createInitialChildren(transaction, props, context, lazyTree);
