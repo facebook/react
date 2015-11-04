@@ -11,23 +11,33 @@
 
 'use strict';
 
-describe('ReactMount', function() {
-  var React = require('React');
-  var ReactDOM = require('ReactDOM');
-  var ReactDOMServer = require('ReactDOMServer');
-  var ReactMount = require('ReactMount');
-  var ReactTestUtils = require('ReactTestUtils');
-  var WebComponents = WebComponents;
+var React;
+var ReactDOM;
+var ReactDOMServer;
+var ReactMount;
+var ReactTestUtils;
+var WebComponents;
 
-  try {
-    if (WebComponents === undefined && typeof jest !== 'undefined') {
-      WebComponents = require('WebComponents');
+describe('ReactMount', function() {
+  beforeEach(function() {
+    jest.resetModuleRegistry();
+
+    React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
+    ReactMount = require('ReactMount');
+    ReactTestUtils = require('ReactTestUtils');
+
+    try {
+      if (WebComponents === undefined && typeof jest !== 'undefined') {
+        WebComponents = require('WebComponents');
+      }
+    } catch (e) {
+      // Parse error expected on engines that don't support setters
+      // or otherwise aren't supportable by the polyfill.
+      // Leave WebComponents undefined.
     }
-  } catch (e) {
-    // Parse error expected on engines that don't support setters
-    // or otherwise aren't supportable by the polyfill.
-    // Leave WebComponents undefined.
-  }
+  });
 
   describe('unmountComponentAtNode', function() {
     it('throws when given a non-node', function() {
@@ -256,5 +266,17 @@ describe('ReactMount', function() {
     });
 
     expect(calls).toBe(5);
+  });
+
+  it('tracks root instances', function() {
+    // Used by devtools.
+    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(0);
+    ReactTestUtils.renderIntoDocument(<span />);
+    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(1);
+    var container = document.createElement('div');
+    ReactDOM.render(<span />, container);
+    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(2);
+    ReactDOM.unmountComponentAtNode(container);
+    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(1);
   });
 });

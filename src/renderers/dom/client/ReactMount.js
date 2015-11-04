@@ -39,6 +39,8 @@ var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
 var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
+var instancesByReactRootID = {};
+
 /**
  * Finds the index of the first character
  * that's not common between the two given strings.
@@ -181,12 +183,19 @@ function hasNonRootReactChild(container) {
   );
 }
 
-function getTopLevelWrapperInContainer(container) {
+function getNativeRootInstanceInContainer(container) {
   var rootEl = getReactRootElementInContainer(container);
   var prevNativeInstance =
     rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl);
-  return !prevNativeInstance || prevNativeInstance._nativeParent ? null :
-    prevNativeInstance._nativeContainerInfo._topLevelWrapper;
+  return (
+    prevNativeInstance && !prevNativeInstance._nativeParent ?
+    prevNativeInstance : null
+  );
+}
+
+function getTopLevelWrapperInContainer(container) {
+  var root = getNativeRootInstanceInContainer(container);
+  return root ? root._nativeContainerInfo._topLevelWrapper : null;
 }
 
 /**
@@ -194,7 +203,10 @@ function getTopLevelWrapperInContainer(container) {
  * composites instead of having to worry about different types of components
  * here.
  */
-var TopLevelWrapper = function() {};
+var topLevelRootCounter = 1;
+var TopLevelWrapper = function() {
+  this.rootID = topLevelRootCounter++;
+};
 TopLevelWrapper.prototype.isReactComponent = {};
 if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
@@ -225,6 +237,11 @@ TopLevelWrapper.prototype.render = function() {
 var ReactMount = {
 
   TopLevelWrapper: TopLevelWrapper,
+
+  /**
+   * Used by devtools. The keys are not important.
+   */
+  _instancesByReactRootID: instancesByReactRootID,
 
   /**
    * This is a hook provided to support rendering React components while
@@ -261,7 +278,8 @@ var ReactMount = {
   },
 
   /**
-   * Render a new component into the DOM.
+   * Render a new component into the DOM. Hooked by devtools!
+   *
    * @param {ReactElement} nextElement element to render
    * @param {DOMElement} container container to render into
    * @param {boolean} shouldReuseMarkup if we should skip the markup insertion
@@ -309,6 +327,9 @@ var ReactMount = {
       shouldReuseMarkup,
       context
     );
+
+    var wrapperID = componentInstance._instance.rootID;
+    instancesByReactRootID[wrapperID] = componentInstance;
 
     return componentInstance;
   },
@@ -526,6 +547,7 @@ var ReactMount = {
 
       return false;
     }
+    delete instancesByReactRootID[prevComponent._instance.rootID];
     ReactUpdates.batchedUpdates(
       unmountComponentFromNode,
       prevComponent,

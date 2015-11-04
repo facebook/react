@@ -13,6 +13,7 @@
 
 'use strict';
 
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
@@ -21,6 +22,7 @@ var ReactUpdates = require('ReactUpdates');
 var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
+var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
@@ -46,6 +48,21 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
+    ComponentTree: {
+      getClosestInstanceFromNode:
+        ReactDOMComponentTree.getClosestInstanceFromNode,
+      getNodeFromInstance: function(inst) {
+        // inst is an internal instance (but could be a composite)
+        if (inst._renderedComponent) {
+          inst = getNativeComponentFromComposite(inst);
+        }
+        if (inst) {
+          return ReactDOMComponentTree.getNodeFromInstance(inst);
+        } else {
+          return null;
+        }
+      },
+    },
     Mount: ReactMount,
     Reconciler: ReactReconciler,
   });
