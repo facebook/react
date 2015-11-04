@@ -78,4 +78,4 @@ return (
 >
 > 위의 예제에 있는 ES6 [화살표 함수](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)는 `this`의 값을 구문적으로 바인드하기위해 사용되었습니다.
 
-[JSX 컴파일러](/react/jsx-compiler.html)로 지금 바로 사용해보세요.
+[Babel REPL](https://babeljs.io/repl/)로 지금 바로 사용해보세요.

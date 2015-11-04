@@ -19,6 +19,7 @@ UI를 가지고 할 수 있는 가장 기초적인 것은 데이터를 표시하
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
@@ -54,7 +55,6 @@ setInterval(function() {
 }, 500);
 ```
 
-
 ## 반응 적(Reactive) 업데이트
 
 `hello-react.html` 파일을 웹 브라우저에서 열어 당신의 이름을 텍스트 필드에 써 보세요. React는 단지 시간을 표시하는 부분만을 바꿉니다 — 텍스트 필드 안에 입력한 것은 그대로 남아 있구요, 당신이 이 동작을 관리하는 그 어떤 코드도 쓰지 않았음에도 불구하고 말이죠. React는 그걸 올바른 방법으로 알아서 해줍니다.
@@ -63,7 +63,6 @@ setInterval(function() {
 
 이 컴포넌트에 대한 입력은 `props` 라고 불립니다 — "properties" 를 줄인 것이죠. 그들은 JSX 문법에서는 어트리뷰트로서 전달됩니다. 당신은 `props` 를 컴포넌트 안에서 불변의(immutable) 엘리먼트로서 생각해야 하고, `this.props` 를 덮어씌우려고 해서는 안됩니다.
 
-
 ## 컴포넌트들은 함수와 같습니다
 
 React 컴포넌트들은 매우 단순합니다. 당신은 그것들을 `props` 와 `state` (이것들은 나중에 언급할 것입니다) 를 받고 HTML을 렌더링하는 단순한 함수들로 생각해도 됩니다. 이걸 염두하면, 컴포넌트의 작동을 이해하는 것도 쉽습니다.
@@ -71,7 +70,6 @@ React 컴포넌트들은 매우 단순합니다. 당신은 그것들을 `props` 
 > 주의:
 >
 > **한가지 제약이 있습니다**: React 컴포넌트들은 단 하나의 루트 노드(root node)만을 렌더할 수 있습니다. 만약 여러개의 노드들을 리턴하고 싶다면, 그것들은 단 하나의 루트 노드로 싸여져 있어야만 합니다.
-
 
 ## JSX 문법
 
@@ -91,12 +89,11 @@ JSX를 이용하면:
 
 우리는 이것이 React 앱들을 만들기 쉽게 하고, 디자이너들이 이 문법을 더 선호하는 것을 발견했습니다, 하지만 모든 사람은 그들만의 선호하는 워크플로우가 있기 마련이므로, **JSX는 React를 사용하기 위해 필수적이지는 않습니다.**
 
-JSX는 매우 작은 언어입니다. 그것을 배우고 싶다면, [JSX 깊게 살펴보기](/react/docs/jsx-in-depth-ko-KR.html). 를 살펴 보시기 바랍니다. 또는, [우리의 온라인 JSX 컴파일러](/react/jsx-compiler.html)를 통해 문법이 변환되는 것을 살펴 보시기 바랍니다.
+JSX는 매우 작은 언어입니다. 그것을 배우고 싶다면, [JSX 깊게 살펴보기](/react/docs/jsx-in-depth-ko-KR.html)를 살펴 보시기 바랍니다. 또는, [바벨 REPL](https://babeljs.io/repl/)를 통해 문법이 변환되는 것을 살펴 보시기 바랍니다.
 
 JSX는 HTML과 비슷하지만, 완전히 똑같지는 않습니다. [JSX의 실수하기 쉬운 부분들](/react/docs/jsx-gotchas-ko-KR.html)에 중요한 차이점들에 대해 설명되어 있습니다.
 
-JSX를 사용하기 시작하기 위한 가장 쉬운 방법은 브라우저에서 작동하는 `JSXTransformer`를 사용하는 것입니다. 우리는 이것을 프로덕션에서는 사용하지 않기를 강하게 권장하는 바입니다. 당신은 우리의 커맨드 라인 [react-tools](https://www.npmjs.com/package/react-tools) 패키지를 이용하여 미리 컴파일(precompile)해 사용할 수 있습니다.
-
+[바벨에서 JSX를 시작하는 여러 방법을 제공합니다](http://babeljs.io/docs/setup/). 여기에는 커맨드 라인 툴부터 루비 온 레일스 연동까지 다양한 방법이 있습니다. 가장 편한 툴을 사용하세요.
 
 ## JSX 없이 React 사용하기
 

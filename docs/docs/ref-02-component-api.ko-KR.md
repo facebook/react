@@ -14,14 +14,17 @@ React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 
 ### setState
 
 ```javascript
-void setState(function|object nextState[, function callback])
+void setState(
+  function|object nextState, 
+  [function callback]
+)
 ```
 
-`nextState`를 현재 state에 합칩니다. 이벤트 핸들러와 서버 요청 콜백에서 UI 업데이트를 발생시키기 위해 이 메소드를 주로 사용합니다.
+nextState를 현재 state에 얕게(shallow) 병합합니다. 이벤트 핸들러와 서버 요청 콜백에서 UI 업데이트를 발생시키기 위해 이 메소드를 주로 사용합니다.
 
 첫번째 인자는 업데이트를 위한 키를 0개 이상 가진 객체이거나 업데이트를 위한 키들을 포함한 객체를 반환하는 함수(의 state나 props)일 수 있습니다.
 
-객체를 사용하는 간단한 예제입니다...
+객체를 사용하는 간단한 예제입니다:
 
 ```javascript
 setState({mykey: '새로운 값'});
@@ -51,7 +54,10 @@ setState(function(previousState, currentProps) {
 ### replaceState
 
 ```javascript
-void replaceState(object nextState[, function callback])
+void replaceState(
+  object nextState, 
+  [function callback]
+)
 ```
 
 `setState()`와 비슷하지만 기존에 존재하는 state 중 nextState에 없는 키는 모두 삭제됩니다.
@@ -64,7 +70,9 @@ void replaceState(object nextState[, function callback])
 ### forceUpdate
 
 ```javascript
-void forceUpdate([function callback])
+void forceUpdate(
+  [function callback]
+ )
 ```
 
 기본적으로, 컴포넌트의 state나 props가 변경되면, 컴포넌트는 다시 렌더됩니다. 하지만 이런 변경이 묵시적이거나(예를들어 객체의 변경 없이 깊이 있는 데이터만 변경된 경우) `render()` 함수가 다른 값에 의존하는 경우, `forceUpdate()`를 호출해 React에게 `render()`를 다시 실행할 필요가 있다고 알릴 수 있습니다.
@@ -95,7 +103,7 @@ DOMElement getDOMNode()
 boolean isMounted()
 ```
 
-`isMounted()`는 컴포넌트가 DOM에 렌더링되었으면 true를, 아니면 false를 리턴합니다. 비동기적으로 `setState()`나 `forceUpdate()`를 호출할 때 이 메소드를 사용하여 오류를 방지할 수 있습니다.
+`isMounted()`는 컴포넌트가 DOM에 렌더링되었으면 `true`를, 아니면 `false`를 리턴합니다. 비동기적으로 `setState()`나 `forceUpdate()`를 호출할 때 이 메소드를 사용하여 오류를 방지할 수 있습니다.
 
 > 주의:
 >
@@ -105,7 +113,10 @@ boolean isMounted()
 ### setProps
 
 ```javascript
-void setProps(object nextProps[, function callback])
+void setProps(
+  object nextProps, 
+  [function callback]
+)
 ```
 
 외부 JavaScript 애플리케이션과 연동하는 경우 `ReactDOM.render()`로 렌더링된 React 컴포넌트에 변경을 알리고 싶을 때가 있습니다.
@@ -124,7 +135,10 @@ void setProps(object nextProps[, function callback])
 ### replaceProps
 
 ```javascript
-void replaceProps(object nextProps[, function callback])
+void replaceProps(
+  object nextProps, 
+  function callback]
+)
 ```
 
 `setProps()`와 비슷하지만 두 객체를 합치는 대신 이전에 존재하던 props를 삭제합니다.

@@ -51,7 +51,8 @@ ReactDOM.render(
 
 > 주의:
 >
-> 아래의 예제에서는 실험적인 ES7 문법이 사용되었기 때문에 `--harmony ` 플래그가 필요합니다. 브라우저에서 JSX 변환기를 사용 중이라면, `<script type="text/jsx;harmony=true">`를 사용해 스크립트를 작성하세요. 자세히 알아보려면 아래의 [잔여 프로퍼티와 스프레드 프로퍼티 ...](/react/docs/transferring-props-ko-KR.html#rest-and-spread-properties-...)를 확인하세요.
+> `...` 구문은 객체 잔여 스프레드 제안의 일부입니다. 이 제안은 표준화 과정에 있습니다. 더 자세한 내용은 밑의 [잔여 프로퍼티와 스프레드 프로퍼티 ...](/react/docs/transferring-props.html#rest-and-spread-properties-...) 부분을 참고하세요.
+
 
 때로는 모든 프로퍼티를 일일이 전달 하는것은 지루하고 덧없는 작업입니다. 이 경우 [구조 해체 할당(destructuring assignment)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)을 다른 프로퍼티를 함께 사용해 미상의 프로퍼티를 추출할 수 있습니다.
 
@@ -133,7 +134,7 @@ var FancyCheckbox = React.createClass({
 
 잔여(Rest, `...`) 프로퍼티는 객체에서 소비되지 않은 나머지 프로퍼티를 추출해 새로운 객체로 만들 수 있게 해 줍니다. 구조 해체 패턴에서 열거된 다른 프로퍼티들은 모두 제외됩니다.
 
-이는 [ES7 제안](https://github.com/sebmarkbage/ecmascript-rest-spread)의 실험적인 구현체입니다.
+이 제안은 2 단계에 돌입해 이제 바벨에서 기본값으로 활성화되어있습니다. 바벨의 이전 버전은 `babel --optional es7.objectRestSpread`로 명시적으로 활성화 할 필요가 있을 수도 있습니다.
 
 ```javascript
 var { x, y, ...z } = { x: 1, y: 2, a: 3, b: 4 };
