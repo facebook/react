@@ -169,9 +169,8 @@ function getNode(id) {
   var node = getNodeIfCached(id);
   if (node) {
     return node;
-  } else {
-    return nodeCache[id] = ReactMount.findReactNodeByID(id);
   }
+  return nodeCache[id] = ReactMount.findReactNodeByID(id);
 }
 
 /**

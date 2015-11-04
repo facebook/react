@@ -26,9 +26,8 @@ var validateDOMNesting = require('validateDOMNesting');
 function getNode(inst) {
   if (inst._nativeNode) {
     return inst._nativeNode;
-  } else {
-    return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
   }
+  return inst._nativeNode = ReactMount.getNode(inst._rootNodeID);
 }
 
 /**
