@@ -78,7 +78,7 @@ type useMap value width wmode
 ### SVG 어트리뷰트
 
 ```
-clipPath cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy
+clipPath cx cy d dx dy fill fillOpacity fontFamily fontSize fontWeight fx fy
 gradientTransform gradientUnits markerEnd markerMid markerStart offset opacity
 patternContentUnits patternUnits points preserveAspectRatio r rx ry
 spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
