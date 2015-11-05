@@ -87,46 +87,6 @@ describe('ReactTestUtils', function() {
     expect(componentWillUnmount).toBeCalled();
   });
 
-  it('should run all lifecycle methods', function() {
-    var componentWillMount = jest.genMockFn();
-    var componentDidMount = jest.genMockFn();
-    var componentWillReceiveProps = jest.genMockFn();
-    var shouldComponentUpdate = jest.genMockFn();
-    var componentWillUpdate = jest.genMockFn();
-    var componentDidUpdate = jest.genMockFn();
-    var componentWillUnmount = jest.genMockFn();
-
-    var SomeComponent = React.createClass({
-      render: function() {
-        return <SomeComponent onChange={() => this.setState({a: 1})} />;
-      },
-      componentWillMount,
-      componentDidMount,
-      componentWillReceiveProps,
-      shouldComponentUpdate() {
-        shouldComponentUpdate();
-        return true;
-      },
-      componentWillUpdate,
-      componentDidUpdate,
-      componentWillUnmount,
-    });
-
-    var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />);
-    shallowRenderer.getRenderOutput().props.onChange();
-    shallowRenderer.render(<SomeComponent />);
-    shallowRenderer.unmount();
-
-    expect(componentWillMount).toBeCalled();
-    expect(componentDidMount).toBeCalled();
-    expect(componentWillReceiveProps).toBeCalled();
-    expect(shouldComponentUpdate).toBeCalled();
-    expect(componentWillUpdate).toBeCalled();
-    expect(componentDidUpdate).toBeCalled();
-    expect(componentWillUnmount).toBeCalled();
-  });
-
   it('can shallow render to null', function() {
     var SomeComponent = React.createClass({
       render: function() {
@@ -140,6 +100,18 @@ describe('ReactTestUtils', function() {
     var result = shallowRenderer.getRenderOutput();
 
     expect(result).toBe(null);
+  });
+
+  it('can shallow render with a ref', function() {
+    var SomeComponent = React.createClass({
+      render: function() {
+        return <div ref="hello" />;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    // Shouldn't crash.
+    shallowRenderer.render(<SomeComponent />);
   });
 
   it('lets you update shallowly rendered components', function() {
