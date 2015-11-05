@@ -3,10 +3,7 @@
   "version": "0.15.0-alpha",
   "description": "React package for working with the DOM.",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/facebook/react.git"
-  },
+  "repository": "facebook/react",
   "keywords": [
     "react"
   ],
