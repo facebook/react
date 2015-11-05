@@ -663,7 +663,6 @@ function bindAutoBindMethod(component, method) {
     boundMethod.__reactBoundArguments = null;
     var componentName = component.constructor.displayName;
     var _bind = boundMethod.bind;
-    /* eslint-disable block-scoped-var, no-undef */
     boundMethod.bind = function(newThis, ...args) {
       // User is trying to bind() an autobound method; we effectively will
       // ignore the value of "this" that the user is trying to use, so
@@ -690,7 +689,6 @@ function bindAutoBindMethod(component, method) {
       reboundMethod.__reactBoundMethod = method;
       reboundMethod.__reactBoundArguments = args;
       return reboundMethod;
-      /* eslint-enable */
     };
   }
   return boundMethod;

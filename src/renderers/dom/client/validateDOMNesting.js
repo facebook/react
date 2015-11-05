@@ -310,9 +310,7 @@ if (__DEV__) {
     }
 
     var stack = [];
-    /*eslint-disable space-after-keywords */
     do {
-    /*eslint-enable space-after-keywords */
       stack.push(instance);
     } while ((instance = instance._currentElement._owner));
     stack.reverse();

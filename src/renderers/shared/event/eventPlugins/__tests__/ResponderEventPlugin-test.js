@@ -218,7 +218,7 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
       '\nFor event test config:\n' + JSON.stringify(eventTestConfig) + '\n'
     );
   };
-  /*eslint-disable no-loop-func, no-shadow */
+
   var registerOneEventType = function(registrationName, eventTypeTestConfig) {
     for (var readableID in eventTypeTestConfig) {
       var nodeConfig = eventTypeTestConfig[readableID];
@@ -226,21 +226,20 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
       var handler = nodeConfig.order === NA ? neverFire.bind(null, readableID, registrationName) :
         // We partially apply readableID and nodeConfig, as they change in the
         // parent closure across iterations.
-        function(readableID, nodeConfig, e) {
+        function(rID, config, e) {
           expect(
-            readableID + '->' + registrationName + ' index:' + runs.dispatchCount++
+            rID + '->' + registrationName + ' index:' + runs.dispatchCount++
           ).toBe(
-            readableID + '->' + registrationName + ' index:' + nodeConfig.order
+            rID + '->' + registrationName + ' index:' + config.order
           );
-          if (nodeConfig.assertEvent) {
-            nodeConfig.assertEvent(e);
+          if (config.assertEvent) {
+            config.assertEvent(e);
           }
-          return nodeConfig.returnVal;
+          return config.returnVal;
         }.bind(null, readableID, nodeConfig);
       EventPluginHub.putListener(idToInstance[id], registrationName, handler);
     }
   };
-  /*eslint-enable no-loop-func, no-shadow */
   for (var eventName in eventTestConfig) {
     var oneEventTypeTestConfig = eventTestConfig[eventName];
     var hasTwoPhase = !!oneEventTypeTestConfig.bubbled;

@@ -23,9 +23,7 @@ module.exports = function(grunt) {
       './examples/shared/*.js',
       '.module-cache',
     ],
-    /*eslint-disable camelcase */
-    compare_size: require('./grunt/config/compare_size'),
-    /*eslint-enable camelcase */
+    'compare_size': require('./grunt/config/compare_size'),
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
