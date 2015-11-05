@@ -30,8 +30,8 @@ thead time title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
-radialGradient rect stop svg text tspan
+circle clipPath defs ellipse g line linearGradient marker mask path pattern polygon
+polyline radialGradient rect stop svg text tspan
 ```
 
 You may also be interested in [react-art](https://github.com/facebook/react-art), a drawing library for React that can render to Canvas, SVG, or VML (for IE8).
@@ -80,11 +80,13 @@ There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here
 
 ```
 clipPath cx cy d dx dy fill fillOpacity fontFamily
-fontSize fx fy gradientTransform gradientUnits markerEnd
-markerMid markerStart offset opacity patternContentUnits
-patternUnits points preserveAspectRatio r rx ry spreadMethod
-stopColor stopOpacity stroke  strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version
-viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
-xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
+fontSize fx fy gradientTransform gradientUnits marker
+markerEnd markerHeight markerMid markerStart markerUnits
+markerWidth offset opacity orient patternContentUnits
+patternUnits points preserveAspectRatio r refX refY rx ry
+spreadMethod stopColor stopOpacity stroke strokeDasharray
+strokeLinecap strokeOpacity strokeWidth textAnchor transform
+version viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref
+xlinkRole xlinkShow xlinkTitle xlinkType xmlBase xmlLang
+xmlSpace y1 y2 y
 ```

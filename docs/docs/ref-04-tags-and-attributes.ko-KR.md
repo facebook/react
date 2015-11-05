@@ -30,8 +30,8 @@ thead time title tr track u ul var video wbr
 다음의 SVG 엘리먼트가 지원됩니다.
 
 ```
-circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
-radialGradient rect stop svg text tspan
+circle clipPath defs ellipse g line linearGradient marker mask path pattern polygon
+polyline radialGradient rect stop svg text tspan
 ```
 
 아마 Canvas, SVG, VML(IE8 전용)에 렌더할 때 쓰는 React의 드로잉 라이브러리인 [react-art](https://github.com/facebook/react-art)도 흥미 있으실 수 있습니다.
@@ -80,11 +80,13 @@ type useMap value width wmode wrap
 
 ```
 clipPath cx cy d dx dy fill fillOpacity fontFamily
-fontSize fx fy gradientTransform gradientUnits markerEnd
-markerMid markerStart offset opacity patternContentUnits
-patternUnits points preserveAspectRatio r rx ry spreadMethod
-stopColor stopOpacity stroke  strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version
-viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
-xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
+fontSize fx fy gradientTransform gradientUnits marker
+markerEnd markerHeight markerMid markerStart markerUnits
+markerWidth offset opacity orient patternContentUnits
+patternUnits points preserveAspectRatio r refX refY rx ry
+spreadMethod stopColor stopOpacity stroke strokeDasharray
+strokeLinecap strokeOpacity strokeWidth textAnchor transform
+version viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref
+xlinkRole xlinkShow xlinkTitle xlinkType xmlBase xmlLang
+xmlSpace y1 y2 y
 ```
