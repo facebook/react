@@ -1,3 +1,13 @@
+## 0.14.2 (November 2, 2015)
+
+### React DOM
+- Fixed bug with development build preventing events from firing in some versions of Internet Explorer & Edge
+- Fixed bug with development build when using es5-sham in older versions of Internet Explorer
+- Added support for `integrity` attribute
+- Fixed bug resulting in `children` prop being coerced to a string for custom elements, which was not the desired behavior
+- Moved `react` from `dependencies` to `peerDependencies` to match expectations and align with `react-addons-*` packages
+
+
 ## 0.14.1 (October 28, 2015)
 
 ### React DOM
