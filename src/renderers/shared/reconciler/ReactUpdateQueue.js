@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentRender = require('ReactCurrentRender');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactUpdates = require('ReactUpdates');
@@ -45,8 +46,18 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   }
 
   if (__DEV__) {
+    var hasOwner = ReactCurrentOwner.current != null;
+    var isRendering = ReactCurrentRender.current != null;
+
     warning(
-      ReactCurrentOwner.current == null,
+      !hasOwner || isRendering,
+      '%s(...): Cannot trigger update from another component\'s constructor. ' +
+      'Move constructor side-effects into `componentWillMount`.',
+      callerName
+    );
+
+    warning(
+      !isRendering,
       '%s(...): Cannot update during an existing state transition ' +
       '(such as within `render`). Render methods should be a pure function ' +
       'of props and state.',
@@ -73,7 +84,7 @@ var ReactUpdateQueue = {
   isMounted: function(publicInstance) {
     if (__DEV__) {
       var owner = ReactCurrentOwner.current;
-      if (owner !== null) {
+      if (owner !== null && owner === ReactCurrentRender.current) {
         warning(
           owner._warnedAboutRefsInRender,
           '%s is accessing isMounted inside its render() function. ' +

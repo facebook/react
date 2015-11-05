@@ -13,6 +13,7 @@
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentRender = require('ReactCurrentRender');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactNodeTypes = require('ReactNodeTypes');
@@ -806,11 +807,17 @@ var ReactCompositeComponentMixin = {
   _renderValidatedComponent: function() {
     var renderedComponent;
     ReactCurrentOwner.current = this;
+    if (__DEV__) {
+      ReactCurrentRender.current = this;
+    }
     try {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
     } finally {
       ReactCurrentOwner.current = null;
+      if (__DEV__) {
+        ReactCurrentRender.current = null;
+      }
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
