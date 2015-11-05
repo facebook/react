@@ -207,8 +207,9 @@ var ReactTestUtils = {
     var all =
       ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
     if (all.length !== 1) {
-      throw new Error('Did not find exactly one match ' +
-        '(found: ' + all.length + ') for class:' + className
+      throw new Error(
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for class:' + className
       );
     }
     return all[0];
@@ -236,8 +237,9 @@ var ReactTestUtils = {
   findRenderedDOMComponentWithTag: function(root, tagName) {
     var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
-      throw new Error('Did not find exactly one match ' +
-        '(found ' + all.length + ') for tag:' + tagName
+      throw new Error(
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for tag:' + tagName
       );
     }
     return all[0];
@@ -270,8 +272,8 @@ var ReactTestUtils = {
     );
     if (all.length !== 1) {
       throw new Error(
-        'Did not find exactly one match for componentType:' + componentType +
-        ' (found ' + all.length + ')'
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for componentType:' + componentType
       );
     }
     return all[0];
