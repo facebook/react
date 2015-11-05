@@ -24,6 +24,6 @@ November 2-4
 [Website](https://reactive2015.com/) - [Schedule](https://reactive2015.com/schedule_speakers.html#schedule)
 
 ### ReactEurope 2016
-May 31 - July 4
+June 2 & 3
 
 [Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
