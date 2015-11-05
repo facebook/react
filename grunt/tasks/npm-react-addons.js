@@ -9,35 +9,43 @@ var addons = {
   CSSTransitionGroup: {
     module: 'ReactCSSTransitionGroup',
     name: 'css-transition-group',
+    docs: 'animation',
   },
   LinkedStateMixin: {
     module: 'LinkedStateMixin',
     name: 'linked-state-mixin',
+    docs: 'two-way-binding-helpers',
   },
   Perf: {
     module: 'ReactDefaultPerf',
     name: 'perf',
+    docs: 'perf',
   },
   PureRenderMixin: {
     module: 'ReactComponentWithPureRenderMixin',
     name: 'pure-render-mixin',
+    docs: 'pure-render-mixin',
   },
   TestUtils: {
     module: 'ReactTestUtils',
     name: 'test-utils',
+    docs: 'test-utils',
   },
   TransitionGroup: {
     module: 'ReactTransitionGroup',
     name: 'transition-group',
+    docs: 'animation',
   },
   cloneWithProps: {
     module: 'cloneWithProps',
     name: 'clone-with-props',
+    docs: 'clone-with-props',
   },
   createFragment: {
     module: 'ReactFragment',
     method: 'create',
     name: 'create-fragment',
+    docs: 'create-fragment',
   },
   shallowCompare: {
     module: 'shallowCompare',
@@ -46,6 +54,7 @@ var addons = {
   updates: {
     module: 'update',
     name: 'update',
+    docs: 'update',
   },
 };
 
@@ -76,15 +85,20 @@ function buildReleases() {
     pkgData.name = pkgName;
 
     grunt.file.mkdir(destDir);
+    var link = info.docs ? info.docs : 'addons';
+    link = `https://facebook.github.io/react/docs/${link}.html`;
     fs.writeFileSync(path.join(destDir, 'index.js'), generateSource(info));
     fs.writeFileSync(path.join(destDir, 'package.json'), JSON.stringify(pkgData, null, 2));
     fs.writeFileSync(path.join(destDir, 'LICENSE'), license);
     fs.writeFileSync(path.join(destDir, 'PATENTS'), patents);
     fs.writeFileSync(
       path.join(destDir, 'README.md'),
-      '# ' + pkgName + '\n\n' +
-      'This package provides the React ' + k + ' add-on. See ' +
-      'http://facebook.github.io/react/docs/addons.html for more information.\n'
+      `
+# ${pkgName}
+
+This package provides the React ${k} add-on.
+
+See <${link}> for more information.`.slice(1)
     );
   });
 
