@@ -23,7 +23,7 @@ module.exports = function(grunt) {
       './examples/shared/*.js',
       '.module-cache',
     ],
-    'compare-size': require('./grunt/config/compare-size'),
+    'compare_size': require('./grunt/config/compare_size'),
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
@@ -133,7 +133,7 @@ module.exports = function(grunt) {
     'npm-react-dom:pack',
     'npm-react-addons:release',
     'npm-react-addons:pack',
-    'compare-size',
+    'compare_size',
   ]);
 
   // Automate the release!
