@@ -146,7 +146,7 @@ function createArrayOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
     if (typeof typeChecker !== 'function') {
       return new Error(
-        `Invalid argument \`${propFullName}\` supplied to \`${componentName}\`, expected valid PropType.`
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside arrayOf.`
       );
     }
     var propValue = props[propName];
@@ -237,7 +237,7 @@ function createObjectOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
     if (typeof typeChecker !== 'function') {
       return new Error(
-        `Invalid argument \`${propFullName}\` supplied to \`${componentName}\`, expected valid PropType.`
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside objectOf.`
       );
     }
     var propValue = props[propName];

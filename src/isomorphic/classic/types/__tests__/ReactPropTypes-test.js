@@ -142,7 +142,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf({ foo: PropTypes.string }),
         { foo: 'bar' },
-        'Invalid argument `testProp` supplied to `testComponent`, expected valid PropType.'
+        'Property `testProp` of component `testComponent` has invalid PropType notation inside arrayOf.'
       );
     });
 
@@ -473,7 +473,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.objectOf({ foo: PropTypes.string }),
         { foo: 'bar' },
-        'Invalid argument `testProp` supplied to `testComponent`, expected valid PropType.'
+        'Property `testProp` of component `testComponent` has invalid PropType notation inside objectOf.'
       );
     });
 
