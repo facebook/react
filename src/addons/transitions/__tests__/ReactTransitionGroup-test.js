@@ -74,7 +74,7 @@ describe('ReactTransitionGroup', function() {
         for (var i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
-        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+        return <ReactTransitionGroup component="span">{children}</ReactTransitionGroup>;
       },
     });
 
@@ -131,7 +131,7 @@ describe('ReactTransitionGroup', function() {
         for (var i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
-        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+        return <ReactTransitionGroup component="div">{children}</ReactTransitionGroup>;
       },
     });
 
@@ -191,7 +191,7 @@ describe('ReactTransitionGroup', function() {
         for (var i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
-        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+        return <ReactTransitionGroup component="span">{children}</ReactTransitionGroup>;
       },
     });
 
@@ -248,7 +248,7 @@ describe('ReactTransitionGroup', function() {
         for (var i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} id={i} />);
         }
-        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+        return <ReactTransitionGroup component="span">{children}</ReactTransitionGroup>;
       },
     });
 
@@ -268,5 +268,40 @@ describe('ReactTransitionGroup', function() {
       'willLeave0', 'didLeave0', 'willLeave1', 'didLeave1',
       'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2',
     ]);
+  });
+
+  describe('component property not defined', function() {
+    it('should return single child unwrapped', function() {
+      var Component = React.createClass({
+        render: function() {
+          return (
+            <ReactTransitionGroup>
+              <span id="singleChild" />
+            </ReactTransitionGroup>
+          );
+        },
+      });
+
+      var instance = ReactDOM.render(<Component />, container);
+      expect(ReactDOM.findDOMNode(instance).id).toBe('singleChild');
+    });
+
+    it('should return children wrapped in a span', function() {
+      var Component = React.createClass({
+        render: function() {
+          return (
+            <ReactTransitionGroup>
+              <span id="childOne" />
+              <span id="childTwo" />
+            </ReactTransitionGroup>
+          );
+        },
+      });
+
+      var instance = ReactDOM.render(<Component />, container);
+      expect(ReactDOM.findDOMNode(instance).childNodes.length).toBe(2);
+      expect(ReactDOM.findDOMNode(instance).childNodes[0].id).toBe('childOne');
+      expect(ReactDOM.findDOMNode(instance).childNodes[1].id).toBe('childTwo');
+    });
   });
 });

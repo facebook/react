@@ -27,7 +27,6 @@ var ReactTransitionGroup = React.createClass({
 
   getDefaultProps: function() {
     return {
-      component: 'span',
       childFactory: emptyFunction.thatReturnsArgument,
     };
   },
@@ -201,8 +200,6 @@ var ReactTransitionGroup = React.createClass({
   },
 
   render: function() {
-    // TODO: we could get rid of the need for the wrapper node
-    // by cloning a single child
     var childrenToRender = [];
     for (var key in this.state.children) {
       var child = this.state.children[key];
@@ -218,11 +215,15 @@ var ReactTransitionGroup = React.createClass({
         ));
       }
     }
-    return React.createElement(
-      this.props.component,
-      this.props,
-      childrenToRender
-    );
+    if (this.props.component || childrenToRender.length > 1) {
+      return React.createElement(
+        this.props.component || 'span',
+        this.props,
+        childrenToRender
+      );
+    } else {
+      return childrenToRender[0] || null;
+    }
   },
 });
 
