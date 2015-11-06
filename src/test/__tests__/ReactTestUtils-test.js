@@ -38,9 +38,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />);
-
-    var result = shallowRenderer.getRenderOutput();
+    var result = shallowRenderer.render(<SomeComponent />);
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -95,9 +93,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />);
-
-    var result = shallowRenderer.getRenderOutput();
+    var result = shallowRenderer.render(<SomeComponent />);
 
     expect(result).toBe(null);
   });
@@ -148,16 +144,14 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />);
-    var result = shallowRenderer.getRenderOutput();
+    var result = shallowRenderer.render(<SomeComponent />);
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
       <span className="child1" />,
       <span className="child2" />,
     ]);
 
-    shallowRenderer.render(<SomeComponent aNew="prop" />);
-    var updatedResult = shallowRenderer.getRenderOutput();
+    var updatedResult = shallowRenderer.render(<SomeComponent aNew="prop" />);
     expect(updatedResult.type).toBe('a');
 
     var mockEvent = {};
@@ -194,8 +188,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SimpleComponent />);
-    var result = shallowRenderer.getRenderOutput();
+    var result = shallowRenderer.render(<SimpleComponent />);
     expect(result).toEqual(<div />);
   });
 
@@ -210,10 +203,9 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SimpleComponent />, {
+    var result = shallowRenderer.render(<SimpleComponent />, {
       name: 'foo',
     });
-    var result = shallowRenderer.getRenderOutput();
     expect(result).toEqual(<div>foo</div>);
   });
 
@@ -229,7 +221,6 @@ describe('ReactTestUtils', function() {
       'NonExistentClass'
     );
     expect(scryResults.length).toBe(0);
-
   });
 
   it('can scryRenderedDOMComponentsWithClass with className contains \\n', function() {
@@ -445,8 +436,8 @@ describe('ReactTestUtils', function() {
     });
     var handler = jasmine.createSpy('spy');
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent handleClick={handler} />);
-    var result = shallowRenderer.getRenderOutput();
+    var result = shallowRenderer.render(<SomeComponent handleClick={handler} />);
+
     expect(() => ReactTestUtils.Simulate.click(result)).toThrow(
       'TestUtils.Simulate expects a component instance and not a ReactElement.' +
       'TestUtils.Simulate will not work if you are using shallow rendering.'
