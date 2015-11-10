@@ -73,13 +73,13 @@ function generateSource(info) {
 
 function buildReleases() {
   var pkgTemplate = grunt.file.readJSON('./packages/react-addons/package.json');
-  var license = grunt.file.read('./LICENSE');
-  var patents = grunt.file.read('./PATENTS');
 
   Object.keys(addons).map(function(k) {
     var info = addons[k];
     var pkgName = 'react-addons-' + info.name;
     var destDir = 'build/packages/' + pkgName;
+    var destLicense = path.join(destDir, 'LICENSE');
+    var destPatents = path.join(destDir, 'PATENTS');
 
     var pkgData = assign({}, pkgTemplate);
     pkgData.name = pkgName;
@@ -89,8 +89,8 @@ function buildReleases() {
     link = `https://facebook.github.io/react/docs/${link}.html`;
     fs.writeFileSync(path.join(destDir, 'index.js'), generateSource(info));
     fs.writeFileSync(path.join(destDir, 'package.json'), JSON.stringify(pkgData, null, 2));
-    fs.writeFileSync(path.join(destDir, 'LICENSE'), license);
-    fs.writeFileSync(path.join(destDir, 'PATENTS'), patents);
+    grunt.file.copy('LICENSE', destLicense);
+    grunt.file.copy('PATENTS', destPatents);
     fs.writeFileSync(
       path.join(destDir, 'README.md'),
       `

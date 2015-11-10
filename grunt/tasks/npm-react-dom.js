@@ -18,7 +18,8 @@ function buildRelease() {
 
   // Copy to build/packages/react-dom
   var mappings = [].concat(
-    grunt.file.expandMapping('**/*', dest, {cwd: src})
+    grunt.file.expandMapping('**/*', dest, {cwd: src}),
+    grunt.file.expandMapping('{LICENSE,PATENTS}', dest)
   );
   mappings.forEach(function(mapping) {
     var mappingSrc = mapping.src[0];
