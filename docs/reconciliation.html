@@ -480,7 +480,7 @@ renderB: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span
 
 <ol>
 <li><p>The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven&#39;t found this to be an issue.</p></li>
-<li><p>If you don&#39;t provide stable keys (by using Math.random() for example), all the sub-trees are going to be re-rendered every single time. By giving the users the choice to choose the key, they have the ability to shoot themselves in the foot.</p></li>
+<li><p>Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many nodes to be unnecessarily re-created, which can cause performance degradation and lost state in child components.</p></li>
 </ol>
 
 

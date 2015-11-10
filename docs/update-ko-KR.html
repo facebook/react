@@ -427,7 +427,9 @@
 <p>이것은 꽤 성능이 좋긴 하지만 (<code>log n</code>개의 객체만 얕은 복사하고, 나머지는 재사용하기 때문에), 일일히 쓰기엔 큰 고통이 따릅니다. 이 반복들을 보세요! 이건 짜증날 뿐만 아니라 버그들을 야기할수도 있습니다.</p>
 
 <p><code>update()</code>는 이런 패턴 속에서 코드를 더 쉽게 쓸 수 있도록 편의 문법을 제공합니다. 코드는 이렇습니다:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">update</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-update&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
   <span class="nx">x</span><span class="o">:</span> <span class="p">{</span><span class="nx">y</span><span class="o">:</span> <span class="p">{</span><span class="nx">z</span><span class="o">:</span> <span class="p">{</span><span class="nx">$set</span><span class="o">:</span> <span class="mi">7</span><span class="p">}}},</span>
   <span class="nx">a</span><span class="o">:</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$push</span><span class="o">:</span> <span class="p">[</span><span class="mi">9</span><span class="p">]}}</span>
 <span class="p">});</span>

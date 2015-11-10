@@ -441,7 +441,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name="ownership"></a>소유권(Ownership) <a class="hash-link" href="#ownership">#</a></h2>
-<p>위의 예제에서, <code>Avatar</code> 인스턴스는  <code>ProfilePic</code>과 <code>ProfileLink</code>인스턴스를 <em>가지고</em> 있습니다. React에서 <strong>소유자는 다른 컴포넌트의 <code>props</code>를 설정하는 컴포넌트입니다</strong>. 더 정식으로 말하면, <code>X</code> 컴포넌트가 <code>Y</code> 컴포넌트의 <code>render()</code> 메소드 안에서 만들어졌다면, <code>Y</code>가 <code>X</code>를 <em>소유하고</em> 있다고 합니다. 앞에서 설명한 바와 같이, 컴포넌트는 자신의 <code>props</code>를 변경할 수 없습니다. <code>props</code>는 언제나 소유자가 설정한 것과 일치합니다. 이와 같은 중요한 성질은 UI가 일관성 있도록 해줍니다.</p>
+<p>위의 예제에서, <code>Avatar</code> 인스턴스는  <code>ProfilePic</code>과 <code>ProfileLink</code>인스턴스를 <em>가지고</em> 있습니다. React에서 <strong>소유자는 다른 컴포넌트의 <code>props</code>를 설정하는 컴포넌트입니다</strong>. 더 정식으로 말하면, <code>X</code> 컴포넌트가 <code>Y</code> 컴포넌트의 <code>render()</code> 메소드 안에서 만들어졌다면, <code>Y</code>가 <code>X</code>를 <em>소유하고</em> 있다고 합니다. 앞에서 설명한 바와 같이, 컴포넌트는 자신의 <code>props</code>를 변경할 수 없습니다. <code>props</code>는 언제나 소유자가 설정한 것과 일치합니다. 이와 같은 근본적인 불변성은 UI가 일관성 있도록 해줍니다.</p>
 
 <p>소유(owner-ownee)관계와 부모·자식 관계를 구별하는 것은 중요합니다. 부모·자식 관계가 DOM에서부터 쓰던 익숙하고 이미 알고있던 단순한 것인 한편, 소유관계는 React 고유의 것입니다.  위의 예제에서, <code>Avatar</code>는 <code>div</code>, <code>ProfilePic</code>, <code>ProfileLink</code>인스턴스를 소유하고, <code>div</code>는 <code>ProfilePic</code>과 <code>ProfileLink</code>인스턴스의 (소유자가 아닌) <strong>부모</strong>입니다.</p>
 <h2><a class="anchor" name=""></a>자식 <a class="hash-link" href="#">#</a></h2>

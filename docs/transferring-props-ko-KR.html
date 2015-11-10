@@ -435,7 +435,7 @@
 <blockquote>
 <p>주의:</p>
 
-<p>아래의 예제에서는 실험적인 ES7 문법이 사용되었기 때문에 <code>--harmony</code> 플래그가 필요합니다. 브라우저에서 JSX 변환기를 사용 중이라면, <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code>를 사용해 스크립트를 작성하세요. 자세히 알아보려면 아래의 <a href="/react/docs/transferring-props-ko-KR.html#rest-and-spread-properties-...">잔여 프로퍼티와 스프레드 프로퍼티 ...</a>를 확인하세요.</p>
+<p><code>...</code> 구문은 객체 잔여 스프레드 제안의 일부입니다. 이 제안은 표준화 과정에 있습니다. 더 자세한 내용은 밑의 <a href="/react/docs/transferring-props.html#rest-and-spread-properties-...">잔여 프로퍼티와 스프레드 프로퍼티 ...</a> 부분을 참고하세요.</p>
 </blockquote>
 
 <p>때로는 모든 프로퍼티를 일일이 전달 하는것은 지루하고 덧없는 작업입니다. 이 경우 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">구조 해체 할당(destructuring assignment)</a>을 다른 프로퍼티를 함께 사용해 미상의 프로퍼티를 추출할 수 있습니다.</p>
@@ -507,7 +507,7 @@
 <h2><a class="anchor" name="----..."></a>잔여 프로퍼티와 스프레드 프로퍼티 <code>...</code> <a class="hash-link" href="#----...">#</a></h2>
 <p>잔여(Rest, <code>...</code>) 프로퍼티는 객체에서 소비되지 않은 나머지 프로퍼티를 추출해 새로운 객체로 만들 수 있게 해 줍니다. 구조 해체 패턴에서 열거된 다른 프로퍼티들은 모두 제외됩니다.</p>
 
-<p>이는 <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">ES7 제안</a>의 실험적인 구현체입니다.</p>
+<p>이 제안은 2 단계에 돌입해 이제 바벨에서 기본값으로 활성화되어있습니다. 바벨의 이전 버전은 <code>babel --optional es7.objectRestSpread</code>로 명시적으로 활성화 할 필요가 있을 수도 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="p">{</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="p">...</span><span class="nx">z</span> <span class="p">}</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">a</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">4</span> <span class="p">};</span>
 <span class="nx">x</span><span class="p">;</span> <span class="c1">// 1</span>
 <span class="nx">y</span><span class="p">;</span> <span class="c1">// 2</span>

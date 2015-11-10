@@ -402,58 +402,107 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p><code>React.addons.TestUtils</code>는 선택한 테스트 프레임워크(React는 <a href="https://facebook.github.io/jest/">Jest</a>를 사용)에서 React 컴포넌트를 테스트하기 쉽게 합니다.</p>
-<h3><a class="anchor" name="simulate"></a>Simulate <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span><span class="nx">DOMElement</span> <span class="nx">element</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">eventData</span><span class="p">)</span>
+    <p><code>ReactTestUtils</code>는 선택한 테스트 프레임워크(React는 <a href="https://facebook.github.io/jest/">Jest</a>를 사용)에서 React 컴포넌트를 테스트하기 쉽게 합니다.</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">var ReactTestUtils = require(&#39;react-addons-test-utils&#39;);
+</code></pre></div><h3><a class="anchor" name="simulate"></a>Simulate <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
+  <span class="nx">DOMElement</span> <span class="nx">element</span><span class="p">,</span>
+  <span class="p">[</span><span class="nx">object</span> <span class="nx">eventData</span><span class="p">]</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>DOM 노드에 이벤트 디스패치하는 것을 시뮬레이트합니다. 선택적으로 <code>eventData</code>를 통해 이벤트 데이터도 처리할 수 있습니다. <strong>아마 <code>ReactTestUtils</code>에서 가장 유용한 유틸리티일 것 입니다.</strong></p>
 
-<p>사용 예:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">target</span><span class="o">:</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Hello, world&#39;</span><span class="p">}});</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">keyDown</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;Enter&quot;</span><span class="p">});</span>
+<p><strong>엘리먼트 클릭</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;button ref=&quot;button&quot;&gt;...&lt;/button&gt;</span>
+<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">button</span><span class="p">;</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
 </code></pre></div>
+<p><strong>입력 필드의 값을 변경하고 엔터 누르기.</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;input ref=&quot;input&quot; /&gt;</span>
+<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">;</span>
+<span class="nx">node</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;giraffe&#39;</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">keyDown</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;Enter&quot;</span><span class="p">,</span> <span class="nx">keyCode</span><span class="o">:</span> <span class="mi">13</span><span class="p">,</span> <span class="nx">which</span><span class="o">:</span> <span class="mi">13</span><span class="p">});</span>
+</code></pre></div>
+<p><em>컴포넌트에서 사용할 이벤트 프로퍼티(예를 들어 keyCode, which, 등등...)는 React에서 만들어 주지 않으므로 직접 제공해야 합니다.</em></p>
+
 <p><code>Simulate</code>에는 React가 이해하는 모든 이벤트에 대해 메소드가 있습니다.</p>
-<h3><a class="anchor" name="renderintodocument"></a>renderIntoDocument <a class="hash-link" href="#renderintodocument">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">renderIntoDocument</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">instance</span><span class="p">)</span>
+<h3><a class="anchor" name="renderintodocument"></a>renderIntoDocument <a class="hash-link" href="#renderintodocument">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">renderIntoDocument</span><span class="p">(</span>
+  <span class="nx">ReactElement</span> <span class="nx">instance</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>문서의 detach된 DOM 노드에 컴포넌트를 렌더합니다. <strong>이 기능은 DOM을 필요로 합니다.</strong></p>
-<h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span><span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span> <span class="nx">string</span><span class="o">?</span> <span class="nx">mockTagName</span><span class="p">)</span>
+
+<blockquote>
+<p>주의:</p>
+
+<p>React를 임포트하기 <strong>전에</strong> <code>window</code>, <code>window.document</code>, <code>window.document.createElement</code>을 전역적으로 사용가능하게 해두어야 합니다. 아니면 React는 DOM과 <code>setState</code>같은 메소드가 동작하지 않는다고 생각할 수 있습니다.</p>
+</blockquote>
+<h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span>
+  <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span>
+  <span class="p">[</span><span class="nx">string</span> <span class="nx">mockTagName</span><span class="p">]</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>목 컴포넌트 모듈을 이 메소드에 넘겨 더미 React 컴포넌트로 사용할 수 있도록 합니다. 이 더미는 유용한 메소드와 함께 사용해 기능을 보강할 수 있습니다. 일반적인 렌더링과는 다르게, 컴포넌트는 제공된 자식을 포함하는 평범한  <code>&lt;div&gt;</code>가 됩니다. (<code>mockTagName</code>을 통해 div가 아닌 다른 태그를 지정해 줄 수도 있습니다.)</p>
-<h3><a class="anchor" name="iselement"></a>isElement <a class="hash-link" href="#iselement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElement</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+<h3><a class="anchor" name="iselement"></a>isElement <a class="hash-link" href="#iselement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElement</span><span class="p">(</span>
+  <span class="nx">ReactElement</span> <span class="nx">element</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>element</code>가 ReactElement면 <code>true</code>를 리턴합니다.</p>
-<h3><a class="anchor" name="iselementoftype"></a>isElementOfType <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElementOfType</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
+<h3><a class="anchor" name="iselementoftype"></a>isElementOfType <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElementOfType</span><span class="p">(</span>
+  <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
+  <span class="kd">function</span> <span class="nx">componentClass</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>element</code>가 React <code>componentClass</code> 타입인 ReactElement면 <code>true</code>를 리턴합니다.</p>
-<h3><a class="anchor" name="isdomcomponent"></a>isDOMComponent <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDOMComponent</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">)</span>
+<h3><a class="anchor" name="isdomcomponent"></a>isDOMComponent <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDOMComponent</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">instance</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>instance</code>가 (<code>&lt;div&gt;</code>나 <code>&lt;span&gt;</code>같은) DOM 컴포넌트면 <code>true</code>를 리턴합니다.</p>
 <h3><a class="anchor" name="iscompositecomponent"></a>isCompositeComponent <a class="hash-link" href="#iscompositecomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isCompositeComponent</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">)</span><span class="err">`</span>
 </code></pre></div>
 <p><code>instance</code>가 (<code>React.createClass()</code>로 생성된) 복합 컴포넌트면 <code>true</code>를 리턴합니다.</p>
-<h3><a class="anchor" name="iscompositecomponentwithtype"></a>isCompositeComponentWithType <a class="hash-link" href="#iscompositecomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isCompositeComponentWithType</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
+<h3><a class="anchor" name="iscompositecomponentwithtype"></a>isCompositeComponentWithType <a class="hash-link" href="#iscompositecomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isCompositeComponentWithType</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">,</span>
+  <span class="kd">function</span> <span class="nx">componentClass</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>instance</code>가 (<code>React.createClass()</code>로 생성된) 복합 컴포넌트고 React <code>componentClass</code> 타입이면 <code>true</code>를 리턴합니다.</p>
-<h3><a class="anchor" name="findallinrenderedtree"></a>findAllInRenderedTree <a class="hash-link" href="#findallinrenderedtree">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">findAllInRenderedTree</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">test</span><span class="p">)</span>
+<h3><a class="anchor" name="findallinrenderedtree"></a>findAllInRenderedTree <a class="hash-link" href="#findallinrenderedtree">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">findAllInRenderedTree</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
+  <span class="kd">function</span> <span class="nx">test</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>tree</code>안의 모든 컴포넌트에서 <code>test(component)</code>가 <code>true</code>인 모든 컴포넌트를 모읍니다. 이것만으로는 그렇게 유용하지 않습니다만, 다른 테스트 유틸와 같이 사용합니다.</p>
-<h3><a class="anchor" name="scryrendereddomcomponentswithclass"></a>scryRenderedDOMComponentsWithClass <a class="hash-link" href="#scryrendereddomcomponentswithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="nx">string</span> <span class="nx">className</span><span class="p">)</span>
+<h3><a class="anchor" name="scryrendereddomcomponentswithclass"></a>scryRenderedDOMComponentsWithClass <a class="hash-link" href="#scryrendereddomcomponentswithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="nx">string</span> <span class="nx">className</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>렌더된 트리의 모든 컴포넌트 인스턴스 중에서 클래스 이름이 <code>className</code>인 DOM 컴포넌트들을 찾습니다.</p>
 <h3><a class="anchor" name="findrendereddomcomponentwithclass"></a>findRenderedDOMComponentWithClass <a class="hash-link" href="#findrendereddomcomponentwithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">findRenderedDOMComponentWithClass</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="nx">string</span> <span class="nx">className</span><span class="p">)</span>
 </code></pre></div>
 <p><code>scryRenderedDOMComponentsWithClass()</code>와 비슷하지만 하나의 결과만 기대될 때 사용합니다. 하나의 결과를 리턴하거나 한개 이상의 결과가 나온 경우에는 예외를 던집니다.</p>
-<h3><a class="anchor" name="scryrendereddomcomponentswithtag"></a>scryRenderedDOMComponentsWithTag <a class="hash-link" href="#scryrendereddomcomponentswithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithTag</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="nx">string</span> <span class="nx">tagName</span><span class="p">)</span>
+<h3><a class="anchor" name="scryrendereddomcomponentswithtag"></a>scryRenderedDOMComponentsWithTag <a class="hash-link" href="#scryrendereddomcomponentswithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithTag</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">string</span> <span class="nx">tagName</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>렌더된 트리의 모든 컴포넌트 인스턴스중에서 태그 이름이 <code>tagName</code>인 DOM 컴포넌트들을 찾습니다.</p>
-<h3><a class="anchor" name="findrendereddomcomponentwithtag"></a>findRenderedDOMComponentWithTag <a class="hash-link" href="#findrendereddomcomponentwithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">findRenderedDOMComponentWithTag</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="nx">string</span> <span class="nx">tagName</span><span class="p">)</span>
+<h3><a class="anchor" name="findrendereddomcomponentwithtag"></a>findRenderedDOMComponentWithTag <a class="hash-link" href="#findrendereddomcomponentwithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">findRenderedDOMComponentWithTag</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">string</span> <span class="nx">tagName</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>scryRenderedDOMComponentsWithTag()</code>와 비슷하지만 하나의 결과만 기대될 때 사용합니다. 하나의 결과를 리턴하거나 한개 이상의 결과가 나온 경우에는 예외를 던집니다.</p>
-<h3><a class="anchor" name="scryrenderedcomponentswithtype"></a>scryRenderedComponentsWithType <a class="hash-link" href="#scryrenderedcomponentswithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedComponentsWithType</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
+<h3><a class="anchor" name="scryrenderedcomponentswithtype"></a>scryRenderedComponentsWithType <a class="hash-link" href="#scryrenderedcomponentswithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedComponentsWithType</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
+  <span class="kd">function</span> <span class="nx">componentClass</span>
+<span class="p">)</span>
 </code></pre></div>
 <p>타입이 <code>componentClass</code>인 모든 컴포넌트 인스턴스를 찾습니다.</p>
-<h3><a class="anchor" name="findrenderedcomponentwithtype"></a>findRenderedComponentWithType <a class="hash-link" href="#findrenderedcomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">findRenderedComponentWithType</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
+<h3><a class="anchor" name="findrenderedcomponentwithtype"></a>findRenderedComponentWithType <a class="hash-link" href="#findrenderedcomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">findRenderedComponentWithType</span><span class="p">(</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>scryRenderedComponentsWithType()</code>와 비슷하지만 하나의 결과만 기대될 때 사용합니다. 하나의 결과를 리턴하거나 한개 이상의 결과가 나온 경우에는 예외를 던집니다.</p>
 <h2><a class="anchor" name="-"></a>얕은 렌더링 <a class="hash-link" href="#-">#</a></h2>
@@ -461,10 +510,12 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactShallowRenderer</span> <span class="nx">createRenderer</span><span class="p">()</span>
 </code></pre></div>
 <p>테스트에서 얕은 렌더러를 생성하고자 할때 호출합니다. 이를 이벤트와 업데이트에 스스로 반응하는 컴포넌트를 렌더하기 위한 &quot;장소&quot;라고 생각할 수 있습니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="nx">ReactElement</span> <span class="nx">element</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><code>ReactDOM.render</code>와 유사합니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactElement</span> <span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
 </code></pre></div>
 <p><code>render</code>가 호출 된 후, 얕게 렌더된 결과물을 반환합니다. 그 후엔 결과물에 대한 검증을 시작할 수 있습니다. 예를 들어 컴포넌트의 렌더 메소드가 다음을 반환한다면:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>

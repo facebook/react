@@ -405,7 +405,7 @@
     <p>React 컴포넌트의 렌더 함수가 &quot;pure&quot;하다면 (다른 말로, props나 state에 같은 값이 주어질 때 같은 결과를 렌더한다면) 몇몇 경우엔 이 믹스인을 사용하여 성능을 향상시킬 수 있습니다.</p>
 
 <p>예제:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">PureRenderMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react/addons&#39;</span><span class="p">).</span><span class="nx">addons</span><span class="p">.</span><span class="nx">PureRenderMixin</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">PureRenderMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-pure-render-mixin&#39;</span><span class="p">);</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">PureRenderMixin</span><span class="p">],</span>
 

@@ -433,6 +433,9 @@
 <p>If you pass properties to native HTML elements that do not exist in the HTML specification, React will not render them. If you want to use a custom attribute, you should prefix it with <code>data-</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
+<p>However, arbitrary attributes are supported on custom elements (those with a hyphen in the tag name or an <code>is=&quot;...&quot;</code> attribute).</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">x</span><span class="o">-</span><span class="nx">my</span><span class="o">-</span><span class="nx">component</span> <span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
 <p><a href="http://www.w3.org/WAI/intro/aria">Web Accessibility</a> attributes starting with <code>aria-</code> will be rendered properly.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">aria</span><span class="o">-</span><span class="nx">hidden</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
 </code></pre></div>

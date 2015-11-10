@@ -409,7 +409,7 @@
 <p><a name="getting-stared"></a></p>
 <h3><a class="anchor" name=""></a>시작하기 <a class="hash-link" href="#">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code>은 <code>ReactTransitions</code>을 위한 인터페이스입니다. 이는 애니메이션을 제어할 모든 컴포넌트를 감싸는 하나의 엘리먼트 입니다. 아래는 목록의 아이템을 페이드 인/아웃하는 간단한 예제입니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">TodoList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -436,7 +436,7 @@
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Add</span> <span class="nx">Item</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span> <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
 </span><span class="hll">          <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -447,7 +447,7 @@
 <blockquote>
 <p>주의:</p>
 
-<p><code>ReactCSSTransitionGroup</code>의 모든 자식은 <a href="/react/docs/multiple-components-ko-KR.html#dynamic-children"><code>key</code> 어트리뷰트</a>를 반드시 만들어야 합니다. 한 아이템을 렌더한다 해도 예외는 아닙니다. 키는 React가 어떤 자식이 들어오고, 나가고, 머무르는지 파악할 때 사용합니다.</p>
+<p><code>ReactCSSTransitionGroup</code>의 모든 자식은 <a href="/react/docs/multiple-components-ko-KR.html#dynamic-children"><code>key</code> 어트리뷰트</a>를 반드시 만들어야 합니다. 한 아이템을 렌더할 때도 예외는 아닙니다. 키는 React가 어떤 자식이 들어오고, 나가고, 머무르는지 파악할 때 사용합니다.</p>
 </blockquote>
 
 <p>이 컴포넌트에서 새로운 아이템이 <code>ReactCSSTransitionGroup</code>에 추가되면 <code>example-enter</code> 아이템은 CSS 클래스를 가지게 되고 다음 순간에 <code>example-enter-active</code> CSS 클래스가 추가됩니다. 이는 <code>transitionName</code> prop을 기반으로 한 관례입니다.</p>
@@ -459,23 +459,24 @@
 
 <span class="nc">.example-enter.example-enter-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">500</span><span class="n">ms</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div>
-<p><code>ReactCSSTransitionGroup</code>에서 아이템을 제거하려해도 DOM에는 남게 됩니다. 만약 애드온을 React의 최소화하지 않은 빌드와 사용한다면, 애니메이션이나 트랜지션이 일어나는 것을 예상하고 있었다는 React의 경고를 보게 될 것입니다. 그게 바로 <code>ReactCSSTransitionGroup</code>가 DOM 엘리먼트를 애니메이션이 끝날 때까지 페이지에 남겨두는 이유입니다. 이 CSS를 넣어보세요.</p>
-<div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-leave</span> <span class="p">{</span>
+
+<span class="nc">.example-leave</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">300</span><span class="n">ms</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="---"></a>처음 마운트에서 애니메이션 하기 <a class="hash-link" href="#---">#</a></h3>
+</code></pre></div>
+<p>에니메이션 기간이 CSS와 렌더 메소드 양쪽에 지정될 필요가 있다는 것에 주의하셔야 합니다. 이는 엘리먼트에서 애니메이션 클래스를 제거할 때 (만약 남아있다면) DOM에서 엘리먼트를 제거할 때 React에 알려줍니다.</p>
+<h3><a class="anchor" name="---"></a>처음 마운트에서 애니메이션 하기 <a class="hash-link" href="#---">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code>은 컴포넌트를 처음 마운트할 때 추가 트렌지션 단계를 추가하기 위해, 선택적인 prop <code>transitionAppear</code>를 제공합니다. 일반적으로 처음 마운트할 때 트렌지션 단계를 넣지 않기 때문에 <code>transitionAppear</code>의 기본 값은 <code>false</code>입니다. 뒤의 예제는 <code>transitionAppear</code> prop에 <code>true</code> 값을 넘기고 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&gt;</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span><span class="o">&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Fading</span> <span class="nx">at</span> <span class="nx">Initial</span> <span class="nx">Mount</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
 </span><span class="hll">      <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 </span>    <span class="p">);</span>
@@ -484,11 +485,11 @@
 <p>처음 마운트할 때 <code>ReactCSSTransitionGroup</code>은 <code>example-appear</code> CSS 클래스를 받고 그 다음에 <code>example-appear-active</code> CSS 클래스가 추가됩니다.</p>
 <div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-appear</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="nc">.example-appear.example-appear-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>처음 마운트할 때, <code>ReactCSSTransitionGroup</code>의 모든 자식은 <code>appear</code>하지만 <code>enter</code>하지 않습니다. 하지만, 존재하는 <code>ReactCSSTransitionGroup</code>에 추가되는 모든 자식은 <code>enter</code>하지만 <code>appear</code>하지 않습니다.</p>
@@ -502,23 +503,23 @@
 <p>트렌지션의 각 단계에서 커스텀 클래스 이름을 사용할 수도 있습니다. transitionName에 문자열을 넘기는 대신 <code>enter</code>, <code>leave</code> 같은 클래스 이름의 객체나 <code>enter</code>, <code>enter-active</code>, <code>leave-active</code>, <code>leave</code>같은 클래스 이름의 객체를 넘길 수 있습니다. enter, leave 클래스만 있다면, enter-active, leave-active 클래스는 클래스 이름 뒤에 &#39;-active&#39;를 붙여서 정할 수 있습니다. 커스텀 클래스를 사용한 예제입니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="p">...</span>
   <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
-    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span>
+    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
       <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
       <span class="nx">enterActive</span><span class="o">:</span> <span class="s1">&#39;enterActive&#39;</span><span class="p">,</span>
       <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
       <span class="nx">leaveActive</span><span class="o">:</span> <span class="s1">&#39;leaveActive&#39;</span><span class="p">,</span>
       <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span><span class="p">,</span>
       <span class="nx">appearActive</span><span class="o">:</span> <span class="s1">&#39;appearActive&#39;</span>
-    <span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
     <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
   <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 
   <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
-    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span>
+    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
       <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
       <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
       <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span>
-    <span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
     <span class="p">{</span><span class="nx">item2</span><span class="p">}</span>
   <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
   <span class="p">...</span>
@@ -543,7 +544,7 @@
   <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="----"></a>아이템 하나이거나 없을 때의 애니메이션 <a class="hash-link" href="#----">#</a></h3>
 <p>위의 예제에서 <code>ReactCSSTransitionGroup</code>에 아이템 목록을 렌더했지만, <code>ReactCSSTransitionGroup</code>의 자식은 하나이거나 없을 수도 있습니다. 이는 한 엘리먼트가 들어오고 나가는 것의 애니메이션을 가능하게 합니다. 비슷하게, 현재 엘리먼트가 나가는 동안 새 앨리먼트의 애니메이션을 하면, 새 엘리먼트가 현재 엘리먼트를 교체하는 애니메이션을 만들 수 있습니다. 예를 들어 이렇게 간단한 이미지 회전 베너(carousel)를 구현할 수 있습니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">ImageCarousel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -552,7 +553,7 @@
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;carousel&quot;</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;carousel&quot;</span> <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span> <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
 </span><span class="hll">          <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -568,7 +569,7 @@
 <p><code>ReactCSSTransitionGroup</code>를 사용할 때는, 트랜지션이 종료되었을 때나 애니메이션 근처에서 더 복잡한 로직을 실행할 때 컴포넌트에 통지할 방법이 없습니다. 보다 세밀하게 제어하고 싶다면, 커스텀 트랜지션에 필요한 훅을 제공하는 저수준 <code>ReactTransitionGroup</code> API를 이용할 수 있습니다.</p>
 </blockquote>
 <h2><a class="anchor" name="-api-reacttransitiongroup"></a>저수준 API: <code>ReactTransitionGroup</code> <a class="hash-link" href="#-api-reacttransitiongroup">#</a></h2>
-<p><code>ReactTransitionGroup</code>은 애니메이션의 기초입니다. 이는 <code>React.addons.TransitionGroup</code>으로 접근할 수 있습니다. 위에 있는 예제처럼 자식들이 선언적으로 여기에 추가되거나 삭제되는 경우, 특별한 훅이 이 생명주기에서 호출됩니다.</p>
+<p><code>ReactTransitionGroup</code>은 애니메이션의 기초입니다. 이는 <code>require(&#39;react-addons-transition-group&#39;)</code>으로 접근할 수 있습니다. 위의 예제처럼 자식들이 선언적으로 여기에 추가되거나 삭제되는 경우, 특별한 훅이 이 생명주기에서 호출됩니다.</p>
 <h3><a class="anchor" name="componentwillappearcallback"></a><code>componentWillAppear(callback)</code> <a class="hash-link" href="#componentwillappearcallback">#</a></h3>
 <p>이미 있는 <code>TransitionGroup</code>에 컴포넌트를 추가할 때 호출되는 <code>componentDidMount()</code>와 같이 호출됩니다. 이는 <code>callback</code>이 호출될 때까지 다른 애니메이션을 막습니다. <code>TransitionGroup</code>의 최초 렌더에서만 호출됩니다.</p>
 <h3><a class="anchor" name="componentdidappear"></a><code>componentDidAppear()</code> <a class="hash-link" href="#componentdidappear">#</a></h3>
@@ -587,13 +588,7 @@
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
-<p>모든 React가 렌더할 수 있는 DOM 컴포넌트는 사용할 수 있습니다. 하지만 <code>component</code>가 DOM 컴포넌트일 필요는 없습니다. React 컴포넌트라면 무엇이든 넣을 수 있습니다. 직접 구현한 컴포넌트여도 됩니다!</p>
-
-<blockquote>
-<p>주의:</p>
-
-<p>v0.12이전에는, DOM 컴포넌트를 사용할 때, <code>component</code> prop은 <code>React.DOM.*</code>로 참조할 필요가 있었습니다. 이제 컴포넌트가 단순히 <code>React.createElement</code>로 전달되기 때문에, <code>component</code> prop은 스트링이어야 합니다. 복합 컴포넌트는 팩토리를 넘겨야 합니다.</p>
-</blockquote>
+<p>React가 렌더할 수 있는 DOM 컴포넌트는 전부 사용할 수 있습니다. 하지만 <code>component</code>가 DOM 컴포넌트일 필요는 없습니다. React 컴포넌트라면 무엇이든 넣을 수 있습니다. 직접 구현한 컴포넌트여도 됩니다! 그냥 <code>component={List}</code>를 적으면 컴포넌트는 <code>this.props.children</code>로 받을 수 있습니다.</p>
 
 <p>사용자 정의를 포함한 어떤 프로퍼티도 렌더된 컴포넌트의 프로퍼티가 됩니다. 예를 들어, <code>&lt;ul&gt;</code>에 CSS 클래스를 넣어서 렌더하려면 이렇게 하면 됩니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>

@@ -412,7 +412,7 @@
     <span class="nx">rightChildren</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">node</span><span class="p">,</span>
 
     <span class="nx">swapped</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span>
-  <span class="p">}</span>
+  <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">children</span><span class="p">;</span>
     <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">swapped</span><span class="p">)</span> <span class="p">{</span>
@@ -426,16 +426,18 @@
 </code></pre></div>
 <p><code>swapped</code> prop을 변경할 경우 자식은 마운트 해제되거나 다시 마운트 될 수 있습니다. 두 자식 집합에 키가 할당되지 않았기 때문입니다.</p>
 
-<p>이 문제를 해결하기 위해서 <code>React.addons.createFragment</code>를 사용해 자식 집합에 키를 부여할 수 있습니다.</p>
-<h4><a class="anchor" name="reactfragment-react.addons.createfragmentobject-children"></a><code>ReactFragment React.addons.createFragment(object children)</code> <a class="hash-link" href="#reactfragment-react.addons.createfragmentobject-children">#</a></h4>
+<p>이 문제를 해결하기 위해서 <code>createFragment</code>를 사용해 자식 집합에 키를 부여할 수 있습니다.</p>
+<h4><a class="anchor" name="arrayltreactnodegt-createfragmentobject-children"></a><code>Array&lt;ReactNode&gt; createFragment(object children)</code> <a class="hash-link" href="#arrayltreactnodegt-createfragmentobject-children">#</a></h4>
 <p>배열을 만드는 대신에 다음과 같이 해볼 수 있습니다:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">swapped</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">children</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">createFragment</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">createFragment</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-create-fragment&#39;</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">swapped</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">children</span> <span class="o">=</span> <span class="nx">createFragment</span><span class="p">({</span>
     <span class="nx">right</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">rightChildren</span><span class="p">,</span>
     <span class="nx">left</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">leftChildren</span>
   <span class="p">});</span>
 <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-  <span class="nx">children</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">createFragment</span><span class="p">({</span>
+  <span class="nx">children</span> <span class="o">=</span> <span class="nx">createFragment</span><span class="p">({</span>
     <span class="nx">left</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">leftChildren</span><span class="p">,</span>
     <span class="nx">right</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">rightChildren</span>
   <span class="p">});</span>

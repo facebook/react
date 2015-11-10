@@ -398,21 +398,7 @@
   <div class="inner-content">
     <h1>컴포넌트 참조</h1>
     <div class="subHeader"></div>
-    <p>애플리케이션의 일부에서만 React 컴포넌트를 사용중이거나 코드를 React로 전환하고 있다면, 컴포넌트의 참조를 보존할 필요가 있을 것입니다. <code>ReactDOM.render</code>는 마운트된 컴포넌트의 참조를 반환합니다:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
-</code></pre></div>
-<p>명심하세요, JSX는 컴포넌트 인스턴스를 반환하지 않습니다! 단지 마운트된 컴포넌트가 어떻게 보일지 알려주는 간단한 서술인 <strong>ReactElement</strong>일 뿐입니다.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">myComponentElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span> <span class="c1">// ReactElement일 뿐입니다.</span>
-
-<span class="c1">// 코드들이 여기 위치하게 됩니다...</span>
-
-<span class="kd">var</span> <span class="nx">myComponentInstance</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myComponentElement</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
-</code></pre></div>
-<blockquote>
-<p>주의:</p>
-
-<p>이는 최상위 레벨에서만 사용되어야 합니다. 컴포넌트의 내부에서는 <code>prop</code>과 <code>state</code>가 자식컴포넌트와의 통신을 제어하며, <a href="/react/docs/more-about-refs-ko-KR.html">refs</a>를 통해서만 컴포넌트를 참조할 수 있습니다.</p>
-</blockquote>
+    <p>이 페이지는 이동되었습니다. <a href="/react/docs/more-about-refs-ko-KR.html">refs</a></p>
 
 
     <div class="docs-prevnext">

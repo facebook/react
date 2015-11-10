@@ -439,8 +439,10 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>이것은 정말 잘 동작하고, 데이터가 어떻게 흐르는지 매우 명확하게 보여지지만, 폼필드가 많을 경우 약간 장황해 질 수 있습니다. 타이핑을 줄이기 위해 <code>ReactLink</code>를 사용해 보겠습니다.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<span class="hll">  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
 </span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -476,8 +478,10 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>보시다시피, <code>ReactLink</code> 객체는 <code>value</code>와 <code>requestChange</code> prop만 가지는 매우 간단한 객체입니다. <code>LinkedStateMixin</code>도 간단합니다. 그냥 <code>this.state</code>의 값과 <code>this.setState()</code>에서 호출되는 콜백을 필드로 가질 뿐입니다.</p>
-<h3><a class="anchor" name="valuelink--reactlink-"></a>valueLink 없이 ReactLink 쓰기 <a class="hash-link" href="#valuelink--reactlink-">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
+<h3><a class="anchor" name="valuelink--reactlink-"></a>valueLink 없이 ReactLink 쓰기 <a class="hash-link" href="#valuelink--reactlink-">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>

@@ -403,7 +403,7 @@
     <div class="subHeader"></div>
 
     <h2><a class="anchor" name="-"></a>지원되는 태그 <a class="hash-link" href="#-">#</a></h2>
-<p>React는 모든 공통 엘리먼트를 지원하려 합니다. 필요한 엘리먼트가 목록에 없다면, 이슈로 등록해 주세요.</p>
+<p>React는 모든 공통 엘리먼트를 지원하려 합니다. 필요한 엘리먼트가 목록에 없다면, <a href="https://github.com/facebook/react/issues/new">이슈로 등록</a>해 주세요.</p>
 <h3><a class="anchor" name="html-"></a>HTML 엘리먼트 <a class="hash-link" href="#html-">#</a></h3>
 <p>다음의 HTML 엘리먼트가 지원됩니다.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">a abbr address area article aside audio b base bdi bdo big blockquote body br
@@ -433,17 +433,17 @@ radialGradient rect stop svg text tspan
 <h3><a class="anchor" name="html-"></a>HTML 어트리뷰트 <a class="hash-link" href="#html-">#</a></h3>
 <p>이런 표준 어트리뷰트가 지원됩니다.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accept acceptCharset accessKey action allowFullScreen allowTransparency alt
-async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet challenge
-checked classID className colSpan cols content contentEditable contextMenu controls
-coords crossOrigin data dateTime defer dir disabled download draggable encType
-form formAction formEncType formMethod formNoValidate formTarget frameBorder
+async autoComplete autoFocus autoPlay capture cellPadding cellSpacing charSet
+challenge checked classID className cols colSpan content contentEditable contextMenu
+controls coords crossOrigin data dateTime defer dir disabled download draggable
+encType form formAction formEncType formMethod formNoValidate formTarget frameBorder
 headers height hidden high href hrefLang htmlFor httpEquiv icon id inputMode
 keyParams keyType label lang list loop low manifest marginHeight marginWidth max
-maxLength media mediaGroup method min multiple muted name noValidate open
+maxLength media mediaGroup method min minlength multiple muted name noValidate open
 optimum pattern placeholder poster preload radioGroup readOnly rel required role
-rowSpan rows sandbox scope scoped scrolling seamless selected shape size sizes
+rows rowSpan sandbox scope scoped scrolling seamless selected shape size sizes
 span spellCheck src srcDoc srcSet start step style summary tabIndex target title
-type useMap value width wmode
+type useMap value width wmode wrap
 </code></pre></div>
 <p>덧붙여, 이런 비표준 어트리뷰트도 지원됩니다.</p>
 
@@ -452,14 +452,18 @@ type useMap value width wmode
 <li><a href="http://ogp.me/">오픈 그래프</a> 메타 태그를 위한 <code>property</code>.</li>
 <li><a href="http://schema.org/docs/gs.html">HTML5 마이크로데이터</a>를 위한 <code>itemProp itemScope itemType itemRef itemID</code>.</li>
 <li>인터넷 익스플로어를 위한 <code>unselectable</code>.</li>
+<li>WebKit/Blink의 <code>search</code> 타입 input 필드를 위한 <code>results autoSave</code> </li>
 </ul>
 
 <p>컴포넌트에 직접 HTML 문자열을 넣을 때 사용하는, React 전용 어트리뷰트 <code>dangerouslySetInnerHTML</code>(<a href="/react/docs/special-non-dom-attributes-ko-KR.html">자세한 정보는 여기</a>)도 있습니다.</p>
-<h3><a class="anchor" name="svg-"></a>SVG 어트리뷰트 <a class="hash-link" href="#svg-">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">clipPath cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy
-gradientTransform gradientUnits markerEnd markerMid markerStart offset opacity
-patternContentUnits patternUnits points preserveAspectRatio r rx ry
-spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version viewBox x1 x2 x y1 y2 y
+<h3><a class="anchor" name="svg-"></a>SVG 어트리뷰트 <a class="hash-link" href="#svg-">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">clipPath cx cy d dx dy fill fillOpacity fontFamily
+fontSize fx fy gradientTransform gradientUnits markerEnd
+markerMid markerStart offset opacity patternContentUnits
+patternUnits points preserveAspectRatio r rx ry spreadMethod
+stopColor stopOpacity stroke  strokeDasharray strokeLinecap
+strokeOpacity strokeWidth textAnchor transform version
+viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
+xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
 </code></pre></div>
 
     <div class="docs-prevnext">

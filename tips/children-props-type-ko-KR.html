@@ -414,7 +414,7 @@
   <span class="nx">mountNode</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>하지만 자식이 하나만 있는 경우, <code>this.props.children</code>는 <em>배열 래퍼(wrapper)없이</em> 싱글 자식 컴포넌트가 됩니다. 이렇게 함으로써 배열 할당을 줄일 수 있습니다. </p>
+<p>하지만 자식이 하나만 있는 경우, <code>this.props.children</code>는 <em>배열 래퍼(wrapper)없이</em> 싱글 자식 컴포넌트가 됩니다. 이렇게 함으로써 배열 할당을 줄일 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">));</span> <span class="c1">// =&gt; false</span>

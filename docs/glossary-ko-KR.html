@@ -428,9 +428,7 @@
              <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Text</span> <span class="nx">Content</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
            <span class="o">&lt;</span><span class="err">/ul&gt;;</span>
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-</code></pre></div>
-<p><strong>팩토리</strong></p>
-
+</code></pre></div><h3><a class="anchor" name=""></a>팩토리 <a class="hash-link" href="#">#</a></h3>
 <p><code>ReactElement</code> 팩토리는 그저 특정한 <code>type</code> 프로퍼티를 가지는 <code>ReactElement</code>를 만들어주는 함수입니다. React에는 팩토리를 만드는 헬퍼가 내장되어 있습니다. 그 함수는 사실상 다음과 같습니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createFactory</span><span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">type</span><span class="p">);</span>
@@ -471,7 +469,7 @@
 <p>이 생성자가 호출될 때 최소한 <code>render</code> 메소드를 가진 객체를 리턴해야 합니다. 이 리턴된 객체를 <code>ReactComponent</code>라고 부릅니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyComponent</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span> <span class="c1">// 절대 하지 마세요.</span>
 </code></pre></div>
-<p>테스트 목적이 아니라면 <strong>절대</strong> 이 생성자를 직접 호출하지 마십시오. React가 알아서 호출해줍니다.</p>
+<p>테스트 목적이 아니라면 <em>절대</em> 이 생성자를 직접 호출하지 마십시오. React가 알아서 호출해줍니다.</p>
 
 <p>대신 <code>ReactComponent</code> 클래스를 <code>createElement</code>에 넘겨 <code>ReactElement</code>를 받을 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">MyComponent</span><span class="p">);</span>
@@ -490,12 +488,8 @@
 <p>그렇기 때문에 직접 인스턴스를 만들어서는 안됩니다. <code>ReactComponent</code>가 생성되기 전에 <code>ReactElement</code>가 대신 가상의 <code>ReactComponent</code> 역할을 합니다. 이전 <code>ReactElement</code>와 새 <code>ReactElement</code>를 비교하여 새로운 <code>ReactComponent</code>를 만들지, 아니면 기존 것을 재사용할지 결정합니다.</p>
 
 <p><code>ReactComponent</code>의 <code>render</code> 메소드는 또다른 <code>ReactElement</code>를 리턴해야 합니다. 이렇게 해서 컴포넌트들이 조합됩니다. 결과적으로 렌더링 과정은 다음과 같습니다. <code>string</code> 타입의 태그를 가진 <code>ReactElement</code>를 통해 DOM <code>Element</code> 인스턴스가 생성되며 문서에 삽입됩니다.</p>
-<h2><a class="anchor" name="--"></a>형식 타입 정의 <a class="hash-link" href="#--">#</a></h2>
-<p><strong>진입점</strong></p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">ReactDOM.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
-</code></pre></div>
-<p><strong>노드와 엘리먼트</strong></p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">type ReactNode = ReactElement | ReactFragment | ReactText;
+<h2><a class="anchor" name="--"></a>형식 타입 정의 <a class="hash-link" href="#--">#</a></h2><h3><a class="anchor" name=""></a>진입점 <a class="hash-link" href="#">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">ReactDOM.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
+</code></pre></div><h3><a class="anchor" name="-"></a>노드와 엘리먼트 <a class="hash-link" href="#-">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">type ReactNode = ReactElement | ReactFragment | ReactText;
 
 type ReactElement = ReactComponentElement | ReactDOMElement;
 
@@ -524,9 +518,7 @@ type ReactNodeList = ReactNode | ReactEmpty;
 type ReactText = string | number;
 
 type ReactEmpty = null | undefined | boolean;
-</code></pre></div>
-<p><strong>클래스와 컴포넌트</strong></p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">type ReactClass&lt;TProps&gt; = (TProps) =&gt; ReactComponent&lt;TProps&gt;;
+</code></pre></div><h3><a class="anchor" name="-"></a>클래스와 컴포넌트 <a class="hash-link" href="#-">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">type ReactClass&lt;TProps&gt; = (TProps) =&gt; ReactComponent&lt;TProps&gt;;
 
 type ReactComponent&lt;TProps&gt; = {
   props : TProps,

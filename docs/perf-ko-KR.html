@@ -412,9 +412,11 @@
 <p>React의 개발 빌드는 제공되는 추가 기능으로 인해 프로덕션 빌드보다 느립니다. 추가 기능에는 React의 친절한 콘솔 경고같은 것이 있습니다.(이는 프로덕션 빌드에서는 제거 됩니다) 따라서, 프로파일러는 앱의 <em>상대적으로</em> 비싼 부분만 표시하도록 합니다.</p>
 </blockquote>
 <h2><a class="anchor" name="-api"></a>일반 API <a class="hash-link" href="#-api">#</a></h2>
-<p>여기에서 설명하는 <code>Perf</code> 객체는 <code>react-with-addons.js</code>를 사용해 개발 모드에서 빌드될 때 <code>React.addons.Perf</code>로 노출됩니다.</p>
+<p>여기에서 설명하는 <code>Perf</code> 객체는 <code>require(&#39;react-addons-perf&#39;)</code>로 노출되고 React 개발 모드에서만 사용할 수 있습니다. 이 번들을 프로덕션에서 앱과 같이 빌드하시면 안됩니다.</p>
 <h3><a class="anchor" name="perf.start-perf.stop"></a><code>Perf.start()</code>와 <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-perf.stop">#</a></h3>
 <p>측정을 시작/정지합니다. 그 사이의 React 연산은 밑에 있는 분석을 하기위해 기록됩니다. 미미한 양의 연산은 무시됩니다.</p>
+
+<p>종료 후, 측정을 하기위해서는 이후에 설명할 <code>Perf.getLastMeasurements()</code>가 필요합니다.</p>
 <h3><a class="anchor" name="perf.printinclusivemeasurements"></a><code>Perf.printInclusive(measurements)</code> <a class="hash-link" href="#perf.printinclusivemeasurements">#</a></h3>
 <p>전 수행 시간을 출력합니다. 인자가 넘겨지지 않으면, 기본값은 지난 기록부터의 모든 측정이 됩니다. 이 출력은 밑에 있는 것처럼 콘솔에서 깔끔한 테이블로 그려집니다.</p>
 

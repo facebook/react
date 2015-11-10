@@ -431,7 +431,7 @@
 
 <p>코드를 고성능으로 유지하고 이해하기 쉽게 하기 위해, React는 보이지 않는 곳에서 몇 가지 일을 수행합니다.</p>
 
-<p><strong>오토바인딩:</strong> JavaScript에서 콜백을 만들 때, 보통은 <code>this</code>의 값이 정확하도록 명시적으로 메소드를 인스턴스에 바인드해야 합니다. React에서는 모든 메소드가 자동으로 React의 컴포넌트 인스턴스에 바인드됩니다. React가 바인드 메소드를 캐시하기 때문에 매우 CPU와 메모리에 효율적입니다. 타이핑해야 할 것도 줄어들죠!</p>
+<p><strong>오토바인딩:</strong> JavaScript에서 콜백을 만들 때, 보통은 <code>this</code>의 값이 정확하도록 명시적으로 메소드를 인스턴스에 바인드해야 합니다. React에서는 모든 메소드가 자동으로 React의 컴포넌트 인스턴스에 바인드됩니다.(ES6 클래스 문법을 사용할 때는 재외하고) React가 바인드 메소드를 캐시하기 때문에 매우 CPU와 메모리에 효율적입니다. 타이핑해야 할 것도 줄어들죠!</p>
 
 <p><strong>이벤트 델리게이션:</strong> React는 실제로는 노드자신에게 이벤트 핸들러를 붙이지 않습니다. React가 시작되면 React는 탑 레벨의 단일 이벤트 리스너로 모든 이벤트를 리스닝하기 시작합니다. 컴포넌트가 마운트되거나 언마운트 될 때, 이벤트 핸들러는 그냥 내부 매핑에서 넣거나 뺄 뿐입니다. 이벤트가 발생하면, React는 이 매핑을 사용해서 어떻게 디스패치할 지를 알게 됩니다. 매핑에 이벤트 핸들러가 남아있지 않으면, React의 이벤트 핸들러는 그냥 아무것도 하지 않습니다. 왜 이 방식이 빠른지 더 알고 싶으시면, <a href="http://davidwalsh.name/event-delegate">David Walsh의 멋진 블로그 글</a>을 읽어 보세요.</p>
 <h2><a class="anchor" name="--state--"></a>컴포넌트는 그냥 state 머신일 뿐 <a class="hash-link" href="#--state--">#</a></h2>
@@ -454,7 +454,7 @@
 <ul>
 <li><strong>계산된 데이터:</strong> state에 따라 값을 미리 계산하는 것에 대해 염려하지 마세요. 계산은 모두 <code>render()</code>에서 하는 것이 UI의 일관성을 유지하기 쉽습니다. 예를 들어, state에서 list items 배열을 가지고 있고 문자열으로 카운트를 렌더링 할 경우, state에 저장하기보다는 그냥 <code>render()</code> 메소드안에서 <code>this.state.listItems.length + &#39; list items&#39;</code>를 렌더하세요.</li>
 <li><strong>React 컴포넌트:</strong> 가지고 있는 props와 state로 <code>render()</code>안에서 만드세요.</li>
-<li><strong>props에서 복사한 데이터:</strong> 가능한 한 원래의 소스로 props를 사용하도록 해보세요. props를 state에 저장하는 단 하나의 올바른 사용법은 이전 값을 알고 싶을 때입니다. props는 시간이 지나면 변경될 수도 있기 때문이죠.</li>
+<li><strong>props에서 복사한 데이터:</strong> 가능한 한 원래의 소스로 props를 사용하도록 해보세요. props를 state에 저장하는 단 하나의 올바른 사용법은 이전 값을 알고 싶을 때입니다. props는 부모 컴포넌트의 재 렌더링의 결과 변경될 수도 있기 때문이죠.</li>
 </ul>
 
 

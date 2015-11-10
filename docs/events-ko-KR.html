@@ -424,7 +424,30 @@
 <blockquote>
 <p>주의:</p>
 
-<p>v0.12 시점에서, 이벤트 핸들러에서 <code>false</code> 를 리턴하는 것은 더 이상 이벤트의 전달(propagation)을 멈추지 않습니다. 대신, <code>e.stopPropagation()</code>나 <code>e.preventDefault()</code>로 적절히 수동으로 트리거해야 합니다.</p>
+<p>v0.14 시점에서, 이벤트 핸들러에서 <code>false</code> 를 리턴하는 것은 더 이상 이벤트의 전달(propagation)을 멈추지 않습니다. 대신, <code>e.stopPropagation()</code>나 <code>e.preventDefault()</code>로 적절히 수동으로 트리거해야 합니다.</p>
+</blockquote>
+<h2><a class="anchor" name="-"></a>이벤트 풀링 <a class="hash-link" href="#-">#</a></h2>
+<p><code>SyntheticEvent</code>는 풀링됩니다. 이는 <code>SyntheticEvent</code> 객체가 재사용될 것이며 이벤트 콜백이 호출된 후 모든 프로퍼티가 null 값을 갖게 된다는 것을 뜻합니다.
+이는 성능을 위한 동작입니다.
+이 때문에, 비동기 방식으로는 이벤트에 접근할 수 없습니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">onClick</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span> <span class="c1">// =&gt; null이 된 객체.</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+  <span class="kd">var</span> <span class="nx">eventType</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">;</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+
+  <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span> <span class="c1">// =&gt; null</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eventType</span><span class="p">);</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+  <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">clickEvent</span><span class="o">:</span> <span class="nx">event</span><span class="p">});</span> <span class="c1">// 작동하지 않습니다. this.state.clickEvent 는 null값들만을 갖고 있습니다.</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">eventType</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">});</span> <span class="c1">// 여전히 이벤트 프로퍼티를 내보낼 수 있습니다.</span>
+<span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>주의:</p>
+
+<p>만약 비동기 방식으로 이벤트 프로퍼티에 접근하길 원한다면, 이벤트의 <code>event.persist()</code>를 호출해야 합니다, 이는 풀로부터 통합적인 이벤트를 제거하고 이벤트에 대한 참조는 사용자의 코드에 의해 유지 될 수 있도록 합니다.</p>
 </blockquote>
 <h2><a class="anchor" name="-"></a>지원되는 이벤트 <a class="hash-link" href="#-">#</a></h2>
 <p>React는 다른 브라우저에서 일관된 특성을 가지도록 이벤트를 일반화합니다.</p>
@@ -436,6 +459,12 @@
 </code></pre></div>
 <p>프로퍼티:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMDataTransfer</span> <span class="nx">clipboardData</span>
+</code></pre></div><h3><a class="anchor" name="composition-events"></a>Composition Events <a class="hash-link" href="#composition-events">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onCompositionEnd onCompositionStart onCompositionUpdate
+</code></pre></div>
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">data</span>
 </code></pre></div><h3><a class="anchor" name="-"></a>키보드 이벤트 <a class="hash-link" href="#-">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
@@ -460,6 +489,8 @@
 <p>프로퍼티:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
 </code></pre></div>
+<p>이 포커스 이벤트는 폼 엘리먼트뿐만 아니라 모든 React DOM 엘리먼트에서 작동합니다.</p>
+
 <p><a name="form-events"></a></p>
 <h3><a class="anchor" name="-"></a>폼 이벤트 <a class="hash-link" href="#-">#</a></h3>
 <p>이벤트 이름:</p>
@@ -468,10 +499,11 @@
 <p>onChange 이벤트에 대한 더 자세한 정보는 <a href="/react/docs/forms-ko-KR.html">폼</a>에서 확인하세요.</p>
 <h3><a class="anchor" name="-"></a>마우스 이벤트 <a class="hash-link" href="#-">#</a></h3>
 <p>이벤트 이름:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
+<div class="highlight"><pre><code class="language-text" data-lang="text">onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
+onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 </code></pre></div>
-<p><code>onMouseEnter</code>와 <code>onMouseLeave</code> 이벤트는 평범하게 일어나는(bubbling) 대신 입력된 컴포넌트에 남겨지도록 컴포넌트에서 전달되고 캡쳐 단계가 없습니다.</p>
+<p><code>onMouseEnter</code>와 <code>onMouseLeave</code> 이벤트는 평범하게 일어나는(bubbling) 대신 입력된 엘리먼트에 남겨지도록 엘리먼트에서 전달되고 캡쳐 단계가 없습니다.</p>
 
 <p>프로퍼티:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
@@ -488,6 +520,9 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">number</span> <span class="nx">screenX</span>
 <span class="nx">number</span> <span class="nx">screenY</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
+</code></pre></div><h3><a class="anchor" name="-"></a>셀렉션 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onSelect
 </code></pre></div><h3><a class="anchor" name="-"></a>터치 이벤트 <a class="hash-link" href="#-">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onTouchCancel onTouchEnd onTouchMove onTouchStart
@@ -520,6 +555,9 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 </code></pre></div><h3><a class="anchor" name="-"></a>미디어 이벤트 <a class="hash-link" href="#-">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+</code></pre></div><h3><a class="anchor" name="-"></a>이미지 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onLoad onError
 </code></pre></div>
 
     <div class="docs-prevnext">

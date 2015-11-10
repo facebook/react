@@ -404,7 +404,7 @@
 
     <p>미리 컴포넌트에 넣을 모든 프로퍼티를 알게 된다면, JSX를 사용하기 쉬워집니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="nx">x</span><span class="p">}</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="nx">y</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h2><a class="anchor" name="props--.1"></a>Props의 변경은 나빠요.<sup id="fnref1"><a href="#fn1" rel="footnote">1</a></sup> <a class="hash-link" href="#props--.1">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="props--"></a>Props의 변경은 나빠요 <a class="hash-link" href="#props--">#</a></h2>
 <p>하지만 어떤 프로퍼티를 설정하고 싶은지 모른다면, 객체 레이어에 넣고 싶어질 수도 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="c1">// 나쁨</span>
@@ -428,19 +428,6 @@
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span><span class="p">);</span> <span class="c1">// &#39;override&#39;</span>
 </code></pre></div><h2><a class="anchor" name="-...--"></a>이상한 <code>...</code> 표기법은 무엇인가요? <a class="hash-link" href="#-...--">#</a></h2>
 <p><code>...</code> 연산자(스프레드 연산자)는 이미 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator">ES6의 배열</a>에서 지원합니다. <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">객체 rest와 스프레드 프로퍼티</a>에 대한 ES7의 제안도 있습니다. JSX의 구문을 더 깔끔하게 하기 위해 지원되고 개발중인 표준을 활용하고 있습니다.</p>
-
-<div class="footnotes">
-<hr>
-<ol>
-
-<li id="fn1">
-<p>아무래도 좋지만, 이 제목의 원문 &quot;Mutating Props is Bad, mkay&quot;는 사우스 파크에
-  나온 대사 &quot;<a href="https://www.youtube-nocookie.com/watch?v=Uh7l8dx-h8M">Drug is bad, mkay</a>&quot;의
-  패러디입니다.&nbsp;<a href="#fnref1" rev="footnote">&#8617;</a></p>
-</li>
-
-</ol>
-</div>
 
 
     <div class="docs-prevnext">

@@ -589,6 +589,28 @@
 <h3><a class="anchor" name="-"></a>믹스인 안됨 <a class="hash-link" href="#-">#</a></h3>
 <p>불행하게도 ES6는 믹스인에 대한 지원이 없이 출시되었기 때문에, React에서 ES6 클래스를 사용한다면 믹스인을 사용할 방법이 없습니다. 대신, 우리는 믹스인에 의존하지 않고도 동작하도록 만들기 위해 열심히 노력하고 있습니다.</p>
 
+<p><a name="stateless-functions"></a></p>
+<h2><a class="anchor" name="---"></a>상태를 가지지 않는 함수 <a class="hash-link" href="#---">#</a></h2>
+<p>React 클래스를 일반 JavaScript 함수로 작성할 수도 있습니다. 상태를 가지지 않는 함수 문법을 사용하는 예제입니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">HelloMessage</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+</code></pre></div>
+<p>아니면 ES6의 화살표 문법을 사용할 수 있습니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">HelloMessage</span> <span class="o">=</span> <span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+</code></pre></div>
+<p>이 단순화된 컴포넌트 API는 prop의 순수 함수인 컴포넌트를 나타냅니다. 이 컴포넌트는 내부 상태가 없어야 하고, 내부 인스턴스가 없어야 하고, 컴포넌트 생명주기 메소드가 없어야 합니다. 아무런 준비 과정없이 입력에 대한 순수한 기능적 변환이어야 합니다.</p>
+
+<blockquote>
+<p>주의:</p>
+
+<p>상태를 가지지 않는 함수는 내부 인스턴스가 없기 때문에, ref를 상태를 가지지않는 함수에 넣을 수 없습니다. 상태를 가지지 않는 함수는 명령형(imperative) API를 제공하지 않기 때문에 일반적으로 이것은 문제가 되지 않습니다. 명령형 API없이 인스턴스에 할 수 있는 것이 많지 않기도 하죠. 하지만 상태를 가지지 않는 컴포넌트의 DOM 노드를 검색하길 원한다면, 반드시 상태 기반 컴포넌트(예. ES6 클래스 컴포넌트)로 컴포넌트를 감싸고 상태 기반 래퍼 컴포넌트에 ref를 붙여야 합니다.</p>
+</blockquote>
+
+<p>이상적으로는, 대부분의 컴포넌트는 상태를 가지지 않는 함수여야 합니다. 왜냐 하면 이런 상태를 가지지 않는 컴포넌트는 React 코어 안에서 더 빠른 코드 경로를 거치기 때문입니다. 이는 가능한 한 추천하는 패턴입니다.</p>
+
 
     <div class="docs-prevnext">
       
