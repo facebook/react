@@ -454,6 +454,40 @@ describe('ReactDOMComponent', function() {
       ReactDOM.render(<div dir="ltr" />, container);
       expect(setter.mock.calls.length).toBe(1);
     });
+
+    it('handles multiple child updates without interference', function() {
+      // This test might look like it's just testing ReactMultiChild but the
+      // last bug in this was actually in DOMChildrenOperations so this test
+      // needs to be in some DOM-specific test file.
+      var container = document.createElement('div');
+
+      // ABCD
+      ReactDOM.render(
+        <div>
+          <div key="one">
+            <div key="A">A</div><div key="B">B</div>
+          </div>
+          <div key="two">
+            <div key="C">C</div><div key="D">D</div>
+          </div>
+        </div>,
+        container
+      );
+      // BADC
+      ReactDOM.render(
+        <div>
+          <div key="one">
+            <div key="B">B</div><div key="A">A</div>
+          </div>
+          <div key="two">
+            <div key="D">D</div><div key="C">C</div>
+          </div>
+        </div>,
+        container
+      );
+
+      expect(container.textContent).toBe('BADC');
+    });
   });
 
   describe('createOpenTagMarkup', function() {

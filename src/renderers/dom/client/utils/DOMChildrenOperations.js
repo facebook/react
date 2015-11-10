@@ -83,7 +83,7 @@ var DOMChildrenOperations = {
           update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         var updatedIndex = update.fromIndex;
         var updatedChild = update.parentNode.childNodes[updatedIndex];
-        var parentID = update.parentID;
+        var parentID = update.parentInst._rootNodeID;
 
         invariant(
           updatedChild,
@@ -143,7 +143,7 @@ var DOMChildrenOperations = {
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           insertChildAt(
             update.parentNode,
-            initialChildren[update.parentID][update.fromIndex],
+            initialChildren[update.parentInst._rootNodeID][update.fromIndex],
             update.toIndex
           );
           break;
