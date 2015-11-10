@@ -9,6 +9,8 @@
   "bugs": "https://github.com/facebook/react/issues",
   "license": "BSD-3-Clause",
   "files": [
+    "LICENSE",
+    "PATENTS",
     "addons.js",
     "react.js",
     "addons/",
