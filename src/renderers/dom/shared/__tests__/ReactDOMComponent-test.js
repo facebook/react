@@ -865,6 +865,22 @@ describe('ReactDOMComponent', function() {
         EventPluginHub.getListener(inst, 'onClick')
       ).toBe(undefined);
     });
+
+    it('unmounts children before unsetting DOM node info', function() {
+      var Inner = React.createClass({
+        render: function() {
+          return <span />;
+        },
+        componentWillUnmount: function() {
+          // Should not throw
+          expect(ReactDOM.findDOMNode(this).nodeName).toBe('SPAN');
+        },
+      });
+
+      var container = document.createElement('div');
+      ReactDOM.render(<div><Inner /></div>, container);
+      ReactDOM.unmountComponentAtNode(container);
+    });
   });
 
   describe('onScroll warning', function() {

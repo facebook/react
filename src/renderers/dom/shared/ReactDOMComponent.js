@@ -1147,8 +1147,8 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    ReactDOMComponentTree.uncacheNode(this);
     this.unmountChildren();
+    ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
