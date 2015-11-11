@@ -106,6 +106,30 @@ describe('ReactEmptyComponent', function() {
     expect(log.argsForCall[3][0]).toBe(null);
   });
 
+  it('should be able to switch in a list of children', () => {
+    var instance1 =
+      <TogglingComponent
+        firstComponent={null}
+        secondComponent={'div'}
+      />;
+
+    ReactTestUtils.renderIntoDocument(
+      <div>
+        {instance1}
+        {instance1}
+        {instance1}
+      </div>
+    );
+
+    expect(log.argsForCall.length).toBe(6);
+    expect(log.argsForCall[0][0]).toBe(null);
+    expect(log.argsForCall[1][0]).toBe(null);
+    expect(log.argsForCall[2][0]).toBe(null);
+    expect(log.argsForCall[3][0].tagName).toBe('DIV');
+    expect(log.argsForCall[4][0].tagName).toBe('DIV');
+    expect(log.argsForCall[5][0].tagName).toBe('DIV');
+  });
+
   it('should distinguish between a script placeholder and an actual script tag',
     () => {
       var instance1 =
@@ -275,12 +299,12 @@ describe('ReactEmptyComponent', function() {
 
     ReactDOM.render(<Empty />, container);
     var noscript1 = container.firstChild;
-    expect(noscript1.tagName).toBe('NOSCRIPT');
+    expect(noscript1.nodeName).toBe('#comment');
 
     // This update shouldn't create a DOM node
     ReactDOM.render(<Empty />, container);
     var noscript2 = container.firstChild;
-    expect(noscript2.tagName).toBe('NOSCRIPT');
+    expect(noscript2.nodeName).toBe('#comment');
 
     expect(noscript1).toBe(noscript2);
   });
