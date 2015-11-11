@@ -325,9 +325,9 @@ Now that the data is available in the `CommentList`, let's render the comments d
 // tutorial10.js
 var CommentList = React.createClass({
   render: function() {
-    var commentNodes = this.props.data.map(function (comment) {
+    var commentNodes = this.props.data.map(function (comment,index) {
       return (
-        <Comment author={comment.author}>
+        <Comment author={comment.author} key={index}>
           {comment.text}
         </Comment>
       );
@@ -340,6 +340,7 @@ var CommentList = React.createClass({
   }
 });
 ```
+Note that each child in an array should have a unique "key" prop. See [dynamic-children]( http://facebook.github.io/react/docs/multiple-components.html#dynamic-children)
 
 That's it!
 
