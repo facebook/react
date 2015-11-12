@@ -9,7 +9,7 @@ Numa primeira fase, explorar-se-á o grau de testabilidade do *software*, analis
 
 Numa segunda fase, serão apresentadas algumas estatísticas pertinentes relacionadas com a verificação e validação do *software*.
 
-Finalmente, será realizado um exercício que consistirá na seleção de um *bug report* e na conceção de casos de teste para o mesmo.
+Finalmente, será realizado um exercício que consistirá na seleção de um *bug report* e na conceção de casos de teste que possam, eventualmente, conduzir à resolução do mesmo.
 
 ### <a name="testabilidade"></a>Testabilidade do *Software*
 
