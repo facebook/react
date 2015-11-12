@@ -138,6 +138,14 @@ describe('ReactPropTypes', function() {
   });
 
   describe('ArrayOf Type', function() {
+    it('should fail for invalid argument', function() {
+      typeCheckFail(
+        PropTypes.arrayOf({ foo: PropTypes.string }),
+        { foo: 'bar' },
+        'Property `testProp` of component `testComponent` has invalid PropType notation inside arrayOf.'
+      );
+    });
+
     it('should support the arrayOf propTypes', function() {
       typeCheckPass(PropTypes.arrayOf(PropTypes.number), [1, 2, 3]);
       typeCheckPass(PropTypes.arrayOf(PropTypes.string), ['a', 'b', 'c']);
@@ -461,6 +469,14 @@ describe('ReactPropTypes', function() {
   });
 
   describe('ObjectOf Type', function() {
+    it('should fail for invalid argument', function() {
+      typeCheckFail(
+        PropTypes.objectOf({ foo: PropTypes.string }),
+        { foo: 'bar' },
+        'Property `testProp` of component `testComponent` has invalid PropType notation inside objectOf.'
+      );
+    });
+
     it('should support the objectOf propTypes', function() {
       typeCheckPass(PropTypes.objectOf(PropTypes.number), {a: 1, b: 2, c: 3});
       typeCheckPass(
