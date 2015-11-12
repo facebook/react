@@ -14,6 +14,7 @@
 'use strict';
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMDevtools = require('ReactDOMDevtools');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
@@ -35,6 +36,8 @@ var React = {
   render: render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   version: ReactVersion,
+  addDevtool: ReactDOMDevtools.addDevtool,
+  removeDevtool: ReactDOMDevtools.removeDevtool,
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
