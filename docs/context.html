@@ -505,7 +505,34 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Menu</span> <span class="nx">items</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;aubergine&#39;</span><span class="p">,</span> <span class="s1">&#39;butternut squash&#39;</span><span class="p">,</span> <span class="s1">&#39;clementine&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>Recall that you can also pass entire React components in props if you&#39;d like to.</p>
-<h2><a class="anchor" name="when-not-to-use-context"></a>When not to use context <a class="hash-link" href="#when-not-to-use-context">#</a></h2>
+<h2><a class="anchor" name="referencing-context-in-lifecycle-methods"></a>Referencing context in lifecycle methods <a class="hash-link" href="#referencing-context-in-lifecycle-methods">#</a></h2>
+<p>If <code>contextTypes</code> is defined within a component, the following lifecycle methods will receive an additional parameter, the <code>context</code> object:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillReceiveProps</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
+<span class="p">)</span>
+
+<span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
+<span class="p">)</span>
+
+<span class="k">void</span> <span class="nx">componentWillUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
+<span class="p">)</span>
+
+<span class="k">void</span> <span class="nx">componentDidUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevContext</span>
+<span class="p">)</span>
+</code></pre></div><h2><a class="anchor" name="referencing-context-in-stateless-functional-components"></a>Referencing context in stateless functional components <a class="hash-link" href="#referencing-context-in-stateless-functional-components">#</a></h2>
+<p>Stateless functional components are also able to reference <code>context</code> if <code>contextTypes</code> is defined as a property of the function. The following code shows the <code>Button</code> component above written as a stateless functional component.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Button</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
+      <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="err">/button&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+<span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
+</code></pre></div><h2><a class="anchor" name="when-not-to-use-context"></a>When not to use context <a class="hash-link" href="#when-not-to-use-context">#</a></h2>
 <p>Just as global variables are best avoided when writing clear code, you should avoid using context in most cases. In particular, think twice before using it to &quot;save typing&quot; and using it instead of passing explicit props.</p>
 
 <p>The best use cases for context are for implicitly passing down the logged-in user, the current language, or theme information. All of these might otherwise be true globals, but context lets you scope them to a single React subtree.</p>

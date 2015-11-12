@@ -505,7 +505,34 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Menu</span> <span class="nx">items</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;가지&#39;</span><span class="p">,</span> <span class="s1">&#39;땅콩호박&#39;</span><span class="p">,</span> <span class="s1">&#39;클레멘타인&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>원한다면 전체 React 컴포넌트를 프로퍼티로 전달할 수도 있습니다. </p>
-<h2><a class="anchor" name="----"></a>컨텍스트를 사용하지 말아야 하는 경우 <a class="hash-link" href="#----">#</a></h2>
+<h2><a class="anchor" name="referencing-context-in-lifecycle-methods"></a>Referencing context in lifecycle methods <a class="hash-link" href="#referencing-context-in-lifecycle-methods">#</a></h2>
+<p>If <code>contextTypes</code> is defined within a component, the following lifecycle methods will receive an additional parameter, the <code>context</code> object:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillReceiveProps</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
+<span class="p">)</span>
+
+<span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
+<span class="p">)</span>
+
+<span class="k">void</span> <span class="nx">componentWillUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
+<span class="p">)</span>
+
+<span class="k">void</span> <span class="nx">componentDidUpdate</span><span class="p">(</span>
+  <span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevContext</span>
+<span class="p">)</span>
+</code></pre></div><h2><a class="anchor" name="referencing-context-in-stateless-functional-components"></a>Referencing context in stateless functional components <a class="hash-link" href="#referencing-context-in-stateless-functional-components">#</a></h2>
+<p>Stateless functional components are also able to reference <code>context</code> if <code>contextTypes</code> is defined as a property of the function. The following code shows the <code>Button</code> component above written as a stateless functional component.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Button</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
+      <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="err">/button&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+<span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
+</code></pre></div><h2><a class="anchor" name="----"></a>컨텍스트를 사용하지 말아야 하는 경우 <a class="hash-link" href="#----">#</a></h2>
 <p>대부분의 경우, 깔끔한 코드를 위해 전역 변수를 피하는 것과 마찬가지로 컨텍스트의 사용을 피해야 합니다. 특히 &quot;타이핑을 줄이거나&quot; 명시적인 프로퍼티 전달 대신 이를 사용하려는 경우 다시 한번 생각해 보세요.</p>
 
 <p>컨텍스트의 가장 적절한 사용 사례는 로그인한 유저, 언어 설정, 테마 정보 등을 암시적으로 전달하는 것입니다. 컨텍스트를 사용함으로써 이런 정보들을 전역으로 다루는 대신 단일 React 서브트리 내에서 다룰 수 있습니다. </p>
