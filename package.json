@@ -53,6 +53,7 @@
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest"
   },
+  "typings": "typings/react.d.ts",
   "jest": {
     "modulePathIgnorePatterns": [
       "/.module-cache/",
