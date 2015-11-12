@@ -1,7 +1,7 @@
 ---
 language: node_js
 node_js:
-- '0.10'
+- 4
 sudo: false
 cache:
   directories:
@@ -15,7 +15,8 @@ before_install:
       echo "Only docs were updated, stopping build process."
       exit
     fi
-    npm install -g npm
+    npm install -g npm@latest-2
+    npm --version
 script:
 - |
     if [ "$TEST_TYPE" = build_website ]; then
@@ -49,9 +50,10 @@ script:
         curl \
           -F "react=@build/react.js" \
           -F "react.min=@build/react.min.js" \
-          -F "transformer=@build/JSXTransformer.js" \
           -F "react-with-addons=@build/react-with-addons.js" \
           -F "react-with-addons.min=@build/react-with-addons.min.js" \
+          -F "react-dom=@build/react-dom.js" \
+          -F "react-dom.min=@build/react-dom.min.js" \
           -F "npm-react=@build/packages/react.tgz" \
           -F "npm-react-dom=@build/packages/react-dom.tgz" \
           -F "commit=$TRAVIS_COMMIT" \

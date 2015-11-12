@@ -8,7 +8,7 @@ id: support
 
 ## Stack Overflow
 
-Many members of the community use Stack Overflow to ask questions. Read through the [existing questions](http://stackoverflow.com/questions/tagged/reactjs) tagged with **reactjs** or [ask your own](http://stackoverflow.com/questions/ask)!
+Many members of the community use Stack Overflow to ask questions. Read through the [existing questions](http://stackoverflow.com/questions/tagged/reactjs) tagged with **reactjs** or [ask your own](http://stackoverflow.com/questions/ask?tags=reactjs)!
 
 ## Discussion forum
 
@@ -22,6 +22,6 @@ Many developers and users idle on Freenode.net's IRC network in **[#reactjs on f
 
 ## Twitter
 
-For the latest news about React, [follow **@reactjs** on Twitter](https://twitter.com/reactjs). In addition, you can use the [**#reactjs** hashtag](https://twitter.com/search?q=%23reactjs) to keep up with the latest React news.
+For the latest news about React, [follow **@reactjs** on Twitter](https://twitter.com/reactjs). In addition, you can use the #reactjs hashtag to see what others are saying or add to the conversation.
 
 <div><a class="twitter-timeline" data-dnt="true" data-chrome="nofooter noheader transparent" href="https://twitter.com/search?q=%23reactjs" data-widget-id="342522405270470656"></a></div>

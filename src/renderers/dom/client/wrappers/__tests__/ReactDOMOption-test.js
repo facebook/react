@@ -39,7 +39,7 @@ describe('ReactDOMOption', function() {
 
     expect(node.innerHTML).toBe('1  2');
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain('Only strings and numbers are supported as <option> children.');
+    expect(console.error.argsForCall[0][0]).toContain('Only strings and numbers are supported as <option> children.');
   });
 
   it('should warn when passing invalid children', function() {
@@ -48,7 +48,7 @@ describe('ReactDOMOption', function() {
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'Only strings and numbers are supported as <option> children.'
     );
   });

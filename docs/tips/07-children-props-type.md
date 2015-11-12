@@ -20,7 +20,7 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <GenericWrapper><span/><span/><span/></GenericWrapper>,
   mountNode
 );
@@ -34,7 +34,7 @@ var GenericWrapper = React.createClass({
     console.log(Array.isArray(this.props.children)); // => false
 
     // warning: yields 5 for length of the string 'hello', not 1 for the
-    // length of the non-existant array wrapper!
+    // length of the non-existent array wrapper!
     console.log(this.props.children.length);
   },
 
@@ -43,7 +43,7 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.render(<GenericWrapper>hello</GenericWrapper>, mountNode);
+ReactDOM.render(<GenericWrapper>hello</GenericWrapper>, mountNode);
 ```
 
 To make `this.props.children` easy to deal with, we've provided the [React.Children utilities](/react/docs/top-level-api.html#react.children).

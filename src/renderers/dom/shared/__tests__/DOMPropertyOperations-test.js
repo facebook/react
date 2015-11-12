@@ -15,17 +15,13 @@ describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
 
-  var mocks;
-
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     var ReactDefaultInjection = require('ReactDefaultInjection');
     ReactDefaultInjection.inject();
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
-
-    mocks = require('mocks');
   });
 
   describe('createMarkupForProperty', function() {
@@ -54,7 +50,7 @@ describe('DOMPropertyOperations', function() {
       )).toBe('id="simple"');
     });
 
-    it('should warn about incorrect casing', function() {
+    it('should warn about incorrect casing on properties', function() {
       spyOn(console, 'error');
       expect(DOMPropertyOperations.createMarkupForProperty(
         'tabindex',
@@ -62,6 +58,21 @@ describe('DOMPropertyOperations', function() {
       )).toBe(null);
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toContain('tabIndex');
+    });
+
+    it('should warn about incorrect casing on event handlers', function() {
+      spyOn(console, 'error');
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'onclick',
+        '1'
+      )).toBe(null);
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'onKeydown',
+        '1'
+      )).toBe(null);
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toContain('onClick');
+      expect(console.error.argsForCall[1][0]).toContain('onKeyDown');
     });
 
     it('should warn about class', function() {
@@ -224,6 +235,15 @@ describe('DOMPropertyOperations', function() {
         .toEqual(['http://www.w3.org/1999/xlink', 'xlink:href', 'about:blank']);
     });
 
+    it('should set values as boolean properties', function() {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', 'disabled');
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', true);
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', false);
+      expect(stubNode.getAttribute('disabled')).toBe(null);
+    });
+
     it('should convert attribute values to string first', function() {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
@@ -261,7 +281,7 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should use mutation method where applicable', function() {
-      var foobarSetter = mocks.getMockFunction();
+      var foobarSetter = jest.genMockFn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: null},

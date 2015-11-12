@@ -14,43 +14,17 @@
 var React;
 var ReactTestUtils;
 
-var mocks;
-
-var OriginalComponent;
 var AutoMockedComponent;
 var MockedComponent;
 
 describe('ReactMockedComponent', function() {
 
   beforeEach(function() {
-    mocks = require('mocks');
-
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
-    OriginalComponent = React.createClass({
-      getDefaultProps: function() {
-        return {bar: 'baz'};
-      },
-
-      getInitialState: function() {
-        return {foo: 'bar'};
-      },
-
-      hasCustomMethod: function() {
-        return true;
-      },
-
-      render: function() {
-        return <span />;
-      },
-
-    });
-
-    var metaData = mocks.getMetadata(OriginalComponent);
-
-    AutoMockedComponent = mocks.generateFromMetadata(metaData);
-    MockedComponent = mocks.generateFromMetadata(metaData);
+    AutoMockedComponent = jest.genMockFromModule('ReactMockedComponentTestComponent');
+    MockedComponent = jest.genMockFromModule('ReactMockedComponentTestComponent');
 
     ReactTestUtils.mockComponent(MockedComponent);
   });

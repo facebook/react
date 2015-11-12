@@ -19,12 +19,12 @@ describe('ReactJSXElement', function() {
   var Component;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    Component = class {
+    Component = class extends React.Component {
       render() {
         return <div />;
       }
@@ -119,7 +119,9 @@ describe('ReactJSXElement', function() {
 
   it('merges JSX children onto the children prop in an array', function() {
     spyOn(console, 'error');
-    var a = 1, b = 2, c = 3;
+    var a = 1;
+    var b = 2;
+    var c = 3;
     var element = <Component>{a}{b}{c}</Component>;
     expect(element.props.children).toEqual([1, 2, 3]);
     expect(console.error.argsForCall.length).toBe(0);
@@ -151,6 +153,7 @@ describe('ReactJSXElement', function() {
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
+    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
   });
 
   it('is indistinguishable from a plain object', function() {
@@ -174,7 +177,7 @@ describe('ReactJSXElement', function() {
   });
 
   it('should normalize props with default values', function() {
-    class NormalizingComponent {
+    class NormalizingComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }

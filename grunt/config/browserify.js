@@ -13,22 +13,10 @@ var envifyDev = envify({NODE_ENV: process.env.NODE_ENV || 'development'});
 var envifyProd = envify({NODE_ENV: process.env.NODE_ENV || 'production'});
 
 var SIMPLE_TEMPLATE =
-'/**\n\
- * @PACKAGE@ v@VERSION@\n\
- */';
+  grunt.file.read('./grunt/data/header-template-short.txt');
 
 var LICENSE_TEMPLATE =
-'/**\n\
- * @PACKAGE@ v@VERSION@\n\
- *\n\
- * Copyright 2013-2015, Facebook, Inc.\n\
- * All rights reserved.\n\
- *\n\
- * This source code is licensed under the BSD-style license found in the\n\
- * LICENSE file in the root directory of this source tree. An additional grant\n\
- * of patent rights can be found in the PATENTS file in the same directory.\n\
- *\n\
- */';
+  grunt.file.read('./grunt/data/header-template-extended.txt');
 
 function minify(src) {
   return UglifyJS.minify(src, {fromString: true}).code;
@@ -38,17 +26,25 @@ function minify(src) {
 function bannerify(src) {
   var version = grunt.config.data.pkg.version;
   var packageName = this.data.packageName || this.data.standalone;
-  return LICENSE_TEMPLATE.replace('@PACKAGE@', packageName)
-                         .replace('@VERSION@', version) +
-         '\n' + src;
+  return (
+    grunt.template.process(
+      LICENSE_TEMPLATE,
+      {data: {package: packageName, version: version}}
+    ) +
+    src
+  );
 }
 
 function simpleBannerify(src) {
   var version = grunt.config.data.pkg.version;
   var packageName = this.data.packageName || this.data.standalone;
-  return SIMPLE_TEMPLATE.replace('@PACKAGE@', packageName)
-                        .replace('@VERSION@', version) +
-         '\n' + src;
+  return (
+    grunt.template.process(
+      SIMPLE_TEMPLATE,
+      {data: {package: packageName, version: version}}
+    ) +
+    src
+  );
 }
 
 // Our basic config which we'll add to to make our other builds
@@ -80,23 +76,7 @@ var min = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [/*derequire,*/ minify, bannerify],
-};
-
-var transformer = {
-  entries:[
-    './vendor/browser-transforms.js',
-  ],
-  outfile: './build/JSXTransformer.js',
-  debug: false,
-  standalone: 'JSXTransformer',
-  transforms: [],
-  // Source-map-generator uses amdefine, which looks at the type of __dereq__.
-  // If it's not a string, it assumes something else (array of strings), but
-  // collapser passes a number; this would throw.
-
-  // plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [minify, bannerify],
 };
 
 var addons = {
@@ -126,13 +106,12 @@ var addonsMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [/*derequire,*/ minify, bannerify],
+  after: [minify, bannerify],
 };
 
 module.exports = {
   basic: basic,
   min: min,
-  transformer: transformer,
   addons: addons,
   addonsMin: addonsMin,
 };

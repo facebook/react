@@ -42,12 +42,13 @@ next: thinking-in-react-ja-JP.html
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
       // ここにコードが入ります
     </script>
   </body>
@@ -84,7 +85,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -105,7 +106,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -121,7 +122,7 @@ React.render(
 
 実際の HTML を返す必要はありません。 自分が（もしくは他の誰かが）組み立てたコンポーネントツリーを返せばいいのです。 これこそ React が **composable**な（組み立てられる）ものである理由であり、この大事なルールを守ればフロントエンドはメンテナンスしやすいものとなります。
 
-`React.render()` はまずルートコンポーネントのインスタンスを作り、フレームワークを立ち上げます。そして、第2引数で与えられた実際の DOM 要素にマークアップを挿入します。
+`ReactDOM.render()` はまずルートコンポーネントのインスタンスを作り、フレームワークを立ち上げます。そして、第2引数で与えられた実際の DOM 要素にマークアップを挿入します。
 
 ## コンポーネントの組み立て
 
@@ -217,13 +218,14 @@ Markdown はインラインでテキストをフォーマットする簡単な�
 
 まず最初に、サードパーティ製の **marked** ライブラリをアプリケーションに追加します。 marked は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように marked を読み込ませます。
 
-```html{8}
+```html{9}
 <!-- index.html -->
 <head>
   <meta charset="UTF-8" />
   <title>Hello React</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
@@ -286,7 +288,7 @@ var data = [
 ];
 ```
 
-このデータはモジュールを使って `CommentList` に取り込む必要があります。`CommentBox` の `React.render()` の部分を手直しして、props を通してデータが `CommentList` へ渡るようにしましょう。
+このデータはモジュールを使って `CommentList` に取り込む必要があります。`CommentBox` の `ReactDOM.render()` の部分を手直しして、props を通してデータが `CommentList` へ渡るようにしましょう。
 
 ```javascript{7,15}
 // tutorial9.js
@@ -302,7 +304,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -338,8 +340,8 @@ var CommentList = React.createClass({
 
 ```javascript{3}
 // tutorial11.js
-React.render(
-  <CommentBox url="comments.json" />,
+ReactDOM.render(
+  <CommentBox url="api/comments" />,
   document.getElementById('content')
 );
 ```
@@ -456,7 +458,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );
@@ -491,14 +493,14 @@ var CommentForm = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     // TODO: サーバにリクエストを送信
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {
@@ -521,7 +523,7 @@ React がコンポーネントにイベントハンドラを登録する際は c
 
 ##### Refs
 
-先程のコードでは `ref` 属性値を使って子のコンポーネントに名前を付けており、`this.ref` でそのコンポーネントを参照しています。`React.findDOMNode(component)` にコンポーネントを指定して呼び出すことで、ブラウザの持つ実際の DOM 要素を取得することが出来ます。
+先程のコードでは `ref` 属性値を使って子のコンポーネントに名前を付けており、`this.ref` でそのコンポーネントを参照しています。`ReactDOM.findDOMNode(component)` にコンポーネントを指定して呼び出すことで、ブラウザの持つ実際の DOM 要素を取得することが出来ます。
 
 ##### Props としてのコールバック
 
@@ -574,14 +576,14 @@ var CommentBox = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {
@@ -680,6 +682,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
+        this.setState({data: comments});
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });

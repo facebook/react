@@ -3,6 +3,7 @@ id: advanced-performance-ko-KR
 title: 성능 심화
 permalink: advanced-performance-ko-KR.html
 prev: perf-ko-KR.html
+next: context-ko-KR.html
 ---
 
 React를 도입하려 할 때 많은 사람이 묻는 첫 번째 질문은 React를 사용하지 않을 때처럼 애플리케이션이 빠르고 반응성도 좋을 것이냐는 것입니다. 모든 상태변화에 대해 컴포넌트의 하위 트리를 전부 다시 렌더링하는 아이디어에 대해 사람들은 이 프로세스가 성능에 부정적인 영향을 줄 것으로 생각하지만, React는 여러 가지 영리한 방법을 통해 UI를 업데이트하는데 필요한 비싼 DOM 조작을 최소화합니다.
@@ -52,7 +53,7 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value</div>;
+    return <div>{this.props.value}</div>;
   }
 });
 ```
@@ -76,7 +77,7 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value.foo</div>;
+    return <div>{this.props.value.foo}</div>;
   }
 });
 ```

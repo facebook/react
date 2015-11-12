@@ -14,6 +14,13 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
+var canDefineProperty = require('canDefineProperty');
+
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
 
 var RESERVED_PROPS = {
   key: true,
@@ -41,47 +48,66 @@ var RESERVED_PROPS = {
  * @internal
  */
 var ReactElement = function(type, key, ref, self, source, owner, props) {
-  // Built-in properties that belong on the element
-  this.type = type;
-  this.key = key;
-  this.ref = ref;
-  this.self = self;
-  this.source = source;
+  var element = {
+    // This tag allow us to uniquely identify this as a React Element
+    $$typeof: REACT_ELEMENT_TYPE,
 
-  // Record the component responsible for creating this element.
-  this._owner = owner;
+    // Built-in properties that belong on the element
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
 
-  this.props = props;
+    // Record the component responsible for creating this element.
+    _owner: owner,
+  };
 
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
-    this._store = {};
+    element._store = {};
 
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
     // include every environment we run tests in), so the test framework
     // ignores it.
-    try {
-      Object.defineProperty(this._store, 'validated', {
+    if (canDefineProperty) {
+      Object.defineProperty(element._store, 'validated', {
         configurable: false,
         enumerable: false,
         writable: true,
         value: false,
       });
-    } catch (x) {
-      this._store.validated = false;
+      // self and source are DEV only properties.
+      Object.defineProperty(element, '_self', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: self,
+      });
+      // Two elements created in two different places should be considered
+      // equal for testing purposes and therefore we hide it from enumeration.
+      Object.defineProperty(element, '_source', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: source,
+      });
+    } else {
+      element._store.validated = false;
+      element._self = self;
+      element._source = source;
     }
-    Object.freeze(this.props);
-    Object.freeze(this);
+    if (Object.freeze) {
+      Object.freeze(element.props);
+      Object.freeze(element);
+    }
   }
-};
 
-// We intentionally don't expose the function on the constructor property.
-// ReactElement should be indistinguishable from a plain object.
-ReactElement.prototype = {};
+  return element;
+};
 
 ReactElement.createElement = function(type, config, children) {
   var propName;
@@ -131,7 +157,7 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
-  return new ReactElement(
+  return ReactElement(
     type,
     key,
     ref,
@@ -154,12 +180,12 @@ ReactElement.createFactory = function(type) {
 };
 
 ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
-  var newElement = new ReactElement(
+  var newElement = ReactElement(
     oldElement.type,
     newKey,
     oldElement.ref,
-    oldElement.self,
-    oldElement.source,
+    oldElement._self,
+    oldElement._source,
     oldElement._owner,
     oldElement.props
   );
@@ -168,12 +194,12 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
 };
 
 ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
-  var newElement = new ReactElement(
+  var newElement = ReactElement(
     oldElement.type,
     oldElement.key,
     oldElement.ref,
-    oldElement.self,
-    oldElement.source,
+    oldElement._self,
+    oldElement._source,
     oldElement._owner,
     newProps
   );
@@ -195,8 +221,12 @@ ReactElement.cloneElement = function(element, config, children) {
   // Reserved names are extracted
   var key = element.key;
   var ref = element.ref;
-  var self = element.__self;
-  var source = element.__source;
+  // Self is preserved since the owner is preserved.
+  var self = element._self;
+  // Source is preserved since cloneElement is unlikely to be targeted by a
+  // transpiler, and the original source is probably a better indicator of the
+  // true owner.
+  var source = element._source;
 
   // Owner will be preserved, unless ref is overridden
   var owner = element._owner;
@@ -232,7 +262,7 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = childArray;
   }
 
-  return new ReactElement(
+  return ReactElement(
     element.type,
     key,
     ref,
@@ -249,11 +279,10 @@ ReactElement.cloneElement = function(element, config, children) {
  * @final
  */
 ReactElement.isValidElement = function(object) {
-  return !!(
+  return (
     typeof object === 'object' &&
-    object != null &&
-    'type' in object &&
-    'props' in object
+    object !== null &&
+    object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
 

@@ -17,7 +17,7 @@ var divStyle = {
   msTransition: 'all' // 'ms'는 유일한 소문자 벤더 프리픽스(vendor prefix)입니다
 };
 
-React.render(<div style={divStyle}>Hello World!</div>, mountNode);
+ReactDOM.render(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
 스타일 키는 JS에서 DOM 노드의 프로퍼티에 접근하는 것과 일관성있도록 camelCased 형식입니다. (예를 들어 `node.style.backgroundImage`) [`ms`를 제외한](http://www.andismith.com/blog/2012/02/modernizr-prefixed/) 벤더 프리픽스는 대문자로 시작해야 합니다. 따라서 `WebkitTransition`은 대문자 "W"를 사용합니다.

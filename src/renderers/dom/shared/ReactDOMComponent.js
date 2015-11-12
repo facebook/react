@@ -17,50 +17,49 @@
 var AutoFocusUtils = require('AutoFocusUtils');
 var CSSProperty = require('CSSProperty');
 var CSSPropertyOperations = require('CSSPropertyOperations');
+var DOMLazyTree = require('DOMLazyTree');
+var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventConstants = require('EventConstants');
+var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMButton = require('ReactDOMButton');
+var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
-var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
+var canDefineProperty = require('canDefineProperty');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
-var setInnerHTML = require('setInnerHTML');
-var setTextContent = require('setTextContent');
 var shallowEqual = require('shallowEqual');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
-var deleteListener = ReactBrowserEventEmitter.deleteListener;
+var Flags = ReactDOMComponentFlags;
+var deleteListener = EventPluginHub.deleteListener;
+var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
-var registrationNameModules = ReactBrowserEventEmitter.registrationNameModules;
+var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
+var CHILDREN = keyOf({children: null});
 var STYLE = keyOf({style: null});
-
-var ELEMENT_NODE_TYPE = 1;
-
-var canDefineProperty = false;
-try {
-  Object.defineProperty({}, 'test', {get: function() {}});
-  canDefineProperty = true;
-} catch (e) {
-}
+var HTML = keyOf({__html: null});
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -81,7 +80,7 @@ if (__DEV__) {
     props: {
       enumerable: false,
       get: function() {
-        var component = this._reactInternalComponent;
+        var component = ReactDOMComponentTree.getInstanceFromNode(this);
         warning(
           false,
           'ReactDOMComponent: Do not access .props of a DOM node; instead, ' +
@@ -98,7 +97,7 @@ if (__DEV__) {
 
 function legacyGetDOMNode() {
   if (__DEV__) {
-    var component = this._reactInternalComponent;
+    var component = ReactDOMComponentTree.getInstanceFromNode(this);
     warning(
       false,
       'ReactDOMComponent: Do not access .getDOMNode() of a DOM node; ' +
@@ -110,7 +109,7 @@ function legacyGetDOMNode() {
 }
 
 function legacyIsMounted() {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
@@ -123,7 +122,7 @@ function legacyIsMounted() {
 
 function legacySetStateEtc() {
   if (__DEV__) {
-    var component = this._reactInternalComponent;
+    var component = ReactDOMComponentTree.getInstanceFromNode(this);
     warning(
       false,
       'ReactDOMComponent: Do not access .setState(), .replaceState(), or ' +
@@ -134,12 +133,12 @@ function legacySetStateEtc() {
 }
 
 function legacySetProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
       'ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
-      'Instead, call React.render again at the top level.%s',
+      'Instead, call ReactDOM.render again at the top level.%s',
       getDeclarationErrorAddendum(component)
     );
   }
@@ -153,12 +152,12 @@ function legacySetProps(partialProps, callback) {
 }
 
 function legacyReplaceProps(partialProps, callback) {
-  var component = this._reactInternalComponent;
+  var component = ReactDOMComponentTree.getInstanceFromNode(this);
   if (__DEV__) {
     warning(
       false,
       'ReactDOMComponent: Do not access .replaceProps() of a DOM node. ' +
-      'Instead, call React.render again at the top level.%s',
+      'Instead, call ReactDOM.render again at the top level.%s',
       getDeclarationErrorAddendum(component)
     );
   }
@@ -169,6 +168,32 @@ function legacyReplaceProps(partialProps, callback) {
   if (callback) {
     ReactUpdateQueue.enqueueCallbackInternal(component, callback);
   }
+}
+
+function friendlyStringify(obj) {
+  if (typeof obj === 'object') {
+    if (Array.isArray(obj)) {
+      return '[' + obj.map(friendlyStringify).join(', ') + ']';
+    } else {
+      var pairs = [];
+      for (var key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          var keyEscaped = /^[a-z$_][\w$_]*$/i.test(key) ?
+            key :
+            JSON.stringify(key);
+          pairs.push(keyEscaped + ': ' + friendlyStringify(obj[key]));
+        }
+      }
+      return '{' + pairs.join(', ') + '}';
+    }
+  } else if (typeof obj === 'string') {
+    return JSON.stringify(obj);
+  } else if (typeof obj === 'function') {
+    return '[function object]';
+  }
+  // Differs from JSON.stringify in that undefined becauses undefined and that
+  // inf and nan don't become null
+  return String(obj);
 }
 
 var styleMutationWarning = {};
@@ -203,8 +228,8 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
     'the `render` %s. Previous style: %s. Mutated style: %s.',
     componentName,
     owner ? 'of `' + ownerName + '`' : 'using <' + componentName + '>',
-    JSON.stringify(style1),
-    JSON.stringify(style2)
+    friendlyStringify(style1),
+    friendlyStringify(style2)
   );
 }
 
@@ -238,7 +263,7 @@ function assertValidProps(component, props) {
     );
     invariant(
       typeof props.dangerouslySetInnerHTML === 'object' &&
-      '__html' in props.dangerouslySetInnerHTML,
+      HTML in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
       'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
       'for more information.'
@@ -262,11 +287,12 @@ function assertValidProps(component, props) {
     props.style == null || typeof props.style === 'object',
     'The `style` prop expects a mapping from style properties to values, ' +
     'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
-    'using JSX.'
+    'using JSX.%s',
+     getDeclarationErrorAddendum(component)
   );
 }
 
-function enqueuePutListener(id, registrationName, listener, transaction) {
+function enqueuePutListener(inst, registrationName, listener, transaction) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
     // bubble.
@@ -275,15 +301,15 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
       'This browser doesn\'t support the `onScroll` event'
     );
   }
-  var container = ReactMount.findReactContainerForID(id);
-  if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
-    listenTo(registrationName, doc);
+  var containerInfo = inst._nativeContainerInfo;
+  var doc = containerInfo._ownerDocument;
+  if (!doc) {
+    // Server rendering.
+    return;
   }
+  listenTo(registrationName, doc);
   transaction.getReactMountReady().enqueue(putListener, {
-    id: id,
+    inst: inst,
     registrationName: registrationName,
     listener: listener,
   });
@@ -291,8 +317,8 @@ function enqueuePutListener(id, registrationName, listener, transaction) {
 
 function putListener() {
   var listenerToPut = this;
-  ReactBrowserEventEmitter.putListener(
-    listenerToPut.id,
+  EventPluginHub.putListener(
+    listenerToPut.inst,
     listenerToPut.registrationName,
     listenerToPut.listener
   );
@@ -331,7 +357,7 @@ function trapBubbledEventsLocal() {
   // If a component renders to null or if another component fatals and causes
   // the state of the tree to be corrupted, `node` here can be null.
   invariant(inst._rootNodeID, 'Must be mounted to trap events');
-  var node = ReactMount.getNode(inst._rootNodeID);
+  var node = getNode(inst);
   invariant(
     node,
     'trapBubbledEvent(...): Requires node to be rendered.'
@@ -351,7 +377,7 @@ function trapBubbledEventsLocal() {
     case 'audio':
 
       inst._wrapperState.listeners = [];
-      // create listener for each media event
+      // Create listener for each media event
       for (var event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
           inst._wrapperState.listeners.push(
@@ -393,7 +419,22 @@ function trapBubbledEventsLocal() {
         ),
       ];
       break;
+    case 'input':
+    case 'select':
+    case 'textarea':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topInvalid,
+          'invalid',
+          node
+        ),
+      ];
+      break;
   }
+}
+
+function mountReadyInputWrapper() {
+  ReactDOMInput.mountReadyWrapper(this);
 }
 
 function postUpdateSelectWrapper() {
@@ -401,7 +442,7 @@ function postUpdateSelectWrapper() {
 }
 
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special cased tags.
+// those special-case tags.
 
 var omittedCloseTags = {
   'area': true,
@@ -450,20 +491,11 @@ function validateDangerousTag(tag) {
   }
 }
 
-function processChildContext(context, inst) {
-  if (__DEV__) {
-    // Pass down our tag name to child components for validation purposes
-    context = assign({}, context);
-    var info = context[validateDOMNesting.ancestorInfoContextKey];
-    context[validateDOMNesting.ancestorInfoContextKey] =
-      validateDOMNesting.updatedAncestorInfo(info, inst._tag, inst);
-  }
-  return context;
-}
-
 function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
+
+var globalIdCounter = 1;
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -482,13 +514,21 @@ function isCustomComponent(tagName, props) {
 function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
   this._tag = tag.toLowerCase();
+  this._namespaceURI = null;
   this._renderedChildren = null;
   this._previousStyle = null;
   this._previousStyleCopy = null;
+  this._nativeNode = null;
+  this._nativeParent = null;
   this._rootNodeID = null;
+  this._domID = null;
+  this._nativeContainerInfo = null;
   this._wrapperState = null;
   this._topLevelWrapper = null;
-  this._nodeWithLegacyProperties = null;
+  this._flags = 0;
+  if (__DEV__) {
+    this._ancestorInfo = null;
+  }
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';
@@ -504,13 +544,22 @@ ReactDOMComponent.Mixin = {
    * is not idempotent.
    *
    * @internal
-   * @param {string} rootID The root DOM ID for this node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {?ReactDOMComponent} the containing DOM component instance
+   * @param {?object} info about the native container
    * @param {object} context
    * @return {string} The computed markup.
    */
-  mountComponent: function(rootID, transaction, context) {
-    this._rootNodeID = rootID;
+  mountComponent: function(
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
+    this._rootNodeID = globalIdCounter++;
+    this._domID = nativeContainerInfo._idCounter++;
+    this._nativeParent = nativeParent;
+    this._nativeContainerInfo = nativeContainerInfo;
 
     var props = this._currentElement.props;
 
@@ -526,48 +575,101 @@ ReactDOMComponent.Mixin = {
         transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
       case 'button':
-        props = ReactDOMButton.getNativeProps(this, props, context);
+        props = ReactDOMButton.getNativeProps(this, props, nativeParent);
         break;
       case 'input':
-        ReactDOMInput.mountWrapper(this, props, context);
-        props = ReactDOMInput.getNativeProps(this, props, context);
+        ReactDOMInput.mountWrapper(this, props, nativeParent);
+        props = ReactDOMInput.getNativeProps(this, props);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
       case 'option':
-        ReactDOMOption.mountWrapper(this, props, context);
-        props = ReactDOMOption.getNativeProps(this, props, context);
+        ReactDOMOption.mountWrapper(this, props, nativeParent);
+        props = ReactDOMOption.getNativeProps(this, props);
         break;
       case 'select':
-        ReactDOMSelect.mountWrapper(this, props, context);
-        props = ReactDOMSelect.getNativeProps(this, props, context);
-        context = ReactDOMSelect.processChildContext(this, props, context);
+        ReactDOMSelect.mountWrapper(this, props, nativeParent);
+        props = ReactDOMSelect.getNativeProps(this, props);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
       case 'textarea':
-        ReactDOMTextarea.mountWrapper(this, props, context);
-        props = ReactDOMTextarea.getNativeProps(this, props, context);
+        ReactDOMTextarea.mountWrapper(this, props, nativeParent);
+        props = ReactDOMTextarea.getNativeProps(this, props);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
     }
 
     assertValidProps(this, props);
-    if (__DEV__) {
-      if (context[validateDOMNesting.ancestorInfoContextKey]) {
-        validateDOMNesting(
-          this._tag,
-          this,
-          context[validateDOMNesting.ancestorInfoContextKey]
-        );
+
+    // We create tags in the namespace of their parent container, except HTML
+    // tags get no namespace.
+    var namespaceURI;
+    var parentTag;
+    if (nativeParent != null) {
+      namespaceURI = nativeParent._namespaceURI;
+      parentTag = nativeParent._tag;
+    } else if (nativeContainerInfo._tag) {
+      namespaceURI = nativeContainerInfo._namespaceURI;
+      parentTag = nativeContainerInfo._tag;
+    }
+    if (namespaceURI == null ||
+        namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject') {
+      namespaceURI = DOMNamespaces.html;
+    }
+    if (namespaceURI === DOMNamespaces.html) {
+      if (this._tag === 'svg') {
+        namespaceURI = DOMNamespaces.svg;
+      } else if (this._tag === 'math') {
+        namespaceURI = DOMNamespaces.mathml;
       }
+    }
+    this._namespaceURI = namespaceURI;
+
+    if (__DEV__) {
+      var parentInfo;
+      if (nativeParent != null) {
+        parentInfo = nativeParent._ancestorInfo;
+      } else if (nativeContainerInfo._tag) {
+        parentInfo = nativeContainerInfo._ancestorInfo;
+      }
+      if (parentInfo) {
+        // parentInfo should always be present except for the top-level
+        // component when server rendering
+        validateDOMNesting(this._tag, this, parentInfo);
+      }
+      this._ancestorInfo =
+        validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);
     }
 
     var mountImage;
     if (transaction.useCreateElement) {
-      var ownerDocument = context[ReactMount.ownerDocumentContextKey];
-      var el = ownerDocument.createElement(this._currentElement.type);
-      DOMPropertyOperations.setAttributeForID(el, this._rootNodeID);
-      // Populate node cache
-      ReactMount.getID(el);
-      this._updateDOMProperties({}, props, transaction, el);
-      this._createInitialChildren(transaction, props, context, el);
-      mountImage = el;
+      var ownerDocument = nativeContainerInfo._ownerDocument;
+      var el;
+      if (namespaceURI === DOMNamespaces.html) {
+        if (this._tag === 'script') {
+          // Create the script via .innerHTML so its "parser-inserted" flag is
+          // set to true and it does not execute
+          var div = ownerDocument.createElement('div');
+          var type = this._currentElement.type;
+          div.innerHTML = `<${type}></${type}>`;
+          el = div.removeChild(div.firstChild);
+        } else {
+          el = ownerDocument.createElement(this._currentElement.type);
+        }
+      } else {
+        el = ownerDocument.createElementNS(
+          namespaceURI,
+          this._currentElement.type
+        );
+      }
+      ReactDOMComponentTree.precacheNode(this, el);
+      this._flags |= Flags.hasCachedChildNodes;
+      if (!this._nativeParent) {
+        DOMPropertyOperations.setAttributeForRoot(el);
+      }
+      this._updateDOMProperties(null, props, transaction);
+      var lazyTree = DOMLazyTree(el);
+      this._createInitialChildren(transaction, props, context, lazyTree);
+      mountImage = lazyTree;
     } else {
       var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
       var tagContent = this._createContentMarkup(transaction, props, context);
@@ -580,8 +682,13 @@ ReactDOMComponent.Mixin = {
     }
 
     switch (this._tag) {
-      case 'button':
       case 'input':
+        transaction.getReactMountReady().enqueue(
+          mountReadyInputWrapper,
+          this
+        );
+        // falls through
+      case 'button':
       case 'select':
       case 'textarea':
         if (props.autoFocus) {
@@ -621,7 +728,9 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
-        enqueuePutListener(this._rootNodeID, propKey, propValue, transaction);
+        if (propValue) {
+          enqueuePutListener(this, propKey, propValue, transaction);
+        }
       } else {
         if (propKey === STYLE) {
           if (propValue) {
@@ -631,11 +740,13 @@ ReactDOMComponent.Mixin = {
             }
             propValue = this._previousStyleCopy = assign({}, props.style);
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
+          propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
+          if (propKey !== CHILDREN) {
+            markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
+          }
         } else {
           markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
         }
@@ -651,8 +762,11 @@ ReactDOMComponent.Mixin = {
       return ret;
     }
 
-    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID;
+    if (!this._nativeParent) {
+      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+    }
+    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
+    return ret;
   },
 
   /**
@@ -684,7 +798,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          processChildContext(context, this)
+          context
         );
         ret = mountImages.join('');
       }
@@ -706,12 +820,12 @@ ReactDOMComponent.Mixin = {
     }
   },
 
-  _createInitialChildren: function(transaction, props, context, el) {
+  _createInitialChildren: function(transaction, props, context, lazyTree) {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        setInnerHTML(el, innerHTML.__html);
+        DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
       }
     } else {
       var contentToUse =
@@ -719,15 +833,15 @@ ReactDOMComponent.Mixin = {
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
-        setTextContent(el, contentToUse);
+        DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          processChildContext(context, this)
+          context
         );
         for (var i = 0; i < mountImages.length; i++) {
-          el.appendChild(mountImages[i]);
+          DOMLazyTree.queueChild(lazyTree, mountImages[i]);
         }
       }
     }
@@ -786,18 +900,17 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    var node = ReactMount.getNode(this._rootNodeID);
     assertValidProps(this, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction, node);
+    this._updateDOMProperties(lastProps, nextProps, transaction);
     this._updateDOMChildren(
       lastProps,
       nextProps,
       transaction,
-      processChildContext(context, this)
+      context
     );
 
-    if (!canDefineProperty && this._nodeWithLegacyProperties) {
-      this._nodeWithLegacyProperties.props = nextProps;
+    if (!canDefineProperty && this._flags & Flags.nodeHasLegacyProperties) {
+      this._nativeNode.props = nextProps;
     }
 
     if (this._tag === 'select') {
@@ -821,15 +934,16 @@ ReactDOMComponent.Mixin = {
    * @private
    * @param {object} lastProps
    * @param {object} nextProps
-   * @param {ReactReconcileTransaction} transaction
+   * @param {?DOMElement} node
    */
-  _updateDOMProperties: function(lastProps, nextProps, transaction, node) {
+  _updateDOMProperties: function(lastProps, nextProps, transaction) {
     var propKey;
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey)) {
+         !lastProps.hasOwnProperty(propKey) ||
+         lastProps[propKey] == null) {
         continue;
       }
       if (propKey === STYLE) {
@@ -846,20 +960,22 @@ ReactDOMComponent.Mixin = {
           // Only call deleteListener if there was a listener previously or
           // else willDeleteListener gets called when there wasn't actually a
           // listener (e.g., onClick={null})
-          deleteListener(this._rootNodeID, propKey);
+          deleteListener(this, propKey);
         }
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        DOMPropertyOperations.deleteValueForProperty(node, propKey);
+        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
-      var lastProp = propKey === STYLE ?
-        this._previousStyleCopy :
-        lastProps[propKey];
-      if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
+      var lastProp =
+        propKey === STYLE ? this._previousStyleCopy :
+        lastProps != null ? lastProps[propKey] : undefined;
+      if (!nextProps.hasOwnProperty(propKey) ||
+          nextProp === lastProp ||
+          nextProp == null && lastProp == null) {
         continue;
       }
       if (propKey === STYLE) {
@@ -910,19 +1026,23 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          enqueuePutListener(this._rootNodeID, propKey, nextProp, transaction);
+          enqueuePutListener(this, propKey, nextProp, transaction);
         } else if (lastProp) {
-          deleteListener(this._rootNodeID, propKey);
+          deleteListener(this, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
+        if (propKey === CHILDREN) {
+          nextProp = null;
+        }
         DOMPropertyOperations.setValueForAttribute(
-          node,
+          getNode(this),
           propKey,
           nextProp
         );
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
+        var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertantly setting to a string. This
         // brings us in line with the same behavior we have on initial render.
@@ -934,7 +1054,11 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      CSSPropertyOperations.setValueForStyles(node, styleUpdates);
+      CSSPropertyOperations.setValueForStyles(
+        getNode(this),
+        styleUpdates,
+        this
+      );
     }
   },
 
@@ -987,6 +1111,10 @@ ReactDOMComponent.Mixin = {
     }
   },
 
+  getNativeNode: function() {
+    return getNode(this);
+  },
+
   /**
    * Destroys all event registrations for this instance. Does not remove from
    * the DOM. That must be done by the parent.
@@ -1032,22 +1160,19 @@ ReactDOMComponent.Mixin = {
     }
 
     this.unmountChildren();
-    ReactBrowserEventEmitter.deleteAllListeners(this._rootNodeID);
+    ReactDOMComponentTree.uncacheNode(this);
+    EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
+    this._domID = null;
     this._wrapperState = null;
-    if (this._nodeWithLegacyProperties) {
-      var node = this._nodeWithLegacyProperties;
-      node._reactInternalComponent = null;
-      this._nodeWithLegacyProperties = null;
-    }
   },
 
   getPublicInstance: function() {
-    if (!this._nodeWithLegacyProperties) {
-      var node = ReactMount.getNode(this._rootNodeID);
-
-      node._reactInternalComponent = this;
+    var node = getNode(this);
+    if (this._flags & Flags.nodeHasLegacyProperties) {
+      return node;
+    } else {
       node.getDOMNode = legacyGetDOMNode;
       node.isMounted = legacyIsMounted;
       node.setState = legacySetStateEtc;
@@ -1068,22 +1193,30 @@ ReactDOMComponent.Mixin = {
         node.props = this._currentElement.props;
       }
 
-      this._nodeWithLegacyProperties = node;
+      this._flags |= Flags.nodeHasLegacyProperties;
+      return node;
     }
-    return this._nodeWithLegacyProperties;
   },
 
 };
 
-ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {
+ReactPerf.measureMethods(ReactDOMComponent.Mixin, 'ReactDOMComponent', {
   mountComponent: 'mountComponent',
-  updateComponent: 'updateComponent',
+  receiveComponent: 'receiveComponent',
 });
 
 assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
-  ReactMultiChild.Mixin
+  ReactMultiChild.Mixin,
+  {
+    prepareToManageChildren: function() {
+      // Before we add, remove, or reorder the children of a node, make sure
+      // we have references to all of its children so we don't lose them, even
+      // if nefarious browser plugins add extra nodes to our tree.
+      ReactDOMComponentTree.precacheChildNodes(this, getNode(this));
+    },
+  }
 );
 
 module.exports = ReactDOMComponent;

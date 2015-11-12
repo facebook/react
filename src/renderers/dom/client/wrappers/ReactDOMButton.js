@@ -30,7 +30,7 @@ var mouseListenerNames = {
  * when `disabled` is set.
  */
 var ReactDOMButton = {
-  getNativeProps: function(inst, props, context) {
+  getNativeProps: function(inst, props) {
     if (!props.disabled) {
       return props;
     }

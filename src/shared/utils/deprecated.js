@@ -20,11 +20,12 @@ var warning = require('warning');
  *
  * @param {string} fnName The name of the function
  * @param {string} newModule The module that fn will exist in
+ * @param {string} newPackage The module that fn will exist in
  * @param {*} ctx The context this forwarded call should run in
  * @param {function} fn The function to forward on to
  * @return {function} The function that will warn once and then call fn
  */
-function deprecated(fnName, newModule, ctx, fn) {
+function deprecated(fnName, newModule, newPackage, ctx, fn) {
   var warned = false;
   if (__DEV__) {
     var newFn = function() {
@@ -33,11 +34,12 @@ function deprecated(fnName, newModule, ctx, fn) {
         // Require examples in this string must be split to prevent React's
         // build tools from mistaking them for real requires.
         // Otherwise the build tools will attempt to build a '%s' module.
-        '`require' + '("react").%s` is deprecated. Please use `require' + '("%s").%s` ' +
+        'React.%s is deprecated. Please use %s.%s from require' + '(\'%s\') ' +
         'instead.',
         fnName,
         newModule,
-        fnName
+        fnName,
+        newPackage
       );
       warned = true;
       return fn.apply(ctx, arguments);

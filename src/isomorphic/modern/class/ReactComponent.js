@@ -13,6 +13,7 @@
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
+var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
@@ -28,6 +29,8 @@ function ReactComponent(props, context, updater) {
   // renderer.
   this.updater = updater || ReactNoopUpdateQueue;
 }
+
+ReactComponent.prototype.isReactComponent = {};
 
 /**
  * Sets a subset of the state. Always use this to mutate
@@ -105,7 +108,7 @@ if (__DEV__) {
   var deprecatedAPIs = {
     getDOMNode: [
       'getDOMNode',
-      'Use React.findDOMNode(component) instead.',
+      'Use ReactDOM.findDOMNode(component) instead.',
     ],
     isMounted: [
       'isMounted',
@@ -114,7 +117,7 @@ if (__DEV__) {
     ],
     replaceProps: [
       'replaceProps',
-      'Instead, call React.render again at the top level.',
+      'Instead, call render again at the top level.',
     ],
     replaceState: [
       'replaceState',
@@ -123,11 +126,11 @@ if (__DEV__) {
     ],
     setProps: [
       'setProps',
-      'Instead, call React.render again at the top level.',
+      'Instead, call render again at the top level.',
     ],
   };
   var defineDeprecationWarning = function(methodName, info) {
-    try {
+    if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           warning(
@@ -139,8 +142,6 @@ if (__DEV__) {
           return undefined;
         },
       });
-    } catch (x) {
-      // IE will fail on defineProperty (es5-shim/sham too)
     }
   };
   for (var fnName in deprecatedAPIs) {

@@ -12,80 +12,50 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactReconciler = require('ReactReconciler');
 
-var invariant = require('invariant');
+var assign = require('Object.assign');
 
-var component;
-// This registry keeps track of the React IDs of the components that rendered to
-// `null` (in reality a placeholder such as `noscript`)
-var nullComponentIDsRegistry = {};
+var placeholderElement;
 
 var ReactEmptyComponentInjection = {
-  injectEmptyComponent: function(emptyComponent) {
-    component = ReactElement.createFactory(emptyComponent);
+  injectEmptyComponent: function(component) {
+    placeholderElement = ReactElement.createElement(component);
   },
 };
 
-var ReactEmptyComponentType = function() {};
-ReactEmptyComponentType.prototype.componentDidMount = function() {
-  var internalInstance = ReactInstanceMap.get(this);
-  // TODO: Make sure we run these methods in the correct order, we shouldn't
-  // need this check. We're going to assume if we're here it means we ran
-  // componentWillUnmount already so there is no internal instance (it gets
-  // removed as part of the unmounting process).
-  if (!internalInstance) {
-    return;
-  }
-  registerNullComponentID(internalInstance._rootNodeID);
+var ReactEmptyComponent = function(instantiate) {
+  this._currentElement = null;
+  this._renderedComponent = instantiate(placeholderElement);
 };
-ReactEmptyComponentType.prototype.componentWillUnmount = function() {
-  var internalInstance = ReactInstanceMap.get(this);
-  // TODO: Get rid of this check. See TODO in componentDidMount.
-  if (!internalInstance) {
-    return;
-  }
-  deregisterNullComponentID(internalInstance._rootNodeID);
-};
-ReactEmptyComponentType.prototype.render = function() {
-  invariant(
-    component,
-    'Trying to return null from a render, but no null placeholder component ' +
-    'was injected.'
-  );
-  return component();
-};
+assign(ReactEmptyComponent.prototype, {
+  construct: function(element) {
+  },
+  mountComponent: function(
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
+    return ReactReconciler.mountComponent(
+      this._renderedComponent,
+      transaction,
+      nativeParent,
+      nativeContainerInfo,
+      context
+    );
+  },
+  receiveComponent: function() {
+  },
+  getNativeNode: function() {
+    return ReactReconciler.getNativeNode(this._renderedComponent);
+  },
+  unmountComponent: function() {
+    ReactReconciler.unmountComponent(this._renderedComponent);
+    this._renderedComponent = null;
+  },
+});
 
-var emptyElement = ReactElement.createElement(ReactEmptyComponentType);
-
-/**
- * Mark the component as having rendered to null.
- * @param {string} id Component's `_rootNodeID`.
- */
-function registerNullComponentID(id) {
-  nullComponentIDsRegistry[id] = true;
-}
-
-/**
- * Unmark the component as having rendered to null: it renders to something now.
- * @param {string} id Component's `_rootNodeID`.
- */
-function deregisterNullComponentID(id) {
-  delete nullComponentIDsRegistry[id];
-}
-
-/**
- * @param {string} id Component's `_rootNodeID`.
- * @return {boolean} True if the component is rendered to null.
- */
-function isNullComponentID(id) {
-  return !!nullComponentIDsRegistry[id];
-}
-
-var ReactEmptyComponent = {
-  emptyElement: emptyElement,
-  injection: ReactEmptyComponentInjection,
-  isNullComponentID: isNullComponentID,
-};
+ReactEmptyComponent.injection = ReactEmptyComponentInjection;
 
 module.exports = ReactEmptyComponent;

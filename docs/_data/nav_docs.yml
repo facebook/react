@@ -43,7 +43,7 @@
     title: Working With the Browser
     subitems:
     - id: more-about-refs
-      title: More About Refs
+      title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
   - id: addons
@@ -67,6 +67,8 @@
       title: Performance Tools
   - id: advanced-performance
     title: Advanced Performance
+  - id: context
+    title: Context
 - title: Reference
   items:
   - id: top-level-api

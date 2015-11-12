@@ -16,7 +16,6 @@ var MorphingComponent;
 var React;
 var ReactDOM;
 var ReactCurrentOwner;
-var ReactMount;
 var ReactPropTypes;
 var ReactServerRendering;
 var ReactTestUtils;
@@ -27,14 +26,13 @@ var reactComponentExpect;
 describe('ReactCompositeComponent', function() {
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
-    ReactMount = require('ReactMount');
     ReactServerRendering = require('ReactServerRendering');
     ReactUpdates = require('ReactUpdates');
 
@@ -324,8 +322,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should silently allow `setState`, not call cb on unmounting components',
-     function() {
+  it('should silently allow `setState`, not call cb on unmounting components', function() {
     var cbCalled = false;
     var container = document.createElement('div');
     document.body.appendChild(container);
@@ -384,8 +381,10 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Cannot update during an existing state ' +
-      'transition (such as within `render`). Render methods should be a pure ' +
-      'function of props and state.'
+      'transition (such as within `render` or another component\'s ' +
+      'constructor). Render methods should be a pure function of props and ' +
+      'state; constructor side-effects are an anti-pattern, but can be moved ' +
+      'to `componentWillMount`.'
     );
 
     // The setState call is queued and then executed as a second pass. This
@@ -460,11 +459,10 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       innerInstance.setProps({value: 1});
     }).toThrow(
-      'Invariant Violation: setProps(...): You called `setProps` on a ' +
-      'component with a parent. This is an anti-pattern since props will get ' +
-      'reactively updated when rendered. Instead, change the owner\'s ' +
-      '`render` method to pass the correct value as props to the component ' +
-      'where it is created.'
+      'setProps(...): You called `setProps` on a component with a parent. ' +
+      'This is an anti-pattern since props will get reactively updated when ' +
+      'rendered. Instead, change the owner\'s `render` method to pass the ' +
+      'correct value as props to the component where it is created.'
     );
   });
 
@@ -489,8 +487,6 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     var innerUnmounted = false;
 
-    spyOn(ReactMount, 'purgeID').andCallThrough();
-
     var Component = React.createClass({
       render: function() {
         return (
@@ -503,11 +499,6 @@ describe('ReactCompositeComponent', function() {
     });
     var Inner = React.createClass({
       componentWillUnmount: function() {
-        // It's important that ReactMount.purgeID is called after any component
-        // lifecycle methods, because a componentWillMount implementation is
-        // likely to call React.findDOMNode(this), which will repopulate the
-        // node cache after it's been cleared, causing a memory leak.
-        expect(ReactMount.purgeID.calls.length).toBe(0);
         innerUnmounted = true;
       },
       render: function() {
@@ -518,12 +509,6 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Component />, container);
     ReactDOM.unmountComponentAtNode(container);
     expect(innerUnmounted).toBe(true);
-
-    // The text and both <div /> elements and their wrappers each call
-    // unmountIDFromEnvironment which calls purgeID, for a total of 3.
-    // TODO: Test the effect of this. E.g. does the node cache get repopulated
-    // after a getDOMNode call?
-    expect(ReactMount.purgeID.callCount).toBe(3);
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
@@ -606,6 +591,29 @@ describe('ReactCompositeComponent', function() {
 
     var component = ReactTestUtils.renderIntoDocument(<Parent />);
     expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
+  });
+
+  it('should skip update when rerendering element in container', function() {
+    var Parent = React.createClass({
+      render: function() {
+        return <div>{this.props.children}</div>;
+      },
+    });
+
+    var childRenders = 0;
+    var Child = React.createClass({
+      render: function() {
+        childRenders++;
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    var child = <Child />;
+
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    expect(childRenders).toBe(1);
   });
 
   it('should pass context when re-rendered for static child', function() {
@@ -1053,7 +1061,7 @@ describe('ReactCompositeComponent', function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrow();  // has no method 'render'
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'NotAComponent(...): No `render` method found'
     );
   });
@@ -1189,5 +1197,35 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls.length).toBe(0);
   });
 
+  it('should warn when a class does not extend React.Component', function() {
+
+    var container = document.createElement('div');
+
+    class Foo {
+      render() {
+        return <span />;
+      }
+    }
+
+    function Bar() { }
+    Bar.prototype = Object.create(React.Component.prototype);
+    Bar.prototype.render = function() {
+      return <span />;
+    };
+
+    expect(console.error.calls.length).toBe(0);
+
+    ReactDOM.render(<Bar />, container);
+
+    expect(console.error.calls.length).toBe(0);
+
+    ReactDOM.render(<Foo />, container);
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'React component classes must extend React.Component'
+    );
+
+  });
 
 });

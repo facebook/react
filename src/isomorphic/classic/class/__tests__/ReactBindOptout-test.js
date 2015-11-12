@@ -11,7 +11,6 @@
 /*global global:true*/
 'use strict';
 
-var mocks = require('mocks');
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
@@ -21,9 +20,9 @@ describe('autobind optout', function() {
 
   it('should work with manual binding', function() {
 
-    var mouseDidEnter = mocks.getMockFunction();
-    var mouseDidLeave = mocks.getMockFunction();
-    var mouseDidClick = mocks.getMockFunction();
+    var mouseDidEnter = jest.genMockFn();
+    var mouseDidLeave = jest.genMockFn();
+    var mouseDidClick = jest.genMockFn();
 
     var TestBindComponent = React.createClass({
       autobind: false,
@@ -83,7 +82,7 @@ describe('autobind optout', function() {
   });
 
   it('should not hold reference to instance', function() {
-    var mouseDidClick = function () {
+    var mouseDidClick = function() {
       void this.state.something;
     };
 
@@ -129,17 +128,17 @@ describe('autobind optout', function() {
 
     expect(mountedInstance1.onClick).toBe(mountedInstance2.onClick);
 
-    expect(function () {
+    expect(function() {
       ReactTestUtils.Simulate.click(rendered1);
     }).toThrow();
 
-    expect(function () {
+    expect(function() {
       ReactTestUtils.Simulate.click(rendered2);
     }).toThrow();
   });
 
   it('works with mixins that have not opted out of autobinding', function() {
-    var mouseDidClick = mocks.getMockFunction();
+    var mouseDidClick = jest.genMockFn();
 
     var TestMixin = {
       onClick: mouseDidClick,
@@ -165,7 +164,7 @@ describe('autobind optout', function() {
   });
 
   it('works with mixins that have opted out of autobinding', function() {
-    var mouseDidClick = mocks.getMockFunction();
+    var mouseDidClick = jest.genMockFn();
 
     var TestMixin = {
       autobind: false,

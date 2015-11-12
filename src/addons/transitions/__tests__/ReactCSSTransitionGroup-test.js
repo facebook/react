@@ -11,6 +11,8 @@
 
 'use strict';
 
+var CSSCore = require('CSSCore');
+
 var React;
 var ReactDOM;
 var ReactCSSTransitionGroup;
@@ -21,6 +23,7 @@ describe('ReactCSSTransitionGroup', function() {
   var container;
 
   beforeEach(function() {
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
@@ -29,9 +32,45 @@ describe('ReactCSSTransitionGroup', function() {
     spyOn(console, 'error');
   });
 
-  it('should warn after time with no transitionend', function() {
+  it('should warn if timeouts aren\'t specified', function() {
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={true}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+
+    // Warning about the missing transitionLeaveTimeout prop
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should not warn if timeouts is zero', function() {
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={true}
+        transitionLeaveTimeout={0}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+
+    expect(console.error.argsForCall.length).toBe(0);
+  });
+
+  it('should clean-up silently after the timeout elapses', function() {
     var a = ReactDOM.render(
-      <ReactCSSTransitionGroup transitionName="yolo">
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeaveTimeout={200}
+      >
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
@@ -41,7 +80,11 @@ describe('ReactCSSTransitionGroup', function() {
     setTimeout.mock.calls.length = 0;
 
     ReactDOM.render(
-      <ReactCSSTransitionGroup transitionName="yolo">
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeaveTimeout={200}
+      >
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
       container
@@ -53,14 +96,18 @@ describe('ReactCSSTransitionGroup', function() {
     // For some reason jst is adding extra setTimeout()s and grunt test isn't,
     // so we need to do this disgusting hack.
     for (var i = 0; i < setTimeout.mock.calls.length; i++) {
-      if (setTimeout.mock.calls[i][1] === 5000) {
+      if (setTimeout.mock.calls[i][1] === 200) {
         setTimeout.mock.calls[i][0]();
         break;
       }
     }
 
-    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
-    expect(console.error.argsForCall.length).toBe(1);
+    // No warnings
+    expect(console.error.argsForCall.length).toBe(0);
+
+    // The leaving child has been removed
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
   });
 
   it('should keep both sets of DOM nodes around', function() {
@@ -171,4 +218,77 @@ describe('ReactCSSTransitionGroup', function() {
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
   });
 
+  it('should use transition-type specific names when they\'re provided', function() {
+    var customTransitionNames = {
+      enter: 'custom-entering',
+      leave: 'custom-leaving',
+    };
+
+    var a = ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={customTransitionNames}
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
+
+    // Add an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={customTransitionNames}
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="one" id="one" />
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    var enteringNode = ReactDOM.findDOMNode(a).childNodes[1];
+    expect(CSSCore.hasClass(enteringNode, 'custom-entering')).toBe(true);
+
+    // Remove an element
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName={customTransitionNames}
+        transitionEnterTimeout={1}
+        transitionLeaveTimeout={1}
+      >
+        <span key="two" id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
+
+    var leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
+    expect(CSSCore.hasClass(leavingNode, 'custom-leaving')).toBe(true);
+  });
+
+  it('should clear transition timeouts when unmounted', function() {
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionName="yolo"
+            transitionEnterTimeout={500}>
+            {this.props.children}
+          </ReactCSSTransitionGroup>
+        );
+      },
+    });
+
+    ReactDOM.render(<Component/>, container);
+    ReactDOM.render(<Component><span key="yolo" id="yolo"/></Component>, container);
+
+    ReactDOM.unmountComponentAtNode(container);
+
+    // Testing that no exception is thrown here, as the timeout has been cleared.
+    jest.runAllTimers();
+  });
 });

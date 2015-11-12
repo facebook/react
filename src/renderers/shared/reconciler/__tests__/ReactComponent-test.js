@@ -15,11 +15,8 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-var mocks;
-
 describe('ReactComponent', function() {
   beforeEach(function() {
-    mocks = require('mocks');
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
@@ -31,15 +28,13 @@ describe('ReactComponent', function() {
     expect(function() {
       ReactDOM.render(<div></div>, [container]);
     }).toThrow(
-      'Invariant Violation: _registerComponent(...): Target container ' +
-      'is not a DOM element.'
+      '_registerComponent(...): Target container is not a DOM element.'
     );
 
     expect(function() {
       ReactDOM.render(<div></div>, null);
     }).toThrow(
-      'Invariant Violation: _registerComponent(...): Target container ' +
-      'is not a DOM element.'
+      '_registerComponent(...): Target container is not a DOM element.'
     );
   });
 
@@ -51,7 +46,8 @@ describe('ReactComponent', function() {
   });
 
   it('should support refs on owned components', function() {
-    var innerObj = {}, outerObj = {};
+    var innerObj = {};
+    var outerObj = {};
 
     var Wrapper = React.createClass({
 
@@ -101,7 +97,8 @@ describe('ReactComponent', function() {
   });
 
   it('should support new-style refs', function() {
-    var innerObj = {}, outerObj = {};
+    var innerObj = {};
+    var outerObj = {};
 
     var Wrapper = React.createClass({
       getObject: function() {
@@ -258,7 +255,7 @@ describe('ReactComponent', function() {
   });
 
   it('fires the callback after a component is rendered', function() {
-    var callback = mocks.getMockFunction();
+    var callback = jest.genMockFn();
     var container = document.createElement('div');
     ReactDOM.render(<div />, container, callback);
     expect(callback.mock.calls.length).toBe(1);
@@ -282,9 +279,9 @@ describe('ReactComponent', function() {
     instance.getDOMNode();
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'Potato.getDOMNode(...) is deprecated. Please use ' +
-      'React.findDOMNode(instance) instead.'
+      'ReactDOM.findDOMNode(instance) instead.'
     );
   });
 
@@ -293,23 +290,20 @@ describe('ReactComponent', function() {
 
     var X = undefined;
     expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: undefined.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: undefined.'
     );
 
     var Y = null;
     expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: null.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: null.'
     );
 
     var Z = {};
     expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: object.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: object.'
     );
 
     // One warning for each element creation

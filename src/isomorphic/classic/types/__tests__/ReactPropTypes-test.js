@@ -138,6 +138,14 @@ describe('ReactPropTypes', function() {
   });
 
   describe('ArrayOf Type', function() {
+    it('should fail for invalid argument', function() {
+      typeCheckFail(
+        PropTypes.arrayOf({ foo: PropTypes.string }),
+        { foo: 'bar' },
+        'Property `testProp` of component `testComponent` has invalid PropType notation inside arrayOf.'
+      );
+    });
+
     it('should support the arrayOf propTypes', function() {
       typeCheckPass(PropTypes.arrayOf(PropTypes.number), [1, 2, 3]);
       typeCheckPass(PropTypes.arrayOf(PropTypes.string), ['a', 'b', 'c']);
@@ -368,6 +376,7 @@ describe('ReactPropTypes', function() {
       typeCheckFail(PropTypes.node, true, failMessage);
       typeCheckFail(PropTypes.node, function() {}, failMessage);
       typeCheckFail(PropTypes.node, {key: function() {}}, failMessage);
+      typeCheckFail(PropTypes.node, {key: <div />}, failMessage);
     });
 
     it('should not warn for valid values', function() {
@@ -377,7 +386,6 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.node, <MyComponent />);
       typeCheckPass(PropTypes.node, 'Some string');
       typeCheckPass(PropTypes.node, []);
-      typeCheckPass(PropTypes.node, {});
 
       typeCheckPass(PropTypes.node, [
         123,
@@ -402,20 +410,6 @@ describe('ReactPropTypes', function() {
         k5: undefined,
       }));
       expect(console.error.calls).toEqual([]);
-
-      // This should also pass, though it warns
-      typeCheckPass(PropTypes.node, {
-        k0: 123,
-        k1: 'Some string',
-        k2: <div />,
-        k3: {
-          k30: <MyComponent />,
-          k31: {k310: <a />},
-          k32: 'Another string',
-        },
-        k4: null,
-        k5: undefined,
-      });
     });
 
     it('should not warn for iterables', function() {
@@ -475,6 +469,14 @@ describe('ReactPropTypes', function() {
   });
 
   describe('ObjectOf Type', function() {
+    it('should fail for invalid argument', function() {
+      typeCheckFail(
+        PropTypes.objectOf({ foo: PropTypes.string }),
+        { foo: 'bar' },
+        'Property `testProp` of component `testComponent` has invalid PropType notation inside objectOf.'
+      );
+    });
+
     it('should support the objectOf propTypes', function() {
       typeCheckPass(PropTypes.objectOf(PropTypes.number), {a: 1, b: 2, c: 3});
       typeCheckPass(
@@ -778,7 +780,7 @@ describe('ReactPropTypes', function() {
 
   describe('Custom validator', function() {
     beforeEach(function() {
-      require('mock-modules').dumpCache();
+      jest.resetModuleRegistry();
       spyOn(console, 'error');
     });
 

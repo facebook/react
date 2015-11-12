@@ -18,6 +18,7 @@ var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
 var ReactPropTypes = require('ReactPropTypes');
+var ReactVersion = require('ReactVersion');
 
 var assign = require('Object.assign');
 var onlyChild = require('onlyChild');
@@ -63,6 +64,8 @@ var React = {
   // This looks DOM specific but these are actually isomorphic helpers
   // since they are just generating DOM strings.
   DOM: ReactDOMFactories,
+
+  version: ReactVersion,
 
   // Hook for JSX spread, don't use this for anything else.
   __spread: assign,

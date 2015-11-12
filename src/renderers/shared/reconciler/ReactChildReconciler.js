@@ -90,7 +90,8 @@ var ReactChildReconciler = {
       var prevChild = prevChildren && prevChildren[name];
       var prevElement = prevChild && prevChild._currentElement;
       var nextElement = nextChildren[name];
-      if (shouldUpdateReactComponent(prevElement, nextElement)) {
+      if (prevChild != null &&
+          shouldUpdateReactComponent(prevElement, nextElement)) {
         ReactReconciler.receiveComponent(
           prevChild, nextElement, transaction, context
         );

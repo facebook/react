@@ -35,6 +35,12 @@ function FallbackCompositionState(root) {
 }
 
 assign(FallbackCompositionState.prototype, {
+  destructor: function() {
+    this._root = null;
+    this._startText = null;
+    this._fallbackText = null;
+  },
+
   /**
    * Get current text of input.
    *

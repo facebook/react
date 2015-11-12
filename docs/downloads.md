@@ -4,7 +4,7 @@ title: Downloads
 layout: single
 ---
 Download the starter kit to get everything you need to
-[get started with React](/react/docs/getting-started.html). The starter kit includes React, the in-browser JSX transformer, and some simple example apps.
+[get started with React](/react/docs/getting-started.html). The starter kit includes React and some simple example apps.
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
@@ -20,63 +20,53 @@ If you're just starting out, make sure to use the development version.
 
 ## Individual Downloads
 
-#### <a href="https://fb.me/react-{{site.react_version}}.js">React {{site.react_version}} (development)</a>
-The uncompressed, development version of React core with inline documentation.
+#### React {{site.react_version}} (development)
+The uncompressed, development version of [react.js](https://fb.me/react-{{site.react_version}}.js) and [react-dom.js](https://fb.me/react-dom-{{site.react_version}}.js) with inline documentation (you need both files).
 
 ```html
 <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
 ```
 
-#### <a href="https://fb.me/react-{{site.react_version}}.min.js">React {{site.react_version}} (production)</a>
-The compressed, production version of React core.
+#### React {{site.react_version}} (production)
+The compressed, production version of [react.js](https://fb.me/react-{{site.react_version}}.min.js) and [react-dom.js](https://fb.me/react-dom-{{site.react_version}}.min.js) (you need both).
 
 ```html
 <script src="https://fb.me/react-{{site.react_version}}.min.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.min.js"></script>
 ```
 
-#### <a href="https://fb.me/react-with-addons-{{site.react_version}}.js">React with Add-Ons {{site.react_version}} (development)</a>
-The uncompressed, development version of React with [add-ons](/react/docs/addons.html).
+#### React with Add-Ons {{site.react_version}} (development)
+The uncompressed, development version of React with [optional add-ons](/react/docs/addons.html).
 
 ```html
 <script src="https://fb.me/react-with-addons-{{site.react_version}}.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
 ```
 
-#### <a href="https://fb.me/react-with-addons-{{site.react_version}}.min.js">React with Add-Ons {{site.react_version}} (production)</a>
-The compressed, production version of React with [add-ons](/react/docs/addons.html).
+#### React with Add-Ons {{site.react_version}} (production)
+The compressed, production version of React with [optional add-ons](/react/docs/addons.html).
 
 ```html
 <script src="https://fb.me/react-with-addons-{{site.react_version}}.min.js"></script>
-```
-
-#### <a href="https://fb.me/JSXTransformer-{{site.react_version}}.js">JSX Transformer</a>
-The JSX transformer used to support [XML syntax](/react/docs/jsx-in-depth.html) in JavaScript.
-
-```html
-<script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.min.js"></script>
 ```
 
 All scripts are also available via [CDNJS](https://cdnjs.com/libraries/react/).
 
 ## npm
 
-To install the JSX transformer on your computer, run:
-
-```sh
-$ npm install -g react-tools
-```
-
-For more info about the `jsx` binary, see the [Getting Started](/react/docs/getting-started.html#offline-transform) guide.
-
-If you're using an npm-compatible packaging system like browserify or webpack, you can use the `react` package. After installing it using `npm install react` or adding `react` to `package.json`, you can use React:
+We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). You can use the `react` and `react-dom` packages. After installing it using `npm install --save react react-dom`, you can use:
 
 ```js
 var React = require('react');
-React.render(...);
+var ReactDOM = require('react-dom');
+ReactDOM.render(<App />, ...);
 ```
 
-If you'd like to use any [add-ons](/react/docs/addons.html), use `var React = require('react/addons');` instead.
+Each of the [add-ons](/react/docs/addons.html) lives in its own package.
 
-**Note:** by default, React will be in development mode. To use React in production mode, set the environment variable `NODE_ENV` to `production`. A minifier that performs dead-code elimination such as [UglifyJS](https://github.com/mishoo/UglifyJS2) is recommended to completely remove the extra code present in development mode.
+**Note:** by default, React will be in development mode. To use React in production mode, set the environment variable `NODE_ENV` to `production` (using envify or webpack's DefinePlugin). A minifier that performs dead-code elimination such as [UglifyJS](https://github.com/mishoo/UglifyJS2) is recommended to completely remove the extra code present in development mode.
 
 ## Bower
 

@@ -98,7 +98,7 @@ function getLifeCycleState(instance) {
  */
 describe('ReactComponentLifeCycle', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
@@ -285,7 +285,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('isMounted should return false when unmounted', function () {
+  it('isMounted should return false when unmounted', function() {
     var Component = React.createClass({
       render: function() {
         return <div/>;
@@ -477,11 +477,10 @@ describe('ReactComponentLifeCycle', function() {
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
-      'Invariant Violation: setProps(...): You called `setProps` on a ' +
-      'component with a parent. This is an anti-pattern since props will get ' +
-      'reactively updated when rendered. Instead, change the owner\'s ' +
-      '`render` method to pass the correct value as props to the component ' +
-      'where it is created.'
+      'setProps(...): You called `setProps` on a component with a parent. ' +
+      'This is an anti-pattern since props will get reactively updated ' +
+      'when rendered. Instead, change the owner\'s `render` method to pass ' +
+      'the correct value as props to the component where it is created.'
     );
     expect(console.error.calls.length).toBe(1);  // setProps deprecated
   });

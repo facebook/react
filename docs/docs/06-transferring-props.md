@@ -24,7 +24,7 @@ The rest of this tutorial explains best practices. It uses JSX and experimental 
 
 ## Manual Transfer
 
-Most of the time you should explicitly pass the properties down. That ensures that you only expose a subset of the inner API, one that you know will work.
+Most of the time you should explicitly pass the properties down. This ensures that you only expose a subset of the inner API, one that you know will work.
 
 ```javascript
 var FancyCheckbox = React.createClass({
@@ -37,7 +37,7 @@ var FancyCheckbox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
   </FancyCheckbox>,
@@ -51,7 +51,7 @@ But what about the `name` prop? Or the `title` prop? Or `onMouseOver`?
 
 > NOTE:
 >
-> In the example below, the `--harmony ` flag is required as this syntax is an experimental ES7 syntax. If using the in-browser JSX transformer, simply open your script with `<script type="text/jsx;harmony=true">`. See the [Rest and Spread Properties ...](/react/docs/transferring-props.html#rest-and-spread-properties-...) section below for more details.
+> The `...` syntax is part of the Object Rest Spread proposal. This proposal is on track to become a standard. See the [Rest and Spread Properties ...](/react/docs/transferring-props.html#rest-and-spread-properties-...) section below for more details.
 
 Sometimes it's fragile and tedious to pass every property along. In that case you can use [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) with rest properties to extract a set of unknown properties.
 
@@ -74,7 +74,7 @@ var FancyCheckbox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
   </FancyCheckbox>,
@@ -143,7 +143,7 @@ z; // { a: 3, b: 4 }
 
 > Note:
 >
-> Use the [JSX command-line tool](https://www.npmjs.com/package/react-tools) with the `--harmony` flag to activate the experimental ES7 syntax.
+> This proposal has reached stage 2 and is now enabled by default in Babel. Older versions of Babel may need to explicitly enable this transform with `babel --optional es7.objectRestSpread`
 
 ## Transferring with Underscore
 
