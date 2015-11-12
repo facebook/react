@@ -13,26 +13,39 @@ Finalmente, será realizado um exercício que consistirá na seleção de um *bu
 
 ### <a name="testabilidade"></a>Testabilidade do *Software*
 
+A discussão que se desenrolará nesta secção incidirá sobre o quão testável o projeto React é, isto é, até que ponto é possível verificar e validar a implementação da biblioteca. A discussão será acompanhada de exemplos e de referências que suportem a interpretação dos autores sempre que for considerado pertinente.
+
 #### <a name="controllability"></a>Controlabilidade
+
+-- Referir o estado de um objeto, ao nível da classe, e as interações entre objetos, ao nível do pacote.
 
 #### <a name="observability"></a>Observabilidade
 
+-- Referir logs do Travis CI; resultados dos testes unitários com Jest (e ReactTestUtils para simular eventos).
+
 #### <a name="isolateability"></a>Isolabilidade
+
+-- Referir a possibilidade de testes unitários com Jest, que permitem automaticamente isolar um módulo das suas dependências (https://facebook.github.io/jest/docs/automatic-mocking.html).
 
 #### <a name="separation"></a>Separação de Funcionalidades
 
+-- Referir o facto de a funcionalidade de cada classe/componente do React estar bem definida.
+
 #### <a name="understandability"></a>Inteligibilidade
+
+-- Documentação da API do React.
 
 #### <a name="heterogeneity"></a>Heterogeneidade
 
+-- Referir que a utilização de um repositório Git que pode receber contribuições de muitos utilizadores conduz à necessidade de testes de integração com Travis CI, que são aplicados em paralelo com os testes unitários definidos com Jest.
 
 ### <a name="estatisticas"></a>Estatísticas de Teste
 
-
-
+-- Exemplos de logs do Travis CI. Tentar recolher estatísticas de cobertura dos testes Travis CI. Referir possibilidade de recolher estatísticas de cobertura com Jest (https://facebook.github.io/jest/docs/api.html#config-collectcoverage-boolean). Já publiquei no fórum: https://discuss.reactjs.org/t/line-coverage-for-tests-on-react/2479
 
 ### <a name="opcional"></a>Fix Bug Report 
 
+Escolher um *bug* fácil de corrigir (eventualmente já corrigido), mas que permita ilustrar a utilização da framework Jest para a definição de testes unitários.
 
 ### <a name="analise"></a>Análise Crítica
 
