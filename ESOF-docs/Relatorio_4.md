@@ -3,7 +3,13 @@
 
 ### <a name="introducao"></a>Introdução
 
+O objetivo deste relatório é a análise dos processos de verificação e validação (V&V) seguidos no desenvolvimento da biblioteca React, com a descrição de algumas das características deste projeto que digam respeito à aplicação desses processos.
 
+Numa primeira fase, explorar-se-á o grau de testabilidade do *software*, analisando a [controlabilidade](#controllability) do estado dos componentes, a [observabilidade](#observability) dos resultados e a [isolabilidade](#isolateability) dos componentes, assim como o grau de [separação](#separation) de funcionalidades, de [inteligibilidade](#understandability) dos componentes e de [heterogeneidade](#heterogeneity) das tecnologias utilizadas.
+
+Numa segunda fase, serão apresentadas algumas estatísticas pertinentes relacionadas com a verificação e validação do *software*.
+
+Finalmente, será realizado um exercício que consistirá na seleção de um *bug report* e na conceção de casos de teste para o mesmo.
 
 ### <a name="testabilidade"></a>Testabilidade do *Software*
 
