@@ -3,9 +3,27 @@
 
 ### <a name="introducao"></a>Introdução
 
+### <a name="testabilidade"></a>Testabilidade do Programa de Software
+
+#### <a name="controllability"></a>Controllability
+
+#### <a name="observability"></a>Observability
+
+#### <a name="isolateability"></a>Isolateability
+
+#### <a name="separation"></a>Separation of concerns
+
+#### <a name="understandability"></a>Understandability
+
+#### <a name="heterogeneity"></a>Heterogeneity
+
+
+### <a name="estatisticas"></a>Estatísticas de Teste
 
 
 
+
+### <a name="opcional"></a>Fix Bug Report 
 
 
 
