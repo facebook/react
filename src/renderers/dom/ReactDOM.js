@@ -14,6 +14,7 @@
 'use strict';
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMDevtools = require('ReactDOMDevtools');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
