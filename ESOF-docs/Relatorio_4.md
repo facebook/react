@@ -3,19 +3,21 @@
 
 ### <a name="introducao"></a>Introdução
 
-### <a name="testabilidade"></a>Testabilidade do Programa de Software
 
-#### <a name="controllability"></a>Controllability
 
-#### <a name="observability"></a>Observability
+### <a name="testabilidade"></a>Testabilidade do *Software*
 
-#### <a name="isolateability"></a>Isolateability
+#### <a name="controllability"></a>Controlabilidade
 
-#### <a name="separation"></a>Separation of concerns
+#### <a name="observability"></a>Observabilidade
 
-#### <a name="understandability"></a>Understandability
+#### <a name="isolateability"></a>Isolabilidade
 
-#### <a name="heterogeneity"></a>Heterogeneity
+#### <a name="separation"></a>Separação de Funcionalidades
+
+#### <a name="understandability"></a>Inteligibilidade
+
+#### <a name="heterogeneity"></a>Heterogeneidade
 
 
 ### <a name="estatisticas"></a>Estatísticas de Teste
@@ -26,7 +28,7 @@
 ### <a name="opcional"></a>Fix Bug Report 
 
 
-
+### <a name="analise"></a>Análise Crítica
 
 
 ### <a name="info"></a>Informações
