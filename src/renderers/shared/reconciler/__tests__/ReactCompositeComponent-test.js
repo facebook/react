@@ -381,8 +381,10 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Cannot update during an existing state ' +
-      'transition (such as within `render`). Render methods should be a pure ' +
-      'function of props and state.'
+      'transition (such as within `render` or another component\'s ' +
+      'constructor). Render methods should be a pure function of props and ' +
+      'state; constructor side-effects are an anti-pattern, but can be moved ' +
+      'to `componentWillMount`.'
     );
 
     // The setState call is queued and then executed as a second pass. This
