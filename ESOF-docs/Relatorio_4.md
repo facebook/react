@@ -35,6 +35,8 @@ Estes são os dois tipos de teste mais relevantes no contexto da biblioteca Reac
 
 -- Referir o facto de a funcionalidade de cada classe/componente do React estar bem definida.
 
+Ao desenvolver uma dada classe ou componente, é importate garantir, ao máximo, que a funcionalidade atríbuida fique confinada o mais possível ao elemento que diz respeito, sob pena de tornar o código mais confuso e, por conseguinte, menos testável.
+A separação de funcionalidades facilita o isolamento na fase de testes, o que permite testar o código de forma mais incisiva e, por conseguinte, cobrir um maior número de situações de teste.
 
 
 #### <a name="understandability"></a>Inteligibilidade
