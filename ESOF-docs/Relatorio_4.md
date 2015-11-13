@@ -17,7 +17,11 @@ A discussão que se desenrolará nesta secção incidirá sobre o quão testáve
 
 #### <a name="controllability"></a>Controlabilidade
 
--- Referir o estado de um objeto, ao nível da classe, e as interações entre objetos, ao nível do pacote.
+A biblioteca React define um conjunto de classes que implementam a sua funcionalidade, tirando partido do suporte à programação orientada por objetos, baseada na definição de protótipos, oferecido pelo JavaScript. Uma vez que é possível aceder, num dado instante, às [propriedades](http://www.w3schools.com/js/js_properties.asp) de um objeto, que podem ser atributos ou métodos, parece razoável admitir que é possível controlar o estado do mesmo, já que é possível conhecê-lo em cada momento. Visto que os testes unitários são realizados ao nível da classe e do método, é possível afirmar que, para esse tipo de testes, o estado do componente que está a ser testado é controlável. Os testes unitários sobre a biblioteca React são realizados com [Jest](https://facebook.github.io/jest/), como será explorado nas subsecções seguintes.
+
+Outro tipo de testes que são realizados sobre a biblioteca React são os testes de integração que fazem uso da ferramenta [Travis CI](https://travis-ci.org/), conforme referido adiante. Estes testes são realizados ao nível do módulo, por exemplo, ao nível do pacote. No caso de um pacote, podemos definir o seu estado como sendo uma instanciação possível do conjunto das classes definidas nesse pacote. Uma vez que é possível conhecer o estado de cada objeto, conforme discutido no parágrafo anterior, também é possível conhecer o estado dessa instanciação, o que faz com que, neste caso, o componente a ser testado, um pacote ou módulo, também seja controlável.
+
+Estes são os dois tipos de teste mais relevantes no contexto da biblioteca React.
 
 #### <a name="observability"></a>Observabilidade
 
