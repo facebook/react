@@ -31,13 +31,23 @@ A discussão que se desenrolará nesta secção incidirá sobre o quão testáve
 
 -- Referir o facto de a funcionalidade de cada classe/componente do React estar bem definida.
 
+
+
 #### <a name="understandability"></a>Inteligibilidade
 
 -- Documentação da API do React.
 
+A biblioteca React [disponibiliza uma API](https://facebook.github.io/react/docs/top-level-api.html) dos vários recursos disponibilizados, que, no ponto de vista dos autores, é bastante extensiva e concisa. Para além desta documentação, é possível encontrar, ao longo do código, vários elementos (comentários, nomes de variáveis, ...), que permitem um maior esclarecimento das entidades aí presentes, tal como se verifica [neste exemplo](https://github.com/facebook/react/blob/master/src/renderers/dom/client/ReactMount.js).
+
+Com estes elementos, é possível desenvolver um *test suit* que abranja um maior número de casos, o que permite detectar um maior número de *defects* no código.
+
 #### <a name="heterogeneity"></a>Heterogeneidade
 
 -- Referir que a utilização de um repositório Git que pode receber contribuições de muitos utilizadores conduz à necessidade de testes de integração com Travis CI, que são aplicados em paralelo com os testes unitários definidos com Jest.
+
+Uma vez que o React é uma biblioteca *open-source*, e, por conseguinte, sujeita a contribuições de vários programadores, é necessário garantir que, após a aceitação e a incorporação das modificações dos *pull-requests*, o sistema permanece funcional. Desta forma é testada a integrabilidade do sistema, em paralelo com a realização de testes unitários incidentes nos vários elementos da biblioteca.
+Por um lado, a realização de testes unitários ao nível da classe permite garantir a consistência dos elementos da biblioteca, com o recurso à *framework* [Jest](https://facebook.github.io/jest/). Por outra lado, é preciso averiguar se a integração dos vários elementos é feita de forma correcta. Nesta vertente, é utilizada a ferramenta [Travis CI](https://travis-ci.org/facebook/react), que premite automatizar este processo.
+
 
 ### <a name="estatisticas"></a>Estatísticas de Teste
 
