@@ -35,9 +35,11 @@ Estes são os dois tipos de teste mais relevantes no contexto da biblioteca Reac
 
 -- Referir o facto de a funcionalidade de cada classe/componente do React estar bem definida.
 
-Ao desenvolver uma dada classe ou componente, é importate garantir, ao máximo, que a funcionalidade atríbuida fique confinada o mais possível ao elemento que diz respeito, sob pena de tornar o código mais confuso e, por conseguinte, menos testável.
-A separação de funcionalidades facilita o isolamento na fase de testes, o que permite testar o código de forma mais incisiva e, por conseguinte, cobrir um maior número de situações de teste.
+Ao desenvolver uma dada classe ou componente, é importate garantir que a funcionalidade atríbuida fique confinada, o mais possível, ao elemento a que diz respeito, sob pena de tornar o código mais confuso e, por conseguinte, menos testável. Em adição a este facto, em projectos de dimensão considerável, este aspecto deve ser tido em consideração por todos os programadores, por forma a evitar a existência de [*Spaghetti code*](https://en.wikipedia.org/wiki/Spaghetti_code), que dificulta, a médio e a longo prazo, a manutenção do projecto.
 
+De uma forma geral, a biblioteca React apresenta uma separação de funcionalidades bem definida, característica esta que está patente na organização de todo o projecto. Repare-se no exemplo de [renderização das páginas](https://github.com/facebook/react/tree/master/src/renderers/dom): a renderização de uma página web pode ser realizada quer no lado do cliente, quer no lado do servidor (esta última possibilitada através de [isomorfismo](./Relatorio_2.md#levantamento)); contudo, é efectuada de maneira diferente, consoante a entidade em questão. Tem-se, assim, uma separação importante da funcionalidade que é importante frisar, que a *core-team* decidiu implementar através da criação de vários *packages*, expostos sob a forma de *folders*. Por outro lado, é também importante isolar o conjunto de funcionalidades que são comuns quer no lado do cliente quer no servidor, com o principal intuito de evitar a repetição de código ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) e promover a [reutilização de código](https://en.wikipedia.org/wiki/Code_reuse), por forma a evitar, ao máximo, a introdução de *bugs* no projecto. O *package* *shared* contém, assim, os elementos que são utilizados por quaisquer das entidades já referidas (cliente ou servidor). 
+
+É importante notar que a separação de funcionalidades facilita o isolamento na fase de testes, o que permite testar o código de forma mais incisiva e cobrir um maior número de situações de teste.
 
 #### <a name="understandability"></a>Inteligibilidade
 
