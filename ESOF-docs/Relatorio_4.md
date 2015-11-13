@@ -26,6 +26,7 @@ Estes são os dois tipos de teste mais relevantes no contexto da biblioteca Reac
 #### <a name="observability"></a>Observabilidade
 
 -- Referir logs do Travis CI; resultados dos testes unitários com Jest (e ReactTestUtils para simular eventos).
+-- Descrição completa e útil para referencia ao Jest: http://marmelab.com/blog/2015/06/24/jest-in-practice.html
 
 #### <a name="isolateability"></a>Isolabilidade
 
