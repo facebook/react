@@ -19,14 +19,20 @@ A discussão que se desenrolará nesta secção incidirá sobre o quão testáve
 
 A biblioteca React define um conjunto de classes que implementam a sua funcionalidade, tirando partido do suporte à programação orientada por objetos, baseada na definição de protótipos, oferecido pelo JavaScript. Uma vez que é possível aceder, num dado instante, às [propriedades](http://www.w3schools.com/js/js_properties.asp) de um objeto, que podem ser atributos ou métodos, parece razoável admitir que é possível controlar o estado do mesmo, já que é possível conhecê-lo em cada momento. Visto que os testes unitários são realizados ao nível da classe e do método, é possível afirmar que, para esse tipo de testes, o estado do componente que está a ser testado é controlável. Os testes unitários sobre a biblioteca React são realizados com [Jest](https://facebook.github.io/jest/), como será explorado nas subsecções seguintes.
 
-Outro tipo de testes que são realizados sobre a biblioteca React são os testes de integração que fazem uso da ferramenta [Travis CI](https://travis-ci.org/), conforme referido adiante. Estes testes são realizados ao nível do módulo, por exemplo, ao nível do pacote. No caso de um pacote, podemos definir o seu estado como sendo uma instanciação possível do conjunto das classes definidas nesse pacote. Uma vez que é possível conhecer o estado de cada objeto, conforme discutido no parágrafo anterior, também é possível conhecer o estado dessa instanciação, o que faz com que, neste caso, o componente a ser testado, um pacote ou módulo, também seja controlável.
+Outro tipo de testes que são realizados sobre a biblioteca React são os testes de integração que fazem uso da ferramenta [Travis CI](https://travis-ci.org/), conforme referido adiante. Estes testes são realizados ao nível de um conjunto de módulos, por exemplo, ao nível do pacote. Neste caso, podemos definir o estado de um pacote como sendo uma instanciação possível do conjunto das classes definidas no mesmo. Uma vez que é possível conhecer o estado de cada objeto, conforme discutido no parágrafo anterior, também é possível conhecer o estado dessa instanciação, o que faz com que, neste caso, o componente a ser testado também seja controlável.
 
 Estes são os dois tipos de teste mais relevantes no contexto da biblioteca React.
 
 #### <a name="observability"></a>Observabilidade
 
--- Referir logs do Travis CI; resultados dos testes unitários com Jest (e ReactTestUtils para simular eventos).
--- Descrição completa e útil para referencia ao Jest: http://marmelab.com/blog/2015/06/24/jest-in-practice.html
+Como já foi referido anteriormente, as duas ferramentas usadas pelos colaboradores do projeto React para efeitos de teste são o [Jest](https://facebook.github.io/jest/), para [testes unitários](https://en.wikipedia.org/wiki/Unit_testing), e o [Travis CI](https://travis-ci.org/), para [testes de integração](https://en.wikipedia.org/wiki/Integration_testing).
+
+O Jest é uma *framework* para a definição de testes unitários desenvolvida pelo Facebook e é a principal ferramenta do género usada no projeto React, surgindo como uma extensão à *framework* [Jasmine](http://jasmine.github.io/edge/introduction.html). Entre as suas principais características, destaca-se o facto de permitir o [isolamento](http://facebook.github.io/jest/docs/automatic-mocking.html) de uma unidade de código, como será discutido na subsecção seguinte, e a execução de testes em processos paralelos, o que resulta num melhor desempenho. Esta ferramenta permite recolher informação sobre o resultado de um teste, como mostra o seguinte exemplo:
+
+> npm test
+[PASS] jest/examples/__tests__/fetchCurrentUser-test.js (0.075s)
+
+A ferramenta Travis CI foi já apresentada no [Relatório 2](./Relatorio_2.md#validacao). É utilizada para realizar testes de integração sobre o código fornecido pelos colaboradores do projeto em *pull requests*, conforme explicado nesse relatório. Na página da ferramenta, é possível ver o resultado de alguns dos testes realizados, como mostra o [seguinte exemplo](https://travis-ci.org/facebook/react/builds/90839775).
 
 #### <a name="isolateability"></a>Isolabilidade
 
@@ -68,7 +74,7 @@ Por um lado, a realização de testes unitários ao nível da classe permite gar
 
 ### <a name="opcional"></a>Fix Bug Report 
 
-Escolher um *bug* fácil de corrigir (eventualmente já corrigido), mas que permita ilustrar a utilização da framework Jest para a definição de testes unitários.
+-- Escolher um *bug* fácil de corrigir (eventualmente já corrigido), mas que permita ilustrar a utilização da framework Jest para a definição de testes unitários.
 
 ### <a name="analise"></a>Análise Crítica
 
