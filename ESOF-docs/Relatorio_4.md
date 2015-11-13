@@ -26,6 +26,7 @@ Estes são os dois tipos de teste mais relevantes no contexto da biblioteca Reac
 #### <a name="observability"></a>Observabilidade
 
 -- Referir logs do Travis CI; resultados dos testes unitários com Jest (e ReactTestUtils para simular eventos).
+-- Descrição completa e útil para referencia ao Jest: http://marmelab.com/blog/2015/06/24/jest-in-practice.html
 
 #### <a name="isolateability"></a>Isolabilidade
 
@@ -60,6 +61,7 @@ Por um lado, a realização de testes unitários ao nível da classe permite gar
 ### <a name="estatisticas"></a>Estatísticas de Teste
 
 -- Exemplos de logs do Travis CI. Tentar recolher estatísticas de cobertura dos testes Travis CI. Referir possibilidade de recolher estatísticas de cobertura com Jest (https://facebook.github.io/jest/docs/api.html#config-collectcoverage-boolean). Já publiquei no fórum: https://discuss.reactjs.org/t/line-coverage-for-tests-on-react/2479
+-- Link a estudar https://github.com/travis-ci/travis-logs
 
 ### <a name="opcional"></a>Fix Bug Report 
 
@@ -73,17 +75,17 @@ Escolher um *bug* fácil de corrigir (eventualmente já corrigido), mas que perm
 ##### Autores:
 
 * António Casimiro (antonio.casimiro@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas:
+	* Contribuição:
 * Diogo Amaral (diogo.amaral@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas:
+	* Contribuição:
 * Pedro Silva (pedro.silva@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas:
+	* Contribuição:
 * Rui Cardoso (rui.peixoto@fe.up.pt)
-	* Número de horas despendidas: 
-	* Contribuição: 
+	* Número de horas despendidas:
+	* Contribuição:
 
 Faculdade de Engenharia da Universidade do Porto - MIEIC
 
