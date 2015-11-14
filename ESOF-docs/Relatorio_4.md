@@ -32,7 +32,7 @@ O Jest é uma *framework* para a definição de testes unitários desenvolvida p
 > npm test
 [PASS] jest/examples/__tests__/fetchCurrentUser-test.js (0.075s)
 
-A ferramenta Travis CI foi já apresentada no [Relatório 2](./Relatorio_2.md#validacao). É utilizada para realizar testes de integração sobre o código fornecido pelos colaboradores do projeto em *pull requests*, conforme explicado nesse relatório. Na página da ferramenta, é possível ver o resultado de alguns dos testes realizados, como mostra o [seguinte exemplo](https://travis-ci.org/facebook/react/builds/90839775).
+A ferramenta Travis CI foi já apresentada no [Relatório 2](./Relatorio_2.md#validacao). É utilizada para realizar testes de integração sobre o código submetido pelos colaboradores do projeto em *pull requests*, conforme explicado nesse relatório. Na página da ferramenta, é possível ver o resultado de alguns dos testes realizados, como mostra o [seguinte exemplo](https://travis-ci.org/facebook/react/builds/90839775). Cada teste tem um conjunto de *jobs* associados, isto é, um conjunto de tarefas que constituem o teste. [Nesta página](https://travis-ci.org/facebook/react/jobs/90839776), podem ser encontradas informações sobre um dos *jobs* do teste de exemplo referido acima, nomeadamente o *log* resultante da execução do teste, contendo os respetivos resultados. Note-se que um teste de integração com Travis CI pode, eventualmente, envolver a execução de testes unitários com Jest, como mostra o *log* [deste *job*](https://travis-ci.org/facebook/react/jobs/90839777).
 
 #### <a name="isolateability"></a>Isolabilidade
 
