@@ -1,6 +1,6 @@
 ---
 id: context
-title: Context
+title: docs.titles.context
 permalink: context.html
 prev: advanced-performance.html
 ---

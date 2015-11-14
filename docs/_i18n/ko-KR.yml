@@ -44,6 +44,7 @@ docs:
     pure-render-mixin: PureRenderMixin
     perf: 성능 도구
     advanced-performance: 성능 심화
+    context: 컨텍스트
 
     reference: Reference
     top-level-api: 최상위 API
