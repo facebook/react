@@ -1,8 +1,8 @@
 ---
-id: why-react-ko-KR
-title: 왜 React인가?
-permalink: why-react-ko-KR.html
-next: displaying-data-ko-KR.html
+id: why-react
+title: docs.titles.why-react
+permalink: why-react.html
+next: displaying-data.html
 ---
 
 React는 페이스북과 인스타그램에서 사용자 인터페이스를 구성하기 위해 만들어진 라이브러리입니다. 많은 사람들은 React를 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 에서의 **V** 로 생각하는 경향이 있습니다.

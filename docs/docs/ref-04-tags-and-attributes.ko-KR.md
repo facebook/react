@@ -1,9 +1,9 @@
 ---
-id: tags-and-attributes-ko-KR
-title: 태그와 어트리뷰트
-permalink: tags-and-attributes-ko-KR.html
-prev: component-specs-ko-KR.html
-next: events-ko-KR.html
+id: tags-and-attributes
+title: docs.titles.tags-and-attributes
+permalink: tags-and-attributes.html
+prev: component-specs.html
+next: events.html
 ---
 
 ## 지원되는 태그

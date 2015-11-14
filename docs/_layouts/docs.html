@@ -8,7 +8,7 @@ sectionid: docs
 
   <div class="inner-content">
     <h1>
-      {{ page.title }}
+      {% t page.title %}
       <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/{{ page.path }}" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader">{{ page.description }}</div>
@@ -17,11 +17,12 @@ sectionid: docs
 
     <div class="docs-prevnext">
       {% if page.prev %}
-        <a class="docs-prev" href="/react/docs/{{ page.prev }}">&larr; Prev</a>
+        <a class="docs-prev" href="{{ page.prev | translate_link_docs }}">&larr; {% t global.previous %}</a>
       {% endif %}
       {% if page.next %}
-        <a class="docs-next" href="/react/docs/{{ page.next }}">Next &rarr;</a>
+        <a class="docs-next" href="{{ page.next | translate_link_docs }}">{% t global.next %} &rarr;</a>
       {% endif %}
     </div>
+
   </div>
 </section>

@@ -1,6 +1,6 @@
 ---
 id: introduction
-title: Introduction
+title: tips.titles.introduction
 layout: tips
 permalink: introduction.html
 next: inline-styles.html

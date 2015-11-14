@@ -1,6 +1,6 @@
 ---
 id: children-props-type
-title: Type of the Children props
+title: tips.titles.children-props-type
 layout: tips
 permalink: children-props-type.html
 prev: style-props-value-px.html

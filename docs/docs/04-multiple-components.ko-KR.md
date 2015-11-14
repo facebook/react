@@ -1,9 +1,9 @@
 ---
-id: multiple-components-ko-KR
-title: 복합 컴포넌트
-permalink: multiple-components-ko-KR.html
-prev: interactivity-and-dynamic-uis-ko-KR.html
-next: reusable-components-ko-KR.html
+id: multiple-components
+title: docs.titles.multiple-components
+permalink: multiple-components.html
+prev: interactivity-and-dynamic-uis.html
+next: reusable-components.html
 ---
 
 지금까지, 단일 컴포넌트에서 데이터를 표시하고 유저 입력을 다루는 것을 살펴보았습니다. 다음엔 React의 최고의 기능 중 하나인 조합가능성(composability)을 살펴봅시다.

@@ -1,9 +1,10 @@
 ---
-id: dom-differences-ko-KR
+id: dom-differences
+title: docs.titles.dom-differences
 title: DOM과의 차이점
-permalink: dom-differences-ko-KR.html
-prev: events-ko-KR.html
-next: special-non-dom-attributes-ko-KR.html
+permalink: dom-differences.html
+prev: events.html
+next: special-non-dom-attributes.html
 ---
 
 React는 성능과 크로스 브라우저 호환성을 이유로 브라우저에 독립적인 이벤트와 DOM 시스템으로 구현되었습니다. 브라우저 DOM 구현의 일관성없는 부분들을 정리할 기회를 가졌습니다.

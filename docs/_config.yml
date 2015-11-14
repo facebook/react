@@ -36,4 +36,10 @@ sass:
   sass_dir: _css
 gems:
 - jekyll-redirect-from
+- jekyll-multiple-languages
 react_version: 0.14.2
+
+# i18n
+languages: ["en", "ko-KR"]
+default_language: "en"
+fill_default_content: true

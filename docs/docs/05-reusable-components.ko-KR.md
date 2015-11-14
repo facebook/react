@@ -1,9 +1,9 @@
 ---
-id: reusable-components-ko-KR
-title: 재사용가능한 컴포넌트
-permalink: reusable-components-ko-KR.html
-prev: multiple-components-ko-KR.html
-next: transferring-props-ko-KR.html
+id: reusable-components
+title: docs.titles.reusable-components
+permalink: reusable-components.html
+prev: multiple-components.html
+next: transferring-props.html
 ---
 
 인터페이스를 설계할 때, 공통적으로 사용되는 디자인 요소들(버튼, 폼 필드, 레이아웃 컴포넌트 등.)을 잘 정의된 인터페이스의 재사용 가능한 컴포넌트로 분해합니다. 이런 방법으로 다음에 UI를 구축할 때에는 훨씬 적은 코드로 만들 수 있습니다. 이 말은 더 빠른 개발 시간, 더 적은 버그, 더 적은 용량으로 할 수 있다는 뜻이죠.

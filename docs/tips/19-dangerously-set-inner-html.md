@@ -1,6 +1,6 @@
 ---
 id: dangerously-set-inner-html
-title: Dangerously Set innerHTML
+title: tips.titles.dangerously-set-inner-html
 layout: tips
 permalink: dangerously-set-inner-html.html
 prev: children-undefined.html

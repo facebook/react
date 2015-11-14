@@ -1,8 +1,8 @@
 ---
-id: getting-started-ko-KR
-title: 시작해보기
-permalink: getting-started-ko-KR.html
-next: tutorial-ko-KR.html
+id: getting-started
+title: docs.titles.getting-started
+permalink: getting-started.html
+next: tutorial.html
 redirect_from: "docs/index-ko-KR.html"
 ---
 

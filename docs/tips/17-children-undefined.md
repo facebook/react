@@ -1,6 +1,6 @@
 ---
 id: children-undefined
-title: this.props.children undefined
+title: tips.titles.children-undefined
 layout: tips
 permalink: children-undefined.html
 prev: expose-component-functions.html

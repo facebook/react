@@ -1,6 +1,6 @@
 ---
 id: displaying-data
-title: Displaying Data
+title: docs.titles.displaying-data
 permalink: displaying-data.html
 prev: why-react.html
 next: jsx-in-depth.html

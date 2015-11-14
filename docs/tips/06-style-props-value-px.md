@@ -1,6 +1,6 @@
 ---
 id: style-props-value-px
-title: Shorthand for Specifying Pixel Values in style props
+title: tips.titles.style-props-value-px
 layout: tips
 permalink: style-props-value-px.html
 prev: maximum-number-of-jsx-root-nodes.html

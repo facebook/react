@@ -1,6 +1,6 @@
 ---
 id: controlled-input-null-value
-title: Value of null for Controlled Input
+title: tips.titles.controlled-input-null-value
 layout: tips
 permalink: controlled-input-null-value.html
 prev: children-props-type.html

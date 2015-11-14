@@ -1,6 +1,6 @@
 ---
 id: maximum-number-of-jsx-root-nodes
-title: Maximum Number of JSX Root Nodes
+title: tips.titles.maximum-number-of-jsx-root-nodes
 layout: tips
 permalink: maximum-number-of-jsx-root-nodes.html
 prev: self-closing-tag.html

@@ -1,9 +1,9 @@
 ---
-id: addons-ko-KR
-title: 애드온
-permalink: addons-ko-KR.html
-prev: tooling-integration-ko-KR.html
-next: animation-ko-KR.html
+id: addons
+title: docs.titles.addons
+permalink: addons.html
+prev: tooling-integration.html
+next: animation.html
 ---
 
 React 애드온은 React 앱을 만드는 데 유용한 유틸리티의 모음입니다. **실험적인 기능으로 취급해야 하고** 코어보다 더 자주 변경될 수 있습니다.

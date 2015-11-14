@@ -1,10 +1,10 @@
 ---
-id: communicate-between-components-ko-KR
-title: 컴포넌트간의 통신
+id: communicate-between-components
+title: tips.titles.communicate-between-components
 layout: tips
-permalink: communicate-between-components-ko-KR.html
-prev: false-in-jsx-ko-KR.html
-next: expose-component-functions-ko-KR.html
+permalink: communicate-between-components.html
+prev: false-in-jsx.html
+next: expose-component-functions.html
 ---
 
 부모-자식 통신을 위해서는, 간단히 [props를 넘기면 됩니다](/react/docs/multiple-components-ko-KR.html).

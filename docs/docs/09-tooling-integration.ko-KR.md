@@ -1,9 +1,9 @@
 ---
-id: tooling-integration-ko-KR
-title: 툴 통합
-permalink: tooling-integration-ko-KR.html
-prev: more-about-refs-ko-KR.html
-next: addons-ko-KR.html
+id: tooling-integration
+title: docs.titles.tooling-integration
+permalink: tooling-integration.html
+prev: more-about-refs.html
+next: addons.html
 ---
 
 모든 프로젝트는 JavaScript를 빌드, 배포할 때 다른 시스템을 사용합니다. 우리는 가능한 한 React를 환경에 구속받지 않도록 하려 노력했습니다.

@@ -1,6 +1,6 @@
 ---
 id: special-non-dom-attributes
-title: Special Non-DOM Attributes
+title: docs.titles.special-non-dom-attributes
 permalink: special-non-dom-attributes.html
 prev: dom-differences.html
 next: reconciliation.html

@@ -1,6 +1,6 @@
 ---
 id: reconciliation
-title: Reconciliation
+title: docs.titles.reconciliation
 permalink: reconciliation.html
 prev: special-non-dom-attributes.html
 next: glossary.html

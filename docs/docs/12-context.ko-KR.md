@@ -1,8 +1,8 @@
 ---
 id: context
-title: 컨텍스트
-permalink: context-ko-KR.html
-prev: advanced-performance-ko-KR.html
+title: docs.titles.context
+permalink: context.html
+prev: advanced-performance.html
 ---
 
 React의 가장 큰 장점 중 하나는 React 컴포넌트를 통해 데이터의 흐름을 추적하기 쉽다는 것입니다. 컴포넌트를 보면 각각의 프로퍼티가 어떻게 전달되었는지 쉽게 파악할 수 있습니다. 

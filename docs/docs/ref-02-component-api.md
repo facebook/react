@@ -1,6 +1,6 @@
 ---
 id: component-api
-title: Component API
+title: docs.titles.component-api
 permalink: component-api.html
 prev: top-level-api.html
 next: component-specs.html

@@ -1,6 +1,6 @@
 ---
 id: flux-overview
-title: Flux Application Architecture
+title: docs.titles.flux-overview
 permalink: flux-overview.html
 ---
 

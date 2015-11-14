@@ -1,9 +1,9 @@
 ---
-id: thinking-in-react-ko-KR
-title: 리액트로 생각해보기
-permalink: thinking-in-react-ko-KR.html
-prev: tutorial-ko-KR.html
-next: videos-ko-KR.html
+id: thinking-in-react
+title: docs.titles.thinking-in-react
+permalink: thinking-in-react.html
+prev: tutorial.html
+next: videos.html
 ---
 
 Pete Hunt의 글입니다.

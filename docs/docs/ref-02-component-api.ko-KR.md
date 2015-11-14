@@ -1,9 +1,9 @@
 ---
-id: component-api-ko-KR
-title: 컴포넌트 API
-permalink: component-api-ko-KR.html
-prev: top-level-api-ko-KR.html
-next: component-specs-ko-KR.html
+id: component-api
+title: docs.titles.component-api
+permalink: component-api.html
+prev: top-level-api.html
+next: component-specs.html
 ---
 
 ## React.Component

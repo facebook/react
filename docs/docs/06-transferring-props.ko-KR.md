@@ -1,9 +1,9 @@
 ---
-id: transferring-props-ko-KR
-title: Props 전달
-permalink: transferring-props-ko-KR.html
-prev: reusable-components-ko-KR.html
-next: forms-ko-KR.html
+id: transferring-props
+title: docs.titles.transferring-props
+permalink: transferring-props.html
+prev: reusable-components.html
+next: forms.html
 ---
 
 React에서는 컴포넌트를 감싸서 추상화하는 것이 일반적인 패턴입니다. 외부 컴포넌트에서는 간단한 프로퍼티만을 노출하여 복잡한 세부 구현을 감출 수 있습니다.

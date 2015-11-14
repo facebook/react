@@ -1,6 +1,6 @@
 ---
 id: forms
-title: Forms
+title: docs.titles.forms
 permalink: forms.html
 prev: transferring-props.html
 next: working-with-the-browser.html

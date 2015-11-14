@@ -1,6 +1,6 @@
 ---
 id: expose-component-functions
-title: Expose Component Functions
+title: tips.titles.expose-component-functions
 layout: tips
 permalink: expose-component-functions.html
 prev: communicate-between-components.html

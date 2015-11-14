@@ -1,0 +1,87 @@
+global:
+  next: 다음
+  previous: 이전
+
+docs:
+  titles:
+    why-react:
+
+docs:
+  titles:
+    quick-start: Quick Start
+    getting-started: 시작해보기
+    tutorial: 튜토리얼
+    thinking-in-react: 리액트로 생각해보기
+
+    community-resources: Community Resources
+    conferences: 컨퍼런스들
+    videos: 비디오들
+    complementary-tools: 상호 보완적인 도구들
+    examples: 예제들
+
+    guides: Guides
+    why-react: 왜 React인가?
+    displaying-data: 데이터를 표시하기
+    jsx-in-depth: JSX 깊이보기
+    jsx-spread: JSX 스프레드 어트리뷰트
+    jsx-gotchas: JSX Gotchas
+    interactivity-and-dynamic-uis: 상호 작용 및 동적 UI
+    multiple-components: 복합 컴포넌트
+    reusable-components: 재사용가능한 컴포넌트
+    transferring-props: Props 전달
+    forms: 폼
+    working-with-the-browser: 브라우저에서의 동작
+    more-about-refs: refs에서 컴포넌트로
+    tooling-integration: 툴 통합
+    addons: 애드온
+    animation: 애니메이션
+    two-way-binding-helpers: 양방향 바인딩 핼퍼
+    class-name-manipulation: 클래스 이름 조작
+    test-utils: 테스트 유틸리티
+    clone-with-props: ReactElement 클론하기
+    create-fragment: 키가 할당된 프래그먼트
+    update: 불변성 헬퍼들
+    pure-render-mixin: PureRenderMixin
+    perf: 성능 도구
+    advanced-performance: 성능 심화
+    context: 컨텍스트
+
+    reference: Reference
+    top-level-api: 최상위 API
+    component-api: 컴포넌트 API
+    component-specs: 컴포넌트 명세와 생명주기
+    tags-and-attributes: 태그와 어트리뷰트
+    events: 이벤트 시스템
+    dom-differences: DOM과의 차이점
+    special-non-dom-attributes: DOM이 아닌 특별한 어트리뷰트
+    reconciliation: 비교조정(Reconciliation)
+    glossary: React (가상) DOM 용어
+
+    flux: Flux
+    flux-overview: Flux 애플리케이션 아키텍쳐
+    flux-todo-list: Flux TodoMVC 튜토리얼
+
+
+tips:
+  titles:
+    tips: Tips
+
+    introduction: 개요
+    inline-styles: 인라인 스타일
+    if-else-in-JSX: JSX에서 If-Else
+    self-closing-tag: 자기 자신을 닫는 태그
+    maximum-number-of-jsx-root-nodes: JSX 루트 노드의 최대 갯수
+    style-props-value-px: 스타일 속성에서 특정 픽셀 값 넣는 간단한 방법
+    children-props-type: 자식 속성들의 타입
+    controlled-input-null-value: 제어되는 input 내의 null 값
+    componentWillReceiveProps-not-triggered-after-mounting: 마운트 후에는 componentWillReceiveProps가 실행되지 않음
+    props-in-getInitialState-as-anti-pattern: getInitialState의 Props는 안티패턴
+    dom-event-listeners: 컴포넌트에서 DOM 이벤트 리스너
+    initial-ajax: AJAX를 통해 초기 데이터 읽어오기
+    false-in-jsx: JSX에서 False
+    communicate-between-components: 컴포넌트간의 통신
+    expose-component-functions: 컴포넌트 함수 드러내기
+    references-to-components: 컴포넌트 참조
+    children-undefined: 정의되지 않은 this.props.children
+    use-react-with-other-libraries: React와 다른 라이브러리를 함께 사용하기
+    dangerously-set-inner-html: Dangerously Set innerHTML

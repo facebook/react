@@ -2,16 +2,16 @@
   <!-- Docs Nav -->
   {% for section in site.data.nav_docs %}
     <div class="nav-docs-section">
-      <h3>{{ section.title }}</h3>
+      <h3>{% t section.title %}</h3>
       <ul>
         {% for item in section.items %}
           <li>
-            {{ item | sidebar_item_link}}
+            {% sidebaritem item %}{% t item.title %}{% endsidebaritem %}
             {% if item.subitems %}
               <ul>
                 {% for subitem in item.subitems %}
                   <li>
-                    {{ subitem | sidebar_item_link}}
+                    {% sidebaritem subitem %}{% t subitem.title %}{% endsidebaritem %}
                   </li>
                 {% endfor %}
               </ul>
@@ -25,11 +25,11 @@
   <!-- Tips Nav -->
   {% for section in site.data.nav_tips %}
     <div class="nav-docs-section">
-      <h3>{{ section.title }}</h3>
+      <h3>{% t section.title %}</h3>
       <ul>
         {% for item in section.items %}
           <li>
-            <a href="/react/tips/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
+            {% sidebartipitem item %}{% t item.title %}{% endsidebartipitem %}
           </li>
         {% endfor %}
       </ul>

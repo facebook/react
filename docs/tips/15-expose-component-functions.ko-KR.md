@@ -1,13 +1,13 @@
 ---
-id: expose-component-functions-ko-KR
-title: 컴포넌트 함수 드러내기
+id: expose-component-functions
+title: tips.titles.expose-component-functions
 layout: tips
-permalink: expose-component-functions-ko-KR.html
-prev: communicate-between-components-ko-KR.html
-next: children-undefined-ko-KR.html
+permalink: expose-component-functions.html
+prev: communicate-between-components.html
+next: children-undefined.html
 ---
 
-[컴포넌트간의 통신](/react/tips/communicate-between-components-ko-KR.html)을 위한 (일반적이지 않은) 또다른 방법이 있습니다: 단순히 부모의 호출을 위해 자식 컴포넌트의 메소드를 노출하는 겁니다. 
+[컴포넌트간의 통신](/react/tips/communicate-between-components-ko-KR.html)을 위한 (일반적이지 않은) 또다른 방법이 있습니다: 단순히 부모의 호출을 위해 자식 컴포넌트의 메소드를 노출하는 겁니다.
 
 할일 목록을 생각해보죠. 아이템을 클릭하면 제거되고, 하나가 남으면 애니메이션 효과를 줍니다:
 

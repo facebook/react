@@ -1,9 +1,10 @@
 ---
 id: why-react
-title: Why React?
+title: docs.titles.why-react
 permalink: why-react.html
 next: displaying-data.html
 ---
+
 React is a JavaScript library for creating user interfaces by Facebook and Instagram. Many people choose to think of React as the **V** in **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)**.
 
 We built React to solve one problem: **building large applications with data that changes over time**.

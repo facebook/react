@@ -1,10 +1,10 @@
 ---
-id: dom-event-listeners-ko-KR
-title: 컴포넌트에서 DOM 이벤트 리스너
+id: dom-event-listeners
+title: tips.titles.dom-event-listeners
 layout: tips
-permalink: dom-event-listeners-ko-KR.html
-prev: props-in-getInitialState-as-anti-pattern-ko-KR.html
-next: initial-ajax-ko-KR.html
+permalink: dom-event-listeners.html
+prev: props-in-getInitialState-as-anti-pattern.html
+next: initial-ajax.html
 ---
 
 > 주의:

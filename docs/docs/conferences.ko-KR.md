@@ -1,9 +1,9 @@
 ---
-id: conferences-ko-KR
-title: 컨퍼런스들
-permalink: conferences-ko-KR.html
-prev: thinking-in-react-ko-KR.html
-next: videos-ko-KR.html
+id: conferences
+title: docs.titles.conferences
+permalink: conferences.html
+prev: thinking-in-react.html
+next: videos.html
 ---
 
 ### React.js Conf 2015

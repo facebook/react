@@ -1,6 +1,6 @@
 ---
 id: dom-event-listeners
-title: DOM Event Listeners in a Component
+title: tips.titles.dom-event-listeners
 layout: tips
 permalink: dom-event-listeners.html
 prev: props-in-getInitialState-as-anti-pattern.html

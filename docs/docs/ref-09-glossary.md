@@ -1,6 +1,6 @@
 ---
 id: glossary
-title: React (Virtual) DOM Terminology
+title: docs.titles.glossary
 permalink: glossary.html
 prev: reconciliation.html
 ---

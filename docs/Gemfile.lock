@@ -32,6 +32,7 @@ GEM
     jekyll-coffeescript (1.0.0)
       coffee-script (~> 2.2)
     jekyll-gist (1.1.0)
+    jekyll-multiple-languages (1.0.8)
     jekyll-paginate (1.0.0)
     jekyll-redirect-from (0.5.0)
       jekyll (~> 2.0)
@@ -75,6 +76,7 @@ PLATFORMS
 
 DEPENDENCIES
   jekyll (~> 2.0)
+  jekyll-multiple-languages
   jekyll-redirect-from
   json
   rake

@@ -1,10 +1,10 @@
 ---
-id: inline-styles-ko-KR
-title: 인라인 스타일
+id: inline-styles
+title: tips.titles.inline-styles
 layout: tips
-permalink: inline-styles-ko-KR.html
-next: if-else-in-JSX-ko-KR.html
-prev: introduction-ko-KR.html
+permalink: inline-styles.html
+next: if-else-in-JSX.html
+prev: introduction.html
 ---
 
 React에서는 인라인 스타일을 문자열로 지정하지 않습니다. 대신 스타일 이름을 camelCased 형식으로 바꾼 키와 스타일의 값(주로 문자열입니다 - [자세히 알아보기](/react/tips/style-props-value-px-ko-KR.html))을 가진 객체로 지정됩니다.

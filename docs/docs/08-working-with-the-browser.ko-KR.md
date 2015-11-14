@@ -1,9 +1,9 @@
 ---
-id: working-with-the-browser-ko-KR
-title: 브라우저에서의 동작
-permalink: working-with-the-browser-ko-KR.html
-prev: forms-ko-KR.html
-next: more-about-refs-ko-KR.html
+id: working-with-the-browser
+title: docs.titles.working-with-the-browser
+permalink: working-with-the-browser.html
+prev: forms.html
+next: more-about-refs.html
 ---
 
 React는 대부분의 경우 직접 DOM을 다루지 않아도 될만큼 강력한 추상화를 제공합니다. 하지만 서드파티 라이브러리나 기존의 코드들을 다루다 보면 간혹 기저(underlying)의 API에 접근해야 할 때도 있습니다.
