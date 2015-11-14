@@ -29,7 +29,7 @@
       <ul>
         {% for item in section.items %}
           <li>
-            <a href="/react/tips/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{%t item.title %}</a>
+            {% sidebartipitem item %}{% t item.title %}{% endsidebartipitem %}
           </li>
         {% endfor %}
       </ul>
