@@ -67,10 +67,23 @@ Uma vez que o React é uma biblioteca *open-source*, e, por conseguinte, sujeita
 Por um lado, a realização de testes unitários ao nível da classe permite garantir a consistência dos elementos da biblioteca, com o recurso à *framework* [Jest](https://facebook.github.io/jest/). Por outra lado, é preciso averiguar se a integração dos vários elementos é feita de forma correcta. Nesta vertente, é utilizada a ferramenta [Travis CI](https://travis-ci.org/facebook/react), que premite automatizar este processo.
 
 
+
+
+
+
+
 ### <a name="estatisticas"></a>Estatísticas de Teste
 
 -- Exemplos de logs do Travis CI. Tentar recolher estatísticas de cobertura dos testes Travis CI. Referir possibilidade de recolher estatísticas de cobertura com Jest (https://facebook.github.io/jest/docs/api.html#config-collectcoverage-boolean). Já publiquei no fórum: https://discuss.reactjs.org/t/line-coverage-for-tests-on-react/2479
 -- Link a estudar https://github.com/travis-ci/travis-logs
+
+#### <a name="travis"></a>Travis IC
+
+Travis IC consiste numa ferramenta muito versátil e útil para este projeto. Na sua vertente [Travis Logs] (https://github.com/travis-ci/travis-logs), processa atualizações do log que são transmitidos de outra vertente, [Travis Worker] (https://github.com/travis-ci/worker), via [RabbitMQ] (http://www.rabbitmq.com/), um programa *open-source* [intermediário para envio de mensagens] (https://en.wikipedia.org/wiki/Message_broker). Uma vez que todas as peças de log forem recebidas, e passado um tempo limite padronizado de 10 segundos, estas peças são agregadas num log final.
+
+A *framework* [Jest](https://facebook.github.io/jest/), ferramenta para testes unitários do [Facebook] (https://github.com/facebook/).
+
+-- Utilização do Jest no React: https://github.com/facebook/jest/blob/fd33aad1da1ed430b656719c7a0e00bb7952c6df/docs/TutorialReact.md
 
 ### <a name="opcional"></a>Fix Bug Report 
 
