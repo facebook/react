@@ -79,7 +79,7 @@ Travis IC consiste numa ferramenta muito versátil e útil para este projeto. Na
 
 #### <a name="jest"></a>Jest
 
-A *framework* [Jest](https://facebook.github.io/jest/), ferramenta para testes unitários do [Facebook] (https://github.com/facebook/), utilizada para testar as aplicações React de forma simples. Estes [testes] (http://facebook.github.io/react/docs/test-utils.html) manipulam componentes do React averiguando o seu comportamento.
+A *framework* [Jest](https://facebook.github.io/jest/), ferramenta para testes unitários do [Facebook] (https://github.com/facebook/), utilizada para testar as aplicações React de forma simples. Estes [testes] (http://facebook.github.io/react/docs/test-utils.html) manipulam componentes do React averiguando o seu comportamento. Para um teste unitário operar numa unidade isolada da aplicação é necessário *mock* todos os módulos exceto aquele que está a ser testado. Jest constrói o *mocking* das partes de uma aplicação [Flux] (https://facebook.github.io/flux/) trivial. Flux é a arquitetura da aplicação que o Facebook utiliza para construir aplicações *web* com o React.
 
 -- Utilização do Jest no React: https://github.com/facebook/jest/blob/fd33aad1da1ed430b656719c7a0e00bb7952c6df/docs/TutorialReact.md
 
