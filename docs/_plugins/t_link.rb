@@ -1,5 +1,5 @@
 module Jekyll
-  module TranslateLinkilter
+  module TranslateLinkFilter
     def translate_link(link)
       is_default_lang = @context.registers[:page]["is_default_language"]
       if is_default_lang
@@ -14,7 +14,17 @@ module Jekyll
       pieces.insert(1, lang)
       return pieces.join('/')
     end
+
+    # for next/prev links, links within if need be
+    def translate_link_docs(link)
+      is_default_lang = @context.registers[:page]["is_default_language"]
+      if is_default_lang
+        return link
+      end
+      lang = @context.registers[:page]["language"]
+      return "/react/#{lang}/docs/#{link}"
+    end
   end
 end
 
-Liquid::Template.register_filter(Jekyll::TranslateLinkilter)
+Liquid::Template.register_filter(Jekyll::TranslateLinkFilter)

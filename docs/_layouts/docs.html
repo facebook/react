@@ -17,10 +17,10 @@ sectionid: docs
 
     <div class="docs-prevnext">
       {% if page.prev %}
-        <a class="docs-prev" href="/react/{{ page.prev }}">&larr; {% t global.previous %}</a>
+        <a class="docs-prev" href="{{ page.prev | translate_link_docs }}">&larr; {% t global.previous %}</a>
       {% endif %}
       {% if page.next %}
-        <a class="docs-next" href="/react/{{ page.next }}">{% t global.next %} &rarr;</a>
+        <a class="docs-next" href="{{ page.next | translate_link_docs }}">{% t global.next %} &rarr;</a>
       {% endif %}
     </div>
 
