@@ -34,15 +34,19 @@ O Jest é uma *framework* para a definição de testes unitários desenvolvida p
 
 A ferramenta Travis CI foi já apresentada no [Relatório 2](./Relatorio_2.md#validacao). É utilizada para realizar testes de integração sobre o código submetido pelos colaboradores do projeto em *pull requests*, conforme explicado nesse relatório. Na página da ferramenta, é possível ver o resultado de alguns dos testes realizados, como mostra o [seguinte exemplo](https://travis-ci.org/facebook/react/builds/90839775). Cada teste tem um conjunto de *jobs* associados, isto é, um conjunto de tarefas que constituem o teste. [Nesta página](https://travis-ci.org/facebook/react/jobs/90839776), podem ser encontradas informações sobre um dos *jobs* do teste de exemplo referido acima, nomeadamente o *log* resultante da execução do teste, contendo os respetivos resultados. Note-se que um teste de integração com Travis CI pode, eventualmente, envolver a execução de testes unitários com Jest, como mostra o *log* [deste *job*](https://travis-ci.org/facebook/react/jobs/90839777).
 
+Conclui-se, desta forma, que é possível observar e recolher informação útil sobre os resultados dos testes que são realizados sobre a biblioteca React.
+
 #### <a name="isolateability"></a>Isolabilidade
 
--- Referir a possibilidade de testes unitários com Jest, que permitem automaticamente isolar um módulo das suas dependências (https://facebook.github.io/jest/docs/automatic-mocking.html).
+Um dos principais desafios na definição de testes unitários é o isolamento de cada componente, isto é, a definição de testes cujo resultado não seja condicionado por eventuais dependências exteriores à unidade de código a ser testada. É neste capítulo que a ferramenta Jest se revela particularmente útil, pois permite o [isolamento](https://facebook.github.io/jest/docs/automatic-mocking.html) da unidade a ser testada através da definição de *mocks*, isto é, de funções que substituirão as funções reais definidas nos módulos dos quais a unidade depende.
+
+Estas [funções](https://facebook.github.io/jest/docs/mock-functions.html) são definidas automaticamente, embora também seja possível defini-las [manualmente](https://facebook.github.io/jest/docs/manual-mocks.html) sempre que for necessário. A [API](https://facebook.github.io/jest/docs/api.html#content) do Jest define funções que permitem, por exemplo, simular [valores de retorno](https://facebook.github.io/jest/docs/mock-functions.html#mock-return-values) das funções *mock*, alterar a sua [implementação](https://facebook.github.io/jest/docs/mock-functions.html#mock-implementations), ou testar a forma como as mesmas são [chamadas](https://facebook.github.io/jest/docs/mock-functions.html#custom-matchers), nomeadamente o número de vezes em que tal ocorre e o número e valor dos argumentos.
+
+Assim, é possível concluir que, no caso da biblioteca React, ao ser usada a *framework* Jest para a definição e execução de testes unitários, é possível isolar o componente que está a ser testado, fazendo uso da funcionalidade referida.
 
 #### <a name="separation"></a>Separação de Funcionalidades
 
--- Referir o facto de a funcionalidade de cada classe/componente do React estar bem definida.
-
-Ao desenvolver uma dada classe ou componente, é importate garantir que a funcionalidade atríbuida fique confinada, o mais possível, ao elemento a que diz respeito, sob pena de tornar o código mais confuso e, por conseguinte, menos testável. Em adição a este facto, em projectos de dimensão considerável, este aspecto deve ser tido em consideração por todos os programadores, por forma a evitar a existência de [*Spaghetti code*](https://en.wikipedia.org/wiki/Spaghetti_code), que dificulta, a médio e a longo prazo, a manutenção do projecto.
+Ao desenvolver uma dada classe ou componente, é importante garantir que a funcionalidade atríbuida fique confinada, o mais possível, ao elemento a que diz respeito, sob pena de tornar o código mais confuso e, por conseguinte, menos testável. Em adição a este facto, em projectos de dimensão considerável, este aspecto deve ser tido em consideração por todos os programadores, por forma a evitar a existência de [*Spaghetti code*](https://en.wikipedia.org/wiki/Spaghetti_code), que dificulta, a médio e a longo prazo, a manutenção do projecto.
 
 De uma forma geral, a biblioteca React apresenta uma separação de funcionalidades bem definida, característica esta que está patente na organização de todo o projecto. Repare-se no exemplo de [renderização das páginas](https://github.com/facebook/react/tree/master/src/renderers/dom): a renderização de uma página web pode ser realizada quer no lado do cliente, quer no lado do servidor (esta última possibilitada através de [isomorfismo](./Relatorio_2.md#levantamento)); contudo, é efectuada de maneira diferente, consoante a entidade em questão. Tem-se, assim, uma separação importante da funcionalidade que é importante frisar, que a *core-team* decidiu implementar através da criação de vários *packages*, expostos sob a forma de *folders*. 
 Por outro lado, é também importante isolar o conjunto de funcionalidades que são comuns quer no lado do cliente quer no servidor, com o principal intuito de evitar a repetição de código ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) e promover a [reutilização de código](https://en.wikipedia.org/wiki/Code_reuse), por forma a evitar, ao máximo, a introdução de *bugs* no projecto. O *package* *shared* contém, assim, os elementos que são utilizados por quaisquer das entidades já referidas (cliente ou servidor). 
@@ -50,8 +54,6 @@ Por outro lado, é também importante isolar o conjunto de funcionalidades que s
 É importante notar que a separação de funcionalidades facilita o isolamento na fase de testes, o que permite testar o código de forma mais incisiva e cobrir um maior número de situações de teste.
 
 #### <a name="understandability"></a>Inteligibilidade
-
--- Documentação da API do React.
 
 Em projectos de dimensão considerável, a componente de documentação possui um peso bastante considerável, por forma a garantir a consistência de uso dos vários elementos disponibilizados.
 
