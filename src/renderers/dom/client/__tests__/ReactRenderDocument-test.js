@@ -14,15 +14,13 @@
 var React;
 var ReactDOM;
 var ReactDOMServer;
-var ReactInstanceMap;
-var ReactMount;
 
 var getTestDocument;
 
 var testDocument;
 
 var UNMOUNT_INVARIANT_MESSAGE =
-  'Invariant Violation: <html> tried to unmount. ' +
+  '<html> tried to unmount. ' +
   'Because of cross-browser quirks it is impossible to unmount some ' +
   'top-level components (eg <html>, <head>, and <body>) reliably and ' +
   'efficiently. To fix this, have a single top-level component that ' +
@@ -30,19 +28,17 @@ var UNMOUNT_INVARIANT_MESSAGE =
 
 describe('rendering React components at document', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
-    ReactInstanceMap = require('ReactInstanceMap');
-    ReactMount = require('ReactMount');
     getTestDocument = require('getTestDocument');
 
     testDocument = getTestDocument();
   });
 
-  it('should be able to get root component id for document node', function() {
+  it('should be able to adopt server markup', function() {
     expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
@@ -53,22 +49,24 @@ describe('rendering React components at document', function() {
               <title>Hello World</title>
             </head>
             <body>
-              Hello world
+              {'Hello ' + this.props.hello}
             </body>
           </html>
         );
       },
     });
 
-    var markup = ReactDOMServer.renderToString(<Root />);
+    var markup = ReactDOMServer.renderToString(<Root hello="world" />);
     testDocument = getTestDocument(markup);
-    var component = ReactDOM.render(<Root />, testDocument);
+    var body = testDocument.body;
+
+    ReactDOM.render(<Root hello="world" />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
-    // TODO: This is a bad test. I have no idea what this is testing.
-    // Node IDs is an implementation detail and not part of the public API.
-    var componentID = ReactMount.getReactRootID(testDocument);
-    expect(componentID).toBe(ReactInstanceMap.get(component)._rootNodeID);
+    ReactDOM.render(<Root hello="moon" />, testDocument);
+    expect(testDocument.body.innerHTML).toBe('Hello moon');
+
+    expect(body).toBe(testDocument.body);
   });
 
   it('should not be able to unmount component from document node', function() {
@@ -204,7 +202,6 @@ describe('rendering React components at document', function() {
       // Notice the text is different!
       ReactDOM.render(<Component text="Hello world" />, testDocument);
     }).toThrow(
-      'Invariant Violation: ' +
       'You\'re trying to render a component to the document using ' +
       'server rendering but the checksum was invalid. This usually ' +
       'means you rendered a different component type or props on ' +
@@ -213,8 +210,8 @@ describe('rendering React components at document', function() {
       'quirks by rendering at the document root. You should look for ' +
       'environment dependent code in your components and ensure ' +
       'the props are the same client and server side:\n' +
-      ' (client) data-reactid=".0.1">Hello world</body></\n' +
-      ' (server) data-reactid=".0.1">Goodbye world</body>'
+      ' (client) dy data-reactid="4">Hello world</body></\n' +
+      ' (server) dy data-reactid="4">Goodbye world</body>'
     );
   });
 
@@ -241,9 +238,9 @@ describe('rendering React components at document', function() {
     expect(function() {
       ReactDOM.render(<Component />, container);
     }).toThrow(
-      'Invariant Violation: You\'re trying to render a component to the ' +
-      'document but you didn\'t use server rendering. We can\'t do this ' +
-      'without using server rendering due to cross-browser quirks. See ' +
+      'You\'re trying to render a component to the document but you didn\'t ' +
+      'use server rendering. We can\'t do this without using server ' +
+      'rendering due to cross-browser quirks. See ' +
       'ReactDOMServer.renderToString() for server rendering.'
     );
   });

@@ -13,10 +13,8 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMTextComponent = require('ReactDOMTextComponent');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultInjection = require('ReactDefaultInjection');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
@@ -24,6 +22,7 @@ var ReactUpdates = require('ReactUpdates');
 var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
+var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
@@ -49,11 +48,23 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-    CurrentOwner: ReactCurrentOwner,
-    InstanceHandles: ReactInstanceHandles,
+    ComponentTree: {
+      getClosestInstanceFromNode:
+        ReactDOMComponentTree.getClosestInstanceFromNode,
+      getNodeFromInstance: function(inst) {
+        // inst is an internal instance (but could be a composite)
+        if (inst._renderedComponent) {
+          inst = getNativeComponentFromComposite(inst);
+        }
+        if (inst) {
+          return ReactDOMComponentTree.getNodeFromInstance(inst);
+        } else {
+          return null;
+        }
+      },
+    },
     Mount: ReactMount,
     Reconciler: ReactReconciler,
-    TextComponent: ReactDOMTextComponent,
   });
 }
 
@@ -73,6 +84,15 @@ if (__DEV__) {
         );
       }
     }
+
+    var testFunc = function testFn() {};
+    warning(
+      (testFunc.name || testFunc.toString()).indexOf('testFn') !== -1,
+      'It looks like you\'re using a minified copy of the development build ' +
+      'of React. When deploying React apps to production, make sure to use ' +
+      'the production build which skips development warnings and is faster. ' +
+      'See https://fb.me/react-minification for more details.'
+    );
 
     // If we're in IE8, check to see if we are in compatibility mode and provide
     // information on preventing compatibility mode
@@ -98,16 +118,13 @@ if (__DEV__) {
       Object.keys,
       String.prototype.split,
       String.prototype.trim,
-
-      // shams
-      Object.create,
-      Object.freeze,
     ];
 
     for (var i = 0; i < expectedFeatures.length; i++) {
       if (!expectedFeatures[i]) {
-        console.error(
-          'One or more ES5 shim/shams expected by React are not available: ' +
+        warning(
+          false,
+          'One or more ES5 shims expected by React are not available: ' +
           'https://fb.me/react-warning-polyfills'
         );
         break;

@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var ExecutionEnvironment;
 var React;
 var ReactDOM;
@@ -22,10 +20,11 @@ var ReactTestUtils;
 var ReactServerRendering;
 
 var ID_ATTRIBUTE_NAME;
+var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactServerRendering', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -38,7 +37,7 @@ describe('ReactServerRendering', function() {
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-    spyOn(console, 'error');
+    ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
   describe('renderToString', function() {
@@ -47,7 +46,8 @@ describe('ReactServerRendering', function() {
         <span>hello world</span>
       );
       expect(response).toMatch(
-        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
       );
     });
@@ -57,7 +57,8 @@ describe('ReactServerRendering', function() {
         <img />
       );
       expect(response).toMatch(
-        '<img ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
       );
     });
@@ -67,14 +68,15 @@ describe('ReactServerRendering', function() {
         <img data-attr=">" />
       );
       expect(response).toMatch(
-        '<img data-attr="&gt;" ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
       );
     });
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = mocks.getMockFunction();
+      var cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -97,7 +99,8 @@ describe('ReactServerRendering', function() {
         <Parent />
       );
       expect(response).toMatch(
-        '<div ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
           '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">My name is </span>' +
@@ -147,7 +150,8 @@ describe('ReactServerRendering', function() {
         );
 
         expect(response).toMatch(
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+          '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+            ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
@@ -227,6 +231,7 @@ describe('ReactServerRendering', function() {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
+      spyOn(console, 'error');
       var instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expect(console.error.argsForCall.length).toBe(1);
@@ -246,8 +251,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderToString(): You must pass ' +
-        'a valid ReactElement.'
+        'renderToString(): You must pass a valid ReactElement.'
       );
     });
   });
@@ -289,7 +293,7 @@ describe('ReactServerRendering', function() {
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = mocks.getMockFunction();
+      var cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -356,8 +360,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderToStaticMarkup(): You must pass ' +
-        'a valid ReactElement.'
+        'renderToString(): You must pass a valid ReactElement.'
       );
     });
 

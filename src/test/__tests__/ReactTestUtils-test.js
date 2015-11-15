@@ -16,13 +16,9 @@ var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 
-var mocks;
-
 describe('ReactTestUtils', function() {
 
   beforeEach(function() {
-    mocks = require('mocks');
-
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
@@ -62,20 +58,20 @@ describe('ReactTestUtils', function() {
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     expect(() => shallowRenderer.render(SomeComponent)).toThrow(
-      'Invariant Violation: ReactShallowRenderer render(): Invalid component ' +
-      'element. Instead of passing a component class, make sure to ' +
-      'instantiate it by passing it to React.createElement.'
+      'ReactShallowRenderer render(): Invalid component element. Instead of ' +
+      'passing a component class, make sure to instantiate it by passing it ' +
+      'to React.createElement.'
     );
     expect(() => shallowRenderer.render(<div />)).toThrow(
-      'Invariant Violation: ReactShallowRenderer render(): Shallow rendering ' +
-      'works only with custom components, not primitives (div). Instead of ' +
-      'calling `.render(el)` and inspecting the rendered output, look at ' +
-      '`el.props` directly instead.'
+      'ReactShallowRenderer render(): Shallow rendering works only with ' +
+      'custom components, not primitives (div). Instead of calling ' +
+      '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
+      'directly instead.'
     );
   });
 
   it('should have shallow unmounting', function() {
-    var componentWillUnmount = mocks.getMockFunction();
+    var componentWillUnmount = jest.genMockFn();
 
     var SomeComponent = React.createClass({
       render: function() {
@@ -104,6 +100,18 @@ describe('ReactTestUtils', function() {
     var result = shallowRenderer.getRenderOutput();
 
     expect(result).toBe(null);
+  });
+
+  it('can shallow render with a ref', function() {
+    var SomeComponent = React.createClass({
+      render: function() {
+        return <div ref="hello" />;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    // Shouldn't crash.
+    shallowRenderer.render(<SomeComponent />);
   });
 
   it('lets you update shallowly rendered components', function() {
@@ -158,6 +166,21 @@ describe('ReactTestUtils', function() {
     var updatedResultCausedByClick = shallowRenderer.getRenderOutput();
     expect(updatedResultCausedByClick.type).toBe('a');
     expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
+  });
+
+  it('can access the mounted component instance', function() {
+    var SimpleComponent = React.createClass({
+      someMethod: function() {
+        return this.props.n;
+      },
+      render: function() {
+        return <div>{this.props.n}</div>;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SimpleComponent n={5} />);
+    expect(shallowRenderer.getMountedInstance().someMethod()).toEqual(5);
   });
 
   it('can shallowly render components with contextTypes', function() {
@@ -408,6 +431,45 @@ describe('ReactTestUtils', function() {
     ReactTestUtils.Simulate.change(node);
 
     expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
+  });
+
+  it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', function() {
+    var SomeComponent = React.createClass({
+      render: function() {
+        return (
+          <div onClick={this.props.handleClick}>
+            hello, world.
+          </div>
+        );
+      },
+    });
+    var handler = jasmine.createSpy('spy');
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SomeComponent handleClick={handler} />);
+    var result = shallowRenderer.getRenderOutput();
+    expect(() => ReactTestUtils.Simulate.click(result)).toThrow(
+      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
+      'TestUtils.Simulate will not work if you are using shallow rendering.'
+    );
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('can scry with stateless components involved', function() {
+    var Stateless = () => <div><hr /></div>;
+    var SomeComponent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Stateless />
+            <hr />
+          </div>
+        );
+      },
+    });
+
+    var inst = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    var hrs = ReactTestUtils.scryRenderedDOMComponentsWithTag(inst, 'hr');
+    expect(hrs.length).toBe(2);
   });
 
 });

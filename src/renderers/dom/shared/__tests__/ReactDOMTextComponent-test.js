@@ -13,22 +13,11 @@
 
 var React;
 var ReactDOM;
-var ReactDOMServer;
 
 describe('ReactDOMTextComponent', function() {
   beforeEach(function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
-  });
-
-  it('should escape the rootID', function() {
-    var ThisThingShouldBeEscaped = '">>> LULZ <<<"';
-    var ThisThingWasBeEscaped = '&quot;&gt;&gt;&gt; LULZ &lt;&lt;&lt;&quot;';
-    var thing = <div><span key={ThisThingShouldBeEscaped}>LULZ</span></div>;
-    var html = ReactDOMServer.renderToString(thing);
-    expect(html).not.toContain(ThisThingShouldBeEscaped);
-    expect(html).toContain(ThisThingWasBeEscaped);
   });
 
   it('updates a mounted text component in place', function() {

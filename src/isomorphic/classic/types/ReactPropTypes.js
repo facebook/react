@@ -96,7 +96,7 @@ function createChainableTypeChecker(validate) {
   ) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
-    if (props[propName] == null) {
+    if (props != null && props[propName] == null) {
       var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
         return new Error(
@@ -112,6 +112,8 @@ function createChainableTypeChecker(validate) {
 
   var chainedCheckType = checkType.bind(null, false);
   chainedCheckType.isRequired = checkType.bind(null, true);
+
+  chainedCheckType.interpretAsError = false;
 
   return chainedCheckType;
 }
@@ -144,6 +146,11 @@ function createAnyTypeChecker() {
 
 function createArrayOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside arrayOf.`
+      );
+    }
     var propValue = props[propName];
     if (!Array.isArray(propValue)) {
       var locationName = ReactPropTypeLocationNames[location];
@@ -203,11 +210,13 @@ function createInstanceTypeChecker(expectedClass) {
 
 function createEnumTypeChecker(expectedValues) {
   if (!Array.isArray(expectedValues)) {
-    return createChainableTypeChecker(function() {
+    var error = createChainableTypeChecker(function() {
       return new Error(
         `Invalid argument supplied to oneOf, expected an instance of array.`
       );
     });
+    error.interpretAsError = true;
+    return error;
   }
 
   function validate(props, propName, componentName, location, propFullName) {
@@ -230,6 +239,11 @@ function createEnumTypeChecker(expectedValues) {
 
 function createObjectOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside objectOf.`
+      );
+    }
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== 'object') {
@@ -260,11 +274,13 @@ function createObjectOfTypeChecker(typeChecker) {
 
 function createUnionTypeChecker(arrayOfTypeCheckers) {
   if (!Array.isArray(arrayOfTypeCheckers)) {
-    return createChainableTypeChecker(function() {
+    var error = createChainableTypeChecker(function() {
       return new Error(
         `Invalid argument supplied to oneOfType, expected an instance of array.`
       );
     });
+    error.interpretAsError = true;
+    return error;
   }
 
   function validate(props, propName, componentName, location, propFullName) {
@@ -411,7 +427,7 @@ function getPreciseType(propValue) {
 // Returns class name of the object, if any.
 function getClassName(propValue) {
   if (!propValue.constructor || !propValue.constructor.name) {
-    return '<<anonymous>>';
+    return ANONYMOUS;
   }
   return propValue.constructor.name;
 }

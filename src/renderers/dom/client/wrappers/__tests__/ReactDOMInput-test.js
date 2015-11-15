@@ -13,7 +13,6 @@
 
 
 var emptyFunction = require('emptyFunction');
-var mocks = require('mocks');
 
 describe('ReactDOMInput', function() {
   var EventConstants;
@@ -23,7 +22,7 @@ describe('ReactDOMInput', function() {
   var ReactTestUtils;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -235,7 +234,7 @@ describe('ReactDOMInput', function() {
   });
 
   it('should support ReactLink', function() {
-    var link = new ReactLink('yolo', mocks.getMockFunction());
+    var link = new ReactLink('yolo', jest.genMockFn());
     var instance = <input type="text" valueLink={link} />;
 
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -252,16 +251,19 @@ describe('ReactDOMInput', function() {
   });
 
   it('should warn with value and no onChange handler', function() {
-    var link = new ReactLink('yolo', mocks.getMockFunction());
+    var link = new ReactLink('yolo', jest.genMockFn());
     ReactTestUtils.renderIntoDocument(<input type="text" valueLink={link} />);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`valueLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+    );
 
     ReactTestUtils.renderIntoDocument(
-      <input type="text" value="zoink" onChange={mocks.getMockFunction()} />
+      <input type="text" value="zoink" onChange={jest.genMockFn()} />
     );
-    expect(console.error.argsForCall.length).toBe(0);
-    ReactTestUtils.renderIntoDocument(<input type="text" value="zoink" />);
     expect(console.error.argsForCall.length).toBe(1);
+    ReactTestUtils.renderIntoDocument(<input type="text" value="zoink" />);
+    expect(console.error.argsForCall.length).toBe(2);
   });
 
   it('should warn with value and no onChange handler and readOnly specified', function() {
@@ -276,9 +278,20 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
   });
 
+  it('should have a this value of undefined if bind is not used', function() {
+    var unboundInputOnChange = function() {
+      expect(this).toBe(undefined);
+    };
+
+    var instance = <input type="text" onChange={unboundInputOnChange} />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+
+    ReactTestUtils.Simulate.change(instance);
+  });
+
   it('should throw if both value and valueLink are provided', function() {
     var node = document.createElement('div');
-    var link = new ReactLink('yolo', mocks.getMockFunction());
+    var link = new ReactLink('yolo', jest.genMockFn());
     var instance = <input type="text" valueLink={link} />;
 
     expect(() => ReactDOM.render(instance, node)).not.toThrow();
@@ -298,7 +311,7 @@ describe('ReactDOMInput', function() {
   });
 
   it('should support checkedLink', function() {
-    var link = new ReactLink(true, mocks.getMockFunction());
+    var link = new ReactLink(true, jest.genMockFn());
     var instance = <input type="checkbox" checkedLink={link} />;
 
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -316,26 +329,29 @@ describe('ReactDOMInput', function() {
 
   it('should warn with checked and no onChange handler', function() {
     var node = document.createElement('div');
-    var link = new ReactLink(true, mocks.getMockFunction());
+    var link = new ReactLink(true, jest.genMockFn());
     ReactDOM.render(<input type="checkbox" checkedLink={link} />, node);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`checkedLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+    );
 
     ReactTestUtils.renderIntoDocument(
       <input
         type="checkbox"
         checked="false"
-        onChange={mocks.getMockFunction()}
+        onChange={jest.genMockFn()}
       />
     );
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(1);
 
     ReactTestUtils.renderIntoDocument(
       <input type="checkbox" checked="false" readOnly={true} />
     );
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(1);
 
     ReactTestUtils.renderIntoDocument(<input type="checkbox" checked="false" />);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(2);
   });
 
   it('should warn with checked and no onChange handler with readOnly specified', function() {
@@ -352,7 +368,7 @@ describe('ReactDOMInput', function() {
 
   it('should throw if both checked and checkedLink are provided', function() {
     var node = document.createElement('div');
-    var link = new ReactLink(true, mocks.getMockFunction());
+    var link = new ReactLink(true, jest.genMockFn());
     var instance = <input type="checkbox" checkedLink={link} />;
 
     expect(() => ReactDOM.render(instance, node)).not.toThrow();
@@ -374,7 +390,7 @@ describe('ReactDOMInput', function() {
 
   it('should throw if both checkedLink and valueLink are provided', function() {
     var node = document.createElement('div');
-    var link = new ReactLink(true, mocks.getMockFunction());
+    var link = new ReactLink(true, jest.genMockFn());
     var instance = <input type="checkbox" checkedLink={link} />;
 
     expect(() => ReactDOM.render(instance, node)).not.toThrow();
@@ -385,5 +401,17 @@ describe('ReactDOMInput', function() {
     instance =
       <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
     expect(() => ReactDOM.render(instance, node)).toThrow();
+  });
+
+  it('should throw warning message if value is null', function() {
+    ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`value` prop on `input` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
+    );
+
+    ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
+    expect(console.error.argsForCall.length).toBe(1);
   });
 });

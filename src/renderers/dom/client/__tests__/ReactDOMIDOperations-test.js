@@ -12,42 +12,16 @@
 'use strict';
 
 describe('ReactDOMIDOperations', function() {
-  var DOMPropertyOperations = require('DOMPropertyOperations');
   var ReactDOMIDOperations = require('ReactDOMIDOperations');
-  var ReactMount = require('ReactMount');
   var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
-  var keyOf = require('keyOf');
-
-  it('should disallow updating special properties', function() {
-    spyOn(ReactMount, 'getNode');
-    spyOn(DOMPropertyOperations, 'setValueForProperty');
-
-    expect(function() {
-      ReactDOMIDOperations.updatePropertyByID(
-        'testID',
-        keyOf({dangerouslySetInnerHTML: null}),
-        {__html: 'testContent'}
-      );
-    }).toThrow();
-
-    expect(
-      ReactMount.getNode.argsForCall[0][0]
-    ).toBe('testID');
-
-    expect(
-      DOMPropertyOperations.setValueForProperty.calls.length
-    ).toBe(0);
-  });
 
   it('should update innerHTML and preserve whitespace', function() {
     var stubNode = document.createElement('div');
-    spyOn(ReactMount, 'getNode').andReturn(stubNode);
-
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
       [{
-        parentID: 'testID',
+        parentInst: {_nativeNode: stubNode},
         parentNode: null,
         type: ReactMultiChildUpdateTypes.SET_MARKUP,
         markupIndex: null,
@@ -57,10 +31,6 @@ describe('ReactDOMIDOperations', function() {
       }],
       []
     );
-
-    expect(
-      ReactMount.getNode.argsForCall[0][0]
-    ).toBe('testID');
 
     expect(stubNode.innerHTML).toBe(html);
   });

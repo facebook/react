@@ -15,6 +15,7 @@ var ReactComponent = require('ReactComponent');
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactPropTypes = require('ReactPropTypes');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
 var assign = require('Object.assign');
@@ -340,7 +341,8 @@ var RESERVED_SPEC_KEYS = {
       validateTypeDef(
         Constructor,
         childContextTypes,
-        ReactPropTypeLocations.childContext
+        ReactPropTypeLocations.childContext,
+        false
       );
     }
     Constructor.childContextTypes = assign(
@@ -354,7 +356,8 @@ var RESERVED_SPEC_KEYS = {
       validateTypeDef(
         Constructor,
         contextTypes,
-        ReactPropTypeLocations.context
+        ReactPropTypeLocations.context,
+        false
       );
     }
     Constructor.contextTypes = assign(
@@ -382,7 +385,8 @@ var RESERVED_SPEC_KEYS = {
       validateTypeDef(
         Constructor,
         propTypes,
-        ReactPropTypeLocations.prop
+        ReactPropTypeLocations.prop,
+        true
       );
     }
     Constructor.propTypes = assign(
@@ -397,7 +401,7 @@ var RESERVED_SPEC_KEYS = {
   autobind: function() {}, // noop
 };
 
-function validateTypeDef(Constructor, typeDef, location) {
+function validateTypeDef(Constructor, typeDef, location, checkProps) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       // use a warning instead of an invariant so components
@@ -410,6 +414,16 @@ function validateTypeDef(Constructor, typeDef, location) {
         ReactPropTypeLocationNames[location],
         propName
       );
+
+      // Calls type checker.
+      if ((typeof typeDef[propName] === 'function') && checkProps && typeDef[propName].interpretAsError) {
+        //var props = {something: ReactPropTypes.bool};
+        var error = typeDef[propName](null);
+        if (error instanceof Error) {
+          warning(false, '%s', error.message);
+          typeDef[propName] = undefined;
+        }
+      }
     }
   }
 }
@@ -455,7 +469,8 @@ function mixSpecIntoComponent(Constructor, spec) {
   invariant(
     typeof spec !== 'function',
     'ReactClass: You\'re attempting to ' +
-    'use a component class as a mixin. Instead, just use a regular object.'
+    'use a component class or function as a mixin. Instead, just use a ' +
+    'regular object.'
   );
   invariant(
     !ReactElement.isValidElement(spec),
@@ -662,7 +677,6 @@ function bindAutoBindMethod(component, method) {
     boundMethod.__reactBoundArguments = null;
     var componentName = component.constructor.displayName;
     var _bind = boundMethod.bind;
-    /* eslint-disable block-scoped-var, no-undef */
     boundMethod.bind = function(newThis, ...args) {
       // User is trying to bind() an autobound method; we effectively will
       // ignore the value of "this" that the user is trying to use, so
@@ -689,7 +703,6 @@ function bindAutoBindMethod(component, method) {
       reboundMethod.__reactBoundMethod = method;
       reboundMethod.__reactBoundArguments = args;
       return reboundMethod;
-      /* eslint-enable */
     };
   }
   return boundMethod;
@@ -847,7 +860,6 @@ var ReactClass = {
     };
     Constructor.prototype = new ReactClassComponent();
     Constructor.prototype.constructor = Constructor;
-    Constructor.isReactClass = {};
 
     injectedMixins.forEach(
       mixSpecIntoComponent.bind(null, Constructor)

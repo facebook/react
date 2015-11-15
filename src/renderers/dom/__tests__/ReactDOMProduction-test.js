@@ -22,7 +22,7 @@ describe('ReactDOMProduction', function() {
     oldProcess = process;
     global.process = {env: {NODE_ENV: 'production'}};
 
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
   });

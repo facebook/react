@@ -23,7 +23,7 @@ describe('ReactElement', function() {
   var originalSymbol;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     // Delete the native Symbol if we have one to ensure we test the
     // unpolyfilled environment.
@@ -339,7 +339,7 @@ describe('ReactElement', function() {
       return OTHER_SYMBOL;
     };
 
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
 
@@ -366,4 +366,99 @@ describe('ReactElement', function() {
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
+});
+
+describe('comparing jsx vs .createFactory() vs .createElement()', function() {
+  var Child;
+
+  beforeEach(function() {
+    jest.resetModuleRegistry();
+    React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactTestUtils = require('ReactTestUtils');
+    Child = jest.genMockFromModule('ReactElementTestChild');
+  });
+
+
+  describe('when using jsx only', function() {
+    var Parent, instance;
+    beforeEach(function() {
+      Parent = React.createClass({
+        render: function() {
+          return (
+            <div>
+              <Child ref="child" foo="foo value">children value</Child>
+            </div>
+          );
+        },
+      });
+      instance = ReactTestUtils.renderIntoDocument(<Parent/>);
+    });
+
+    it('should scry children but cannot', function() {
+      var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
+      expect(children.length).toBe(1);
+    });
+
+    it('does not maintain refs', function() {
+      expect(instance.refs.child).not.toBeUndefined();
+    });
+
+    it('can capture Child instantiation calls', function() {
+      expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
+    });
+  });
+
+  describe('when using parent that uses .createFactory()', function() {
+    var factory, instance;
+    beforeEach(function() {
+      var childFactory = React.createFactory(Child);
+      var Parent = React.createClass({
+        render: function() {
+          return React.DOM.div({}, childFactory({ ref: 'child', foo: 'foo value' }, 'children value'));
+        },
+      });
+      factory = React.createFactory(Parent);
+      instance = ReactTestUtils.renderIntoDocument(factory());
+    });
+
+    it('can properly scry children', function() {
+      var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
+      expect(children.length).toBe(1);
+    });
+
+    it('does not maintain refs', function() {
+      expect(instance.refs.child).not.toBeUndefined();
+    });
+
+    it('can capture Child instantiation calls', function() {
+      expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
+    });
+  });
+
+  describe('when using parent that uses .createElement()', function() {
+    var factory, instance;
+    beforeEach(function() {
+      var Parent = React.createClass({
+        render: function() {
+          return React.DOM.div({}, React.createElement(Child, { ref: 'child', foo: 'foo value' }, 'children value'));
+        },
+      });
+      factory = React.createFactory(Parent);
+      instance = ReactTestUtils.renderIntoDocument(factory());
+    });
+
+    it('should scry children but cannot', function() {
+      var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
+      expect(children.length).toBe(1);
+    });
+
+    it('does not maintain refs', function() {
+      expect(instance.refs.child).not.toBeUndefined();
+    });
+
+    it('can capture Child instantiation calls', function() {
+      expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
+    });
+  });
 });

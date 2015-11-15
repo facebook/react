@@ -14,6 +14,7 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
+var canDefineProperty = require('canDefineProperty');
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -27,16 +28,6 @@ var RESERVED_PROPS = {
   __self: true,
   __source: true,
 };
-
-var canDefineProperty = false;
-if (__DEV__) {
-  try {
-    Object.defineProperty({}, 'x', {});
-    canDefineProperty = true;
-  } catch (x) {
-    // IE will fail on defineProperty
-  }
-}
 
 /**
  * Base constructor for all React elements. This is only used to make this
@@ -109,8 +100,10 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
       element._self = self;
       element._source = source;
     }
-    Object.freeze(element.props);
-    Object.freeze(element);
+    if (Object.freeze) {
+      Object.freeze(element.props);
+      Object.freeze(element);
+    }
   }
 
   return element;

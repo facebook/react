@@ -16,7 +16,7 @@ describe('traverseAllChildren', function() {
   var React;
   var ReactFragment;
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     traverseAllChildren = require('traverseAllChildren');
     React = require('React');
     ReactFragment = require('ReactFragment');
@@ -82,7 +82,7 @@ describe('traverseAllChildren', function() {
     );
     expect(traverseContext.length).toEqual(1);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child', function() {
@@ -162,10 +162,10 @@ describe('traverseAllChildren', function() {
       traverseContext, div, '.$divNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, <span key="span/.$spanNode" />, '.1:0:$span/=1$spanNode'
+      traverseContext, <span key="span/.$spanNode" />, '.1:0:$span/.$spanNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, <a key="a/.$aNode" />, '.2:$a/=1$aNode'
+      traverseContext, <a key="a/.$aNode" />, '.2:$a/.$aNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext, 'string', '.3'
@@ -225,25 +225,25 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="firstHalfKey/.$keyZero" />,
-      '.0:$firstHalfKey/=1$keyZero'
+      '.0:$firstHalfKey/.$keyZero'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="firstHalfKey/.$keyTwo" />,
-      '.0:$firstHalfKey/=1$keyTwo'
+      '.0:$firstHalfKey/.$keyTwo'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="secondHalfKey/.$keyFour" />,
-      '.0:$secondHalfKey/=1$keyFour'
+      '.0:$secondHalfKey/.$keyFour'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       <div key="keyFive/.$keyFiveInner" />,
-      '.0:$keyFive/=1$keyFiveInner'
+      '.0:$keyFive/.$keyFiveInner'
     );
   });
 
@@ -326,7 +326,7 @@ describe('traverseAllChildren', function() {
     );
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child in an iterable with keys', function() {
@@ -480,10 +480,10 @@ describe('traverseAllChildren', function() {
     expect(function() {
       traverseAllChildren({a: 1, b: 2}, function() {}, null);
     }).toThrow(
-      'Invariant Violation: Objects are not valid as a React child (found: ' +
-      'object with keys {a, b}). If you meant to render a collection of ' +
-      'children, use an array instead or wrap the object using ' +
-      'createFragment(object) from the React add-ons.'
+      'Objects are not valid as a React child (found: object with keys ' +
+      '{a, b}). If you meant to render a collection of children, use an ' +
+      'array instead or wrap the object using createFragment(object) from ' +
+      'the React add-ons.'
     );
   });
 
@@ -493,10 +493,9 @@ describe('traverseAllChildren', function() {
     expect(function() {
       traverseAllChildren(/abc/, function() {}, null);
     }).toThrow(
-      'Invariant Violation: Objects are not valid as a React child (found: ' +
-      '/abc/). If you meant to render a collection of children, use an array ' +
-      'instead or wrap the object using createFragment(object) from the ' +
-      'React add-ons.'
+      'Objects are not valid as a React child (found: /abc/). If you meant ' +
+      'to render a collection of children, use an array instead or wrap the ' +
+      'object using createFragment(object) from the React add-ons.'
     );
   });
 

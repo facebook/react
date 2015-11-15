@@ -11,7 +11,7 @@
 
 'use strict';
 
-require('mock-modules')
+jest
   .dontMock('accumulateInto');
 
 var accumulateInto;
@@ -26,8 +26,7 @@ describe('accumulateInto', function() {
     expect(function() {
       accumulateInto([], null);
     }).toThrow(
-      'Invariant Violation: accumulateInto(...): Accumulated items must not ' +
-      'be null or undefined.'
+      'accumulateInto(...): Accumulated items must not be null or undefined.'
     );
   });
 

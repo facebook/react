@@ -240,16 +240,16 @@ describe('ReactChildren', function() {
       mappedChildren[2].key,
       mappedChildren[3].key,
     ]).toEqual([
-      'giraffe/.0:$firstHalfKey/=1$keyZero',
-      '/.0:$firstHalfKey/=1$keyTwo',
-      'keyFour/.0:$secondHalfKey/=1$keyFour',
-      '/.0:$keyFive/=1$keyFiveInner',
+      'giraffe/.0:$firstHalfKey/.$keyZero',
+      '/.0:$firstHalfKey/.$keyTwo',
+      'keyFour/.0:$secondHalfKey/.$keyFour',
+      '/.0:$keyFive/.$keyFiveInner',
     ]);
 
-    expect(mappedChildren[0]).toEqual(<div key="giraffe/.0:$firstHalfKey/=1$keyZero" />);
-    expect(mappedChildren[1]).toEqual(<div key="/.0:$firstHalfKey/=1$keyTwo" />);
-    expect(mappedChildren[2]).toEqual(<div key="keyFour/.0:$secondHalfKey/=1$keyFour" />);
-    expect(mappedChildren[3]).toEqual(<div key="/.0:$keyFive/=1$keyFiveInner" />);
+    expect(mappedChildren[0]).toEqual(<div key="giraffe/.0:$firstHalfKey/.$keyZero" />);
+    expect(mappedChildren[1]).toEqual(<div key="/.0:$firstHalfKey/.$keyTwo" />);
+    expect(mappedChildren[2]).toEqual(<div key="keyFour/.0:$secondHalfKey/.$keyFour" />);
+    expect(mappedChildren[3]).toEqual(<div key="/.0:$keyFive/.$keyFiveInner" />);
   });
 
   it('should retain key across two mappings', function() {
@@ -279,8 +279,8 @@ describe('ReactChildren', function() {
     expect(mappedForcedKeys).toEqual(expectedForcedKeys);
 
     var expectedRemappedForcedKeys = [
-      'giraffe/.$giraffe/=1$keyZero',
-      '/.$/=1$keyOne',
+      'giraffe/.$giraffe/.$keyZero',
+      '/.$/.$keyOne',
     ];
     var remappedChildrenForcedKeys =
       ReactChildren.map(mappedChildrenForcedKeys, mapFn);
