@@ -87,7 +87,19 @@ A *framework* [Jest](https://facebook.github.io/jest/), ferramenta para testes u
 
 ### <a name="opcional"></a>Fix Bug Report 
 
--- Escolher um *bug* fácil de corrigir (eventualmente já corrigido), mas que permita ilustrar a utilização da framework Jest para a definição de testes unitários.
+Bug escolhido: https://github.com/facebook/react/issues/5468
+
+Regiões do código modificadas:
+
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/class/ReactClass.js#L419
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/types/ReactPropTypes.js#L99
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/types/ReactPropTypes.js#L116
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/types/ReactPropTypes.js#L213
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/types/ReactPropTypes.js#L277
+
+Caso de teste:
+
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/class/__tests__/ReactClass-test.js#L384
 
 ### <a name="analise"></a>Análise Crítica
 
