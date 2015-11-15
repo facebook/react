@@ -15,7 +15,6 @@ var ReactComponent = require('ReactComponent');
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactPropTypes = require('ReactPropTypes');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
 var assign = require('Object.assign');
@@ -417,7 +416,6 @@ function validateTypeDef(Constructor, typeDef, location, checkProps) {
 
       // Calls type checker.
       if ((typeof typeDef[propName] === 'function') && checkProps && typeDef[propName].interpretAsError) {
-        //var props = {something: ReactPropTypes.bool};
         var error = typeDef[propName](null);
         if (error instanceof Error) {
           warning(false, '%s', error.message);
