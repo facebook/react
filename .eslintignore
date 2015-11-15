@@ -11,9 +11,5 @@ docs/vendor/bundle/
 examples/
 # Ignore built files.
 build/
-# react-codemod
-packages/react-codemod/test/
-packages/react-codemod/scripts/
-packages/react-codemod/build/
-packages/react-codemod/node_modules/
+scripts/bench/bench-*.js
 vendor/react-dom.js

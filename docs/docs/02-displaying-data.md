@@ -8,7 +8,6 @@ next: jsx-in-depth.html
 
 The most basic thing you can do with a UI is display some data. React makes it easy to display data and automatically keeps the interface up-to-date when the data changes.
 
-
 ## Getting Started
 
 Let's look at a really simple example. Create a `hello-react.html` file with the following code:
@@ -20,6 +19,7 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
@@ -48,13 +48,12 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
 }, 500);
 ```
-
 
 ## Reactive Updates
 
@@ -64,7 +63,6 @@ The way we are able to figure this out is that React does not manipulate the DOM
 
 The inputs to this component are called `props` — short for "properties". They're passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, **never write to `this.props`**.
 
-
 ## Components are Just Like Functions
 
 React components are very simple. You can think of them as simple functions that take in `props` and `state` (discussed later) and render HTML. With this in mind, components are easy to reason about.
@@ -72,7 +70,6 @@ React components are very simple. You can think of them as simple functions that
 > Note:
 >
 > **One limitation**: React components can only render a single root node. If you want to return multiple nodes they *must* be wrapped in a single root.
-
 
 ## JSX Syntax
 
@@ -98,7 +95,6 @@ JSX is similar to HTML, but not exactly the same. See [JSX gotchas](/react/docs/
 
 [Babel exposes a number of ways to get started using JSX](http://babeljs.io/docs/setup/), ranging from command line tools to Ruby on Rails integrations. Choose the tool that works best for you.
 
-
 ## React without JSX
 
 JSX is completely optional; you don't have to use JSX with React. You can create React elements in plain JavaScript using `React.createElement`, which takes a tag name or component, a properties object, and variable number of optional child arguments.
@@ -107,7 +103,7 @@ JSX is completely optional; you don't have to use JSX with React. You can create
 var child1 = React.createElement('li', null, 'First Text Content');
 var child2 = React.createElement('li', null, 'Second Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 For convenience, you can create short-hand factory functions to create elements from custom components.
@@ -116,7 +112,7 @@ For convenience, you can create short-hand factory functions to create elements 
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 React already has built-in factories for common HTML tags:

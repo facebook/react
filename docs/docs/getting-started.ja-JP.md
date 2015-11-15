@@ -37,7 +37,7 @@ React でのハッキングを始めるにあたり、一番簡単なものと�
   <body>
     <div id="example"></div>
     <script type="text/babel">
-      React.render(
+      ReactDOM.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
       );
@@ -53,7 +53,7 @@ JavaScript の中に書かれた XML シンタックスは JSX と呼ばれる�
 React の JSX コードは別ファイルに分離することができます。 次のような `src/helloworld.js` を作ってみましょう。
 
 ```javascript
-React.render(
+ReactDOM.render(
   <h1>Hello, world!</h1>,
   document.getElementById('example')
 );
@@ -83,7 +83,7 @@ jsx --watch src/ build/
 すると、`src/helloword.js` に変更を加えるごとに `build/helloworld.js` が自動で生成されるようになります。
 
 ```javascript{2}
-React.render(
+ReactDOM.render(
   React.createElement('h1', null, 'Hello, world!'),
   document.getElementById('example')
 );

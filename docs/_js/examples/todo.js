@@ -34,10 +34,10 @@ var TodoApp = React.createClass({
   }
 });
 
-React.render(<TodoApp />, mountNode);
+ReactDOM.render(<TodoApp />, mountNode);
 `;
 
-React.render(
+ReactDOM.render(
   <ReactPlayground codeText={TODO_COMPONENT} />,
   document.getElementById('todoExample')
 );

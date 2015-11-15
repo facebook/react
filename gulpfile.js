@@ -41,8 +41,8 @@ var babelOpts = {
   _moduleMap: require('fbjs/module-map'),
 };
 
-gulp.task('react:clean', function(cb) {
-  del([paths.react.lib], cb);
+gulp.task('react:clean', function() {
+  return del([paths.react.lib]);
 });
 
 gulp.task('react:modules', function() {

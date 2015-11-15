@@ -4,7 +4,7 @@ var MarkdownEditor = React.createClass({
     return {value: 'Type some *markdown* here!'};
   },
   handleChange: function() {
-    this.setState({value: React.findDOMNode(this.refs.textarea).value});
+    this.setState({value: this.refs.textarea.value});
   },
   rawMarkup: function() {
     return { __html: marked(this.state.value, {sanitize: true}) };
@@ -27,10 +27,10 @@ var MarkdownEditor = React.createClass({
   }
 });
 
-React.render(<MarkdownEditor />, mountNode);
+ReactDOM.render(<MarkdownEditor />, mountNode);
 `;
 
-React.render(
+ReactDOM.render(
   <ReactPlayground codeText={MARKDOWN_COMPONENT} />,
   document.getElementById('markdownExample')
 );

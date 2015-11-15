@@ -3,7 +3,7 @@ id: children-undefined-ko-KR
 title: 정의되지 않은 this.props.children
 layout: tips
 permalink: children-undefined-ko-KR.html
-prev: references-to-components-ko-KR.html
+prev: expose-component-functions-ko-KR.html
 next: use-react-with-other-libraries-ko-KR.html
 ---
 
@@ -22,7 +22,7 @@ var App = React.createClass({
   }
 });
 
-React.render(<App></App>, mountNode);
+ReactDOM.render(<App></App>, mountNode);
 ```
 
 서브 컴포넌트(`span`)에 억세스하려면, [refs](/react/docs/more-about-refs.html)를 넣으세요.

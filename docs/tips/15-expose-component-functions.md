@@ -53,7 +53,7 @@ var Todos = React.createClass({
   }
 });
 
-React.render(<Todos />, mountNode);
+ReactDOM.render(<Todos />, mountNode);
 ```
 
 Alternatively, you could have achieved this by passing the `todo` an `isLastUnfinishedItem` prop, let it check this prop in `componentDidUpdate`, then animate itself; however, this quickly gets messy if you pass around different props to control animations.

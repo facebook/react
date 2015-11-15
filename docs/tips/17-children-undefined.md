@@ -22,7 +22,7 @@ var App = React.createClass({
   }
 });
 
-React.render(<App></App>, mountNode);
+ReactDOM.render(<App></App>, mountNode);
 ```
 
 To access your own subcomponents (the `span`s), place [refs](/react/docs/more-about-refs.html) on them.

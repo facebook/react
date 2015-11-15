@@ -26,7 +26,7 @@ var MessageBox = React.createClass({
   }
 });
 
-React.render(<MessageBox name="Rogers"/>, mountNode);
+ReactDOM.render(<MessageBox name="Rogers"/>, mountNode);
 ```
 
 Better:
@@ -38,7 +38,7 @@ var MessageBox = React.createClass({
   }
 });
 
-React.render(<MessageBox name="Rogers"/>, mountNode);
+ReactDOM.render(<MessageBox name="Rogers"/>, mountNode);
 ```
 
 (For more complex logic, simply isolate the computation in a method.)
@@ -62,5 +62,5 @@ var Counter = React.createClass({
   }
 });
 
-React.render(<Counter initialCount={7}/>, mountNode);
+ReactDOM.render(<Counter initialCount={7}/>, mountNode);
 ```
