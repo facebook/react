@@ -1,0 +1,1800 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for src/test/ReactTestUtils.js</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../prettify.css">
+    <link rel="stylesheet" href="../../base.css">
+    <style type='text/css'>
+        div.coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class="header high">
+    <h1>Code coverage report for <span class="entity">src/test/ReactTestUtils.js</span></h1>
+    <h2>
+        Statements: <span class="metric">84.44% <small>(152 / 180)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Branches: <span class="metric">61.9% <small>(52 / 84)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Functions: <span class="metric">86.54% <small>(45 / 52)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Lines: <span class="metric">84.44% <small>(152 / 180)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Ignored: <span class="metric"><span class="ignore-none">none</span></span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    <div class="path"><a href="../../index.html">All files</a> &#187; <a href="index.html">src/test/</a> &#187; ReactTestUtils.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tr><td class="line-count">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586</td><td class="line-coverage"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">124</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">113</span>
+<span class="cline-any cline-yes">113</span>
+<span class="cline-any cline-yes">113</span>
+<span class="cline-any cline-yes">113</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">72</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">60</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">41</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">113</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">330</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">330</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">376</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">73</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">67</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">23</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">23</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">23</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16</span>
+<span class="cline-any cline-yes">13</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16</span>
+<span class="cline-any cline-yes">87</span>
+<span class="cline-any cline-yes">59</span>
+<span class="cline-any cline-yes">59</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">59</span>
+<span class="cline-any cline-yes">59</span>
+<span class="cline-any cline-yes">63</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">16</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15</span>
+<span class="cline-any cline-yes">15</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">8</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">12</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">22461</span>
+<span class="cline-any cline-yes">50</span>
+<span class="cline-any cline-yes">50</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">48</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">340</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">340</span>
+<span class="cline-any cline-yes">340</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22461</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">49</span>
+<span class="cline-any cline-yes">20416</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-yes">14</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">20416</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">20416</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">319</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule ReactTestUtils
+ */
+&nbsp;
+'use strict';
+&nbsp;
+var EventConstants = require('EventConstants');
+var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
+var EventPropagators = require('EventPropagators');
+var React = require('React');
+var ReactDOM = require('ReactDOM');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactElement = require('ReactElement');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactInstanceMap = require('ReactInstanceMap');
+var ReactUpdates = require('ReactUpdates');
+var SyntheticEvent = require('SyntheticEvent');
+&nbsp;
+var assign = require('Object.assign');
+var emptyObject = require('emptyObject');
+var findDOMNode = require('findDOMNode');
+var invariant = require('invariant');
+&nbsp;
+var topLevelTypes = EventConstants.topLevelTypes;
+&nbsp;
+function Event(suffix) {}
+&nbsp;
+/**
+ * @class ReactTestUtils
+ */
+&nbsp;
+function findAllInRenderedTreeInternal(inst, test) {
+  if (!inst || !inst.getPublicInstance) {
+    return [];
+  }
+  var publicInst = inst.getPublicInstance();
+  var ret = test(publicInst) ? [publicInst] : [];
+  var currentElement = inst._currentElement;
+  if (ReactTestUtils.isDOMComponent(publicInst)) {
+    var renderedChildren = inst._renderedChildren;
+    var key;
+    for (key in renderedChildren) {
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (!renderedChildren.hasOwnProperty(key)) {
+<span class="cstat-no" title="statement not covered" >        continue;</span>
+      }
+      ret = ret.concat(
+        findAllInRenderedTreeInternal(
+          renderedChildren[key],
+          test
+        )
+      );
+    }
+  <span class="missing-if-branch" title="else path not taken" >E</span>} else if (
+    ReactElement.isValidElement(currentElement) &amp;&amp;
+    typeof currentElement.type === 'function'
+  ) {
+    ret = ret.concat(
+      findAllInRenderedTreeInternal(inst._renderedComponent, test)
+    );
+  }
+  return ret;
+}
+&nbsp;
+/**
+ * Todo: Support the entire DOM.scry query syntax. For now, these simple
+ * utilities will suffice for testing purposes.
+ * @lends ReactTestUtils
+ */
+var ReactTestUtils = {
+  renderIntoDocument: function(instance) {
+    var div = document.createElement('div');
+    // None of our tests actually require attaching the container to the
+    // DOM, and doing so creates a mess that we rely on test isolation to
+    // clean up, so we're going to stop honoring the name of this method
+    // (and probably rename it eventually) if no problems arise.
+    // document.documentElement.appendChild(div);
+    return ReactDOM.render(instance, div);
+  },
+&nbsp;
+  isElement: function(element) {
+    return ReactElement.isValidElement(element);
+  },
+&nbsp;
+  isElementOfType: <span class="fstat-no" title="function not covered" >function(inst, convenienceConstructor) {</span>
+<span class="cstat-no" title="statement not covered" >    return (</span>
+      ReactElement.isValidElement(inst) &amp;&amp;
+      inst.type === convenienceConstructor
+    );
+  },
+&nbsp;
+  isDOMComponent: function(inst) {
+    return !!(inst &amp;&amp; inst.nodeType === 1 &amp;&amp; inst.tagName);
+  },
+&nbsp;
+  isDOMComponentElement: <span class="fstat-no" title="function not covered" >function(inst) {</span>
+<span class="cstat-no" title="statement not covered" >    return !!(inst &amp;&amp;</span>
+              ReactElement.isValidElement(inst) &amp;&amp;
+              !!inst.tagName);
+  },
+&nbsp;
+  isCompositeComponent: function(inst) {
+    if (ReactTestUtils.isDOMComponent(inst)) {
+      // Accessing inst.setState warns; just return false as that'll be what
+      // this returns when we have DOM nodes as refs directly
+      return false;
+    }
+    return inst != null &amp;&amp;
+           typeof inst.render === 'function' &amp;&amp;
+           typeof inst.setState === 'function';
+  },
+&nbsp;
+  isCompositeComponentWithType: function(inst, type) {
+    if (!ReactTestUtils.isCompositeComponent(inst)) {
+      return false;
+    }
+    var internalInstance = ReactInstanceMap.get(inst);
+    var constructor = internalInstance
+      ._currentElement
+      .type;
+&nbsp;
+    return (constructor === type);
+  },
+&nbsp;
+  isCompositeComponentElement: <span class="fstat-no" title="function not covered" >function(inst) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!ReactElement.isValidElement(inst)) {</span>
+<span class="cstat-no" title="statement not covered" >      return false;</span>
+    }
+    // We check the prototype of the type that will get mounted, not the
+    // instance itself. This is a future proof way of duck typing.
+<span class="cstat-no" title="statement not covered" >    var prototype = inst.type.prototype;</span>
+<span class="cstat-no" title="statement not covered" >    return (</span>
+      typeof prototype.render === 'function' &amp;&amp;
+      typeof prototype.setState === 'function'
+    );
+  },
+&nbsp;
+  isCompositeComponentElementWithType: <span class="fstat-no" title="function not covered" >function(inst, type) {</span>
+<span class="cstat-no" title="statement not covered" >    var internalInstance = ReactInstanceMap.get(inst);</span>
+<span class="cstat-no" title="statement not covered" >    var constructor = internalInstance</span>
+      ._currentElement
+      .type;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return !!(ReactTestUtils.isCompositeComponentElement(inst) &amp;&amp;</span>
+             (constructor === type));
+  },
+&nbsp;
+  getRenderedChildOfCompositeComponent: <span class="fstat-no" title="function not covered" >function(inst) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!ReactTestUtils.isCompositeComponent(inst)) {</span>
+<span class="cstat-no" title="statement not covered" >      return null;</span>
+    }
+<span class="cstat-no" title="statement not covered" >    var internalInstance = ReactInstanceMap.get(inst);</span>
+<span class="cstat-no" title="statement not covered" >    return internalInstance._renderedComponent.getPublicInstance();</span>
+  },
+&nbsp;
+  findAllInRenderedTree: function(inst, test) {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!inst) {
+<span class="cstat-no" title="statement not covered" >      return [];</span>
+    }
+    invariant(
+      ReactTestUtils.isCompositeComponent(inst),
+      'findAllInRenderedTree(...): instance must be a composite component'
+    );
+    return findAllInRenderedTreeInternal(ReactInstanceMap.get(inst), test);
+  },
+&nbsp;
+  /**
+   * Finds all instance of components in the rendered tree that are DOM
+   * components with the class name matching `className`.
+   * @return {array} an array of all the matches.
+   */
+  scryRenderedDOMComponentsWithClass: function(root, classNames) {
+    if (!Array.isArray(classNames)) {
+      classNames = classNames.split(/\s+/);
+    }
+    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
+      if (ReactTestUtils.isDOMComponent(inst)) {
+        var className = inst.className;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof className !== 'string') {
+          // SVG, probably.
+<span class="cstat-no" title="statement not covered" >          className = inst.getAttribute('class') || '';</span>
+        }
+        var classList = className.split(/\s+/);
+        return classNames.every(function(name) {
+          return classList.indexOf(name) !== -1;
+        });
+      }
+      return false;
+    });
+  },
+&nbsp;
+  /**
+   * Like scryRenderedDOMComponentsWithClass but expects there to be one result,
+   * and returns that one result, or throws exception if there is any other
+   * number of matches besides one.
+   * @return {!ReactDOMComponent} The one match.
+   */
+  findRenderedDOMComponentWithClass: function(root, className) {
+    var all =
+      ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (all.length !== 1) {
+<span class="cstat-no" title="statement not covered" >      throw new Error(</span>
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for class:' + className
+      );
+    }
+    return all[0];
+  },
+&nbsp;
+&nbsp;
+  /**
+   * Finds all instance of components in the rendered tree that are DOM
+   * components with the tag name matching `tagName`.
+   * @return {array} an array of all the matches.
+   */
+  scryRenderedDOMComponentsWithTag: function(root, tagName) {
+    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
+      return ReactTestUtils.isDOMComponent(inst) &amp;&amp;
+            inst.tagName.toUpperCase() === tagName.toUpperCase();
+    });
+  },
+&nbsp;
+  /**
+   * Like scryRenderedDOMComponentsWithTag but expects there to be one result,
+   * and returns that one result, or throws exception if there is any other
+   * number of matches besides one.
+   * @return {!ReactDOMComponent} The one match.
+   */
+  findRenderedDOMComponentWithTag: <span class="fstat-no" title="function not covered" >function(root, tagName) {</span>
+<span class="cstat-no" title="statement not covered" >    var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);</span>
+<span class="cstat-no" title="statement not covered" >    if (all.length !== 1) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error(</span>
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for tag:' + tagName
+      );
+    }
+<span class="cstat-no" title="statement not covered" >    return all[0];</span>
+  },
+&nbsp;
+&nbsp;
+  /**
+   * Finds all instances of components with type equal to `componentType`.
+   * @return {array} an array of all the matches.
+   */
+  scryRenderedComponentsWithType: function(root, componentType) {
+    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
+      return ReactTestUtils.isCompositeComponentWithType(
+        inst,
+        componentType
+      );
+    });
+  },
+&nbsp;
+  /**
+   * Same as `scryRenderedComponentsWithType` but expects there to be one result
+   * and returns that one result, or throws exception if there is any other
+   * number of matches besides one.
+   * @return {!ReactComponent} The one match.
+   */
+  findRenderedComponentWithType: function(root, componentType) {
+    var all = ReactTestUtils.scryRenderedComponentsWithType(
+      root,
+      componentType
+    );
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (all.length !== 1) {
+<span class="cstat-no" title="statement not covered" >      throw new Error(</span>
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for componentType:' + componentType
+      );
+    }
+    return all[0];
+  },
+&nbsp;
+  /**
+   * Pass a mocked component module to this method to augment it with
+   * useful methods that allow it to be used as a dummy React component.
+   * Instead of rendering as usual, the component will become a simple
+   * &lt;div&gt; containing any provided children.
+   *
+   * @param {object} module the mock function object exported from a
+   *                        module that defines the component to be mocked
+   * @param {?string} mockTagName optional dummy root tag name to return
+   *                              from render method (overrides
+   *                              module.mockTagName if provided)
+   * @return {object} the ReactTestUtils object (for chaining)
+   */
+  mockComponent: function(module, mockTagName) {
+    mockTagName = mockTagName || module.mockTagName || 'div';
+&nbsp;
+    module.prototype.render.mockImplementation(function() {
+      return React.createElement(
+        mockTagName,
+        null,
+        this.props.children
+      );
+    });
+&nbsp;
+    return this;
+  },
+&nbsp;
+  /**
+   * Simulates a top level event being dispatched from a raw event that occurred
+   * on an `Element` node.
+   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`
+   * @param {!Element} node The dom to simulate an event occurring on.
+   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+   */
+  simulateNativeEventOnNode: function(topLevelType, node, fakeNativeEvent) {
+    fakeNativeEvent.target = node;
+    ReactBrowserEventEmitter.ReactEventListener.dispatchEvent(
+      topLevelType,
+      fakeNativeEvent
+    );
+  },
+&nbsp;
+  /**
+   * Simulates a top level event being dispatched from a raw event that occurred
+   * on the `ReactDOMComponent` `comp`.
+   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`.
+   * @param {!ReactDOMComponent} comp
+   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+   */
+  simulateNativeEventOnDOMComponent: function(
+      topLevelType,
+      comp,
+      fakeNativeEvent) {
+    ReactTestUtils.simulateNativeEventOnNode(
+      topLevelType,
+      findDOMNode(comp),
+      fakeNativeEvent
+    );
+  },
+&nbsp;
+  nativeTouchData: function(x, y) {
+    return {
+      touches: [
+        {pageX: x, pageY: y},
+      ],
+    };
+  },
+&nbsp;
+  createRenderer: function() {
+    return new ReactShallowRenderer();
+  },
+&nbsp;
+  Simulate: null,
+  SimulateNative: {},
+};
+&nbsp;
+/**
+ * @class ReactShallowRenderer
+ */
+var ReactShallowRenderer = function() {
+  this._instance = null;
+};
+&nbsp;
+ReactShallowRenderer.prototype.getRenderOutput = function() {
+  return (
+    (this._instance &amp;&amp; this._instance._renderedComponent &amp;&amp;
+     this._instance._renderedComponent._renderedOutput)
+    || null
+  );
+};
+&nbsp;
+ReactShallowRenderer.prototype.getMountedInstance = function() {
+  return this._instance ? this._instance._instance : <span class="branch-1 cbranch-no" title="branch not covered" >null;</span>
+};
+&nbsp;
+var NoopInternalComponent = function(element) {
+  this._renderedOutput = element;
+  this._currentElement = element;
+};
+&nbsp;
+NoopInternalComponent.prototype = {
+&nbsp;
+  mountComponent: function() {
+  },
+&nbsp;
+  receiveComponent: function(element) {
+    this._renderedOutput = element;
+    this._currentElement = element;
+  },
+&nbsp;
+  getNativeNode: function() {
+    return undefined;
+  },
+&nbsp;
+  unmountComponent: function() {
+  },
+&nbsp;
+};
+&nbsp;
+var ShallowComponentWrapper = function() { };
+assign(
+  ShallowComponentWrapper.prototype,
+  ReactCompositeComponent.Mixin, {
+    _instantiateReactComponent: function(element) {
+      return new NoopInternalComponent(element);
+    },
+    _replaceNodeWithMarkup: function() {},
+    _renderValidatedComponent:
+      ReactCompositeComponent.Mixin
+        ._renderValidatedComponentWithoutOwnerOrContext,
+  }
+);
+&nbsp;
+ReactShallowRenderer.prototype.render = function(element, context) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'ReactShallowRenderer render(): Invalid component element.%s',
+    typeof element === 'function' ?
+      ' Instead of passing a component class, make sure to instantiate ' +
+      'it by passing it to React.createElement.' :
+      ''
+  );
+  invariant(
+    typeof element.type !== 'string',
+    'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+    'components, not primitives (%s). Instead of calling `.render(el)` and ' +
+    'inspecting the rendered output, look at `el.props` directly instead.',
+    element.type
+  );
+&nbsp;
+  if (!context) {
+    context = emptyObject;
+  }
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
+  this._render(element, transaction, context);
+  ReactUpdates.ReactReconcileTransaction.release(transaction);
+};
+&nbsp;
+ReactShallowRenderer.prototype.unmount = function() {
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (this._instance) {
+    this._instance.unmountComponent();
+  }
+};
+&nbsp;
+ReactShallowRenderer.prototype._render = function(element, transaction, context) {
+  if (this._instance) {
+    this._instance.receiveComponent(element, transaction, context);
+  } else {
+    var instance = new ShallowComponentWrapper(element.type);
+    instance.construct(element);
+&nbsp;
+    instance.mountComponent(transaction, null, null, context);
+&nbsp;
+    this._instance = instance;
+  }
+};
+&nbsp;
+/**
+ * Exports:
+ *
+ * - `ReactTestUtils.Simulate.click(Element/ReactDOMComponent)`
+ * - `ReactTestUtils.Simulate.mouseMove(Element/ReactDOMComponent)`
+ * - `ReactTestUtils.Simulate.change(Element/ReactDOMComponent)`
+ * - ... (All keys from event plugin `eventTypes` objects)
+ */
+function makeSimulator(eventType) {
+  return function(domComponentOrNode, eventData) {
+    var node;
+    invariant(
+      !React.isValidElement(domComponentOrNode),
+      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
+      'TestUtils.Simulate will not work if you are using shallow rendering.'
+    );
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
+      node = findDOMNode(domComponentOrNode);
+<span class="cstat-no" title="statement not covered" >    } else if (domComponentOrNode.tagName) {</span>
+<span class="cstat-no" title="statement not covered" >      node = domComponentOrNode;</span>
+    }
+&nbsp;
+    var dispatchConfig =
+      EventPluginRegistry.eventNameDispatchConfigs[eventType];
+&nbsp;
+    var fakeNativeEvent = new Event();
+    fakeNativeEvent.target = node;
+    // We don't use SyntheticEvent.getPooled in order to not have to worry about
+    // properly destroying any properties assigned from `eventData` upon release
+    var event = new SyntheticEvent(
+      dispatchConfig,
+      ReactDOMComponentTree.getInstanceFromNode(node),
+      fakeNativeEvent,
+      node
+    );
+    assign(event, eventData);
+&nbsp;
+    if (dispatchConfig.phasedRegistrationNames) {
+      EventPropagators.accumulateTwoPhaseDispatches(event);
+    } else {
+      EventPropagators.accumulateDirectDispatches(event);
+    }
+&nbsp;
+    ReactUpdates.batchedUpdates(function() {
+      EventPluginHub.enqueueEvents(event);
+      EventPluginHub.processEventQueue(true);
+    });
+  };
+}
+&nbsp;
+function buildSimulators() {
+  ReactTestUtils.Simulate = {};
+&nbsp;
+  var eventType;
+  for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
+    /**
+     * @param {!Element|ReactDOMComponent} domComponentOrNode
+     * @param {?object} eventData Fake event data to use in SyntheticEvent.
+     */
+    ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
+  }
+}
+&nbsp;
+// Rebuild ReactTestUtils.Simulate whenever event plugins are injected
+var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
+EventPluginHub.injection.injectEventPluginOrder = <span class="fstat-no" title="function not covered" >function() {</span>
+<span class="cstat-no" title="statement not covered" >  oldInjectEventPluginOrder.apply(this, arguments);</span>
+<span class="cstat-no" title="statement not covered" >  buildSimulators();</span>
+};
+var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
+EventPluginHub.injection.injectEventPluginsByName = function() {
+  oldInjectEventPlugins.apply(this, arguments);
+  buildSimulators();
+};
+&nbsp;
+buildSimulators();
+&nbsp;
+/**
+ * Exports:
+ *
+ * - `ReactTestUtils.SimulateNative.click(Element/ReactDOMComponent)`
+ * - `ReactTestUtils.SimulateNative.mouseMove(Element/ReactDOMComponent)`
+ * - `ReactTestUtils.SimulateNative.mouseIn/ReactDOMComponent)`
+ * - `ReactTestUtils.SimulateNative.mouseOut(Element/ReactDOMComponent)`
+ * - ... (All keys from `EventConstants.topLevelTypes`)
+ *
+ * Note: Top level event types are a subset of the entire set of handler types
+ * (which include a broader set of "synthetic" events). For example, onDragDone
+ * is a synthetic event. Except when testing an event plugin or React's event
+ * handling code specifically, you probably want to use ReactTestUtils.Simulate
+ * to dispatch synthetic events.
+ */
+&nbsp;
+function makeNativeSimulator(eventType) {
+  return function(domComponentOrNode, nativeEventData) {
+    var fakeNativeEvent = new Event(eventType);
+    assign(fakeNativeEvent, nativeEventData);
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
+      ReactTestUtils.simulateNativeEventOnDOMComponent(
+        eventType,
+        domComponentOrNode,
+        fakeNativeEvent
+      );
+<span class="cstat-no" title="statement not covered" >    } else if (domComponentOrNode.tagName) {</span>
+      // Will allow on actual dom nodes.
+<span class="cstat-no" title="statement not covered" >      ReactTestUtils.simulateNativeEventOnNode(</span>
+        eventType,
+        domComponentOrNode,
+        fakeNativeEvent
+      );
+    }
+  };
+}
+&nbsp;
+Object.keys(topLevelTypes).forEach(function(eventType) {
+  // Event type is stored as 'topClick' - we transform that to 'click'
+  var convenienceName = eventType.indexOf('top') === 0 ?
+    eventType.charAt(3).toLowerCase() + eventType.substr(4) <span class="branch-1 cbranch-no" title="branch not covered" >: eventTyp</span>e;
+  /**
+   * @param {!Element|ReactDOMComponent} domComponentOrNode
+   * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
+   */
+  ReactTestUtils.SimulateNative[convenienceName] =
+    makeNativeSimulator(eventType);
+});
+&nbsp;
+module.exports = ReactTestUtils;
+&nbsp;</pre></td></tr>
+</table></pre>
+
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Nov 14 2015 19:44:32 GMT+0000 (WET)</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

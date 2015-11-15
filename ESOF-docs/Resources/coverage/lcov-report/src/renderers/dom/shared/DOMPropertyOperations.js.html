@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for src/renderers/dom/shared/DOMPropertyOperations.js</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../../../prettify.css">
+    <link rel="stylesheet" href="../../../../base.css">
+    <style type='text/css'>
+        div.coverage-summary .sorter {
+            background-image: url(../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class="header high">
+    <h1>Code coverage report for <span class="entity">src/renderers/dom/shared/DOMPropertyOperations.js</span></h1>
+    <h2>
+        Statements: <span class="metric">82% <small>(82 / 100)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Branches: <span class="metric">73.68% <small>(70 / 95)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Functions: <span class="metric">66.67% <small>(8 / 12)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Lines: <span class="metric">82% <small>(82 / 100)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Ignored: <span class="metric"><span class="ignore-none">none</span></span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    <div class="path"><a href="../../../../index.html">All files</a> &#187; <a href="index.html">src/renderers/dom/shared/</a> &#187; DOMPropertyOperations.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tr><td class="line-count">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281</td><td class="line-coverage"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">34</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">33</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">33</span>
+<span class="cline-any cline-yes">22</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16</span>
+<span class="cline-any cline-yes">16</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15</span>
+<span class="cline-any cline-yes">13</span>
+<span class="cline-any cline-yes">13</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">12</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">8</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule DOMPropertyOperations
+ * @typechecks static-only
+ */
+&nbsp;
+'use strict';
+&nbsp;
+var DOMProperty = require('DOMProperty');
+var EventPluginRegistry = require('EventPluginRegistry');
+var ReactPerf = require('ReactPerf');
+&nbsp;
+var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
+var warning = require('warning');
+&nbsp;
+// Simplified subset
+var VALID_ATTRIBUTE_NAME_REGEX = /^[a-zA-Z_][\w\.\-]*$/;
+var illegalAttributeNameCache = {};
+var validatedAttributeNameCache = {};
+&nbsp;
+function isAttributeNameSafe(attributeName) {
+  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+    return true;
+  }
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+<span class="cstat-no" title="statement not covered" >    return false;</span>
+  }
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
+    validatedAttributeNameCache[attributeName] = true;
+    return true;
+  }
+<span class="cstat-no" title="statement not covered" >  illegalAttributeNameCache[attributeName] = true;</span>
+<span class="cstat-no" title="statement not covered" >  warning(</span>
+    false,
+    'Invalid attribute name: `%s`',
+    attributeName
+  );
+<span class="cstat-no" title="statement not covered" >  return false;</span>
+}
+&nbsp;
+function shouldIgnoreValue(propertyInfo, value) {
+  return value == null ||
+    (propertyInfo.hasBooleanValue &amp;&amp; !value) ||
+    (propertyInfo.hasNumericValue &amp;&amp; isNaN(value)) ||
+    (propertyInfo.hasPositiveNumericValue &amp;&amp; (value &lt; 1)) ||
+    (propertyInfo.hasOverloadedBooleanValue &amp;&amp; value === false);
+}
+&nbsp;
+<span class="missing-if-branch" title="else path not taken" >E</span>if (__DEV__) {
+  var reactProps = {
+    children: true,
+    dangerouslySetInnerHTML: true,
+    key: true,
+    ref: true,
+  };
+  var warnedProperties = {};
+&nbsp;
+  var warnUnknownProperty = function(name) {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (reactProps.hasOwnProperty(name) &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >reactProps[name] </span>||
+        warnedProperties.hasOwnProperty(name)<span class="branch-3 cbranch-no" title="branch not covered" > &amp;&amp; warnedProperties[na</span>me]) {
+<span class="cstat-no" title="statement not covered" >      return;</span>
+    }
+&nbsp;
+    warnedProperties[name] = true;
+    var lowerCasedName = name.toLowerCase();
+&nbsp;
+    // data-* attributes should be lowercase; suggest the lowercase version
+    var standardName = (
+      DOMProperty.isCustomAttribute(lowerCasedName) ?
+<span class="branch-0 cbranch-no" title="branch not covered" >        lowerCasedN</span>ame :
+      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
+        DOMProperty.getPossibleStandardName[lowerCasedName] :
+        null
+    );
+&nbsp;
+    // For now, only warn when we have a suggested correction. This prevents
+    // logging too much when using transferPropsTo.
+    warning(
+      standardName == null,
+      'Unknown DOM property %s. Did you mean %s?',
+      name,
+      standardName
+    );
+&nbsp;
+    var registrationName = (
+      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+        lowerCasedName
+      ) ?
+      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
+      null
+    );
+&nbsp;
+    warning(
+      registrationName == null,
+      'Unknown event handler property %s. Did you mean `%s`?',
+      name,
+      registrationName
+    );
+  };
+}
+&nbsp;
+/**
+ * Operations for dealing with DOM properties.
+ */
+var DOMPropertyOperations = {
+&nbsp;
+  /**
+   * Creates markup for the ID property.
+   *
+   * @param {string} id Unescaped ID.
+   * @return {string} Markup string.
+   */
+  createMarkupForID: <span class="fstat-no" title="function not covered" >function(id) {</span>
+<span class="cstat-no" title="statement not covered" >    return DOMProperty.ID_ATTRIBUTE_NAME + '=' +</span>
+      quoteAttributeValueForBrowser(id);
+  },
+&nbsp;
+  setAttributeForID: <span class="fstat-no" title="function not covered" >function(node, id) {</span>
+<span class="cstat-no" title="statement not covered" >    node.setAttribute(DOMProperty.ID_ATTRIBUTE_NAME, id);</span>
+  },
+&nbsp;
+  createMarkupForRoot: <span class="fstat-no" title="function not covered" >function() {</span>
+<span class="cstat-no" title="statement not covered" >    return DOMProperty.ROOT_ATTRIBUTE_NAME + '=""';</span>
+  },
+&nbsp;
+  setAttributeForRoot: <span class="fstat-no" title="function not covered" >function(node) {</span>
+<span class="cstat-no" title="statement not covered" >    node.setAttribute(DOMProperty.ROOT_ATTRIBUTE_NAME, '');</span>
+  },
+&nbsp;
+  /**
+   * Creates markup for a property.
+   *
+   * @param {string} name
+   * @param {*} value
+   * @return {?string} Markup string, or null if the property was invalid.
+   */
+  createMarkupForProperty: function(name, value) {
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      if (shouldIgnoreValue(propertyInfo, value)) {
+        return '';
+      }
+      var attributeName = propertyInfo.attributeName;
+      if (propertyInfo.hasBooleanValue ||
+          (propertyInfo.hasOverloadedBooleanValue &amp;&amp; value === true)) {
+        return attributeName + '=""';
+      }
+      return attributeName + '=' + quoteAttributeValueForBrowser(value);
+    } else if (DOMProperty.isCustomAttribute(name)) {
+      if (value == null) {
+        return '';
+      }
+      return name + '=' + quoteAttributeValueForBrowser(value);
+    <span class="missing-if-branch" title="else path not taken" >E</span>} else if (__DEV__) {
+      warnUnknownProperty(name);
+    }
+    return null;
+  },
+&nbsp;
+  /**
+   * Creates markup for a custom property.
+   *
+   * @param {string} name
+   * @param {*} value
+   * @return {string} Markup string, or empty string if the property was invalid.
+   */
+  createMarkupForCustomAttribute: function(name, value) {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAttributeNameSafe(name) || value == null) {
+<span class="cstat-no" title="statement not covered" >      return '';</span>
+    }
+    return name + '=' + quoteAttributeValueForBrowser(value);
+  },
+&nbsp;
+  /**
+   * Sets the value for a property on a node.
+   *
+   * @param {DOMElement} node
+   * @param {string} name
+   * @param {*} value
+   */
+  setValueForProperty: function(node, name, value) {
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      var mutationMethod = propertyInfo.mutationMethod;
+      if (mutationMethod) {
+        mutationMethod(node, value);
+      } else if (shouldIgnoreValue(propertyInfo, value)) {
+        this.deleteValueForProperty(node, name);
+      } else if (propertyInfo.mustUseAttribute) {
+        var attributeName = propertyInfo.attributeName;
+        var namespace = propertyInfo.attributeNamespace;
+        // `setAttribute` with objects becomes only `[object]` in IE8/9,
+        // ('' + value) makes it output the correct toString()-value.
+        if (namespace) {
+          node.setAttributeNS(namespace, attributeName, '' + value);
+        } else if (propertyInfo.hasBooleanValue ||
+                   (propertyInfo.hasOverloadedBool<span class="branch-2 cbranch-no" title="branch not covered" >eanValue &amp;&amp; val</span>ue === true)) {
+          node.setAttribute(attributeName, '');
+        } else {
+          node.setAttribute(attributeName, '' + value);
+        }
+      } else {
+        var propName = propertyInfo.propertyName;
+        // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
+        // property type before comparing; only `value` does and is string.
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (!propertyInfo.hasSideEffects ||
+<span class="branch-1 cbranch-no" title="branch not covered" >            ('' + node[propName]) !== ('' +</span> value)) {
+          // Contrary to `setAttribute`, object properties are properly
+          // `toString`ed by IE8/9.
+          node[propName] = value;
+        }
+      }
+    <span class="missing-if-branch" title="else path not taken" >E</span>} else if (DOMProperty.isCustomAttribute(name)) {
+      DOMPropertyOperations.setValueForAttribute(node, name, value);
+<span class="cstat-no" title="statement not covered" >    } else if (__DEV__) {</span>
+<span class="cstat-no" title="statement not covered" >      warnUnknownProperty(name);</span>
+    }
+  },
+&nbsp;
+  setValueForAttribute: function(node, name, value) {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAttributeNameSafe(name)) {
+<span class="cstat-no" title="statement not covered" >      return;</span>
+    }
+    if (value == null) {
+      node.removeAttribute(name);
+    } else {
+      node.setAttribute(name, '' + value);
+    }
+  },
+&nbsp;
+  /**
+   * Deletes the value for a property on a node.
+   *
+   * @param {DOMElement} node
+   * @param {string} name
+   */
+  deleteValueForProperty: function(node, name) {
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name<span class="branch-1 cbranch-no" title="branch not covered" >] : n</span>ull;
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (propertyInfo) {
+      var mutationMethod = propertyInfo.mutationMethod;
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (mutationMethod) {
+<span class="cstat-no" title="statement not covered" >        mutationMethod(node, undefined);</span>
+      } else if (propertyInfo.mustUseAttribute) {
+        node.removeAttribute(propertyInfo.attributeName);
+      } else {
+        var propName = propertyInfo.propertyName;
+        var defaultValue = DOMProperty.getDefaultValueForProperty(
+          node.nodeName,
+          propName
+        );
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (!propertyInfo.hasSideEffects ||
+<span class="branch-1 cbranch-no" title="branch not covered" >            ('' + node[propName]) !== default</span>Value) {
+          node[propName] = defaultValue;
+        }
+      }
+<span class="cstat-no" title="statement not covered" >    } else if (DOMProperty.isCustomAttribute(name)) {</span>
+<span class="cstat-no" title="statement not covered" >      node.removeAttribute(name);</span>
+<span class="cstat-no" title="statement not covered" >    } else if (__DEV__) {</span>
+<span class="cstat-no" title="statement not covered" >      warnUnknownProperty(name);</span>
+    }
+  },
+&nbsp;
+};
+&nbsp;
+ReactPerf.measureMethods(DOMPropertyOperations, 'DOMPropertyOperations', {
+  setValueForProperty: 'setValueForProperty',
+  setValueForAttribute: 'setValueForAttribute',
+  deleteValueForProperty: 'deleteValueForProperty',
+});
+&nbsp;
+module.exports = DOMPropertyOperations;
+&nbsp;</pre></td></tr>
+</table></pre>
+
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Nov 14 2015 19:44:32 GMT+0000 (WET)</div>
+</div>
+<script src="../../../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../../../sorter.js"></script>
+</body>
+</html>

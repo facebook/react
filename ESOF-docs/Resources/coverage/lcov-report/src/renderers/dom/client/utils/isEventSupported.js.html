@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for src/renderers/dom/client/utils/isEventSupported.js</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../../../../prettify.css">
+    <link rel="stylesheet" href="../../../../../base.css">
+    <style type='text/css'>
+        div.coverage-summary .sorter {
+            background-image: url(../../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class="header high">
+    <h1>Code coverage report for <span class="entity">src/renderers/dom/client/utils/isEventSupported.js</span></h1>
+    <h2>
+        Statements: <span class="metric">88.24% <small>(15 / 17)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Branches: <span class="metric">64.71% <small>(11 / 17)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Functions: <span class="metric">100% <small>(1 / 1)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Lines: <span class="metric">88.24% <small>(15 / 17)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Ignored: <span class="metric"><span class="ignore-none">none</span></span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    <div class="path"><a href="../../../../../index.html">All files</a> &#187; <a href="index.html">src/renderers/dom/client/utils/</a> &#187; isEventSupported.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tr><td class="line-count">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64</td><td class="line-coverage"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">55</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">55</span>
+<span class="cline-any cline-yes">55</span>
+<span class="cline-any cline-yes">55</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">111</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">55</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule isEventSupported
+ */
+&nbsp;
+'use strict';
+&nbsp;
+var ExecutionEnvironment = require('ExecutionEnvironment');
+&nbsp;
+var useHasFeature;
+<span class="missing-if-branch" title="else path not taken" >E</span>if (ExecutionEnvironment.canUseDOM) {
+  useHasFeature =
+    document.implementation &amp;&amp;
+    document.implementation.hasFeature &amp;&amp;
+    // always returns true in newer browsers as per the standard.
+    // @see http://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
+    document.implementation.hasFeature('', '') !== true;
+}
+&nbsp;
+/**
+ * Checks if an event is supported in the current execution environment.
+ *
+ * NOTE: This will not work correctly for non-generic events such as `change`,
+ * `reset`, `load`, `error`, and `select`.
+ *
+ * Borrows from Modernizr.
+ *
+ * @param {string} eventNameSuffix Event name, e.g. "click".
+ * @param {?boolean} capture Check if the capture phase is supported.
+ * @return {boolean} True if the event is supported.
+ * @internal
+ * @license Modernizr 3.0.0pre (Custom Build) | MIT
+ */
+function isEventSupported(eventNameSuffix, capture) {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!ExecutionEnvironment.canUseDOM ||
+      capture &amp;&amp; !('addEventListener' in document)) {
+<span class="cstat-no" title="statement not covered" >    return false;</span>
+  }
+&nbsp;
+  var eventName = 'on' + eventNameSuffix;
+  var isSupported = eventName in document;
+&nbsp;
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (!isSupported) {
+    var element = document.createElement('div');
+    element.setAttribute(eventName, 'return;');
+    isSupported = typeof element[eventName] === 'function';
+  }
+&nbsp;
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!isSupported &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >useHasFeature </span>&amp;&amp; <span class="branch-2 cbranch-no" title="branch not covered" >eventNameSuffix === 'wheel')</span> {
+    // This is the only way to test support for the `wheel` event in IE9+.
+<span class="cstat-no" title="statement not covered" >    isSupported = document.implementation.hasFeature('Events.wheel', '3.0');</span>
+  }
+&nbsp;
+  return isSupported;
+}
+&nbsp;
+module.exports = isEventSupported;
+&nbsp;</pre></td></tr>
+</table></pre>
+
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Nov 14 2015 19:44:32 GMT+0000 (WET)</div>
+</div>
+<script src="../../../../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../../../../sorter.js"></script>
+</body>
+</html>
