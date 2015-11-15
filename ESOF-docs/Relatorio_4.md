@@ -91,6 +91,10 @@ Bug escolhido: https://github.com/facebook/react/issues/5468
 
 Regiões do código modificadas:
 
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/class/ReactClass.js#L344
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/class/ReactClass.js#L359
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/class/ReactClass.js#L388
+https://github.com/rppc/react/blob/master/src/isomorphic/classic/class/ReactClass.js#L403
 https://github.com/rppc/react/blob/master/src/isomorphic/classic/class/ReactClass.js#L418
 https://github.com/rppc/react/blob/master/src/isomorphic/classic/types/ReactPropTypes.js#L99
 https://github.com/rppc/react/blob/master/src/isomorphic/classic/types/ReactPropTypes.js#L116
