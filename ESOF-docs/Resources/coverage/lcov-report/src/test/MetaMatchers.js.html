@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for src/test/MetaMatchers.js</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../prettify.css">
+    <link rel="stylesheet" href="../../base.css">
+    <style type='text/css'>
+        div.coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class="header high">
+    <h1>Code coverage report for <span class="entity">src/test/MetaMatchers.js</span></h1>
+    <h2>
+        Statements: <span class="metric">80% <small>(48 / 60)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Branches: <span class="metric">65.38% <small>(17 / 26)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Functions: <span class="metric">77.78% <small>(7 / 9)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Lines: <span class="metric">80% <small>(48 / 60)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Ignored: <span class="metric"><span class="ignore-none">none</span></span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    <div class="path"><a href="../../index.html">All files</a> &#187; <a href="index.html">src/test/</a> &#187; MetaMatchers.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tr><td class="line-count">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129</td><td class="line-coverage"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">10</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">388</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-yes">7</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">44</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">43</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">44</span>
+<span class="cline-any cline-yes">44</span>
+<span class="cline-any cline-yes">44</span>
+<span class="cline-any cline-yes">44</span>
+<span class="cline-any cline-yes">44</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">43</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">235</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">235</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Copyright 2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule MetaMatchers
+ */
+&nbsp;
+'use strict';
+&nbsp;
+/**
+ * This modules adds a jasmine matcher toEqualSpecsIn that can be used to
+ * compare the specs in two different "describe" functions and their result.
+ * It can be used to test a test.
+ */
+&nbsp;
+function getRunnerWithResults(describeFunction) {
+  if (describeFunction._cachedRunner) {
+    // Cached result of execution. This is a convenience way to test against
+    // the same authorative function multiple times.
+    return describeFunction._cachedRunner;
+  }
+  // Patch the current global environment.
+  var env = new jasmine.Env();
+  // Execute the tests synchronously.
+  env.updateInterval = 0;
+  var outerGetEnv = jasmine.getEnv;
+  jasmine.getEnv = function() {
+    return env;
+  };
+  // TODO: Bring over matchers from the existing environment.
+  var runner = env.currentRunner();
+  try {
+    env.describe('', describeFunction);
+    env.execute();
+  } finally {
+    // Restore the environment.
+    jasmine.getEnv = outerGetEnv;
+  }
+  describeFunction._cachedRunner = runner;
+  return runner;
+}
+&nbsp;
+function compareSpec(actual, expected) {
+  if (actual.results().totalCount !== expected.results().totalCount) {
+    return (
+      'Expected ' + expected.results().totalCount + ' expects, ' +
+      'but got ' + actual.results().totalCount + ':' +
+      actual.getFullName()
+    );
+  }
+  return null;
+}
+&nbsp;
+<span class="fstat-no" title="function not covered" >function includesDescription(specs, description, startIndex) {</span>
+<span class="cstat-no" title="statement not covered" >  for (var i = startIndex; i &lt; specs.length; i++) {</span>
+<span class="cstat-no" title="statement not covered" >    if (specs[i].description === description) {</span>
+<span class="cstat-no" title="statement not covered" >      return true;</span>
+    }
+  }
+<span class="cstat-no" title="statement not covered" >  return false;</span>
+}
+&nbsp;
+function compareSpecs(actualSpecs, expectedSpecs) {
+  for (var i = 0; i &lt; actualSpecs.length &amp;&amp; i &lt; expectedSpecs.length; i++) {
+    var actual = actualSpecs[i];
+    var expected = expectedSpecs[i];
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (actual.description === expected.description) {
+      var errorMessage = compareSpec(actual, expected);
+      if (errorMessage) {
+        return errorMessage;
+      }
+      continue;
+<span class="cstat-no" title="statement not covered" >    } else if (includesDescription(actualSpecs, expected.description, i)) {</span>
+<span class="cstat-no" title="statement not covered" >      return 'Did not expect the spec:' + actualSpecs[i].getFullName();</span>
+    } else {
+<span class="cstat-no" title="statement not covered" >      return 'Expected an equivalent to:' + expectedSpecs[i].getFullName();</span>
+    }
+  }
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (i &lt; actualSpecs.length) {
+<span class="cstat-no" title="statement not covered" >    return 'Did not expect the spec:' + actualSpecs[i].getFullName();</span>
+  }
+  if (i &lt; expectedSpecs.length) {
+    return 'Expected an equivalent to:' + expectedSpecs[i].getFullName();
+  }
+  return null;
+}
+&nbsp;
+function compareDescription(a, b) {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (a.description === b.description) {
+<span class="cstat-no" title="statement not covered" >    return 0;</span>
+  }
+  return a.description &lt; b.description ? -1 : 1;
+}
+&nbsp;
+function compareRunners(actual, expected) {
+  return compareSpecs(
+    actual.specs().sort(compareDescription),
+    expected.specs().sort(compareDescription)
+  );
+}
+&nbsp;
+var MetaMatchers = {
+  toEqualSpecsIn: function(expectedDescribeFunction) {
+    var actualDescribeFunction = this.actual;
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof actualDescribeFunction !== 'function') {
+<span class="cstat-no" title="statement not covered" >      throw Error('toEqualSpecsIn() should be used on a describe function');</span>
+    }
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof expectedDescribeFunction !== 'function') {
+<span class="cstat-no" title="statement not covered" >      throw Error('toEqualSpecsIn() should be passed a describe function');</span>
+    }
+    var actual = getRunnerWithResults(actualDescribeFunction);
+    var expected = getRunnerWithResults(expectedDescribeFunction);
+    var errorMessage = compareRunners(actual, expected);
+    this.message = <span class="fstat-no" title="function not covered" >function() {</span>
+<span class="cstat-no" title="statement not covered" >      return [</span>
+        errorMessage,
+        'The specs are equal. Expected them to be different.',
+      ];
+    };
+    return !errorMessage;
+  },
+};
+&nbsp;
+module.exports = MetaMatchers;
+&nbsp;</pre></td></tr>
+</table></pre>
+
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sat Nov 14 2015 19:44:32 GMT+0000 (WET)</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>
