@@ -85,6 +85,9 @@ var ReactPropTypes = {
   shape: createShapeTypeChecker,
 };
 
+ReactPropTypes['boolean'] = ReactPropTypes.bool;
+ReactPropTypes['function'] = ReactPropTypes.func;
+
 function createChainableTypeChecker(validate) {
   function checkType(
     isRequired,
