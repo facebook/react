@@ -30,14 +30,14 @@ var executeDispatchesInOrderStopAtTrue =
   EventPluginUtils.executeDispatchesInOrderStopAtTrue;
 
 /**
- * Instance of element that should respond to touch/move types of interactions, as
- * indicated explicitly by relevant callbacks.
+ * Instance of element that should respond to touch/move types of interactions,
+ * as indicated explicitly by relevant callbacks.
  */
 var responderInst = null;
 
 /**
  * Count of current touches. A textInput should become responder iff the
- * the selection changes while there is a touch on the screen.
+ * selection changes while there is a touch on the screen.
  */
 var trackedTouchCount = 0;
 
