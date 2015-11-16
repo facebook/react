@@ -3,7 +3,7 @@ id: reconciliation-it-IT
 title: Riconciliazione
 permalink: reconciliation-it-IT.html
 prev: special-non-dom-attributes-it-IT.html
-next: glossary-it-IT.html
+next: webcomponents.html
 ---
 
 La decisione chiave del design di React è fare in modo che l'API sembri ripetere il rendering dell'intera applicazione per ciascun aggiornamento. Ciò rende la scrittura delle applicazione molto più semplice, ma è anche una sfida incredibile per renderlo trattabile. Questo articolo spiega come siamo riusciti a trasformare, tramite potenti euristiche, un problema O(n<sup>3</sup>) in uno O(n).

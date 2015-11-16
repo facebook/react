@@ -2,7 +2,7 @@
 id: glossary
 title: React (Virtual) DOM Terminology
 permalink: glossary.html
-prev: reconciliation.html
+prev: webcomponents.html
 ---
 
 In React's terminology, there are five core types that are important to distinguish:
