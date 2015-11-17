@@ -30,7 +30,7 @@ function compile(content, contentFilename) {
 
       if (filename === 'lib.d.ts') {
         source = fs.readFileSync(
-          require.resolve('typescript/bin/lib.d.ts')
+          require.resolve('typescript/lib/lib.d.ts')
         ).toString();
       } else if (filename === 'jest.d.ts') {
         source = fs.readFileSync(
@@ -71,18 +71,17 @@ function compile(content, contentFilename) {
     getNewLine: function() {
       return '\n';
     },
+    fileExists: function (filename) {
+      return ts.sys.fileExists(filename);
+    },
   };
   var program = ts.createProgram([
     'lib.d.ts',
     'jest.d.ts',
     contentFilename,
   ], tsOptions, compilerHost);
-  var errors = program.getDiagnostics();
-  if (!errors.length) {
-    var checker = program.getTypeChecker(true);
-    errors = checker.getDiagnostics();
-    checker.emitFiles();
-  }
+  var emitResult = program.emit();
+  var errors = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
   if (errors.length) {
     throw new Error(errors.map(formatErrorMessage).join('\n'));
   }
