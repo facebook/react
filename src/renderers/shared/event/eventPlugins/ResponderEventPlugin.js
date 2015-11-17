@@ -135,7 +135,7 @@ var eventTypes = {
  *   immediately to indicate so, either by highlighting or moving accordingly.
  * - To be the responder means, that touches are exclusively important to that
  *   responder view, and no other view.
- * - While touches are still occuring, the responder lock can be transfered to
+ * - While touches are still occurring, the responder lock can be transferred to
  *   a new view, but only to increasingly "higher" views (meaning ancestors of
  *   the current responder).
  *
@@ -330,7 +330,7 @@ function setResponderAndExtractTransfer(
       eventTypes.selectionChangeShouldSetResponder :
     eventTypes.scrollShouldSetResponder;
 
-  // TODO: stop one short of the the current responder.
+  // TODO: stop one short of the current responder.
   var bubbleShouldSetFrom = !responderInst ?
     targetInst :
     EventPluginUtils.getLowestCommonAncestor(responderInst, targetInst);
@@ -499,7 +499,7 @@ var ResponderEventPlugin = {
         nativeEvent,
         nativeEventTarget) :
       null;
-    // Responder may or may not have transfered on a new touch start/move.
+    // Responder may or may not have transferred on a new touch start/move.
     // Regardless, whoever is the responder after any potential transfer, we
     // direct all touch start/move/ends to them in the form of
     // `onResponderMove/Start/End`. These will be called for *every* additional
