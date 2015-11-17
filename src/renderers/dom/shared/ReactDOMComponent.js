@@ -1201,7 +1201,8 @@ assign(
     prepareToManageChildren: function() {
       // Before we add, remove, or reorder the children of a node, make sure
       // we have references to all of its children so we don't lose them, even
-      // if nefarious browser plugins add extra nodes to our tree.
+      // if nefarious browser plugins add extra nodes to our tree. This could be
+      // called once per child so it should be fast.
       ReactDOMComponentTree.precacheChildNodes(this, getNode(this));
     },
   }

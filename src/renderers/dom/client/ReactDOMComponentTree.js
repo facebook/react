@@ -64,7 +64,10 @@ function uncacheNode(inst) {
  * node every time.
  *
  * Since we update `_renderedChildren` and the actual DOM at (slightly)
- * different times, we could race here and not get the
+ * different times, we could race here and see a newer `_renderedChildren` than
+ * the DOM nodes we see. To avoid this, ReactMultiChild calls
+ * `prepareToManageChildren` before we change `_renderedChildren`, at which
+ * time the container's child nodes are always cached (until it unmounts).
  */
 function precacheChildNodes(inst, node) {
   if (inst._flags & Flags.hasCachedChildNodes) {
