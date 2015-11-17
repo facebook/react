@@ -728,7 +728,7 @@ describe('ResponderEventPlugin', function() {
 
     config = oneEventLoopTestConfig(three);
 
-    // Parent is responder, and responder is transfered by a second touch start
+    // Parent is responder, and responder is transferred by a second touch start
     config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: true};
     config.responderTerminationRequest.parent = {order: 1, returnVal: true};
     config.responderGrant.grandParent = {order: 2};
