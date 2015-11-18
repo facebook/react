@@ -9,6 +9,8 @@ var dist = dest + 'dist/';
 var distFiles = [
   'react-dom.js',
   'react-dom.min.js',
+  'react-dom-server.js',
+  'react-dom-server.min.js',
 ];
 
 function buildRelease() {
