@@ -110,7 +110,6 @@ module.exports = function(grunt) {
     'npm-react:release',
   ]);
   grunt.registerTask('build:react-dom', require('./grunt/tasks/react-dom'));
-  grunt.registerTask('build:react-dom-server', require('./grunt/tasks/react-dom-server'));
 
   grunt.registerTask('test', ['jest']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
@@ -128,7 +127,6 @@ module.exports = function(grunt) {
     'browserify:min',
     'browserify:addonsMin',
     'build:react-dom',
-    'build:react-dom-server',
     'npm-react:release',
     'npm-react:pack',
     'npm-react-dom:release',
