@@ -23,7 +23,7 @@
       // see https://github.com/facebook/react/issues/3037
       g = this;
     }
-    g.ReactDOM = f(g.React);
+    g.ReactDOMServer = f(g.React);
   }
 
 })(function(React) {
