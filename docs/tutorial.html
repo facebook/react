@@ -286,6 +286,11 @@
           </li>
         
           <li>
+            <a href="/react/docs/webcomponents.html">Web Components</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
             
           </li>
@@ -804,43 +809,95 @@
 </span>    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div>
-<p>Let&#39;s make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let&#39;s listen for the form&#39;s submit event and clear it.</p>
+</code></pre></div><h4><a class="anchor" name="controlled-components"></a>Controlled components <a class="hash-link" href="#controlled-components">#</a></h4>
+<p>With the traditional DOM, <code>input</code> elements are rendered and the browser manages the state (its rendered value). As a result, the state of the actual DOM will differ from that of the component. This is not ideal as the state of the view will differ from that of the component. In React, components should always represent the state of the view and not only at the point of initialization.</p>
+
+<p>Hence, we will be using <code>this.state</code> to save the user&#39;s input as it is entered. We define an initial <code>state</code> with two properties <code>author</code> and <code>text</code> and set them to be empty strings. In our <code>&lt;input&gt;</code> elements, we set the <code>value</code> prop to reflect the <code>state</code> of the component and attach <code>onChange</code> handlers to them. These <code>&lt;input&gt;</code> elements with a <code>value</code> set are called controlled components. Read more about controlled components on the <a href="/react/docs/forms.html#controlled-components">Forms article</a>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial16.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
-</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">text</span> <span class="o">||</span> <span class="o">!</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">      <span class="k">return</span><span class="p">;</span>
-</span><span class="hll">    <span class="p">}</span>
-</span><span class="hll">    <span class="c1">// TODO: send request to the server</span>
-</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-</span><span class="hll">    <span class="k">return</span><span class="p">;</span>
+<span class="hll">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+</span><span class="hll">  <span class="p">},</span>
+</span><span class="hll">  <span class="nx">handleAuthorChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">},</span>
+</span><span class="hll">  <span class="nx">handleTextChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
 </span><span class="hll">  <span class="p">},</span>
 </span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="p">(</span>
-</span><span class="hll">      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;author&quot;</span> <span class="o">/&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">input</span>
+</span><span class="hll">          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+</span><span class="hll">          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span>
+</span><span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAuthorChange</span><span class="p">}</span>
+</span><span class="hll">        <span class="o">/&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span>
+</span><span class="hll">          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+</span><span class="hll">          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
+</span><span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleTextChange</span><span class="p">}</span>
+</span><span class="hll">        <span class="o">/&gt;</span>
 </span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h5><a class="anchor" name="events"></a>Events <a class="hash-link" href="#events">#</a></h5>
-<p>React attaches event handlers to components using a camelCase naming convention. We attach an <code>onSubmit</code> handler to the form that clears the form fields when the form is submitted with valid input.</p>
+</code></pre></div><h4><a class="anchor" name="events"></a>Events <a class="hash-link" href="#events">#</a></h4>
+<p>React attaches event handlers to components using a camelCase naming convention. We attach <code>onChange</code> handlers to the two <code>&lt;input&gt;</code> elements. Now, as the user enters text into the <code>&lt;input&gt;</code> fields, the attached <code>onChange</code> callbacks are fired and the <code>state</code> of the component is modified. Subsequently, the rendered value of the <code>input</code> element will be updated to reflect the current component <code>state</code>.</p>
+<h4><a class="anchor" name="submitting-the-form"></a>Submitting the form <a class="hash-link" href="#submitting-the-form">#</a></h4>
+<p>Let&#39;s make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let&#39;s listen for the form&#39;s submit event and clear it.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
+<span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">handleAuthorChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">handleTextChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
+<span class="hll">  <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">text</span> <span class="o">||</span> <span class="o">!</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">      <span class="k">return</span><span class="p">;</span>
+</span><span class="hll">    <span class="p">}</span>
+</span><span class="hll">    <span class="c1">// TODO: send request to the server</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">},</span>
+</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAuthorChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleTextChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/form&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>We attach an <code>onSubmit</code> handler to the form that clears the form fields when the form is submitted with valid input.</p>
 
 <p>Call <code>preventDefault()</code> on the event to prevent the browser&#39;s default action of submitting the form.</p>
-<h5><a class="anchor" name="refs"></a>Refs <a class="hash-link" href="#refs">#</a></h5>
-<p>We use the <code>ref</code> attribute to assign a name to a child component and <code>this.refs</code> to reference the DOM node.</p>
-<h5><a class="anchor" name="callbacks-as-props"></a>Callbacks as props <a class="hash-link" href="#callbacks-as-props">#</a></h5>
+<h4><a class="anchor" name="callbacks-as-props"></a>Callbacks as props <a class="hash-link" href="#callbacks-as-props">#</a></h4>
 <p>When a user submits a comment, we will need to refresh the list of comments to include the new one. It makes sense to do all of this logic in <code>CommentBox</code> since <code>CommentBox</code> owns the state that represents the list of comments.</p>
 
 <p>We need to pass data from the child component back up to its parent. We do this in our parent&#39;s <code>render</code> method by passing a new callback (<code>handleCommentSubmit</code>) into the child, binding it to the child&#39;s <code>onCommentSubmit</code> event. Whenever the event is triggered, the callback will be invoked:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -877,25 +934,42 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Let&#39;s call the callback from the <code>CommentForm</code> when the user submits the form:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial19.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">handleAuthorChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">handleTextChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
   <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
-    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
-    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
     <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">text</span> <span class="o">||</span> <span class="o">!</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
 <span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onCommentSubmit</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">author</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">text</span><span class="p">});</span>
-</span>    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-    <span class="k">return</span><span class="p">;</span>
+</span>    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;author&quot;</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAuthorChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleTextChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
@@ -903,7 +977,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial19.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial20.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -951,7 +1025,7 @@
 <span class="p">});</span>
 </code></pre></div><h3><a class="anchor" name="optimization-optimistic-updates"></a>Optimization: optimistic updates <a class="hash-link" href="#optimization-optimistic-updates">#</a></h3>
 <p>Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial20.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial21.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
