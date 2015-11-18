@@ -11,6 +11,8 @@ var BOWER_FILES = [
   'react-with-addons.min.js',
   'react-dom.js',
   'react-dom.min.js',
+  'react-dom-server.js',
+  'react-dom-server.min.js',
 ];
 var GH_PAGES_PATH = '../react-gh-pages/';
 var GH_PAGES_GLOB = [GH_PAGES_PATH + '*'];

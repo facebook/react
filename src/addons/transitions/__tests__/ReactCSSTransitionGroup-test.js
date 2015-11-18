@@ -269,4 +269,26 @@ describe('ReactCSSTransitionGroup', function() {
     var leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
     expect(CSSCore.hasClass(leavingNode, 'custom-leaving')).toBe(true);
   });
+
+  it('should clear transition timeouts when unmounted', function() {
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionName="yolo"
+            transitionEnterTimeout={500}>
+            {this.props.children}
+          </ReactCSSTransitionGroup>
+        );
+      },
+    });
+
+    ReactDOM.render(<Component/>, container);
+    ReactDOM.render(<Component><span key="yolo" id="yolo"/></Component>, container);
+
+    ReactDOM.unmountComponentAtNode(container);
+
+    // Testing that no exception is thrown here, as the timeout has been cleared.
+    jest.runAllTimers();
+  });
 });
