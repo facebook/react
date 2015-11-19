@@ -7,6 +7,53 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.14.3</title>
+				<description>&lt;p&gt;It&amp;#39;s time for another installment of React patch releases! We didn&amp;#39;t break anything in v0.14.2 but we do have a couple of other bugs we&amp;#39;re fixing. The biggest change in this release is actually an addition of a new built file. We heard from a number of people that they still need the ability to use React to render to a string on the client. While the use cases are not common and there are other ways to achieve this, we decided that it&amp;#39;s still valuable to support. So we&amp;#39;re now building &lt;code&gt;react-dom-server.js&lt;/code&gt;, which will be shipped to Bower and in the &lt;code&gt;dist/&lt;/code&gt; directory of the &lt;code&gt;react-dom&lt;/code&gt; package on npm. This file works the same was as &lt;code&gt;react-dom.js&lt;/code&gt; and therefore requires that the primary React build has already been included on the page.&lt;/p&gt;
+
+&lt;p&gt;The release is now available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.3.js&quot;&gt;https://fb.me/react-0.14.3.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.3.min.js&quot;&gt;https://fb.me/react-0.14.3.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.3.js&quot;&gt;https://fb.me/react-with-addons-0.14.3.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.3.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.3.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.3.js&quot;&gt;https://fb.me/react-dom-0.14.3.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.3.min.js&quot;&gt;https://fb.me/react-dom-0.14.3.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.3.js&quot;&gt;https://fb.me/react-dom-server-0.14.3.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.3.min.js&quot;&gt;https://fb.me/react-dom-server-0.14.3.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.3&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added support for &lt;code&gt;nonce&lt;/code&gt; attribute for &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; and &lt;code&gt;&amp;lt;style&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;reversed&lt;/code&gt; attribute for &lt;code&gt;&amp;lt;ol&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-testutils-add-on&quot;&gt;&lt;/a&gt;React TestUtils Add-on &lt;a class=&quot;hash-link&quot; href=&quot;#react-testutils-add-on&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed bug with shallow rendering and function refs&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-csstransitiongroup-add-on&quot;&gt;&lt;/a&gt;React CSSTransitionGroup Add-on &lt;a class=&quot;hash-link&quot; href=&quot;#react-csstransitiongroup-add-on&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed bug resulting in timeouts firing incorrectly when mounting and unmounting rapidly&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-on-bower&quot;&gt;&lt;/a&gt;React on Bower &lt;a class=&quot;hash-link&quot; href=&quot;#react-on-bower&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added &lt;code&gt;react-dom-server.js&lt;/code&gt; to expose &lt;code&gt;renderToString&lt;/code&gt; and &lt;code&gt;renderToStaticMarkup&lt;/code&gt; for usage in the browser&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-11-18T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/11/18/react-v0.14.3.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/11/18/react-v0.14.3.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.14.2</title>
 				<description>&lt;p&gt;We have a quick update following the release of 0.14.1 last week. It turns out we broke a couple things in the development build of React when using Internet Explorer. Luckily it was only the development build, so your production applications were unaffected. This release is mostly to address those issues. There is one notable change if consuming React from npm. For the &lt;code&gt;react-dom&lt;/code&gt; package, we moved &lt;code&gt;react&lt;/code&gt; from a regular dependency to a peer dependency. This will impact very few people as these two are typically installed together at the top level, but it will fix some issues with dependencies of installed components also using &lt;code&gt;react&lt;/code&gt; as a peer dependency.&lt;/p&gt;
 
@@ -782,39 +829,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.0-r
 				<pubDate>2015-08-13T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/08/13/reacteurope-roundup.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/08/13/reacteurope-roundup.html</guid>
-			</item>
-		
-			<item>
-				<title>Relay Technical Preview</title>
-				<description>&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;relay&quot;&gt;&lt;/a&gt;Relay &lt;a class=&quot;hash-link&quot; href=&quot;#relay&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
-&lt;p&gt;Today we&amp;#39;re excited to share an update on Relay - the technical preview is now open-source and &lt;a href=&quot;http://github.com/facebook/relay&quot;&gt;available on GitHub&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;why-relay&quot;&gt;&lt;/a&gt;Why Relay &lt;a class=&quot;hash-link&quot; href=&quot;#why-relay&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;While React simplified the process of developing complex user-interfaces, it left open the question of how to interact with data on the server. It turns out that this was a significant source of friction for our developers; fragile coupling between client and server caused data-related bugs and made iteration harder. Furthermore, developers were forced to constantly re-implement complex async logic instead of focusing on their apps. Relay addresses these concerns by borrowing important lessons from React: it provides &lt;em&gt;declarative, component-oriented data fetching for React applications&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;Declarative data-fetching means that Relay applications specify &lt;em&gt;what&lt;/em&gt; data they need, not &lt;em&gt;how&lt;/em&gt; to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.&lt;/p&gt;
-
-&lt;p&gt;Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.&lt;/p&gt;
-
-&lt;p&gt;Relay is in use at Facebook in production apps, and we&amp;#39;re using it more and more because &lt;em&gt;Relay lets developers focus on their products and move fast&lt;/em&gt;. It&amp;#39;s working for us and we&amp;#39;d like to share it with the community.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-included&quot;&gt;&lt;/a&gt;What&amp;#39;s Included &lt;a class=&quot;hash-link&quot; href=&quot;#whats-included&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We&amp;#39;re open-sourcing a technical preview of Relay - the core framework that we use internally, with some modifications for use outside Facebook. As this is the first release, it&amp;#39;s good to keep in mind that there may be some incomplete or missing features. We&amp;#39;ll continue to develop Relay and are working closely with the GraphQL community to ensure that Relay tracks updates during GraphQL&amp;#39;s RFC period. But we couldn&amp;#39;t wait any longer to get this in your hands, and we&amp;#39;re looking forward to your feedback and contributions.&lt;/p&gt;
-
-&lt;p&gt;Relay is available on &lt;a href=&quot;http://github.com/facebook/relay&quot;&gt;GitHub&lt;/a&gt; and &lt;a href=&quot;https://www.npmjs.com/package/react-relay&quot;&gt;npm&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-next&quot;&gt;&lt;/a&gt;What&amp;#39;s Next &lt;a class=&quot;hash-link&quot; href=&quot;#whats-next&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The team is super excited to be releasing Relay - and just as excited about what&amp;#39;s next. Here are some of the things we&amp;#39;ll be focusing on:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Offline support. This will allow applications to fulfill queries and enqueue updates without connectivity.&lt;/li&gt;
-&lt;li&gt;Real-time updates. In collaboration with the GraphQL community, we&amp;#39;re working to define a specification for subscriptions and provide support for them in Relay.&lt;/li&gt;
-&lt;li&gt;A generic Relay. Just as the power of React was never about the virtual DOM, Relay is much more than a GraphQL client. We&amp;#39;re working to extend Relay to provide a unified interface for interacting not only with server data, but also in-memory and native device data (and, even better, a mix of all three).&lt;/li&gt;
-&lt;li&gt;Finally, it&amp;#39;s all too easy as developers to focus on those people with the newest devices and fastest internet connections. We&amp;#39;re working to make it easier to build applications that are robust in the face of slow or intermittent connectivity.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Thanks!&lt;/p&gt;
-</description>
-				<pubDate>2015-08-11T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html</guid>
 			</item>
 		
 	</channel>
