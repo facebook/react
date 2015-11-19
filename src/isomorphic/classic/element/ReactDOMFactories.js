@@ -160,6 +160,7 @@ var ReactDOMFactories = mapObject({
   image: 'image',
   line: 'line',
   linearGradient: 'linearGradient',
+  marker: 'marker',
   mask: 'mask',
   path: 'path',
   pattern: 'pattern',
