@@ -143,10 +143,7 @@ describe('ReactCompositeComponent', function() {
     instance.setProps({renderAnchor: false});  // Clear out the anchor
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
-    var anchor = instance.getAnchor();
-    var actualDOMAnchorNode = ReactDOM.findDOMNode(anchor);
-    expect(actualDOMAnchorNode.className).toBe('');
-    expect(actualDOMAnchorNode).toBe(ReactDOM.findDOMNode(anchor));
+    expect(instance.getAnchor().className).toBe('');
   });
 
   it('should auto bind methods and values correctly', function() {
