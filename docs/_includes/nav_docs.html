@@ -1,3 +1,6 @@
+<button class="nav-docs-button">
+  <span class="nav-docs-button-action">Show</span> Navigation Docs
+</button>
 <div class="nav-docs">
   <!-- Docs Nav -->
   {% for section in site.data.nav_docs %}
@@ -36,3 +39,15 @@
     </div>
   {% endfor %}
 </div>
+<script>
+  (function () {
+    var displayNavDocs = false;
+    var navDocsEl = document.querySelector('.nav-docs');
+    var navDocsButtonActionEl = document.querySelector('.nav-docs-button-action');
+    document.querySelector('.nav-docs-button').addEventListener('click', function () {
+      displayNavDocs = !displayNavDocs;
+      navDocsButtonActionEl.textContent = displayNavDocs ? 'Hide' : 'Show';
+      navDocsEl.style.display = displayNavDocs ? 'inherit' : 'none';
+    });
+  })();
+</script>

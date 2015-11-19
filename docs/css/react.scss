@@ -99,6 +99,11 @@ h1, h2, h3, h4, h5, h6 {
 
 // Main Nav
 
+.nav-docs-button {
+  display: none;
+  padding: 10px 20px;
+}
+
 .nav-main {
   @include clearfix;
   background: $darkestColor;
@@ -830,18 +835,24 @@ div[data-twttr-id] iframe {
   margin-left: 20px;
 }
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: $contentWidth) {
   .container,
   .wrap,
   .inner-content {
     min-width: auto;
     width: 100%;
   }
-}
 
-@media screen and (max-width: 768px) {
   .nav-main {
     overflow: scroll;
+
+    .nav-site-wrapper {
+      white-space: nowrap;
+
+      .nav-site-external {
+        float: none;
+      }
+    }
 
     .right-gradient {
       position: fixed;
@@ -862,12 +873,12 @@ div[data-twttr-id] iframe {
     }
   }
 
-  .nav-site-wrapper {
-    white-space: nowrap;
+  .nav-docs {
+    display: none;
+  }
 
-    .nav-site-external {
-      float: none;
-    }
+  .nav-docs-button {
+    display: inherit;
   }
 
   footer div {
