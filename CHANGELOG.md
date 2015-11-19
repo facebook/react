@@ -1,3 +1,19 @@
+## 0.14.3 (November 18, 2015)
+
+### React DOM
+- Added support for `nonce` attribute for `<script>` and `<style>` elements
+- Added support for `reversed` attribute for `<ol>` elements
+
+### React TestUtils Add-on
+- Fixed bug with shallow rendering and function refs
+
+### React CSSTransitionGroup Add-on
+- Fixed bug resulting in timeouts firing incorrectly when mounting and unmounting rapidly
+
+### React on Bower
+- Added `react-dom-server.js` to expose `renderToString` and `renderToStaticMarkup` for usage in the browser
+
+
 ## 0.14.2 (November 2, 2015)
 
 ### React DOM

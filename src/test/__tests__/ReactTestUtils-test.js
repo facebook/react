@@ -199,6 +199,31 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div />);
   });
 
+  it('can shallowly render components with ref as function', function() {
+    var SimpleComponent = React.createClass({
+      getInitialState: function() {
+        return {clicked: false};
+      },
+      handleUserClick: function() {
+        this.setState({ clicked: true });
+      },
+      render: function() {
+        return <div ref={() => {}} onClick={this.handleUserClick} className={this.state.clicked ? 'clicked' : ''}></div>;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+    var result = shallowRenderer.getRenderOutput();
+    expect(result.type).toEqual('div');
+    expect(result.props.className).toEqual('');
+    result.props.onClick();
+
+    result = shallowRenderer.getRenderOutput();
+    expect(result.type).toEqual('div');
+    expect(result.props.className).toEqual('clicked');
+  });
+
   it('can pass context when shallowly rendering', function() {
     var SimpleComponent = React.createClass({
       contextTypes: {
