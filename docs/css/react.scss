@@ -155,6 +155,7 @@ h1, h2, h3, h4, h5, h6 {
     line-height: $navHeight;
     height: $navHeight;
     display: inline-block;
+    float: left;
   }
 
   .nav-logo {
@@ -787,15 +788,6 @@ p a code {
   text-decoration: none !important;
 }
 
-@media screen and (max-width: 960px) {
-  .nav-main {
-    position: static;
-  }
-  .container {
-    padding-top: 0;
-  }
-}
-
 .post {
   margin-bottom: 30px;
 }
@@ -836,4 +828,55 @@ div[data-twttr-id] iframe {
 
 .three-column > ul:first-child {
   margin-left: 20px;
+}
+
+@media screen and (max-width: 960px) {
+  .container,
+  .wrap,
+  .inner-content {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .nav-main {
+    overflow: scroll;
+
+    .right-gradient {
+      position: fixed;
+      top: 0;
+      right: 0;
+      overflow: hidden;
+      width: 150px;
+      height: $navHeight;
+      padding: 0;
+      display: block;
+      pointer-events: none;
+      background: -moz-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: -webkit-gradient(linear, left top, right top, color-stop(0%, rgba(0, 0, 0, 0)), color-stop(100%, rgba(0, 0, 0, 0.9)));
+      background: -webkit-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: -o-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: -ms-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+    }
+  }
+
+  .nav-site-wrapper {
+    white-space: nowrap;
+
+    .nav-site-external {
+      float: none;
+    }
+  }
+
+  footer div {
+    text-align: center;
+    margin-bottom: 5px;
+
+    &.left,
+    &.right {
+      float: none;
+    }
+  }
 }
