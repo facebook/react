@@ -79,7 +79,7 @@ function recomputePluginOrdering() {
  */
 function publishEventForPlugin(dispatchConfig, PluginModule, eventName) {
   invariant(
-    !EventPluginRegistry.eventNameDispatchConfigs.hasOwnProperty(eventName),
+    !EventPluginRegistry.eventNameDispatchConfigs[eventName],
     'EventPluginHub: More than one plugin attempted to publish the same ' +
     'event name, `%s`.',
     eventName

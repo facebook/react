@@ -214,7 +214,7 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
 
   var hash = ownerName + '|' + componentName;
 
-  if (styleMutationWarning.hasOwnProperty(hash)) {
+  if (styleMutationWarning[hash]) {
     return;
   }
 
@@ -378,15 +378,13 @@ function trapBubbledEventsLocal() {
       inst._wrapperState.listeners = [];
       // Create listener for each media event
       for (var event in mediaEvents) {
-        if (mediaEvents.hasOwnProperty(event)) {
-          inst._wrapperState.listeners.push(
-            ReactBrowserEventEmitter.trapBubbledEvent(
-              EventConstants.topLevelTypes[event],
-              mediaEvents[event],
-              node
-            )
-          );
-        }
+        inst._wrapperState.listeners.push(
+          ReactBrowserEventEmitter.trapBubbledEvent(
+            EventConstants.topLevelTypes[event],
+            mediaEvents[event],
+            node
+          )
+        );
       }
 
       break;
@@ -481,10 +479,9 @@ var voidElementTags = assign({
 
 var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
 var validatedTagCache = {};
-var hasOwnProperty = {}.hasOwnProperty;
 
 function validateDangerousTag(tag) {
-  if (!hasOwnProperty.call(validatedTagCache, tag)) {
+  if (!validatedTagCache[tag]) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
     validatedTagCache[tag] = true;
   }
@@ -726,7 +723,7 @@ ReactDOMComponent.Mixin = {
       if (propValue == null) {
         continue;
       }
-      if (registrationNameModules.hasOwnProperty(propKey)) {
+      if (registrationNameModules[propKey]) {
         if (propValue) {
           enqueuePutListener(this, propKey, propValue, transaction);
         }
@@ -954,7 +951,7 @@ ReactDOMComponent.Mixin = {
           }
         }
         this._previousStyleCopy = null;
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      } else if (registrationNameModules[propKey]) {
         if (lastProps[propKey]) {
           // Only call deleteListener if there was a listener previously or
           // else willDeleteListener gets called when there wasn't actually a
@@ -1012,7 +1009,7 @@ ReactDOMComponent.Mixin = {
           // Relies on `updateStylesByID` not mutating `styleUpdates`.
           styleUpdates = nextProp;
         }
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      } else if (registrationNameModules[propKey]) {
         if (nextProp) {
           enqueuePutListener(this, propKey, nextProp, transaction);
         } else if (lastProp) {
