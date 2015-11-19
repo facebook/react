@@ -35,10 +35,8 @@ var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
-var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
-var canDefineProperty = require('canDefineProperty');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -71,102 +69,6 @@ function getDeclarationErrorAddendum(internalInstance) {
     }
   }
   return '';
-}
-
-var legacyPropsDescriptor;
-if (__DEV__) {
-  legacyPropsDescriptor = {
-    props: {
-      enumerable: false,
-      get: function() {
-        var component = ReactDOMComponentTree.getInstanceFromNode(this);
-        warning(
-          false,
-          'ReactDOMComponent: Do not access .props of a DOM node; instead, ' +
-          'recreate the props as `render` did originally or read the DOM ' +
-          'properties/attributes directly from this node (e.g., ' +
-          'this.refs.box.className).%s',
-          getDeclarationErrorAddendum(component)
-        );
-        return component._currentElement.props;
-      },
-    },
-  };
-}
-
-function legacyGetDOMNode() {
-  if (__DEV__) {
-    var component = ReactDOMComponentTree.getInstanceFromNode(this);
-    warning(
-      false,
-      'ReactDOMComponent: Do not access .getDOMNode() of a DOM node; ' +
-      'instead, use the node directly.%s',
-      getDeclarationErrorAddendum(component)
-    );
-  }
-  return this;
-}
-
-function legacyIsMounted() {
-  var component = ReactDOMComponentTree.getInstanceFromNode(this);
-  if (__DEV__) {
-    warning(
-      false,
-      'ReactDOMComponent: Do not access .isMounted() of a DOM node.%s',
-      getDeclarationErrorAddendum(component)
-    );
-  }
-  return !!component;
-}
-
-function legacySetStateEtc() {
-  if (__DEV__) {
-    var component = ReactDOMComponentTree.getInstanceFromNode(this);
-    warning(
-      false,
-      'ReactDOMComponent: Do not access .setState(), .replaceState(), or ' +
-      '.forceUpdate() of a DOM node. This is a no-op.%s',
-      getDeclarationErrorAddendum(component)
-    );
-  }
-}
-
-function legacySetProps(partialProps, callback) {
-  var component = ReactDOMComponentTree.getInstanceFromNode(this);
-  if (__DEV__) {
-    warning(
-      false,
-      'ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
-      'Instead, call ReactDOM.render again at the top level.%s',
-      getDeclarationErrorAddendum(component)
-    );
-  }
-  if (!component) {
-    return;
-  }
-  ReactUpdateQueue.enqueueSetPropsInternal(component, partialProps);
-  if (callback) {
-    ReactUpdateQueue.enqueueCallbackInternal(component, callback);
-  }
-}
-
-function legacyReplaceProps(partialProps, callback) {
-  var component = ReactDOMComponentTree.getInstanceFromNode(this);
-  if (__DEV__) {
-    warning(
-      false,
-      'ReactDOMComponent: Do not access .replaceProps() of a DOM node. ' +
-      'Instead, call ReactDOM.render again at the top level.%s',
-      getDeclarationErrorAddendum(component)
-    );
-  }
-  if (!component) {
-    return;
-  }
-  ReactUpdateQueue.enqueueReplacePropsInternal(component, partialProps);
-  if (callback) {
-    ReactUpdateQueue.enqueueCallbackInternal(component, callback);
-  }
 }
 
 function friendlyStringify(obj) {
@@ -908,10 +810,6 @@ ReactDOMComponent.Mixin = {
       context
     );
 
-    if (!canDefineProperty && this._flags & Flags.nodeHasLegacyProperties) {
-      this._nativeNode.props = nextProps;
-    }
-
     if (this._tag === 'select') {
       // <select> value update needs to occur after <option> children
       // reconciliation
@@ -1157,33 +1055,7 @@ ReactDOMComponent.Mixin = {
   },
 
   getPublicInstance: function() {
-    var node = getNode(this);
-    if (this._flags & Flags.nodeHasLegacyProperties) {
-      return node;
-    } else {
-      node.getDOMNode = legacyGetDOMNode;
-      node.isMounted = legacyIsMounted;
-      node.setState = legacySetStateEtc;
-      node.replaceState = legacySetStateEtc;
-      node.forceUpdate = legacySetStateEtc;
-      node.setProps = legacySetProps;
-      node.replaceProps = legacyReplaceProps;
-
-      if (__DEV__) {
-        if (canDefineProperty) {
-          Object.defineProperties(node, legacyPropsDescriptor);
-        } else {
-          // updateComponent will update this property on subsequent renders
-          node.props = this._currentElement.props;
-        }
-      } else {
-        // updateComponent will update this property on subsequent renders
-        node.props = this._currentElement.props;
-      }
-
-      this._flags |= Flags.nodeHasLegacyProperties;
-      return node;
-    }
+    return getNode(this);
   },
 
 };

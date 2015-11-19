@@ -146,7 +146,7 @@ describe('ReactCompositeComponent', function() {
     var anchor = instance.getAnchor();
     var actualDOMAnchorNode = ReactDOM.findDOMNode(anchor);
     expect(actualDOMAnchorNode.className).toBe('');
-    expect(actualDOMAnchorNode).toBe(anchor.getDOMNode());
+    expect(actualDOMAnchorNode).toBe(ReactDOM.findDOMNode(anchor));
   });
 
   it('should auto bind methods and values correctly', function() {

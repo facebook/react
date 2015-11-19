@@ -12,8 +12,7 @@
 'use strict';
 
 var ReactDOMComponentFlags = {
-  nodeHasLegacyProperties: 1 << 0,
-  hasCachedChildNodes: 1 << 1,
+  hasCachedChildNodes: 1 << 0,
 };
 
 module.exports = ReactDOMComponentFlags;
