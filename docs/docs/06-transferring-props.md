@@ -20,7 +20,7 @@ If you don't use JSX, you can use any object helper such as ES6 `Object.assign` 
 React.createElement(Component, Object.assign({}, this.props, { more: 'values' }));
 ```
 
-The rest of this tutorial explains best practices. It uses JSX and experimental ES7 syntax.
+The rest of this tutorial explains best practices. It uses JSX and experimental ECMAScript syntax.
 
 ## Manual Transfer
 
@@ -132,7 +132,7 @@ var FancyCheckbox = React.createClass({
 
 Rest properties allow you to extract the remaining properties from an object into a new object. It excludes every other property listed in the destructuring pattern.
 
-This is an experimental implementation of an [ES7 proposal](https://github.com/sebmarkbage/ecmascript-rest-spread).
+This is an experimental implementation of an [ECMAScript proposal](https://github.com/sebmarkbage/ecmascript-rest-spread).
 
 ```javascript
 var { x, y, ...z } = { x: 1, y: 2, a: 3, b: 4 };
