@@ -53,8 +53,8 @@ assign(ReactDOMTextComponent.prototype, {
     // TODO: This is really a ReactText (ReactNode), not a ReactElement
     this._currentElement = text;
     this._stringText = '' + text;
+    // ReactDOMComponentTree uses these:
     this._nativeNode = null;
-    // ReactDOMComponentTree uses this:
     this._nativeParent = null;
 
     // Properties

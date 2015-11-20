@@ -22,6 +22,7 @@ var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
 var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
@@ -79,7 +80,11 @@ function inject() {
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
-  ReactInjection.EmptyComponent.injectEmptyComponent('noscript');
+  ReactInjection.EmptyComponent.injectEmptyComponentFactory(
+    function(instantiate) {
+      return new ReactDOMEmptyComponent(instantiate);
+    }
+  );
 
   ReactInjection.Updates.injectReconcileTransaction(
     ReactReconcileTransaction

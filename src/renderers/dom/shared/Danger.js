@@ -166,7 +166,7 @@ var Danger = {
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
     invariant(
-      oldChild.tagName.toLowerCase() !== 'html',
+      oldChild.nodeName !== 'HTML',
       'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +
       '<html> node. This is because browser quirks make this unreliable ' +
       'and/or slow. If you want to render to the root you must use ' +
