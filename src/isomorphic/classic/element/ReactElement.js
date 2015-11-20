@@ -128,7 +128,7 @@ ReactElement.createElement = function(type, config, children) {
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (config.hasOwnProperty(propName) &&
-          !RESERVED_PROPS.hasOwnProperty(propName)) {
+          !RESERVED_PROPS[propName]) {
         props[propName] = config[propName];
       }
     }
@@ -243,7 +243,7 @@ ReactElement.cloneElement = function(element, config, children) {
     // Remaining properties override existing props
     for (propName in config) {
       if (config.hasOwnProperty(propName) &&
-          !RESERVED_PROPS.hasOwnProperty(propName)) {
+          !RESERVED_PROPS[propName]) {
         props[propName] = config[propName];
       }
     }

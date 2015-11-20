@@ -75,7 +75,7 @@ var DOMPropertyInjection = {
 
     for (var propName in Properties) {
       invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
+        !DOMProperty.properties[propName],
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
         '\'%s\' which has already been injected. You may be accidentally ' +
         'injecting the same DOM property config twice, or you may be ' +
@@ -125,7 +125,7 @@ var DOMPropertyInjection = {
         DOMProperty.getPossibleStandardName[lowerCased] = propName;
       }
 
-      if (DOMAttributeNames.hasOwnProperty(propName)) {
+      if (DOMAttributeNames[propName]) {
         var attributeName = DOMAttributeNames[propName];
         propertyInfo.attributeName = attributeName;
         if (__DEV__) {
@@ -133,15 +133,15 @@ var DOMPropertyInjection = {
         }
       }
 
-      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
+      if (DOMAttributeNamespaces[propName]) {
         propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
       }
 
-      if (DOMPropertyNames.hasOwnProperty(propName)) {
+      if (DOMPropertyNames[propName]) {
         propertyInfo.propertyName = DOMPropertyNames[propName];
       }
 
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
+      if (DOMMutationMethods[propName]) {
         propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
 

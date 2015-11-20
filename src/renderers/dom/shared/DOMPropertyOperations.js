@@ -25,10 +25,10 @@ var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
 
 function isAttributeNameSafe(attributeName) {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (validatedAttributeNameCache[attributeName]) {
     return true;
   }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (illegalAttributeNameCache[attributeName]) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
@@ -62,8 +62,7 @@ if (__DEV__) {
   var warnedProperties = {};
 
   var warnUnknownProperty = function(name) {
-    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
-        warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+    if (reactProps[name] || warnedProperties[name]) {
       return;
     }
 
@@ -74,9 +73,7 @@ if (__DEV__) {
     var standardName = (
       DOMProperty.isCustomAttribute(lowerCasedName) ?
         lowerCasedName :
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
-        DOMProperty.getPossibleStandardName[lowerCasedName] :
-        null
+        DOMProperty.getPossibleStandardName[lowerCasedName] || null
     );
 
     // For now, only warn when we have a suggested correction. This prevents
@@ -88,13 +85,8 @@ if (__DEV__) {
       standardName
     );
 
-    var registrationName = (
-      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
-        lowerCasedName
-      ) ?
-      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
-      null
-    );
+    var registrationName =
+      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] || null;
 
     warning(
       registrationName == null,
@@ -141,8 +133,7 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.properties[name] || null;
     if (propertyInfo) {
       if (shouldIgnoreValue(propertyInfo, value)) {
         return '';
@@ -186,8 +177,7 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.properties[name] || null;
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
@@ -243,8 +233,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.properties[name] || null;
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {

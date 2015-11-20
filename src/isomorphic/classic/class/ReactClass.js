@@ -415,12 +415,12 @@ function validateTypeDef(Constructor, typeDef, location) {
 }
 
 function validateMethodOverride(proto, name) {
-  var specPolicy = ReactClassInterface.hasOwnProperty(name) ?
+  var specPolicy = ReactClassInterface[name] ?
     ReactClassInterface[name] :
     null;
 
   // Disallow overriding of base class methods unless explicitly allowed.
-  if (ReactClassMixin.hasOwnProperty(name)) {
+  if (ReactClassMixin[name]) {
     invariant(
       specPolicy === SpecPolicy.OVERRIDE_BASE,
       'ReactClassInterface: You are attempting to override ' +
@@ -486,7 +486,7 @@ function mixSpecIntoComponent(Constructor, spec) {
     var property = spec[name];
     validateMethodOverride(proto, name);
 
-    if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
+    if (RESERVED_SPEC_KEYS[name]) {
       RESERVED_SPEC_KEYS[name](Constructor, property);
     } else {
       // Setup methods on prototype:
@@ -494,7 +494,7 @@ function mixSpecIntoComponent(Constructor, spec) {
       // 1. Expected ReactClass methods (in the "interface").
       // 2. Overridden methods (that were mixed in).
       var isReactClassMethod =
-        ReactClassInterface.hasOwnProperty(name);
+        !!ReactClassInterface[name];
       var isAlreadyDefined = proto.hasOwnProperty(name);
       var isFunction = typeof property === 'function';
       var shouldAutoBind =
@@ -701,13 +701,11 @@ function bindAutoBindMethod(component, method) {
  */
 function bindAutoBindMethods(component) {
   for (var autoBindKey in component.__reactAutoBindMap) {
-    if (component.__reactAutoBindMap.hasOwnProperty(autoBindKey)) {
-      var method = component.__reactAutoBindMap[autoBindKey];
-      component[autoBindKey] = bindAutoBindMethod(
-        component,
-        method
-      );
-    }
+    var method = component.__reactAutoBindMap[autoBindKey];
+    component[autoBindKey] = bindAutoBindMethod(
+      component,
+      method
+    );
   }
 }
 
