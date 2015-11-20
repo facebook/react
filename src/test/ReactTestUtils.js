@@ -29,6 +29,9 @@ var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
+var originInstantiateReactComponent = require('instantiateReactComponent');
+var ReactMultiChild = require('ReactMultiChild');
+var ReactChildReconciler = require('ReactChildReconciler');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -76,6 +79,7 @@ function findAllInRenderedTreeInternal(inst, test) {
  * @lends ReactTestUtils
  */
 var ReactTestUtils = {
+  renderComponentsAsChild: [],
   renderIntoDocument: function(instance) {
     var div = document.createElement('div');
     // None of our tests actually require attaching the container to the
@@ -355,6 +359,37 @@ var ReactTestUtils = {
   SimulateNative: {},
 };
 
+function rebuildElementsFromRenderedComponent(component) {
+  if (!component._currentElement) {
+    return null;
+  }
+
+  if (typeof component._currentElement === 'string') {
+    return component._currentElement;
+  }
+
+  var props = assign({}, component._currentElement.props);
+
+  if (props.children) {
+    delete props.children;
+  }
+
+  if (ReactTestUtils.renderComponentsAsChild.indexOf(component._currentElement.type) !== -1) {
+    return rebuildElementsFromRenderedComponent(component._renderedComponent);
+  }
+
+  var args = [component._currentElement.type, props];
+
+  for (var key in component._renderedChildren) {
+    var childComponent = component._renderedChildren[key];
+    var element = rebuildElementsFromRenderedComponent(childComponent);
+
+    args.push(element);
+  }
+
+  return React.createElement.apply(null, args);
+}
+
 /**
  * @class ReactShallowRenderer
  */
@@ -363,11 +398,7 @@ var ReactShallowRenderer = function() {
 };
 
 ReactShallowRenderer.prototype.getRenderOutput = function() {
-  return (
-    (this._instance && this._instance._renderedComponent &&
-     this._instance._renderedComponent._renderedOutput)
-    || null
-  );
+  return rebuildElementsFromRenderedComponent(this._instance._renderedComponent);
 };
 
 ReactShallowRenderer.prototype.getMountedInstance = function() {
@@ -401,17 +432,96 @@ NoopInternalComponent.prototype = {
   },
 };
 
+var instantiateReactComponent = function(node) {
+  var instance;
+
+  if (node === null ||
+    node &&
+    typeof node === 'string' ||
+    typeof node.type === 'string' ||
+    typeof node === 'number') {
+    instance = new ShallowDOMComponentWrapper(node);
+
+    instance.construct(node);
+
+    return instance;
+  } else if (node && typeof node.type === 'function') {
+
+    if (ReactTestUtils.renderComponentsAsChild.indexOf(node.type) !== -1) {
+      instance = new ShallowComponentWrapper(node.type);
+
+      instance.construct(node);
+    } else {
+      instance = new NoopInternalComponent(node);
+    }
+
+    return instance;
+  }
+
+  var component = originInstantiateReactComponent.apply(this, arguments);
+
+  return component;
+};
+
 var ShallowComponentWrapper = function() { };
+
 assign(
   ShallowComponentWrapper.prototype,
   ReactCompositeComponent.Mixin, {
-    _instantiateReactComponent: function(element) {
-      return new NoopInternalComponent(element);
-    },
+    _instantiateReactComponent: instantiateReactComponent,
     _replaceNodeWithMarkup: function() {},
-    _renderValidatedComponent:
-      ReactCompositeComponent.Mixin
-        ._renderValidatedComponentWithoutOwnerOrContext,
+    getNativeNode: function() {},
+  }
+);
+
+var ShallowDOMComponentWrapper = function() {};
+
+assign(
+  ShallowDOMComponentWrapper.prototype,
+  ShallowComponentWrapper.prototype,
+  ReactMultiChild.Mixin,
+  {
+    _childReconciler: assign(
+      {},
+      ReactChildReconciler,
+      {
+        _instantiateReactComponent: instantiateReactComponent,
+      }
+    ),
+
+    mountComponent: function(
+      transaction,
+      nativeParent,
+      nativeContainerInfo,
+      context
+    ) {
+      if (typeof this._currentElement !== 'object' ||
+        this._currentElement === null) {
+        return;
+      }
+
+      var props = this._currentElement.props;
+
+      this.mountChildren(
+        props.children,
+        transaction,
+        context
+      );
+    },
+
+    receiveComponent: function(nextElement, transaction, context) {
+      if (typeof this._currentElement !== 'object' ||
+        this._currentElement === null) {
+
+        return;
+      }
+      this._currentElement = nextElement;
+      this.updateChildren(nextElement.props.children, transaction, context);
+    },
+
+    unmountComponent: function() {
+      this.unmountChildren();
+    },
   }
 );
 

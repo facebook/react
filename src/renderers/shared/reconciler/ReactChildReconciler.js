@@ -19,29 +19,29 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
-function instantiateChild(childInstances, child, name) {
-  // We found a component instance.
-  var keyUnique = (childInstances[name] === undefined);
-  if (__DEV__) {
-    warning(
-      keyUnique,
-      'flattenChildren(...): Encountered two children with the same key, ' +
-      '`%s`. Child keys must be unique; when two children share a key, only ' +
-      'the first child will be used.',
-      name
-    );
-  }
-  if (child != null && keyUnique) {
-    childInstances[name] = instantiateReactComponent(child, null);
-  }
-}
-
 /**
  * ReactChildReconciler provides helpers for initializing or updating a set of
  * children. Its output is suitable for passing it onto ReactMultiChild which
  * does diffed reordering and insertion.
  */
 var ReactChildReconciler = {
+  _instantiateReactComponent: instantiateReactComponent,
+  instantiateChild: function(childInstances, child, name) {
+    // We found a component instance.
+    var keyUnique = (childInstances[name] === undefined);
+    if (__DEV__) {
+      warning(
+        keyUnique,
+        'flattenChildren(...): Encountered two children with the same key, ' +
+        '`%s`. Child keys must be unique; when two children share a key, only ' +
+        'the first child will be used.',
+        name
+      );
+    }
+    if (child != null && keyUnique) {
+      childInstances[name] = this._instantiateReactComponent(child, null);
+    }
+  },
   /**
    * Generates a "mount image" for each of the supplied children. In the case
    * of `ReactDOMComponent`, a mount image is a string of markup.
@@ -55,7 +55,7 @@ var ReactChildReconciler = {
       return null;
     }
     var childInstances = {};
-    traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
+    traverseAllChildren(nestedChildNodes, this.instantiateChild.bind(this), childInstances);
     return childInstances;
   },
 
