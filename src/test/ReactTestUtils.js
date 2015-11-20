@@ -362,14 +362,6 @@ var ReactShallowRenderer = function() {
   this._instance = null;
 };
 
-ReactShallowRenderer.prototype.getRenderOutput = function() {
-  return (
-    (this._instance && this._instance._renderedComponent &&
-     this._instance._renderedComponent._renderedOutput)
-    || null
-  );
-};
-
 ReactShallowRenderer.prototype.getMountedInstance = function() {
   return this._instance ? this._instance._instance : null;
 };
@@ -438,6 +430,16 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   this._render(element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
+
+  return this.getRenderOutput();
+};
+
+ReactShallowRenderer.prototype.getRenderOutput = function() {
+  return (
+    (this._instance && this._instance._renderedComponent &&
+     this._instance._renderedComponent._renderedOutput)
+    || null
+  );
 };
 
 ReactShallowRenderer.prototype.unmount = function() {
