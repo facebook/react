@@ -18,8 +18,7 @@ $columnWidth: 280px;
 $columnGutter: 40px;
 $twoColumnWidth: 2 * $columnWidth + $columnGutter;
 $navHeight: 50px;
-
-
+$navActiveBorder: 3px;
 
 // basic reset
 * {
@@ -148,7 +147,7 @@ h1, h2, h3, h4, h5, h6 {
 
       &.active {
         color: $lightTextColor;
-        border-bottom: 3px solid $primary;
+        border-bottom: $navActiveBorder solid $primary;
         background: #333;
       }
     }
@@ -844,7 +843,8 @@ div[data-twttr-id] iframe {
   }
 
   .nav-main {
-    overflow: scroll;
+    height: $navHeight + $navActiveBorder;
+    overflow-x: scroll;
 
     .nav-site-wrapper {
       white-space: nowrap;
