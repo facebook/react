@@ -389,7 +389,7 @@ describe('ReactClass-spec', function() {
       propTypes: {
         optionalNumber: React.PropTypes.number,
         optionalEnum: React.PropTypes.oneOf('foo'),
-        optionalUnion: React.PropTypes.oneOfType(React.PropTypes.string, React.PropTypes.number)
+        optionalUnion: React.PropTypes.oneOfType(React.PropTypes.string, React.PropTypes.number),
       },
       render: function() {
         return <span>{this.props.prop}</span>;
