@@ -1,5 +1,13 @@
 Work-in-progress benchmarks.
 
+## Running the suite
+
+```
+$ ./measure.py react-a.min.js >a.txt
+$ ./measure.py react-b.min.js >b.txt
+$ ./analyze.py a.txt b.txt
+```
+
 ## Running one
 One thing you can do with them is benchmark initial render time for a realistic hierarchy:
 
