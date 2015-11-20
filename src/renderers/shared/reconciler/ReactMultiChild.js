@@ -191,13 +191,13 @@ var ReactMultiChild = {
    * @lends {ReactMultiChild.prototype}
    */
   Mixin: {
-
+    _childReconciler: ReactChildReconciler,
     _reconcilerInstantiateChildren: function(nestedChildren, transaction, context) {
       if (__DEV__) {
         if (this._currentElement) {
           try {
             ReactCurrentOwner.current = this._currentElement._owner;
-            return ReactChildReconciler.instantiateChildren(
+            return this._childReconciler.instantiateChildren(
               nestedChildren, transaction, context
             );
           } finally {
@@ -205,7 +205,7 @@ var ReactMultiChild = {
           }
         }
       }
-      return ReactChildReconciler.instantiateChildren(
+      return this._childReconciler.instantiateChildren(
         nestedChildren, transaction, context
       );
     },
@@ -220,13 +220,13 @@ var ReactMultiChild = {
           } finally {
             ReactCurrentOwner.current = null;
           }
-          return ReactChildReconciler.updateChildren(
+          return this._childReconciler.updateChildren(
             prevChildren, nextChildren, transaction, context
           );
         }
       }
       nextChildren = flattenChildren(nextNestedChildrenElements);
-      return ReactChildReconciler.updateChildren(
+      return this._childReconciler.updateChildren(
         prevChildren, nextChildren, transaction, context
       );
     },
@@ -275,7 +275,7 @@ var ReactMultiChild = {
       try {
         var prevChildren = this._renderedChildren;
         // Remove any rendered children.
-        ReactChildReconciler.unmountChildren(prevChildren);
+        this._childReconciler.unmountChildren(prevChildren);
         // TODO: The setTextContent operation should be enough
         for (var name in prevChildren) {
           if (prevChildren.hasOwnProperty(name)) {
@@ -309,7 +309,7 @@ var ReactMultiChild = {
       try {
         var prevChildren = this._renderedChildren;
         // Remove any rendered children.
-        ReactChildReconciler.unmountChildren(prevChildren);
+        this._childReconciler.unmountChildren(prevChildren);
         for (var name in prevChildren) {
           if (prevChildren.hasOwnProperty(name)) {
             this._unmountChild(prevChildren[name]);
@@ -417,7 +417,7 @@ var ReactMultiChild = {
      */
     unmountChildren: function() {
       var renderedChildren = this._renderedChildren;
-      ReactChildReconciler.unmountChildren(renderedChildren);
+      this._childReconciler.unmountChildren(renderedChildren);
       this._renderedChildren = null;
     },
 

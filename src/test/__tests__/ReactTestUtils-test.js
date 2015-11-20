@@ -257,6 +257,58 @@ describe('ReactTestUtils', function() {
 
   });
 
+  it('should not shallowly render custom components by default', function() {
+    var renderSpy = jasmine.createSpy('ChildComponent.render');
+
+    var ChildComponent = React.createClass({
+      render: renderSpy,
+    });
+
+    var SomeComponent = React.createClass({
+      render: function() {
+        return (<div>
+          <ChildComponent />
+        </div>);
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SomeComponent />);
+    var result = shallowRenderer.getRenderOutput();
+
+    expect(result).toEqual(<div>
+      <ChildComponent />
+    </div>);
+
+    expect(renderSpy).not.toHaveBeenCalled();
+  });
+
+  it('can shallowly render custom components which are on white list', function() {
+    var ChildComponent = React.createClass({
+      render: function() {
+        return <div className="child"></div>;
+      },
+    });
+
+    ReactTestUtils.renderComponentsAsChild.push(ChildComponent);
+
+    var SomeComponent = React.createClass({
+      render: function() {
+        return (<div>
+          <ChildComponent />
+        </div>);
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SomeComponent />);
+    var result = shallowRenderer.getRenderOutput();
+
+    expect(result).toEqual(<div>
+      <div className="child"></div>
+    </div>);
+  });
+
   it('can scryRenderedDOMComponentsWithClass with className contains \\n', function() {
     var Wrapper = React.createClass({
       render: function() {
