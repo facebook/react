@@ -183,7 +183,7 @@ boolean shiftKey
 ```
 
 
-### Selection events
+### Selection Events
 
 Event names:
 
@@ -192,7 +192,7 @@ onSelect
 ```
 
 
-### Touch events
+### Touch Events
 
 Event names:
 
