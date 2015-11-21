@@ -41,7 +41,6 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
       prevElement.key === nextElement.key
     );
   }
-  return false;
 }
 
 module.exports = shouldUpdateReactComponent;
