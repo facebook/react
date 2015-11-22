@@ -786,7 +786,26 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
     var inst = this._instance;
-    var renderedComponent = inst.render();
+
+    if (typeof inst.render !== 'function') {
+      throw new TypeError('render is not a function');
+    }
+
+    try {
+      var renderedComponent = inst.render();
+    } catch (err) {
+      warning(
+        false,
+        '%s(...): The `render` method threw error. Empty element will ' +
+        'be displayed instead.',
+        this.getName() || 'ReactCompositeComponent'
+      );
+      setTimeout(function() {
+        throw err;
+      }, 0);
+      renderedComponent = null;
+    }
+
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
       if (typeof renderedComponent === 'undefined' &&
