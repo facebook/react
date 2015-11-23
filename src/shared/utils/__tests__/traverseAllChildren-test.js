@@ -476,6 +476,39 @@ describe('traverseAllChildren', function() {
     }
   });
 
+  it('should allow extension of native prototypes', function() {
+    /*eslint-disable no-extend-native */
+    String.prototype.key = 'react';
+    Number.prototype.key = 'rocks';
+    /*eslint-enable no-extend-native */
+
+    var instance = (
+      <div>
+        {'a'}
+        {13}
+      </div>
+    );
+
+    var traverseFn = jasmine.createSpy();
+
+    traverseAllChildren(instance.props.children, traverseFn, null);
+    expect(traverseFn.calls.length).toBe(2);
+
+    expect(traverseFn).toHaveBeenCalledWith(
+      null,
+      'a',
+      '.0'
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      null,
+      13,
+      '.1'
+    );
+
+    delete String.prototype.key;
+    delete Number.prototype.key;
+  });
+
   it('should throw on object', function() {
     expect(function() {
       traverseAllChildren({a: 1, b: 2}, function() {}, null);
