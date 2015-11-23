@@ -30,7 +30,7 @@ React.createElement("div", {id: if (condition) { 'msg' }}, "Hello World!");
 That's not valid JS. You probably want to make use of a ternary expression:
 
 ```js
-ReactDOM.render(<div id={condition ? 'msg' : ''}>Hello World!</div>, mountNode);
+ReactDOM.render(<div id={condition ? 'msg' : null}>Hello World!</div>, mountNode);
 ```
 
 If a ternary expression isn't robust enough, you can use `if` statements outside of your JSX to determine which components should be used:
