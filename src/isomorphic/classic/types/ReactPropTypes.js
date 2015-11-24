@@ -13,10 +13,10 @@
 
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var warning = require('warning');
 
 var emptyFunction = require('emptyFunction');
 var getIteratorFn = require('getIteratorFn');
+var warning = require('warning');
 
 /**
  * Collection of methods that allow declaration and validation of props that are

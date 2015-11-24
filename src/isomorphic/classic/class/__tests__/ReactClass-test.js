@@ -382,8 +382,6 @@ describe('ReactClass-spec', function() {
   });
 
   it('should warn on invalid prop types', function() {
-    var warn = console.error;
-    console.error = jest.genMockFn();
     React.createClass({
       displayName: 'Component',
       propTypes: {
@@ -395,13 +393,12 @@ describe('ReactClass-spec', function() {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.mock.calls.length).toBe(2);
-    expect(console.error.mock.calls[0][0]).toContain(
+    expect(console.error.calls.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toContain(
         'Invalid argument supplied to oneOf, expected an instance of array.'
     );
-    expect(console.error.mock.calls[1][0]).toContain(
+    expect(console.error.argsForCall[1][0]).toContain(
         'Invalid argument supplied to oneOfType, expected an instance of array.'
     );
-    console.error = warn;
   });
 });

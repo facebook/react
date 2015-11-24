@@ -570,18 +570,15 @@ describe('ReactPropTypes', function() {
   describe('OneOf Types', function() {
     it('should fail for invalid argument', function() {
       spyOn(console, 'error');
-      var warn = console.error;
-      console.error = jest.genMockFn();
       typeCheckFail(
         PropTypes.oneOf('red', 'blue'),
         'red',
         'Invalid argument supplied to oneOf, expected an instance of array.'
       );
-      expect(console.error.mock.calls.length).toBe(1);
-      expect(console.error.mock.calls[0][0]).toContain(
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain(
         'Invalid argument supplied to oneOf, expected an instance of array.'
       );
-      console.error = warn;
     });
 
     it('should warn for invalid strings', function() {
@@ -638,18 +635,15 @@ describe('ReactPropTypes', function() {
   describe('Union Types', function() {
     it('should fail for invalid argument', function() {
       spyOn(console, 'error');
-      var warn = console.error;
-      console.error = jest.genMockFn();
       typeCheckFail(
         PropTypes.oneOfType(PropTypes.string, PropTypes.number),
         'red',
         'Invalid argument supplied to oneOfType, expected an instance of array.'
       );
-      expect(console.error.mock.calls.length).toBe(1);
-      expect(console.error.mock.calls[0][0]).toContain(
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain(
         'Invalid argument supplied to oneOfType, expected an instance of array.'
         );
-      console.error = warn;
     });
 
     it('should warn if none of the types are valid', function() {
