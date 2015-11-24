@@ -138,6 +138,15 @@ boolean shiftKey
 ```
 
 
+### Selection Events
+
+事件名称:
+
+```
+onSelect
+```
+
+
 ### 触控事件
 
 事件名称：
@@ -191,4 +200,20 @@ number deltaMode
 number deltaX
 number deltaY
 number deltaZ
+```
+
+### Media Events
+
+事件名称:
+
+```
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+```
+
+### Image Events
+
+事件名称:
+
+```
+onLoad onError
 ```
