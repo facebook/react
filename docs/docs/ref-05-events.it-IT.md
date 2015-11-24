@@ -81,6 +81,22 @@ DOMDataTransfer clipboardData
 ```
 
 
+### Eventi di Composizione
+
+Nomi degli eventi:
+
+```
+onCompositionEnd onCompositionStart onCompositionUpdate
+```
+
+Proprietà:
+
+```javascript
+string data
+
+```
+
+
 ### Eventi di Tastiera
 
 Nomi degli eventi:
@@ -162,6 +178,15 @@ DOMEventTarget relatedTarget
 number screenX
 number screenY
 boolean shiftKey
+```
+
+
+### Eventi di Selezione
+
+Nomi degli eventi:
+
+```
+onSelect
 ```
 
 
