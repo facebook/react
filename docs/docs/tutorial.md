@@ -733,7 +733,7 @@ var CommentBox = React.createClass({
 
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
 
-```javascript{17-23}
+```javascript{17-23,33}
 // tutorial21.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
