@@ -657,7 +657,7 @@ var CommentBox = React.createClass({
 
 La nostra applicazione è adesso completa, ma aspettare che la richiesta completi prima di vedere il commento apparire nella lista la fa sembrare lenta. Possiamo aggiungere ottimisticamente questo commento alla lista per fare apparire l'applicazione più veloce.
 
-```javascript{17-19}
+```javascript{17-19,29}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {

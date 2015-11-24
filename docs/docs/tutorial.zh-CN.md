@@ -657,7 +657,7 @@ var CommentBox = React.createClass({
 
 我们的应用现在已经功能完备，但是它感觉很慢，因为在评论出现在列表前必须等待请求完成。我们可以优化添加这条评论到列表以使应用感觉更快。
 
-```javascript{17-19}
+```javascript{17-19,29}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
