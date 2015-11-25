@@ -67,58 +67,58 @@ var DOMChildrenOperations = {
    * update configurations are each expected to have a `parentNode` property.
    *
    * @param {array<object>} updates List of update configurations.
-   * @param {array<string>} markupList List of markup strings.
    * @internal
    */
-  processUpdates: function(updates, markupList) {
+  processUpdates: function(parentNode, updates) {
     var update;
     // Mapping from parent IDs to initial child orderings.
     var initialChildren = null;
     // List of children that will be moved or removed.
     var updatedChildren = null;
 
+    var markupList = null;
+
     for (var i = 0; i < updates.length; i++) {
       update = updates[i];
       if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
           update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         var updatedIndex = update.fromIndex;
-        var updatedChild = update.parentNode.childNodes[updatedIndex];
-        var parentID = update.parentInst._rootNodeID;
+        var updatedChild = parentNode.childNodes[updatedIndex];
 
         invariant(
           updatedChild,
-          'processUpdates(): Unable to find child %s of element. This ' +
+          'processUpdates(): Unable to find child %s of element %s. This ' +
           'probably means the DOM was unexpectedly mutated (e.g., by the ' +
           'browser), usually due to forgetting a <tbody> when using tables, ' +
           'nesting tags like <form>, <p>, or <a>, or using non-SVG elements ' +
-          'in an <svg> parent. Try inspecting the child nodes of the element ' +
-          'with React ID `%s`.',
+          'in an <svg> parent.',
           updatedIndex,
-          parentID
+          parentNode,
         );
 
         initialChildren = initialChildren || {};
-        initialChildren[parentID] = initialChildren[parentID] || [];
-        initialChildren[parentID][updatedIndex] = updatedChild;
+        initialChildren[updatedIndex] = updatedChild;
 
         updatedChildren = updatedChildren || [];
         updatedChildren.push(updatedChild);
+      } else if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP) {
+        // Replace each HTML string with an index into the markup list
+        if (typeof update.content === 'string') {
+          markupList = markupList || [];
+          update.content = markupList.push(update.markup);
+        }
       }
     }
 
-    // markupList is either a list of markup or just a list of elements
-    var isHTML = markupList.length && typeof markupList[0] === 'string';
     var renderedMarkup;
-    if (isHTML) {
+    if (markupList) {
       renderedMarkup = Danger.dangerouslyRenderMarkup(markupList);
-    } else {
-      renderedMarkup = markupList;
     }
 
     // Remove updated children first so that `toIndex` is consistent.
     if (updatedChildren) {
       for (var j = 0; j < updatedChildren.length; j++) {
-        updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+        parentNode.removeChild(updatedChildren[j]);
       }
     }
 
@@ -126,36 +126,36 @@ var DOMChildrenOperations = {
       update = updates[k];
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
-          if (isHTML) {
+          if (renderedMarkup) {
             insertChildAt(
-              update.parentNode,
-              renderedMarkup[update.markupIndex],
+              parentNode,
+              renderedMarkup[update.content],
               update.toIndex
             );
           } else {
             insertLazyTreeChildAt(
-              update.parentNode,
-              renderedMarkup[update.markupIndex],
+              parentNode,
+              update.content,
               update.toIndex
             );
           }
           break;
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           insertChildAt(
-            update.parentNode,
-            initialChildren[update.parentInst._rootNodeID][update.fromIndex],
+            parentNode,
+            initialChildren[update.fromIndex],
             update.toIndex
           );
           break;
         case ReactMultiChildUpdateTypes.SET_MARKUP:
           setInnerHTML(
-            update.parentNode,
+            parentNode,
             update.content
           );
           break;
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
           setTextContent(
-            update.parentNode,
+            parentNode,
             update.content
           );
           break;

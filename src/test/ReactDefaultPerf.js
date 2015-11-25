@@ -199,7 +199,7 @@ var ReactDefaultPerf = {
           ReactDefaultPerf._recordWrite('', fnName, totalTime, args[0]);
         } else if (fnName === 'dangerouslyProcessChildrenUpdates') {
           // special format
-          args[0].forEach(function(update) {
+          args[1].forEach(function(update) {
             var writeArgs = {};
             if (update.fromIndex !== null) {
               writeArgs.fromIndex = update.fromIndex;
@@ -207,14 +207,11 @@ var ReactDefaultPerf = {
             if (update.toIndex !== null) {
               writeArgs.toIndex = update.toIndex;
             }
-            if (update.textContent !== null) {
-              writeArgs.textContent = update.textContent;
-            }
-            if (update.markupIndex !== null) {
-              writeArgs.markup = args[1][update.markupIndex];
+            if (update.content !== null) {
+              writeArgs.content = update.content;
             }
             ReactDefaultPerf._recordWrite(
-              update.parentInst._rootNodeID,
+              args[0]._rootNodeID,
               update.type,
               totalTime,
               writeArgs
