@@ -20,11 +20,9 @@ describe('ReactDOMIDOperations', function() {
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
+      {_nativeNode: stubNode},
       [{
-        parentInst: {_nativeNode: stubNode},
-        parentNode: null,
         type: ReactMultiChildUpdateTypes.SET_MARKUP,
-        markupIndex: null,
         content: html,
         fromIndex: null,
         toIndex: null,
