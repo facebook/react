@@ -55,14 +55,14 @@ var addons = {
     module: 'update',
     name: 'update',
     docs: 'update',
-  }
+  },
 };
 
 function generateSource(info) {
   var pieces = [
     "module.exports = require('react/lib/",
     info.module,
-    "')"
+    "')",
   ];
   if (info.method) {
     pieces.push('.', info.method);
@@ -114,7 +114,7 @@ function packReleases() {
 
     var spawnCmd = {
       cmd: 'npm',
-      args: ['pack', pkgDir]
+      args: ['pack', pkgDir],
     };
     grunt.util.spawn(spawnCmd, function() {
       var buildSrc = pkgName + '-' + grunt.config.data.pkg.version + '.tgz';
