@@ -55,14 +55,14 @@ var addons = {
     module: 'update',
     name: 'update',
     docs: 'update',
-  },
+  }
 };
 
 function generateSource(info) {
   var pieces = [
     "module.exports = require('react/lib/",
     info.module,
-    "')",
+    "')"
   ];
   if (info.method) {
     pieces.push('.', info.method);
@@ -86,13 +86,13 @@ function buildReleases() {
 
     grunt.file.mkdir(destDir);
     var link = info.docs ? info.docs : 'addons';
-    link = 'https://facebook.github.io/react/docs/' + link + '.html';
+    link = '`https://facebook.github.io/react/docs/' + link + '.html`';
     fs.writeFileSync(path.join(destDir, 'index.js'), generateSource(info));
     fs.writeFileSync(path.join(destDir, 'package.json'), JSON.stringify(pkgData, null, 2));
     grunt.file.copy('LICENSE', destLicense);
     grunt.file.copy('PATENTS', destPatents);
 
-    var moreText = "`# " + pkgName + " This package provides the React " + k + " add-on. See <" + link + "> for more information.`"
+    var moreText = '`# ' + pkgName + ' This package provides the React ' + k + ' add-on. See <' + link + '> for more information.`';
     fs.writeFileSync(
       path.join(destDir, 'README.md'),
       moreText.slice(1)
@@ -114,7 +114,7 @@ function packReleases() {
 
     var spawnCmd = {
       cmd: 'npm',
-      args: ['pack', pkgDir],
+      args: ['pack', pkgDir]
     };
     grunt.util.spawn(spawnCmd, function() {
       var buildSrc = pkgName + '-' + grunt.config.data.pkg.version + '.tgz';
