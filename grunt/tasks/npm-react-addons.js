@@ -86,19 +86,16 @@ function buildReleases() {
 
     grunt.file.mkdir(destDir);
     var link = info.docs ? info.docs : 'addons';
-    link = `https://facebook.github.io/react/docs/${link}.html`;
+    link = 'https://facebook.github.io/react/docs/' + link + '.html';
     fs.writeFileSync(path.join(destDir, 'index.js'), generateSource(info));
     fs.writeFileSync(path.join(destDir, 'package.json'), JSON.stringify(pkgData, null, 2));
     grunt.file.copy('LICENSE', destLicense);
     grunt.file.copy('PATENTS', destPatents);
+
+    var moreText = "`# " + pkgName + " This package provides the React " + k + " add-on. See <" + link + "> for more information.`"
     fs.writeFileSync(
       path.join(destDir, 'README.md'),
-      `
-# ${pkgName}
-
-This package provides the React ${k} add-on.
-
-See <${link}> for more information.`.slice(1)
+      moreText.slice(1)
     );
   });
 
