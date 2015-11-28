@@ -143,7 +143,7 @@ z; // { a: 3, b: 4 }
 
 > Note:
 >
-> This proposal has reached stage 2 and is now enabled by default in Babel. Older versions of Babel may need to explicitly enable this transform with `babel --optional es7.objectRestSpread`
+> To transform rest and spread properties using Babel 6, you need to install the [`es2015`](https://babeljs.io/docs/plugins/preset-es2015/) preset, the [`transform-object-rest-spread`](https://babeljs.io/docs/plugins/transform-object-rest-spread/) plugin and configure them in the `.babelrc` file.
 
 ## Transferring with Underscore
 
