@@ -78,6 +78,28 @@ React.createClass({
 });
 ```
 
+### Single Child
+
+With `React.PropTypes.element` you can specify that only a single child can be passed to
+a component as children.
+
+```javascript
+var MyComponent = React.createClass({
+  propTypes: {
+    children: React.PropTypes.element.isRequired
+  },
+
+  render: function() {
+    return (
+      <div>
+        {this.props.children} // This must be exactly one element or it will warn.
+      </div>
+    );
+  }
+
+});
+```
+
 ## Default Prop Values
 
 React lets you define default values for your `props` in a very declarative way:
@@ -113,28 +135,6 @@ ReactDOM.render(
   </CheckLink>,
   document.getElementById('example')
 );
-```
-
-## Single Child
-
-With `React.PropTypes.element` you can specify that only a single child can be passed to
-a component as children.
-
-```javascript
-var MyComponent = React.createClass({
-  propTypes: {
-    children: React.PropTypes.element.isRequired
-  },
-
-  render: function() {
-    return (
-      <div>
-        {this.props.children} // This must be exactly one element or it will throw.
-      </div>
-    );
-  }
-
-});
 ```
 
 ## Mixins
