@@ -217,6 +217,21 @@ describe('ReactTestUtils', function() {
     expect(result.props.className).toEqual('clicked');
   });
 
+  it('can setState in componentWillMount when shallow rendering', function() {
+    var SimpleComponent = React.createClass({
+      componentWillMount() {
+        this.setState({groovy: 'doovy'});
+      },
+      render() {
+        return <div>{this.state.groovy}</div>;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    var result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>doovy</div>);
+  });
+
   it('can pass context when shallowly rendering', function() {
     var SimpleComponent = React.createClass({
       contextTypes: {
