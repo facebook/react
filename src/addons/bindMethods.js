@@ -19,9 +19,9 @@
  * @param {Array} methods names to bind to the given self.
  **/
 function bindMethods(self, methods) {
-	methods.forEach(function (method) {
-		self[method] = self[method].bind(self);
-	});
+  methods.forEach(function(method) {
+    self[method] = self[method].bind(self);
+  });
 }
 
 module.exports = bindMethods;

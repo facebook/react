@@ -13,8 +13,8 @@
 
 var bindMethods = require('bindMethods');
 
-describe('#bindMethods', function () {
-  beforeEach(function () {
+describe('#bindMethods', function() {
+  beforeEach(function() {
     this.object = {
       count: 1,
 
@@ -24,18 +24,18 @@ describe('#bindMethods', function () {
 
       decrement() {
         this.count--;
-      }
+      },
     };
   });
 
-  it('craches without binding', function () {
+  it('craches without binding', function() {
     const {increment, decrement} = this.object;
 
     expect(() => increment()).toThrow("Cannot read property 'count' of undefined");
     expect(() => decrement()).toThrow("Cannot read property 'count' of undefined");
   });
 
-  it('binds the object correctly', function () {
+  it('binds the object correctly', function() {
     bindMethods(this.object, ['increment', 'decrement']);
     const {increment, decrement} = this.object;
 
