@@ -19,7 +19,7 @@ require('commoner').version(
   // duration of the build, so it is both consistent and cheap to
   // evaluate multiple times.
   return context.getProvidedP().then(function(idToPath) {
-    // If a module declares its own identifier using @providesModule
+    // If a module declares it's own identifier using @providesModule
     // then that identifier will be a key in the idToPath object.
     if (idToPath.hasOwnProperty(id)) {
       return context.readFileP(idToPath[id]);
