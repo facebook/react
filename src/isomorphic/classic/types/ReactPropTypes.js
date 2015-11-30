@@ -217,13 +217,24 @@ function createEnumTypeChecker(expectedValues) {
 
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
+    var locationName = ReactPropTypeLocationNames[location];
+
     for (var i = 0; i < expectedValues.length; i++) {
+      if (expectedValues[i] !== null &&
+        (typeof expectedValues[i] === 'object' || typeof expectedValues[i] === 'function')
+      ) {
+        return new Error(
+          `Invalid ${locationName} \`${propFullName}\` of value \`${propValue}\` ` +
+          `supplied to \`${componentName}\`, \`oneOf\` expects an enum of primitive values. ` +
+          `Did you mean to use \`oneOfType\`?`
+        );
+      }
+
       if (propValue === expectedValues[i]) {
         return null;
       }
     }
 
-    var locationName = ReactPropTypeLocationNames[location];
     var valuesString = JSON.stringify(expectedValues);
     return new Error(
       `Invalid ${locationName} \`${propFullName}\` of value \`${propValue}\` ` +

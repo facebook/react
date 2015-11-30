@@ -601,6 +601,18 @@ describe('ReactPropTypes', function() {
         'Invalid prop `testProp` of value `false` supplied to ' +
         '`testComponent`, expected one of [0,"false"].'
       );
+      typeCheckFail(
+        PropTypes.oneOf(['red', 'blue']),
+        {},
+        'Invalid prop `testProp` of value `[object Object]` supplied to ' +
+        '`testComponent`, expected one of ["red","blue"].'
+      );
+      typeCheckFail(
+        PropTypes.oneOf(['red', 'blue']),
+        PropTypes.string,
+        'Invalid prop `testProp` of value `function () { [native code] }` supplied to ' +
+        '`testComponent`, expected one of ["red","blue"].'
+      );
     });
 
     it('should not warn for valid values', function() {
