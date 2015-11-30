@@ -51,6 +51,10 @@ var addons = {
     module: 'shallowCompare',
     name: 'shallow-compare',
   },
+  bindMethods: {
+    module: 'bindMethods',
+    name: 'bind-methods',
+  },
   updates: {
     module: 'update',
     name: 'update',

@@ -29,6 +29,7 @@ var ReactUpdates = require('ReactUpdates');
 
 var cloneWithProps = require('cloneWithProps');
 var shallowCompare = require('shallowCompare');
+var bindMethods = require('bindMethods');
 var update = require('update');
 var warning = require('warning');
 
@@ -54,6 +55,7 @@ React.addons = {
   cloneWithProps: cloneWithProps,
   createFragment: ReactFragment.create,
   shallowCompare: shallowCompare,
+  bindMethods: bindMethods,
   update: update,
 };
 
