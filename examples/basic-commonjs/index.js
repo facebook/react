@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 
 var ExampleApplication = React.createClass({
   render: function() {
@@ -16,7 +17,7 @@ var ExampleApplication = React.createClass({
 var start = new Date().getTime();
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <ExampleApplication elapsed={new Date().getTime() - start} />,
     document.getElementById('container')
   );

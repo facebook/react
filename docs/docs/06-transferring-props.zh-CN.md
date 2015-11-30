@@ -11,17 +11,16 @@ React 里有一个非常常用的模式就是对组件做一层抽象。组件�
 可以使用 [JSX 展开属性](/react/docs/jsx-spread-zh-CN.html) 来合并现有的 props 和其它值：
 
 ```javascript
-return <Component {...this.props} more="values" />;
+<Component {...this.props} more="values" />
 ```
 
 如果不使用 JSX，可以使用一些对象辅助方法如 ES6 的 `Object.assign` 或 Underscore `_.extend`。
 
 ```javascript
-return Component(Object.assign({}, this.props, { more: 'values' }));
+React.createElement(Component, Object.assign({}, this.props, { more: 'values' }));
 ```
 
 下面的教程介绍一些最佳实践。使用了 JSX 和 ES7 的还在试验阶段的特性。
-
 
 ## 手动传递
 
@@ -38,18 +37,21 @@ var FancyCheckbox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
   </FancyCheckbox>,
-  document.body
+  document.getElementById('example')
 );
 ```
 
 但 `name` 这个属性怎么办？还有 `title`、`onMouseOver` 这些 props？
 
-
 ## 在 JSX 里使用 `...` 传递
+
+> 注意:
+>
+> 在下面的例子中，`--harmony ` 标志是必须的因为这个语法是ES7的实验性语法。如果用浏览器中的JSX转换器，以 `<script type="text/jsx;harmony=true">`简单的打开你脚本就行了。详见[Rest and Spread Properties ...](/react/docs/transferring-props.html#rest-and-spread-properties-...)
 
 有时把所有属性都传下去是不安全或啰嗦的。这时可以使用 [解构赋值](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) 中的剩余属性特性来把未知属性批量提取出来。
 
@@ -72,16 +74,16 @@ var FancyCheckbox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
   </FancyCheckbox>,
-  document.body
+  document.getElementById('example')
 );
 ```
 
 > 注意:
-> 
+>
 > 上面例子中，`checked` 属性也是一个有效的 DOM 属性。如果你没有使用解构赋值，那么可能无意中把它传下去。
 
 在传递这些未知的 `other` 属性时，要经常使用解构赋值模式。
@@ -124,7 +126,7 @@ var FancyCheckbox = React.createClass({
 ```
 
 > 注意:
-> 
+>
 > 顺序很重要，把 `{...other}` 放到 JSX props 前面会使它不被覆盖。上面例子中我们可以保证 input 的 type 是 `"checkbox"`。
 
 
@@ -143,7 +145,7 @@ z; // { a: 3, b: 4 }
 
 > 注意:
 >
-> 使用 [JSX 命令行工具](http://npmjs.org/package/react-tools) 配合 `--harmony` 标记来启用 ES7 语法。
+> 使用 [JSX 命令行工具](https://www.npmjs.com/package/react-tools) 配合 `--harmony` 标记来启用 ES7 语法。
 
 
 ## 使用 Underscore 来传递

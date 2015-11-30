@@ -11,20 +11,20 @@ It's a common pattern in React to wrap a component in an abstraction. The outer 
 You can use [JSX spread attributes](/react/docs/jsx-spread.html) to merge the old props with additional values:
 
 ```javascript
-return <Component {...this.props} more="values" />;
+<Component {...this.props} more="values" />
 ```
 
 If you don't use JSX, you can use any object helper such as ES6 `Object.assign` or Underscore `_.extend`:
 
 ```javascript
-return Component(Object.assign({}, this.props, { more: 'values' }));
+React.createElement(Component, Object.assign({}, this.props, { more: 'values' }));
 ```
 
-The rest of this tutorial explains best practices. It uses JSX and experimental ES7 syntax.
+The rest of this tutorial explains best practices. It uses JSX and experimental ECMAScript syntax.
 
 ## Manual Transfer
 
-Most of the time you should explicitly pass the properties down. That ensures that you only expose a subset of the inner API, one that you know will work.
+Most of the time you should explicitly pass the properties down. This ensures that you only expose a subset of the inner API, one that you know will work.
 
 ```javascript
 var FancyCheckbox = React.createClass({
@@ -37,11 +37,11 @@ var FancyCheckbox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
   </FancyCheckbox>,
-  document.body
+  document.getElementById('example')
 );
 ```
 
@@ -50,8 +50,8 @@ But what about the `name` prop? Or the `title` prop? Or `onMouseOver`?
 ## Transferring with `...` in JSX
 
 > NOTE:
-> 
-> In the example below, the `--harmony ` flag is required as this syntax is an experimental ES7 syntax. If using the in-browser JSX transformer, simply open your script with `<script type="text/jsx;harmony=true">`. See the [Rest and Spread Properties ...](http://facebook.github.io/react/docs/transferring-props.html#rest-and-spread-properties-...) section below for more details.
+>
+> The `...` syntax is part of the Object Rest Spread proposal. This proposal is on track to become a standard. See the [Rest and Spread Properties ...](/react/docs/transferring-props.html#rest-and-spread-properties-...) section below for more details.
 
 Sometimes it's fragile and tedious to pass every property along. In that case you can use [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) with rest properties to extract a set of unknown properties.
 
@@ -74,16 +74,16 @@ var FancyCheckbox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
   </FancyCheckbox>,
-  document.body
+  document.getElementById('example')
 );
 ```
 
 > NOTE:
-> 
+>
 > In the example above, the `checked` prop is also a valid DOM attribute. If you didn't use destructuring in this way you might inadvertently pass it along.
 
 Always use the destructuring pattern when transferring unknown `other` props.
@@ -102,7 +102,7 @@ var FancyCheckbox = React.createClass({
 
 ## Consuming and Transferring the Same Prop
 
-If your component wants to consume a property but also pass it along, you can repass it explicitly `checked={checked}`. This is preferable to passing the full `this.props` object since it's easier to refactor and lint.
+If your component wants to consume a property but also wants to pass it along, you can repass it explicitly with `checked={checked}`. This is preferable to passing the full `this.props` object since it's easier to refactor and lint.
 
 ```javascript
 var FancyCheckbox = React.createClass({
@@ -125,14 +125,14 @@ var FancyCheckbox = React.createClass({
 ```
 
 > NOTE:
-> 
+>
 > Order matters. By putting the `{...other}` before your JSX props you ensure that the consumer of your component can't override them. In the example above we have guaranteed that the input will be of type `"checkbox"`.
 
 ## Rest and Spread Properties `...`
 
 Rest properties allow you to extract the remaining properties from an object into a new object. It excludes every other property listed in the destructuring pattern.
 
-This is an experimental implementation of an [ES7 proposal](https://github.com/sebmarkbage/ecmascript-rest-spread).
+This is an experimental implementation of an [ECMAScript proposal](https://github.com/sebmarkbage/ecmascript-rest-spread).
 
 ```javascript
 var { x, y, ...z } = { x: 1, y: 2, a: 3, b: 4 };
@@ -143,7 +143,7 @@ z; // { a: 3, b: 4 }
 
 > Note:
 >
-> Use the [JSX command-line tool](http://npmjs.org/package/react-tools) with the `--harmony` flag to activate the experimental ES7 syntax.
+> To transform rest and spread properties using Babel 6, you need to install the [`es2015`](https://babeljs.io/docs/plugins/preset-es2015/) preset, the [`transform-object-rest-spread`](https://babeljs.io/docs/plugins/transform-object-rest-spread/) plugin and configure them in the `.babelrc` file.
 
 ## Transferring with Underscore
 

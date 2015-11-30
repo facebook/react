@@ -1,66 +1,88 @@
 ---
 language: node_js
 node_js:
-- '0.10'
+- 4
 sudo: false
 cache:
   directories:
+  - docs/vendor/bundle
   - node_modules
 before_install:
 - |
-    if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-      PR_FIRST=$(curl -s https://github.com/${TRAVIS_REPO_SLUG}/pull/${TRAVIS_PULL_REQUEST}.patch | head -1 | grep -o -E '\b[0-9a-f]{40}\b' | tr -d '\n')
-      TRAVIS_COMMIT_RANGE=$PR_FIRST^..$TRAVIS_COMMIT
-    fi
-    git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/' || {
+    if [ "$TEST_TYPE" != build_website ] && \
+      ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
+    then
       echo "Only docs were updated, stopping build process."
       exit
-    }
+    fi
+    npm install -g npm@latest-2
+    npm --version
 script:
 - |
-    grunt $TEST_TYPE
-after_script:
-- |
-    if [ "$TEST_TYPE" = test ] && [ "$SERVER" ]; then
-      grunt build
-      curl \
-        -F "react=@build/react.js" \
-        -F "react.min=@build/react.min.js" \
-        -F "transformer=@build/JSXTransformer.js" \
-        -F "react-with-addons=@build/react-with-addons.js" \
-        -F "react-with-addons.min=@build/react-with-addons.min.js" \
-        -F "npm-react=@build/react.tgz" \
-        -F "npm-react-tools=@build/react-tools.tgz" \
-        -F "commit=$TRAVIS_COMMIT" \
-        -F "date=`git log --format='%ct' -1`" \
-        -F "pull_request=$TRAVIS_PULL_REQUEST" \
-        -F "token=$SECRET_TOKEN" \
-        -F "branch=$TRAVIS_BRANCH" \
-        $SERVER
+    if [ "$TEST_TYPE" = build_website ]; then
+      if [ "$TRAVIS_BRANCH" = "$REACT_WEBSITE_BRANCH" ] && [ "$TRAVIS_PULL_REQUEST" = false ]; then
+        set -e
+
+        GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
+        echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
+        git config --global user.name "Travis CI"
+        git config --global user.email "travis@reactjs.org"
+
+        git clone --branch gh-pages --depth=50 \
+          https://reactjs-bot@github.com/facebook/react.git \
+          $GH_PAGES_DIR
+        pushd docs
+        bundle install --jobs=3 --retry=3 --path=vendor/bundle
+        bundle exec rake release
+        cd $GH_PAGES_DIR
+        git status
+        if ! git diff-index --quiet HEAD --; then
+          git add -A .
+          git commit -m "Rebuild website"
+          git push origin gh-pages
+        fi
+        popd
+      fi
+    elif [ "$TEST_TYPE" = build ]; then
+      if [ "$SERVER" ]; then
+        set -e
+        ./node_modules/.bin/grunt build
+        curl \
+          -F "react=@build/react.js" \
+          -F "react.min=@build/react.min.js" \
+          -F "react-with-addons=@build/react-with-addons.js" \
+          -F "react-with-addons.min=@build/react-with-addons.min.js" \
+          -F "react-dom=@build/react-dom.js" \
+          -F "react-dom.min=@build/react-dom.min.js" \
+          -F "react-dom-server=@build/react-dom-server.js" \
+          -F "react-dom-server.min=@build/react-dom-server.min.js" \
+          -F "npm-react=@build/packages/react.tgz" \
+          -F "npm-react-dom=@build/packages/react-dom.tgz" \
+          -F "commit=$TRAVIS_COMMIT" \
+          -F "date=`git log --format='%ct' -1`" \
+          -F "pull_request=$TRAVIS_PULL_REQUEST" \
+          -F "token=$SECRET_TOKEN" \
+          -F "branch=$TRAVIS_BRANCH" \
+          $SERVER
+      fi
+    else
+      ./node_modules/.bin/grunt $TEST_TYPE
     fi
 env:
   matrix:
-  - TEST_TYPE=test
+  - TEST_TYPE=build
   - TEST_TYPE=jest
   - TEST_TYPE=lint
-  - TEST_TYPE=test:webdriver:saucelabs:modern
+  - TEST_TYPE=build_website
   global:
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
   # SECRET_TOKEN
   - secure: dkpPW+VnoqC/okhRdV90m36NcyBFhcwEKL3bNFExAwi0dXnFao8RoFlvnwiPlA23h2faROkMIetXlti6Aju08BgUFV+f9aL6vLyU7gUent4Nd3413zf2fwDtXIWIETg6uLnOpSykGKgCAT/hY3Q2oPLqOoY0OxfgnbqwxkxljrE=
+  # GITHUB_TOKEN
+  - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
 matrix:
   fast_finish: true
-  allow_failures:
-    - env: TEST_TYPE=test:coverage
-    - env: TEST_TYPE=perf:full
-    - env: TEST_TYPE=test:webdriver:saucelabs:modern
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
-    - env: TEST_TYPE=test:webdriver:saucelabs:ios
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=safari
 notifications:
   irc:
     use_notice: true

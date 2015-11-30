@@ -24,7 +24,7 @@ var EVENT_NAME_MAP = {
     'WebkitTransition': 'webkitTransitionEnd',
     'MozTransition': 'mozTransitionEnd',
     'OTransition': 'oTransitionEnd',
-    'msTransition': 'MSTransitionEnd'
+    'msTransition': 'MSTransitionEnd',
   },
 
   animationend: {
@@ -32,8 +32,8 @@ var EVENT_NAME_MAP = {
     'WebkitAnimation': 'webkitAnimationEnd',
     'MozAnimation': 'mozAnimationEnd',
     'OAnimation': 'oAnimationEnd',
-    'msAnimation': 'MSAnimationEnd'
-  }
+    'msAnimation': 'MSAnimationEnd',
+  },
 };
 
 var endEvents = [];
@@ -103,7 +103,7 @@ var ReactTransitionEvents = {
     endEvents.forEach(function(endEvent) {
       removeEventListener(node, endEvent, eventListener);
     });
-  }
+  },
 };
 
 module.exports = ReactTransitionEvents;

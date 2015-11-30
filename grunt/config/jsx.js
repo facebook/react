@@ -1,11 +1,12 @@
 'use strict';
 
-var assign = require('../../src/stubs/Object.assign');
 var grunt = require('grunt');
 
 var rootIDs = [
   'React',
-  'ReactWithAddons'
+  'ReactWithAddons',
+  // deprecated is used in the npm package but not anywhere else, so build it.
+  'deprecated',
 ];
 
 var normal = {
@@ -13,30 +14,12 @@ var normal = {
   getConfig: function() {
     return {
       commonerConfig: grunt.config.data.pkg.commonerConfig,
-      constants: {}
     };
   },
   sourceDir: 'src',
-  outputDir: 'build/modules'
+  outputDir: 'build/modules',
 };
-
-
-var test = {
-  rootIDs: rootIDs.concat([
-    'test/all.js',
-    '**/__tests__/*.js'
-  ]),
-  getConfig: function() {
-    return assign({}, normal.getConfig(), {
-      mocking: true
-    });
-  },
-  sourceDir: 'src',
-  outputDir: 'build/modules'
-};
-
 
 module.exports = {
   normal: normal,
-  test: test
 };

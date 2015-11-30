@@ -1,6 +1,6 @@
 ---
 title: "New in React v0.4: Autobind by Default"
-author: Paul O'Shannessy
+author: zpao
 ---
 
 React v0.4 is very close to completion. As we finish it off, we'd like to share with you some of the major changes we've made since v0.3. This is the first of several posts we'll be making over the next week.
@@ -8,7 +8,7 @@ React v0.4 is very close to completion. As we finish it off, we'd like to share 
 
 ## What is React.autoBind?
 
-If you take a look at most of our current examples, you'll see us using `React.autoBind` for event handlers. This is used in place of `Function.prototype.bind`. Remember that in JS, [function calls are late-bound](http://bonsaiden.github.io/JavaScript-Garden/#function.this). That means that if you simply pass a function around, the `this` used inside won't necessarily be the `this` you expect. `Function.prototype.bind` creates a new, properly bound, function so that when called, `this` is exactly what you expect it to be.
+If you take a look at most of our current examples, you'll see us using `React.autoBind` for event handlers. This is used in place of `Function.prototype.bind`. Remember that in JS, [function calls are late-bound](https://bonsaiden.github.io/JavaScript-Garden/#function.this). That means that if you simply pass a function around, the `this` used inside won't necessarily be the `this` you expect. `Function.prototype.bind` creates a new, properly bound, function so that when called, `this` is exactly what you expect it to be.
 
 Before we launched React, we would write this:
 

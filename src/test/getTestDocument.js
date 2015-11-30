@@ -12,19 +12,12 @@
 'use strict';
 
 function getTestDocument(markup) {
-  var iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  var testDocument = iframe.contentDocument || iframe.contentWindow.document;
-  testDocument.open();
-  testDocument.write(
+  document.open();
+  document.write(
     markup || '<!doctype html><html><meta charset=utf-8><title>test doc</title>'
   );
-  testDocument.close();
-
-  iframe.parentNode.removeChild(iframe);
-  return testDocument;
+  document.close();
+  return document;
 }
 
 module.exports = getTestDocument;

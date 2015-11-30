@@ -1,6 +1,6 @@
 ---
 title: "Use React and JSX in Ruby on Rails"
-author: Paul O'Shannessy
+author: zpao
 ---
 
 Today we're releasing a gem to make it easier to use React and JSX in Ruby on Rails applications: [react-rails](https://github.com/facebook/react-rails).
@@ -38,7 +38,7 @@ When you name your file with `myfile.js.jsx`, `react-rails` will automatically t
 
 ```js
 /** @jsx React.DOM */
-React.renderComponent(<MyComponent/>, document.body)
+React.renderComponent(<MyComponent/>, document.getElementById('example'))
 ```
 
 

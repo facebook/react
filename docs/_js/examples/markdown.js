@@ -1,12 +1,13 @@
 var MARKDOWN_COMPONENT = `
-var converter = new Showdown.converter();
-
 var MarkdownEditor = React.createClass({
   getInitialState: function() {
     return {value: 'Type some *markdown* here!'};
   },
   handleChange: function() {
-    this.setState({value: this.refs.textarea.getDOMNode().value});
+    this.setState({value: this.refs.textarea.value});
+  },
+  rawMarkup: function() {
+    return { __html: marked(this.state.value, {sanitize: true}) };
   },
   render: function() {
     return (
@@ -19,19 +20,17 @@ var MarkdownEditor = React.createClass({
         <h3>Output</h3>
         <div
           className="content"
-          dangerouslySetInnerHTML={{
-            __html: converter.makeHtml(this.state.value)
-          }}
+          dangerouslySetInnerHTML={this.rawMarkup()}
         />
       </div>
     );
   }
 });
 
-React.render(<MarkdownEditor />, mountNode);
+ReactDOM.render(<MarkdownEditor />, mountNode);
 `;
 
-React.render(
+ReactDOM.render(
   <ReactPlayground codeText={MARKDOWN_COMPONENT} />,
   document.getElementById('markdownExample')
 );

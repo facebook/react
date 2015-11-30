@@ -26,7 +26,7 @@ React.createClass({
     optionalString: React.PropTypes.string,
 
     // 所有可以被渲染的对象：数字，
-    // 字符串，DOM 元素或包含这些类型的数组。
+    // 字符串，DOM 元素或包含这些类型的数组(or fragment) 。
     optionalNode: React.PropTypes.node,
 
     // React 元素
@@ -105,7 +105,7 @@ var CheckLink = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CheckLink href="/checked.html">
     Click here!
   </CheckLink>,
@@ -137,7 +137,7 @@ var MyComponent = React.createClass({
 
 ## Mixins
 
-组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 [跨切面关注点](http://en.wikipedia.org/wiki/Cross-cutting_concern)。React 使用 `mixins` 来解决这类问题。
+组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 [跨切面关注点](https://en.wikipedia.org/wiki/Cross-cutting_concern)。React 使用 `mixins` 来解决这类问题。
 
 一个通用的场景是：一个组件需要定期更新。用 `setInterval()` 做很容易，但当不需要它的时候取消定时器来节省内存是非常重要的。React 提供 [生命周期方法](/react/docs/working-with-the-browser.html#component-lifecycle) 来告知组件创建或销毁的时间。下面来做一个简单的 mixin，使用 `setInterval()` 并保证在组件销毁时清理定时器。
 
@@ -150,7 +150,7 @@ var SetIntervalMixin = {
     this.intervals.push(setInterval.apply(null, arguments));
   },
   componentWillUnmount: function() {
-    this.intervals.map(clearInterval);
+    this.intervals.forEach(clearInterval);
   }
 };
 
@@ -174,10 +174,57 @@ var TickTock = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <TickTock />,
   document.getElementById('example')
 );
 ```
 
 关于 mixin 值得一提的优点是，如果一个组件使用了多个 mixin，并用有多个 mixin 定义了同样的生命周期方法（如：多个 mixin 都需要在组件销毁时做资源清理操作），所有这些生命周期方法都保证会被执行到。方法执行顺序是：首先按 mixin 引入顺序执行 mixin 里方法，最后执行组件内定义的方法。
+
+## ES6 Classes
+
+你也可以以一个简单的JavaScript 类来定义你的React classes。使用ES6 class的例子:
+
+```javascript
+class HelloMessage extends React.Component {
+  render() {
+    return <div>Hello {this.props.name}</div>;
+  }
+}
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+API近似于 `React.createClass` 除了 `getInitialState`。 你应该在构造函数里设置你的`state`，而不是提供一个单独的  `getInitialState` 方法。
+
+另一个不同是 `propTypes` 和 `defaultProps` 在构造函数而不是class body里被定义为属性。
+
+```javascript
+export class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: props.initialCount};
+  }
+  tick() {
+    this.setState({count: this.state.count + 1});
+  }
+  render() {
+    return (
+      <div onClick={this.tick.bind(this)}>
+        Clicks: {this.state.count}
+      </div>
+    );
+  }
+}
+Counter.propTypes = { initialCount: React.PropTypes.number };
+Counter.defaultProps = { initialCount: 0 };
+```
+
+### 无自动绑定
+
+方法遵循正式的ES6 class的语义，意味着它们不会自动绑定`this`到实例上。你必须显示的使用`.bind(this)` or [箭头函数](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`.
+
+### 没有 Mixins
+
+不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易支持这些用例不依靠mixins。
+

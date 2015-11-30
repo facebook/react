@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #5"
-author: Vjeux
+author: vjeux
 ---
 
 We launched the [React Facebook Page](https://www.facebook.com/react) along with the React v0.4 launch. 700 people already liked it to get updated on the project :)
@@ -52,7 +52,7 @@ Learning a new library is always easier when you have working examples you can p
 
 ## React Chosen Wrapper
 
-[Cheng Lou](https://github.com/chenglou) wrote a wrapper for the [Chosen](http://harvesthq.github.io/chosen/) input library called [react-chosen](https://github.com/chenglou/react-chosen). It took just 25 lines to be able to use jQuery component as a React one.
+[Cheng Lou](https://github.com/chenglou) wrote a wrapper for the [Chosen](https://harvesthq.github.io/chosen/) input library called [react-chosen](https://github.com/chenglou/react-chosen). It took just 25 lines to be able to use jQuery component as a React one.
 
 ```javascript
 React.renderComponent(
@@ -60,7 +60,7 @@ React.renderComponent(
     <option value="Facebook">Facebook</option>
     <option value="Harvest">Harvest</option>
   </Chosen>
-, document.body);
+, document.getElementById('example'));
 ```
 
 
@@ -75,7 +75,7 @@ React.renderComponent(
 
 [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/jordwalke), React developers, did a presentation of React at Facebook Seattle's office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&A. I highly recommend you watching this video.
 
-<figure><iframe width="650" height="400" src="//www.youtube.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="650" height="400" src="//www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## Docs

@@ -33,7 +33,7 @@ var LinkedStateMixin = {
       this.state[key],
       ReactStateSetters.createStateKeySetter(this, key)
     );
-  }
+  },
 };
 
 module.exports = LinkedStateMixin;

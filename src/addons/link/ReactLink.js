@@ -26,7 +26,7 @@
  *     var valueLink = new ReactLink(this.state.value, this._handleValueChange);
  *     return <input valueLink={valueLink} />;
  *   },
- *   this._handleValueChange: function(newValue) {
+ *   _handleValueChange: function(newValue) {
  *     this.setState({value: newValue});
  *   }
  * });
@@ -59,13 +59,13 @@ function createLinkTypeChecker(linkType) {
     value: typeof linkType === 'undefined' ?
       React.PropTypes.any.isRequired :
       linkType.isRequired,
-    requestChange: React.PropTypes.func.isRequired
+    requestChange: React.PropTypes.func.isRequired,
   };
   return React.PropTypes.shape(shapes);
 }
 
 ReactLink.PropTypes = {
-  link: createLinkTypeChecker
+  link: createLinkTypeChecker,
 };
 
 module.exports = ReactLink;

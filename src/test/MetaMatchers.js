@@ -28,7 +28,9 @@ function getRunnerWithResults(describeFunction) {
   // Execute the tests synchronously.
   env.updateInterval = 0;
   var outerGetEnv = jasmine.getEnv;
-  jasmine.getEnv = function() { return env; };
+  jasmine.getEnv = function() {
+    return env;
+  };
   // TODO: Bring over matchers from the existing environment.
   var runner = env.currentRunner();
   try {
@@ -116,11 +118,11 @@ var MetaMatchers = {
     this.message = function() {
       return [
         errorMessage,
-        'The specs are equal. Expected them to be different.'
+        'The specs are equal. Expected them to be different.',
       ];
     };
     return !errorMessage;
-  }
+  },
 };
 
 module.exports = MetaMatchers;

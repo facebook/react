@@ -3,7 +3,7 @@ id: reconciliation
 title: Reconciliation
 permalink: reconciliation.html
 prev: special-non-dom-attributes.html
-next: glossary.html
+next: webcomponents.html
 ---
 
 React's key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but is also an incredible challenge to make it tractable. This article explains how with powerful heuristics we managed to turn a O(n<sup>3</sup>) problem into a O(n) one.
@@ -30,7 +30,7 @@ In order to do a tree diff, we first need to be able to diff two nodes. There ar
 
 ### Different Node Types
 
-If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one. 
+If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one.
 
 ```xml
 renderA: <div />
@@ -103,7 +103,7 @@ renderB: <div><span>second</span><span>first</span></div>
 => [replaceAttribute textContent 'second'], [insertNode <span>first</span>]
 ```
 
-There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. [Levenshtein distance](http://en.wikipedia.org/wiki/Levenshtein_distance) can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn't find when a node has moved into another position and algorithms to do that have much worse complexity.
+There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn't find when a node has moved into another position and algorithms to do that have much worse complexity.
 
 ### Keys
 
@@ -129,5 +129,5 @@ Because we rely on two heuristics, if the assumptions behind them are not met, p
 
 1. The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
 
-2. If you don't provide stable keys (by using Math.random() for example), all the sub-trees are going to be re-rendered every single time. By giving the users the choice to choose the key, they have the ability to shoot themselves in the foot.
+2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many nodes to be unnecessarily re-created, which can cause performance degradation and lost state in child components.
 

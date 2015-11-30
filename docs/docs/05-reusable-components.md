@@ -6,8 +6,7 @@ prev: multiple-components.html
 next: transferring-props.html
 ---
 
-When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, fewer bugs, and fewer bytes down the wire.
-
+When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc.) into reusable components with well-defined interfaces. That way, the next time you need to build some UI, you can write much less code. This means faster development time, fewer bugs, and fewer bytes down the wire.
 
 ## Prop Validation
 
@@ -26,7 +25,7 @@ React.createClass({
     optionalString: React.PropTypes.string,
 
     // Anything that can be rendered: numbers, strings, elements or an array
-    // containing these types.
+    // (or fragment) containing these types.
     optionalNode: React.PropTypes.node,
 
     // A React element.
@@ -79,6 +78,27 @@ React.createClass({
 });
 ```
 
+### Single Child
+
+With `React.PropTypes.element` you can specify that only a single child can be passed to
+a component as children.
+
+```javascript
+var MyComponent = React.createClass({
+  propTypes: {
+    children: React.PropTypes.element.isRequired
+  },
+
+  render: function() {
+    return (
+      <div>
+        {this.props.children} // This must be exactly one element or it will warn.
+      </div>
+    );
+  }
+
+});
+```
 
 ## Default Prop Values
 
@@ -97,10 +117,9 @@ var ComponentWithDefaultProps = React.createClass({
 
 The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
 
-
 ## Transferring Props: A Shortcut
 
-A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
+A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
 var CheckLink = React.createClass({
@@ -110,7 +129,7 @@ var CheckLink = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CheckLink href="/checked.html">
     Click here!
   </CheckLink>,
@@ -118,31 +137,9 @@ React.render(
 );
 ```
 
-## Single Child
-
-With `React.PropTypes.element` you can specify that only a single child can be passed to
-a component as children.
-
-```javascript
-var MyComponent = React.createClass({
-  propTypes: {
-    children: React.PropTypes.element.isRequired
-  },
-
-  render: function() {
-    return (
-      <div>
-        {this.props.children} // This must be exactly one element or it will throw.
-      </div>
-    );
-  }
-
-});
-```
-
 ## Mixins
 
-Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
+Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
 
 One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
@@ -155,7 +152,7 @@ var SetIntervalMixin = {
     this.intervals.push(setInterval.apply(null, arguments));
   },
   componentWillUnmount: function() {
-    this.intervals.map(clearInterval);
+    this.intervals.forEach(clearInterval);
   }
 };
 
@@ -179,7 +176,7 @@ var TickTock = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <TickTock />,
   document.getElementById('example')
 );
@@ -197,10 +194,10 @@ class HelloMessage extends React.Component {
     return <div>Hello {this.props.name}</div>;
   }
 }
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
-The API is similar to `React.createClass` with the exception or `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
+The API is similar to `React.createClass` with the exception of `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
 
 Another difference is that `propTypes` and `defaultProps` are defined as properties on the constructor instead of in the class body.
 
@@ -227,8 +224,34 @@ Counter.defaultProps = { initialCount: 0 };
 
 ### No Autobinding
 
-Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or arrow functions.
+Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`.
 
 ### No Mixins
 
 Unfortunately ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes. Instead, we're working on making it easier to support such use cases without resorting to mixins.
+
+## Stateless Functions
+
+You may also define your React classes as a plain JavaScript function. For example using the stateless function syntax:
+
+```javascript
+function HelloMessage(props) {
+  return <div>Hello {props.name}</div>;
+}
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+Or using the new ES6 arrow syntax:
+
+```javascript
+var HelloMessage = (props) => <div>Hello {props.name}</div>;
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+This simplified component API is intended for components that are pure functions of their props. These components must not retain internal state, do not have backing instances, and do not have the component lifecycle methods. They are pure functional transforms of their input, with zero boilerplate.
+
+> NOTE:
+>
+> Because stateless functions don't have a backing instance, you can't attach a ref to a stateless function component. Normally this isn't an issue, since stateless functions do not provide an imperative API. Without an imperative API, there isn't much you could do with an instance anyway. However, if a user wants to find the DOM node of a stateless function component, they must wrap the component in a stateful component (eg. ES6 class component) and attach the ref to the stateful wrapper component.
+
+In an ideal world, most of your components would be stateless functions because these stateless components can follow a faster code path within the React core. This is the recommended pattern, when possible.
