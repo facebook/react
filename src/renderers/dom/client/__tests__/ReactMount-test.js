@@ -279,4 +279,35 @@ describe('ReactMount', function() {
     ReactDOM.unmountComponentAtNode(container);
     expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(1);
   });
+
+  it('marks top-level mounts', function() {
+    var ReactFeatureFlags = require('ReactFeatureFlags');
+
+    var Foo = React.createClass({
+      render: function() {
+        return <Bar />;
+      },
+    });
+
+    var Bar = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+
+    try {
+      ReactFeatureFlags.logTopLevelRenders = true;
+      spyOn(console, 'time');
+      spyOn(console, 'timeEnd');
+
+      ReactTestUtils.renderIntoDocument(<Foo />);
+
+      expect(console.time.argsForCall.length).toBe(1);
+      expect(console.time.argsForCall[0][0]).toBe('React mount: Foo');
+      expect(console.timeEnd.argsForCall.length).toBe(1);
+      expect(console.timeEnd.argsForCall[0][0]).toBe('React mount: Foo');
+    } finally {
+      ReactFeatureFlags.logTopLevelRenders = false;
+    }
+  });
 });
