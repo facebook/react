@@ -217,6 +217,24 @@ describe('ReactTestUtils', function() {
     expect(result.props.className).toEqual('clicked');
   });
 
+  it('can setState in componentWillMount with shallow render', function() {
+    var SimpleComponent = React.createClass({
+      contextTypes: {
+        name: React.PropTypes.string,
+      },
+      componentWillMount: function() {
+        this.setState({hello: 'ociffer'});
+      },
+      render: function() {
+        return <div>{this.state.hello}</div>;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    var result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).not.toBeUndefined();
+  });
+
   it('can pass context when shallowly rendering', function() {
     var SimpleComponent = React.createClass({
       contextTypes: {
