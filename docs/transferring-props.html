@@ -53,8 +53,8 @@
         </ul>
 
         <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a>
+          <li><a href="https://github.com/facebook/react">GitHub</a></li>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
         </ul>
       </div>
     </div>
@@ -415,7 +415,7 @@
 <p>If you don&#39;t use JSX, you can use any object helper such as ES6 <code>Object.assign</code> or Underscore <code>_.extend</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="p">{</span> <span class="nx">more</span><span class="o">:</span> <span class="s1">&#39;values&#39;</span> <span class="p">}));</span>
 </code></pre></div>
-<p>The rest of this tutorial explains best practices. It uses JSX and experimental ES7 syntax.</p>
+<p>The rest of this tutorial explains best practices. It uses JSX and experimental ECMAScript syntax.</p>
 <h2><a class="anchor" name="manual-transfer"></a>Manual Transfer <a class="hash-link" href="#manual-transfer">#</a></h2>
 <p>Most of the time you should explicitly pass the properties down. This ensures that you only expose a subset of the inner API, one that you know will work.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -510,7 +510,7 @@
 <h2><a class="anchor" name="rest-and-spread-properties-..."></a>Rest and Spread Properties <code>...</code> <a class="hash-link" href="#rest-and-spread-properties-...">#</a></h2>
 <p>Rest properties allow you to extract the remaining properties from an object into a new object. It excludes every other property listed in the destructuring pattern.</p>
 
-<p>This is an experimental implementation of an <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">ES7 proposal</a>.</p>
+<p>This is an experimental implementation of an <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">ECMAScript proposal</a>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="p">{</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="p">...</span><span class="nx">z</span> <span class="p">}</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">a</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">4</span> <span class="p">};</span>
 <span class="nx">x</span><span class="p">;</span> <span class="c1">// 1</span>
 <span class="nx">y</span><span class="p">;</span> <span class="c1">// 2</span>
@@ -519,7 +519,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>This proposal has reached stage 2 and is now enabled by default in Babel. Older versions of Babel may need to explicitly enable this transform with <code>babel --optional es7.objectRestSpread</code></p>
+<p>To transform rest and spread properties using Babel 6, you need to install the <a href="https://babeljs.io/docs/plugins/preset-es2015/"><code>es2015</code></a> preset, the <a href="https://babeljs.io/docs/plugins/transform-object-rest-spread/"><code>transform-object-rest-spread</code></a> plugin and configure them in the <code>.babelrc</code> file.</p>
 </blockquote>
 <h2><a class="anchor" name="transferring-with-underscore"></a>Transferring with Underscore <a class="hash-link" href="#transferring-with-underscore">#</a></h2>
 <p>If you don&#39;t use JSX, you can use a library to achieve the same pattern. Underscore supports <code>_.omit</code> to filter out properties and <code>_.extend</code> to copy properties onto a new object.</p>
