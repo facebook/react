@@ -904,4 +904,37 @@ describe('ReactUpdates', function() {
     expect(renderCount).toBe(1);
   });
 
+  it('marks top-level updates', function() {
+    var ReactFeatureFlags = require('ReactFeatureFlags');
+
+    var Foo = React.createClass({
+      render: function() {
+        return <Bar />;
+      },
+    });
+
+    var Bar = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+
+    try {
+      ReactFeatureFlags.logTopLevelRenders = true;
+      spyOn(console, 'time');
+      spyOn(console, 'timeEnd');
+
+      ReactDOM.render(<Foo />, container);
+
+      expect(console.time.argsForCall.length).toBe(1);
+      expect(console.time.argsForCall[0][0]).toBe('React update: Foo');
+      expect(console.timeEnd.argsForCall.length).toBe(1);
+      expect(console.timeEnd.argsForCall[0][0]).toBe('React update: Foo');
+    } finally {
+      ReactFeatureFlags.logTopLevelRenders = false;
+    }
+  });
 });

@@ -13,6 +13,7 @@
 
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
@@ -149,10 +150,28 @@ function runBatchedUpdates(transaction) {
     var callbacks = component._pendingCallbacks;
     component._pendingCallbacks = null;
 
+    var markerName;
+    if (ReactFeatureFlags.logTopLevelRenders) {
+      var namedComponent = component;
+      // Duck type TopLevelWrapper. This is probably always true.
+      if (
+        component._currentElement.props ===
+        component._renderedComponent._currentElement
+      ) {
+        namedComponent = component._renderedComponent;
+      }
+      markerName = 'React update: ' + namedComponent.getName();
+      console.time(markerName);
+    }
+
     ReactReconciler.performUpdateIfNecessary(
       component,
       transaction.reconcileTransaction
     );
+
+    if (markerName) {
+      console.timeEnd(markerName);
+    }
 
     if (callbacks) {
       for (var j = 0; j < callbacks.length; j++) {

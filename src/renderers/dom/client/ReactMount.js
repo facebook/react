@@ -19,6 +19,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
@@ -96,6 +97,17 @@ function mountComponentIntoNode(
   shouldReuseMarkup,
   context
 ) {
+  var markerName;
+  if (ReactFeatureFlags.logTopLevelRenders) {
+    var wrappedElement = wrapperInstance._currentElement.props;
+    var type = wrappedElement.type;
+    markerName = 'React mount: ' + (
+      typeof type === 'string' ? type :
+      type.displayName || type.name
+    );
+    console.time(markerName);
+  }
+
   var markup = ReactReconciler.mountComponent(
     wrapperInstance,
     transaction,
@@ -103,6 +115,11 @@ function mountComponentIntoNode(
     ReactDOMContainerInfo(wrapperInstance, container),
     context
   );
+
+  if (markerName) {
+    console.timeEnd(markerName);
+  }
+
   wrapperInstance._renderedComponent._topLevelWrapper = wrapperInstance;
   ReactMount._mountImageIntoNode(
     markup,
