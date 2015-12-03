@@ -137,12 +137,23 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should not cache old DOM nodes when switching constructors', function() {
-    var instance = <ChildUpdates renderAnchor={true} anchorClassOn={false}/>;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.setProps({anchorClassOn: true});  // Warm any cache
-    instance.setProps({renderAnchor: false});  // Clear out the anchor
-    // rerender
-    instance.setProps({renderAnchor: true, anchorClassOn: false});
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(
+      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
+      container
+    );
+    ReactDOM.render(  // Warm any cache
+      <ChildUpdates renderAnchor={true} anchorClassOn={true}/>,
+      container
+    );
+    ReactDOM.render(  // Clear out the anchor
+      <ChildUpdates renderAnchor={false} anchorClassOn={true}/>,
+      container
+    );
+    ReactDOM.render(  // rerender
+      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
+      container
+    );
     expect(instance.getAnchor().className).toBe('');
   });
 
@@ -396,71 +407,6 @@ describe('ReactCompositeComponent', function() {
     expect(instance).toBe(instance2);
     expect(renderedState).toBe(1);
     expect(instance2.state.value).toBe(1);
-  });
-
-  it('should not allow `setProps` on unmounted components', function() {
-    var container = document.createElement('div');
-    document.body.appendChild(container);
-
-    var Component = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-
-    var instance = <Component />;
-    expect(instance.setProps).not.toBeDefined();
-
-    instance = ReactDOM.render(instance, container);
-    expect(function() {
-      instance.setProps({value: 1});
-    }).not.toThrow();
-    expect(console.error.calls.length).toBe(1);  // setProps deprecated
-
-    ReactDOM.unmountComponentAtNode(container);
-    expect(function() {
-      instance.setProps({value: 2});
-    }).not.toThrow();
-
-    expect(console.error.calls.length).toBe(2);
-    expect(console.error.argsForCall[1][0]).toBe(
-      'Warning: setProps(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called setProps() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
-      'Component component.'
-    );
-  });
-
-  it('should only allow `setProps` on top-level components', function() {
-    var container = document.createElement('div');
-    document.body.appendChild(container);
-
-    var innerInstance;
-
-    var Inner = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-    var Component = React.createClass({
-      render: function() {
-        return <div><Inner ref="inner" /></div>;
-      },
-      componentDidMount: function() {
-        innerInstance = this.refs.inner;
-      },
-    });
-    ReactDOM.render(<Component />, container);
-
-    expect(innerInstance).not.toBe(undefined);
-    expect(function() {
-      innerInstance.setProps({value: 1});
-    }).toThrow(
-      'setProps(...): You called `setProps` on a component with a parent. ' +
-      'This is an anti-pattern since props will get reactively updated when ' +
-      'rendered. Instead, change the owner\'s `render` method to pass the ' +
-      'correct value as props to the component where it is created.'
-    );
   });
 
   it('should cleanup even if render() fatals', function() {

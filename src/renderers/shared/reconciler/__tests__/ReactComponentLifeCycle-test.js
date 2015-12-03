@@ -444,47 +444,6 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
-  it('should throw when calling setProps() on an owned component', function() {
-    /**
-     * calls setProps in an componentDidMount.
-     */
-    var Inner = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-    var PropsUpdaterInOnDOMReady = React.createClass({
-      componentDidMount: function() {
-        this.refs.theSimpleComponent.setProps({
-          className: this.props.valueToUseInOnDOMReady,
-        });
-      },
-      render: function() {
-        return (
-          <Inner
-            className={this.props.valueToUseInitially}
-            ref="theSimpleComponent"
-          />
-        );
-      },
-    });
-    var instance =
-      <PropsUpdaterInOnDOMReady
-        valueToUseInitially="hello"
-        valueToUseInOnDOMReady="goodbye"
-      />;
-    spyOn(console, 'error');
-    expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow(
-      'setProps(...): You called `setProps` on a component with a parent. ' +
-      'This is an anti-pattern since props will get reactively updated ' +
-      'when rendered. Instead, change the owner\'s `render` method to pass ' +
-      'the correct value as props to the component where it is created.'
-    );
-    expect(console.error.calls.length).toBe(1);  // setProps deprecated
-  });
-
   it('should not throw when updating an auxiliary component', function() {
     var Tooltip = React.createClass({
       render: function() {
