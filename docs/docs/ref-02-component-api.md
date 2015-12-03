@@ -106,7 +106,7 @@ boolean isMounted()
 
 > Note:
 >
-> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
+> This method is not available on ES6 `class` components that extend `React.Component`. It will likely be removed entirely in a future version of React, so you might as well [start migrating away from isMounted() now](/react/blog/2015/12/16/ismounted-antipattern.html).
 
 
 ### setProps
