@@ -1087,5 +1087,28 @@ describe('ReactDOMComponent', function() {
         'See Link > a > ... > Link > a.'
       );
     });
+
+    it('should warn about incorrect casing on properties', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(React.createElement('input', {type: 'text', tabindex: '1'}));
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
+    });
+
+    it('should warn about incorrect casing on event handlers', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onclick: '1'}));
+      ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onKeydown: '1'}));
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toContain('onClick');
+      expect(console.error.argsForCall[1][0]).toContain('onKeyDown');
+    });
+
+    it('should warn about class', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(React.createElement('div', {class: 'muffins'}));
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('className');
+    });
   });
 });

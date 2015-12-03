@@ -50,41 +50,6 @@ describe('DOMPropertyOperations', function() {
       )).toBe('id="simple"');
     });
 
-    it('should warn about incorrect casing on properties', function() {
-      spyOn(console, 'error');
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'tabindex',
-        '1'
-      )).toBe(null);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
-    });
-
-    it('should warn about incorrect casing on event handlers', function() {
-      spyOn(console, 'error');
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'onclick',
-        '1'
-      )).toBe(null);
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'onKeydown',
-        '1'
-      )).toBe(null);
-      expect(console.error.argsForCall.length).toBe(2);
-      expect(console.error.argsForCall[0][0]).toContain('onClick');
-      expect(console.error.argsForCall[1][0]).toContain('onKeyDown');
-    });
-
-    it('should warn about class', function() {
-      spyOn(console, 'error');
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'class',
-        'muffins'
-      )).toBe(null);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('className');
-    });
-
     it('should create markup for boolean properties', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
