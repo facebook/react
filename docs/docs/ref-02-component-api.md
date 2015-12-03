@@ -124,11 +124,11 @@ Calling `setProps()` on a root-level component will change its properties and tr
 
 > Note:
 >
+> This method is deprecated and will be removed soon. This method is not available on ES6 `class` components that extend `React.Component`. Instead of calling `setProps`, try invoking ReactDOM.render() again with the new props. For additional notes, see our [blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
+>
 > When possible, the declarative approach of calling `ReactDOM.render()` again on the same node is preferred instead. It tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
 >
 > This method can only be called on a root-level component. That is, it's only available on the component passed directly to `ReactDOM.render()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
->
-> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
 
 ### replaceProps
 
@@ -143,4 +143,4 @@ Like `setProps()` but deletes any pre-existing props instead of merging the two 
 
 > Note:
 >
-> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
+> This method is deprecated and will be removed soon. This method is not available on ES6 `class` components that extend `React.Component`. Instead of calling `replaceProps`, try invoking ReactDOM.render() again with the new props. For additional notes, see our [blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
