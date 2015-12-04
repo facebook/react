@@ -475,4 +475,19 @@ describe('ReactDOMSelect', function() {
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
     expect(console.error.argsForCall.length).toBe(1);
   });
+
+  it('should refresh state on change', function() {
+    var stub =
+      <select value="giraffe" onChange={noop}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    ReactTestUtils.Simulate.change(node);
+
+    expect(node.value).toBe('giraffe');
+  });
 });
