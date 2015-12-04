@@ -7,6 +7,53 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React.js Conf 2016 Diversity Scholarship</title>
+				<description>&lt;p&gt;I thrilled to announced that we will be organizing another diversity scholarship program for the upcoming React.js Conf! The tech industry is suffering from a lack of diversity, but it&amp;#39;s important to us that we have a thriving community that is made up of people with a variety of experiences and viewpoints.&lt;/p&gt;
+
+&lt;p&gt;When we ran this program last year, we had &lt;em&gt;over 200&lt;/em&gt; people apply for only 10 tickets. There we so many people that we wanted to bring in but we couldn&amp;#39;t. The results were still awesome, and we had bright individuals from around the world attending who would have otherwise been unable to. These attendees took part in discussions at the conference and brought perspectives that we might not have otherwise seen there.&lt;/p&gt;
+
+&lt;p&gt;This year we&amp;#39;re excited to bring back the scholarship, but we&amp;#39;ve set aside &lt;strong&gt;40 tickets&lt;/strong&gt; because we really believe that it&amp;#39;s important to do our best to make sure we have an even more diverse audience.&lt;/p&gt;
+
+&lt;p&gt;This is something I&amp;#39;m personally really excited to be a part of. I know the rest of the team is as well. We&amp;#39;re really proud to have everyone at Facebook providing support and funding for this.&lt;/p&gt;
+
+&lt;p&gt;The details of the scholarship are provided below (or you can &lt;a href=&quot;http://goo.gl/forms/PEmKj8oUp4&quot;&gt;go directly to the application&lt;/a&gt;). I encourage you to apply! If you don&amp;#39;t feel like you are eligible yourself, you can still help – send this along to friends, family, coworkers, acquaintances, or anybody who might be interested. And even if you haven&amp;#39;t spoken before, please consider &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;submitting a proposal for a talk&lt;/a&gt; (either 30 minutes or just 5 minutes) - we&amp;#39;re hoping to have a very diverse group of speakers in addition to attendees.&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;Facebook is excited to announce that we are now accepting applications for the React.js Conf Diversity Scholarship!&lt;/p&gt;
+
+&lt;p&gt;Beginning today, those studying or working in computer science or a related field can apply for a partial scholarship to attend the React.js Conf in San Francisco, CA on February 22 &amp;amp; 23, 2016.&lt;/p&gt;
+
+&lt;p&gt;React opens a world of new possibilities such as server-side rendering, real-time updates, different rendering targets like SVG and canvas. React Native makes is easy to use the same concepts and technologies to build native mobile experiences on iOS and Android. Join us at React.js Conf to shape the future of client-side applications! For more information about the React.js conference, please see &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;the website&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;At Facebook, we believe that anyone anywhere can make a positive impact by developing products to make the world more open and connected to the people and things they care about. Given the current realities of the tech industry and the lack of representation of communities we seek to serve, applicants currently under-represented in Computer Science and related fields are strongly encouraged to apply. Facebook will make determinations on scholarship recipients in its sole discretion. Facebook complies with all equal opportunity laws.&lt;/p&gt;
+
+&lt;p&gt;To apply for the scholarship, please visit the application page: &lt;strong&gt;&lt;a href=&quot;http://goo.gl/forms/PEmKj8oUp4&quot;&gt;http://goo.gl/forms/PEmKj8oUp4&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;award-includes&quot;&gt;&lt;/a&gt;Award Includes &lt;a class=&quot;hash-link&quot; href=&quot;#award-includes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Paid registration fee for the React.js Conf Feburary 22 &amp;amp; 23 in downtown San Francisco, CA&lt;/li&gt;
+&lt;li&gt;Paid lodging expenses for February 21, 22, 23&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;important-dates&quot;&gt;&lt;/a&gt;Important Dates &lt;a class=&quot;hash-link&quot; href=&quot;#important-dates&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Sunday December 13th 2015 - 11:59 PST: Applications for the React.js Conf Scholarship must be submitted in full&lt;/li&gt;
+&lt;li&gt;Wednesday, December 16th, 2015: Award recipients will be notified by email of their acceptance&lt;/li&gt;
+&lt;li&gt;Monday &amp;amp; Tuesday, February 22 &amp;amp; 23, 2016: React.js Conf&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;eligibility&quot;&gt;&lt;/a&gt;Eligibility &lt;a class=&quot;hash-link&quot; href=&quot;#eligibility&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Must currently be studying or working in Computer Science or a related field&lt;/li&gt;
+&lt;li&gt;International applicants are welcome, but you will be responsible for securing your own visa to attend the conference&lt;/li&gt;
+&lt;li&gt;You must be able to provide your own transportation to San Francisco&lt;/li&gt;
+&lt;li&gt;You must be available to attend the full duration of React.js Conf on February 22 &amp;amp; 23 in San Francisco, CA&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-12-04T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/12/04/react-js-conf-2016-diversity-scholarship.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/12/04/react-js-conf-2016-diversity-scholarship.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.14.3</title>
 				<description>&lt;p&gt;It&amp;#39;s time for another installment of React patch releases! We didn&amp;#39;t break anything in v0.14.2 but we do have a couple of other bugs we&amp;#39;re fixing. The biggest change in this release is actually an addition of a new built file. We heard from a number of people that they still need the ability to use React to render to a string on the client. While the use cases are not common and there are other ways to achieve this, we decided that it&amp;#39;s still valuable to support. So we&amp;#39;re now building &lt;code&gt;react-dom-server.js&lt;/code&gt;, which will be shipped to Bower and in the &lt;code&gt;dist/&lt;/code&gt; directory of the &lt;code&gt;react-dom&lt;/code&gt; package on npm. This file works the same way as &lt;code&gt;react-dom.js&lt;/code&gt; and therefore requires that the primary React build has already been included on the page.&lt;/p&gt;
 
@@ -763,72 +810,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.0-r
 				<pubDate>2015-09-02T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/09/02/new-react-developer-tools.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/09/02/new-react-developer-tools.html</guid>
-			</item>
-		
-			<item>
-				<title>ReactEurope Round-up</title>
-				<description>&lt;p&gt;Last month, the first React.js European conference took place in the city of Paris, at ReactEurope. Attendees were treated to a range of talks covering React, React Native, Flux, Relay, and GraphQL. Big thanks to everyone involved with organizing the conference, to all the attendees, and everyone who gave their time to speak - it wouldn&amp;#39;t have been possible without the help and support of the React community.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/vjeux&quot;&gt;Christopher Chedeau&lt;/a&gt; gave the opening keynote to the conference:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/PAA9O4E1IM4&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/sahrens&quot;&gt;Spencer Ahrens&lt;/a&gt; walks through building an advanced gestural UI leveraging the unique power of the React Native layout and animation systems to build a complex and fluid experience:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/xDlfrcM6YBk&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/leebyron&quot;&gt;Lee Byron&lt;/a&gt; explores GraphQL, its core principles, how it works, and what makes it a powerful tool:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/WQLzZf34FJ8&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/josephsavona&quot;&gt;Joseph Savona&lt;/a&gt; explores the problems Relay solves, its architecture and the query lifecycle, and how can you use Relay to build more scalable apps. There are examples of how Relay powers applications as complex as the Facebook News Feed:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/IrgHurBjQbg&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/schrockn&quot;&gt;Nick Schrock&lt;/a&gt; and &lt;a href=&quot;https://github.com/dschafer&quot;&gt;Dan Schafer&lt;/a&gt; take a deeper dive into putting GraphQL to work. How can we build a GraphQL API to work with an existing REST API or server-side data model? What are best practices when building a GraphQL API, and how do they differ from traditional REST best practices? How does Facebook use GraphQL? Most importantly, what does a complete and coherent GraphQL API looks like, and how can we get started building one?&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/gY48GW87Feo&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/sebmarkbage&quot;&gt;Sebastian Markbåge&lt;/a&gt; talks about why the DOM is flawed and how it is becoming a second-class citizen in the land of React apps:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/Zemce4Y1Y-A&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/sebmck&quot;&gt;Sebastian McKenzie&lt;/a&gt; goes over how existing JSX build pipeline infrastructure can be further utilised to perform even more significant code transformations such as transpilation, optimisation, profiling and more, reducing bugs, making your code faster and you as a developer more productive and happy:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/OFuDvqZmUrE&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/chenglou&quot;&gt;Cheng Lou&lt;/a&gt; gives a talk on the past, the present and the future of animation, and the place React can potentially take in this:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/1tavDv5hXpo&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;And there was a Q&amp;amp;A session with the whole team covering a range of React topics:&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;366&quot; src=&quot;//www.youtube.com/embed/CRJZBZ_-6hQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;And there were lots of great talks from the React community:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=ERB1TJBn32c&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&amp;amp;index=2&quot;&gt;Michael Chan&lt;/a&gt; looks at how to solve problems like CSS theming and media queries with contexts and plain old JavaScript. He also looks at the role of container-components and when it&amp;#39;s better to &amp;quot;just use CSS.&amp;quot;.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=JSjhhUvB9DY&amp;amp;index=3&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&quot;&gt;Elie Rotenberg&lt;/a&gt; talks about Flux over the Wire, building isomorphic, real-time React apps using a novel interpretation of Flux.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=BF58ZJ1ZQxY&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&amp;amp;index=6&quot;&gt;Ryan Florence&lt;/a&gt; says “Your front and back ends are already successfully in production but you don&amp;#39;t have to miss out on the productivity that React brings. Forget the rewrites, this is brownfield!”.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=xsSnOQynTHs&amp;amp;index=7&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&quot;&gt;Dan Abramov&lt;/a&gt; demonstrates how React can be used together with Webpack Hot Module Replacement to create a live editing environment with time travel that supercharges your debugging experience and transforms the way you work on real apps every day.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=ee_U2t-8L48&amp;amp;index=10&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&quot;&gt;Mikhail Davydov&lt;/a&gt; shows you how to ask the browser layout engine for help, how to avoid slavery of DSL, and build declarative Text UI using only web-technologies like HTML, JS, CSS and React.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=EOz4D_714R8&amp;amp;list=PLCC436JpVnK3HvUSAHpt-LRJkIK8pQG6R&amp;amp;index=3&quot;&gt;Kevin Robinson&lt;/a&gt; shares how user experience choices are a primary influence on how Twitter design the data layer, especially for teams developing new products with full-stack capabilities.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=ctwmd5L1U_Q&amp;amp;list=PLCC436JpVnK3HvUSAHpt-LRJkIK8pQG6R&amp;amp;index=4&quot;&gt;Jed Watson&lt;/a&gt; shares what Thinkmill have learned about React and mobile app development, and how they&amp;#39;ve approached the unique challenges of mobile web apps - with tools that are useful to all developers building touch interfaces with React, as well as a walkthrough of their development process and framework.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=Q6Kczrgw6ic&amp;amp;list=PLCC436JpVnK3HvUSAHpt-LRJkIK8pQG6R&amp;amp;index=5&quot;&gt;Michael Jackson&lt;/a&gt; discusses how your users can benefit from the many tools that React Router provides including server-side rendering, real URLs on native devices, and much, much more.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=MrozpFEBEBE&amp;amp;index=7&amp;amp;list=PLCC436JpVnK3HvUSAHpt-LRJkIK8pQG6R&quot;&gt;Michael Ridgway&lt;/a&gt; walks you through an isomorphic Flux architecture to give you the holy grail of frontend development.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=2Qu-Ulrsfl8&amp;amp;index=8&amp;amp;list=PLCC436JpVnK3HvUSAHpt-LRJkIK8pQG6R&quot;&gt;Aria Buckles&lt;/a&gt; covers Khan Academy&amp;#39;s techniques and patterns to make dealing with large pure components simpler, as well as current open questions.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=Uu4Yz2HmCgE&amp;amp;index=9&amp;amp;list=PLCC436JpVnK3HvUSAHpt-LRJkIK8pQG6R&quot;&gt;Evan Morikawa and Ben Gotow&lt;/a&gt; talk about specific features of React &amp;amp; Flux, React CSS, programming design patterns, and custom libraries, which can turn a static application into a dynamic platform that an ecosystem of developers can build on top of.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=3EQhkquvVmY&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&amp;amp;index=9&quot;&gt;Zalando&lt;/a&gt;, &lt;a href=&quot;https://www.youtube.com/watch?v=nAWKR1bBDsU&amp;amp;index=12&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&quot;&gt;Rangle.io&lt;/a&gt;, &lt;a href=&quot;https://www.youtube.com/watch?v=hjhyrBbDp6U&amp;amp;index=13&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&quot;&gt;Automattic&lt;/a&gt;, &lt;a href=&quot;https://www.youtube.com/watch?v=ApoCktYaRxk&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&amp;amp;index=14&quot;&gt;Thinkmill&lt;/a&gt;, and &lt;a href=&quot;https://www.youtube.com/watch?v=hdKidiwR8DM&amp;amp;list=PLCC436JpVnK0Phxld2dD4tM4xPMxJCiRD&amp;amp;index=15&quot;&gt;Red Badger&lt;/a&gt; provided lots of insight into how larger companies are using React.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;There was also a &lt;a href=&quot;https://www.youtube.com/playlist?list=PLCC436JpVnK3xnOZ727t0vd3nbb5ZqCyo&quot;&gt;great series of Lightning talks&lt;/a&gt; from &lt;a href=&quot;https://github.com/jsierles&quot;&gt;Joshua Sierles&lt;/a&gt;, &lt;a href=&quot;https://github.com/skidding&quot;&gt;Ovidiu Cherecheș&lt;/a&gt;, &lt;a href=&quot;https://github.com/grabbou&quot;&gt;Mike Grabowski&lt;/a&gt;, &lt;a href=&quot;https://github.com/bruderstein&quot;&gt;Dave Brotherstone&lt;/a&gt;, &lt;a href=&quot;https://github.com/threepointone&quot;&gt;Sunil Pai&lt;/a&gt;, &lt;a href=&quot;https://github.com/AnSavvides&quot;&gt;Andreas Savvides&lt;/a&gt;, and &lt;a href=&quot;https://github.com/petrbela&quot;&gt;Petr Bela&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;You can view the full list of talks on &lt;a href=&quot;https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A&quot;&gt;the ReactEurope YouTube channel&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>2015-08-13T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/08/13/reacteurope-roundup.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/08/13/reacteurope-roundup.html</guid>
 			</item>
 		
 	</channel>
