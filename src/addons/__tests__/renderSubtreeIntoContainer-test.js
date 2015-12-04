@@ -92,4 +92,54 @@ describe('renderSubtreeIntoContainer', function() {
       },
     });
   });
+
+  it('should update the context when rendering subtree elsewhere a second time', function() {
+
+    var portal = document.createElement('div');
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string.isRequired,
+      },
+
+      render: function() {
+        return <div>{this.context.foo}</div>;
+      },
+    });
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string.isRequired,
+      },
+
+      getInitialState: function() {
+        return {
+          baz: false,
+        };
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.state.baz ? 'qux' : 'bar',
+        };
+      },
+
+      render: function() {
+        return null;
+      },
+
+      componentDidMount: function() {
+        renderSubtreeIntoContainer(this, <Component />, portal);
+
+        if (!this.state.baz) {
+          this.setState({
+            baz: true,
+          });
+        }
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<Parent />);
+    expect(portal.firstChild.innerHTML).toBe('qux');
+  });
 });
