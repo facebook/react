@@ -5,7 +5,7 @@ author: zpao
 
 I am thrilled to announced that we will be organizing another diversity scholarship program for the upcoming React.js Conf! The tech industry is suffering from a lack of diversity, but it's important to us that we have a thriving community that is made up of people with a variety of experiences and viewpoints.
 
-When we ran this program last year, we had *over 200* people apply for only 10 tickets. There we so many people that we wanted to bring in but we couldn't. The results were still awesome, and we had bright individuals from around the world attending who would have otherwise been unable to. These attendees took part in discussions at the conference and brought perspectives that we might not have otherwise seen there.
+When we ran this program last year, we had *over 200* people apply for only 10 tickets. There were so many people that we wanted to bring in but we couldn't. The results were still awesome, and we had bright individuals from around the world attending who would have otherwise been unable to. These attendees took part in discussions at the conference and brought perspectives that we might not have otherwise seen there.
 
 This year we're excited to bring back the scholarship, but we've set aside **40 tickets** because we really believe that it's important to do our best to make sure we have an even more diverse audience.
 
