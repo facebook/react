@@ -114,7 +114,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['jest']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
-  grunt.registerTask('jest', require('./grunt/tasks/jest'));
+  grunt.loadNpmTasks('grunt-jest');
 
   // Optimized build task that does all of our builds. The subtasks will be run
   // in order so we can take advantage of that and only run build-modules once.

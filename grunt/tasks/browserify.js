@@ -27,7 +27,6 @@ module.exports = function() {
     entries: entries,
     debug: config.debug, // sourcemaps
     standalone: config.standalone, // global
-    paths: paths,
   };
 
   var bundle = browserify(options);
