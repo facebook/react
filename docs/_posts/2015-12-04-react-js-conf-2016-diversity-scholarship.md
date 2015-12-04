@@ -3,7 +3,7 @@ title: React.js Conf 2016 Diversity Scholarship
 author: zpao
 ---
 
-I thrilled to announced that we will be organizing another diversity scholarship program for the upcoming React.js Conf! The tech industry is suffering from a lack of diversity, but it's important to us that we have a thriving community that is made up of people with a variety of experiences and viewpoints.
+I am thrilled to announced that we will be organizing another diversity scholarship program for the upcoming React.js Conf! The tech industry is suffering from a lack of diversity, but it's important to us that we have a thriving community that is made up of people with a variety of experiences and viewpoints.
 
 When we ran this program last year, we had *over 200* people apply for only 10 tickets. There we so many people that we wanted to bring in but we couldn't. The results were still awesome, and we had bright individuals from around the world attending who would have otherwise been unable to. These attendees took part in discussions at the conference and brought perspectives that we might not have otherwise seen there.
 
