@@ -175,7 +175,7 @@ var ReactTestUtils = {
   /**
    * Finds all instance of components in the rendered tree that are DOM
    * components with the class name matching `className`.
-   * @return {array} an array of all the matches.
+   * @return {Array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, classNames) {
     if (!Array.isArray(classNames)) {
@@ -219,7 +219,7 @@ var ReactTestUtils = {
   /**
    * Finds all instance of components in the rendered tree that are DOM
    * components with the tag name matching `tagName`.
-   * @return {array} an array of all the matches.
+   * @return {Array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
@@ -248,7 +248,7 @@ var ReactTestUtils = {
 
   /**
    * Finds all instances of components with type equal to `componentType`.
-   * @return {array} an array of all the matches.
+   * @return {Array} an array of all the matches.
    */
   scryRenderedComponentsWithType: function(root, componentType) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {

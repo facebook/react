@@ -188,7 +188,7 @@ var ReactMultiChild = {
      * of `ReactDOMComponent`, a mount image is a string of markup.
      *
      * @param {?Object} nestedChildren Nested child maps.
-     * @return {array} An array of mounted representations.
+     * @return {Array} An array of mounted representations.
      * @internal
      */
     mountChildren: function(nestedChildren, transaction, context) {

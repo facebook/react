@@ -81,7 +81,7 @@ var ReactClassInterface = {
   /**
    * An array of Mixin objects to include when defining your component.
    *
-   * @type {array}
+   * @type {Array}
    * @optional
    */
   mixins: SpecPolicy.DEFINE_MANY,

@@ -176,7 +176,7 @@ var EventPluginRegistry = {
    * to be decoupled from injection of the actual plugins so that ordering is
    * always deterministic regardless of packaging, on-the-fly injection, etc.
    *
-   * @param {array} InjectedEventPluginOrder
+   * @param {Array} InjectedEventPluginOrder
    * @internal
    * @see {EventPluginHub.injection.injectEventPluginOrder}
    */

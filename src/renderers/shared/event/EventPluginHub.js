@@ -83,7 +83,7 @@ var EventPluginHub = {
   injection: {
 
     /**
-     * @param {array} InjectedEventPluginOrder
+     * @param {Array} InjectedEventPluginOrder
      * @public
      */
     injectEventPluginOrder: EventPluginRegistry.injectEventPluginOrder,
