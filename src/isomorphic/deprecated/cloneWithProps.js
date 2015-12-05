@@ -27,7 +27,7 @@ var didDeprecatedWarn = false;
  * this is to add a CSS class.
  *
  * @param {ReactElement} child child element you'd like to clone
- * @param {object} props props you'd like to modify. className and style will be
+ * @param {Object} props props you'd like to modify. className and style will be
  * merged automatically.
  * @return {ReactElement} a clone of child with props merged in.
  * @deprecated

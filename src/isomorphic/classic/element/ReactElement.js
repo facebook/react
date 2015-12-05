@@ -35,7 +35,7 @@ var RESERVED_PROPS = {
  *
  * @param {*} type
  * @param {*} key
- * @param {string|object} ref
+ * @param {string|Object} ref
  * @param {*} self A *temporary* helper to detect places where `this` is
  * different from the `owner` when React.createElement is called, so that we
  * can warn. We want to get rid of owner and replace string `ref`s with arrow
@@ -274,7 +274,7 @@ ReactElement.cloneElement = function(element, config, children) {
 };
 
 /**
- * @param {?object} object
+ * @param {?Object} object
  * @return {boolean} True if `object` is a valid component.
  * @final
  */

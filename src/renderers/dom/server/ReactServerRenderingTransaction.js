@@ -66,7 +66,7 @@ var Mixin = {
   },
 
   /**
-   * @return {object} The queue to collect `onDOMReady` callbacks with.
+   * @return {Object} The queue to collect `onDOMReady` callbacks with.
    */
   getReactMountReady: function() {
     return this.reactMountReady;

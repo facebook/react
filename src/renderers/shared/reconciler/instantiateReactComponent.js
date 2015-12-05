@@ -60,7 +60,7 @@ function isInternalComponentType(type) {
  * Given a ReactNode, create an instance that will actually be mounted.
  *
  * @param {ReactNode} node
- * @return {object} A new instance of the element's constructor.
+ * @return {Object} A new instance of the element's constructor.
  * @protected
  */
 function instantiateReactComponent(node) {

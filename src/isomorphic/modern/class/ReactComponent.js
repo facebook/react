@@ -51,7 +51,7 @@ ReactComponent.prototype.isReactComponent = {};
  * shouldComponentUpdate, and this new state, props, and context will not yet be
  * assigned to this.
  *
- * @param {object|function} partialState Next partial state or function to
+ * @param {Object|function} partialState Next partial state or function to
  *        produce next partial state to be merged with current state.
  * @param {?function} callback Called after state is updated.
  * @final

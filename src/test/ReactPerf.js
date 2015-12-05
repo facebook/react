@@ -30,7 +30,7 @@ var ReactPerf = {
   storedMeasure: _noMeasure,
 
   /**
-   * @param {object} object
+   * @param {Object} object
    * @param {string} objectName
    * @param {object<string>} methodNames
    */

@@ -40,7 +40,7 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
 /**
  * Flattens children that are typically specified as `props.children`. Any null
  * children will not be included in the resulting object.
- * @return {!object} flattened children keyed by name.
+ * @return {!Object} flattened children keyed by name.
  */
 function flattenChildren(children) {
   if (children == null) {

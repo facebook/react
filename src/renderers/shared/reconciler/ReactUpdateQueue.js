@@ -192,7 +192,7 @@ var ReactUpdateQueue = {
    * accessing `this.state` after calling this method may return the old value.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} completeState Next state.
+   * @param {Object} completeState Next state.
    * @internal
    */
   enqueueReplaceState: function(publicInstance, completeState) {
@@ -218,7 +218,7 @@ var ReactUpdateQueue = {
    * during the merge.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} partialState Next partial state to be merged with state.
+   * @param {Object} partialState Next partial state to be merged with state.
    * @internal
    */
   enqueueSetState: function(publicInstance, partialState) {
@@ -243,7 +243,7 @@ var ReactUpdateQueue = {
    * Sets a subset of the props.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} partialProps Subset of the next props.
+   * @param {Object} partialProps Subset of the next props.
    * @internal
    */
   enqueueSetProps: function(publicInstance, partialProps) {
@@ -286,7 +286,7 @@ var ReactUpdateQueue = {
    * Replaces all of the props.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} props New props.
+   * @param {Object} props New props.
    * @internal
    */
   enqueueReplaceProps: function(publicInstance, props) {

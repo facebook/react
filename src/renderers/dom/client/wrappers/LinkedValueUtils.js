@@ -125,7 +125,7 @@ var LinkedValueUtils = {
   },
 
   /**
-   * @param {object} inputProps Props for form component
+   * @param {Object} inputProps Props for form component
    * @return {*} current value of the input either from value prop or link.
    */
   getValue: function(inputProps) {
@@ -137,7 +137,7 @@ var LinkedValueUtils = {
   },
 
   /**
-   * @param {object} inputProps Props for form component
+   * @param {Object} inputProps Props for form component
    * @return {*} current checked status of the input either from checked prop
    *             or link.
    */
@@ -150,7 +150,7 @@ var LinkedValueUtils = {
   },
 
   /**
-   * @param {object} inputProps Props for form component
+   * @param {Object} inputProps Props for form component
    * @param {SyntheticEvent} event change event to handle
    */
   executeOnChange: function(inputProps, event) {

@@ -33,7 +33,7 @@ var eventQueue = null;
 /**
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
- * @param {?object} event Synthetic event to be dispatched.
+ * @param {?Object} event Synthetic event to be dispatched.
  * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
@@ -89,7 +89,7 @@ var EventPluginHub = {
     injectEventPluginOrder: EventPluginRegistry.injectEventPluginOrder,
 
     /**
-     * @param {object} injectedNamesToPlugins Map from names to plugin modules.
+     * @param {Object} injectedNamesToPlugins Map from names to plugin modules.
      */
     injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
 

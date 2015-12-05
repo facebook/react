@@ -285,12 +285,12 @@ var ReactTestUtils = {
    * Instead of rendering as usual, the component will become a simple
    * <div> containing any provided children.
    *
-   * @param {object} module the mock function object exported from a
+   * @param {Object} module the mock function object exported from a
    *                        module that defines the component to be mocked
    * @param {?string} mockTagName optional dummy root tag name to return
    *                              from render method (overrides
    *                              module.mockTagName if provided)
-   * @return {object} the ReactTestUtils object (for chaining)
+   * @return {Object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
     mockTagName = mockTagName || module.mockTagName || 'div';
@@ -522,7 +522,7 @@ function buildSimulators() {
   for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
-     * @param {?object} eventData Fake event data to use in SyntheticEvent.
+     * @param {?Object} eventData Fake event data to use in SyntheticEvent.
      */
     ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
   }

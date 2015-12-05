@@ -66,7 +66,7 @@ var ON_SELECT_KEY = keyOf({onSelect: null});
  * two identical selections on the same node will return identical objects.
  *
  * @param {DOMElement} node
- * @return {object}
+ * @return {Object}
  */
 function getSelection(node) {
   if ('selectionStart' in node &&
@@ -97,7 +97,7 @@ function getSelection(node) {
 /**
  * Poll selection to see whether it's changed.
  *
- * @param {object} nativeEvent
+ * @param {Object} nativeEvent
  * @return {?SyntheticEvent}
  */
 function constructSelectEvent(nativeEvent, nativeEventTarget) {

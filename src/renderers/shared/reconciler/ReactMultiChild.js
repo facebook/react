@@ -187,7 +187,7 @@ var ReactMultiChild = {
      * Generates a "mount image" for each of the supplied children. In the case
      * of `ReactDOMComponent`, a mount image is a string of markup.
      *
-     * @param {?object} nestedChildren Nested child maps.
+     * @param {?Object} nestedChildren Nested child maps.
      * @return {array} An array of mounted representations.
      * @internal
      */
@@ -260,7 +260,7 @@ var ReactMultiChild = {
     /**
      * Updates the rendered children with new children.
      *
-     * @param {?object} nextNestedChildrenElements Nested child element maps.
+     * @param {?Object} nextNestedChildrenElements Nested child element maps.
      * @param {ReactReconcileTransaction} transaction
      * @internal
      */
@@ -270,7 +270,7 @@ var ReactMultiChild = {
     },
 
     /**
-     * @param {?object} nextNestedChildrenElements Nested child element maps.
+     * @param {?Object} nextNestedChildrenElements Nested child element maps.
      * @param {ReactReconcileTransaction} transaction
      * @final
      * @protected

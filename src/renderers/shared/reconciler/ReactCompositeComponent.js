@@ -121,9 +121,9 @@ var ReactCompositeComponentMixin = {
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {?object} nativeParent
-   * @param {?object} nativeContainerInfo
-   * @param {?object} context
+   * @param {?Object} nativeParent
+   * @param {?Object} nativeContainerInfo
+   * @param {?Object} context
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -364,8 +364,8 @@ var ReactCompositeComponentMixin = {
    * Filters the context object to only contain keys specified in
    * `contextTypes`
    *
-   * @param {object} context
-   * @return {?object}
+   * @param {Object} context
+   * @return {?Object}
    * @private
    */
   _maskContext: function(context) {
@@ -385,8 +385,8 @@ var ReactCompositeComponentMixin = {
    * Filters the context object to only contain keys specified in
    * `contextTypes`, and asserts that they are valid.
    *
-   * @param {object} context
-   * @return {?object}
+   * @param {Object} context
+   * @return {?Object}
    * @private
    */
   _processContext: function(context) {
@@ -405,8 +405,8 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * @param {object} currentContext
-   * @return {object}
+   * @param {Object} currentContext
+   * @return {Object}
    * @private
    */
   _processChildContext: function(currentContext) {
@@ -445,8 +445,8 @@ var ReactCompositeComponentMixin = {
    * asserting that the props are valid. Does not mutate its argument; returns
    * a new props object with defaults merged in.
    *
-   * @param {object} newProps
-   * @return {object}
+   * @param {Object} newProps
+   * @return {Object}
    * @private
    */
   _processProps: function(newProps) {
@@ -466,8 +466,8 @@ var ReactCompositeComponentMixin = {
   /**
    * Assert that the props are valid
    *
-   * @param {object} propTypes Map of prop name to a ReactPropType
-   * @param {object} props
+   * @param {Object} propTypes Map of prop name to a ReactPropType
+   * @param {Object} props
    * @param {string} location e.g. "prop", "context", "child context"
    * @private
    */
@@ -680,11 +680,11 @@ var ReactCompositeComponentMixin = {
    * performs update.
    *
    * @param {ReactElement} nextElement Next element
-   * @param {object} nextProps Next public object to set as properties.
-   * @param {?object} nextState Next object to set as state.
-   * @param {?object} nextContext Next public object to set as context.
+   * @param {Object} nextProps Next public object to set as properties.
+   * @param {?Object} nextState Next object to set as state.
+   * @param {?Object} nextContext Next public object to set as context.
    * @param {ReactReconcileTransaction} transaction
-   * @param {?object} unmaskedContext
+   * @param {?Object} unmaskedContext
    * @private
    */
   _performComponentUpdate: function(

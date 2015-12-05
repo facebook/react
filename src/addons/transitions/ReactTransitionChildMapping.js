@@ -20,7 +20,7 @@ var ReactTransitionChildMapping = {
    * simple syntactic sugar around flattenChildren().
    *
    * @param {*} children `this.props.children`
-   * @return {object} Mapping of key to child
+   * @return {Object} Mapping of key to child
    */
   getChildMapping: function(children) {
     if (!children) {
@@ -39,11 +39,11 @@ var ReactTransitionChildMapping = {
    * directly have this concept of the union of prevChildren and nextChildren
    * so we implement it here.
    *
-   * @param {object} prev prev children as returned from
+   * @param {Object} prev prev children as returned from
    * `ReactTransitionChildMapping.getChildMapping()`.
-   * @param {object} next next children as returned from
+   * @param {Object} next next children as returned from
    * `ReactTransitionChildMapping.getChildMapping()`.
-   * @return {object} a key set that contains all keys in `prev` and all keys
+   * @return {Object} a key set that contains all keys in `prev` and all keys
    * in `next` in a reasonable order.
    */
   mergeChildMappings: function(prev, next) {

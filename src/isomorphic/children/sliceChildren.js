@@ -20,7 +20,7 @@ var ReactChildren = require('ReactChildren');
  * @param {*} children The children set to filter.
  * @param {number} start The first zero-based index to include in the subset.
  * @param {?number} end The non-inclusive last index of the subset.
- * @return {object} mirrored array with mapped children
+ * @return {Object} mirrored array with mapped children
  */
 function sliceChildren(children, start, end) {
   if (children == null) {

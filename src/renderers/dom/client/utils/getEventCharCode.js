@@ -19,7 +19,7 @@
  * The Tab-key is considered non-printable and does not have a `charCode`,
  * presumably because it does not produce a tab-character in browsers.
  *
- * @param {object} nativeEvent Native browser event.
+ * @param {Object} nativeEvent Native browser event.
  * @return {number} Normalized `charCode` property.
  */
 function getEventCharCode(nativeEvent) {

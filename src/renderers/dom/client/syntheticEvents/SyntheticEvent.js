@@ -49,9 +49,9 @@ var EventInterface = {
  * normalizing browser quirks. Subclasses do not necessarily have to implement a
  * DOM interface; custom application-specific events can also subclass this.
  *
- * @param {object} dispatchConfig Configuration used to dispatch this event.
+ * @param {Object} dispatchConfig Configuration used to dispatch this event.
  * @param {*} targetInst Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
+ * @param {Object} nativeEvent Native browser event.
  */
 function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
   this.dispatchConfig = dispatchConfig;
@@ -171,7 +171,7 @@ SyntheticEvent.Interface = EventInterface;
  * Helper to reduce boilerplate when creating subclasses.
  *
  * @param {function} Class
- * @param {?object} Interface
+ * @param {?Object} Interface
  */
 SyntheticEvent.augmentClass = function(Class, Interface) {
   var Super = this;

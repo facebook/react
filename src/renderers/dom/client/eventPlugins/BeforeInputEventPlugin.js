@@ -152,7 +152,7 @@ function isKeypressCommand(nativeEvent) {
  * Translate native top level events into event types.
  *
  * @param {string} topLevelType
- * @return {object}
+ * @return {Object}
  */
 function getCompositionEventType(topLevelType) {
   switch (topLevelType) {
@@ -170,7 +170,7 @@ function getCompositionEventType(topLevelType) {
  * composition has begun?
  *
  * @param {string} topLevelType
- * @param {object} nativeEvent
+ * @param {Object} nativeEvent
  * @return {boolean}
  */
 function isFallbackCompositionStart(topLevelType, nativeEvent) {
@@ -184,7 +184,7 @@ function isFallbackCompositionStart(topLevelType, nativeEvent) {
  * Does our fallback mode think that this event is the end of composition?
  *
  * @param {string} topLevelType
- * @param {object} nativeEvent
+ * @param {Object} nativeEvent
  * @return {boolean}
  */
 function isFallbackCompositionEnd(topLevelType, nativeEvent) {
@@ -212,7 +212,7 @@ function isFallbackCompositionEnd(topLevelType, nativeEvent) {
  * is available on the event object, use it. If not, this is a plain
  * composition event and we have nothing special to extract.
  *
- * @param {object} nativeEvent
+ * @param {Object} nativeEvent
  * @return {?string}
  */
 function getDataFromCustomEvent(nativeEvent) {
@@ -227,7 +227,7 @@ function getDataFromCustomEvent(nativeEvent) {
 var currentComposition = null;
 
 /**
- * @return {?object} A SyntheticCompositionEvent.
+ * @return {?Object} A SyntheticCompositionEvent.
  */
 function extractCompositionEvent(
   topLevelType,
@@ -289,7 +289,7 @@ function extractCompositionEvent(
 
 /**
  * @param {string} topLevelType Record from `EventConstants`.
- * @param {object} nativeEvent Native browser event.
+ * @param {Object} nativeEvent Native browser event.
  * @return {?string} The string corresponding to this `beforeInput` event.
  */
 function getNativeBeforeInputChars(topLevelType, nativeEvent) {
@@ -343,7 +343,7 @@ function getNativeBeforeInputChars(topLevelType, nativeEvent) {
  * appropriate string to use for SyntheticInputEvent.
  *
  * @param {string} topLevelType Record from `EventConstants`.
- * @param {object} nativeEvent Native browser event.
+ * @param {Object} nativeEvent Native browser event.
  * @return {?string} The fallback string for this `beforeInput` event.
  */
 function getFallbackBeforeInputChars(topLevelType, nativeEvent) {
@@ -399,7 +399,7 @@ function getFallbackBeforeInputChars(topLevelType, nativeEvent) {
  * Extract a SyntheticInputEvent for `beforeInput`, based on either native
  * `textInput` or fallback behavior.
  *
- * @return {?object} A SyntheticInputEvent.
+ * @return {?Object} A SyntheticInputEvent.
  */
 function extractBeforeInputEvent(
   topLevelType,

@@ -85,7 +85,7 @@ function validateExplicitKey(element, parentType) {
  * @param {string} messageType A key used for de-duping warnings.
  * @param {ReactElement} element Component that requires a key.
  * @param {*} parentType element's parent's type.
- * @returns {?object} A set of addenda to use in the warning message, or null
+ * @returns {?Object} A set of addenda to use in the warning message, or null
  * if the warning has already been shown before (and shouldn't be shown again).
  */
 function getAddendaForKeyUse(messageType, element, parentType) {
@@ -172,8 +172,8 @@ function validateChildKeys(node, parentType) {
  * Assert that the props are valid
  *
  * @param {string} componentName Name of the component for error messages.
- * @param {object} propTypes Map of prop name to a ReactPropType
- * @param {object} props
+ * @param {Object} propTypes Map of prop name to a ReactPropType
+ * @param {Object} props
  * @param {string} location e.g. "prop", "context", "child context"
  * @private
  */

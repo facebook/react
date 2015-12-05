@@ -45,7 +45,7 @@ function getSiblingNode(node) {
  *
  * @param {DOMElement|DOMTextNode} root
  * @param {number} offset
- * @return {?object}
+ * @return {?Object}
  */
 function getNodeForCharacterOffset(root, offset) {
   var node = getLeafNode(root);

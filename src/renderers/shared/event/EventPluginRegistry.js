@@ -72,8 +72,8 @@ function recomputePluginOrdering() {
 /**
  * Publishes an event so that it can be dispatched by the supplied plugin.
  *
- * @param {object} dispatchConfig Dispatch configuration for the event.
- * @param {object} PluginModule Plugin publishing the event.
+ * @param {Object} dispatchConfig Dispatch configuration for the event.
+ * @param {Object} PluginModule Plugin publishing the event.
  * @return {boolean} True if the event was successfully published.
  * @private
  */
@@ -115,7 +115,7 @@ function publishEventForPlugin(dispatchConfig, PluginModule, eventName) {
  * can be used with `EventPluginHub.putListener` to register listeners.
  *
  * @param {string} registrationName Registration name to add.
- * @param {object} PluginModule Plugin publishing the event.
+ * @param {Object} PluginModule Plugin publishing the event.
  * @private
  */
 function publishRegistrationName(registrationName, PluginModule, eventName) {
@@ -197,7 +197,7 @@ var EventPluginRegistry = {
    *
    * Plugins can be injected as part of page initialization or on-the-fly.
    *
-   * @param {object} injectedNamesToPlugins Map from names to plugin modules.
+   * @param {Object} injectedNamesToPlugins Map from names to plugin modules.
    * @internal
    * @see {EventPluginHub.injection.injectEventPluginsByName}
    */
@@ -228,8 +228,8 @@ var EventPluginRegistry = {
   /**
    * Looks up the plugin for the supplied event.
    *
-   * @param {object} event A synthetic event.
-   * @return {?object} The plugin that created the supplied event.
+   * @param {Object} event A synthetic event.
+   * @return {?Object} The plugin that created the supplied event.
    * @internal
    */
   getPluginModuleForEvent: function(event) {

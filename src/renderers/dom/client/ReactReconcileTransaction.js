@@ -123,7 +123,7 @@ var Mixin = {
    * @see Transaction
    * @abstract
    * @final
-   * @return {array<object>} List of operation wrap procedures.
+   * @return {array<Object>} List of operation wrap procedures.
    *   TODO: convert to array<TransactionWrapper>
    */
   getTransactionWrappers: function() {
@@ -131,7 +131,7 @@ var Mixin = {
   },
 
   /**
-   * @return {object} The queue to collect `onDOMReady` callbacks with.
+   * @return {Object} The queue to collect `onDOMReady` callbacks with.
    */
   getReactMountReady: function() {
     return this.reactMountReady;

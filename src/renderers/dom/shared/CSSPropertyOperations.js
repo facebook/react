@@ -124,7 +124,7 @@ var CSSPropertyOperations = {
    * Undefined values are ignored so that declarative programming is easier.
    * The result should be HTML-escaped before insertion into the DOM.
    *
-   * @param {object} styles
+   * @param {Object} styles
    * @param {ReactDOMComponent} component
    * @return {?string}
    */
@@ -152,7 +152,7 @@ var CSSPropertyOperations = {
    * '' (empty string), the corresponding style property will be unset.
    *
    * @param {DOMElement} node
-   * @param {object} styles
+   * @param {Object} styles
    */
   setValueForStyles: function(node, styles, component) {
     var style = node.style;

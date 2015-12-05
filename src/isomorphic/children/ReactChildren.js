@@ -152,7 +152,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
  * @param {?*} children Children tree container.
  * @param {function(*, int)} func The map function.
  * @param {*} context Context for mapFunction.
- * @return {object} Object containing the ordered map of results.
+ * @return {Object} Object containing the ordered map of results.
  */
 function mapChildren(children, func, context) {
   if (children == null) {

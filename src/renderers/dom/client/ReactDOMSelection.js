@@ -37,7 +37,7 @@ function isCollapsed(anchorNode, anchorOffset, focusNode, focusOffset) {
  * differ between the two APIs.
  *
  * @param {DOMElement} node
- * @return {object}
+ * @return {Object}
  */
 function getIEOffsets(node) {
   var selection = document.selection;
@@ -60,7 +60,7 @@ function getIEOffsets(node) {
 
 /**
  * @param {DOMElement} node
- * @return {?object}
+ * @return {?Object}
  */
 function getModernOffsets(node) {
   var selection = window.getSelection && window.getSelection();
@@ -132,7 +132,7 @@ function getModernOffsets(node) {
 
 /**
  * @param {DOMElement|DOMTextNode} node
- * @param {object} offsets
+ * @param {Object} offsets
  */
 function setIEOffsets(node, offsets) {
   var range = document.selection.createRange().duplicate();
@@ -166,7 +166,7 @@ function setIEOffsets(node, offsets) {
  * versions, we use the old IE API to create our selections.
  *
  * @param {DOMElement|DOMTextNode} node
- * @param {object} offsets
+ * @param {Object} offsets
  */
 function setModernOffsets(node, offsets) {
   if (!window.getSelection) {
@@ -219,7 +219,7 @@ var ReactDOMSelection = {
 
   /**
    * @param {DOMElement|DOMTextNode} node
-   * @param {object} offsets
+   * @param {Object} offsets
    */
   setOffsets: useIEOffsets ? setIEOffsets : setModernOffsets,
 };
