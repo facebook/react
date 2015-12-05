@@ -571,7 +571,7 @@ var ResponderEventPlugin = {
 
   injection: {
     /**
-     * @param {{onChange: (ReactID, ReactID) => void} GlobalResponderHandler
+     * @param {{onChange: (ReactID, ReactID) => void}} GlobalResponderHandler
      * Object that handles any change in responder. Use this to inject
      * integration with an existing touch handling system etc.
      */
@@ -580,7 +580,7 @@ var ResponderEventPlugin = {
     },
 
     /**
-     * @param {{onChange: (numberActiveTouches) => void} GlobalInteractionHandler
+     * @param {{onChange: (numberActiveTouches) => void}} GlobalInteractionHandler
      * Object that handles any change in the number of active touches.
      */
     injectGlobalInteractionHandler: function(GlobalInteractionHandler) {

@@ -884,7 +884,7 @@ var ReactCompositeComponentMixin = {
    * is exposed by refs and returned by render. Can be null for stateless
    * components.
    *
-   * @return {ReactComponent} the public component instance.
+   * @return {?ReactComponent} the public component instance.
    * @internal
    */
   getPublicInstance: function() {
