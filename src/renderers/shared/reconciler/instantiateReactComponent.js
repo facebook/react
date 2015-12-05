@@ -44,7 +44,7 @@ function getDeclarationErrorAddendum(owner) {
  * Check if the type reference is a known internal type. I.e. not a user
  * provided composite type.
  *
- * @param {function} type
+ * @param {Function} type
  * @return {boolean} Returns true if this is a valid internal type.
  */
 function isInternalComponentType(type) {

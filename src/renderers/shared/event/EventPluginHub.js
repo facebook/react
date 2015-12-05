@@ -100,7 +100,7 @@ var EventPluginHub = {
    *
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {?function} listener The callback to store.
+   * @param {?Function} listener The callback to store.
    */
   putListener: function(inst, registrationName, listener) {
     invariant(
@@ -123,7 +123,7 @@ var EventPluginHub = {
   /**
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @return {?function} The stored callback.
+   * @return {?Function} The stored callback.
    */
   getListener: function(inst, registrationName) {
     var bankForRegistrationName = listenerBank[registrationName];

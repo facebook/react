@@ -39,7 +39,7 @@ var React = require('React');
 
 /**
  * @param {*} value current value of the link
- * @param {function} requestChange callback to request a change
+ * @param {Function} requestChange callback to request a change
  */
 function ReactLink(value, requestChange) {
   this.value = value;

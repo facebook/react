@@ -170,7 +170,7 @@ SyntheticEvent.Interface = EventInterface;
 /**
  * Helper to reduce boilerplate when creating subclasses.
  *
- * @param {function} Class
+ * @param {Function} Class
  * @param {?Object} Interface
  */
 SyntheticEvent.augmentClass = function(Class, Interface) {

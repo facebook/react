@@ -32,7 +32,7 @@ function escapeUserProvidedKey(text) {
  * traversal. Allows avoiding binding callbacks.
  *
  * @constructor ForEachBookKeeping
- * @param {!function} forEachFunction Function to perform traversal with.
+ * @param {!Function} forEachFunction Function to perform traversal with.
  * @param {?*} forEachContext Context to perform context with.
  */
 function ForEachBookKeeping(forEachFunction, forEachContext) {
@@ -79,7 +79,7 @@ function forEachChildren(children, forEachFunc, forEachContext) {
  *
  * @constructor MapBookKeeping
  * @param {!*} mapResult Object containing the ordered map of results.
- * @param {!function} mapFunction Function to perform mapping with.
+ * @param {!Function} mapFunction Function to perform mapping with.
  * @param {?*} mapContext Context to perform mapping with.
  */
 function MapBookKeeping(mapResult, keyPrefix, mapFunction, mapContext) {

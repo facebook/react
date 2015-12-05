@@ -15,7 +15,7 @@ var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
 /**
- * @param {function} traverseContext Context passed through traversal.
+ * @param {Function} traverseContext Context passed through traversal.
  * @param {?ReactComponent} child React child component.
  * @param {!string} name String name of key path to child.
  */

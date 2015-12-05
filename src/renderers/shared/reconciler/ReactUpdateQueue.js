@@ -104,7 +104,7 @@ var ReactUpdateQueue = {
    * have processed.
    *
    * @param {ReactClass} publicInstance The instance to use as `this` context.
-   * @param {?function} callback Called after state is updated.
+   * @param {?Function} callback Called after state is updated.
    * @internal
    */
   enqueueCallback: function(publicInstance, callback) {

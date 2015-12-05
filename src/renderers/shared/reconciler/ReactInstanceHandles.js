@@ -165,7 +165,7 @@ function getFirstCommonAncestorID(oneID, twoID) {
  *
  * @param {?string} start ID at which to start traversal.
  * @param {?string} stop ID at which to end traversal.
- * @param {function} cb Callback to invoke each ID with.
+ * @param {Function} cb Callback to invoke each ID with.
  * @param {*} arg Argument to invoke the callback with.
  * @param {?boolean} skipFirst Whether or not to skip the first node.
  * @param {?boolean} skipLast Whether or not to skip the last node.
@@ -263,7 +263,7 @@ var ReactInstanceHandles = {
    *
    * @param {string} leaveID ID being left.
    * @param {string} enterID ID being entered.
-   * @param {function} cb Callback to invoke on each entered/left ID.
+   * @param {Function} cb Callback to invoke on each entered/left ID.
    * @param {*} upArg Argument to invoke the callback with on left IDs.
    * @param {*} downArg Argument to invoke the callback with on entered IDs.
    * @internal
@@ -284,7 +284,7 @@ var ReactInstanceHandles = {
    * NOTE: This traversal happens on IDs without touching the DOM.
    *
    * @param {string} targetID ID of the target node.
-   * @param {function} cb Callback to invoke.
+   * @param {Function} cb Callback to invoke.
    * @param {*} arg Argument to invoke the callback with.
    * @internal
    */
@@ -313,7 +313,7 @@ var ReactInstanceHandles = {
    * NOTE: This traversal happens on IDs without touching the DOM.
    *
    * @param {string} targetID ID of the target node.
-   * @param {function} cb Callback to invoke.
+   * @param {Function} cb Callback to invoke.
    * @param {*} arg Argument to invoke the callback with.
    * @internal
    */

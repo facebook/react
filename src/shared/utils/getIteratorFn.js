@@ -28,7 +28,7 @@ var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
  *     }
  *
  * @param {?Object} maybeIterable
- * @return {?function}
+ * @return {?Function}
  */
 function getIteratorFn(maybeIterable) {
   var iteratorFn = maybeIterable && (

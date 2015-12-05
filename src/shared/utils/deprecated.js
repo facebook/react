@@ -22,8 +22,8 @@ var warning = require('warning');
  * @param {string} newModule The module that fn will exist in
  * @param {string} newPackage The module that fn will exist in
  * @param {*} ctx The context this forwarded call should run in
- * @param {function} fn The function to forward on to
- * @return {function} The function that will warn once and then call fn
+ * @param {Function} fn The function to forward on to
+ * @return {Function} The function that will warn once and then call fn
  */
 function deprecated(fnName, newModule, newPackage, ctx, fn) {
   var warned = false;

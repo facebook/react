@@ -600,9 +600,9 @@ function mergeIntoWithNoDuplicateKeys(one, two) {
 /**
  * Creates a function that invokes two functions and merges their return values.
  *
- * @param {function} one Function to invoke first.
- * @param {function} two Function to invoke second.
- * @return {function} Function that invokes the two argument functions.
+ * @param {Function} one Function to invoke first.
+ * @param {Function} two Function to invoke second.
+ * @return {Function} Function that invokes the two argument functions.
  * @private
  */
 function createMergedResultFunction(one, two) {
@@ -624,9 +624,9 @@ function createMergedResultFunction(one, two) {
 /**
  * Creates a function that invokes two functions and ignores their return vales.
  *
- * @param {function} one Function to invoke first.
- * @param {function} two Function to invoke second.
- * @return {function} Function that invokes the two argument functions.
+ * @param {Function} one Function to invoke first.
+ * @param {Function} two Function to invoke second.
+ * @return {Function} Function that invokes the two argument functions.
  * @private
  */
 function createChainedFunction(one, two) {
@@ -640,8 +640,8 @@ function createChainedFunction(one, two) {
  * Binds a method to the component.
  *
  * @param {Object} component Component whose method is going to be bound.
- * @param {function} method Method to be bound.
- * @return {function} The bound method.
+ * @param {Function} method Method to be bound.
+ * @return {Function} The bound method.
  */
 function bindAutoBindMethod(component, method) {
   var boundMethod = method.bind(component);
@@ -745,7 +745,7 @@ var ReactClass = {
    * Creates a composite component class given a class specification.
    *
    * @param {Object} spec Class specification (which must define `render`).
-   * @return {function} Component constructor function.
+   * @return {Function} Component constructor function.
    * @public
    */
   createClass: function(spec) {

@@ -19,8 +19,8 @@ var joinClasses = require('joinClasses');
  * Creates a transfer strategy that will merge prop values using the supplied
  * `mergeStrategy`. If a prop was previously unset, this just sets it.
  *
- * @param {function} mergeStrategy
- * @return {function}
+ * @param {Function} mergeStrategy
+ * @return {Function}
  */
 function createTransferStrategy(mergeStrategy) {
   return function(props, key, value) {

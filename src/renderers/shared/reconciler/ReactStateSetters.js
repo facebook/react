@@ -17,9 +17,9 @@ var ReactStateSetters = {
    * of that to set the component's state.
    *
    * @param {ReactCompositeComponent} component
-   * @param {function} funcReturningState Returned callback uses this to
+   * @param {Function} funcReturningState Returned callback uses this to
    *                                      determine how to update state.
-   * @return {function} callback that when invoked uses funcReturningState to
+   * @return {Function} callback that when invoked uses funcReturningState to
    *                    determined the object literal to setState.
    */
   createStateSetter: function(component, funcReturningState) {
@@ -39,7 +39,7 @@ var ReactStateSetters = {
    *
    * @param {ReactCompositeComponent} component
    * @param {string} key The key in the state that you should update.
-   * @return {function} callback of 1 argument which calls setState() with
+   * @return {Function} callback of 1 argument which calls setState() with
    *                    the provided keyName and callback argument.
    */
   createStateKeySetter: function(component, key) {
@@ -72,9 +72,9 @@ ReactStateSetters.Mixin = {
    *     return {x: xValue};
    *   })(1);
    *
-   * @param {function} funcReturningState Returned callback uses this to
+   * @param {Function} funcReturningState Returned callback uses this to
    *                                      determine how to update state.
-   * @return {function} callback that when invoked uses funcReturningState to
+   * @return {Function} callback that when invoked uses funcReturningState to
    *                    determined the object literal to setState.
    */
   createStateSetter: function(funcReturningState) {
@@ -93,7 +93,7 @@ ReactStateSetters.Mixin = {
    * Note: this is memoized function, which makes it inexpensive to call.
    *
    * @param {string} key The key in the state that you should update.
-   * @return {function} callback of 1 argument which calls setState() with
+   * @return {Function} callback of 1 argument which calls setState() with
    *                    the provided keyName and callback argument.
    */
   createStateKeySetter: function(key) {

@@ -110,7 +110,7 @@ var Mixin = {
    * need to be safety checked. The optional arguments helps prevent the need
    * to bind in many cases.
    *
-   * @param {function} method Member of scope to call.
+   * @param {Function} method Member of scope to call.
    * @param {Object} scope Scope to invoke from.
    * @param {Object?=} a Argument to pass to the method.
    * @param {Object?=} b Argument to pass to the method.
