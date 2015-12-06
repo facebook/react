@@ -32,7 +32,7 @@ function instantiateChild(childInstances, child, name) {
     );
   }
   if (child != null && keyUnique) {
-    childInstances[name] = instantiateReactComponent(child, null);
+    childInstances[name] = instantiateReactComponent(child);
   }
 }
 
@@ -101,10 +101,7 @@ var ReactChildReconciler = {
           ReactReconciler.unmountComponent(prevChild, name);
         }
         // The child must be instantiated before it's mounted.
-        var nextChildInstance = instantiateReactComponent(
-          nextElement,
-          null
-        );
+        var nextChildInstance = instantiateReactComponent(nextElement);
         nextChildren[name] = nextChildInstance;
       }
     }

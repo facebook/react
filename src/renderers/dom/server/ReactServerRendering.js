@@ -41,7 +41,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
     return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(element, null);
+      var componentInstance = instantiateReactComponent(element);
       var markup = componentInstance.mountComponent(
         transaction,
         null,
