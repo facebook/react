@@ -30,6 +30,7 @@ var SVGDOMPropertyConfig = {
     dy: MUST_USE_ATTRIBUTE,
     fill: MUST_USE_ATTRIBUTE,
     fillOpacity: MUST_USE_ATTRIBUTE,
+    filter: MUST_USE_ATTRIBUTE,
     fontFamily: MUST_USE_ATTRIBUTE,
     fontSize: MUST_USE_ATTRIBUTE,
     fx: MUST_USE_ATTRIBUTE,
