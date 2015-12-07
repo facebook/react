@@ -447,7 +447,9 @@ var topLevelEventsToDispatchConfig = {
 };
 
 for (var type in topLevelEventsToDispatchConfig) {
-  topLevelEventsToDispatchConfig[type].dependencies = [type];
+  if (topLevelEventsToDispatchConfig.hasOwnProperty(type)) {
+    topLevelEventsToDispatchConfig[type].dependencies = [type];
+  }
 }
 
 var ON_CLICK_KEY = keyOf({onClick: null});
