@@ -79,6 +79,24 @@ describe('update', function() {
     });
   });
 
+  it('should reject malformed specs', function() {
+    var wrongSpecs = [
+      null,
+      false,
+      [],
+      [[]],
+      {a: {b: [[]]}},
+    ];
+
+    wrongSpecs.forEach(function(spec) {
+      expect(update.bind(null, {a: 'b'}, spec)).toThrow(
+        'update(): You provided a key path to update() that did not contain ' +
+        'one of $push, $unshift, $splice, $set, $merge, $apply. Did you ' +
+        'forget to include {$set: ...}?'
+      );
+    });
+  });
+
   it('should require a command', function() {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
       'update(): You provided a key path to update() that did not contain ' +

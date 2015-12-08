@@ -69,7 +69,7 @@ function invariantArrayCase(value, spec, command) {
 
 function update(value, spec) {
   invariant(
-    typeof spec === 'object',
+    typeof spec === 'object' && spec !== null && !Array.isArray(spec),
     'update(): You provided a key path to update() that did not contain one ' +
     'of %s. Did you forget to include {%s: ...}?',
     ALL_COMMANDS_LIST.join(', '),
