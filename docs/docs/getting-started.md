@@ -27,6 +27,16 @@ ReactDOM.render(
 );
 ```
 
+```html
+<!doctype html>
+<html>
+  <body>
+    <div id=example></div>
+    <script src=bundle.js></script>
+  </body>
+<html>
+```
+
 To install React DOM and build your bundle after installing browserify:
 
 ```sh
