@@ -95,7 +95,7 @@ If you want to initialize the component with a non-empty value, you can supply a
 
 This example will function much like the **Uncontrolled Components** example above.
 
-Likewise, `<input>` supports `defaultChecked` and `<select>` supports `defaultValue`.
+Likewise, `<input>` supports `defaultValue` and `<select>` supports `defaultChecked`.
 
 > Note:
 >
