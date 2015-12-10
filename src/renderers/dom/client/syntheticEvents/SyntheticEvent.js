@@ -155,7 +155,9 @@ assign(SyntheticEvent.prototype, {
   destructor: function() {
     var Interface = this.constructor.Interface;
     for (var propName in Interface) {
-      this[propName] = null;
+      if (Interface.hasOwnProperty(propName)) {
+        this[propName] = null;
+      }
     }
     this.dispatchConfig = null;
     this._targetInst = null;
