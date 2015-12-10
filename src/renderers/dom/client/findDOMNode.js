@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule findDOMNode
- * @typechecks static-only
  */
 
 'use strict';
