@@ -74,78 +74,80 @@ var DOMPropertyInjection = {
     }
 
     for (var propName in Properties) {
-      invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
-        'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
-        '\'%s\' which has already been injected. You may be accidentally ' +
-        'injecting the same DOM property config twice, or you may be ' +
-        'injecting two configs that have conflicting property names.',
-        propName
-      );
+      if (Properties.hasOwnProperty(propName)) {
+        invariant(
+          !DOMProperty.properties.hasOwnProperty(propName),
+          'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
+          '\'%s\' which has already been injected. You may be accidentally ' +
+          'injecting the same DOM property config twice, or you may be ' +
+          'injecting two configs that have conflicting property names.',
+          propName
+        );
 
-      var lowerCased = propName.toLowerCase();
-      var propConfig = Properties[propName];
+        var lowerCased = propName.toLowerCase();
+        var propConfig = Properties[propName];
 
-      var propertyInfo = {
-        attributeName: lowerCased,
-        attributeNamespace: null,
-        propertyName: propName,
-        mutationMethod: null,
+        var propertyInfo = {
+          attributeName: lowerCased,
+          attributeNamespace: null,
+          propertyName: propName,
+          mutationMethod: null,
 
-        mustUseAttribute: checkMask(propConfig, Injection.MUST_USE_ATTRIBUTE),
-        mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
-        hasSideEffects: checkMask(propConfig, Injection.HAS_SIDE_EFFECTS),
-        hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
-        hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
-        hasPositiveNumericValue:
-          checkMask(propConfig, Injection.HAS_POSITIVE_NUMERIC_VALUE),
-        hasOverloadedBooleanValue:
-          checkMask(propConfig, Injection.HAS_OVERLOADED_BOOLEAN_VALUE),
-      };
+          mustUseAttribute: checkMask(propConfig, Injection.MUST_USE_ATTRIBUTE),
+          mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
+          hasSideEffects: checkMask(propConfig, Injection.HAS_SIDE_EFFECTS),
+          hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
+          hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
+          hasPositiveNumericValue:
+            checkMask(propConfig, Injection.HAS_POSITIVE_NUMERIC_VALUE),
+          hasOverloadedBooleanValue:
+            checkMask(propConfig, Injection.HAS_OVERLOADED_BOOLEAN_VALUE),
+        };
 
-      invariant(
-        !propertyInfo.mustUseAttribute || !propertyInfo.mustUseProperty,
-        'DOMProperty: Cannot require using both attribute and property: %s',
-        propName
-      );
-      invariant(
-        propertyInfo.mustUseProperty || !propertyInfo.hasSideEffects,
-        'DOMProperty: Properties that have side effects must use property: %s',
-        propName
-      );
-      invariant(
-        propertyInfo.hasBooleanValue + propertyInfo.hasNumericValue +
-          propertyInfo.hasOverloadedBooleanValue <= 1,
-        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-        'numeric value, but not a combination: %s',
-        propName
-      );
+        invariant(
+          !propertyInfo.mustUseAttribute || !propertyInfo.mustUseProperty,
+          'DOMProperty: Cannot require using both attribute and property: %s',
+          propName
+        );
+        invariant(
+          propertyInfo.mustUseProperty || !propertyInfo.hasSideEffects,
+          'DOMProperty: Properties that have side effects must use property: %s',
+          propName
+        );
+        invariant(
+          propertyInfo.hasBooleanValue + propertyInfo.hasNumericValue +
+            propertyInfo.hasOverloadedBooleanValue <= 1,
+          'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
+          'numeric value, but not a combination: %s',
+          propName
+        );
 
-      if (__DEV__) {
-        DOMProperty.getPossibleStandardName[lowerCased] = propName;
-      }
-
-      if (DOMAttributeNames.hasOwnProperty(propName)) {
-        var attributeName = DOMAttributeNames[propName];
-        propertyInfo.attributeName = attributeName;
         if (__DEV__) {
-          DOMProperty.getPossibleStandardName[attributeName] = propName;
+          DOMProperty.getPossibleStandardName[lowerCased] = propName;
         }
-      }
 
-      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-        propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
-      }
+        if (DOMAttributeNames.hasOwnProperty(propName)) {
+          var attributeName = DOMAttributeNames[propName];
+          propertyInfo.attributeName = attributeName;
+          if (__DEV__) {
+            DOMProperty.getPossibleStandardName[attributeName] = propName;
+          }
+        }
 
-      if (DOMPropertyNames.hasOwnProperty(propName)) {
-        propertyInfo.propertyName = DOMPropertyNames[propName];
-      }
+        if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
+          propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
+        }
 
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
-        propertyInfo.mutationMethod = DOMMutationMethods[propName];
-      }
+        if (DOMPropertyNames.hasOwnProperty(propName)) {
+          propertyInfo.propertyName = DOMPropertyNames[propName];
+        }
 
-      DOMProperty.properties[propName] = propertyInfo;
+        if (DOMMutationMethods.hasOwnProperty(propName)) {
+          propertyInfo.mutationMethod = DOMMutationMethods[propName];
+        }
+
+        DOMProperty.properties[propName] = propertyInfo;
+      }
     }
   },
 };
