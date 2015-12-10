@@ -503,4 +503,15 @@ describe('ReactTestUtils', function() {
     expect(hrs.length).toBe(2);
   });
 
+  it('can find stateless components by type', function() {
+    var Stateless = () => <div></div>;
+    var SomeComponent = React.createClass({
+      render: function() {
+        return <Stateless />;
+      },
+    });
+    var inst = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    var result = ReactTestUtils.findRenderedComponentWithType(inst, Stateless);
+    expect(result).toBeDefined();
+  });
 });

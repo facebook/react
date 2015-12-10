@@ -42,7 +42,7 @@ function findAllInRenderedTreeInternal(inst, test) {
   if (!inst || !inst.getPublicInstance) {
     return [];
   }
-  var publicInst = inst.getPublicInstance();
+  var publicInst = (inst._instance != null && inst._instance instanceof ReactCompositeComponent.StatelessComponent) ? inst._instance : inst.getPublicInstance();
   var ret = test(publicInst) ? [publicInst] : [];
   var currentElement = inst._currentElement;
   if (ReactTestUtils.isDOMComponent(publicInst)) {
@@ -113,9 +113,14 @@ var ReactTestUtils = {
       // this returns when we have DOM nodes as refs directly
       return false;
     }
-    return inst != null &&
-           typeof inst.render === 'function' &&
-           typeof inst.setState === 'function';
+    return (
+      inst != null &&
+      (
+        typeof inst.render === 'function' &&
+        typeof inst.setState === 'function' ||
+        inst instanceof ReactCompositeComponent.StatelessComponent
+      )
+    );
   },
 
   isCompositeComponentWithType: function(inst, type) {
@@ -139,7 +144,8 @@ var ReactTestUtils = {
     var prototype = inst.type.prototype;
     return (
       typeof prototype.render === 'function' &&
-      typeof prototype.setState === 'function'
+      typeof prototype.setState === 'function' ||
+      prototype === ReactCompositeComponent.StatelessComponent
     );
   },
 

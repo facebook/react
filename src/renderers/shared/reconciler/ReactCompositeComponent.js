@@ -911,9 +911,8 @@ ReactPerf.measureMethods(
 );
 
 var ReactCompositeComponent = {
-
   Mixin: ReactCompositeComponentMixin,
-
+  StatelessComponent: StatelessComponent,
 };
 
 module.exports = ReactCompositeComponent;
