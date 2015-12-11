@@ -200,11 +200,11 @@ describe('ReactCompositeComponent', function() {
       mountedInstance.methodAutoBound();
     }).not.toThrow();
 
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
     var explicitlyBound = mountedInstance.methodToBeExplicitlyBound.bind(
       mountedInstance
     );
-    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.calls.count()).toBe(2);
     var autoBound = mountedInstance.methodAutoBound;
 
     var context = {};
@@ -288,13 +288,13 @@ describe('ReactCompositeComponent', function() {
     instance = ReactDOM.render(instance, container);
     instance.forceUpdate();
 
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     ReactDOM.unmountComponentAtNode(container);
 
     instance.forceUpdate();
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounted or ' +
       'mounting component. This usually means you called forceUpdate() on an ' +
       'unmounted component. This is a no-op. Please check the code for the ' +
@@ -327,7 +327,7 @@ describe('ReactCompositeComponent', function() {
 
     instance.setState({value: 1});
 
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     expect(renders).toBe(2);
 
@@ -336,8 +336,8 @@ describe('ReactCompositeComponent', function() {
 
     expect(renders).toBe(2);
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
       'unmounted component. This is a no-op. Please check the code for the ' +
@@ -369,10 +369,10 @@ describe('ReactCompositeComponent', function() {
     var instance = ReactDOM.render(<Component />, container);
 
     instance.setState({value: 1});
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
     expect(cbCalled).toBe(false);
   });
 
@@ -397,12 +397,12 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     var instance = ReactDOM.render(<Component />, container);
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Cannot update during an existing state ' +
       'transition (such as within `render` or another component\'s ' +
       'constructor). Render methods should be a pure function of props and ' +
@@ -487,8 +487,8 @@ describe('ReactCompositeComponent', function() {
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     instance.setState({bogus: true});
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
       'boolean value. Make sure to return true or false.'
     );
@@ -506,8 +506,8 @@ describe('ReactCompositeComponent', function() {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component has a method called ' +
       'componentDidUnmount(). But there is no such lifecycle method. ' +
       'Did you mean componentWillUnmount()?'
@@ -630,7 +630,7 @@ describe('ReactCompositeComponent', function() {
     parentInstance.setState({flag: true});
     expect(parentInstance.state.flag).toBe(true);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
   });
@@ -690,7 +690,7 @@ describe('ReactCompositeComponent', function() {
     // We update <Parent /> while <Child /> is still a static prop relative to this update
     wrapper.refs.parent.setState({flag: false});
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     expect(wrapper.refs.parent.state.flag).toEqual(false);
     reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: false});
@@ -811,7 +811,7 @@ describe('ReactCompositeComponent', function() {
     });
     expect(parentInstance.state.flag).toBe(true);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
   });
@@ -1020,8 +1020,8 @@ describe('ReactCompositeComponent', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Outer />);
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: _renderNewRootComponent(): Render methods should ' +
       'be a pure function of props and state; triggering nested component ' +
       'updates from render is not allowed. If necessary, trigger nested ' +
@@ -1148,7 +1148,7 @@ describe('ReactCompositeComponent', function() {
     var div = document.createElement('div');
     ReactDOM.render(<Parent><Component /></Parent>, div);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should replace state', function() {
@@ -1242,11 +1242,11 @@ describe('ReactCompositeComponent', function() {
 
     ReactDOM.render(<Outer><Component /></Outer>, container);
 
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     ReactDOM.render(<Outer />, container);
 
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should warn when mutated props are passed', function() {
@@ -1264,12 +1264,12 @@ describe('ReactCompositeComponent', function() {
       }
     }
 
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     ReactDOM.render(<Foo idx="qwe" />, container);
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Foo(...): When calling super() in `Foo`, make sure to pass ' +
       'up the same props that your component\'s constructor was passed.'
     );

@@ -41,9 +41,9 @@ describe('ReactDOMSVG', function() {
       <svg clipPath="url(#starlet)" />
     );
     expect(markup).toContain('clip-path="url(#starlet)"');
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('clipPath');
-    expect(console.error.argsForCall[0][0]).toContain('clip-path');
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain('clipPath');
+    expect(console.error.calls.argsFor(0)[0]).toContain('clip-path');
   });
 
   it('creates initial markup for unknown hyphenated attributes', function() {

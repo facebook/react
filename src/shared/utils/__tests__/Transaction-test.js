@@ -237,7 +237,7 @@ describe('Transaction', function() {
     var transaction = new TestTransaction();
     expect(function() {
       transaction.perform(function() {});
-    }).toThrow(exceptionMsg);
+    }).toThrowError(exceptionMsg);
     expect(transaction.isInTransaction()).toBe(false);
   });
 

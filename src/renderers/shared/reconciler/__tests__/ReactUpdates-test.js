@@ -495,7 +495,7 @@ describe('ReactUpdates', function() {
 
   it('should share reconcile transaction across different roots', function() {
     var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
-    spyOn(ReconcileTransaction, 'getPooled').andCallThrough();
+    spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
 
     var Component = React.createClass({
       render: function() {
@@ -511,7 +511,7 @@ describe('ReactUpdates', function() {
       ReactDOM.render(<Component text="A1" />, containerA);
       ReactDOM.render(<Component text="B1" />, containerB);
     });
-    expect(ReconcileTransaction.getPooled.calls.length).toBe(2);
+    expect(ReconcileTransaction.getPooled.calls.count()).toBe(2);
 
     // ...but updates are! Here only one more transaction is used, which means
     // we only have to initialize and close the wrappers once.
@@ -519,7 +519,7 @@ describe('ReactUpdates', function() {
       ReactDOM.render(<Component text="A2" />, containerA);
       ReactDOM.render(<Component text="B2" />, containerB);
     });
-    expect(ReconcileTransaction.getPooled.calls.length).toBe(3);
+    expect(ReconcileTransaction.getPooled.calls.count()).toBe(3);
   });
 
   it('should queue mount-ready handlers across different roots', function() {
@@ -929,10 +929,10 @@ describe('ReactUpdates', function() {
 
       ReactDOM.render(<Foo />, container);
 
-      expect(console.time.argsForCall.length).toBe(1);
-      expect(console.time.argsForCall[0][0]).toBe('React update: Foo');
-      expect(console.timeEnd.argsForCall.length).toBe(1);
-      expect(console.timeEnd.argsForCall[0][0]).toBe('React update: Foo');
+      expect(console.time.calls.count()).toBe(1);
+      expect(console.time.calls.argsFor(0)[0]).toBe('React update: Foo');
+      expect(console.timeEnd.calls.count()).toBe(1);
+      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React update: Foo');
     } finally {
       ReactFeatureFlags.logTopLevelRenders = false;
     }

@@ -37,7 +37,7 @@ describe('ReactDOMProduction', function() {
 
     spyOn(console, 'error');
     warning(false, 'Do cows go moo?');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should use prod React', function() {
@@ -46,7 +46,7 @@ describe('ReactDOMProduction', function() {
     // no key warning
     void <div>{[<span />]}</div>;
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should handle a simple flow', function() {

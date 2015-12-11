@@ -96,7 +96,7 @@ describe('EventPluginRegistry', function() {
       EventPluginRegistry.injectEventPluginsByName({
         bad: BadPlugin,
       });
-    }).toThrow(
+    }).toThrowError(
       'EventPluginRegistry: Event plugins must implement an `extractEvents` ' +
       'method, but `bad` does not.'
     );
@@ -113,7 +113,7 @@ describe('EventPluginRegistry', function() {
         one: OnePlugin,
         random: RandomPlugin,
       });
-    }).toThrow(
+    }).toThrowError(
       'EventPluginRegistry: Cannot inject event plugins that do not exist ' +
       'in the plugin ordering, `random`.'
     );
@@ -126,7 +126,7 @@ describe('EventPluginRegistry', function() {
 
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
-    }).toThrow(
+    }).toThrowError(
       'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
       'once. You are likely trying to load more than one copy of React.'
     );
@@ -140,7 +140,7 @@ describe('EventPluginRegistry', function() {
 
     expect(function() {
       EventPluginRegistry.injectEventPluginsByName({same: TwoPlugin});
-    }).toThrow(
+    }).toThrowError(
       'EventPluginRegistry: Cannot inject two different event plugins using ' +
       'the same name, `same`.'
     );
@@ -204,7 +204,7 @@ describe('EventPluginRegistry', function() {
 
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(['one', 'two']);
-    }).toThrow(
+    }).toThrowError(
       'EventPluginHub: More than one plugin attempted to publish the same ' +
       'registration name, `onPhotoCapture`.'
     );
@@ -221,7 +221,7 @@ describe('EventPluginRegistry', function() {
 
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(['one']);
-    }).toThrow(
+    }).toThrowError(
       'EventPluginRegistry: Failed to publish event `badEvent` for plugin ' +
       '`one`.'
     );
