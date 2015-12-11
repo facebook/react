@@ -75,12 +75,12 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    expect(() => shallowRenderer.render(SomeComponent)).toThrow(
+    expect(() => shallowRenderer.render(SomeComponent)).toThrowError(
       'ReactShallowRenderer render(): Invalid component element. Instead of ' +
       'passing a component class, make sure to instantiate it by passing it ' +
       'to React.createElement.'
     );
-    expect(() => shallowRenderer.render(<div />)).toThrow(
+    expect(() => shallowRenderer.render(<div />)).toThrowError(
       'ReactShallowRenderer render(): Shallow rendering works only with ' +
       'custom components, not primitives (div). Instead of calling ' +
       '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
@@ -435,7 +435,7 @@ describe('ReactTestUtils', function() {
         e.persist();
       },
     };
-    spyOn(obj, 'handler').andCallThrough();
+    spyOn(obj, 'handler').and.callThrough();
     var container = document.createElement('div');
     var instance = ReactDOM.render(<input type="text" onChange={obj.handler} />, container);
 
@@ -462,7 +462,7 @@ describe('ReactTestUtils', function() {
         e.persist();
       },
     };
-    spyOn(obj, 'handler').andCallThrough();
+    spyOn(obj, 'handler').and.callThrough();
     var container = document.createElement('div');
     var instance = ReactDOM.render(<SomeComponent handleChange={obj.handler} />, container);
 
@@ -487,7 +487,7 @@ describe('ReactTestUtils', function() {
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SomeComponent handleClick={handler} />);
 
-    expect(() => ReactTestUtils.Simulate.click(result)).toThrow(
+    expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
       'TestUtils.Simulate expects a component instance and not a ReactElement.' +
       'TestUtils.Simulate will not work if you are using shallow rendering.'
     );

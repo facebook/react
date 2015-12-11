@@ -115,7 +115,7 @@ describe('ReactDOM', function() {
     spyOn(console, 'error');
     var element = React.DOM.div();
     expect(element.type).toBe('div');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('throws in render() if the mount callback is not a function', function() {

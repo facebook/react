@@ -16,7 +16,7 @@ var MetaMatchers = require('MetaMatchers');
 describe('meta-matchers', function() {
 
   beforeEach(function() {
-    this.addMatchers(MetaMatchers);
+    jasmine.addMatchers(MetaMatchers);
   });
 
   function a() {
