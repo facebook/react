@@ -94,7 +94,7 @@ describe('rendering React components at document', function() {
 
     expect(function() {
       ReactDOM.unmountComponentAtNode(testDocument);
-    }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
+    }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
@@ -142,7 +142,7 @@ describe('rendering React components at document', function() {
     // Reactive update
     expect(function() {
       ReactDOM.render(<Component2 />, testDocument);
-    }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
+    }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
@@ -201,7 +201,7 @@ describe('rendering React components at document', function() {
     expect(function() {
       // Notice the text is different!
       ReactDOM.render(<Component text="Hello world" />, testDocument);
-    }).toThrow(
+    }).toThrowError(
       'You\'re trying to render a component to the document using ' +
       'server rendering but the checksum was invalid. This usually ' +
       'means you rendered a different component type or props on ' +
@@ -237,7 +237,7 @@ describe('rendering React components at document', function() {
 
     expect(function() {
       ReactDOM.render(<Component />, container);
-    }).toThrow(
+    }).toThrowError(
       'You\'re trying to render a component to the document but you didn\'t ' +
       'use server rendering. We can\'t do this without using server ' +
       'rendering due to cross-browser quirks. See ' +

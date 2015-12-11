@@ -99,6 +99,7 @@
       "<rootDir>/src",
       "node_modules/fbjs"
     ],
+    "testRunner": "node_modules/jest-cli/src/testRunners/jasmine/jasmine2.js",
     "unmockedModulePathPatterns": [
       ""
     ]

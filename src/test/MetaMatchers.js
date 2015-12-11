@@ -32,6 +32,7 @@ function getRunnerWithResults(describeFunction) {
     return env;
   };
   // TODO: Bring over matchers from the existing environment.
+  console.error(env);
   var runner = env.currentRunner();
   try {
     env.describe('', describeFunction);
@@ -104,24 +105,30 @@ function compareRunners(actual, expected) {
 }
 
 var MetaMatchers = {
-  toEqualSpecsIn: function(expectedDescribeFunction) {
-    var actualDescribeFunction = this.actual;
-    if (typeof actualDescribeFunction !== 'function') {
-      throw Error('toEqualSpecsIn() should be used on a describe function');
-    }
-    if (typeof expectedDescribeFunction !== 'function') {
-      throw Error('toEqualSpecsIn() should be passed a describe function');
-    }
-    var actual = getRunnerWithResults(actualDescribeFunction);
-    var expected = getRunnerWithResults(expectedDescribeFunction);
-    var errorMessage = compareRunners(actual, expected);
-    this.message = function() {
-      return [
-        errorMessage,
-        'The specs are equal. Expected them to be different.',
-      ];
+  toEqualSpecsIn(/* util, customEqualityMatcher*/) {
+    return {
+      compare(actualDescribeFunction, expectedDescribeFunction) {
+        if (typeof actualDescribeFunction !== 'function') {
+          throw Error('toEqualSpecsIn() should be used on a describe function');
+        }
+        if (typeof expectedDescribeFunction !== 'function') {
+          throw Error('toEqualSpecsIn() should be passed a describe function');
+        }
+        var actual = getRunnerWithResults(actualDescribeFunction);
+        var expected = getRunnerWithResults(expectedDescribeFunction);
+        var errorMessage = compareRunners(actual, expected);
+
+        return {
+          passed: !errorMessage,
+          message: function() {
+            return [
+              errorMessage,
+              'The specs are equal. Expected them to be different.',
+            ];
+          },
+        };
+      },
     };
-    return !errorMessage;
   },
 };
 
