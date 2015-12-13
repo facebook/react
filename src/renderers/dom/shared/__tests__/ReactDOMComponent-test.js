@@ -242,7 +242,7 @@ describe('ReactDOMComponent', function() {
     it('should skip child object attribute on web components', function() {
       var container = document.createElement('div');
 
-      // Test intial render to null
+      // Test initial render to null
       ReactDOM.render(<my-component children={['foo']} />, container);
       expect(container.firstChild.hasAttribute('children')).toBe(false);
 
@@ -920,7 +920,7 @@ describe('ReactDOMComponent', function() {
   describe('onScroll warning', function() {
     it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
       // Mock this here so we can mimic IE8 support. We require isEventSupported
-      // before React so it's pre-mocked before React qould require it.
+      // before React so it's pre-mocked before React would require it.
       jest.resetModuleRegistry()
         .mock('isEventSupported');
       var isEventSupported = require('isEventSupported');

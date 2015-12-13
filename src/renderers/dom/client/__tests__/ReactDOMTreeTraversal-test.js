@@ -135,7 +135,7 @@ describe('ReactDOMTreeTraversal', function() {
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_2);
       var expectedAggregation = [
         {node: parent.refs.P_P1_C1.refs.DIV_1, isUp: true, arg: ARG},
-        // enter/leave shouldn't fire antyhing on the parent
+        // enter/leave shouldn't fire anything on the parent
         {node: parent.refs.P_P1_C1.refs.DIV_2, isUp: false, arg: ARG2},
       ];
       ReactDOMTreeTraversal.traverseEnterLeave(
@@ -245,7 +245,7 @@ describe('ReactDOMTreeTraversal', function() {
           two: parent.refs.P_P1,
           com: parent.refs.P_P1,
         },
-        // Grantparent across subcomponent boundaries.
+        // Grandparent across subcomponent boundaries.
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C2.refs.DIV_1,

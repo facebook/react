@@ -17,7 +17,7 @@
  */
 
 module.exports = function(context) {
-  // we also allow literal strings and concatinated literal strings
+  // we also allow literal strings and concatenated literal strings
   function getLiteralString(node) {
     if (node.type === 'Literal' && typeof node.value === 'string') {
       return node.value;
@@ -67,7 +67,7 @@ module.exports = function(context) {
         );
         return;
       }
-      // count the number of formating substitutions, plus the first two args
+      // count the number of formatting substitutions, plus the first two args
       var expectedNArgs = (format.match(/%s/g) || []).length + 2;
       if (node.arguments.length !== expectedNArgs) {
         context.report(

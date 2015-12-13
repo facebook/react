@@ -19,7 +19,7 @@ var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
 var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
-// Use require.resolve to be resiliant to file moves, npm updates, etc
+// Use require.resolve to be resilient to file moves, npm updates, etc
 var pathToBabel = path.join(require.resolve('babel'), '..', 'package.json');
 var pathToModuleMap = require.resolve('fbjs/module-map');
 var pathToBabelPluginDev = require.resolve('fbjs-scripts/babel/dev-expression');

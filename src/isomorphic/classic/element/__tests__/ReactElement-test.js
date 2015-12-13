@@ -213,7 +213,7 @@ describe('ReactElement', function() {
   it('allows the use of PropTypes validators in statics', function() {
     // TODO: This test was added to cover a special case where we proxied
     // methods. However, we don't do that any more so this test can probably
-    // be removed. Leaving it in classic as a safety precausion.
+    // be removed. Leaving it in classic as a safety precaution.
     var Component = React.createClass({
       render: () => null,
       statics: {
