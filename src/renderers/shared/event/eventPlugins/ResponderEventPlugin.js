@@ -156,7 +156,7 @@ var eventTypes = {
  *   interaction is no longer locked to it - the system has taken over.
  *
  * - Responder being released:
- *   As soon as no more touches that *started* inside of descendents of the
+ *   As soon as no more touches that *started* inside of descendants of the
  *   *current* responderInst, an `onResponderRelease` event is dispatched to the
  *   current responder, and the responder lock is released.
  *

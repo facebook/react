@@ -13,7 +13,7 @@ React is only one-piece of your web application stack. [Mark Lussier](https://gi
 >
 > I encourage you to fork, and make it right and submit a pull request!
 >
-> My current opinion is using tools like Grunt, Browserify, Bower and mutiple grunt plugins to get the job done. I also opted for Zepto over jQuery and the Flatiron Project's Director when I need a router. Oh and for the last little bit of tech that makes you mad, I am in the SASS camp when it comes to stylesheets
+> My current opinion is using tools like Grunt, Browserify, Bower and multiple grunt plugins to get the job done. I also opted for Zepto over jQuery and the Flatiron Project's Director when I need a router. Oh and for the last little bit of tech that makes you mad, I am in the SASS camp when it comes to stylesheets
 >
 > [Check it out on GitHub...](https://github.com/intabulas/reactjs-baseline)
 
