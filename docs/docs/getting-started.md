@@ -27,6 +27,12 @@ ReactDOM.render(
 );
 ```
 
+If you are using webpack to bundle your dependencies: 
+
+```sh
+$ npm install --save react react-dom babelify babel-preset-react
+```
+
 To install React DOM and build your bundle after installing browserify:
 
 ```sh
