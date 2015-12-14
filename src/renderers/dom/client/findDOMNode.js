@@ -7,15 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule findDOMNode
- * @typechecks static-only
  */
 
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
 
+var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -47,19 +47,25 @@ function findDOMNode(componentOrElement) {
   if (componentOrElement.nodeType === 1) {
     return componentOrElement;
   }
-  if (ReactInstanceMap.has(componentOrElement)) {
-    return ReactMount.getNodeFromInstance(componentOrElement);
+
+  var inst = ReactInstanceMap.get(componentOrElement);
+  if (inst) {
+    inst = getNativeComponentFromComposite(inst);
+    return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
   }
-  invariant(
-    componentOrElement.render == null ||
-    typeof componentOrElement.render !== 'function',
-    'findDOMNode was called on an unmounted component.'
-  );
-  invariant(
-    false,
-    'Element appears to be neither ReactComponent nor DOMNode (keys: %s)',
-    Object.keys(componentOrElement)
-  );
+
+  if (typeof componentOrElement.render === 'function') {
+    invariant(
+      false,
+      'findDOMNode was called on an unmounted component.'
+    );
+  } else {
+    invariant(
+      false,
+      'Element appears to be neither ReactComponent nor DOMNode (keys: %s)',
+      Object.keys(componentOrElement)
+    );
+  }
 }
 
 module.exports = findDOMNode;

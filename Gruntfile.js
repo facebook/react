@@ -2,6 +2,12 @@
 
 var assign = require('object-assign');
 var path = require('path');
+var process = require('process');
+
+var GULP_EXE = 'gulp';
+if (process.platform === 'win32') {
+  GULP_EXE += '.cmd';
+}
 
 module.exports = function(grunt) {
 
@@ -17,18 +23,17 @@ module.exports = function(grunt) {
       './examples/shared/*.js',
       '.module-cache',
     ],
-    /*eslint-disable camelcase */
-    compare_size: require('./grunt/config/compare_size'),
-    /*eslint-enable camelcase */
+    'compare_size': require('./grunt/config/compare_size'),
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
 
   function spawnGulp(args, opts, done) {
+
     grunt.util.spawn({
       // This could be more flexible (require.resolve & lookup bin in package)
       // but if it breaks we'll fix it then.
-      cmd: path.join('node_modules', '.bin', 'gulp'),
+      cmd: path.join('node_modules', '.bin', GULP_EXE),
       args: args,
       opts: assign({stdio: 'inherit'}, opts),
     }, function(err, result, code) {
@@ -72,6 +77,7 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
 
   var npmReactDOMTasks = require('./grunt/tasks/npm-react-dom');
+  grunt.registerTask('npm-react-dom:release', npmReactDOMTasks.buildRelease);
   grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
 
   var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
@@ -123,6 +129,7 @@ module.exports = function(grunt) {
     'build:react-dom',
     'npm-react:release',
     'npm-react:pack',
+    'npm-react-dom:release',
     'npm-react-dom:pack',
     'npm-react-addons:release',
     'npm-react-addons:pack',
@@ -130,12 +137,7 @@ module.exports = function(grunt) {
   ]);
 
   // Automate the release!
-  var releaseTasks = require('./grunt/tasks/release');
-  grunt.registerTask('release:setup', releaseTasks.setup);
-  grunt.registerTask('release:bower', releaseTasks.bower);
-  grunt.registerTask('release:docs', releaseTasks.docs);
-  grunt.registerTask('release:msg', releaseTasks.msg);
-  grunt.registerTask('release:starter', releaseTasks.starter);
+  grunt.registerMultiTask('release', require('./grunt/tasks/release'));
 
   grunt.registerTask('release', [
     'release:setup',

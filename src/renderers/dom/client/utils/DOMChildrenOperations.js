@@ -7,13 +7,14 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule DOMChildrenOperations
- * @typechecks static-only
  */
 
 'use strict';
 
+var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
+var ReactPerf = require('ReactPerf');
 
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
@@ -28,21 +29,27 @@ var invariant = require('invariant');
  * @internal
  */
 function insertChildAt(parentNode, childNode, index) {
-  // By exploiting arrays returning `undefined` for an undefined index, we can
-  // rely exclusively on `insertBefore(node, null)` instead of also using
-  // `appendChild(node)`. However, using `undefined` is not allowed by all
-  // browsers so we must replace it with `null`.
+  // We can rely exclusively on `insertBefore(node, null)` instead of also using
+  // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
+  // we are careful to use `null`.)
 
-  // fix render order error in safari
-  // IE8 will throw error when index out of list size.
-  var beforeChild = index >= parentNode.childNodes.length ?
-                    null :
-                    parentNode.childNodes.item(index);
+  // In Safari, .childNodes[index] can return a DOM node with id={index} so we
+  // use .item() instead which is immune to this bug. (See #3560.) In contrast
+  // to the spec, IE8 throws an error if index is larger than the list size.
+  var referenceNode =
+    index < parentNode.childNodes.length ?
+    parentNode.childNodes.item(index) : null;
 
-  parentNode.insertBefore(
-    childNode,
-    beforeChild
-  );
+  parentNode.insertBefore(childNode, referenceNode);
+}
+
+function insertLazyTreeChildAt(parentNode, childTree, index) {
+  // See above.
+  var referenceNode =
+    index < parentNode.childNodes.length ?
+    parentNode.childNodes.item(index) : null;
+
+  DOMLazyTree.insertTreeBefore(parentNode, childTree, referenceNode);
 }
 
 /**
@@ -59,57 +66,58 @@ var DOMChildrenOperations = {
    * update configurations are each expected to have a `parentNode` property.
    *
    * @param {array<object>} updates List of update configurations.
-   * @param {array<string>} markupList List of markup strings.
    * @internal
    */
-  processUpdates: function(updates, markupList) {
+  processUpdates: function(parentNode, updates) {
     var update;
     // Mapping from parent IDs to initial child orderings.
     var initialChildren = null;
     // List of children that will be moved or removed.
     var updatedChildren = null;
 
+    var markupList = null;
+
     for (var i = 0; i < updates.length; i++) {
       update = updates[i];
       if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
           update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         var updatedIndex = update.fromIndex;
-        var updatedChild = update.parentNode.childNodes[updatedIndex];
-        var parentID = update.parentID;
+        var updatedChild = parentNode.childNodes[updatedIndex];
 
         invariant(
           updatedChild,
-          'processUpdates(): Unable to find child %s of element. This ' +
+          'processUpdates(): Unable to find child %s of element %s. This ' +
           'probably means the DOM was unexpectedly mutated (e.g., by the ' +
           'browser), usually due to forgetting a <tbody> when using tables, ' +
           'nesting tags like <form>, <p>, or <a>, or using non-SVG elements ' +
-          'in an <svg> parent. Try inspecting the child nodes of the element ' +
-          'with React ID `%s`.',
+          'in an <svg> parent.',
           updatedIndex,
-          parentID
+          parentNode,
         );
 
         initialChildren = initialChildren || {};
-        initialChildren[parentID] = initialChildren[parentID] || [];
-        initialChildren[parentID][updatedIndex] = updatedChild;
+        initialChildren[updatedIndex] = updatedChild;
 
         updatedChildren = updatedChildren || [];
         updatedChildren.push(updatedChild);
+      } else if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP) {
+        // Replace each HTML string with an index into the markup list
+        if (typeof update.content === 'string') {
+          markupList = markupList || [];
+          update.content = markupList.push(update.markup);
+        }
       }
     }
 
     var renderedMarkup;
-    // markupList is either a list of markup or just a list of elements
-    if (markupList.length && typeof markupList[0] === 'string') {
+    if (markupList) {
       renderedMarkup = Danger.dangerouslyRenderMarkup(markupList);
-    } else {
-      renderedMarkup = markupList;
     }
 
     // Remove updated children first so that `toIndex` is consistent.
     if (updatedChildren) {
       for (var j = 0; j < updatedChildren.length; j++) {
-        updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+        parentNode.removeChild(updatedChildren[j]);
       }
     }
 
@@ -117,28 +125,36 @@ var DOMChildrenOperations = {
       update = updates[k];
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
-          insertChildAt(
-            update.parentNode,
-            renderedMarkup[update.markupIndex],
-            update.toIndex
-          );
+          if (renderedMarkup) {
+            insertChildAt(
+              parentNode,
+              renderedMarkup[update.content],
+              update.toIndex
+            );
+          } else {
+            insertLazyTreeChildAt(
+              parentNode,
+              update.content,
+              update.toIndex
+            );
+          }
           break;
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           insertChildAt(
-            update.parentNode,
-            initialChildren[update.parentID][update.fromIndex],
+            parentNode,
+            initialChildren[update.fromIndex],
             update.toIndex
           );
           break;
         case ReactMultiChildUpdateTypes.SET_MARKUP:
           setInnerHTML(
-            update.parentNode,
+            parentNode,
             update.content
           );
           break;
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
           setTextContent(
-            update.parentNode,
+            parentNode,
             update.content
           );
           break;
@@ -150,5 +166,9 @@ var DOMChildrenOperations = {
   },
 
 };
+
+ReactPerf.measureMethods(DOMChildrenOperations, 'DOMChildrenOperations', {
+  updateTextContent: 'updateTextContent',
+});
 
 module.exports = DOMChildrenOperations;

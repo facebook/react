@@ -40,20 +40,18 @@ The first step is a React `<Story>` component that accepts a `story` prop with t
 
 ```javascript
 // Story.react.js
-class Story extends React.Component {
+export default class Story extends React.Component {
   render() {
     var story = this.props.story;
     return (
       <View>
-        <Image uri={story.author.profile_picture.uri} />
+        <Image uri={story.author.profilePicture.uri} />
         <Text>{story.author.name}</Text>
         <Text>{story.text}</Text>
       </View>
     );
   }
 }
-
-module.exports = Story;
 ```
 
 <br/>
@@ -66,41 +64,41 @@ Relay automates the process of fetching data for components by wrapping existing
 // Story.react.js
 class Story extends React.Component { ... }
 
-module.exports = Relay.createContainer(Story, {
-  queries: {
+export default Relay.createContainer(Story, {
+  fragments: {
     story: /* TODO */
   }
 });
 ```
 
-Before adding the GraphQL query, let's look at the component hierarchy this creates:
+Before adding the GraphQL fragment, let's look at the component hierarchy this creates:
 
 <img src="/react/img/blog/relay-components/relay-containers.png" width="397" alt="React Container Data Flow" />
 
-Most props will be passed through from the container to the original component. However, Relay will return the query results for a prop whenever a query is defined. In this case we'll add a GraphQL query for `story`:
+Most props will be passed through from the container to the original component. However, Relay will return the query results for a prop whenever a fragment is defined. In this case we'll add a GraphQL fragment for `story`:
 
 ```javascript
 // Story.react.js
 class Story extends React.Component { ... }
 
-module.exports = Relay.createContainer(Story, {
-  queries: {
-    story: graphql`
-      Story {
+export default Relay.createContainer(Story, {
+  fragments: {
+    story: () => Relay.QL`
+      fragment on Story {
         author {
-          name,
-          profile_picture {
+          name
+          profilePicture {
             uri
           }
-        },
+        }
         text
       }
-    `
-  }
+    `,
+  },
 });
 ```
 
-Queries use ES6 template literals tagged with the `graphql` function. Similar to how JSX transpiles to plain JavaScript objects and function calls, these template literals transpile to plain objects that describe queries. Note that the query's structure closely matches the object structure that we expected in `<Story>`'s render function.
+Queries use ES6 template literals tagged with the `Relay.QL` function. Similar to how JSX transpiles to plain JavaScript objects and function calls, these template literals transpile to plain objects that describe fragments. Note that the fragment's structure closely matches the object structure that we expected in `<Story>`'s render function.
 
 <br/>
 
@@ -112,7 +110,7 @@ We can render a Relay component by providing Relay with the component (`<Story>`
 {
   author: {
     name: "Greg",
-    profile_picture: {
+    profilePicture: {
       uri: "https://…"
     }
   },
@@ -159,35 +157,35 @@ module.exports = NewsFeed;
 
 `<NewsFeed>` has two new requirements: it composes `<Story>` and requests more data at runtime.
 
-Just as React views can be nested, Relay queries can compose queries from child components. Composition in GraphQL uses ES6 template literal substitution: `${Component.getQuery('prop')}`. Pagination can be accomplished with a query parameter, specified with `<param>` (as in `stories(first: <count>)`):
+Just as React views can be nested, Relay components can compose query fragments from child components. Composition in GraphQL uses ES6 template literal substitution: `${Component.getFragment('prop')}`. Pagination can be accomplished with a variable, specified with `$variable` (as in `stories(first: $count)`):
 
 ```javascript
 // NewsFeed.react.js
 class NewsFeed extends React.Component { ... }
 
-module.exports = Relay.createContainer(NewsFeed, {
-  queryParams: {
-    count: 3                             /* default to 3 stories */
+export default Relay.createContainer(NewsFeed, {
+  initialVariables: {
+    count: 3                                /* default to 3 stories */
   },
-  queries: {
-    viewer: graphql`
-      Viewer {
-        stories(first: <count>) {        /* fetch viewer's stories */
-          edges {                        /* traverse the graph */
+  fragments: {
+    viewer: () => Relay.QL`
+      fragment on Viewer {
+        stories(first: $count) {            /* fetch viewer's stories */
+          edges {                           /* traverse the graph */
             node {
-              ${Story.getQuery('story')} /* compose child query */
+              ${Story.getFragment('story')} /* compose child fragment */
             }
           }
         }
       }
-    `
-  }
+    `,
+  },
 });
 ```
 
-Whenever `<NewsFeed>` is rendered, Relay will recursively expand all the composed queries and fetch them in a single trip to the server. In this case, the `text` and `author` data will be fetched for each of the 3 story nodes.
+Whenever `<NewsFeed>` is rendered, Relay will recursively expand all the composed fragments and fetch the queries in a single trip to the server. In this case, the `text` and `author` data will be fetched for each of the 3 story nodes.
 
-Query parameters are available to components as `props.queryParams` and can be modified with `props.setQueryParams(nextParams)`. We can use these to implement pagination:
+Query variables are available to components as `props.relay.variables` and can be modified with `props.relay.setVariables(nextVariables)`. We can use these to implement pagination:
 
 ```javascript
 // NewsFeed.react.js
@@ -196,16 +194,16 @@ class NewsFeed extends React.Component {
 
   loadMore() {
     // read current params
-    var count = this.props.queryParams.count;
+    var count = this.props.relay.variables.count;
     // update params
-    this.props.setQueryParams({
-      count: count + 5
+    this.props.relay.setVariables({
+      count: count + 5,
     });
   }
 }
 ```
 
-Now when `loadMore()` is called, Relay will send a GraphQL request for the additional five stories. When these stories are fetched, the component will re-render with the new stories available in `props.viewer.stories` and the updated count reflected in `props.queryParams.count`.
+Now when `loadMore()` is called, Relay will send a GraphQL request for the additional five stories. When these stories are fetched, the component will re-render with the new stories available in `props.viewer.stories` and the updated count reflected in `props.relay.variables.count`.
 
 <br/>
 

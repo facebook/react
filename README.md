@@ -21,7 +21,7 @@ var HelloMessage = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <HelloMessage name="John" />,
   document.getElementById('container')
 );
@@ -37,12 +37,12 @@ The fastest way to get started is to serve JavaScript from the CDN (also availab
 
 ```html
 <!-- The core React library -->
-<script src="https://fb.me/react-0.13.3.js"></script>
-<!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+<script src="https://fb.me/react-0.14.3.js"></script>
+<!-- The ReactDOM Library -->
+<script src="https://fb.me/react-dom-0.14.3.js"></script>
 ```
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-0.13.3.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](https://facebook.github.io/react/downloads/react-0.14.3.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
@@ -60,7 +60,7 @@ The process to build `react.js` is built entirely on top of node.js, using many 
 
 #### Prerequisites
 
-* You have `node` installed at v0.10.0+ (it might work at lower versions, we just haven't tested) and `npm` at v2.0.0+.
+* You have `node` installed at v4.0.0+ and `npm` at v2.0.0+.
 * You are familiar with `npm` and know whether or not you need to use `sudo` when installing packages globally.
 * You are familiar with `git`.
 
@@ -91,6 +91,10 @@ grunt lint
 # Wipe out build directory
 grunt clean
 ```
+
+### Good First Bug
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix.  This is a great place to get started.
+
 
 ### License
 

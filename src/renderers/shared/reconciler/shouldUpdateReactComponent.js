@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule shouldUpdateReactComponent
- * @typechecks static-only
  */
 
 'use strict';
@@ -41,7 +40,6 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
       prevElement.key === nextElement.key
     );
   }
-  return false;
 }
 
 module.exports = shouldUpdateReactComponent;

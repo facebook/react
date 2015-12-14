@@ -15,7 +15,7 @@ describe('CSSProperty', function() {
   var CSSProperty;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     CSSProperty = require('CSSProperty');
   });
 
@@ -24,6 +24,8 @@ describe('CSSProperty', function() {
     expect(CSSProperty.isUnitlessNumber.WebkitLineClamp).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msFlexGrow).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.MozFlexGrow).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
   });
 
 });

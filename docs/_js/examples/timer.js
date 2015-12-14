@@ -19,10 +19,10 @@ var Timer = React.createClass({
   }
 });
 
-React.render(<Timer />, mountNode);
+ReactDOM.render(<Timer />, mountNode);
 `;
 
-React.render(
+ReactDOM.render(
   <ReactPlayground codeText={TIMER_COMPONENT} />,
   document.getElementById('timerExample')
 );

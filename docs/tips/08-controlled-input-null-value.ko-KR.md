@@ -14,9 +14,9 @@ next: componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html
 아래 짧은 예제가 있습니다; 렌더링 후, 잠시 뒤에 텍스트를 고칠 수 있는 상태가 되는 것을 확인 하실 수 있습니다.
 
 ```js
-React.render(<input value="hi" />, mountNode);
+ReactDOM.render(<input value="hi" />, mountNode);
 
 setTimeout(function() {
-  React.render(<input value={null} />, mountNode);
+  ReactDOM.render(<input value={null} />, mountNode);
 }, 1000);
 ```

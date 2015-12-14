@@ -20,7 +20,7 @@ var TestComponentWithMixin;
 
 describe('ReactStateSetters', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     TestComponent = React.createClass({
       getInitialState: function() {

@@ -7,12 +7,9 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactInstanceHandles
- * @typechecks static-only
  */
 
 'use strict';
-
-var ReactRootIndex = require('ReactRootIndex');
 
 var invariant = require('invariant');
 
@@ -221,10 +218,11 @@ var ReactInstanceHandles = {
 
   /**
    * Constructs a React root ID
+   * @param {number} index A unique integer
    * @return {string} A React root ID.
    */
-  createReactRootID: function() {
-    return getReactRootIDString(ReactRootIndex.createReactRootIndex());
+  createReactRootID: function(index) {
+    return getReactRootIDString(index);
   },
 
   /**

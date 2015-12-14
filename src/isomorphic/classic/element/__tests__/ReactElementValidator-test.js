@@ -22,7 +22,7 @@ describe('ReactElementValidator', function() {
   var ComponentClass;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -239,37 +239,36 @@ describe('ReactElementValidator', function() {
       },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`. Check the render method of `ParentComp`.'
     );
   });
 
-  it('gives a helpful error when passing null, undefined, boolean, or number',
-      function() {
+  it('gives a helpful error when passing null, undefined, boolean, or number', function() {
     spyOn(console, 'error');
     React.createElement(undefined);
     React.createElement(null);
     React.createElement(true);
     React.createElement(123);
     expect(console.error.calls.length).toBe(4);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
     );
-    expect(console.error.calls[1].args[0]).toBe(
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
     );
-    expect(console.error.calls[2].args[0]).toBe(
+    expect(console.error.argsForCall[2][0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
     );
-    expect(console.error.calls[3].args[0]).toBe(
+    expect(console.error.argsForCall[3][0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
@@ -278,8 +277,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.length).toBe(4);
   });
 
-  it('includes the owner name when passing null, undefined, boolean, or number',
-      function() {
+  it('includes the owner name when passing null, undefined, boolean, or number', function() {
     spyOn(console, 'error');
     var ParentComp = React.createClass({
       render: function() {
@@ -289,12 +287,12 @@ describe('ReactElementValidator', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     }).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: null. Check the render method of `ParentComp`.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: null. Check ' +
+      'the render method of `ParentComp`.'
     );
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components). Check the render method of ' +
@@ -318,7 +316,7 @@ describe('ReactElementValidator', function() {
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `Component`.'
     );
@@ -342,7 +340,7 @@ describe('ReactElementValidator', function() {
     );
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `Component`.'
     );
@@ -368,12 +366,12 @@ describe('ReactElementValidator', function() {
     );
 
     expect(console.error.calls.length).toBe(2);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `Component`.'
     );
 
-    expect(console.error.calls[1].args[0]).toBe(
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
       '`Component`, expected `string`.'
@@ -404,7 +402,7 @@ describe('ReactElementValidator', function() {
     );
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Component: type specification of prop `myProp` is invalid; ' +
       'the type checker function must return `null` or an `Error` but ' +
       'returned a function. You may have forgotten to pass an argument to ' +
@@ -467,6 +465,34 @@ describe('ReactElementValidator', function() {
     } finally {
       delete Number.prototype['@@iterator'];
     }
+  });
+
+  it('does not blow up with inlined children', function() {
+    // We don't suggest this since it silences all sorts of warnings, but we
+    // shouldn't blow up either.
+
+    var child = {
+      $$typeof: (<div />).$$typeof,
+      type: 'span',
+      key: null,
+      ref: null,
+      props: {},
+      _owner: null,
+    };
+
+    void <div>{[child]}</div>;
+  });
+
+  it('does not blow up on key warning with undefined type', function() {
+    spyOn(console, 'error');
+    var Foo = undefined;
+    void <Foo>{[<div />]}</Foo>;
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: React.createElement: type should not be null, undefined, ' +
+      'boolean, or number. It should be a string (for DOM elements) or a ' +
+      'ReactClass (for composite components).'
+    );
   });
 
 });

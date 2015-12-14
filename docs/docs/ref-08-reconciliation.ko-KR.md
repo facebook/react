@@ -3,7 +3,7 @@ id: reconciliation-ko-KR
 title: 비교조정(Reconciliation)
 permalink: reconciliation-ko-KR.html
 prev: special-non-dom-attributes-ko-KR.html
-next: glossary-ko-KR.html
+next: webcomponents.html
 ---
 
 React의 주요 설계 철학은 업데이트할 때마다 전체 앱을 다시 렌더하는 것처럼 보이게 API를 만드는 것입니다. 이렇게 하면 애플리케이션 작성이 훨씬 쉬워지지만 한편으로는 어려운 도전 과제이기도 합니다. 이 글에서는 강력한 휴리스틱으로 어떻게 O(n<sup>3</sup>) 복잡도의 문제를 O(n)짜리로 바꿀 수 있었는지 설명합니다.

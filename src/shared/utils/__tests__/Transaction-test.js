@@ -18,7 +18,7 @@ var Transaction;
 var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
 describe('Transaction', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     Transaction = require('Transaction');
   });
 

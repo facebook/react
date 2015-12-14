@@ -12,8 +12,7 @@ Every project uses a different system for building and deploying JavaScript. We'
 
 ### CDN-hosted React
 
-We provide CDN-hosted versions of React [on our download page](/react/downloads.html). These prebuilt files use the UMD module format. Dropping them in with a simple `<script>` tag will inject a `React` global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.
-
+We provide CDN-hosted versions of React [on our download page](/react/downloads.html). These pre-built files use the UMD module format. Dropping them in with a simple `<script>` tag will inject a `React` global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.
 
 ### Using master
 
@@ -29,12 +28,20 @@ If you like using JSX, Babel provides an [in-browser ES6 and JSX transformer for
 >
 > The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.
 
-
 ### Productionizing: Precompiled JSX
 
-If you have [npm](https://www.npmjs.com/), you can run `npm install -g babel`. Babel has built-in support for React v0.12 and v0.13. Tags are automatically transformed to their equivalent `React.createElement(...)`, `displayName` is automatically inferred and added to all React.createClass calls.
+If you have [npm](https://www.npmjs.com/), you can run `npm install -g babel-cli`. Babel has built-in support for React v0.12+. Tags are automatically transformed to their equivalent `React.createElement(...)`, `displayName` is automatically inferred and added to all `React.createClass` calls.
 
 This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: `babel --watch src/ --out-dir lib/`.
+
+Beginning with Babel 6, there are no transforms included by default. This means that options must be specified when running the `babel` command, or a `.babelrc` must specify options. Additional packages must also be installed which bundle together a number of transforms, called presets. The most common use when working with React will be to include the `es2015` and `react` presets. More information about the changes to Babel can be found in [their blog post announcing Babel 6](http://babeljs.io/blog/2015/10/29/6.0.0/).
+
+Here is an example of what you will do if using ES2015 syntax and React:
+
+```
+npm install babel-preset-es2015 babel-preset-react
+babel --presets es2015,react --watch src/ --out-dir lib/
+```
 
 By default JSX files with a `.js` extension are transformed. Run `babel --help` for more information on how to use Babel.
 
@@ -48,7 +55,7 @@ var HelloMessage = React.createClass({
   }
 });
 
-React.render(<HelloMessage name="John" />, mountNode);
+ReactDOM.render(<HelloMessage name="John" />, mountNode);
 $ babel test.jsx
 "use strict";
 
@@ -65,9 +72,8 @@ var HelloMessage = React.createClass({
   }
 });
 
-React.render(React.createElement(HelloMessage, { name: "John" }), mountNode);
+ReactDOM.render(React.createElement(HelloMessage, { name: "John" }), mountNode);
 ```
-
 
 ### Helpful Open-Source Projects
 

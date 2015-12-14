@@ -11,7 +11,7 @@ next: children-props-type-ko-KR.html
 
 ```js
 var divStyle = {height: 10}; // "height:10px" 로 렌더링 됩니다.
-React.render(<div style={divStyle}>Hello World!</div>, mountNode);
+ReactDOM.render(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
 더 자세한 이야기는 [Inline Styles](/react/tips/inline-styles-ko-KR.html)를 참고해 주시기 바랍니다.

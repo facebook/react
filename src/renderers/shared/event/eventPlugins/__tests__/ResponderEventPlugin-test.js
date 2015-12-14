@@ -17,11 +17,6 @@ var ReactInstanceHandles;
 var ResponderEventPlugin;
 var EventPluginUtils;
 
-var GRANDPARENT_ID = '.0';
-var PARENT_ID = '.0.0';
-var CHILD_ID = '.0.0.0';
-var CHILD_ID2 = '.0.0.1';
-
 var topLevelTypes;
 
 var touch = function(nodeHandle, i) {
@@ -89,8 +84,7 @@ var _touchConfig = function(
       changedTouchObjects
     ),
     topLevelType: topType,
-    target: targetNodeHandle,
-    targetID: targetNodeHandle,
+    targetInst: idToInstance[targetNodeHandle],
   };
 };
 
@@ -224,7 +218,7 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
       '\nFor event test config:\n' + JSON.stringify(eventTestConfig) + '\n'
     );
   };
-  /*eslint-disable no-loop-func, no-shadow */
+
   var registerOneEventType = function(registrationName, eventTypeTestConfig) {
     for (var readableID in eventTypeTestConfig) {
       var nodeConfig = eventTypeTestConfig[readableID];
@@ -232,21 +226,20 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
       var handler = nodeConfig.order === NA ? neverFire.bind(null, readableID, registrationName) :
         // We partially apply readableID and nodeConfig, as they change in the
         // parent closure across iterations.
-        function(readableID, nodeConfig, e) {
+        function(rID, config, e) {
           expect(
-            readableID + '->' + registrationName + ' index:' + runs.dispatchCount++
+            rID + '->' + registrationName + ' index:' + runs.dispatchCount++
           ).toBe(
-            readableID + '->' + registrationName + ' index:' + nodeConfig.order
+            rID + '->' + registrationName + ' index:' + config.order
           );
-          if (nodeConfig.assertEvent) {
-            nodeConfig.assertEvent(e);
+          if (config.assertEvent) {
+            config.assertEvent(e);
           }
-          return nodeConfig.returnVal;
+          return config.returnVal;
         }.bind(null, readableID, nodeConfig);
-      EventPluginHub.putListener(id, registrationName, handler);
+      EventPluginHub.putListener(idToInstance[id], registrationName, handler);
     }
   };
-  /*eslint-enable no-loop-func, no-shadow */
   for (var eventName in eventTestConfig) {
     var oneEventTypeTestConfig = eventTestConfig[eventName];
     var hasTwoPhase = !!oneEventTypeTestConfig.bubbled;
@@ -296,8 +289,7 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
   // Trigger the event
   var extractedEvents = ResponderEventPlugin.extractEvents(
     nativeEventConfig.topLevelType,
-    nativeEventConfig.target,
-    nativeEventConfig.targetID,
+    nativeEventConfig.targetInst,
     nativeEventConfig.nativeEvent,
     nativeEventConfig.target
   );
@@ -306,7 +298,7 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
   // extraction process, but not the side effectful events. Below, we dispatch
   // side effectful events.
   EventPluginHub.enqueueEvents(extractedEvents);
-  EventPluginHub.processEventQueue();
+  EventPluginHub.processEventQueue(true);
 
   // Ensure that every event that declared an `order`, was actually dispatched.
   expect(
@@ -315,6 +307,16 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
     'number of events dispatched:' + (max + 1)
   ); // +1 for extra ++
 };
+
+var GRANDPARENT_ID = '.0';
+var PARENT_ID = '.0.0';
+var CHILD_ID = '.0.0.0';
+var CHILD_ID2 = '.0.0.1';
+
+var idToInstance = {};
+[GRANDPARENT_ID, PARENT_ID, CHILD_ID, CHILD_ID2].forEach(function(id) {
+  idToInstance[id] = {_rootNodeID: id};
+});
 
 var three = {
   grandParent: GRANDPARENT_ID,
@@ -330,7 +332,7 @@ var siblings = {
 
 describe('ResponderEventPlugin', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     EventConstants = require('EventConstants');
     EventPluginHub = require('EventPluginHub');
@@ -338,16 +340,44 @@ describe('ResponderEventPlugin', function() {
     ReactInstanceHandles = require('ReactInstanceHandles');
     ResponderEventPlugin = require('ResponderEventPlugin');
 
-    EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
-
-    // Only needed because SyntheticEvent supports the `currentTarget`
-    // property.
-    EventPluginUtils.injection.injectMount({
-      getNode: function(id) {
-        return id;
+    EventPluginUtils.injection.injectComponentTree({
+      getInstanceFromNode: function(id) {
+        return idToInstance[id];
       },
-      getID: function(nodeHandle) {
-        return nodeHandle;
+      getNodeFromInstance: function(inst) {
+        return inst._rootNodeID;
+      },
+    });
+
+    EventPluginUtils.injection.injectTreeTraversal({
+      isAncestor: function(a, b) {
+        return ReactInstanceHandles.isAncestorIDOf(
+          a._rootNodeID,
+          b._rootNodeID
+        );
+      },
+      getLowestCommonAncestor: function(a, b) {
+        if (!a || !b) {
+          return null;
+        }
+        var commonID = ReactInstanceHandles.getFirstCommonAncestorID(
+          a._rootNodeID,
+          b._rootNodeID
+        );
+        return idToInstance[commonID] || null;
+      },
+      getParentInstance: function(inst) {
+        var id = inst._rootNodeID;
+        var parentID = id.substr(0, id.lastIndexOf('.'));
+        return idToInstance[parentID] || null;
+      },
+      traverseTwoPhase: function(target, fn, arg) {
+        ReactInstanceHandles.traverseTwoPhase(
+          target._rootNodeID,
+          function(id, upwards) {
+            fn(idToInstance[id], upwards, arg);
+          }
+        );
       },
     });
 
@@ -363,12 +393,12 @@ describe('ResponderEventPlugin', function() {
     config.startShouldSetResponder.bubbled.parent = {order: 4, returnVal: false};
     config.startShouldSetResponder.bubbled.grandParent = {order: 5, returnVal: false};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
 
     // Now no handlers should be called on `touchEnd`.
     config = oneEventLoopTestConfig(three);
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
 
@@ -384,13 +414,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.grandParent = {order: 1};
     config.responderStart.grandParent = {order: 2};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(GRANDPARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.grandParent = {order: 0};
     config.responderRelease.grandParent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder parent while capturing', () => {
@@ -400,13 +430,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.parent = {order: 2};
     config.responderStart.parent = {order: 3};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.parent = {order: 0};
     config.responderRelease.parent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder child while capturing', () => {
@@ -417,13 +447,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.child = {order: 3};
     config.responderStart.child = {order: 4};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.child = {order: 0};
     config.responderRelease.child = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder child while bubbling', () => {
@@ -435,13 +465,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.child = {order: 4};
     config.responderStart.child = {order: 5};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.child = {order: 0};
     config.responderRelease.child = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder parent while bubbling', () => {
@@ -454,13 +484,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.parent = {order: 5};
     config.responderStart.parent = {order: 6};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.parent = {order: 0};
     config.responderRelease.parent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder grandParent while bubbling', () => {
@@ -474,13 +504,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.grandParent = {order: 6};
     config.responderStart.grandParent = {order: 7};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(GRANDPARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.grandParent = {order: 0};
     config.responderRelease.grandParent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
 
@@ -506,13 +536,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.grandParent = {order: 1};
     config.responderMove.grandParent = {order: 2};
     run(config, three, moveConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(GRANDPARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.grandParent = {order: 0};
     config.responderRelease.grandParent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder parent while capturing move', () => {
@@ -532,13 +562,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.parent = {order: 2};
     config.responderMove.parent = {order: 3};
     run(config, three, moveConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.parent = {order: 0};
     config.responderRelease.parent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder child while capturing move', () => {
@@ -559,13 +589,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.child = {order: 3};
     config.responderMove.child = {order: 4};
     run(config, three, moveConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.child = {order: 0};
     config.responderRelease.child = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder child while bubbling move', () => {
@@ -587,13 +617,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.child = {order: 4};
     config.responderMove.child = {order: 5};
     run(config, three, moveConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.child = {order: 0};
     config.responderRelease.child = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder parent while bubbling move', () => {
@@ -616,13 +646,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.parent = {order: 5};
     config.responderMove.parent = {order: 6};
     run(config, three, moveConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.parent = {order: 0};
     config.responderRelease.parent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should grant responder grandParent while bubbling move', () => {
@@ -646,13 +676,13 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.grandParent = {order: 6};
     config.responderMove.grandParent = {order: 7};
     run(config, three, moveConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(GRANDPARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.grandParent = {order: 0};
     config.responderRelease.grandParent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
 
@@ -668,9 +698,9 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.parent = {order: 2};
     config.responderStart.parent = {order: 3};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
-    // While `PARENT_ID` is still responder, we create new handlers that verify
+    // While `parent` is still responder, we create new handlers that verify
     // the ordering of propagation, restarting the count at `0`.
     config = oneEventLoopTestConfig(three);
     config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
@@ -678,13 +708,13 @@ describe('ResponderEventPlugin', function() {
     config.startShouldSetResponder.bubbled.grandParent = {order: 1, returnVal: false};
     config.responderStart.parent = {order: 2};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.parent = {order: 0};
     config.responderRelease.parent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   it('should bubble negotiation to first common ancestor of responder then transfer', () => {
@@ -694,30 +724,30 @@ describe('ResponderEventPlugin', function() {
     config.responderGrant.parent = {order: 2};
     config.responderStart.parent = {order: 3};
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
     config = oneEventLoopTestConfig(three);
 
-    // Parent is responder, and responder is transfered by a second touch start
+    // Parent is responder, and responder is transferred by a second touch start
     config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: true};
     config.responderTerminationRequest.parent = {order: 1, returnVal: true};
     config.responderGrant.grandParent = {order: 2};
     config.responderTerminate.parent = {order: 3};
     config.responderStart.grandParent = {order: 4};
     run(config, three, startConfig(three.child, [three.child, three.child], [1]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(GRANDPARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.grandParent = {order: 0};
                                       // one remains\ /one ended \
     run(config, three, endConfig(three.child, [three.child, three.child], [1]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(GRANDPARENT_ID);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.grandParent = {order: 0};
     config.responderRelease.grandParent = {order: 1};
     run(config, three, endConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
   /**
@@ -733,7 +763,7 @@ describe('ResponderEventPlugin', function() {
     config.startShouldSetResponder.bubbled.grandParent = {order: 3, returnVal: false};
 
     run(config, three, startConfig(three.parent, [three.parent], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
 
     config = oneEventLoopTestConfig(three);
 
@@ -749,7 +779,7 @@ describe('ResponderEventPlugin', function() {
     config.responderStart.child = {order: 5};
     //                                     /  Two active touches  \  /one of them new\
     run(config, three, startConfig(three.child, [three.parent, three.child], [1]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
 
     // Now we remove the original first touch, keeping the second touch that
@@ -759,7 +789,7 @@ describe('ResponderEventPlugin', function() {
     config.responderEnd.child = {order: 0};
     //                                      / one ended\  /one remains \
     run(config, three, endConfig(three.child, [three.parent, three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     // Okay, now let's add back that first touch (nothing should change) and
     // then we'll try peeling back the touches in the opposite order to make
@@ -775,7 +805,7 @@ describe('ResponderEventPlugin', function() {
     config.responderStart.child = {order: 4};
     //                                           /  Two active touches  \  /one of them new\
     run(config, three, startConfig(three.parent, [three.child, three.parent], [1]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
 
     // Now, move that new touch that had no effect, and did not start within
@@ -790,7 +820,7 @@ describe('ResponderEventPlugin', function() {
     config.responderMove.child = {order: 4};
     //                                     /  Two active touches  \  /one of them moved\
     run(config, three, moveConfig(three.parent, [three.child, three.parent], [1]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
 
     config = oneEventLoopTestConfig(three);
@@ -798,7 +828,7 @@ describe('ResponderEventPlugin', function() {
     config.responderRelease.child = {order: 1};
     //                                        /child end \ /parent remain\
     run(config, three, endConfig(three.child, [three.child, three.parent], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
 
@@ -816,7 +846,7 @@ describe('ResponderEventPlugin', function() {
     config.responderStart.childOne = {order: 4};
 
     run(config, siblings, startConfig(siblings.childOne, [siblings.childOne], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(siblings.childOne);
+    expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
 
     // If the touch target is the sibling item, the negotiation should only
     // propagate to first common ancestor of current responder and sibling (so
@@ -829,7 +859,7 @@ describe('ResponderEventPlugin', function() {
     var touchConfig =
       startConfig(siblings.childTwo, [siblings.childOne, siblings.childTwo], [1]);
     run(config, siblings, touchConfig);
-    expect(ResponderEventPlugin.getResponderID()).toBe(siblings.childOne);
+    expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
 
 
     // move childOne
@@ -838,7 +868,7 @@ describe('ResponderEventPlugin', function() {
     config.moveShouldSetResponder.bubbled.parent = {order: 1, returnVal: false};
     config.responderMove.childOne = {order: 2};
     run(config, siblings, moveConfig(siblings.childOne, [siblings.childOne, siblings.childTwo], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(siblings.childOne);
+    expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
 
     // move childTwo: Only negotiates to `parent`.
     config = oneEventLoopTestConfig(siblings);
@@ -846,7 +876,7 @@ describe('ResponderEventPlugin', function() {
     config.moveShouldSetResponder.bubbled.parent = {order: 1, returnVal: false};
     config.responderMove.childOne = {order: 2};
     run(config, siblings, moveConfig(siblings.childTwo, [siblings.childOne, siblings.childTwo], [1]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(siblings.childOne);
+    expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
 
   });
 
@@ -862,7 +892,7 @@ describe('ResponderEventPlugin', function() {
     config.responderStart.child = {order: 5};
 
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     // Suppose parent wants to become responder on move, and is rejected
     config = oneEventLoopTestConfig(three);
@@ -877,7 +907,7 @@ describe('ResponderEventPlugin', function() {
     var touchConfig =
       moveConfig(three.child, [three.child], [0]);
     run(config, three, touchConfig);
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     config = oneEventLoopTestConfig(three);
     config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
@@ -891,7 +921,7 @@ describe('ResponderEventPlugin', function() {
     touchConfig =
       startConfig(three.child, [three.child, three.child], [1]);
     run(config, three, touchConfig);
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
   });
 
@@ -907,7 +937,7 @@ describe('ResponderEventPlugin', function() {
     config.responderStart.child = {order: 5};
 
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     // If the touch target is the sibling item, the negotiation should only
     // propagate to first common ancestor of current responder and sibling (so
@@ -921,11 +951,10 @@ describe('ResponderEventPlugin', function() {
 
     run(config, three, {
       topLevelType: topLevelTypes.topScroll,
-      target: three.parent,
-      targetID: three.parent,
+      targetInst: idToInstance[three.parent],
       nativeEvent: {},
     });
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
 
     // Now lets let the scroll take control this time.
@@ -939,11 +968,10 @@ describe('ResponderEventPlugin', function() {
 
     run(config, three, {
       topLevelType: topLevelTypes.topScroll,
-      target: three.parent,
-      targetID: three.parent,
+      targetInst: idToInstance[three.parent],
       nativeEvent: {},
     });
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.parent);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
 
 
   });
@@ -959,7 +987,7 @@ describe('ResponderEventPlugin', function() {
     config.responderStart.child = {order: 5};
 
     run(config, three, startConfig(three.child, [three.child], [0]));
-    expect(ResponderEventPlugin.getResponderID()).toBe(three.child);
+    expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.child = {order: 0};
@@ -972,6 +1000,6 @@ describe('ResponderEventPlugin', function() {
       [0]
     );
     run(config, three, nativeEvent);
-    expect(ResponderEventPlugin.getResponderID()).toBe(null);
+    expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 });

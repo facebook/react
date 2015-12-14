@@ -13,13 +13,12 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var warning = require('warning');
 
-var SEPARATOR = ReactInstanceHandles.SEPARATOR;
+var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
 /**
@@ -29,11 +28,10 @@ var SUBSEPARATOR = ':';
 
 var userProvidedKeyEscaperLookup = {
   '=': '=0',
-  '.': '=1',
   ':': '=2',
 };
 
-var userProvidedKeyEscapeRegex = /[=.:]/g;
+var userProvidedKeyEscapeRegex = /[=:]/g;
 
 var didWarnAboutMaps = false;
 
@@ -49,7 +47,9 @@ function userProvidedKeyEscaper(match) {
  * @return {string}
  */
 function getComponentKey(component, index) {
-  if (component && component.key != null) {
+  // Do some typechecking here since we call this blindly. We want to ensure
+  // that we don't block potential future ES APIs.
+  if (component && typeof component === 'object' && component.key != null) {
     // Explicit key
     return wrapUserProvidedKey(component.key);
   }
@@ -181,20 +181,29 @@ function traverseAllChildrenImpl(
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
+          'instead or wrap the object using createFragment(object) from the ' +
+          'React add-ons.';
+        if (children._isReactElement) {
+          addendum =
+            ' It looks like you\'re using an element created by a different ' +
+            'version of React. Make sure to use only one copy of React.';
+        }
         if (ReactCurrentOwner.current) {
           var name = ReactCurrentOwner.current.getName();
           if (name) {
-            addendum = ' Check the render method of `' + name + '`.';
+            addendum += ' Check the render method of `' + name + '`.';
           }
         }
       }
+      var childrenString = String(children);
       invariant(
         false,
-        'Objects are not valid as a React child (found object with keys ' +
-        '{%s}). If you meant to render a collection of children, use an ' +
-        'array instead or wrap the object using ' +
-        'React.addons.createFragment(object).%s',
-        Object.keys(children).join(', '),
+        'Objects are not valid as a React child (found: %s).%s',
+        childrenString === '[object Object]' ?
+          'object with keys {' + Object.keys(children).join(', ') + '}' :
+          childrenString,
         addendum
       );
     }

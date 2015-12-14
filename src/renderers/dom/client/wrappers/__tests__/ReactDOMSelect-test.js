@@ -12,8 +12,6 @@
 'use strict';
 
 
-var mocks = require('mocks');
-
 describe('ReactDOMSelect', function() {
   var React;
   var ReactDOM;
@@ -350,14 +348,23 @@ describe('ReactDOMSelect', function() {
   });
 
   it('should support ReactLink', function() {
-    var link = new ReactLink('giraffe', mocks.getMockFunction());
+    var link = new ReactLink('giraffe', jest.genMockFn());
     var stub =
       <select valueLink={link}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
+
+    spyOn(console, 'error');
+
     stub = ReactTestUtils.renderIntoDocument(stub);
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`valueLink` prop on `select` is deprecated; set `value` and `onChange` instead.'
+    );
+
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
@@ -453,5 +460,34 @@ describe('ReactDOMSelect', function() {
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
     expect(node.options[2].selected).toBe(false);  // gorilla
+  });
+
+  it('should throw warning message if value is null', function() {
+    spyOn(console, 'error');
+
+    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`value` prop on `select` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
+    );
+
+    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should refresh state on change', function() {
+    var stub =
+      <select value="giraffe" onChange={noop}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    ReactTestUtils.Simulate.change(node);
+
+    expect(node.value).toBe('giraffe');
   });
 });

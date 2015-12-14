@@ -31,7 +31,7 @@ var GroceryList = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <GroceryList items={['사과', '바나나', '크랜베리']} />, mountNode
 );
 ```

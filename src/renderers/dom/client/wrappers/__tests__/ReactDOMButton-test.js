@@ -12,14 +12,12 @@
 'use strict';
 
 
-var mocks = require('mocks');
-
 describe('ReactDOMButton', function() {
   var React;
   var ReactDOM;
   var ReactTestUtils;
 
-  var onClick = mocks.getMockFunction();
+  var onClick = jest.genMockFn();
 
   function expectClickThru(button) {
     onClick.mockClear();

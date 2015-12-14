@@ -24,12 +24,10 @@
       Learn more about React at
       <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
-    <script src="../shared/thirdparty/es5-shim.min.js"></script>
-    <script src="../shared/thirdparty/es5-sham.min.js"></script>
-    <script src="../shared/thirdparty/console-polyfill.js"></script>
     <script src="../../build/react-with-addons.js"></script>
-    <script src="../../build/JSXTransformer.js"></script>
-    <script type="text/jsx">
+    <script src="../../build/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+    <script type="text/babel">
       var CSSTransitionGroup = React.addons.CSSTransitionGroup;
       var INTERVAL = 2000;
 
@@ -65,6 +63,8 @@
           return (
             <CSSTransitionGroup
               className="animateExample"
+              transitionEnterTimeout={250}
+              transitionLeaveTimeout={250}
               transitionName="example">
               {children}
             </CSSTransitionGroup>
@@ -72,7 +72,7 @@
         }
       });
 
-      React.render(
+      ReactDOM.render(
         <AnimateDemo />,
         document.getElementById('container')
       );

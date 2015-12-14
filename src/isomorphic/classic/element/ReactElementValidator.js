@@ -23,6 +23,7 @@ var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var warning = require('warning');
@@ -57,7 +58,7 @@ var loggedTypeFailures = {};
  * @param {*} parentType element's parent's type.
  */
 function validateExplicitKey(element, parentType) {
-  if (element._store.validated || element.key != null) {
+  if (!element._store || element._store.validated || element.key != null) {
     return;
   }
   element._store.validated = true;
@@ -254,9 +255,11 @@ function validatePropTypes(element) {
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
+    var validType = typeof type === 'string' || typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
-    warning(typeof type === 'string' || typeof type === 'function',
+    warning(
+      validType,
       'React.createElement: type should not be null, undefined, boolean, or ' +
         'number. It should be a string (for DOM elements) or a ReactClass ' +
         '(for composite components).%s',
@@ -271,8 +274,15 @@ var ReactElementValidator = {
       return element;
     }
 
-    for (var i = 2; i < arguments.length; i++) {
-      validateChildKeys(arguments[i], type);
+    // Skip key warning if the type isn't valid since our key validation logic
+    // doesn't expect a non-string/function type and can throw confusing errors.
+    // We don't want exception behavior to differ between dev and prod.
+    // (Rendering will throw with a helpful message and as soon as the type is
+    // fixed, the key warnings will appear.)
+    if (validType) {
+      for (var i = 2; i < arguments.length; i++) {
+        validateChildKeys(arguments[i], type);
+      }
     }
 
     validatePropTypes(element);
@@ -289,7 +299,7 @@ var ReactElementValidator = {
     validatedFactory.type = type;
 
     if (__DEV__) {
-      try {
+      if (canDefineProperty) {
         Object.defineProperty(
           validatedFactory,
           'type',
@@ -308,8 +318,6 @@ var ReactElementValidator = {
             },
           }
         );
-      } catch (x) {
-        // IE will fail on defineProperty (es5-shim/sham too)
       }
     }
 

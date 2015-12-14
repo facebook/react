@@ -12,7 +12,6 @@
 'use strict';
 
 var assign = require('Object.assign');
-var mocks = require('mocks');
 
 describe('ReactDOMComponent', function() {
   var React;
@@ -21,7 +20,7 @@ describe('ReactDOMComponent', function() {
   var ReactDOMServer;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
@@ -52,7 +51,7 @@ describe('ReactDOMComponent', function() {
       var stubStyle = container.firstChild.style;
 
       // set initial style
-      var setup = {display: 'block', left: '1', top: 2, fontFamily: 'Arial'};
+      var setup = {display: 'block', left: '1px', top: 2, fontFamily: 'Arial'};
       ReactDOM.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
@@ -128,8 +127,8 @@ describe('ReactDOMComponent', function() {
         'Warning: `div` was passed a style object that has previously been ' +
         'mutated. Mutating `style` is deprecated. Consider cloning it ' +
         'beforehand. Check the `render` of `App`. Previous style: ' +
-        '{"border":"1px solid black"}. Mutated style: ' +
-        '{"border":"1px solid black","position":"absolute"}.'
+        '{border: "1px solid black"}. Mutated style: ' +
+        '{border: "1px solid black", position: "absolute"}.'
       );
 
       style = {background: 'red'};
@@ -145,6 +144,65 @@ describe('ReactDOMComponent', function() {
       style.background = 'blue';
       ReactDOM.render(<span style={style}></span>, div);
       expect(console.error.argsForCall.length).toBe(2);
+    });
+
+    it('should warn about styles with numeric string values for non-unitless properties', function() {
+      spyOn(console, 'error');
+
+      var div = document.createElement('div');
+      var One = React.createClass({
+        render: function() {
+          return this.props.inline ?
+            <span style={{fontSize: '1'}} /> :
+            <div style={{fontSize: '1'}} />;
+        },
+      });
+      var Two = React.createClass({
+        render: function() {
+          return <div style={{fontSize: '1'}} />;
+        },
+      });
+      ReactDOM.render(<One inline={false} />, div);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: a `div` tag (owner: `One`) was passed a numeric string value ' +
+        'for CSS property `fontSize` (value: `1`) which will be treated ' +
+        'as a unitless number in a future version of React.'
+      );
+
+      // Don't warn again for the same component
+      ReactDOM.render(<One inline={true} />, div);
+      expect(console.error.calls.length).toBe(1);
+
+      // Do warn for different components
+      ReactDOM.render(<Two />, div);
+      expect(console.error.calls.length).toBe(2);
+      expect(console.error.argsForCall[1][0]).toBe(
+        'Warning: a `div` tag (owner: `Two`) was passed a numeric string value ' +
+        'for CSS property `fontSize` (value: `1`) which will be treated ' +
+        'as a unitless number in a future version of React.'
+      );
+
+      // Really don't warn again for the same component
+      ReactDOM.render(<One inline={true} />, div);
+      expect(console.error.calls.length).toBe(2);
+    });
+
+    it('should warn semi-nicely about NaN in style', function() {
+      spyOn(console, 'error');
+
+      var style = {fontSize: NaN};
+      var div = document.createElement('div');
+      ReactDOM.render(<span style={style}></span>, div);
+      ReactDOM.render(<span style={style}></span>, div);
+
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toEqual(
+        'Warning: `span` was passed a style object that has previously been ' +
+        'mutated. Mutating `style` is deprecated. Consider cloning it ' +
+        'beforehand. Check the `render` using <span>. Previous style: ' +
+        '{fontSize: NaN}. Mutated style: {fontSize: NaN}.'
+      );
     });
 
     it('should update styles if initially null', function() {
@@ -179,6 +237,18 @@ describe('ReactDOMComponent', function() {
 
       ReactDOM.render(<div style={null} />, container);
       expect(stubStyle.display).toEqual('');
+    });
+
+    it('should skip child object attribute on web components', function() {
+      var container = document.createElement('div');
+
+      // Test initial render to null
+      ReactDOM.render(<my-component children={['foo']} />, container);
+      expect(container.firstChild.hasAttribute('children')).toBe(false);
+
+      // Test updates to null
+      ReactDOM.render(<my-component children={['foo']} />, container);
+      expect(container.firstChild.hasAttribute('children')).toBe(false);
     });
 
     it('should remove attributes', function() {
@@ -347,7 +417,7 @@ describe('ReactDOMComponent', function() {
 
       var node = container.firstChild;
       var nodeValue = ''; // node.value always returns undefined
-      var nodeValueSetter = mocks.getMockFunction();
+      var nodeValueSetter = jest.genMockFn();
       Object.defineProperty(node, 'value', {
         get: function() {
           return nodeValue;
@@ -368,6 +438,55 @@ describe('ReactDOMComponent', function() {
       var container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova"/>, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
+    });
+
+    it('should not update when switching between null/undefined', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<div />, container);
+
+      var setter = jest.genMockFn();
+      node.setAttribute = setter;
+
+      ReactDOM.render(<div dir={null} />, container);
+      ReactDOM.render(<div dir={undefined} />, container);
+      ReactDOM.render(<div />, container);
+      expect(setter.mock.calls.length).toBe(0);
+      ReactDOM.render(<div dir="ltr" />, container);
+      expect(setter.mock.calls.length).toBe(1);
+    });
+
+    it('handles multiple child updates without interference', function() {
+      // This test might look like it's just testing ReactMultiChild but the
+      // last bug in this was actually in DOMChildrenOperations so this test
+      // needs to be in some DOM-specific test file.
+      var container = document.createElement('div');
+
+      // ABCD
+      ReactDOM.render(
+        <div>
+          <div key="one">
+            <div key="A">A</div><div key="B">B</div>
+          </div>
+          <div key="two">
+            <div key="C">C</div><div key="D">D</div>
+          </div>
+        </div>,
+        container
+      );
+      // BADC
+      ReactDOM.render(
+        <div>
+          <div key="one">
+            <div key="B">B</div><div key="A">A</div>
+          </div>
+          <div key="two">
+            <div key="D">D</div><div key="C">C</div>
+          </div>
+        </div>,
+        container
+      );
+
+      expect(container.textContent).toBe('BADC');
     });
   });
 
@@ -529,8 +648,7 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).toThrow(
-        'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
       );
     });
 
@@ -548,7 +666,6 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrow(
-        'Invariant Violation: ' +
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
       );
@@ -558,7 +675,6 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: {foo: 'bar'} });
       }).toThrow(
-        'Invariant Violation: ' +
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
       );
@@ -581,17 +697,17 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({style: 'display: none'});
       }).toThrow(
-        'Invariant Violation: The `style` prop expects a mapping from style ' +
-        'properties to values, not a string. For example, ' +
-        'style={{marginRight: spacing + \'em\'}} when using JSX.'
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
+        'when using JSX.'
       );
     });
 
     it('should execute custom event plugin listening behavior', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
-      SimpleEventPlugin.didPutListener = mocks.getMockFunction();
-      SimpleEventPlugin.willDeleteListener = mocks.getMockFunction();
+      SimpleEventPlugin.didPutListener = jest.genMockFn();
+      SimpleEventPlugin.willDeleteListener = jest.genMockFn();
 
       var container = document.createElement('div');
       ReactDOM.render(
@@ -609,9 +725,13 @@ describe('ReactDOMComponent', function() {
     it('should handle null and missing properly with event hooks', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
-      SimpleEventPlugin.didPutListener = mocks.getMockFunction();
-      SimpleEventPlugin.willDeleteListener = mocks.getMockFunction();
+      SimpleEventPlugin.didPutListener = jest.genMockFn();
+      SimpleEventPlugin.willDeleteListener = jest.genMockFn();
       var container = document.createElement('div');
+
+      ReactDOM.render(<div onClick={false} />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(0);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(0);
 
       ReactDOM.render(<div onClick={null} />, container);
       expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(0);
@@ -694,8 +814,7 @@ describe('ReactDOMComponent', function() {
           container
         );
       }).toThrow(
-        'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
       );
     });
 
@@ -715,9 +834,9 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<div style={1}></div>, container);
       }).toThrow(
-        'Invariant Violation: The `style` prop expects a mapping from style ' +
-        'properties to values, not a string. For example, ' +
-        'style={{marginRight: spacing + \'em\'}} when using JSX.'
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
+        'when using JSX.'
       );
     });
 
@@ -731,10 +850,9 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<Animal/>, container);
       }).toThrow(
-        'Invariant Violation: The `style` prop expects a mapping from style ' +
-        'properties to values, not a string. For example, ' +
-        'style={{marginRight: spacing + \'em\'}} when using JSX. ' +
-        'This DOM node was rendered by `Animal`.'
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
+        'when using JSX. This DOM node was rendered by `Animal`.'
       );
     });
 
@@ -758,8 +876,8 @@ describe('ReactDOMComponent', function() {
 
   describe('unmountComponent', function() {
     it('should clean up listeners', function() {
-      var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-      var ReactMount = require('ReactMount');
+      var EventPluginHub = require('EventPluginHub');
+      var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
       var container = document.createElement('div');
       document.body.appendChild(container);
@@ -769,26 +887,41 @@ describe('ReactDOMComponent', function() {
       instance = ReactDOM.render(instance, container);
 
       var rootNode = ReactDOM.findDOMNode(instance);
-      var rootNodeID = ReactMount.getID(rootNode);
+      var inst = ReactDOMComponentTree.getInstanceFromNode(rootNode);
       expect(
-        ReactBrowserEventEmitter.getListener(rootNodeID, 'onClick')
+        EventPluginHub.getListener(inst, 'onClick')
       ).toBe(callback);
       expect(rootNode).toBe(ReactDOM.findDOMNode(instance));
 
       ReactDOM.unmountComponentAtNode(container);
 
       expect(
-        ReactBrowserEventEmitter.getListener(rootNodeID, 'onClick')
+        EventPluginHub.getListener(inst, 'onClick')
       ).toBe(undefined);
+    });
+
+    it('unmounts children before unsetting DOM node info', function() {
+      var Inner = React.createClass({
+        render: function() {
+          return <span />;
+        },
+        componentWillUnmount: function() {
+          // Should not throw
+          expect(ReactDOM.findDOMNode(this).nodeName).toBe('SPAN');
+        },
+      });
+
+      var container = document.createElement('div');
+      ReactDOM.render(<div><Inner /></div>, container);
+      ReactDOM.unmountComponentAtNode(container);
     });
   });
 
   describe('onScroll warning', function() {
     it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
       // Mock this here so we can mimic IE8 support. We require isEventSupported
-      // before React so it's pre-mocked before React qould require it.
-      require('mock-modules')
-        .dumpCache()
+      // before React so it's pre-mocked before React would require it.
+      jest.resetModuleRegistry()
         .mock('isEventSupported');
       var isEventSupported = require('isEventSupported');
       isEventSupported.mockReturnValueOnce(false);
@@ -798,7 +931,7 @@ describe('ReactDOMComponent', function() {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(<div onScroll={function() {}} />);
       expect(console.error.calls.length).toBe(1);
-      expect(console.error.mostRecentCall.args[0]).toBe(
+      expect(console.error.argsForCall[0][0]).toBe(
         'Warning: This browser doesn\'t support the `onScroll` event'
       );
     });
@@ -811,7 +944,7 @@ describe('ReactDOMComponent', function() {
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
       ).toThrow(
-        'Invariant Violation: Invalid tag: script tag'
+        'Invalid tag: script tag'
       );
     });
 
@@ -821,7 +954,7 @@ describe('ReactDOMComponent', function() {
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
       ).toThrow(
-        'Invariant Violation: Invalid tag: div><img /><div'
+        'Invalid tag: div><img /><div'
       );
     });
   });
@@ -838,7 +971,7 @@ describe('ReactDOMComponent', function() {
       ReactTestUtils.renderIntoDocument(<div><tr /><tr /></div>);
 
       expect(console.error.calls.length).toBe(1);
-      expect(console.error.calls[0].args[0]).toBe(
+      expect(console.error.argsForCall[0][0]).toBe(
         'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
         '<div>. See div > tr.'
       );
@@ -850,7 +983,7 @@ describe('ReactDOMComponent', function() {
       ReactDOM.render(<span><p /></span>, p);
 
       expect(console.error.calls.length).toBe(1);
-      expect(console.error.calls[0].args[0]).toBe(
+      expect(console.error.argsForCall[0][0]).toBe(
         'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
         'of <p>. See p > ... > p.'
       );
@@ -865,16 +998,20 @@ describe('ReactDOMComponent', function() {
       });
       var Foo = React.createClass({
         render: function() {
-          return <table><Row /></table>;
+          return <table><Row /> </table>;
         },
       });
       ReactTestUtils.renderIntoDocument(<Foo />);
 
-      expect(console.error.calls.length).toBe(1);
-      expect(console.error.calls[0].args[0]).toBe(
+      expect(console.error.calls.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toBe(
         'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
         '<table>. See Foo > table > Row > tr. Add a <tbody> to your code to ' +
         'match the DOM tree generated by the browser.'
+      );
+      expect(console.error.argsForCall[1][0]).toBe(
+        'Warning: validateDOMNesting(...): <span> cannot appear as a child ' +
+        'of <table>. See Foo > table > span.'
       );
     });
 
@@ -905,7 +1042,7 @@ describe('ReactDOMComponent', function() {
       });
       ReactTestUtils.renderIntoDocument(<App1 />);
       expect(console.error.calls.length).toBe(1);
-      expect(console.error.calls[0].args[0]).toContain(
+      expect(console.error.argsForCall[0][0]).toContain(
         'See Viz1 > table > FancyRow > Row > tr.'
       );
 
@@ -917,25 +1054,25 @@ describe('ReactDOMComponent', function() {
       });
       ReactTestUtils.renderIntoDocument(<App2 />);
       expect(console.error.calls.length).toBe(2);
-      expect(console.error.calls[1].args[0]).toContain(
+      expect(console.error.argsForCall[1][0]).toContain(
         'See Viz2 > FancyTable > Table > table > FancyRow > Row > tr.'
       );
 
       ReactTestUtils.renderIntoDocument(<FancyTable><FancyRow /></FancyTable>);
       expect(console.error.calls.length).toBe(3);
-      expect(console.error.calls[2].args[0]).toContain(
+      expect(console.error.argsForCall[2][0]).toContain(
         'See FancyTable > Table > table > FancyRow > Row > tr.'
       );
 
       ReactTestUtils.renderIntoDocument(<table><FancyRow /></table>);
       expect(console.error.calls.length).toBe(4);
-      expect(console.error.calls[3].args[0]).toContain(
+      expect(console.error.argsForCall[3][0]).toContain(
         'See table > FancyRow > Row > tr.'
       );
 
       ReactTestUtils.renderIntoDocument(<FancyTable><tr /></FancyTable>);
       expect(console.error.calls.length).toBe(5);
-      expect(console.error.calls[4].args[0]).toContain(
+      expect(console.error.argsForCall[4][0]).toContain(
         'See FancyTable > Table > table > tr.'
       );
 
@@ -946,91 +1083,9 @@ describe('ReactDOMComponent', function() {
       });
       ReactTestUtils.renderIntoDocument(<Link><div><Link /></div></Link>);
       expect(console.error.calls.length).toBe(6);
-      expect(console.error.calls[5].args[0]).toContain(
+      expect(console.error.argsForCall[5][0]).toContain(
         'See Link > a > ... > Link > a.'
       );
-    });
-  });
-
-  describe('DOM nodes as refs', function() {
-    var ReactTestUtils;
-
-    beforeEach(function() {
-      ReactTestUtils = require('ReactTestUtils');
-    });
-
-    it('warns when accessing properties on DOM components', function() {
-      spyOn(console, 'error');
-      var innerDiv;
-      var Animal = React.createClass({
-        render: function() {
-          return <div ref="div">iguana</div>;
-        },
-        componentDidMount: function() {
-          innerDiv = this.refs.div;
-
-          void this.refs.div.props;
-          this.refs.div.setState();
-          expect(this.refs.div.getDOMNode()).toBe(this.refs.div);
-          expect(this.refs.div.isMounted()).toBe(true);
-        },
-      });
-      var container = document.createElement('div');
-      ReactDOM.render(<Animal />, container);
-      ReactDOM.unmountComponentAtNode(container);
-      expect(innerDiv.isMounted()).toBe(false);
-
-      expect(console.error.calls.length).toBe(5);
-      expect(console.error.calls[0].args[0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .props of a DOM ' +
-        'node; instead, recreate the props as `render` did originally or ' +
-        'read the DOM properties/attributes directly from this node (e.g., ' +
-        'this.refs.box.className). This DOM node was rendered by `Animal`.'
-      );
-      expect(console.error.calls[1].args[0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .setState(), ' +
-        '.replaceState(), or .forceUpdate() of a DOM node. This is a no-op. ' +
-        'This DOM node was rendered by `Animal`.'
-      );
-      expect(console.error.calls[2].args[0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .getDOMNode() of a DOM ' +
-        'node; instead, use the node directly. This DOM node was ' +
-        'rendered by `Animal`.'
-      );
-      expect(console.error.calls[3].args[0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .isMounted() of a DOM ' +
-        'node. This DOM node was rendered by `Animal`.'
-      );
-      expect(console.error.calls[4].args[0]).toContain('isMounted');
-    });
-
-    it('handles legacy setProps and replaceProps', function() {
-      spyOn(console, 'error');
-      var node = ReactTestUtils.renderIntoDocument(<div>rhinoceros</div>);
-
-      node.setProps({className: 'herbiverous'});
-      expect(node.className).toBe('herbiverous');
-      expect(node.textContent).toBe('rhinoceros');
-
-      node.replaceProps({className: 'invisible rhino'});
-      expect(node.className).toBe('invisible rhino');
-      expect(node.textContent).toBe('');
-
-      expect(console.error.calls.length).toBe(2);
-      expect(console.error.calls[0].args[0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
-        'Instead, call ReactDOM.render again at the top level.'
-      );
-      expect(console.error.calls[1].args[0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .replaceProps() of a DOM ' +
-        'node. Instead, call ReactDOM.render again at the top level.'
-      );
-    });
-
-    it('does not touch ref-less nodes', function() {
-      var node = ReactTestUtils.renderIntoDocument(<div><span /></div>);
-      expect(typeof node.getDOMNode).toBe('function');
-      expect(typeof node.firstChild.getDOMNode).toBe('undefined');
     });
   });
 });

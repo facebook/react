@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule instantiateReactComponent
- * @typechecks static-only
  */
 
 'use strict';
@@ -67,7 +66,7 @@ function instantiateReactComponent(node) {
   var instance;
 
   if (node === null || node === false) {
-    instance = new ReactEmptyComponent(instantiateReactComponent);
+    instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
     invariant(
@@ -105,6 +104,7 @@ function instantiateReactComponent(node) {
       typeof instance.construct === 'function' &&
       typeof instance.mountComponent === 'function' &&
       typeof instance.receiveComponent === 'function' &&
+      typeof instance.getNativeNode === 'function' &&
       typeof instance.unmountComponent === 'function',
       'Only React Components can be mounted.'
     );

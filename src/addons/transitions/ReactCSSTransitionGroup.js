@@ -6,7 +6,6 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @typechecks
  * @providesModule ReactCSSTransitionGroup
  */
 
@@ -27,7 +26,7 @@ function createTransitionTimeoutPropValidator(transitionType) {
     // If the transition is enabled
     if (props[enabledPropName]) {
       // If no timeout duration is provided
-      if (!props[timeoutPropName]) {
+      if (props[timeoutPropName] == null) {
         return new Error(
           timeoutPropName + ' wasn\'t supplied to ReactCSSTransitionGroup: ' +
           'this can cause unreliable animations and won\'t be supported in ' +

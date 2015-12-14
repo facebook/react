@@ -1,7 +1,7 @@
 ---
 language: node_js
 node_js:
-- '0.10'
+- 4
 sudo: false
 cache:
   directories:
@@ -16,6 +16,7 @@ before_install:
       exit
     fi
     npm install -g npm@latest-2
+    npm --version
 script:
 - |
     if [ "$TEST_TYPE" = build_website ]; then
@@ -53,6 +54,8 @@ script:
           -F "react-with-addons.min=@build/react-with-addons.min.js" \
           -F "react-dom=@build/react-dom.js" \
           -F "react-dom.min=@build/react-dom.min.js" \
+          -F "react-dom-server=@build/react-dom-server.js" \
+          -F "react-dom-server.min=@build/react-dom-server.min.js" \
           -F "npm-react=@build/packages/react.tgz" \
           -F "npm-react-dom=@build/packages/react-dom.tgz" \
           -F "commit=$TRAVIS_COMMIT" \

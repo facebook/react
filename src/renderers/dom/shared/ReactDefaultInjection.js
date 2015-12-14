@@ -13,7 +13,6 @@
 
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
-var ClientReactRootIndex = require('ClientReactRootIndex');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var ExecutionEnvironment = require('ExecutionEnvironment');
@@ -21,18 +20,18 @@ var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactDOMComponent = require('ReactDOMComponent');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
+var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
+var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
-var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactMount = require('ReactMount');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
-var SelectEventPlugin = require('SelectEventPlugin');
-var ServerReactRootIndex = require('ServerReactRootIndex');
-var SimpleEventPlugin = require('SimpleEventPlugin');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
+var SelectEventPlugin = require('SelectEventPlugin');
+var SimpleEventPlugin = require('SimpleEventPlugin');
 
 var alreadyInjected = false;
 
@@ -53,8 +52,8 @@ function inject() {
    * Inject modules for resolving DOM hierarchy and plugin ordering.
    */
   ReactInjection.EventPluginHub.injectEventPluginOrder(DefaultEventPluginOrder);
-  ReactInjection.EventPluginHub.injectInstanceHandle(ReactInstanceHandles);
-  ReactInjection.EventPluginHub.injectMount(ReactMount);
+  ReactInjection.EventPluginUtils.injectComponentTree(ReactDOMComponentTree);
+  ReactInjection.EventPluginUtils.injectTreeTraversal(ReactDOMTreeTraversal);
 
   /**
    * Some important event plugins included by default (without having to require
@@ -81,19 +80,17 @@ function inject() {
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
-  ReactInjection.EmptyComponent.injectEmptyComponent('noscript');
+  ReactInjection.EmptyComponent.injectEmptyComponentFactory(
+    function(instantiate) {
+      return new ReactDOMEmptyComponent(instantiate);
+    }
+  );
 
   ReactInjection.Updates.injectReconcileTransaction(
     ReactReconcileTransaction
   );
   ReactInjection.Updates.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
-  );
-
-  ReactInjection.RootIndex.injectCreateReactRootIndex(
-    ExecutionEnvironment.canUseDOM ?
-      ClientReactRootIndex.createReactRootIndex :
-      ServerReactRootIndex.createReactRootIndex
   );
 
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);

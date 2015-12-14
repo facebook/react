@@ -7,7 +7,15 @@ module Authors
   class Generator < Jekyll::Generator
     def generate(site)
       site.posts.each do |post|
-        post.data['author'] = site.data['authors'][post['author']]
+        authors = []
+        if post['author'].kind_of?(Array)
+          for author in post['author']
+            authors.push(site.data['authors'][author])
+          end
+        else
+          authors.push(site.data['authors'][post['author']])
+        end
+        post.data['authors'] = authors
       end
     end
   end

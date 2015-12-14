@@ -11,20 +11,38 @@
 
 'use strict';
 
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
-var ReactMount = require('ReactMount');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
+var warning = require('warning');
 
 var instancesByReactID = {};
+
+var didWarnValueLink = false;
+var didWarnCheckedLink = false;
+var didWarnValueNull = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
     ReactDOMInput.updateWrapper(this);
+  }
+}
+
+function warnIfValueIsNull(props) {
+  if (props != null && props.value === null && !didWarnValueNull) {
+    warning(
+      false,
+      '`value` prop on `input` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
+    );
+
+    didWarnValueNull = true;
   }
 }
 
@@ -45,7 +63,7 @@ function forceUpdateIfMounted() {
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 var ReactDOMInput = {
-  getNativeProps: function(inst, props, context) {
+  getNativeProps: function(inst, props) {
     var value = LinkedValueUtils.getValue(props);
     var checked = LinkedValueUtils.getChecked(props);
 
@@ -67,15 +85,35 @@ var ReactDOMInput = {
         props,
         inst._currentElement._owner
       );
+
+      if (props.valueLink !== undefined && !didWarnValueLink) {
+        warning(
+          false,
+          '`valueLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+        );
+        didWarnValueLink = true;
+      }
+      if (props.checkedLink !== undefined && !didWarnCheckedLink) {
+        warning(
+          false,
+          '`checkedLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+        );
+        didWarnCheckedLink = true;
+      }
+      warnIfValueIsNull(props);
     }
 
     var defaultValue = props.defaultValue;
     inst._wrapperState = {
       initialChecked: props.defaultChecked || false,
       initialValue: defaultValue != null ? defaultValue : null,
+      listeners: null,
       onChange: _handleChange.bind(inst),
     };
+  },
 
+  mountReadyWrapper: function(inst) {
+    // Can't be in mountWrapper or else server rendering leaks.
     instancesByReactID[inst._rootNodeID] = inst;
   },
 
@@ -86,11 +124,15 @@ var ReactDOMInput = {
   updateWrapper: function(inst) {
     var props = inst._currentElement.props;
 
+    if (__DEV__) {
+      warnIfValueIsNull(props);
+    }
+
     // TODO: Shouldn't this be getChecked(props)?
     var checked = props.checked;
     if (checked != null) {
-      ReactDOMIDOperations.updatePropertyByID(
-        inst._rootNodeID,
+      DOMPropertyOperations.setValueForProperty(
+        ReactDOMComponentTree.getNodeFromInstance(inst),
         'checked',
         checked || false
       );
@@ -100,8 +142,8 @@ var ReactDOMInput = {
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      ReactDOMIDOperations.updatePropertyByID(
-        inst._rootNodeID,
+      DOMPropertyOperations.setValueForProperty(
+        ReactDOMComponentTree.getNodeFromInstance(inst),
         'value',
         '' + value
       );
@@ -121,7 +163,7 @@ function _handleChange(event) {
 
   var name = props.name;
   if (props.type === 'radio' && name != null) {
-    var rootNode = ReactMount.getNode(this._rootNodeID);
+    var rootNode = ReactDOMComponentTree.getNodeFromInstance(this);
     var queryRoot = rootNode;
 
     while (queryRoot.parentNode) {
@@ -146,18 +188,12 @@ function _handleChange(event) {
       // This will throw if radio buttons rendered by different copies of React
       // and the same name are rendered into the same form (same as #1939).
       // That's probably okay; we don't support it just as we don't support
-      // mixing React with non-React.
-      var otherID = ReactMount.getID(otherNode);
-      invariant(
-        otherID,
-        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-        'same `name` is not supported.'
-      );
-      var otherInstance = instancesByReactID[otherID];
+      // mixing React radio buttons with non-React ones.
+      var otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
       invariant(
         otherInstance,
-        'ReactDOMInput: Unknown radio button ID %s.',
-        otherID
+        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+        'same `name` is not supported.'
       );
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked

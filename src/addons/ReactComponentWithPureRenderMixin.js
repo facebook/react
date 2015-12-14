@@ -15,7 +15,7 @@ var shallowCompare = require('shallowCompare');
 
 /**
  * If your React component's render function is "pure", e.g. it will render the
- * same result given the same props and state, provide this Mixin for a
+ * same result given the same props and state, provide this mixin for a
  * considerable performance boost.
  *
  * Most React components have pure render functions.

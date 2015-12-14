@@ -13,6 +13,7 @@
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
+var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
@@ -29,7 +30,7 @@ function ReactComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-ReactComponent.isReactClass = {};
+ReactComponent.prototype.isReactComponent = {};
 
 /**
  * Sets a subset of the state. Always use this to mutate
@@ -114,22 +115,14 @@ if (__DEV__) {
       'Instead, make sure to clean up subscriptions and pending requests in ' +
       'componentWillUnmount to prevent memory leaks.',
     ],
-    replaceProps: [
-      'replaceProps',
-      'Instead, call render again at the top level.',
-    ],
     replaceState: [
       'replaceState',
       'Refactor your code to use setState instead (see ' +
       'https://github.com/facebook/react/issues/3236).',
     ],
-    setProps: [
-      'setProps',
-      'Instead, call render again at the top level.',
-    ],
   };
   var defineDeprecationWarning = function(methodName, info) {
-    try {
+    if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           warning(
@@ -141,8 +134,6 @@ if (__DEV__) {
           return undefined;
         },
       });
-    } catch (x) {
-      // IE will fail on defineProperty (es5-shim/sham too)
     }
   };
   for (var fnName in deprecatedAPIs) {

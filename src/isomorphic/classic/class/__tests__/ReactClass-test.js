@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -30,8 +28,7 @@ describe('ReactClass-spec', function() {
     expect(function() {
       React.createClass({});
     }).toThrow(
-      'Invariant Violation: createClass(...): Class specification must ' +
-      'implement a `render` method.'
+      'createClass(...): Class specification must implement a `render` method.'
     );
   });
 
@@ -47,7 +44,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should copy prop types onto the Constructor', function() {
-    var propValidator = mocks.getMockFunction();
+    var propValidator = jest.genMockFn();
     var TestComponent = React.createClass({
       propTypes: {
         value: propValidator,
@@ -64,7 +61,7 @@ describe('ReactClass-spec', function() {
 
   it('should warn on invalid prop types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
 
       React.createClass({
@@ -88,7 +85,7 @@ describe('ReactClass-spec', function() {
 
   it('should warn on invalid context types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
       React.createClass({
         displayName: 'Component',
@@ -111,7 +108,7 @@ describe('ReactClass-spec', function() {
 
   it('should throw on invalid child context types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
       React.createClass({
         displayName: 'Component',
@@ -197,10 +194,10 @@ describe('ReactClass-spec', function() {
         },
       });
     }).toThrow(
-      'Invariant Violation: ReactClass: You are attempting to ' +
-      'define a reserved property, `getDefaultProps`, that shouldn\'t be on ' +
-      'the "statics" key. Define it as an instance property instead; it ' +
-      'will still be accessible on the constructor.'
+      'ReactClass: You are attempting to define a reserved property, ' +
+      '`getDefaultProps`, that shouldn\'t be on the "statics" key. Define ' +
+      'it as an instance property instead; it will still be accessible on ' +
+      'the constructor.'
     );
   });
 
@@ -331,8 +328,7 @@ describe('ReactClass-spec', function() {
       expect(function() {
         instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrow(
-        'Invariant Violation: Component.getInitialState(): ' +
-        'must return an object or null'
+        'Component.getInitialState(): must return an object or null'
       );
     });
   });
@@ -379,7 +375,7 @@ describe('ReactClass-spec', function() {
     instance.getDOMNode();
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'MyComponent.getDOMNode(...) is deprecated. Please use ' +
       'ReactDOM.findDOMNode(instance) instead.'
     );

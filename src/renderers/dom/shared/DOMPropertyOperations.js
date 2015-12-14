@@ -7,12 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule DOMPropertyOperations
- * @typechecks static-only
  */
 
 'use strict';
 
 var DOMProperty = require('DOMProperty');
+var EventPluginRegistry = require('EventPluginRegistry');
+var ReactPerf = require('ReactPerf');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var warning = require('warning');
@@ -86,6 +87,20 @@ if (__DEV__) {
       standardName
     );
 
+    var registrationName = (
+      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+        lowerCasedName
+      ) ?
+      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
+      null
+    );
+
+    warning(
+      registrationName == null,
+      'Unknown event handler property %s. Did you mean `%s`?',
+      name,
+      registrationName
+    );
   };
 }
 
@@ -107,6 +122,14 @@ var DOMPropertyOperations = {
 
   setAttributeForID: function(node, id) {
     node.setAttribute(DOMProperty.ID_ATTRIBUTE_NAME, id);
+  },
+
+  createMarkupForRoot: function() {
+    return DOMProperty.ROOT_ATTRIBUTE_NAME + '=""';
+  },
+
+  setAttributeForRoot: function(node) {
+    node.setAttribute(DOMProperty.ROOT_ATTRIBUTE_NAME, '');
   },
 
   /**
@@ -246,5 +269,11 @@ var DOMPropertyOperations = {
   },
 
 };
+
+ReactPerf.measureMethods(DOMPropertyOperations, 'DOMPropertyOperations', {
+  setValueForProperty: 'setValueForProperty',
+  setValueForAttribute: 'setValueForAttribute',
+  deleteValueForProperty: 'deleteValueForProperty',
+});
 
 module.exports = DOMPropertyOperations;

@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
 var ReactDOM;
 
@@ -132,7 +130,7 @@ describe('ReactCompositeComponent-state', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
-    var stateListener = mocks.getMockFunction();
+    var stateListener = jest.genMockFn();
     var instance = ReactDOM.render(
       <TestComponent stateListener={stateListener} />,
       container,

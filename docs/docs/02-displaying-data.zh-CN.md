@@ -21,11 +21,12 @@ next: jsx-in-depth-zh-CN.html
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
 
       // ** 在这里替换成你的代码 **
 
@@ -49,7 +50,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -95,17 +96,17 @@ JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性�
 
 JSX 类似于 HTML，但不是完全一样。参考 [JSX 陷阱](/react/docs/jsx-gotchas-zh-CN.html) 学习关键区别。
 
-最简单开始学习 JSX 的方法就是使用浏览器端的 `JSXTransformer`。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 [react-tools](https://www.npmjs.com/package/react-tools) 包来预编译你的代码。
-
+[Babel 公开了一些使用 JSX 的方式],从命令行工具到 Ruby on Rails 集成。选择一个对你来说最合适的工具。
 
 ## 没有 JSX 的 React
 
-你完全可以选择是否使用 JSX，并不是 React 必须的。你可以通过 `React.createElement` 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，每三个是子节点。
+JSX完全是可选的；你无需在 React 中必须使用 JSX。你可以通过 `React.createElement` 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，每三个是子节点。
 
 ```javascript
-var child = React.createElement('li', null, 'Text Content');
-var root = React.createElement('ul', { className: 'my-list' }, child);
-React.render(root, document.getElementById('example'));
+var child1 = React.createElement('li', null, 'First Text Content');
+var child2 = React.createElement('li', null, 'Second Text Content');
+var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 方便起见，你可以创建基于自定义组件的速记工厂方法。
@@ -114,13 +115,14 @@ React.render(root, document.getElementById('example'));
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 React 已经为 HTML 标签提供内置工厂方法。
 
 ```javascript
 var root = React.DOM.ul({ className: 'my-list' },
-  React.DOM.li(null, 'Text Content')
-);
+             React.DOM.li(null, 'Text Content')
+           );
 ```
+

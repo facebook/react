@@ -19,7 +19,7 @@ describe('CSSPropertyOperations', function() {
   var CSSPropertyOperations;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     CSSPropertyOperations = require('CSSPropertyOperations');
   });
 

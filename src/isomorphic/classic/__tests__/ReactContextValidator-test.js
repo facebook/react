@@ -25,7 +25,7 @@ var reactComponentExpect;
 
 describe('ReactContextValidator', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
     ReactDOM = require('ReactDOM');

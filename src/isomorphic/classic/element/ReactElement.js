@@ -14,10 +14,11 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
+var canDefineProperty = require('canDefineProperty');
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-var TYPE_SYMBOL =
+var REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
 
@@ -27,16 +28,6 @@ var RESERVED_PROPS = {
   __self: true,
   __source: true,
 };
-
-var canDefineProperty = false;
-if (__DEV__) {
-  try {
-    Object.defineProperty({}, 'x', {});
-    canDefineProperty = true;
-  } catch (x) {
-    // IE will fail on defineProperty
-  }
-}
 
 /**
  * Base constructor for all React elements. This is only used to make this
@@ -59,7 +50,7 @@ if (__DEV__) {
 var ReactElement = function(type, key, ref, self, source, owner, props) {
   var element = {
     // This tag allow us to uniquely identify this as a React Element
-    $$typeof: TYPE_SYMBOL,
+    $$typeof: REACT_ELEMENT_TYPE,
 
     // Built-in properties that belong on the element
     type: type,
@@ -109,8 +100,10 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
       element._self = self;
       element._source = source;
     }
-    Object.freeze(element.props);
-    Object.freeze(element);
+    if (Object.freeze) {
+      Object.freeze(element.props);
+      Object.freeze(element);
+    }
   }
 
   return element;
@@ -289,7 +282,7 @@ ReactElement.isValidElement = function(object) {
   return (
     typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === TYPE_SYMBOL
+    object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
 
