@@ -12,35 +12,20 @@
 'use strict';
 
 var PooledClass = require('PooledClass');
-var CallbackQueue = require('CallbackQueue');
 var Transaction = require('Transaction');
 
 var assign = require('Object.assign');
-var emptyFunction = require('emptyFunction');
-
-/**
- * Provides a `CallbackQueue` queue for collecting `onDOMReady` callbacks
- * during the performing of the transaction.
- */
-var ON_DOM_READY_QUEUEING = {
-  /**
-   * Initializes the internal `onDOMReady` queue.
-   */
-  initialize: function() {
-    this.reactMountReady.reset();
-  },
-
-  close: emptyFunction,
-};
 
 /**
  * Executed within the scope of the `Transaction` instance. Consider these as
  * being member methods, but with an implied ordering while being isolated from
  * each other.
  */
-var TRANSACTION_WRAPPERS = [
-  ON_DOM_READY_QUEUEING,
-];
+var TRANSACTION_WRAPPERS = [];
+
+var noopCallbackQueue = {
+  enqueue: function() {},
+};
 
 /**
  * @class ReactServerRenderingTransaction
@@ -49,7 +34,6 @@ var TRANSACTION_WRAPPERS = [
 function ReactServerRenderingTransaction(renderToStaticMarkup) {
   this.reinitializeTransaction();
   this.renderToStaticMarkup = renderToStaticMarkup;
-  this.reactMountReady = CallbackQueue.getPooled(null);
   this.useCreateElement = false;
 }
 
@@ -68,7 +52,7 @@ var Mixin = {
    * @return {object} The queue to collect `onDOMReady` callbacks with.
    */
   getReactMountReady: function() {
-    return this.reactMountReady;
+    return noopCallbackQueue;
   },
 
   /**
@@ -76,8 +60,6 @@ var Mixin = {
    * instance to be reused.
    */
   destructor: function() {
-    CallbackQueue.release(this.reactMountReady);
-    this.reactMountReady = null;
   },
 };
 
