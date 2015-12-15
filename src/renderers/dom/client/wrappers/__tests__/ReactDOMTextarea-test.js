@@ -27,29 +27,37 @@ describe('ReactDOMTextarea', function() {
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
 
-    renderTextarea = function(component, container) {
+    renderTextarea = function(component, container, skipReplace) {
       if (!container) {
         container = document.createElement('div');
       }
       var stub = ReactDOM.render(component, container);
       var node = ReactDOM.findDOMNode(stub);
-      // Fixing jsdom's quirky behavior -- in reality, the parser should strip
-      // off the leading newline but we need to do it by hand here.
-      node.value = node.innerHTML.replace(/^\n/, '');
+
+      if (!skipReplace) {
+        // Fixing jsdom's quirky behavior -- in reality, the parser should strip
+        // off the leading newline but we need to do it by hand here.
+        node.value = node.innerHTML.replace(/^\n/, '');
+      }
       return stub;
     };
   });
 
   it('should allow setting `defaultValue`', function() {
     var container = document.createElement('div');
-    var stub = renderTextarea(<textarea defaultValue="giraffe" />, container);
+    var stub = renderTextarea(<textarea defaultValue="giraffe" />, container, true);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
-    // Changing `defaultValue` should do nothing.
-    stub = renderTextarea(<textarea defaultValue="gorilla" />, container);
-    expect(node.value).toEqual('giraffe');
+    // Changing `defaultValue` should change if no value set.
+    stub = renderTextarea(<textarea defaultValue="gorilla" />, container, true);
+    expect(node.value).toEqual('gorilla');
+
+    node.value = 'cat';
+
+    stub = renderTextarea(<textarea defaultValue="monkey" />, container, true);
+    expect(node.value).toEqual('cat');
   });
 
   it('should display `defaultValue` of number 0', function() {
@@ -163,6 +171,57 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('foo');
   });
 
+  it('should take updates to `defaultValue` for uncontrolled textarea', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<textarea type="text" defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<textarea type="text" defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
+  });
+
+  it('should take updates to children in lieu of `defaultValue` for uncontrolled textarea', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<textarea type="text" defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    spyOn(console, 'error'); // deprecation warning for `children` content
+
+    ReactDOM.render(<textarea type="text">1</textarea>, container);
+
+    expect(node.value).toBe('1');
+  });
+
+  it('should not incur unnecessary DOM mutations', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<textarea value="a" onChange={emptyFunction} />, container);
+
+    var node = container.firstChild;
+    var nodeValue = 'a'; // node.value always returns undefined
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<textarea value="a" onChange={emptyFunction} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+
+    ReactDOM.render(<textarea value="b" onChange={emptyFunction} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(1);
+  });
+
   it('should properly control a value of number `0`', function() {
     var stub = <textarea value={0} onChange={emptyFunction} />;
     stub = renderTextarea(stub);
@@ -178,15 +237,45 @@ describe('ReactDOMTextarea', function() {
 
     var container = document.createElement('div');
     var stub = <textarea>giraffe</textarea>;
-    stub = renderTextarea(stub, container);
+    stub = renderTextarea(stub, container, true);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(node.value).toBe('giraffe');
 
-    // Changing children should do nothing, it functions like `defaultValue`.
+    // Changing children should cause value to change (new behavior of `defaultValue`)
     stub = ReactDOM.render(<textarea>gorilla</textarea>, container);
-    expect(node.value).toEqual('giraffe');
+    expect(node.value).toEqual('gorilla');
+  });
+
+  it('should not keep value when switching to uncontrolled element if not changed', function() {
+    var container = document.createElement('div');
+
+    var stub = renderTextarea(<textarea value="kitten" onChange={emptyFunction} />, container, true);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.value).toBe('kitten');
+
+    ReactDOM.render(<textarea defaultValue="gorilla"></textarea>, container);
+
+    expect(node.value).toEqual('gorilla');
+  });
+
+  it('should keep value when switching to uncontrolled element if changed', function() {
+    var container = document.createElement('div');
+
+    var stub = renderTextarea(<textarea value="kitten" onChange={emptyFunction} />, container, true);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.value).toBe('kitten');
+
+    ReactDOM.render(<textarea value="puppies" onChange={emptyFunction}></textarea>, container);
+
+    expect(node.value).toBe('puppies');
+
+    ReactDOM.render(<textarea defaultValue="gorilla"></textarea>, container);
+
+    expect(node.value).toEqual('puppies');
   });
 
   it('should allow numbers as children', function() {
@@ -297,4 +386,5 @@ describe('ReactDOMTextarea', function() {
     );
     expect(console.error.argsForCall.length).toBe(1);
   });
+
 });

@@ -575,25 +575,25 @@ describe('ReactDOMComponent', function() {
 
     it('should not incur unnecessary DOM mutations', function() {
       var container = document.createElement('div');
-      ReactDOM.render(<div value="" />, container);
+      ReactDOM.render(<div id="" />, container);
 
       var node = container.firstChild;
-      var nodeValue = ''; // node.value always returns undefined
-      var nodeValueSetter = jest.genMockFn();
-      Object.defineProperty(node, 'value', {
+      var nodeId = ''; // node.value always returns undefined
+      var nodeIdSetter = jest.genMockFn();
+      Object.defineProperty(node, 'id', {
         get: function() {
-          return nodeValue;
+          return nodeId;
         },
-        set: nodeValueSetter.mockImplementation(function(newValue) {
-          nodeValue = newValue;
+        set: nodeIdSetter.mockImplementation(function(newValue) {
+          nodeId = newValue;
         }),
       });
 
-      ReactDOM.render(<div value="" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(0);
+      ReactDOM.render(<div id="" />, container);
+      expect(nodeIdSetter.mock.calls.length).toBe(0);
 
       ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
+      expect(nodeIdSetter.mock.calls.length).toBe(1);
     });
 
     it('should ignore attribute whitelist for elements with the "is: attribute', function() {

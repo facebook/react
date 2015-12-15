@@ -36,6 +36,7 @@ describe('ReactDOMInput', function() {
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
+    expect(node.getAttribute('value')).toBe('0');
     expect(node.value).toBe('0');
   });
 
@@ -53,6 +54,68 @@ describe('ReactDOMInput', function() {
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('false');
+  });
+
+  it('should update `defaultValue` for uncontrolled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
+  });
+
+  it('should take `defaultValue` for a controlled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" value={null} defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" value={null} defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
+
+    ReactDOM.render(<input type="text" value={3} defaultValue="2" />, container);
+
+    expect(node.value).toBe('3');
+
+    ReactDOM.render(<input type="text" value={5} defaultValue="4" />, container);
+
+    expect(node.value).toBe('5');
+    expect(node.getAttribute('value')).toBe('5');
+    expect(node.defaultValue).toBe('5');
+  });
+
+  it('should update `value` when changing to controlled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" value="1" defaultValue="0" />, container);
+
+    expect(node.value).toBe('1');
+  });
+
+  it('should take `defaultValue` when changing to uncontrolled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" value="0" readOnly="true" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
   });
 
   it('should display "foobar" for `defaultValue` of `objToString`', function() {
@@ -125,6 +188,29 @@ describe('ReactDOMInput', function() {
       container
     );
     expect(node.value).toEqual('foobar');
+  });
+
+  it('should not incur unnecessary DOM mutations', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="a" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = 'a'; // node.value always returns undefined
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value="a" />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+
+    ReactDOM.render(<input value="b"/>, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 
   it('should properly control a value of number `0`', function() {
