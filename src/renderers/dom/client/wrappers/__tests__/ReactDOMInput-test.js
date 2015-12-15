@@ -36,6 +36,7 @@ describe('ReactDOMInput', function() {
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
+    expect(node.getAttribute('value')).toBe('0');
     expect(node.value).toBe('0');
   });
 
@@ -53,6 +54,68 @@ describe('ReactDOMInput', function() {
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('false');
+  });
+
+  it('should update `defaultValue` for uncontrolled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
+  });
+
+  it('should take `defaultValue` for a controlled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" value={null} defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" value={null} defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
+
+    ReactDOM.render(<input type="text" value={3} defaultValue="2" />, container);
+
+    expect(node.value).toBe('3');
+
+    ReactDOM.render(<input type="text" value={5} defaultValue="4" />, container);
+
+    expect(node.value).toBe('5');
+    expect(node.getAttribute('value')).toBe('4');
+    expect(node.defaultValue).toBe('4');
+  });
+
+  it('should update `value` when changing to controlled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" defaultValue="0" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" value="1" defaultValue="0" />, container);
+
+    expect(node.value).toBe('1');
+  });
+
+  it('should clear `value` when changing to uncontrolled input', function() {
+    var container = document.createElement('div');
+
+    var el = ReactDOM.render(<input type="text" value="0" readOnly="true" />, container);
+    var node = ReactDOM.findDOMNode(el);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" defaultValue="1" />, container);
+
+    expect(node.value).toBe('');
   });
 
   it('should display "foobar" for `defaultValue` of `objToString`', function() {

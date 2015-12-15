@@ -69,11 +69,17 @@ var ReactDOMInput = {
 
     var nativeProps = assign({}, props, {
       defaultChecked: undefined,
-      defaultValue: undefined,
-      value: value != null ? value : inst._wrapperState.initialValue,
       checked: checked != null ? checked : inst._wrapperState.initialChecked,
       onChange: inst._wrapperState.onChange,
     });
+
+    if (value !== undefined) {
+      // for controlled inputs, use defaultValue as an initial value
+      nativeProps.value = value != null ? value : props.defaultValue;
+    } else {
+      // for uncontrolled inputs, pass defaultValue property to DOM element
+      nativeProps.defaultValue = props.defaultValue;
+    }
 
     return nativeProps;
   },
@@ -103,10 +109,8 @@ var ReactDOMInput = {
       warnIfValueIsNull(props);
     }
 
-    var defaultValue = props.defaultValue;
     inst._wrapperState = {
       initialChecked: props.defaultChecked || false,
-      initialValue: defaultValue != null ? defaultValue : null,
       listeners: null,
       onChange: _handleChange.bind(inst),
     };
