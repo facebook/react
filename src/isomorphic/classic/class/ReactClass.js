@@ -389,7 +389,7 @@ function validateTypeDef(Constructor, typeDef, location) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       // use a warning instead of an invariant so components
-      // don't show up in prod but not in __DEV__
+      // don't show up in prod but only in __DEV__
       warning(
         typeof typeDef[propName] === 'function',
         '%s: %s type `%s` is invalid; it must be a function, usually from ' +
