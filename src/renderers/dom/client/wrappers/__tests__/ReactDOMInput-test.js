@@ -47,6 +47,7 @@ describe('ReactDOMInput', function() {
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
+    expect(node.getAttribute('value')).toBe('0');
     expect(node.value).toBe('0');
   });
 
@@ -64,6 +65,30 @@ describe('ReactDOMInput', function() {
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('false');
+  });
+
+  it('should update `defaultValue` for uncontrolled input', function() {
+    var container = document.createElement('div');
+
+    var node = ReactDOM.render(<input type="text" defaultValue="0" />, container);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
+  });
+
+  it('should take `defaultValue` when changing to uncontrolled input', function() {
+    var container = document.createElement('div');
+
+    var node = ReactDOM.render(<input type="text" value="0" readOnly="true" />, container);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<input type="text" defaultValue="1" />, container);
+
+    expect(node.value).toBe('1');
   });
 
   it('should display "foobar" for `defaultValue` of `objToString`', function() {
@@ -91,8 +116,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `true`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    var node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('yolo');
 
@@ -106,8 +130,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `false`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    var node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('yolo');
 
@@ -121,8 +144,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `objToString`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="foo" onChange={emptyFunction} />;
-    stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    var node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('foo');
 
@@ -136,6 +158,29 @@ describe('ReactDOMInput', function() {
       container
     );
     expect(node.value).toEqual('foobar');
+  });
+
+  it('should not incur unnecessary DOM mutations', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="a" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = 'a'; // node.value always returns undefined
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value="a" />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+
+    ReactDOM.render(<input value="b"/>, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 
   it('should properly control a value of number `0`', function() {

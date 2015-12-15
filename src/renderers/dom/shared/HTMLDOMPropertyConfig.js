@@ -15,7 +15,6 @@ var DOMProperty = require('DOMProperty');
 
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
-var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
 var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
 var HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
@@ -62,6 +61,7 @@ var HTMLDOMPropertyConfig = {
     data: 0, // For `<object />` acts as `src`.
     dateTime: 0,
     default: HAS_BOOLEAN_VALUE,
+    defaultValue: MUST_USE_PROPERTY,
     defer: HAS_BOOLEAN_VALUE,
     dir: 0,
     disabled: HAS_BOOLEAN_VALUE,
@@ -153,7 +153,7 @@ var HTMLDOMPropertyConfig = {
     // Setting .type throws on non-<input> tags
     type: 0,
     useMap: 0,
-    value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
+    value: 0,
     width: 0,
     wmode: 0,
     wrap: 0,

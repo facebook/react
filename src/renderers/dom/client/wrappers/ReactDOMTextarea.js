@@ -12,7 +12,6 @@
 'use strict';
 
 var DisabledInputUtils = require('DisabledInputUtils');
-var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
@@ -66,12 +65,46 @@ var ReactDOMTextarea = {
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
     );
 
-    // Always set children to the same thing. In IE9, the selection range will
-    // get reset if `textContent` is mutated.
-    var hostProps = Object.assign({}, DisabledInputUtils.getHostProps(inst, props), {
-      defaultValue: undefined,
+    var value = LinkedValueUtils.getValue(props);
+
+    // only bother fetching default value if we're going to use it
+    if (value == null) {
+      var defaultValue = props.defaultValue;
+      // TODO (yungsters): Remove support for children content in <textarea>.
+      var children = props.children;
+      if (children != null) {
+        if (__DEV__) {
+          warning(
+            false,
+            'Use the `defaultValue` or `value` props instead of setting ' +
+            'children on <textarea>.'
+          );
+        }
+        invariant(
+          defaultValue == null,
+          'If you supply `defaultValue` on a <textarea>, do not pass children.'
+        );
+        if (Array.isArray(children)) {
+          invariant(
+            children.length <= 1,
+            '<textarea> can only have at most one child.'
+          );
+          children = children[0];
+        }
+
+        defaultValue = '' + children;
+      }
+      if (defaultValue == null) {
+        defaultValue = '';
+      }
+    }
+
+    // The value can be a boolean or object so that's why it's
+    // forced to be a string.
+    var nativeProps = Object.assign({}, DisabledInputUtils.getHostProps(inst, props), {
+      defaultValue: '' + (value != null ? value : defaultValue),
       value: undefined,
-      children: inst._wrapperState.initialValue,
+      children: undefined,
       onChange: inst._wrapperState.onChange,
     });
 
@@ -110,41 +143,7 @@ var ReactDOMTextarea = {
       warnIfValueIsNull(props);
     }
 
-    var defaultValue = props.defaultValue;
-    // TODO (yungsters): Remove support for children content in <textarea>.
-    var children = props.children;
-    if (children != null) {
-      if (__DEV__) {
-        warning(
-          false,
-          'Use the `defaultValue` or `value` props instead of setting ' +
-          'children on <textarea>.'
-        );
-      }
-      invariant(
-        defaultValue == null,
-        'If you supply `defaultValue` on a <textarea>, do not pass children.'
-      );
-      if (Array.isArray(children)) {
-        invariant(
-          children.length <= 1,
-          '<textarea> can only have at most one child.'
-        );
-        children = children[0];
-      }
-
-      defaultValue = '' + children;
-    }
-    if (defaultValue == null) {
-      defaultValue = '';
-    }
-    var value = LinkedValueUtils.getValue(props);
     inst._wrapperState = {
-      // We save the initial value so that `ReactDOMComponent` doesn't update
-      // `textContent` (unnecessary since we update value).
-      // The initial value can be a boolean or object so that's why it's
-      // forced to be a string.
-      initialValue: '' + (value != null ? value : defaultValue),
       listeners: null,
       onChange: _handleChange.bind(inst),
     };
@@ -159,13 +158,16 @@ var ReactDOMTextarea = {
 
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
+      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      DOMPropertyOperations.setValueForProperty(
-        ReactDOMComponentTree.getNodeFromInstance(inst),
-        'value',
-        '' + value
-      );
+      var newValue = '' + value;
+
+      // To avoid side effects (such as losing text selection), only set value if changed
+      if (newValue !== node.value) {
+        node.value = newValue;
+      }
     }
   },
 };
