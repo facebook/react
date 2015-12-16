@@ -14,6 +14,7 @@ The React add-ons are a collection of useful utility modules for building React 
 - [`createFragment`](create-fragment.html), to create a set of externally-keyed children.
 - [`update`](update.html), a helper function that makes dealing with immutable data in JavaScript easier.
 - [`PureRenderMixin`](pure-render-mixin.html), a performance booster under certain situations.
+- [`shallowCompare`](shallow-compare.html), a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.
 
 The add-ons below are in the development (unminified) version of React only:
 

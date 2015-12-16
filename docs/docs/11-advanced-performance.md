@@ -2,7 +2,7 @@
 id: advanced-performance
 title: Advanced Performance
 permalink: advanced-performance.html
-prev: perf.html
+prev: shallow-compare.html
 next: context.html
 ---
 
