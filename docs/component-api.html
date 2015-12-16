@@ -478,7 +478,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
+<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It will likely be removed entirely in a future version of React, so you might as well <a href="/react/blog/2015/12/16/ismounted-antipattern.html">start migrating away from isMounted() now</a>.</p>
 </blockquote>
 <h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
@@ -492,11 +492,11 @@
 <blockquote>
 <p>Note:</p>
 
+<p>This method is deprecated and will be removed soon. This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. Instead of calling <code>setProps</code>, try invoking ReactDOM.render() again with the new props. For additional notes, see our <a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
+
 <p>When possible, the declarative approach of calling <code>ReactDOM.render()</code> again on the same node is preferred instead. It tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
 
 <p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>ReactDOM.render()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
-
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
 </blockquote>
 <h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
@@ -508,7 +508,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
+<p>This method is deprecated and will be removed soon. This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. Instead of calling <code>replaceProps</code>, try invoking ReactDOM.render() again with the new props. For additional notes, see our <a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
 </blockquote>
 
 

@@ -425,9 +425,13 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>To install React DOM and build your bundle after installing browserify:</p>
+<p>To install React DOM and build your bundle with browserify:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babelify babel-preset-react
 <span class="nv">$ </span>browserify -t <span class="o">[</span> babelify --presets <span class="o">[</span> react <span class="o">]</span> <span class="o">]</span> main.js -o bundle.js
+</code></pre></div>
+<p>To install React DOM and build your bundle with webpack:  </p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babel-preset-react
+<span class="nv">$ </span>webpack
 </code></pre></div>
 <blockquote>
 <p>Note:</p>

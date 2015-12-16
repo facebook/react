@@ -431,7 +431,7 @@
 
 <p>For sake of simplicity, the server we will run uses a <code>JSON</code> file as a database. You would not run this in production but it makes it easy to simulate what you might do when consuming an API. Once you start the server, it will support our API endpoint and it will also serve the static pages we need.</p>
 <h3><a class="anchor" name="getting-started"></a>Getting started <a class="hash-link" href="#getting-started">#</a></h3>
-<p>For this tutorial, we&#39;re going to make it as easy as possible. Included in the server package discussed above is an HTML file which we&#39;ll work in. Open up <code>public/index.html</code> in your favorite editor. It should look something like this (with perhaps some minor differences, we&#39;ll add an additional <code>&lt;script&gt;</code> tag later):</p>
+<p>For this tutorial, we&#39;re going to make it as easy as possible. Included in the server package discussed above is an HTML file which we&#39;ll work in. Open up <code>public/index.html</code> in your favorite editor. It should look something like this:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
@@ -442,6 +442,7 @@
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
@@ -512,6 +513,8 @@
 <p><code>ReactDOM.render()</code> instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.</p>
 
 <p>The <code>ReactDOM</code> module exposes DOM-specific methods, while <code>React</code> has the core tools shared by React on different platforms (e.g., <a href="http://facebook.github.io/react-native/">React Native</a>).</p>
+
+<p>It is important that <code>ReactDOM.render</code> remain at the bottom of the script for this tutorial. <code>ReactDOM.render</code> should only be called after the composite components have been defined.</p>
 <h2><a class="anchor" name="composing-components"></a>Composing components <a class="hash-link" href="#composing-components">#</a></h2>
 <p>Let&#39;s build skeletons for <code>CommentList</code> and <code>CommentForm</code> which will, again, be simple <code>&lt;div&gt;</code>s. Add these two components to your file, keeping the existing <code>CommentBox</code> declaration and <code>ReactDOM.render</code> call:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
@@ -585,19 +588,7 @@
 <h3><a class="anchor" name="adding-markdown"></a>Adding Markdown <a class="hash-link" href="#adding-markdown">#</a></h3>
 <p>Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.</p>
 
-<p>First, add the third-party library <strong>marked</strong> to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
-<span class="nt">&lt;head&gt;</span>
-  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="nt">/&gt;</span>
-  <span class="nt">&lt;title&gt;</span>React Tutorial<span class="nt">&lt;/title&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.3/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class="nt">&lt;/head&gt;</span>
-</code></pre></div>
-<p>Next, let&#39;s convert the comment text to Markdown and output it:</p>
+<p>In this tutorial we use a third-party library <strong>marked</strong> which takes Markdown text and converts it to raw HTML. We already included this library with the original markup for the page, so we can just start using it. Let&#39;s convert the comment text to Markdown and output it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -619,11 +610,11 @@
 <p>That&#39;s React protecting you from an <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attack</a>. There&#39;s a way to get around it but the framework warns you not to use it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">rawMarkup</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="p">{</span><span class="nx">sanitize</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
-</span>    <span class="k">return</span> <span class="p">{</span> <span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span> <span class="p">};</span>
-  <span class="p">},</span>
-
+<span class="hll">  <span class="nx">rawMarkup</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="p">{</span><span class="nx">sanitize</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">{</span> <span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span> <span class="p">};</span>
+</span><span class="hll">  <span class="p">},</span>
+</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>

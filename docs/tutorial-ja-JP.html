@@ -606,7 +606,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>このコードでは Showdown のライブラリを呼び出すことしかしていません。<code>this.props.children</code> は React によってラップされたテキストですが、これを Showdown が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に <code>toString()</code> を呼び出しているのです。</p>
+<p>このコードでは marked のライブラリを呼び出すことしかしていません。<code>this.props.children</code> は React によってラップされたテキストですが、これを marked が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に <code>toString()</code> を呼び出しているのです。</p>
 
 <p>しかし問題があります！ブラウザがレンダリングしたコメントは次のように表示されているはずです -- &quot;<code>&lt;p&gt;</code>This is <code>&lt;em&gt;</code>another<code>&lt;/em&gt;</code> comment<code>&lt;/p&gt;</code>&quot; このようなタグは実際に HTML としてレンダリングさせたいですね。</p>
 
@@ -626,9 +626,9 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは Showdown のためにこのバックドアを利用しています。</p>
+<p>これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは marked のためにこのバックドアを利用しています。</p>
 
-<p><strong>注意:</strong> この機能を使うことで、Showdown は安全なものと信頼することになります。</p>
+<p><strong>注意:</strong> この機能を使うことで、marked は安全なものと信頼することになります。</p>
 <h3><a class="anchor" name=""></a>データモデルとの連携 <a class="hash-link" href="#">#</a></h3>
 <p>これまではソースコードにコメントを直に書き込んでいました。その代わりに、これからは JSON の blob データをコメントリストにレンダリングしてみましょう。サーバからデータを取得するのが最後の目標ですが、とりあえず今はソースコードの中にデータを書いておくことにします。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>
