@@ -23,6 +23,7 @@ var paths = {
       'src/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
+      '!src/shared/vendor/**/*.js',
     ],
     lib: 'build/modules',
   },
