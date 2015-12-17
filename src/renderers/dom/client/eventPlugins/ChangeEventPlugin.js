@@ -26,6 +26,8 @@ var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
+var LAST_VALUE_KEY = '__reactLastInputValue';
+
 var eventTypes = {
   change: {
     phasedRegistrationNames: {
@@ -44,6 +46,35 @@ var eventTypes = {
     ],
   },
 };
+
+function getInstIfValueChanged(targetInst, target) {
+  var value = getInputValue(target);
+  var lastValue = target[LAST_VALUE_KEY];
+
+  if (!target.hasOwnProperty(LAST_VALUE_KEY) || value !== lastValue) {
+    target[LAST_VALUE_KEY] = value;
+    return targetInst;
+  }
+}
+
+function getInputValue(elem) {
+  var value;
+
+  if (elem) {
+    var type = elem.type;
+    var nodeName = elem.nodeName;
+
+    if (
+      (nodeName && nodeName.toLowerCase() === 'input') &&
+      (type === 'checkbox' || type === 'radio')
+    ) {
+      value = elem.checked;
+    } else {
+      value = elem.value;
+    }
+  }
+  return value;
+}
 
 /**
  * For IE shims
@@ -72,10 +103,10 @@ if (ExecutionEnvironment.canUseDOM) {
   );
 }
 
-function manualDispatchChangeEvent(nativeEvent) {
+function manualDispatchChangeEvent(nativeEvent, targetInst) {
   var event = SyntheticEvent.getPooled(
     eventTypes.change,
-    activeElementInst,
+    targetInst,
     nativeEvent,
     getEventTarget(nativeEvent)
   );
@@ -146,15 +177,13 @@ var isInputEventSupported = false;
 if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events.
-  // IE10+ fire input events to often, such when a placeholder
-  // changes or when an input with a placeholder is focused.
   isInputEventSupported = isEventSupported('input') && (
-    !('documentMode' in document) || document.documentMode > 11
+    !('documentMode' in document) || document.documentMode > 9
   );
 }
 
 /**
- * (For IE <=11) Replacement getter/setter for the `value` property that gets
+ * (For IE <=9) Replacement getter/setter for the `value` property that gets
  * set on the active element.
  */
 var newValueProp = {
@@ -168,12 +197,14 @@ var newValueProp = {
   },
 };
 
-/**
- * (For IE <=11) Starts tracking propertychange events on the passed-in element
- * and override the value property so that we can distinguish user events from
- * value changes in JS.
- */
-function startWatchingForValueChange(target, targetInst) {
+function clearActiveElement() {
+  activeElement = null;
+  activeElementInst = null;
+  activeElementValue = null;
+  activeElementValueProp = null;
+}
+
+function updateActiveElement(target, targetInst) {
   activeElement = target;
   activeElementInst = targetInst;
   activeElementValue = target.value;
@@ -181,19 +212,24 @@ function startWatchingForValueChange(target, targetInst) {
     target.constructor.prototype,
     'value'
   );
+}
+
+/**
+ * (For IE <=9) Starts tracking propertychange events on the passed-in element
+ * and override the value property so that we can distinguish user events from
+ * value changes in JS.
+ */
+function startWatchingForValueChange(target, targetInst) {
+  updateActiveElement(target, targetInst);
 
   // Not guarded in a canDefineProperty check: IE8 supports defineProperty only
   // on DOM elements
   Object.defineProperty(activeElement, 'value', newValueProp);
-  if (activeElement.attachEvent) {
-    activeElement.attachEvent('onpropertychange', handlePropertyChange);
-  } else {
-    activeElement.addEventListener('propertychange', handlePropertyChange, false);
-  }
+  activeElement.attachEvent('onpropertychange', handlePropertyChange);
 }
 
 /**
- * (For IE <=11) Removes the event listeners from the currently-tracked element,
+ * (For IE <=9) Removes the event listeners from the currently-tracked element,
  * if any exists.
  */
 function stopWatchingForValueChange() {
@@ -203,21 +239,12 @@ function stopWatchingForValueChange() {
 
   // delete restores the original property definition
   delete activeElement.value;
-
-  if (activeElement.detachEvent) {
-    activeElement.detachEvent('onpropertychange', handlePropertyChange);
-  } else {
-    activeElement.removeEventListener('propertychange', handlePropertyChange, false);
-  }
-
-  activeElement = null;
-  activeElementInst = null;
-  activeElementValue = null;
-  activeElementValueProp = null;
+  activeElement.detachEvent('onpropertychange', handlePropertyChange);
+  clearActiveElement();
 }
 
 /**
- * (For IE <=11) Handles a propertychange event, sending a `change` event if
+ * (For IE <=9) Handles a propertychange event, sending a `change` event if
  * the value of the active element has changed.
  */
 function handlePropertyChange(nativeEvent) {
@@ -233,21 +260,7 @@ function handlePropertyChange(nativeEvent) {
   manualDispatchChangeEvent(nativeEvent);
 }
 
-/**
- * If a `change` event should be fired, returns the target's ID.
- */
-function getTargetInstForInputEvent(
-  topLevelType,
-  targetInst
-) {
-  if (topLevelType === topLevelTypes.topInput) {
-    // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
-    // what we want so fall through here and trigger an abstract event
-    return targetInst;
-  }
-}
-
-function handleEventsForInputEventIE(
+function handleEventsForInputEventPolyfill(
   topLevelType,
   target,
   targetInst
@@ -256,7 +269,7 @@ function handleEventsForInputEventIE(
     // In IE8, we can capture almost all .value changes by adding a
     // propertychange handler and looking for events with propertyName
     // equal to 'value'
-    // In IE9-11, propertychange fires for most input events but is buggy and
+    // In IE9, propertychange fires for most input events but is buggy and
     // doesn't fire when text is deleted, but conveniently, selectionchange
     // appears to fire in all of the remaining cases so we catch those and
     // forward the event if the value has changed
@@ -274,7 +287,7 @@ function handleEventsForInputEventIE(
 }
 
 // For IE8 and IE9.
-function getTargetInstForInputEventIE(
+function getTargetInstForInputEventPolyfill(
   topLevelType,
   targetInst
 ) {
@@ -314,10 +327,24 @@ function shouldUseClickEvent(elem) {
 
 function getTargetInstForClickEvent(
   topLevelType,
-  targetInst
+  targetInst,
+  target
 ) {
   if (topLevelType === topLevelTypes.topClick) {
-    return targetInst;
+    return getInstIfValueChanged(targetInst, target);
+  }
+}
+
+function getTargetInstForInputOrChangeEvent(
+  topLevelType,
+  targetInst,
+  target
+) {
+  if (
+    topLevelType === topLevelTypes.topInput ||
+    topLevelType === topLevelTypes.topChange
+  ) {
+    return getInstIfValueChanged(targetInst, target);
   }
 }
 
@@ -334,6 +361,8 @@ function getTargetInstForClickEvent(
 var ChangeEventPlugin = {
 
   eventTypes: eventTypes,
+
+  _isInputEventSupported: isInputEventSupported,
 
   extractEvents: function(
     topLevelType,
@@ -353,17 +382,17 @@ var ChangeEventPlugin = {
       }
     } else if (isTextInputElement(targetNode)) {
       if (isInputEventSupported) {
-        getTargetInstFunc = getTargetInstForInputEvent;
+        getTargetInstFunc = getTargetInstForInputOrChangeEvent;
       } else {
-        getTargetInstFunc = getTargetInstForInputEventIE;
-        handleEventFunc = handleEventsForInputEventIE;
+        getTargetInstFunc = getTargetInstForInputEventPolyfill;
+        handleEventFunc = handleEventsForInputEventPolyfill;
       }
     } else if (shouldUseClickEvent(targetNode)) {
       getTargetInstFunc = getTargetInstForClickEvent;
     }
 
     if (getTargetInstFunc) {
-      var inst = getTargetInstFunc(topLevelType, targetInst);
+      var inst = getTargetInstFunc(topLevelType, targetInst, targetNode);
       if (inst) {
         var event = SyntheticEvent.getPooled(
           eventTypes.change,

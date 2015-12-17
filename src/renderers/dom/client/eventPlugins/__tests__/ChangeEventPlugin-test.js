@@ -13,6 +13,7 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
+var ChangeEventPlugin = require('ChangeEventPlugin');
 
 describe('ChangeEventPlugin', function() {
   it('should fire change for checkbox input', function() {
@@ -26,5 +27,92 @@ describe('ChangeEventPlugin', function() {
     var input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
     ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
+  });
+
+  it('should only fire change for checked radio button once', function() {
+    var called = 0;
+
+    function cb(e) {
+      called += 1;
+    }
+
+    var input = ReactTestUtils.renderIntoDocument(<input type="radio" onChange={cb}/>);
+    ReactTestUtils.SimulateNative.click(input);
+    ReactTestUtils.SimulateNative.click(input);
+    expect(called).toBe(1);
+  });
+
+  it('should deduplicate input value change events', function() {
+    var input;
+    var called = 0;
+
+    function cb(e) {
+      called += 1;
+      expect(e.type).toBe('change');
+    }
+
+    [
+      <input type="text" onChange={cb}/>,
+      <input type="number" onChange={cb}/>,
+      <input type="range" onChange={cb}/>,
+    ].forEach(function(element) {
+      called = 0;
+      input = ReactTestUtils.renderIntoDocument(element);
+
+      ReactTestUtils.SimulateNative.change(input);
+      ReactTestUtils.SimulateNative.change(input);
+      expect(called).toBe(1);
+
+      called = 0;
+      input = ReactTestUtils.renderIntoDocument(element);
+      ReactTestUtils.SimulateNative.input(input);
+      ReactTestUtils.SimulateNative.input(input);
+      expect(called).toBe(1);
+
+      called = 0;
+      input = ReactTestUtils.renderIntoDocument(element);
+      ReactTestUtils.SimulateNative.input(input);
+      ReactTestUtils.SimulateNative.change(input);
+      expect(called).toBe(1);
+    });
+  });
+
+  it('should listen for both change and input events when supported', function() {
+    var called = 0;
+
+    function cb(e) {
+      called += 1;
+      expect(e.type).toBe('change');
+    }
+
+    if (!ChangeEventPlugin._isInputEventSupported) {
+      return;
+    }
+
+    var input = ReactTestUtils.renderIntoDocument(<input type="range" onChange={cb}/>);
+
+    ReactTestUtils.SimulateNative.input(input);
+    input.value = 'foo';
+    ReactTestUtils.SimulateNative.change(input);
+
+    expect(called).toBe(2);
+  });
+
+  it('should only fire events when the value changes for range inputs', function() {
+    var called = 0;
+
+    function cb(e) {
+      called += 1;
+      expect(e.type).toBe('change');
+    }
+
+    var input = ReactTestUtils.renderIntoDocument(<input type="range" onChange={cb}/>);
+
+    ReactTestUtils.SimulateNative.input(input);
+    ReactTestUtils.SimulateNative.change(input);
+    input.value = 'foo';
+    ReactTestUtils.SimulateNative.input(input);
+    ReactTestUtils.SimulateNative.change(input);
+    expect(called).toBe(2);
   });
 });
