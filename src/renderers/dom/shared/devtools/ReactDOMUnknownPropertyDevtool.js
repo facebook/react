@@ -26,6 +26,9 @@ if (__DEV__) {
   var warnedProperties = {};
 
   var warnUnknownProperty = function(name) {
+    if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
+      return;
+    }
     if (reactProps.hasOwnProperty(name) && reactProps[name] ||
         warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return;
@@ -69,20 +72,16 @@ if (__DEV__) {
   };
 }
 
-class ReactDOMUnknownPropertyDevtool {
-  handleEvent(eventName, eventData) {
-    switch (eventName) {
-      case 'createMarkupForProperty':
-      case 'setValueForProperty':
-      case 'deleteValueForProperty':
-        var name = eventData.name;
-        if (!DOMProperty.properties.hasOwnProperty(name) &&
-            !DOMProperty.isCustomAttribute(name)) {
-          warnUnknownProperty(name);
-        }
-        break;
-    }
-  }
+var ReactDOMUnknownPropertyDevtool = {
+  onCreateMarkupForProperty(name, value) {
+    warnUnknownProperty(name);
+  },
+  onSetValueForProperty(node, name, value) {
+    warnUnknownProperty(name);
+  },
+  onDeleteValueForProperty(node, name) {
+    warnUnknownProperty(name);
+  },
 }
 
 module.exports = ReactDOMUnknownPropertyDevtool;
