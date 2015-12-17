@@ -41,6 +41,58 @@ $ npm install --save react react-dom babel-preset-react
 $ webpack
 ```
 
+A good starting webpack config for production mode would be:
+
+```javascript
+module.exports = {
+  entry: [
+    './client/index.jsx',
+  ],
+  output: {
+    path: path.join(__dirname, 'dist'),
+    filename: 'bundle.[hash].js',
+  },
+  resolve: {
+    modulesDirectories: ['node_modules', 'client'],
+    extensions: ['.js', '.jsx'],
+  },
+  module: {
+    loaders: [{
+      test: /\.jsx?$/,
+      exclude: /node_modules/,
+      loaders: ['babel'],
+    }],
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': JSON.stringify('production'),
+      },
+    }),
+    new webpack.optimize.UglifyJsPlugin({ comments: false }),
+  ],
+};
+```
+
+This assumes all React code lives under a directory called `client`, the entry
+point is `client/index.jsx` and that no `.jsx` files under `node_modules` needs
+to be compiled with babel. The combined output will be `dist/bundle.somehash.js`.
+
+Additionally, the define plugin sets React to build in production mode so some
+code in React will become:
+```javascript
+if ('production' === 'development') {
+  logAllTheThings();
+}
+```
+Combining this with the Uglify plugin will use [dead code elimination](https://en.wikipedia.org/wiki/Dead_code_elimination) to remove
+these blocks of code.
+
+To run the above use the following command
+```sh
+webpack -p --config webpack.config.js
+```
+
 > Note:
 >
 > If you are using ES2015, you will want to also use the `babel-preset-es2015` package.
