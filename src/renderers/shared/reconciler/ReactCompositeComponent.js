@@ -197,13 +197,12 @@ var ReactCompositeComponentMixin = {
 
       var propsMutated = inst.props !== publicProps;
       var componentName =
-            Component.displayName || Component.name || 'Component';
+        Component.displayName || Component.name || 'Component';
 
       warning(
-        typeof inst.props === 'undefined' ||
-          !propsMutated,
+        typeof inst.props === 'undefined' || !propsMutated,
         '%s(...): When calling super() in `%s`, make sure to pass ' +
-          'up the same props that your component\'s constructor was passed.',
+        'up the same props that your component\'s constructor was passed.',
         componentName, componentName
       );
     }
@@ -328,7 +327,7 @@ var ReactCompositeComponentMixin = {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
       }
       checkpoint = transaction.checkpoint();
-      
+
       this._renderedComponent.unmountComponent();
       transaction.rollback(checkpoint);
 

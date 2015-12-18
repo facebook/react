@@ -1193,7 +1193,7 @@ describe('ReactCompositeComponent', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'Foo(...): When calling super() in `Foo`, make sure to pass ' +
-        'up the same props that your component\'s constructor was passed.'
+      'up the same props that your component\'s constructor was passed.'
     );
 
   });
