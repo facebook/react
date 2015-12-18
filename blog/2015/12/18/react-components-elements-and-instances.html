@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Blog | React</title>
+  <title>React Components, Elements, and Instances | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Blog | React">
+  <meta property="og:title" content="React Components, Elements, and Instances | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/blog/index.html">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2015/12/18/react-components-elements-and-instances.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -67,7 +67,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2015/12/18/react-components-elements-and-instances.html">React Components, Elements, and Instances</a></li>
+        <li><a href="/react/blog/2015/12/18/react-components-elements-and-instances.html" class="active">React Components, Elements, and Instances</a></li>
       
         <li><a href="/react/blog/2015/12/16/ismounted-antipattern.html">isMounted is an Antipattern</a></li>
       
@@ -94,12 +94,10 @@
 
   <div class="inner-content">
     
-      <div class="post-list-item">
-        
 
 <h1>
 
-  <a href="/react/blog/2015/12/18/react-components-elements-and-instances.html">React Components, Elements, and Instances</a>
+  React Components, Elements, and Instances
 
 </h1>
 
@@ -451,304 +449,9 @@
 </div>
 
 
+  <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
 
-      </div>
-    
-      <div class="post-list-item">
-        
 
-<h1>
-
-  <a href="/react/blog/2015/12/16/ismounted-antipattern.html">isMounted is an Antipattern</a>
-
-</h1>
-
-<p class="meta">
-  December 16, 2015
-  by
-  
-    
-      <a href="http://www.jimsproch.com">Jim Sproch</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>As we move closer to officially deprecating isMounted, it&#39;s worth understanding why the function is an antipattern, and how to write code without the isMounted function.</p>
-
-<p>The primary use case for <code>isMounted()</code> is to avoid calling <code>setState()</code> after a component has unmounted, because calling <code>setState()</code> after a component has unmounted will emit a warning. The “setState warning” exists to help you catch bugs, because calling <code>setState()</code> on an unmounted component is an indication that your app/component has somehow failed to clean up properly. Specifically, calling <code>setState()</code> in an unmounted component means that your app is still holding a reference to the component after the component has been unmounted - which often indicates a memory leak!</p>
-
-<p>To avoid the error message, people often add lines like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">isMounted</span><span class="p">())</span> <span class="p">{</span> <span class="c1">// This is bad.</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({...});</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Checking <code>isMounted</code> before calling <code>setState()</code> does eliminate the warning, but it also defeats the purpose of the warning, since now you will never get the warning (even when you should!)</p>
-
-<p>Other uses of <code>isMounted()</code> are similarly erroneous; using <code>isMounted()</code> is a code smell because the only reason you would check is because you think you might be holding a reference after the component has unmounted.</p>
-
-<p>An easy migration strategy for anyone upgrading their code to avoid <code>isMounted()</code> is to track the mounted status yourself.  Just set a <code>_isMounted</code> property to true in <code>componentDidMount</code> and set it to false in <code>componentWillUnmount</code>, and use this variable to check your component&#39;s status.</p>
-
-<p>An optimal solution would be to find places where <code>setState()</code> might be called after a component has unmounted, and fix them. Such situations most commonly occur due to callbacks, when a component is waiting for some data and gets unmounted before the data arrives. Ideally, any callbacks should be canceled in <code>componentWillUnmount</code>, prior to unmounting.</p>
-
-<p>For instance, if you are using a Flux store in your component, you must unsubscribe in <code>componentWillUnmount</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">mydatastore</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="p">...</span>
-  <span class="p">}</span>
-  <span class="nx">componentWillUnmount</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="nx">mydatastore</span><span class="p">.</span><span class="nx">unsubscribe</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-</span>  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>If you use ES6 promises, you may need to wrap your promise in order to make it cancelable.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">cancelablePromise</span> <span class="o">=</span> <span class="nx">makeCancelable</span><span class="p">(</span>
-  <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="nx">r</span> <span class="o">=&gt;</span> <span class="nx">component</span><span class="p">.</span><span class="nx">setState</span><span class="p">({...}}))</span>
-<span class="p">);</span>
-
-<span class="nx">cancelablePromise</span>
-  <span class="p">.</span><span class="nx">promise</span>
-  <span class="p">.</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;resolved&#39;</span><span class="p">))</span>
-  <span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">reason</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;isCanceled&#39;</span><span class="p">,</span> <span class="nx">reason</span><span class="p">.</span><span class="nx">isCanceled</span><span class="p">));</span>
-
-<span class="nx">cancelablePromise</span><span class="p">.</span><span class="nx">cancel</span><span class="p">();</span> <span class="c1">// Cancel the promise</span>
-</code></pre></div>
-<p>Where <code>makeCancelable</code> is <a href="https://github.com/facebook/react/issues/5465#issuecomment-157888325">defined by @istarkov</a> as:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">makeCancelable</span> <span class="o">=</span> <span class="p">(</span><span class="nx">promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="kd">let</span> <span class="nx">hasCanceled_</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-
-  <span class="k">return</span> <span class="p">{</span>
-    <span class="nx">promise</span><span class="o">:</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span>
-      <span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">promise</span>
-        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">r</span> <span class="o">=&gt;</span> <span class="nx">hasCanceled_</span>
-          <span class="o">?</span> <span class="nx">reject</span><span class="p">({</span><span class="nx">isCanceled</span><span class="o">:</span> <span class="kc">true</span><span class="p">})</span>
-          <span class="o">:</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span>
-        <span class="p">)</span>
-    <span class="p">),</span>
-    <span class="nx">cancel</span><span class="p">()</span> <span class="p">{</span>
-      <span class="nx">hasCanceled_</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">},</span>
-  <span class="p">};</span>
-<span class="p">};</span>
-</code></pre></div>
-<p>As an added bonus for getting your code cleaned up early, getting rid of <code>isMounted()</code> makes it one step easier for you to upgrade to ES6 classes, where using <code>isMounted()</code> is already prohibited.  Happy coding!</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/12/04/react-js-conf-2016-diversity-scholarship.html">React.js Conf 2016 Diversity Scholarship</a>
-
-</h1>
-
-<p class="meta">
-  December  4, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>I am thrilled to announced that we will be organizing another diversity scholarship program for the upcoming React.js Conf! The tech industry is suffering from a lack of diversity, but it&#39;s important to us that we have a thriving community that is made up of people with a variety of experiences and viewpoints.</p>
-
-<p>When we ran this program last year, we had <em>over 200</em> people apply for only 10 tickets. There were so many people that we wanted to bring in but we couldn&#39;t. The results were still awesome, and we had bright individuals from around the world attending who would have otherwise been unable to. These attendees took part in discussions at the conference and brought perspectives that we might not have otherwise seen there.</p>
-
-<p>This year we&#39;re excited to bring back the scholarship, but we&#39;ve set aside <strong>40 tickets</strong> because we really believe that it&#39;s important to do our best to make sure we have an even more diverse audience.</p>
-
-<p>This is something I&#39;m personally really excited to be a part of. I know the rest of the team is as well. We&#39;re really proud to have everyone at Facebook providing support and funding for this.</p>
-
-<p>The details of the scholarship are provided below (or you can <a href="http://goo.gl/forms/PEmKj8oUp4">go directly to the application</a>). I encourage you to apply! If you don&#39;t feel like you are eligible yourself, you can still help – send this along to friends, family, coworkers, acquaintances, or anybody who might be interested. And even if you haven&#39;t spoken before, please consider <a href="http://conf.reactjs.com/">submitting a proposal for a talk</a> (either 30 minutes or just 5 minutes) - we&#39;re hoping to have a very diverse group of speakers in addition to attendees.</p>
-
-<hr>
-
-<p>Facebook is excited to announce that we are now accepting applications for the React.js Conf Diversity Scholarship!</p>
-
-<p>Beginning today, those studying or working in computer science or a related field can apply for a partial scholarship to attend the React.js Conf in San Francisco, CA on February 22 &amp; 23, 2016.</p>
-
-<p>React opens a world of new possibilities such as server-side rendering, real-time updates, different rendering targets like SVG and canvas. React Native makes is easy to use the same concepts and technologies to build native mobile experiences on iOS and Android. Join us at React.js Conf to shape the future of client-side applications! For more information about the React.js conference, please see <a href="http://conf.reactjs.com/">the website</a>.</p>
-
-<p>At Facebook, we believe that anyone anywhere can make a positive impact by developing products to make the world more open and connected to the people and things they care about. Given the current realities of the tech industry and the lack of representation of communities we seek to serve, applicants currently under-represented in Computer Science and related fields are strongly encouraged to apply. Facebook will make determinations on scholarship recipients in its sole discretion. Facebook complies with all equal opportunity laws.</p>
-
-<p>To apply for the scholarship, please visit the application page: <strong><a href="http://goo.gl/forms/PEmKj8oUp4">http://goo.gl/forms/PEmKj8oUp4</a></strong></p>
-<h2><a class="anchor" name="award-includes"></a>Award Includes <a class="hash-link" href="#award-includes">#</a></h2>
-<ul>
-<li>Paid registration fee for the React.js Conf Feburary 22 &amp; 23 in downtown San Francisco, CA</li>
-<li>Paid lodging expenses for February 21, 22, 23</li>
-</ul>
-<h2><a class="anchor" name="important-dates"></a>Important Dates <a class="hash-link" href="#important-dates">#</a></h2>
-<ul>
-<li>Sunday December 13th 2015 - 11:59 PST: Applications for the React.js Conf Scholarship must be submitted in full</li>
-<li>Wednesday, December 16th, 2015: Award recipients will be notified by email of their acceptance</li>
-<li>Monday &amp; Tuesday, February 22 &amp; 23, 2016: React.js Conf</li>
-</ul>
-<h2><a class="anchor" name="eligibility"></a>Eligibility <a class="hash-link" href="#eligibility">#</a></h2>
-<ul>
-<li>Must currently be studying or working in Computer Science or a related field</li>
-<li>International applicants are welcome, but you will be responsible for securing your own visa to attend the conference</li>
-<li>You must be able to provide your own transportation to San Francisco</li>
-<li>You must be available to attend the full duration of React.js Conf on February 22 &amp; 23 in San Francisco, CA</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/11/18/react-v0.14.3.html">React v0.14.3</a>
-
-</h1>
-
-<p class="meta">
-  November 18, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>It&#39;s time for another installment of React patch releases! We didn&#39;t break anything in v0.14.2 but we do have a couple of other bugs we&#39;re fixing. The biggest change in this release is actually an addition of a new built file. We heard from a number of people that they still need the ability to use React to render to a string on the client. While the use cases are not common and there are other ways to achieve this, we decided that it&#39;s still valuable to support. So we&#39;re now building <code>react-dom-server.js</code>, which will be shipped to Bower and in the <code>dist/</code> directory of the <code>react-dom</code> package on npm. This file works the same way as <code>react-dom.js</code> and therefore requires that the primary React build has already been included on the page.</p>
-
-<p>The release is now available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.14.3.js">https://fb.me/react-0.14.3.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.14.3.min.js">https://fb.me/react-0.14.3.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.3.js">https://fb.me/react-with-addons-0.14.3.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.14.3.min.js">https://fb.me/react-with-addons-0.14.3.min.js</a><br></li>
-<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
-Dev build with warnings: <a href="https://fb.me/react-dom-0.14.3.js">https://fb.me/react-dom-0.14.3.js</a><br>
-Minified build for production: <a href="https://fb.me/react-dom-0.14.3.min.js">https://fb.me/react-dom-0.14.3.min.js</a><br></li>
-<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br>
-Dev build with warnings: <a href="https://fb.me/react-dom-server-0.14.3.js">https://fb.me/react-dom-server-0.14.3.js</a><br>
-Minified build for production: <a href="https://fb.me/react-dom-server-0.14.3.min.js">https://fb.me/react-dom-server-0.14.3.min.js</a><br></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.14.3</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-dom"></a>React DOM <a class="hash-link" href="#react-dom">#</a></h3>
-<ul>
-<li>Added support for <code>nonce</code> attribute for <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> elements</li>
-<li>Added support for <code>reversed</code> attribute for <code>&lt;ol&gt;</code> elements</li>
-</ul>
-<h3><a class="anchor" name="react-testutils-add-on"></a>React TestUtils Add-on <a class="hash-link" href="#react-testutils-add-on">#</a></h3>
-<ul>
-<li>Fixed bug with shallow rendering and function refs</li>
-</ul>
-<h3><a class="anchor" name="react-csstransitiongroup-add-on"></a>React CSSTransitionGroup Add-on <a class="hash-link" href="#react-csstransitiongroup-add-on">#</a></h3>
-<ul>
-<li>Fixed bug resulting in timeouts firing incorrectly when mounting and unmounting rapidly</li>
-</ul>
-<h3><a class="anchor" name="react-on-bower"></a>React on Bower <a class="hash-link" href="#react-on-bower">#</a></h3>
-<ul>
-<li>Added <code>react-dom-server.js</code> to expose <code>renderToString</code> and <code>renderToStaticMarkup</code> for usage in the browser</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/11/02/react-v0.14.2.html">React v0.14.2</a>
-
-</h1>
-
-<p class="meta">
-  November  2, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>We have a quick update following the release of 0.14.1 last week. It turns out we broke a couple things in the development build of React when using Internet Explorer. Luckily it was only the development build, so your production applications were unaffected. This release is mostly to address those issues. There is one notable change if consuming React from npm. For the <code>react-dom</code> package, we moved <code>react</code> from a regular dependency to a peer dependency. This will impact very few people as these two are typically installed together at the top level, but it will fix some issues with dependencies of installed components also using <code>react</code> as a peer dependency.</p>
-
-<p>The release is now available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.14.2.js">https://fb.me/react-0.14.2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.14.2.min.js">https://fb.me/react-0.14.2.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.2.js">https://fb.me/react-with-addons-0.14.2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.14.2.min.js">https://fb.me/react-with-addons-0.14.2.min.js</a><br></li>
-<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
-Dev build with warnings: <a href="https://fb.me/react-dom-0.14.2.js">https://fb.me/react-dom-0.14.2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-dom-0.14.2.min.js">https://fb.me/react-dom-0.14.2.min.js</a><br></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.14.2</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-dom"></a>React DOM <a class="hash-link" href="#react-dom">#</a></h3>
-<ul>
-<li>Fixed bug with development build preventing events from firing in some versions of Internet Explorer &amp; Edge</li>
-<li>Fixed bug with development build when using es5-sham in older versions of Internet Explorer</li>
-<li>Added support for <code>integrity</code> attribute</li>
-<li>Fixed bug resulting in <code>children</code> prop being coerced to a string for custom elements, which was not the desired behavior.</li>
-<li>Moved <code>react</code> from <code>dependencies</code> to <code>peerDependencies</code> to match expectations and align with <code>react-addons-*</code> packages</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-
-    <div class="pagination">
-      
-      
-        <a href="/react/blog/page2/" class="next">
-          Next Page &raquo;
-        </a>
-      
-    </div>
   </div>
 </section>
 

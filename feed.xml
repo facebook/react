@@ -7,6 +7,344 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React Components, Elements, and Instances</title>
+				<description>&lt;p&gt;The difference between &lt;strong&gt;components, their instances, and elements&lt;/strong&gt; confuses many React beginners. Why are there three different terms to refer to something that is painted on screen?&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;managing-the-instances&quot;&gt;&lt;/a&gt;Managing the Instances &lt;a class=&quot;hash-link&quot; href=&quot;#managing-the-instances&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;If you’re new to React, you probably only worked with component classes and instances before. For example, you may declare a &lt;code&gt;Button&lt;/code&gt; &lt;em&gt;component&lt;/em&gt; by creating a class. When the app is running, you may have several &lt;em&gt;instances&lt;/em&gt; of this component on screen, each with its own properties and local state. This is the traditional object-oriented UI programming. Why introduce &lt;em&gt;elements&lt;/em&gt;?&lt;/p&gt;
+
+&lt;p&gt;In this traditional UI model, it is up to you take care of creating and destroying child component instances. If a &lt;code&gt;Form&lt;/code&gt; component wants to render a &lt;code&gt;Button&lt;/code&gt; component, it needs to create its instance, and manually keep it up to date with any new information.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Form&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TraditionalObjectOrientedView&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Read some data passed to the view&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;buttonText&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attrs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Form is not yet submitted. Create the button!&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;buttonText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;appendChild&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// The button is visible. Update its text!&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attrs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;buttonText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Form was submitted. Destroy the button!&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;removeChild&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;destroy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;c1&quot;&gt;// Form was submitted. Show the success message!&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Success!&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;appendChild&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is pseudocode, but it is more or less what you end up with when you write composite UI code that behaves consistently in an object-oriented way using a library like Backbone.&lt;/p&gt;
+
+&lt;p&gt;Each component instance has to keep references to its DOM node and to the instances of the children components, and create, update, and destroy them when the time is right. The lines of code grow as the square of the number of possible states of the component, and the parents have direct access to their children component instances, making it hard to decouple them in the future.&lt;/p&gt;
+
+&lt;p&gt;So how is React different?&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;elements-describe-the-tree&quot;&gt;&lt;/a&gt;Elements Describe the Tree &lt;a class=&quot;hash-link&quot; href=&quot;#elements-describe-the-tree&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In React, this is where the &lt;em&gt;elements&lt;/em&gt; come to rescue. &lt;strong&gt;An element is a plain object &lt;em&gt;describing&lt;/em&gt; a component instance or DOM node and its desired properties.&lt;/strong&gt; It contains only information about the component type (for example, a &lt;code&gt;Button&lt;/code&gt;), its properties (for example, its &lt;code&gt;color&lt;/code&gt;), and any child elements inside it.&lt;/p&gt;
+
+&lt;p&gt;An element is not an actual instance. Rather, it is a way to tell React what you &lt;em&gt;want&lt;/em&gt; to see on the screen. You can’t call any methods on the element. It’s just an immutable description object with two fields: &lt;code&gt;type: (string | ReactClass)&lt;/code&gt; and &lt;code&gt;props: Object&lt;/code&gt;&lt;sup id=&quot;fnref1&quot;&gt;&lt;a href=&quot;#fn1&quot; rel=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;dom-elements&quot;&gt;&lt;/a&gt;DOM Elements &lt;a class=&quot;hash-link&quot; href=&quot;#dom-elements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;When an element’s &lt;code&gt;type&lt;/code&gt; is a string, it represents a DOM node with that tag name, and &lt;code&gt;props&lt;/code&gt; correspond to its attributes. This is what React will render. For example:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This element is just a way to represent the following HTML as a plain object:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;button button-blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;b&amp;gt;&lt;/span&gt;
+    OK!
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/b&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/button&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note how elements can be nested. By convention, when we want to create an element tree, we specify one or more child elements as the &lt;code&gt;children&lt;/code&gt; prop of their containing element.&lt;/p&gt;
+
+&lt;p&gt;What’s important is that both child and parent elements are &lt;em&gt;just descriptions and not the actual instances&lt;/em&gt;. They don’t refer to anything on the screen when you create them. You can create them and throw them away, and it won’t matter much.&lt;/p&gt;
+
+&lt;p&gt;React elements are easy to traverse, don’t need to be parsed, and of course they are much lighter than the actual DOM elements—they’re just objects!&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;component-elements&quot;&gt;&lt;/a&gt;Component Elements &lt;a class=&quot;hash-link&quot; href=&quot;#component-elements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;However, the &lt;code&gt;type&lt;/code&gt; of an element can also be a function or a class corresponding to a React component:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is the core idea of React.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;An element describing a component is also an element, just like an element describing the DOM node. They can be nested and mixed with each other.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This feature lets you define a &lt;code&gt;DangerButton&lt;/code&gt; component as a &lt;code&gt;Button&lt;/code&gt; with a specific &lt;code&gt;color&lt;/code&gt; property value without worrying about whether &lt;code&gt;Button&lt;/code&gt; renders to a DOM &lt;code&gt;&amp;lt;button&amp;gt;&lt;/code&gt;, a &lt;code&gt;&amp;lt;div&amp;gt;&lt;/code&gt;, or something else entirely:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;DangerButton&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;red&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can mix and match DOM and component elements in a single element tree:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;DeleteAccount&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;div&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;p&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Are you sure?&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;DangerButton&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Yep&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Cancel&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+   &lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or, if you prefer JSX:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;DeleteAccount&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Are&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;you&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;sure&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/p&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DangerButton&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Yep&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/DangerButton&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Cancel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Button&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This mix and matching helps keep components decoupled from each other, as they can express both &lt;em&gt;is-a&lt;/em&gt; () and &lt;em&gt;has-a&lt;/em&gt; relationships exclusively through composition:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Button&lt;/code&gt; is a DOM &lt;code&gt;&amp;lt;button&amp;gt;&lt;/code&gt; with specific properties.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;DangerButton&lt;/code&gt; is a &lt;code&gt;Button&lt;/code&gt; with specific properties.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;DeleteAccount&lt;/code&gt; contains a &lt;code&gt;Button&lt;/code&gt; and a &lt;code&gt;DangerButton&lt;/code&gt; inside a &lt;code&gt;&amp;lt;div&amp;gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;components-encapsulate-element-trees&quot;&gt;&lt;/a&gt;Components Encapsulate Element Trees &lt;a class=&quot;hash-link&quot; href=&quot;#components-encapsulate-element-trees&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;When React sees an element with a function or class &lt;code&gt;type&lt;/code&gt;, it knows to ask &lt;em&gt;that&lt;/em&gt; component what element it renders to, given the corresponding &lt;code&gt;props&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;When it sees this element:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React will ask &lt;code&gt;Button&lt;/code&gt; what it renders to. The &lt;code&gt;Button&lt;/code&gt; will return this element:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React will repeat this process until it knows the underlying DOM tag elements for every component on the page.&lt;/p&gt;
+
+&lt;p&gt;React is like a child asking “what is Y” for every “X is Y” you explain to them until they figure out every little thing in the world.&lt;/p&gt;
+
+&lt;p&gt;Remember the &lt;code&gt;Form&lt;/code&gt; example above? It can be written in React as follows&lt;sup id=&quot;fnref1&quot;&gt;&lt;a href=&quot;#fn1&quot; rel=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Form&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;buttonText&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Form submitted! Return a message element.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Success!&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;// Form is still visible! Return a button element.&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;buttonText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That’s it! For a React component, props are the input, and an element tree is the output.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;The returned element tree can contain both elements describing DOM nodes, and elements describing other components. This lets you compose independent parts of UI without relying on their internal DOM structure.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;We let React create, update, and destroy instances. We &lt;em&gt;describe&lt;/em&gt; them with elements we return from the components, and React takes care of managing the instances.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;components-can-be-classes-or-functions&quot;&gt;&lt;/a&gt;Components Can Be Classes or Functions &lt;a class=&quot;hash-link&quot; href=&quot;#components-can-be-classes-or-functions&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;In the code above, &lt;code&gt;Form&lt;/code&gt;, &lt;code&gt;Message&lt;/code&gt;, and &lt;code&gt;Button&lt;/code&gt; are React components. They can either be written as functions, like above, or as classes descending from &lt;code&gt;React.Component&lt;/code&gt;. These three ways to declare a component are mostly equivalent:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// 1) As a function of props&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 2) Using the React.createClass() factory&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 3) As an ES6 class descending from React.Component&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When a component is defined as a class, it is a little bit more powerful than a functional component. It can store some local state and perform custom logic when the corresponding DOM node is created or destroyed.&lt;/p&gt;
+
+&lt;p&gt;A functional component is less powerful but is simpler, and acts like a class component with just a single &lt;code&gt;render()&lt;/code&gt; method. Unless you need features available only in a class, we encourage you to use functional components instead.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;However, whether functions or classes, fundamentally they are all components to React. They take the props as their input, and return the elements as their output.&lt;/strong&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;top-down-reconciliation&quot;&gt;&lt;/a&gt;Top-Down Reconciliation &lt;a class=&quot;hash-link&quot; href=&quot;#top-down-reconciliation&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;When you call:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Form&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;buttonText&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getElementById&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;root&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React will ask the &lt;code&gt;Form&lt;/code&gt; component what element tree it returns, given those &lt;code&gt;props&lt;/code&gt;. It will gradually “refine” its understanding of your component tree in terms of simpler primitives:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// React: You told me this...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Form&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;isSubmitted&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;buttonText&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// React: ...And Form told me this...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// React: ...and Button told me this! I guess I&amp;#39;m done.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is a part of the process that React calls &lt;a href=&quot;/react/docs/reconciliation.html&quot;&gt;reconciliation&lt;/a&gt; which starts when you call &lt;a href=&quot;/react/docs/top-level-api.html#reactdom.render&quot;&gt;&lt;code&gt;ReactDOM.render()&lt;/code&gt;&lt;/a&gt; or &lt;a href=&quot;/react/docs/component-api.html#setstate&quot;&gt;&lt;code&gt;setState()&lt;/code&gt;&lt;/a&gt;. By the end of the reconciliation, React knows the result DOM tree, and a renderer like &lt;code&gt;react-dom&lt;/code&gt; or &lt;code&gt;react-native&lt;/code&gt; applies the minimal set of changes necessary to update the DOM nodes (or the platform-specific views in case of React Native).&lt;/p&gt;
+
+&lt;p&gt;This gradual refining process is also the reason React apps are easy to optimize. If some parts of your component tree become too large for React to visit efficiently, you can tell it to &lt;a href=&quot;/react/docs/advanced-performance.html&quot;&gt;skip this “refining” and diffing certain parts of the tree if the relevant props have not changed&lt;/a&gt;. It is very fast to calculate whether the props have changed if they are immutable, so React and immutability work great together, and can provide great optimizations with the minimal effort.&lt;/p&gt;
+
+&lt;p&gt;You might have noticed that this blog entry talks a lot about components and elements, and not so much about the instances. The truth is, instances have much less importance in React than in most object-oriented UI frameworks.&lt;/p&gt;
+
+&lt;p&gt;Only components declared as classes have instances, and you never create them directly: React does that for you. While &lt;a href=&quot;/react/docs/more-about-refs.html&quot;&gt;mechanisms for a parent component instance to access a child component instance&lt;/a&gt; exist, they are only used for imperative actions (such as setting focus on a field), and should generally be avoided.&lt;/p&gt;
+
+&lt;p&gt;React takes care of creating an instance for every class component, so you can write components in an object-oriented way with methods and local state, but other than that, instances are not very important in the React’s programming model and are managed by React itself.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;summary&quot;&gt;&lt;/a&gt;Summary &lt;a class=&quot;hash-link&quot; href=&quot;#summary&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;An &lt;em&gt;element&lt;/em&gt; is a plain object describing what you want to appear on the screen in terms of the DOM nodes or other components. Elements can contain other elements in their props. Creating a React element is cheap. Once an element is created, it is never mutated.&lt;/p&gt;
+
+&lt;p&gt;A &lt;em&gt;component&lt;/em&gt; can be declared in several different ways. It can be a class with a &lt;code&gt;render()&lt;/code&gt; method. Alternatively, in simple cases, it can be defined as a function. In either case, it takes props as an input, and returns an element tree as the output.&lt;/p&gt;
+
+&lt;p&gt;When a component receives some props as an input, it is because a particular parent component returned an element with its &lt;code&gt;type&lt;/code&gt; and these props. This is why people say that the props flows one way in React: from parents to children.&lt;/p&gt;
+
+&lt;p&gt;An &lt;em&gt;instance&lt;/em&gt; is what you refer to as &lt;code&gt;this&lt;/code&gt; in the component class you write. It is useful for &lt;a href=&quot;/react/docs/component-api.html&quot;&gt;storing local state and reacting to the lifecycle events&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Functional components don’t have instances at all. Class components have instances, but you never need to create a component instance directly—React takes care of this.&lt;/p&gt;
+
+&lt;p&gt;Finally, to create elements, use &lt;a href=&quot;/react/docs/top-level-api.html#react.createelement&quot;&gt;&lt;code&gt;React.createElement()&lt;/code&gt;&lt;/a&gt;, &lt;a href=&quot;/react/docs/jsx-in-depth.html&quot;&gt;JSX&lt;/a&gt;, or an &lt;a href=&quot;/react/docs/top-level-api.html#react.createfactory&quot;&gt;element factory helper&lt;/a&gt;. Don’t write elements as plain objects in the real code—just know that they are plain objects under the hood.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;further-reading&quot;&gt;&lt;/a&gt;Further Reading &lt;a class=&quot;hash-link&quot; href=&quot;#further-reading&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;/react/blog/2014/10/14/introducing-react-elements.html&quot;&gt;Introducing React Elements&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;/react/blog/2015/02/24/streamlining-react-elements.html&quot;&gt;Streamlining React Elements&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;/react/docs/glossary.html&quot;&gt;React (Virtual) DOM Terminology&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;footnotes&quot;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+
+&lt;li id=&quot;fn1&quot;&gt;
+&lt;p&gt;All React elements require an additional &lt;code&gt;$$typeof: Symbol.for(‘react.element’)&lt;/code&gt; field declared on the object for &lt;a href=&quot;https://github.com/facebook/react/pull/4832&quot;&gt;security reasons&lt;/a&gt;. It is omitted in the examples above. This blog entry uses inline objects for elements to give you an idea of what’s happening underneath but the code won’t run as is unless you either add &lt;code&gt;$$typeof&lt;/code&gt; to the elements, or change the code to use &lt;code&gt;React.createElement()&lt;/code&gt; or JSX.&amp;nbsp;&lt;a href=&quot;#fnref1&quot; rev=&quot;footnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;/ol&gt;
+&lt;/div&gt;
+</description>
+				<pubDate>2015-12-18T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/12/18/react-components-elements-and-instances.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/12/18/react-components-elements-and-instances.html</guid>
+			</item>
+		
+			<item>
 				<title>isMounted is an Antipattern</title>
 				<description>&lt;p&gt;As we move closer to officially deprecating isMounted, it&amp;#39;s worth understanding why the function is an antipattern, and how to write code without the isMounted function.&lt;/p&gt;
 
@@ -686,170 +1024,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.0.m
 				<pubDate>2015-09-14T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/09/14/community-roundup-27.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/09/14/community-roundup-27.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.14 Release Candidate</title>
-				<description>&lt;p&gt;We’re happy to announce our first release candidate for React 0.14! We gave you a &lt;a href=&quot;/react/blog/2015/07/03/react-v0.14-beta-1.html&quot;&gt;sneak peek in July&lt;/a&gt; at the upcoming changes but we’ve now stabilized the release more and we’d love for you to try it out before we release the final version.&lt;/p&gt;
-
-&lt;p&gt;Let us know if you run into any problems by filing issues on our &lt;a href=&quot;https://github.com/facebook/react&quot;&gt;GitHub repo&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single package:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;npm install --save react@0.14.0-rc1&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;npm install --save react-dom@0.14.0-rc1&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
-
-&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we also provide pre-built browser builds for your convenience:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.0-rc1.js&quot;&gt;https://fb.me/react-0.14.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.0-rc1.min.js&quot;&gt;https://fb.me/react-0.14.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.0-rc1.js&quot;&gt;https://fb.me/react-with-addons-0.14.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.0-rc1.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.0-rc1.js&quot;&gt;https://fb.me/react-dom-0.14.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.0-rc1.min.js&quot;&gt;https://fb.me/react-dom-0.14.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;These builds are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;major-changes&quot;&gt;&lt;/a&gt;Major changes &lt;a class=&quot;hash-link&quot; href=&quot;#major-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;two-packages-react-and-react-dom&quot;&gt;&lt;/a&gt;Two Packages: React and React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#two-packages-react-and-react-dom&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;As we look at packages like &lt;a href=&quot;https://github.com/facebook/react-native&quot;&gt;react-native&lt;/a&gt;, &lt;a href=&quot;https://github.com/reactjs/react-art&quot;&gt;react-art&lt;/a&gt;, &lt;a href=&quot;https://github.com/Flipboard/react-canvas&quot;&gt;react-canvas&lt;/a&gt;, and &lt;a href=&quot;https://github.com/Izzimach/react-three&quot;&gt;react-three&lt;/a&gt;, it has become clear that the beauty and essence of React has nothing to do with browsers or the DOM.&lt;/p&gt;
-
-&lt;p&gt;To make this more clear and to make it easier to build more environments that React can render to, we’re splitting the main &lt;code&gt;react&lt;/code&gt; package into two: &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-dom&lt;/code&gt;. &lt;strong&gt;This paves the way to writing components that can be shared between the web version of React and React Native.&lt;/strong&gt; We don’t expect all the code in an app to be shared, but we want to be able to share the components that do behave the same across platforms.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code&gt;react&lt;/code&gt; package contains &lt;code&gt;React.createElement&lt;/code&gt;, &lt;code&gt;.createClass&lt;/code&gt;, &lt;code&gt;.Component&lt;/code&gt;, &lt;code&gt;.PropTypes&lt;/code&gt;, &lt;code&gt;.Children&lt;/code&gt;, and the other helpers related to elements and component classes. We think of these as the &lt;a href=&quot;http://nerds.airbnb.com/isomorphic-javascript-future-web-apps/&quot;&gt;&lt;em&gt;isomorphic&lt;/em&gt;&lt;/a&gt; or &lt;a href=&quot;https://medium.com/@mjackson/universal-javascript-4761051b7ae9&quot;&gt;&lt;em&gt;universal&lt;/em&gt;&lt;/a&gt; helpers that you need to build components.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code&gt;react-dom&lt;/code&gt; package has &lt;code&gt;ReactDOM.render&lt;/code&gt;, &lt;code&gt;.unmountComponentAtNode&lt;/code&gt;, and &lt;code&gt;.findDOMNode&lt;/code&gt;. In &lt;code&gt;react-dom/server&lt;/code&gt; we have server-side rendering support with &lt;code&gt;ReactDOMServer.renderToString&lt;/code&gt; and &lt;code&gt;.renderToStaticMarkup&lt;/code&gt;.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react-dom&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Hello&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;World&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;We’ve published the &lt;a href=&quot;https://github.com/reactjs/react-codemod/blob/master/README.md&quot;&gt;automated codemod script&lt;/a&gt; we used at Facebook to help you with this transition.&lt;/p&gt;
-
-&lt;p&gt;The add-ons have moved to separate packages as well: &lt;code&gt;react-addons-clone-with-props&lt;/code&gt;, &lt;code&gt;react-addons-create-fragment&lt;/code&gt;, &lt;code&gt;react-addons-css-transition-group&lt;/code&gt;, &lt;code&gt;react-addons-linked-state-mixin&lt;/code&gt;, &lt;code&gt;react-addons-perf&lt;/code&gt;, &lt;code&gt;react-addons-pure-render-mixin&lt;/code&gt;, &lt;code&gt;react-addons-shallow-compare&lt;/code&gt;, &lt;code&gt;react-addons-test-utils&lt;/code&gt;, &lt;code&gt;react-addons-transition-group&lt;/code&gt;, and &lt;code&gt;react-addons-update&lt;/code&gt;, plus &lt;code&gt;ReactDOM.unstable_batchedUpdates&lt;/code&gt; in &lt;code&gt;react-dom&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;For now, please use matching versions of &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-dom&lt;/code&gt; in your apps to avoid versioning problems.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;dom-node-refs&quot;&gt;&lt;/a&gt;DOM node refs &lt;a class=&quot;hash-link&quot; href=&quot;#dom-node-refs&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;The other big change we’re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a &lt;code&gt;ref&lt;/code&gt; to a React DOM component and realized that the only useful thing you can do with it is call &lt;code&gt;this.refs.giraffe.getDOMNode()&lt;/code&gt; to get the underlying DOM node. In this release, &lt;code&gt;this.refs.giraffe&lt;/code&gt; &lt;em&gt;is&lt;/em&gt; the actual DOM node. &lt;strong&gt;Note that refs to custom (user-defined) components work exactly as before; only the built-in DOM components are affected by this change.&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Zoo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Giraffe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;giraffe&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;showName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Previously: var input = this.refs.giraffe.getDOMNode();&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;refs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;giraffe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This change also applies to the return result of &lt;code&gt;ReactDOM.render&lt;/code&gt; when passing a DOM node as the top component. As with refs, this change does not affect custom components. With these changes, we’re deprecating &lt;code&gt;.getDOMNode()&lt;/code&gt; and replacing it with &lt;code&gt;ReactDOM.findDOMNode&lt;/code&gt; (see below).&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;stateless-function-components&quot;&gt;&lt;/a&gt;Stateless function components &lt;a class=&quot;hash-link&quot; href=&quot;#stateless-function-components&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;In idiomatic React code, most of the components you write will be stateless, simply composing other components. We’re introducing a new, simpler syntax for these components where you can take &lt;code&gt;props&lt;/code&gt; as an argument and return the element you want to render:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Using an ES2015 (ES6) arrow function:&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Aquarium&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;fish&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;getFish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;species&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Tank&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;fish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Tank&amp;gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// Or with destructuring and an implicit return, simply:&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Aquarium&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;species&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Tank&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getFish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;species&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Tank&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// Then use: &amp;lt;Aquarium species=&amp;quot;rainbowfish&amp;quot; /&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This pattern is designed to encourage the creation of these simple components that should comprise large portions of your apps. In the future, we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecation-of-react-tools&quot;&gt;&lt;/a&gt;Deprecation of react-tools &lt;a class=&quot;hash-link&quot; href=&quot;#deprecation-of-react-tools&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;The &lt;code&gt;react-tools&lt;/code&gt; package and &lt;code&gt;JSXTransformer.js&lt;/code&gt; browser file &lt;a href=&quot;/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html&quot;&gt;have been deprecated&lt;/a&gt;. You can continue using version &lt;code&gt;0.13.3&lt;/code&gt; of both, but we no longer support them and recommend migrating to &lt;a href=&quot;http://babeljs.io/&quot;&gt;Babel&lt;/a&gt;, which has built-in support for React and JSX.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;compiler-optimizations&quot;&gt;&lt;/a&gt;Compiler optimizations &lt;a class=&quot;hash-link&quot; href=&quot;#compiler-optimizations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;React now supports two compiler optimizations that can be enabled in Babel 5.8.23 and newer. Both of these transforms &lt;strong&gt;should be enabled only in production&lt;/strong&gt; (e.g., just before minifying your code) because although they improve runtime performance, they make warning messages more cryptic and skip important checks that happen in development mode, including propTypes.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Inlining React elements:&lt;/strong&gt; The &lt;code&gt;optimisation.react.inlineElements&lt;/code&gt; transform converts JSX elements to object literals like &lt;code&gt;{type: &amp;#39;div&amp;#39;, props: ...}&lt;/code&gt; instead of calls to &lt;code&gt;React.createElement&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Constant hoisting for React elements:&lt;/strong&gt; The &lt;code&gt;optimisation.react.constantElements&lt;/code&gt; transform hoists element creation to the top level for subtrees that are fully static, which reduces calls to &lt;code&gt;React.createElement&lt;/code&gt; and the resulting allocations. More importantly, it tells React that the subtree hasn’t changed so React can completely skip it when reconciling.&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;As always, we have a few breaking changes in this release. Whenever we make large changes, we warn for at least one release so you have time to update your code. The Facebook codebase has over 15,000 React components, so on the React team, we always try to minimize the pain of breaking changes.&lt;/p&gt;
-
-&lt;p&gt;These three breaking changes had a warning in 0.13, so you shouldn’t have to do anything if your code is already free of warnings:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;The &lt;code&gt;props&lt;/code&gt; object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, &lt;a href=&quot;/react/docs/top-level-api.html#react.cloneelement&quot;&gt;&lt;code&gt;React.cloneElement&lt;/code&gt;&lt;/a&gt; should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.&lt;/li&gt;
-&lt;li&gt;Plain objects are no longer supported as React children; arrays should be used instead. You can use the &lt;a href=&quot;/react/docs/create-fragment.html&quot;&gt;&lt;code&gt;createFragment&lt;/code&gt;&lt;/a&gt; helper to migrate, which now returns an array.&lt;/li&gt;
-&lt;li&gt;Add-Ons: &lt;code&gt;classSet&lt;/code&gt; has been removed. Use &lt;a href=&quot;https://github.com/JedWatson/classnames&quot;&gt;classnames&lt;/a&gt; instead.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;And these two changes did not warn in 0.13 but should be easy to find and clean up:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.initializeTouchEvents&lt;/code&gt; is no longer necessary and has been removed completely. Touch events now work automatically.&lt;/li&gt;
-&lt;li&gt;Add-Ons: Due to the DOM node refs change mentioned above, &lt;code&gt;TestUtils.findAllInRenderedTree&lt;/code&gt; and related helpers are no longer able to take a DOM component, only a custom component.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-deprecations-introduced-with-a-warning&quot;&gt;&lt;/a&gt;New deprecations, introduced with a warning &lt;a class=&quot;hash-link&quot; href=&quot;#new-deprecations-introduced-with-a-warning&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Due to the DOM node refs change mentioned above, &lt;code&gt;this.getDOMNode()&lt;/code&gt; is now deprecated and &lt;code&gt;ReactDOM.findDOMNode(this)&lt;/code&gt; can be used instead. Note that in most cases, calling &lt;code&gt;findDOMNode&lt;/code&gt; is now unnecessary – see the example above in the “DOM node refs” section.&lt;/p&gt;
-
-&lt;p&gt;If you have a large codebase, you can use our &lt;a href=&quot;https://github.com/facebook/react/blob/master/packages/react-codemod/README.md&quot;&gt;automated codemod script&lt;/a&gt; to change your code automatically.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;code&gt;setProps&lt;/code&gt; and &lt;code&gt;replaceProps&lt;/code&gt; are now deprecated. Instead, call ReactDOM.render again at the top level with the new props.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;ES6 component classes must now extend &lt;code&gt;React.Component&lt;/code&gt; in order to enable stateless function components. The &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages&quot;&gt;ES3 module pattern&lt;/a&gt; will continue to work.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Reusing and mutating a &lt;code&gt;style&lt;/code&gt; object between renders has been deprecated. This mirrors our change to freeze the &lt;code&gt;props&lt;/code&gt; object.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Add-Ons: &lt;code&gt;cloneWithProps&lt;/code&gt; is now deprecated. Use &lt;a href=&quot;/react/docs/top-level-api.html#react.cloneelement&quot;&gt;&lt;code&gt;React.cloneElement&lt;/code&gt;&lt;/a&gt; instead (unlike &lt;code&gt;cloneWithProps&lt;/code&gt;, &lt;code&gt;cloneElement&lt;/code&gt; does not merge &lt;code&gt;className&lt;/code&gt; or &lt;code&gt;style&lt;/code&gt; automatically; you can merge them manually if needed).&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Add-Ons: To improve reliability, &lt;code&gt;CSSTransitionGroup&lt;/code&gt; will no longer listen to transition events. Instead, you should specify transition durations manually using props such as &lt;code&gt;transitionEnterTimeout={500}&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-enhancements&quot;&gt;&lt;/a&gt;Notable enhancements &lt;a class=&quot;hash-link&quot; href=&quot;#notable-enhancements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added &lt;code&gt;React.Children.toArray&lt;/code&gt; which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your &lt;code&gt;render&lt;/code&gt; methods, especially if you want to reorder or slice &lt;code&gt;this.props.children&lt;/code&gt; before passing it down. In addition, &lt;code&gt;React.Children.map&lt;/code&gt; now returns plain arrays too.&lt;/li&gt;
-&lt;li&gt;React uses &lt;code&gt;console.error&lt;/code&gt; instead of &lt;code&gt;console.warn&lt;/code&gt; for warnings so that browsers show a full stack trace in the console. (Our warnings appear when you use patterns that will break in future releases and for code that is likely to behave unexpectedly, so we do consider our warnings to be “must-fix” errors.)&lt;/li&gt;
-&lt;li&gt;Previously, including untrusted objects as React children &lt;a href=&quot;http://danlec.com/blog/xss-via-a-spoofed-react-element&quot;&gt;could result in an XSS security vulnerability&lt;/a&gt;. This problem should be avoided by properly validating input at the application layer and by never passing untrusted objects around your application code. As an additional layer of protection, &lt;a href=&quot;https://github.com/facebook/react/pull/4832&quot;&gt;React now tags elements&lt;/a&gt; with a specific &lt;a href=&quot;http://www.2ality.com/2014/12/es6-symbols.html&quot;&gt;ES2015 (ES6) &lt;code&gt;Symbol&lt;/code&gt;&lt;/a&gt; in browsers that support it, in order to ensure that React never considers untrusted JSON to be a valid element. If this extra security protection is important to you, you should add a &lt;code&gt;Symbol&lt;/code&gt; polyfill for older browsers, such as the one included by &lt;a href=&quot;http://babeljs.io/docs/usage/polyfill/&quot;&gt;Babel’s polyfill&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;When possible, React DOM now generates XHTML-compatible markup.&lt;/li&gt;
-&lt;li&gt;React DOM now supports these standard HTML attributes: &lt;code&gt;capture&lt;/code&gt;, &lt;code&gt;challenge&lt;/code&gt;, &lt;code&gt;inputMode&lt;/code&gt;, &lt;code&gt;is&lt;/code&gt;, &lt;code&gt;keyParams&lt;/code&gt;, &lt;code&gt;keyType&lt;/code&gt;, &lt;code&gt;minLength&lt;/code&gt;, &lt;code&gt;summary&lt;/code&gt;, &lt;code&gt;wrap&lt;/code&gt;. It also now supports these non-standard attributes: &lt;code&gt;autoSave&lt;/code&gt;, &lt;code&gt;results&lt;/code&gt;, &lt;code&gt;security&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;React DOM now supports these SVG attributes, which render into namespaced attributes: &lt;code&gt;xlinkActuate&lt;/code&gt;, &lt;code&gt;xlinkArcrole&lt;/code&gt;, &lt;code&gt;xlinkHref&lt;/code&gt;, &lt;code&gt;xlinkRole&lt;/code&gt;, &lt;code&gt;xlinkShow&lt;/code&gt;, &lt;code&gt;xlinkTitle&lt;/code&gt;, &lt;code&gt;xlinkType&lt;/code&gt;, &lt;code&gt;xmlBase&lt;/code&gt;, &lt;code&gt;xmlLang&lt;/code&gt;, &lt;code&gt;xmlSpace&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;image&lt;/code&gt; SVG tag is now supported by React DOM.&lt;/li&gt;
-&lt;li&gt;In React DOM, arbitrary attributes are supported on custom elements (those with a hyphen in the tag name or an &lt;code&gt;is=&amp;quot;...&amp;quot;&lt;/code&gt; attribute).&lt;/li&gt;
-&lt;li&gt;React DOM now supports these media events on &lt;code&gt;audio&lt;/code&gt; and &lt;code&gt;video&lt;/code&gt; tags: &lt;code&gt;onAbort&lt;/code&gt;, &lt;code&gt;onCanPlay&lt;/code&gt;, &lt;code&gt;onCanPlayThrough&lt;/code&gt;, &lt;code&gt;onDurationChange&lt;/code&gt;, &lt;code&gt;onEmptied&lt;/code&gt;, &lt;code&gt;onEncrypted&lt;/code&gt;, &lt;code&gt;onEnded&lt;/code&gt;, &lt;code&gt;onError&lt;/code&gt;, &lt;code&gt;onLoadedData&lt;/code&gt;, &lt;code&gt;onLoadedMetadata&lt;/code&gt;, &lt;code&gt;onLoadStart&lt;/code&gt;, &lt;code&gt;onPause&lt;/code&gt;, &lt;code&gt;onPlay&lt;/code&gt;, &lt;code&gt;onPlaying&lt;/code&gt;, &lt;code&gt;onProgress&lt;/code&gt;, &lt;code&gt;onRateChange&lt;/code&gt;, &lt;code&gt;onSeeked&lt;/code&gt;, &lt;code&gt;onSeeking&lt;/code&gt;, &lt;code&gt;onStalled&lt;/code&gt;, &lt;code&gt;onSuspend&lt;/code&gt;, &lt;code&gt;onTimeUpdate&lt;/code&gt;, &lt;code&gt;onVolumeChange&lt;/code&gt;, &lt;code&gt;onWaiting&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Many small performance improvements have been made.&lt;/li&gt;
-&lt;li&gt;Many warnings show more context than before.&lt;/li&gt;
-&lt;li&gt;Add-Ons: A &lt;a href=&quot;https://github.com/facebook/react/pull/3355&quot;&gt;&lt;code&gt;shallowCompare&lt;/code&gt;&lt;/a&gt; add-on has been added as a migration path for &lt;code&gt;PureRenderMixin&lt;/code&gt; in ES6 classes.&lt;/li&gt;
-&lt;li&gt;Add-Ons: &lt;code&gt;CSSTransitionGroup&lt;/code&gt; can now use &lt;a href=&quot;https://github.com/facebook/react/blob/48942b85/docs/docs/10.1-animation.md#custom-classes&quot;&gt;custom class names&lt;/a&gt; instead of appending &lt;code&gt;-enter-active&lt;/code&gt; or similar to the transition name.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-helpful-warnings&quot;&gt;&lt;/a&gt;New helpful warnings &lt;a class=&quot;hash-link&quot; href=&quot;#new-helpful-warnings&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.&lt;/li&gt;
-&lt;li&gt;Passing &lt;code&gt;document.body&lt;/code&gt; directly as the container to &lt;code&gt;ReactDOM.render&lt;/code&gt; now gives a warning as doing so can cause problems with browser extensions that modify the DOM.&lt;/li&gt;
-&lt;li&gt;Using multiple instances of React together is not supported, so we now warn when we detect this case to help you avoid running into the resulting problems.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-bug-fixes&quot;&gt;&lt;/a&gt;Notable bug fixes &lt;a class=&quot;hash-link&quot; href=&quot;#notable-bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Click events are handled by React DOM more reliably in mobile browsers, particularly in Mobile Safari.&lt;/li&gt;
-&lt;li&gt;SVG elements are created with the correct namespace in more cases.&lt;/li&gt;
-&lt;li&gt;React DOM now renders &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; elements with multiple text children properly and renders &lt;code&gt;&amp;lt;select&amp;gt;&lt;/code&gt; elements on the server with the correct option selected.&lt;/li&gt;
-&lt;li&gt;When two separate copies of React add nodes to the same document (including when a browser extension uses React), React DOM tries harder not to throw exceptions during event handling.&lt;/li&gt;
-&lt;li&gt;Using non-lowercase HTML tag names in React DOM (e.g., &lt;code&gt;React.createElement(&amp;#39;DIV&amp;#39;)&lt;/code&gt;) no longer causes problems, though we continue to recommend lowercase for consistency with the JSX tag name convention (lowercase names refer to built-in components, capitalized names refer to custom components).&lt;/li&gt;
-&lt;li&gt;React DOM understands that these CSS properties are unitless and does not append “px” to their values: &lt;code&gt;animationIterationCount&lt;/code&gt;, &lt;code&gt;boxOrdinalGroup&lt;/code&gt;, &lt;code&gt;flexOrder&lt;/code&gt;, &lt;code&gt;tabSize&lt;/code&gt;, &lt;code&gt;stopOpacity&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Add-Ons: When using the test utils, &lt;code&gt;Simulate.mouseEnter&lt;/code&gt; and &lt;code&gt;Simulate.mouseLeave&lt;/code&gt; now work.&lt;/li&gt;
-&lt;li&gt;Add-Ons: ReactTransitionGroup now correctly handles multiple nodes being removed simultaneously.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2015-09-10T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/09/10/react-v0.14-rc1.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/09/10/react-v0.14-rc1.html</guid>
 			</item>
 		
 	</channel>
