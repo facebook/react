@@ -9,7 +9,7 @@ The difference between **components, their instances, and elements** confuses ma
 
 If you’re new to React, you probably only worked with component classes and instances before. For example, you may declare a `Button` *component* by creating a class. When the app is running, you may have several *instances* of this component on screen, each with its own properties and local state. This is the traditional object-oriented UI programming. Why introduce *elements*?
 
-In this traditional UI model, it is up to you take care of creating and destroying child component instances. If a `Form` component wants to render a `Button` component, it needs to create its instance, and manually keep it up to date with any new information.
+In this traditional UI model, it is up to you to take care of creating and destroying child component instances. If a `Form` component wants to render a `Button` component, it needs to create its instance, and manually keep it up to date with any new information.
 
 ```js
 class Form extends TraditionalObjectOrientedView {
@@ -162,7 +162,7 @@ const DeleteAccount = () => (
 );
 ```
 
-This mix and matching helps keep components decoupled from each other, as they can express both *is-a* () and *has-a* relationships exclusively through composition:
+This mix and matching helps keep components decoupled from each other, as they can express both *is-a* and *has-a* relationships exclusively through composition:
 
 * `Button` is a DOM `<button>` with specific properties.
 * `DangerButton` is a `Button` with specific properties.
