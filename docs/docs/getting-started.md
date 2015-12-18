@@ -41,8 +41,9 @@ $ npm install --save react react-dom babel-preset-react
 $ webpack
 ```
 
-A good starting webpack config for production mode would be:
+Ensure you have a `.babelrc` including the react preset.
 
+A good starting webpack config for production mode would be:
 ```javascript
 module.exports = {
   entry: [
@@ -50,7 +51,7 @@ module.exports = {
   ],
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'bundle.[hash].js',
+    filename: 'bundle.js',
   },
   resolve: {
     modulesDirectories: ['node_modules', 'client'],
@@ -76,7 +77,7 @@ module.exports = {
 
 This assumes all React code lives under a directory called `client`, the entry
 point is `client/index.jsx` and that no `.jsx` files under `node_modules` needs
-to be compiled with babel. The combined output will be `dist/bundle.somehash.js`.
+to be compiled with babel. The combined output will be `dist/bundle.js`.
 
 Additionally, the define plugin sets React to build in production mode so some
 code in React will become:
@@ -93,9 +94,10 @@ To run the above use the following command
 webpack -p --config webpack.config.js
 ```
 
-> Note:
->
-> If you are using ES2015, you will want to also use the `babel-preset-es2015` package.
+For development mode things you may wish to do include:
+ - Removing the Uglify plugin
+ - Including source maps by adding the
+ [devtool](https://webpack.github.io/docs/configuration.html#devtool) option.
 
 
 ## Quick Start Without npm
