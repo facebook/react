@@ -137,13 +137,10 @@ assign(ReactDOMTextComponent.prototype, {
       }
     }
   },
-
-  getNativeNode: function() {
-    return getNode(this);
-  },
-
   unmountComponent: function() {
+    var node = getNode(this);
     ReactDOMComponentTree.uncacheNode(this);
+    return node;
   },
 
 });

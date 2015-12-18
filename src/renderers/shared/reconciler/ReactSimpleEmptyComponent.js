@@ -38,9 +38,6 @@ assign(ReactSimpleEmptyComponent.prototype, {
   },
   receiveComponent: function() {
   },
-  getNativeNode: function() {
-    return ReactReconciler.getNativeNode(this._renderedComponent);
-  },
   unmountComponent: function() {
     ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
