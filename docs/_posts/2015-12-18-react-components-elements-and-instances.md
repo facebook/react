@@ -70,7 +70,9 @@ When an element’s `type` is a string, it represents a DOM node with that tag n
     className: 'button button-blue',
     children: {
       type: 'b',
-      children: 'OK!'
+      props: {
+        children: 'OK!'
+      }
     }
   }
 }
@@ -191,7 +193,9 @@ React will ask `Button` what it renders to. The `Button` will return this elemen
     className: 'button button-blue',
     children: {
       type: 'b',
-      children: 'OK!'
+      props: {
+        children: 'OK!'
+      }
     }
   }
 }
