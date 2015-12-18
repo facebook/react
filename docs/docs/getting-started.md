@@ -98,7 +98,7 @@ $ webpack -p --config webpack.config.js
 For development mode things you may wish to do include:
  - Removing the Uglify plugin
  - Including source maps by adding the
- [devtool](https://webpack.github.io/docs/configuration.html#devtool) option.
+ [devtool](https://webpack.github.io/docs/configuration.html#devtool) option. `cheap-module-eval-source` is recommended.
 
 
 ## Quick Start Without npm
