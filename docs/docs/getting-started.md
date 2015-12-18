@@ -37,11 +37,9 @@ $ browserify -t [ babelify --presets [ react ] ] main.js -o bundle.js
 To install React DOM and build your bundle with webpack:  
 
 ```sh
-$ npm install --save react react-dom babel-preset-react
+$ npm install --save react react-dom babel-preset-react babel-preset-es2015
 $ webpack
 ```
-
-Ensure you have a `.babelrc` including the react preset.
 
 A good starting webpack config for production mode would be:
 ```javascript
@@ -62,6 +60,9 @@ module.exports = {
       test: /\.jsx?$/,
       exclude: /node_modules/,
       loaders: ['babel'],
+      query: {
+        presets: ['react', 'es2015']
+      }
     }],
   },
   plugins: [
@@ -91,7 +92,7 @@ these blocks of code.
 
 To run the above use the following command
 ```sh
-webpack -p --config webpack.config.js
+$ webpack -p --config webpack.config.js
 ```
 
 For development mode things you may wish to do include:
