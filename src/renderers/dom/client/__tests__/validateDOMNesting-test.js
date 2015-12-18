@@ -67,6 +67,7 @@ describe('ReactContextValidator', function() {
     expect(isTagStackValid(['div', 'a', 'object', 'a'])).toBe(true);
     expect(isTagStackValid(['div', 'p', 'button', 'p'])).toBe(true);
     expect(isTagStackValid(['p', 'svg', 'foreignObject', 'p'])).toBe(true);
+    expect(isTagStackValid(['html', 'body', 'div'])).toBe(true);
 
     // Invalid, but not changed by browser parsing so we allow them
     expect(isTagStackValid(['div', 'ul', 'ul', 'li'])).toBe(true);
@@ -81,5 +82,6 @@ describe('ReactContextValidator', function() {
     expect(isTagStackValid(['p', 'p'])).toBe(false);
     expect(isTagStackValid(['table', 'tr'])).toBe(false);
     expect(isTagStackValid(['div', 'ul', 'li', 'div', 'li'])).toBe(false);
+    expect(isTagStackValid(['div', 'html'])).toBe(false);
   });
 });
