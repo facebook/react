@@ -31,7 +31,7 @@ Our JSON API returns some data that looks like this:
 ];
 ```
 
-## Step 1: break the UI into a component hierarchy
+## Step 1: Break the UI into a component hierarchy
 
 The first thing you'll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you're working with a designer, they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!
 
