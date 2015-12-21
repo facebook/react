@@ -18,7 +18,7 @@ We will do our best to keep `master` in good shape, with tests passing at all ti
 
 Use `grunt test` to run the full test suite with PhantomJS.
 
-This command is just a facade to [Jest](https://facebook.github.io/jest/). You may optionally `npm install -g jest-cli` run and use Jest commands directly to have more control over how tests are executed.
+This command is just a facade to [Jest](https://facebook.github.io/jest/). You may optionally run `npm install -g jest-cli` and use Jest commands directly to have more control over how tests are executed.
 
 For example, `jest --watch` lets you automatically run the test suite on every file change.
 
