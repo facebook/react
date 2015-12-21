@@ -14,6 +14,14 @@ Some of the core team will be working directly on GitHub. These changes will be 
 
 We will do our best to keep `master` in good shape, with tests passing at all times. But in order to move fast, we will make API changes that your application might not be compatible with. We will do our best to communicate these changes and always version appropriately so you can lock into a specific version if need be.
 
+### Test Suite
+
+Use `grunt test` to run the full test suite with PhantomJS.
+
+This command is just a facade to [Jest](https://facebook.github.io/jest/). You may optionally `npm install -g jest-cli` run and use Jest commands directly to have more control over how tests are executed.
+
+For example, `jest --watch` lets you automatically run the test suite on every file change.
+
 ### Pull Requests
 
 The core team will be monitoring for pull requests. When we get one, we'll run some Facebook-specific integration tests on it first. From here, we'll need to get another person to sign off on the changes and then merge the pull request. For API changes we may need to fix internal uses, which could cause some delay. We'll do our best to provide updates and feedback throughout the process.
