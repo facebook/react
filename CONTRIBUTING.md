@@ -22,6 +22,12 @@ This command is just a facade to [Jest](https://facebook.github.io/jest/). You m
 
 For example, `jest --watch` lets you automatically run the test suite on every file change.
 
+You can also run a subset of tests by passing a prefix to `jest`. For example, `jest ReactDOMSVG` will only run tests in the files that start with `ReactDOMSVG`, such as `ReactDOMSVG-test.js`.
+
+When you know which tests you want to run, you can achieve a fast feedback loop by using these two features together. For example, `jest --watch ReactDOMSVG` will re-run only the matching tests on every change.
+
+Just make sure to run the whole test suite before submitting a pull request!
+
 ### Pull Requests
 
 The core team will be monitoring for pull requests. When we get one, we'll run some Facebook-specific integration tests on it first. From here, we'll need to get another person to sign off on the changes and then merge the pull request. For API changes we may need to fix internal uses, which could cause some delay. We'll do our best to provide updates and feedback throughout the process.
