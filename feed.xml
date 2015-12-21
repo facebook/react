@@ -12,7 +12,7 @@
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;managing-the-instances&quot;&gt;&lt;/a&gt;Managing the Instances &lt;a class=&quot;hash-link&quot; href=&quot;#managing-the-instances&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;If you’re new to React, you probably only worked with component classes and instances before. For example, you may declare a &lt;code&gt;Button&lt;/code&gt; &lt;em&gt;component&lt;/em&gt; by creating a class. When the app is running, you may have several &lt;em&gt;instances&lt;/em&gt; of this component on screen, each with its own properties and local state. This is the traditional object-oriented UI programming. Why introduce &lt;em&gt;elements&lt;/em&gt;?&lt;/p&gt;
 
-&lt;p&gt;In this traditional UI model, it is up to you take care of creating and destroying child component instances. If a &lt;code&gt;Form&lt;/code&gt; component wants to render a &lt;code&gt;Button&lt;/code&gt; component, it needs to create its instance, and manually keep it up to date with any new information.&lt;/p&gt;
+&lt;p&gt;In this traditional UI model, it is up to you to take care of creating and destroying child component instances. If a &lt;code&gt;Form&lt;/code&gt; component wants to render a &lt;code&gt;Button&lt;/code&gt; component, it needs to create its instance, and manually keep it up to date with any new information.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Form&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TraditionalObjectOrientedView&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;c1&quot;&gt;// Read some data passed to the view&lt;/span&gt;
@@ -64,7 +64,9 @@
     &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
     &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
       &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
@@ -136,7 +138,7 @@
   &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This mix and matching helps keep components decoupled from each other, as they can express both &lt;em&gt;is-a&lt;/em&gt; () and &lt;em&gt;has-a&lt;/em&gt; relationships exclusively through composition:&lt;/p&gt;
+&lt;p&gt;This mix and matching helps keep components decoupled from each other, as they can express both &lt;em&gt;is-a&lt;/em&gt; and &lt;em&gt;has-a&lt;/em&gt; relationships exclusively through composition:&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;Button&lt;/code&gt; is a DOM &lt;code&gt;&amp;lt;button&amp;gt;&lt;/code&gt; with specific properties.&lt;/li&gt;
@@ -162,7 +164,9 @@
     &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;button button-blue&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
     &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
       &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;OK!&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;

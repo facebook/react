@@ -119,7 +119,7 @@
 <h2><a class="anchor" name="managing-the-instances"></a>Managing the Instances <a class="hash-link" href="#managing-the-instances">#</a></h2>
 <p>If you’re new to React, you probably only worked with component classes and instances before. For example, you may declare a <code>Button</code> <em>component</em> by creating a class. When the app is running, you may have several <em>instances</em> of this component on screen, each with its own properties and local state. This is the traditional object-oriented UI programming. Why introduce <em>elements</em>?</p>
 
-<p>In this traditional UI model, it is up to you take care of creating and destroying child component instances. If a <code>Form</code> component wants to render a <code>Button</code> component, it needs to create its instance, and manually keep it up to date with any new information.</p>
+<p>In this traditional UI model, it is up to you to take care of creating and destroying child component instances. If a <code>Form</code> component wants to render a <code>Button</code> component, it needs to create its instance, and manually keep it up to date with any new information.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">TraditionalObjectOrientedView</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Read some data passed to the view</span>
@@ -171,7 +171,9 @@
     <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-blue&#39;</span><span class="p">,</span>
     <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
       <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
-      <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+      <span class="p">}</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
@@ -243,7 +245,7 @@
   <span class="o">&lt;</span><span class="err">/div&gt;</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>This mix and matching helps keep components decoupled from each other, as they can express both <em>is-a</em> () and <em>has-a</em> relationships exclusively through composition:</p>
+<p>This mix and matching helps keep components decoupled from each other, as they can express both <em>is-a</em> and <em>has-a</em> relationships exclusively through composition:</p>
 
 <ul>
 <li><code>Button</code> is a DOM <code>&lt;button&gt;</code> with specific properties.</li>
@@ -269,7 +271,9 @@
     <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-blue&#39;</span><span class="p">,</span>
     <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
       <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
-      <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+      <span class="p">}</span>
     <span class="p">}</span>
   <span class="p">}</span>
 <span class="p">}</span>
