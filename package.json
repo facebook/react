@@ -3,12 +3,14 @@
   "private": true,
   "version": "0.15.0-alpha",
   "devDependencies": {
+    "async": "^1.5.0",
     "babel": "^5.8.29",
     "babel-eslint": "4.1.5",
     "benchmark": "^1.0.0",
     "browserify": "^12.0.1",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
+    "coveralls": "^2.11.6",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "envify": "^3.0.0",
@@ -17,6 +19,7 @@
     "eslint-plugin-react-internal": "file:eslint-rules",
     "fbjs": "^0.4.0",
     "fbjs-scripts": "^0.5.0",
+    "glob": "^6.0.1",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
     "grunt-compare-size": "^0.4.0",
@@ -54,6 +57,16 @@
     "test": "jest"
   },
   "jest": {
+    "collectCoverage": true,
+    "collectCoverageOnlyFrom": {
+      "src/**/*.js": {
+        "ignore": [
+          "src/**/__tests__/*.js",
+          "src/shared/vendor/third_party/*.js",
+          "src/test/*.js"
+        ]
+      }
+    },
     "modulePathIgnorePatterns": [
       "/.module-cache/",
       "/react/build/"
