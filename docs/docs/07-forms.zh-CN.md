@@ -32,7 +32,6 @@ next: working-with-the-browser-zh-CN.html
 >
 > 对于 `<input>` and `<textarea>`， `onChange` 替代 — 一般应该用来替代 — the DOM's 内建的 [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) 事件处理。
 
-
 ## 受限组件
 
 设置了 `value` 的 `<input>` 是一个*受限*组件。 对于受限的 `<input>`，渲染出来的 HTML 元素始终保持 `value` 属性的值。例如：
@@ -72,7 +71,6 @@ next: working-with-the-browser-zh-CN.html
 
 当心，在力图标准化复选框与单选按钮的变换处理中，React使用`click` 事件代替 `change` 事件。在大多数情况下它们表现的如同预期，除了在`change` handler中调用`preventDefault` 。`preventDefault` 阻止了浏览器视觉上更新输入，即使`checked`被触发。变通的方式是要么移除`preventDefault`的调用，要么把`checked` 的触发放在一个`setTimeout`里。
 
-
 ## 不受限组件
 
 没有设置 `value`(或者设为 `null`) 的 `<input>` 组件是一个*不受限*组件。对于不受限的 `<input>` 组件，渲染出来的元素直接反应用户输入。例如：
@@ -95,7 +93,7 @@ next: working-with-the-browser-zh-CN.html
   }
 ```
 
-这个例子会像上面的**Controlled Components** 例子一样运行。
+这个例子会像上面的 **不受限组件** 例子一样运行。
 
 同样的， `<input>` 支持 `defaultChecked` 、 `<select>` 支持 `defaultValue`.
 
@@ -103,9 +101,7 @@ next: working-with-the-browser-zh-CN.html
 >
 >  `defaultValue` 和 `defaultChecked` props 只能在内部渲染时被使用。 如果你需要在随后的渲染更新值, 你需要使用 [受限组件](#受限组件).
 
-
 ## 高级主题
-
 
 ### 为什么使用受限组件？
 
@@ -127,7 +123,6 @@ next: working-with-the-browser-zh-CN.html
 
 该方法在任何时间点渲染组件以后，输入框的值就应该 *始终* 为 `Untitled`。
 
-
 ### 为什么 `<textarea>` 使用 `value` 属性？
 
 在 HTML 中， `<textarea>` 的值通常使用子节点设置：
@@ -144,7 +139,6 @@ next: working-with-the-browser-zh-CN.html
 ```
 
 如果 *非要* 使用子节点，效果和使用 `defaultValue` 一样。
-
 
 ### 为什么 `<select>` 使用 `value` 属性
 
