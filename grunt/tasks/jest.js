@@ -69,6 +69,7 @@ function writeTempConfig(callback) {
     if (err) {
       callback(err);
     } else {
+      grunt.file.mkdir(buildPath);
       fs.writeFile(tempConfigPath, JSON.stringify(data, null, '  '), 'utf8', callback);
     }
   });
