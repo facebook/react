@@ -19,13 +19,22 @@ var tempConfigPath = path.join(buildPath, 'jest-config.json');
 
 var config = require(path.join(rootPath, 'package.json')).jest;
 
+var collectCoverageOnlyFrom = {
+  'src/**/*.js': {
+    ignore: [
+      'src/**/__tests__/*.js',
+      'src/shared/vendor/third_party/*.js',
+      'src/test/*.js',
+    ],
+  },
+};
+
 function getCollectCoverageOnlyFrom(callback) {
-  var coverageFrom = config.collectCoverageOnlyFrom;
-  var patterns = Object.keys((config.collectCoverage && coverageFrom) || {});
+  var patterns = Object.keys(collectCoverageOnlyFrom);
   var result = {};
 
   async.each(patterns, function(pattern) {
-    var options = assign({ nodir: true }, coverageFrom[pattern]);
+    var options = assign({ nodir: true }, collectCoverageOnlyFrom[pattern]);
     glob(pattern, options, function(err, files) {
       (files || []).reduce(function(object, key) {
         object[key] = true;
@@ -44,6 +53,7 @@ function getJestConfig(callback) {
   getCollectCoverageOnlyFrom(function(err, data) {
     callback(err, assign({}, config, {
       rootDir: rootDir,
+      collectCoverage: true,
       collectCoverageOnlyFrom: data,
     }));
   });

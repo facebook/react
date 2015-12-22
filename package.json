@@ -57,16 +57,6 @@
     "test": "jest"
   },
   "jest": {
-    "collectCoverage": true,
-    "collectCoverageOnlyFrom": {
-      "src/**/*.js": {
-        "ignore": [
-          "src/**/__tests__/*.js",
-          "src/shared/vendor/third_party/*.js",
-          "src/test/*.js"
-        ]
-      }
-    },
     "modulePathIgnorePatterns": [
       "/.module-cache/",
       "/react/build/"
