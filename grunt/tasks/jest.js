@@ -64,29 +64,48 @@ function writeTempConfig(callback) {
   });
 }
 
-module.exports = function() {
-  var done = this.async();
-
+function run(done, configPath) {
   grunt.log.writeln('running jest (this may take a while)');
+
+  var args = ['--harmony', path.join('node_modules', 'jest-cli', 'bin', 'jest')];
+  if (configPath) {
+    args.push('--config', configPath);
+  }
+  grunt.util.spawn({
+    cmd: 'node',
+    args: args,
+    opts: { stdio: 'inherit', env: { NODE_ENV: 'test' } },
+  }, function(spawnErr, result, code) {
+    if (spawnErr) {
+      onError(spawnErr);
+    } else {
+      grunt.log.ok('jest passed');
+    }
+    grunt.log.writeln(result.stdout);
+
+    done(code === 0);
+  });
+}
+
+function runJestNormally() {
+  var done = this.async();
+  run(done);
+}
+
+function runJestWithCoverage() {
+  var done = this.async();
 
   writeTempConfig(function(writeErr) {
     if (writeErr) {
       onError(writeErr);
       return;
     }
-    grunt.util.spawn({
-      cmd: 'node',
-      args: ['--harmony', path.join('node_modules', 'jest-cli', 'bin', 'jest'), '--config', tempConfigPath],
-      opts: { stdio: 'inherit', env: { NODE_ENV: 'test' } },
-    }, function(spawnErr, result, code) {
-      if (spawnErr) {
-        onError(spawnErr);
-      } else {
-        grunt.log.ok('jest passed');
-      }
-      grunt.log.writeln(result.stdout);
 
-      done(code === 0);
-    });
+    run(done, tempConfigPath);
   });
+}
+
+module.exports = {
+  normal: runJestNormally,
+  coverage: runJestWithCoverage,
 };
