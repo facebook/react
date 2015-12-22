@@ -19,13 +19,22 @@ var tempConfigPath = path.join(buildPath, 'jest-config.json');
 
 var config = require(path.join(rootPath, 'package.json')).jest;
 
+var collectCoverageOnlyFrom = {
+  'src/**/*.js': {
+    ignore: [
+      'src/**/__tests__/*.js',
+      'src/shared/vendor/third_party/*.js',
+      'src/test/*.js',
+    ],
+  },
+};
+
 function getCollectCoverageOnlyFrom(callback) {
-  var coverageFrom = config.collectCoverageOnlyFrom;
-  var patterns = Object.keys((config.collectCoverage && coverageFrom) || {});
+  var patterns = Object.keys(collectCoverageOnlyFrom);
   var result = {};
 
   async.each(patterns, function(pattern) {
-    var options = assign({ nodir: true }, coverageFrom[pattern]);
+    var options = assign({ nodir: true }, collectCoverageOnlyFrom[pattern]);
     glob(pattern, options, function(err, files) {
       (files || []).reduce(function(object, key) {
         object[key] = true;
@@ -44,6 +53,7 @@ function getJestConfig(callback) {
   getCollectCoverageOnlyFrom(function(err, data) {
     callback(err, assign({}, config, {
       rootDir: rootDir,
+      collectCoverage: true,
       collectCoverageOnlyFrom: data,
     }));
   });
@@ -64,29 +74,48 @@ function writeTempConfig(callback) {
   });
 }
 
-module.exports = function() {
-  var done = this.async();
-
+function run(done, configPath) {
   grunt.log.writeln('running jest (this may take a while)');
+
+  var args = ['--harmony', path.join('node_modules', 'jest-cli', 'bin', 'jest')];
+  if (configPath) {
+    args.push('--config', configPath);
+  }
+  grunt.util.spawn({
+    cmd: 'node',
+    args: args,
+    opts: { stdio: 'inherit', env: { NODE_ENV: 'test' } },
+  }, function(spawnErr, result, code) {
+    if (spawnErr) {
+      onError(spawnErr);
+    } else {
+      grunt.log.ok('jest passed');
+    }
+    grunt.log.writeln(result.stdout);
+
+    done(code === 0);
+  });
+}
+
+function runJestNormally() {
+  var done = this.async();
+  run(done);
+}
+
+function runJestWithCoverage() {
+  var done = this.async();
 
   writeTempConfig(function(writeErr) {
     if (writeErr) {
       onError(writeErr);
       return;
     }
-    grunt.util.spawn({
-      cmd: 'node',
-      args: ['--harmony', path.join('node_modules', 'jest-cli', 'bin', 'jest'), '--config', tempConfigPath],
-      opts: { stdio: 'inherit', env: { NODE_ENV: 'test' } },
-    }, function(spawnErr, result, code) {
-      if (spawnErr) {
-        onError(spawnErr);
-      } else {
-        grunt.log.ok('jest passed');
-      }
-      grunt.log.writeln(result.stdout);
 
-      done(code === 0);
-    });
+    run(done, tempConfigPath);
   });
+}
+
+module.exports = {
+  normal: runJestNormally,
+  coverage: runJestWithCoverage,
 };

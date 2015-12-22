@@ -65,13 +65,21 @@ script:
           -F "branch=$TRAVIS_BRANCH" \
           $SERVER
       fi
+    elif [ "$TEST_TYPE" = test ]; then
+      if [ "$TRAVIS_PULL_REQUEST" = false ]; then
+        set -e
+        ./node_modules/.bin/grunt jest:coverage
+        cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
+      else
+        ./node_modules/.bin/grunt jest:normal
+      fi
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi
 env:
   matrix:
   - TEST_TYPE=build
-  - TEST_TYPE=jest
+  - TEST_TYPE=test
   - TEST_TYPE=lint
   - TEST_TYPE=build_website
   global:
@@ -81,6 +89,8 @@ env:
   - secure: dkpPW+VnoqC/okhRdV90m36NcyBFhcwEKL3bNFExAwi0dXnFao8RoFlvnwiPlA23h2faROkMIetXlti6Aju08BgUFV+f9aL6vLyU7gUent4Nd3413zf2fwDtXIWIETg6uLnOpSykGKgCAT/hY3Q2oPLqOoY0OxfgnbqwxkxljrE=
   # GITHUB_TOKEN
   - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
+  # COVERALLS_TOKEN
+  - secure: h/cUq+TrUMZOQmkFD7CvuwX0uAwmjIfKZ4qSUzY+QzUtDzOzA0L/XF84xTBq1Q5YYsEiaoF6GxxGCdrLQiBA/ZTd+88UHgeZPMRvi0xG9Q+PeePVOsZMTxy4/WWFgOfSQCk49Mj9zizGgO78i6vxq+SDXMtFHnZ+TpPJIEW6/m0=
 matrix:
   fast_finish: true
 notifications:

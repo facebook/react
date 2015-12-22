@@ -111,10 +111,12 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('build:react-dom', require('./grunt/tasks/react-dom'));
 
-  grunt.registerTask('test', ['jest']);
-  grunt.registerTask('npm:test', ['build', 'npm:pack']);
+  var jestTasks = require('./grunt/tasks/jest');
+  grunt.registerTask('jest:normal', jestTasks.normal);
+  grunt.registerTask('jest:coverage', jestTasks.coverage);
 
-  grunt.registerTask('jest', require('./grunt/tasks/jest'));
+  grunt.registerTask('test', ['jest:normal']);
+  grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
   // in order so we can take advantage of that and only run build-modules once.
