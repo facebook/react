@@ -169,6 +169,6 @@ Server-side rendering을 위해 [SoundCloud](https://developers.soundcloud.com/b
 
 ### Introducing React Native (+Playlist) - React.js Conf 2015
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/watch?v=KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/v/KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
 
 2015년에 [Tom Occhino](https://twitter.com/tomocchino)님이 React의 과거와 현재를 리뷰하고 나아갈 방향을 제시했습니다.
