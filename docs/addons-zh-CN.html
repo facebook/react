@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -407,7 +411,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p><code>React.addons</code> 是我们放置一些用来构建React apps的有用的工具的地方。 <strong>这些应该被认为是实验性的</strong> 但是最终批量进入核心代码或者一个有用的工具库中:</p>
+    <p>React插件是一系列的用来构建 React app的有用模块。 <strong>这些应该被认为是实验性的</strong> 并趋向于比core变动更频繁。</p>
 
 <ul>
 <li><a href="animation.html"><code>TransitionGroup</code> 和 <code>CSSTransitionGroup</code></a>, 用来处理通常不能简单实现的动画和转换，比如在组件移除之前。</li>
@@ -416,6 +420,7 @@
 <li><a href="create-fragment.html"><code>createFragment</code></a>, 创建一组外键的子级。</li>
 <li><a href="update.html"><code>update</code></a>, 一个使不可变数据在JavaScript里更易处理的辅助函数。</li>
 <li><a href="pure-render-mixin.html"><code>PureRenderMixin</code></a>, 一个特定情况下的性能优化器。</li>
+<li><a href="shallow-compare.html"><code>shallowCompare</code></a>, 一个辅助函数，用来对 props 和 state在组件里 执行浅比较 以决定一个组件是否应该更新。</li>
 </ul>
 
 <p>下面的插件只存在开发版(未压缩)React中：</p>
@@ -425,9 +430,7 @@
 <li><a href="perf.html"><code>Perf</code></a>, 用于测量性能并给你提示哪里可以优化。</li>
 </ul>
 
-<p>要获取插件，使用 <code>react-with-addons.js</code> (和它的压缩副本）而不是通常的 <code>react.js</code>。</p>
-
-<p>当从npm使用react包时，简单的用<code>require(&#39;react/addons&#39;)</code> 代替 <code>require(&#39;react&#39;)</code> 来获取带有所有插件的React。</p>
+<p>要获取插件，单独从npm安装他们(例如 <code>npm install react-addons-pure-render-mixin</code>).我们不支持使用插件如果你没有用npm.</p>
 
 
     <div class="docs-prevnext">

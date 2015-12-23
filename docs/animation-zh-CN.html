@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -412,7 +416,7 @@
 <p><code>ReactCSSTransitionGroup</code> 基于 <code>ReactTransitionGroup</code> 是一个当React组件进入或离开DOM时，执行CSS动画和过渡的简单方法。它的灵感来自于杰出的 <a href="http://www.nganimate.org/">ng-animate</a> 库。</p>
 <h3><a class="anchor" name=""></a>入门指南 <a class="hash-link" href="#">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code> 是 <code>ReactTransitions</code> 的接口。这是一个简单的元素，包裹了所有你感兴趣的动画组件。这里是一个淡入和淡出列表项目的例子。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">TodoList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -424,7 +428,7 @@
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">newItems</span><span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">handleRemove</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">newItems</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">newItems</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
     <span class="nx">newItems</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">newItems</span><span class="p">});</span>
   <span class="p">},</span>
@@ -488,11 +492,11 @@
 <p>在初始化挂载时 <code>ReactCSSTransitionGroup</code> 将获得<code>example-appear</code> CSS类 并且<code>example-appear-active</code> CSS 类在下一刻被添加。</p>
 <div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-appear</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="nc">.example-appear.example-appear-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>在初始化挂载，所有的 <code>ReactCSSTransitionGroup</code> 子级将会 <code>appear</code> 但不 <code>enter</code>。然而，所有后来添加到已存在的 <code>ReactCSSTransitionGroup</code> 的子级将 <code>enter</code> 但不 <code>appear</code>。</p>
@@ -547,7 +551,7 @@
   <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="-animating-one-or-zero-items"></a>动画一个或者零个项目 Animating One or Zero Items <a class="hash-link" href="#-animating-one-or-zero-items">#</a></h3>
 <p>在上面的例子中，我们渲染了一系列的项目到<code>ReactCSSTransitionGroup</code>里。然而 <code>ReactCSSTransitionGroup</code> 的子级同样可以是一个或零个项目。这使它能够动画化单个元素的进入和离开。同样，你可以动画化一个新的元素替换当前元素。例如，我们可以像这样实现一个简单的图片轮播器：</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">ImageCarousel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -572,7 +576,7 @@
 <p>当使用 <code>ReactCSSTransitionGroup</code> 时，没有办法通知你的组件何时过渡效果结束或者在动画时执行任何复杂的逻辑运算。如果你想要更多细粒度的控制，你可以使用底层的 <code>ReactTransitionGroup</code> API，它提供了你自定义过渡效果所需要的挂钩。</p>
 </blockquote>
 <h2><a class="anchor" name="-api-reacttransitiongroup"></a>底层 API: <code>ReactTransitionGroup</code> <a class="hash-link" href="#-api-reacttransitiongroup">#</a></h2>
-<p><code>ReactTransitionGroup</code>是动画的基础。它通过 <code>React.addons.TransitionGroup</code> 访问。当子级被声明式的从其中添加或移除（就像上面的例子）时，特殊的生命周期挂钩会在它们上面被调用。</p>
+<p><code>ReactTransitionGroup</code>是动画的基础。它通过 <code>require(&#39;react-addons-transition-group&#39;)</code> 访问。当子级被声明式的从其中添加或移除（就像上面的例子）时，特殊的生命周期挂钩会在它们上面被调用。</p>
 <h3><a class="anchor" name="componentwillappearcallback"></a><code>componentWillAppear(callback)</code> <a class="hash-link" href="#componentwillappearcallback">#</a></h3>
 <p>对于被初始化挂载到 <code>TransitionGroup</code> 的组件，它和 <code>componentDidMount()</code> 在相同时间被调用 。它将会阻塞其它动画发生，直到<code>callback</code>被调用。它只会在 <code>TransitionGroup</code> 初始化渲染时被调用。</p>
 <h3><a class="anchor" name="componentdidappear"></a><code>componentDidAppear()</code> <a class="hash-link" href="#componentdidappear">#</a></h3>
@@ -591,13 +595,7 @@
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
-<p>每一个React能渲染的DOM组件都是可用的。然而，<code>组件</code>不需要是一个DOM组件。它可以是任何你想要的React组件；甚至是你自己已经写好的！</p>
-
-<blockquote>
-<p>注意：</p>
-
-<p>v0.12之前，当使用DOM组件时，<code>组件</code> prop 需要是一个对<code>React.DOM.*</code>的引用。既然组件简单的被传递到 <code>React.createElement</code>，它现在必然是一个字符串。复合组件必须传递工厂函数（factory）。</p>
-</blockquote>
+<p>每一个React能渲染的DOM组件都是可用的。然而，<code>组件</code>不需要是一个DOM组件。它可以是任何你想要的React组件；甚至是你自己已经写好的！只要写 <code>component={List}</code> 你的组件会收到 <code>this.props.children</code></p>
 
 <p>任何额外的、用户定义的属性将会成为已渲染的组件的属性。例如，以下是你将如何渲染一个带有css类的 <code>&lt;ul&gt;</code>：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>

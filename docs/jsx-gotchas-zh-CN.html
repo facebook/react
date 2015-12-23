@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -437,6 +441,9 @@
 </code></pre></div><h2><a class="anchor" name="-html-"></a>自定义 HTML 属性 <a class="hash-link" href="#-html-">#</a></h2>
 <p>如果往原生 HTML 元素里传入 HTML 规范里不存在的属性，React 不会显示它们。如果需要使用自定义属性，要加 <code>data-</code> 前缀。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>然而，在自定义元素中任意的属性都是被支持的 （那些在tag名里带有连接符或者 <code>is=&quot;...&quot;</code> 属性的）</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">x</span><span class="o">-</span><span class="nx">my</span><span class="o">-</span><span class="nx">component</span> <span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>以 <code>aria-</code> 开头的 <a href="http://www.w3.org/WAI/intro/aria">网络无障碍</a> 属性可以正常使用。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">aria</span><span class="o">-</span><span class="nx">hidden</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>

@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -428,10 +432,12 @@
     <span class="c1">// React 元素</span>
     <span class="nx">optionalElement</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">,</span>
 
+    <span class="c1">// 你同样可以断言一个 prop 是一个类的实例。</span>
     <span class="c1">// 用 JS 的 instanceof 操作符声明 prop 为类的实例。</span>
     <span class="nx">optionalMessage</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">),</span>
 
-    <span class="c1">// 用 enum 来限制 prop 只接受指定的值。</span>
+    <span class="c1">// 你可以用 enum 的方式</span>
+    <span class="c1">// 确保你的 prop 被限定为指定值。</span>
     <span class="nx">optionalEnum</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;News&#39;</span><span class="p">,</span> <span class="s1">&#39;Photos&#39;</span><span class="p">]),</span>
 
     <span class="c1">// 指定的多个对象类型中的一个</span>
@@ -453,14 +459,16 @@
       <span class="nx">fontSize</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
     <span class="p">}),</span>
 
-    <span class="c1">// 以后任意类型加上 `isRequired` 来使 prop 不可空。</span>
+    <span class="c1">// 你可以在任意东西后面加上 `isRequired`</span>
+    <span class="c1">// 来确保 如果 prop 没有提供 就会显示一个警告。</span>
     <span class="nx">requiredFunc</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
 
     <span class="c1">// 不可空的任意类型</span>
     <span class="nx">requiredAny</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
 
-    <span class="c1">// 自定义验证器。如果验证失败需要返回一个 Error 对象。不要直接</span>
-    <span class="c1">// 使用 `console.warn` 或抛异常，因为这样 `oneOfType` 会失效。</span>
+    <span class="c1">// 你可以自定义一个验证器。如果验证失败需要返回一个 Error 对象。</span>
+    <span class="c1">// 不要直接使用 `console.warn` 或抛异常，</span>
+    <span class="c1">// 因为这在 `oneOfType` 里不起作用。</span>
     <span class="nx">customProp</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">propName</span><span class="p">,</span> <span class="nx">componentName</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="sr">/matchme/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">props</span><span class="p">[</span><span class="nx">propName</span><span class="p">]))</span> <span class="p">{</span>
         <span class="k">return</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Validation failed!&#39;</span><span class="p">);</span>
@@ -468,6 +476,22 @@
     <span class="p">}</span>
   <span class="p">},</span>
   <span class="cm">/* ... */</span>
+<span class="p">});</span>
+</code></pre></div><h3><a class="anchor" name="single-child"></a>Single Child <a class="hash-link" href="#single-child">#</a></h3>
+<p>用  <code>React.PropTypes.element</code> 你可以指定仅有一个子级能被传送给组件</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">isRequired</span>
+  <span class="p">},</span>
+
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span> <span class="c1">// 这里必须是一个元素否则就会警告</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+
 <span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="-prop-"></a>默认 Prop 值 <a class="hash-link" href="#-prop-">#</a></h2>
 <p>React 支持以声明式的方式来定义 <code>props</code> 的默认值。</p>
@@ -481,8 +505,8 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>当父级没有传入 props 时，<code>getDefaultProps()</code> 可以保证  <code>this.props.value</code> 有默认值，注意 <code>getDefaultProps</code> 的结果会被 <em>缓存</em>。得益于此，你可以直接使用 props，而不必写手动编写一些重复或无意义的代码。</p>
-<h2><a class="anchor" name="-props"></a>传递 Props：小技巧 <a class="hash-link" href="#-props">#</a></h2>
-<p>有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想少写点代码来把传入组件的 props 复制到对应的 HTML 元素上。这时 JSX 的 <em>spread</em> 语法会帮到你：</p>
+<h2><a class="anchor" name="-props"></a>传递 Props：捷径 <a class="hash-link" href="#-props">#</a></h2>
+<p>有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想 复制任何传进你的组件的HTML属性 到底层的HTML元素上。为了减少输入，你可以用 JSX <em>spread</em>  语法来完成：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// 这样会把 CheckList 所有的 props 复制到 &lt;a&gt;</span>
@@ -496,22 +520,6 @@
   <span class="o">&lt;</span><span class="err">/CheckLink&gt;,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name=""></a>单个子级 <a class="hash-link" href="#">#</a></h2>
-<p><code>React.PropTypes.element</code> 可以限定只能有一个子级传入。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">children</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">isRequired</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span> <span class="c1">// 有且仅有一个元素，否则会抛异常。</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-
-<span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="mixins"></a>Mixins <a class="hash-link" href="#mixins">#</a></h2>
 <p>组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">跨切面关注点</a>。React 使用 <code>mixins</code> 来解决这类问题。</p>
 
@@ -588,6 +596,27 @@
 <p>方法遵循正式的ES6 class的语义，意味着它们不会自动绑定<code>this</code>到实例上。你必须显示的使用<code>.bind(this)</code> or <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions">箭头函数</a> <code>=&gt;</code>.</p>
 <h3><a class="anchor" name="-mixins"></a>没有 Mixins <a class="hash-link" href="#-mixins">#</a></h3>
 <p>不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易支持这些用例不依靠mixins。</p>
+<h2><a class="anchor" name=""></a>无状态函数 <a class="hash-link" href="#">#</a></h2>
+<p>你也可以用 JavaScript 函数来定义你的 React 类。例如使用无状态函数语法：</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">HelloMessage</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+</code></pre></div>
+<p>或者使用新的ES6箭头函数:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">HelloMessage</span> <span class="o">=</span> <span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+</code></pre></div>
+<p>这个简化的组件API旨在用于那些纯函数态的组件 。这些组件必须没有保持任何内部状态，没有备份实例，也没有组件生命周期方法。他们纯粹的函数式的转化他们的输入，没有引用。
+然而，你仍然可以以设置为函数的properties的方式来指定 <code>.propTypes</code> 和 <code>.defaultProps</code>，就像你在ES6类里设置他们那样。</p>
+
+<blockquote>
+<p>注意：</p>
+
+<p>因为无状态函数没有备份实例，你不能附加一个引用到一个无状态函数组件。 通常这不是问题，因为无状态函数不提供一个命令式的API。没有命令式的API，你就没有任何需要实例来做的事。然而，如果用户想查找无状态函数组件的DOM节点，他们必须把这个组件包装在一个有状态组件里（比如，ES6 类组件） 并且连接一个引用到有状态的包装组件。</p>
+</blockquote>
+
+<p>在理想世界里，你的大多数组件都应该是无状态函数式的，因为这些无状态组件可以在React核心里经过一个快速的代码路径。 如果可能，这是推荐的模式。</p>
 
 
     <div class="docs-prevnext">

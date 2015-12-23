@@ -337,7 +337,7 @@
 &lt;ol&gt;
 
 &lt;li id=&quot;fn1&quot;&gt;
-&lt;p&gt;All React elements require an additional &lt;code&gt;$$typeof: Symbol.for(‘react.element’)&lt;/code&gt; field declared on the object for &lt;a href=&quot;https://github.com/facebook/react/pull/4832&quot;&gt;security reasons&lt;/a&gt;. It is omitted in the examples above. This blog entry uses inline objects for elements to give you an idea of what’s happening underneath but the code won’t run as is unless you either add &lt;code&gt;$$typeof&lt;/code&gt; to the elements, or change the code to use &lt;code&gt;React.createElement()&lt;/code&gt; or JSX.&amp;nbsp;&lt;a href=&quot;#fnref1&quot; rev=&quot;footnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;All React elements require an additional &lt;code&gt;$$typeof: Symbol.for(&amp;#39;react.element&amp;#39;)&lt;/code&gt; field declared on the object for &lt;a href=&quot;https://github.com/facebook/react/pull/4832&quot;&gt;security reasons&lt;/a&gt;. It is omitted in the examples above. This blog entry uses inline objects for elements to give you an idea of what’s happening underneath but the code won’t run as is unless you either add &lt;code&gt;$$typeof&lt;/code&gt; to the elements, or change the code to use &lt;code&gt;React.createElement()&lt;/code&gt; or JSX.&amp;nbsp;&lt;a href=&quot;#fnref1&quot; rev=&quot;footnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 
 &lt;/ol&gt;

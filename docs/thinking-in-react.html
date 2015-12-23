@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -479,7 +483,7 @@
 <h2><a class="anchor" name="step-3-identify-the-minimal-but-complete-representation-of-ui-state"></a>Step 3: Identify the minimal (but complete) representation of UI state <a class="hash-link" href="#step-3-identify-the-minimal-but-complete-representation-of-ui-state">#</a></h2>
 <p>To make your UI interactive, you need to be able to trigger changes to your underlying data model. React makes this easy with <strong>state</strong>.</p>
 
-<p>To build your app correctly, you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: <em>Don&#39;t Repeat Yourself</em>. Figure out what the absolute minimal representation of the state of your application needs to be and compute everything else you need on-demand. For example, if you&#39;re building a TODO list, just keep an array of the TODO items around; don&#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count, simply take the length of the TODO items array.</p>
+<p>To build your app correctly, you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: <em>Don&#39;t Repeat Yourself</em>. Figure out the absolute minimal representation of the state your application needs and compute everything else you need on-demand. For example, if you&#39;re building a TODO list, just keep an array of the TODO items around; don&#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count, simply take the length of the TODO items array.</p>
 
 <p>Think of all of the pieces of data in our example application. We have:</p>
 

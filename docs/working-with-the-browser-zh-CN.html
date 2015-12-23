@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -409,48 +413,13 @@
 
     <p>React提供了强大的抽象机制使你在大多数情况下免于直接接触DOM，但有时你仅仅只需要访问底层API，也许是为了与第三方库或者已有的代码协作。</p>
 <h2><a class="anchor" name="dom"></a>虚拟DOM <a class="hash-link" href="#dom">#</a></h2>
-<p>React如此快速是因为它从不直接操作DOM。React维持了一个快速的内存中的DOM表示。<code>render()</code> 方法返回一个DOM的<em>描述</em>，然后React能根据内存中的描述diff此描述来计算出最快速的方法更新浏览器。</p>
+<p>React非常快速是因为它从不直接操作DOM。React维持了一个快速的内存中的DOM表示。<code>render()</code> 方法实际上返回一个对DOM的<em>描述</em>，然后React能根据内存中的“描述”来比较此“描述”以计算出最快速的方法更新浏览器。</p>
 
 <p>此外，React实现了一个完备的合成事件(synthetic event)系统，以使得所有的事件对象都被保证符合W3C细则，而不论各个浏览器的怪癖，并且所有事件跨浏览器地一致并高效的冒泡（bubbles），你甚至能在IE8里使用一些HTML5事件！</p>
 
 <p>大多数时间你应该和React的&quot;伪造浏览器&quot;呆在一起，因为它更高性能并且容易推理。然而，有时你只需要访问底层API，或许是为了与第三方库比如一个jQuery插件协作。React为你提供了安全仓口来直接使用底层API。</p>
 <h2><a class="anchor" name="refs--finddomnode"></a>Refs 和 findDOMNode() <a class="hash-link" href="#refs--finddomnode">#</a></h2>
-<p>为了与浏览器互动，你需要一个指向DOM node的引用。React有一个函数<code>ReactDOM.findDOMNode(component)</code> ，你能调用以得到一个指向指向组件的DOM node的引用。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p><code>findDOMNode()</code> 只作用于已挂载的组件（即，已经放置于DOM中的组件）。如果你尝试在还没有被挂载的组件上调用此函数（比如在<code>render()</code> 里有待被创建的组件上调用<code>findDOMNode()</code>将会抛出一个异常）</p>
-</blockquote>
-
-<p>为了获得一个指向React组件的引用，你可以要么使用<code>this</code> 来得到当前React组件，要么使用refs来引用你拥有的组件。它们像这样工作：</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// 明确的强制text input使用原生DOM API。</span>
-    <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myTextInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// 当组件被挂载时</span>
-    <span class="c1">// ref属性给this.refs添加了一个指向指向组件的引用</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;myTextInput&quot;</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span>
-          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span>
-          <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Focus the text input&quot;</span>
-          <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span>
-        <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="refs"></a>更多关于Refs <a class="hash-link" href="#refs">#</a></h2>
-<p>要学习更多有关refs，包括更有效使用它们的方法，请参见<a href="/react/docs/more-about-refs.html">more about refs</a> 文档。</p>
+<p>为了与浏览器互动，你需要一个指向DOM node的引用。你可以连接一个 <code>ref</code> 到任何的元素，这允许你引用 组件的 <strong>backing instance</strong>  。它很有用，如果你需要在组件上调用命令式函数，或者想访问底层的DOM节点。要了解很多关于 refs，包括更有效使用他们的方法，请查看我们的 <a href="/react/docs/more-about-refs-zh-CN.html">关于Refs的更多内容</a> 文档。</p>
 <h2><a class="anchor" name=""></a>组件的生命周期 <a class="hash-link" href="#">#</a></h2>
 <p>组件的生命周期有三个主要部分：</p>
 
@@ -478,12 +447,11 @@
 <ul>
 <li><code>componentWillUnmount()</code> 在组件被卸载和摧毁后被立即调用。清理应该放在这里。</li>
 </ul>
-<h3><a class="anchor" name="mounted-methods"></a>Mounted Methods <a class="hash-link" href="#mounted-methods">#</a></h3>
+<h3><a class="anchor" name=""></a>已挂载的方法 <a class="hash-link" href="#">#</a></h3>
 <p><em>Mounted</em> 复合组件同样支持以下方法:</p>
 
 <ul>
-<li><code>findDOMNode(): DOMElement</code> 能够在任何已挂载的组件上调用以便于获取指向它渲染的DOM node的引用。</li>
-<li><code>forceUpdate()</code> 能在任何已挂载的组件上调用，当你知道一些更深层次的组件状态变化了但没有使用 <code>this.setState()</code>。</li>
+<li><code>component.forceUpdate()</code> 可以在任何已挂载的组件上调用，在你知道 某些深处的组件状态被未使用 <code>this.setState()</code> 改变了时。</li>
 </ul>
 <h2><a class="anchor" name="polyfills"></a>浏览器支持和填充物(polyfills) <a class="hash-link" href="#polyfills">#</a></h2>
 <p>在 Facebook，我们支持老浏览器，包括IE8。我们由来已久的有适当的填充物(polyfills)来让我们写前瞻性的js。这意味着我们在代码库中没有一堆散落在各处的技巧(hacks)并且我们依然能期望我们的代码&quot;可行（just work）&quot;。例如，我可以只写 <code>Date.now()</code>，而不是额外看到<code>+new Date()</code>。既然开源的React和我们内部使用的一样，我们也应用了这种使用前瞻性js的哲学。</p>

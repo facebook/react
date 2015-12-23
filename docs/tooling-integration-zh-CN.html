@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -421,10 +425,16 @@
 <p>浏览器中的JSX转换器相当大并且导致额外的本可避免的客户端计算。不要在生产环境中使用 - 见下一节。</p>
 </blockquote>
 <h3><a class="anchor" name="--jsx"></a>投入生产: 预编译 JSX <a class="hash-link" href="#--jsx">#</a></h3>
-<p>如果你有<a href="https://www.npmjs.com/">npm</a>，你可以运行 <code>npm install -g babel</code>. Babel 对React v0.12 和 v0.13 有内建的支持。 标签被自动转化为它们的等价物<code>React.createElement(...)</code>, <code>displayName</code> 被自动推断并添加到所有的React.createClass 调用。</p>
+<p>如果你有<a href="https://www.npmjs.com/">npm</a>，你可以运行 <code>npm install -g babel-cli</code>. Babel 对React v0.12+ 有内建支持。 标签被自动转化为它们的等价物<code>React.createElement(...)</code>, <code>displayName</code> 被自动推断并添加到所有的React.createClass 调用。</p>
 
 <p>这个工具会把使用JSX语法的文件转化为简单的可直接在浏览器运行的JavaScript文件。它同样将为你监视目录并自动转化文件当他们变动时；例如：<code>babel --watch src/ --out-dir lib/</code>.</p>
 
+<p>从 Babel 6 开始，默认不再包含转换。这意味这必须在运行 <code>babel</code> 命令时指定选项，或者 <code>.babelrc</code> 必须指定选项。附加的捆绑了一大批转化的包(presets)也同样需要被安装.协同React工作最常用的是 <code>es2015</code> 和 <code>react</code> presets.更多关于 Babel 变化的信息可以在 <a href="http://babeljs.io/blog/2015/10/29/6.0.0/">Babel 6 博客发布的信息</a>上找到.</p>
+
+<p>这里是一个要使用ES2015 语法和 React 你该怎样做的例子：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install babel-preset-es2015 babel-preset-react
+babel --presets es2015,react --watch src/ --out-dir lib/
+</code></pre></div>
 <p>默认模式下带有<code>.js</code>后缀的JSX文件被转化。运行 <code>babel --help</code> 获取更多关于如何使用 Babel 的信息。</p>
 
 <p>输出的例子：</p>
@@ -454,7 +464,7 @@ var HelloMessage = React.createClass({
 
 ReactDOM.render(React.createElement(HelloMessage, { name: &quot;John&quot; }), mountNode);
 </code></pre></div><h3><a class="anchor" name=""></a>有帮助的开源项目 <a class="hash-link" href="#">#</a></h3>
-<p>开源社区已经创建了一些集成JSX到数个编辑器和构建系统的工具。参见<a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSX integrations</a> 查看全部列表。</p>
+<p>开源社区已经创建了一些集成JSX到数个编辑器和构建系统的工具。全部列表请见<a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSX integrations</a> 。</p>
 
 
     <div class="docs-prevnext">

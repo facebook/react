@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -446,8 +450,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name=""></a>从属关系 <a class="hash-link" href="#">#</a></h2>
-<p>上面例子中，<code>Avatar</code> 拥有 <code>ProfilePic</code> 和 <code>ProfileLink</code> 的实例。<code>拥有者</code> 就是给其它组件设置 <code>props</code> 的那个组件。更正式地说，
-如果组件 <code>Y</code> 在 <code>render()</code> 方法是创建了组件 <code>X</code>，那么 <code>Y</code> 就拥有 <code>X</code>。上面讲过，组件不能修改自身的 <code>props</code> - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。</p>
+<p>上面例子中，<code>Avatar</code> 拥有 <code>ProfilePic</code> 和 <code>ProfileLink</code> 的实例。<code>拥有者</code> 就是给其它组件设置 <code>props</code> 的那个组件。更正式地说，如果组件 <code>Y</code> 在 <code>render()</code> 方法是创建了组件 <code>X</code>，那么 <code>Y</code> 就拥有 <code>X</code>。上面讲过，组件不能修改自身的 <code>props</code> - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。</p>
 
 <p>把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，<code>Avatar</code> 拥有 <code>div</code>、<code>ProfilePic</code> 和 <code>ProfileLink</code> 实例，<code>div</code> 是 <code>ProfilePic</code> 和 <code>ProfileLink</code> 实例的<strong>父级</strong>（但不是拥有者）。</p>
 <h2><a class="anchor" name=""></a>子级 <a class="hash-link" href="#">#</a></h2>

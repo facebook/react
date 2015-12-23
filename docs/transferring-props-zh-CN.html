@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -415,7 +419,7 @@
 <p>如果不使用 JSX，可以使用一些对象辅助方法如 ES6 的 <code>Object.assign</code> 或 Underscore <code>_.extend</code>。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="p">{</span> <span class="nx">more</span><span class="o">:</span> <span class="s1">&#39;values&#39;</span> <span class="p">}));</span>
 </code></pre></div>
-<p>下面的教程介绍一些最佳实践。使用了 JSX 和 ES7 的还在试验阶段的特性。</p>
+<p>下面的教程介绍一些最佳实践。使用了 JSX 和 试验性的ECMAScript 语法。</p>
 <h2><a class="anchor" name=""></a>手动传递 <a class="hash-link" href="#">#</a></h2>
 <p>大部分情况下你应该显式地向下传递 props。这样可以确保只公开你认为是安全的内部 API 的子集。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -510,7 +514,7 @@
 <h2><a class="anchor" name="-..."></a>剩余属性和展开属性 <code>...</code> <a class="hash-link" href="#-...">#</a></h2>
 <p>剩余属性可以把对象剩下的属性提取到一个新的对象。会把所有在解构赋值中列出的属性剔除。</p>
 
-<p>这是 <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">ES7 草案</a> 中的试验特性。</p>
+<p>这是 <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">ECMAScript 草案</a> 中的试验特性。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="p">{</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="p">...</span><span class="nx">z</span> <span class="p">}</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">x</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">a</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">4</span> <span class="p">};</span>
 <span class="nx">x</span><span class="p">;</span> <span class="c1">// 1</span>
 <span class="nx">y</span><span class="p">;</span> <span class="c1">// 2</span>
@@ -519,7 +523,7 @@
 <blockquote>
 <p>注意:</p>
 
-<p>使用 <a href="https://www.npmjs.com/package/react-tools">JSX 命令行工具</a> 配合 <code>--harmony</code> 标记来启用 ES7 语法。</p>
+<p>要用 Babel 6转换 rest 和 spread 属性，你需要安装 <a href="https://babeljs.io/docs/plugins/preset-es2015/"><code>es2015</code></a> preset，<a href="https://babeljs.io/docs/plugins/transform-object-rest-spread/"><code>transform-object-rest-spread</code></a> 插件并在 <code>.babelrc</code> 里配置他们.</p>
 </blockquote>
 <h2><a class="anchor" name="-underscore-"></a>使用 Underscore 来传递 <a class="hash-link" href="#-underscore-">#</a></h2>
 <p>如果不使用 JSX，可以使用一些库来实现相同效果。Underscore 提供 <code>_.omit</code> 来过滤属性，<code>_.extend</code> 复制属性到新的对象。</p>

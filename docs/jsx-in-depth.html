@@ -224,6 +224,10 @@
                     <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -464,10 +468,7 @@ names like <code>className</code> and <code>htmlFor</code>, respectively.</p>
 <span class="c1">// Output (JS):</span>
 <span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s2">&quot;Nav&quot;</span><span class="p">,</span> <span class="p">});</span>
 </code></pre></div>
-<p>Use the <a href="https://babeljs.io/repl/">Babel REPL</a> to try out JSX and see how it
-desugars into native JavaScript, and the
-<a href="/react/html-jsx.html">HTML to JSX converter</a> to convert your existing HTML to
-JSX.</p>
+<p>Use the <a href="https://babeljs.io/repl/">Babel REPL</a> to try out JSX and see how it desugars into native JavaScript, and the <a href="/react/html-jsx.html">HTML to JSX converter</a> to convert your existing HTML to JSX.</p>
 
 <p>If you want to use JSX, the <a href="/react/docs/getting-started.html">Getting Started</a> guide shows how to set up compilation.</p>
 
@@ -531,8 +532,7 @@ ReactElement as an object literal to bypass the validation code in
 <p>This feature is available in <a href="/react/blog/2014/07/17/react-v0.11.html#jsx">v0.11</a> and above.</p>
 </blockquote>
 <h2><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h2><h3><a class="anchor" name="attribute-expressions"></a>Attribute Expressions <a class="hash-link" href="#attribute-expressions">#</a></h3>
-<p>To use a JavaScript expression as an attribute value, wrap the expression in a
-pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</code>).</p>
+<p>To use a JavaScript expression as an attribute value, wrap the expression in a pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</code>).</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Person</span> <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="c1">// Output (JS):</span>
