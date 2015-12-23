@@ -20,8 +20,6 @@ var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
-var instancesByReactID = {};
-
 var didWarnValueLink = false;
 var didWarnCheckedLink = false;
 var didWarnValueNull = false;
@@ -146,15 +144,6 @@ var ReactDOMInput = {
       listeners: null,
       onChange: _handleChange.bind(inst),
     };
-  },
-
-  mountReadyWrapper: function(inst) {
-    // Can't be in mountWrapper or else server rendering leaks.
-    instancesByReactID[inst._rootNodeID] = inst;
-  },
-
-  unmountWrapper: function(inst) {
-    delete instancesByReactID[inst._rootNodeID];
   },
 
   updateWrapper: function(inst) {
