@@ -260,6 +260,75 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.hasAttribute('height')).toBe(false);
     });
 
+    it('should remove known SVG camel case attributes', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<svg viewBox="0 0 100 100" />, container);
+
+      expect(container.firstChild.hasAttribute('viewBox')).toBe(true);
+      ReactDOM.render(<svg />, container);
+      expect(container.firstChild.hasAttribute('viewBox')).toBe(false);
+    });
+
+    it('should remove known SVG hyphenated attributes', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<svg clip-path="0 0 100 100" />, container);
+
+      expect(container.firstChild.hasAttribute('clip-path')).toBe(true);
+      ReactDOM.render(<svg />, container);
+      expect(container.firstChild.hasAttribute('clip-path')).toBe(false);
+    });
+
+    it('should remove arbitrary SVG hyphenated attributes', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<svg the-word="the-bird" />, container);
+
+      expect(container.firstChild.hasAttribute('the-word')).toBe(true);
+      ReactDOM.render(<svg />, container);
+      expect(container.firstChild.hasAttribute('the-word')).toBe(false);
+    });
+
+    it('should remove arbitrary SVG camel case attributes', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<svg theWord="theBird" />, container);
+
+      expect(container.firstChild.hasAttribute('theWord')).toBe(true);
+      ReactDOM.render(<svg />, container);
+      expect(container.firstChild.hasAttribute('theWord')).toBe(false);
+    });
+
+    it('should remove SVG attributes that should have been hyphenated', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<svg clipPath="0 0 100 100" />, container);
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('clipPath');
+      expect(console.error.argsForCall[0][0]).toContain('clip-path');
+
+      expect(container.firstChild.hasAttribute('clip-path')).toBe(true);
+      ReactDOM.render(<svg />, container);
+      expect(container.firstChild.hasAttribute('clip-path')).toBe(false);
+    });
+
+    it('should remove namespaced SVG attributes', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <svg>
+          <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+        </svg>,
+        container
+      );
+
+      expect(container.firstChild.firstChild.hasAttributeNS(
+        'http://www.w3.org/1999/xlink',
+        'href'
+      )).toBe(true);
+      ReactDOM.render(<svg><image /></svg>, container);
+      expect(container.firstChild.firstChild.hasAttributeNS(
+        'http://www.w3.org/1999/xlink',
+        'href'
+      )).toBe(false);
+    });
+
     it('should remove properties', function() {
       var container = document.createElement('div');
       ReactDOM.render(<div className="monkey" />, container);
@@ -329,6 +398,99 @@ describe('ReactDOMComponent', function() {
       ReactDOM.render(afterUpdate, container);
 
       expect(container.childNodes[0].getAttribute('myattr')).toBe('myval');
+    });
+
+    it('should update known hyphenated attributes for SVG tags', function() {
+      var container = document.createElement('div');
+
+      var beforeUpdate = React.createElement('svg', {}, null);
+      ReactDOM.render(beforeUpdate, container);
+
+      var afterUpdate = <svg clip-path="url(#starlet)" />;
+      ReactDOM.render(afterUpdate, container);
+
+      expect(container.childNodes[0].getAttribute('clip-path')).toBe(
+        'url(#starlet)'
+      );
+    });
+
+    it('should update camel case attributes for SVG tags', function() {
+      var container = document.createElement('div');
+
+      var beforeUpdate = React.createElement('svg', {}, null);
+      ReactDOM.render(beforeUpdate, container);
+
+      var afterUpdate = <svg viewBox="0 0 100 100" />;
+      ReactDOM.render(afterUpdate, container);
+
+      expect(container.childNodes[0].getAttribute('viewBox')).toBe(
+        '0 0 100 100'
+      );
+    });
+
+    it('should warn camel casing hyphenated attributes for SVG tags', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      var beforeUpdate = React.createElement('svg', {}, null);
+      ReactDOM.render(beforeUpdate, container);
+
+      var afterUpdate = <svg clipPath="url(#starlet)" />;
+      ReactDOM.render(afterUpdate, container);
+
+      expect(container.childNodes[0].getAttribute('clip-path')).toBe(
+        'url(#starlet)'
+      );
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('clipPath');
+      expect(console.error.argsForCall[0][0]).toContain('clip-path');
+    });
+
+    it('should update arbitrary hyphenated attributes for SVG tags', function() {
+      var container = document.createElement('div');
+
+      var beforeUpdate = React.createElement('svg', {}, null);
+      ReactDOM.render(beforeUpdate, container);
+
+      var afterUpdate = <svg the-word="the-bird" />;
+      ReactDOM.render(afterUpdate, container);
+
+      expect(container.childNodes[0].getAttribute('the-word')).toBe('the-bird');
+    });
+
+    it('should update arbitrary camel case attributes for SVG tags', function() {
+      var container = document.createElement('div');
+
+      var beforeUpdate = React.createElement('svg', {}, null);
+      ReactDOM.render(beforeUpdate, container);
+
+      var afterUpdate = <svg theWord="theBird" />;
+      ReactDOM.render(afterUpdate, container);
+
+      expect(container.childNodes[0].getAttribute('theWord')).toBe('theBird');
+    });
+
+    it('should update namespaced SVG attributes', function() {
+      var container = document.createElement('div');
+
+      var beforeUpdate = (
+        <svg>
+          <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+        </svg>
+      );
+      ReactDOM.render(beforeUpdate, container);
+
+      var afterUpdate = (
+        <svg>
+          <image xlinkHref="http://i.imgur.com/JvqCM2p.png" />
+        </svg>
+      );
+      ReactDOM.render(afterUpdate, container);
+
+      expect(container.firstChild.firstChild.getAttributeNS(
+        'http://www.w3.org/1999/xlink',
+        'href'
+      )).toBe('http://i.imgur.com/JvqCM2p.png');
     });
 
     it('should clear all the styles when removing `style`', function() {

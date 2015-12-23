@@ -50,6 +50,32 @@ function shouldIgnoreValue(propertyInfo, value) {
     (propertyInfo.hasOverloadedBooleanValue && value === false);
 }
 
+if (__DEV__) {
+  var reactProps = {
+    children: true,
+    dangerouslySetInnerHTML: true,
+    key: true,
+    ref: true,
+  };
+  var warnedSVGProperties = {};
+
+  var warnDeprecatedSVGProperty = function(name, attributeName) {
+    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
+        warnedSVGProperties.hasOwnProperty(name) && warnedSVGProperties[name]) {
+      return;
+    }
+
+    warnedSVGProperties[name] = true;
+    warning(
+      false,
+      'SVG property %s is deprecated. Use the original attribute name ' +
+      '%s for SVG tags instead.',
+      name,
+      attributeName
+    );
+  };
+}
+
 /**
  * Operations for dealing with DOM properties.
  */
@@ -125,6 +151,31 @@ var DOMPropertyOperations = {
   },
 
   /**
+   * Creates markup for an SVG property.
+   *
+   * @param {string} name
+   * @param {*} value
+   * @return {string} Markup string, or empty string if the property was invalid.
+   */
+  createMarkupForSVGAttribute: function(name, value) {
+    if (!isAttributeNameSafe(name) || value == null) {
+      return '';
+    }
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      var { attributeName, attributeNamespace } = propertyInfo;
+      if (__DEV__) {
+        if (!attributeNamespace && name !== attributeName) {
+          warnDeprecatedSVGProperty(name, attributeName);
+        }
+      }
+      return attributeName + '=' + quoteAttributeValueForBrowser(value);
+    }
+    return name + '=' + quoteAttributeValueForBrowser(value);
+  },
+
+  /**
    * Sets the value for a property on a node.
    *
    * @param {DOMElement} node
@@ -183,6 +234,22 @@ var DOMPropertyOperations = {
     }
   },
 
+  setValueForSVGAttribute: function(node, name, value) {
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      if (__DEV__) {
+        var { attributeName, attributeNamespace } = propertyInfo;
+        if (!attributeNamespace && name !== attributeName) {
+          warnDeprecatedSVGProperty(name, attributeName);
+        }
+      }
+      DOMPropertyOperations.setValueForProperty(node, name, value);
+    } else {
+      DOMPropertyOperations.setValueForAttribute(node, name, value);
+    }
+  },
+
   /**
    * Deletes the value for a property on a node.
    *
@@ -213,6 +280,16 @@ var DOMPropertyOperations = {
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
+      node.removeAttribute(name);
+    }
+  },
+
+  deleteValueForSVGAttribute: function(node, name) {
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
+    if (propertyInfo) {
+      DOMPropertyOperations.deleteValueForProperty(node, name);
+    } else {
       node.removeAttribute(name);
     }
   },
