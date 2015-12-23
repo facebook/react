@@ -414,4 +414,32 @@ describe('ReactDOMInput', function() {
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
     expect(console.error.argsForCall.length).toBe(1);
   });
+
+  it('sets type before value always', function() {
+    var log = [];
+    var originalCreateElement = document.createElement;
+    spyOn(document, 'createElement').andCallFake(function(type) {
+      var el = originalCreateElement.apply(this, arguments);
+      if (type === 'input') {
+        Object.defineProperty(el, 'value', {
+          get: function() {},
+          set: function() {
+            log.push('set value');
+          },
+        });
+        spyOn(el, 'setAttribute').andCallFake(function(name, value) {
+          log.push('set ' + name);
+        });
+      }
+      return el;
+    });
+
+    ReactTestUtils.renderIntoDocument(<input value="hi" type="radio" />);
+    // Setting value before type does bad things. Make sure we set type first.
+    expect(log).toEqual([
+      'set data-reactroot',
+      'set type',
+      'set value',
+    ]);
+  });
 });
