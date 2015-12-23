@@ -748,7 +748,7 @@ var ReactClass = {
    */
   createClass: function(spec) {
     var Constructor = function(props, context, updater) {
-      // This constructor is overridden by mocks. The argument is used
+      // This constructor gets overridden by mocks. The argument is used
       // by mocks to assert on what gets mounted.
 
       if (__DEV__) {
