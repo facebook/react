@@ -161,8 +161,7 @@ boolean shouldComponentUpdate(
 
 Invoked before rendering when new props or state are being received. This method is not called for the initial render or when `forceUpdate` is used.
 
-Use this as an opportunity to `return false` when you're certain that the
-transition to the new props and state will not require a component update.
+Use this as an opportunity to `return false` when you're certain that the transition to the new props and state will not require a component update.
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
