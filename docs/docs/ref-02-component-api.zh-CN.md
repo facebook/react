@@ -8,13 +8,13 @@ next: component-specs-zh-CN.html
 
 ## React.Component
 
-当渲染时，React 组件的实例在 React 内部被创建。这些实例在随后的渲染中被重复使用，并可以在组件方法中通过 `this` 访问。唯一的在 React 之外获取 React 组件实例句柄的方法是保存 `React.render` 的返回值。在其它组件内，你可以使用 [refs](/react/docs/more-about-refs-zh-CN.html) 得到相同的结果。
+当渲染时，React 组件的实例在 React 内部被创建。这些实例在随后的渲染中被重复使用，并可以在组件方法中通过 `this` 访问。唯一的在 React 之外获取 React 组件实例句柄的方法是保存 `ReactDOM.render` 的返回值。在其它组件内，你可以使用 [refs](/react/docs/more-about-refs-zh-CN.html) 得到相同的结果。
 
 
 ### setState
 
 ```javascript
-setState(
+void setState(
   function|object nextState,
   [function callback]
 )
@@ -29,7 +29,7 @@ setState(
 setState({mykey: 'my new value'});
 ```
 
-也可以以 `function(state, props)` 传递一个函数。当你想要把一个在设置任何值之前参考前一次 state+props 的值的原子更新放在队列中 这会有很用。例如，假如我们想在 state 增加一个值。
+也可以以 `function(state, props)` 传递一个函数。当你想要把一个在设置任何值之前参考前一次 state+props 的值的原子更新放在队列中 这会有很用。例如，假如我们想在 state 增加一个值:
 
 ```javascript
 setState(function(previousState, currentProps) {
@@ -53,7 +53,7 @@ setState(function(previousState, currentProps) {
 ### replaceState
 
 ```javascript
-replaceState(
+void replaceState(
   object nextState,
   [function callback]
 )
@@ -69,7 +69,7 @@ replaceState(
 ### forceUpdate
 
 ```javascript
-forceUpdate(
+void forceUpdate(
   [function callback]
 )
 ```
@@ -91,7 +91,7 @@ DOMElement getDOMNode()
 
 > Note:
 >
-> getDOMNode 被废弃了，已经被 [React.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#react.finddomnode).
+> getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode).
 >
 > 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
 
@@ -99,41 +99,41 @@ DOMElement getDOMNode()
 ### isMounted
 
 ```javascript
-bool isMounted()
+boolean isMounted()
 ```
 
 如果组件渲染到了 DOM 中，`isMounted()` 返回 true，否则返回 `false`。可以使用该方法来控制对 `setState()` 和 `forceUpdate()` 的异步调用。
 
 > 注意:
 >
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
+> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除,所以你也要移除它 [start migrating away from isMounted() now](/react/blog/2015/12/16/ismounted-antipattern.html)
 
 
 ### setProps
 
 ```javascript
-setProps(
+void setProps(
   object nextProps,
   [function callback]
 )
 ```
 
-当和一个外部的 JavaScript 应用整合的时候，你也许会想用 `React.render()` 给 React 组件标示一个改变。
+当和一个外部的 JavaScript 应用整合的时候，你也许会想用 `ReactDOM.render()` 给 React 组件标示一个改变。
 
 在根组件上调用 `setProps()` 会改变他的属性并触发一次重绘。另外，你可以提供一个可选的回调函数，一旦 `setProps` 完成并且组件被重绘它就执行。
 
 > 注意:
 >
-> 如果可能，上述的在同一个节点上再次调用 `React.render()` 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）
+> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用. 取代调用 `setProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
 >
-> 这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 `React.render()` 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 `setProps()`，不要利用响应式更新，而是当子组件在 `render()` 中创建的时候传入新的 prop 到子组件中。
+> 如果可能，上述的在同一个节点上再次调用 `ReactDOM.render()` 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）
 >
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
+> 这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 `ReactDOM.render()` 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 `setProps()`，不要利用响应式更新，而是当子组件在 `render()` 中创建的时候传入新的 prop 到子组件中。
 
 ### replaceProps
 
 ```javascript
-replaceProps(
+void replaceProps(
   object nextProps,
   [function callback]
 )
@@ -143,4 +143,4 @@ replaceProps(
 
 > 注意:
 >
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
+> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用.  取代调用 `replaceProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
