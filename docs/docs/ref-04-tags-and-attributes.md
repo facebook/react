@@ -80,11 +80,11 @@ There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here
 
 ```
 clipPath cx cy d dx dy fill fillOpacity fontFamily
-fontSize fx fy gradientTransform gradientUnits markerEnd
-markerMid markerStart offset opacity patternContentUnits
+fontSize fontStyle fontWeight fx fy gradientTransform gradientUnits 
+markerEnd markerMid markerStart offset opacity patternContentUnits
 patternUnits points preserveAspectRatio r rx ry spreadMethod
 stopColor stopOpacity stroke  strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version
+strokeOpacity strokeWidth textAnchor textDecoration transform version
 viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
 xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
 ```
