@@ -84,7 +84,7 @@ fontSize fx fy gradientTransform gradientUnits markerEnd
 markerMid markerStart offset opacity patternContentUnits
 patternUnits points preserveAspectRatio r rx ry spreadMethod
 stopColor stopOpacity stroke  strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version
+strokeOpacity strokeWidth textAnchor transform vectorEffect version
 viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
 xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
 ```
