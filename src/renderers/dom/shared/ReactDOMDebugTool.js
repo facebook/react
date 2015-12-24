@@ -12,6 +12,8 @@
 'use strict';
 
 var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
+var ReactDOMSVGDeprecatedAttributeDevtool =
+  require('ReactDOMSVGDeprecatedAttributeDevtool');
 
 var warning = require('warning');
 
@@ -53,8 +55,14 @@ var ReactDOMDebugTool = {
   onCreateMarkupForProperty(name, value) {
     emitEvent('onCreateMarkupForProperty', name, value);
   },
+  onCreateMarkupForSVGAttribute(name, value) {
+    emitEvent('onCreateMarkupForSVGAttribute', name, value);
+  },
   onSetValueForProperty(node, name, value) {
     emitEvent('onSetValueForProperty', node, name, value);
+  },
+  onSetValueForSVGAttribute(node, name, value) {
+    emitEvent('onSetValueForSVGAttribute', node, name, value);
   },
   onDeleteValueForProperty(node, name) {
     emitEvent('onDeleteValueForProperty', node, name);
@@ -62,5 +70,6 @@ var ReactDOMDebugTool = {
 };
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
+ReactDOMDebugTool.addDevtool(ReactDOMSVGDeprecatedAttributeDevtool);
 
 module.exports = ReactDOMDebugTool;

@@ -50,32 +50,6 @@ function shouldIgnoreValue(propertyInfo, value) {
     (propertyInfo.hasOverloadedBooleanValue && value === false);
 }
 
-if (__DEV__) {
-  var reactProps = {
-    children: true,
-    dangerouslySetInnerHTML: true,
-    key: true,
-    ref: true,
-  };
-  var warnedSVGProperties = {};
-
-  var warnDeprecatedSVGProperty = function(name, attributeName) {
-    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
-        warnedSVGProperties.hasOwnProperty(name) && warnedSVGProperties[name]) {
-      return;
-    }
-
-    warnedSVGProperties[name] = true;
-    warning(
-      false,
-      'SVG property %s is deprecated. Use the original attribute name ' +
-      '%s for SVG tags instead.',
-      name,
-      attributeName
-    );
-  };
-}
-
 /**
  * Operations for dealing with DOM properties.
  */
@@ -158,21 +132,21 @@ var DOMPropertyOperations = {
    * @return {string} Markup string, or empty string if the property was invalid.
    */
   createMarkupForSVGAttribute: function(name, value) {
+    if (__DEV__) {
+      ReactDOMInstrumentation.debugTool.onCreateMarkupForSVGAttribute(name, value);
+    }
     if (!isAttributeNameSafe(name) || value == null) {
       return '';
     }
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
-      var { attributeName, attributeNamespace } = propertyInfo;
-      if (__DEV__) {
-        if (!attributeNamespace && name !== attributeName) {
-          warnDeprecatedSVGProperty(name, attributeName);
-        }
-      }
+      // Migration path for deprecated camelCase aliases for SVG attributes
+      var { attributeName } = propertyInfo;
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
+    } else {
+      return name + '=' + quoteAttributeValueForBrowser(value);
     }
-    return name + '=' + quoteAttributeValueForBrowser(value);
   },
 
   /**
@@ -235,15 +209,11 @@ var DOMPropertyOperations = {
   },
 
   setValueForSVGAttribute: function(node, name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
-    if (propertyInfo) {
-      if (__DEV__) {
-        var { attributeName, attributeNamespace } = propertyInfo;
-        if (!attributeNamespace && name !== attributeName) {
-          warnDeprecatedSVGProperty(name, attributeName);
-        }
-      }
+    if (__DEV__) {
+      ReactDOMInstrumentation.debugTool.onSetValueForSVGAttribute(node, name, value);
+    }
+    if (DOMProperty.properties.hasOwnProperty(name)) {
+      // Migration path for deprecated camelCase aliases for SVG attributes
       DOMPropertyOperations.setValueForProperty(node, name, value);
     } else {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
