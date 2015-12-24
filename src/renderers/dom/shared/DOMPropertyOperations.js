@@ -12,7 +12,7 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var EventPluginRegistry = require('EventPluginRegistry');
+var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var ReactPerf = require('ReactPerf');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
@@ -48,59 +48,6 @@ function shouldIgnoreValue(propertyInfo, value) {
     (propertyInfo.hasNumericValue && isNaN(value)) ||
     (propertyInfo.hasPositiveNumericValue && (value < 1)) ||
     (propertyInfo.hasOverloadedBooleanValue && value === false);
-}
-
-if (__DEV__) {
-  var reactProps = {
-    children: true,
-    dangerouslySetInnerHTML: true,
-    key: true,
-    ref: true,
-  };
-  var warnedProperties = {};
-
-  var warnUnknownProperty = function(name) {
-    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
-        warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
-      return;
-    }
-
-    warnedProperties[name] = true;
-    var lowerCasedName = name.toLowerCase();
-
-    // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = (
-      DOMProperty.isCustomAttribute(lowerCasedName) ?
-        lowerCasedName :
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
-        DOMProperty.getPossibleStandardName[lowerCasedName] :
-        null
-    );
-
-    // For now, only warn when we have a suggested correction. This prevents
-    // logging too much when using transferPropsTo.
-    warning(
-      standardName == null,
-      'Unknown DOM property %s. Did you mean %s?',
-      name,
-      standardName
-    );
-
-    var registrationName = (
-      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
-        lowerCasedName
-      ) ?
-      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
-      null
-    );
-
-    warning(
-      registrationName == null,
-      'Unknown event handler property %s. Did you mean `%s`?',
-      name,
-      registrationName
-    );
-  };
 }
 
 /**
@@ -139,6 +86,9 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
+    if (__DEV__) {
+      ReactDOMInstrumentation.debugTool.onCreateMarkupForProperty(name, value);
+    }
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -156,8 +106,6 @@ var DOMPropertyOperations = {
         return '';
       }
       return name + '=' + quoteAttributeValueForBrowser(value);
-    } else if (__DEV__) {
-      warnUnknownProperty(name);
     }
     return null;
   },
@@ -184,6 +132,9 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
+    if (__DEV__) {
+      ReactDOMInstrumentation.debugTool.onSetValueForProperty(node, name, value);
+    }
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -218,8 +169,6 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
-    } else if (__DEV__) {
-      warnUnknownProperty(name);
     }
   },
 
@@ -241,6 +190,9 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
+    if (__DEV__) {
+      ReactDOMInstrumentation.debugTool.onDeleteValueForProperty(node, name);
+    }
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -262,8 +214,6 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
-    } else if (__DEV__) {
-      warnUnknownProperty(name);
     }
   },
 
