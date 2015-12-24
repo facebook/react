@@ -442,4 +442,11 @@ describe('ReactDOMInput', function() {
       'set value',
     ]);
   });
+
+  it('sets value properly with type coming later in props', function() {
+    var input = ReactTestUtils.renderIntoDocument(
+      <input value="hi" type="radio" />
+    );
+    expect(input.value).toBe('hi');
+  });
 });
