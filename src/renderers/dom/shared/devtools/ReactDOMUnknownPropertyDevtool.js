@@ -82,6 +82,6 @@ var ReactDOMUnknownPropertyDevtool = {
   onDeleteValueForProperty(node, name) {
     warnUnknownProperty(name);
   },
-}
+};
 
 module.exports = ReactDOMUnknownPropertyDevtool;

@@ -647,6 +647,8 @@ ReactDOMComponent.Mixin = {
           if (propKey !== CHILDREN) {
             markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
           }
+        } else if (this._namespaceURI === DOMNamespaces.svg) {
+          markup = DOMPropertyOperations.createMarkupForSVGAttribute(propKey, propValue);
         } else {
           markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
         }
@@ -858,6 +860,11 @@ ReactDOMComponent.Mixin = {
           // listener (e.g., onClick={null})
           deleteListener(this, propKey);
         }
+      } else if (this._namespaceURI === DOMNamespaces.svg) {
+        DOMPropertyOperations.deleteValueForSVGAttribute(
+          getNode(this),
+          propKey
+        );
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
@@ -920,6 +927,12 @@ ReactDOMComponent.Mixin = {
           nextProp = null;
         }
         DOMPropertyOperations.setValueForAttribute(
+          getNode(this),
+          propKey,
+          nextProp
+        );
+      } else if (this._namespaceURI === DOMNamespaces.svg) {
+        DOMPropertyOperations.setValueForSVGAttribute(
           getNode(this),
           propKey,
           nextProp
