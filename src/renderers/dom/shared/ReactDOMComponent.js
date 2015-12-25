@@ -860,15 +860,15 @@ ReactDOMComponent.Mixin = {
           // listener (e.g., onClick={null})
           deleteListener(this, propKey);
         }
-      } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
-        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       } else if (this._namespaceURI === DOMNamespaces.svg) {
         DOMPropertyOperations.deleteValueForSVGAttribute(
           getNode(this),
           propKey
         );
+      } else if (
+          DOMProperty.properties[propKey] ||
+          DOMProperty.isCustomAttribute(propKey)) {
+        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
