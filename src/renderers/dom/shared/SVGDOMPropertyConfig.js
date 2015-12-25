@@ -24,6 +24,7 @@ var SVGDOMPropertyConfig = {
   Properties: {
     clipPath: MUST_USE_ATTRIBUTE,
     fillOpacity: MUST_USE_ATTRIBUTE,
+    fillRule: MUST_USE_ATTRIBUTE,
     fontFamily: MUST_USE_ATTRIBUTE,
     fontSize: MUST_USE_ATTRIBUTE,
     markerEnd: MUST_USE_ATTRIBUTE,
@@ -62,6 +63,7 @@ var SVGDOMPropertyConfig = {
   DOMAttributeNames: {
     clipPath: 'clip-path',
     fillOpacity: 'fill-opacity',
+    fillRule: 'fill-rule',
     fontFamily: 'font-family',
     fontSize: 'font-size',
     markerEnd: 'marker-end',
