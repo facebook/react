@@ -403,7 +403,7 @@ describe('ReactDOMComponent', function() {
     it('should update known hyphenated attributes for SVG tags', function() {
       var container = document.createElement('div');
 
-      var beforeUpdate = React.createElement('svg', {}, null);
+      var beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
       var afterUpdate = <svg clip-path="url(#starlet)" />;
@@ -417,7 +417,7 @@ describe('ReactDOMComponent', function() {
     it('should update camel case attributes for SVG tags', function() {
       var container = document.createElement('div');
 
-      var beforeUpdate = React.createElement('svg', {}, null);
+      var beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
       var afterUpdate = <svg viewBox="0 0 100 100" />;
@@ -432,7 +432,7 @@ describe('ReactDOMComponent', function() {
       spyOn(console, 'error');
       var container = document.createElement('div');
 
-      var beforeUpdate = React.createElement('svg', {}, null);
+      var beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
       var afterUpdate = <svg clipPath="url(#starlet)" />;
@@ -449,7 +449,7 @@ describe('ReactDOMComponent', function() {
     it('should update arbitrary hyphenated attributes for SVG tags', function() {
       var container = document.createElement('div');
 
-      var beforeUpdate = React.createElement('svg', {}, null);
+      var beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
       var afterUpdate = <svg the-word="the-bird" />;
@@ -461,7 +461,7 @@ describe('ReactDOMComponent', function() {
     it('should update arbitrary camel case attributes for SVG tags', function() {
       var container = document.createElement('div');
 
-      var beforeUpdate = React.createElement('svg', {}, null);
+      var beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
       var afterUpdate = <svg theWord="theBird" />;
