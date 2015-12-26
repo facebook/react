@@ -78,13 +78,6 @@ There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here
 
 ### SVG Attributes
 
-```
-clipPath cx cy d dx dy fill fillOpacity fontFamily
-fontSize fx fy gradientTransform gradientUnits markerEnd
-markerMid markerStart offset opacity patternContentUnits
-patternUnits points preserveAspectRatio r rx ry spreadMethod
-stopColor stopOpacity stroke  strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version
-viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
-xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
-```
+Any attributes passed to SVG tags are passed through without changes.
+
+React used to support special camelCase aliases for certain SVG attributes, such as `clipPath`. If you use them now you'll see a deprecation warning. These aliases will be removed in the next version in favor of their real names from the SVG specification, such as `clip-path`. Attributes that have a camelCase name in the spec, such as `gradientTransform`, will keep their names.
