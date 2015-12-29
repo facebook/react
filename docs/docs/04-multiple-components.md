@@ -165,6 +165,8 @@ var MyComponent = React.createClass({
 });
 ```
 
+Note that `key` is not a prop; trying to access `this.props.key` from inside `ListItemWrapper.render` wil be undefined. If you need to access the same value within the child component, you should pass it as a different prop (ex: `<ListItemWrapper key={result.id} id={result.id} />`) While this may seem redundant, it's important to separate app logic from reconciling hints.
+
 You can also key children by passing a ReactFragment object. See [Keyed Fragments](create-fragment.html) for more details.
 
 ## Data Flow
