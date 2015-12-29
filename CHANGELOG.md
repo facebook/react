@@ -1,3 +1,9 @@
+## 0.14.5 (December 29, 2015)
+
+### React
+- More minor internal changes for better compatibility with React Native
+
+
 ## 0.14.4 (December 29, 2015)
 
 ### React
