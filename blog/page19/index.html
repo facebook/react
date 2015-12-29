@@ -67,6 +67,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2015/12/29/react-v0.14.4.html">React v0.14.4</a></li>
+      
         <li><a href="/react/blog/2015/12/18/react-components-elements-and-instances.html">React Components, Elements, and Instances</a></li>
       
         <li><a href="/react/blog/2015/12/16/ismounted-antipattern.html">isMounted is an Antipattern</a></li>
@@ -85,14 +87,57 @@
       
         <li><a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">ReactDOM.render and the Top Level React API</a></li>
       
-        <li><a href="/react/blog/2015/09/14/community-roundup-27.html">Community Round-up #27 &ndash; Relay Edition</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a>
+
+</h1>
+
+<p class="meta">
+  June 21, 2013
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
+<h2><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h2>
+<ul>
+<li>Upgrade Commoner so <code>require</code> statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&#39;t translate well for other consumers of <code>bin/jsx</code>.</li>
+<li>Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.</li>
+<li>Freeze our esprima dependency.</li>
+</ul>
+<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2>
+<ul>
+<li>Allow reusing the same DOM node to render different components. e.g. <code>React.renderComponent(&lt;div/&gt;, domNode); React.renderComponent(&lt;span/&gt;, domNode);</code> will work now.</li>
+</ul>
+<h2><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h2>
+<ul>
+<li>Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         

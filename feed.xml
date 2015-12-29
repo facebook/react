@@ -7,6 +7,49 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.14.4</title>
+				<description>&lt;p&gt;Happy December! We have a minor point release today. It has just a few small bug fixes.&lt;/p&gt;
+
+&lt;p&gt;The release is now available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.4.js&quot;&gt;https://fb.me/react-0.14.4.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.4.min.js&quot;&gt;https://fb.me/react-0.14.4.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.4.js&quot;&gt;https://fb.me/react-with-addons-0.14.4.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.4.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.4.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.4.js&quot;&gt;https://fb.me/react-dom-0.14.4.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.4.min.js&quot;&gt;https://fb.me/react-dom-0.14.4.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.4.js&quot;&gt;https://fb.me/react-dom-server-0.14.4.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.4.min.js&quot;&gt;https://fb.me/react-dom-server-0.14.4.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.4&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Minor internal changes for better compatibility with React Native&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;autoCapitalize&lt;/code&gt; and &lt;code&gt;autoCorrect&lt;/code&gt; props are now set as attributes in the DOM instead of properties to improve cross-browser compatibility&lt;/li&gt;
+&lt;li&gt;Fixed bug with controlled &lt;code&gt;&amp;lt;select&amp;gt;&lt;/code&gt; elements not handling updates properly&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-perf-add-on&quot;&gt;&lt;/a&gt;React Perf Add-on &lt;a class=&quot;hash-link&quot; href=&quot;#react-perf-add-on&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Some DOM operation names have been updated for clarity in the output of &lt;code&gt;.printDOM()&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-12-29T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2015/12/29/react-v0.14.4.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/12/29/react-v0.14.4.html</guid>
+			</item>
+		
+			<item>
 				<title>React Components, Elements, and Instances</title>
 				<description>&lt;p&gt;The difference between &lt;strong&gt;components, their instances, and elements&lt;/strong&gt; confuses many React beginners. Why are there three different terms to refer to something that is painted on screen?&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;managing-the-instances&quot;&gt;&lt;/a&gt;Managing the Instances &lt;a class=&quot;hash-link&quot; href=&quot;#managing-the-instances&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -956,78 +999,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.0.m
 				<pubDate>2015-10-01T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/10/01/react-render-and-top-level-api.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/10/01/react-render-and-top-level-api.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #27 &amp;ndash; Relay Edition</title>
-				<description>&lt;p&gt;In the weeks following the &lt;a href=&quot;/react/blog/2015/08/11/relay-technical-preview.html&quot;&gt;open-source release&lt;/a&gt; of the Relay technical preview, the community has been abuzz with activity. We are honored to have been able to enjoy a steady stream of ideas and contributions from such a talented group of individuals. Let&amp;#39;s take a look at some of the things we&amp;#39;ve achieved, together!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;teaching-servers-to-speak-graphql&quot;&gt;&lt;/a&gt;Teaching servers to speak GraphQL &lt;a class=&quot;hash-link&quot; href=&quot;#teaching-servers-to-speak-graphql&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Every great Relay app starts by finding a GraphQL server to talk to. The community has spent the past few weeks teaching GraphQL to a few backend systems.&lt;/p&gt;
-
-&lt;p&gt;Bryan Goldstein (&lt;a href=&quot;https://github.com/brysgo&quot;&gt;brysgo&lt;/a&gt;) has built a tool to help you define a GraphQL schema that wraps a set of &lt;a href=&quot;http://bookshelfjs.org/&quot;&gt;Bookshelf.JS&lt;/a&gt; models. Check out &lt;a href=&quot;https://github.com/brysgo/graphql-bookshelf&quot;&gt;graphql-bookshelf&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;RisingStack (&lt;a href=&quot;https://github.com/risingstack&quot;&gt;risingstack&lt;/a&gt;) created a GraphQL ORM called &lt;a href=&quot;https://github.com/RisingStack/graffiti&quot;&gt;graffiti&lt;/a&gt; that you can plug into &lt;a href=&quot;http://mongoosejs.com/&quot;&gt;mongoose&lt;/a&gt; and serve using Express, Hapi, or Koa.&lt;/p&gt;
-
-&lt;p&gt;David Mongeau-Petitpas (&lt;a href=&quot;https://github.com/dmongeau&quot;&gt;dmongeau&lt;/a&gt;) is working on a way to vend your Laravel models through a GraphQL endpoint, &lt;a href=&quot;https://github.com/Folkloreatelier/laravel-graphql&quot;&gt;laravel-graphql&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Gerald Monaco (&lt;a href=&quot;https://github.com/devknoll&quot;&gt;devknoll&lt;/a&gt;) created &lt;a href=&quot;https://github.com/devknoll/graphql-schema&quot;&gt;graphql-schema&lt;/a&gt; to allow the creation of JavaScript GraphQL schemas using a fluent/chainable interface.&lt;/p&gt;
-
-&lt;p&gt;Jason Dusek (&lt;a href=&quot;https://github.com/solidsnack&quot;&gt;solidsnack&lt;/a&gt;) dove deep into PostgreSQL to teach it how to respond to GraphQL query strings as though they were SQL queries. Check out &lt;a href=&quot;https://github.com/solidsnack/GraphpostgresQL&quot;&gt;GraphpostgresQL&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Espen Hovlandsdal (&lt;a href=&quot;https://github.com/rexxars&quot;&gt;rexxars&lt;/a&gt;) built a &lt;a href=&quot;https://github.com/vaffel/sql-to-graphql&quot;&gt;sql-to-graphql&lt;/a&gt; tool that can perform introspection on the tables of a MySQL or PostgreSQL database, and produce a queryable HTTP GraphQL endpoint out of it.&lt;/p&gt;
-
-&lt;p&gt;Mick Hansen (&lt;a href=&quot;https://github.com/mickhansen&quot;&gt;mickhansen&lt;/a&gt;) offers a set of &lt;a href=&quot;https://github.com/mickhansen/graphql-sequelize&quot;&gt;schema-building helpers&lt;/a&gt; for use with the &lt;a href=&quot;http://docs.sequelizejs.com/en/latest/&quot;&gt;Sequelize ORM&lt;/a&gt; for MySQL, PostgreSQL, SQLite, and MSSQL.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;graphql-beyond-javascript&quot;&gt;&lt;/a&gt;GraphQL beyond JavaScript &lt;a class=&quot;hash-link&quot; href=&quot;#graphql-beyond-javascript&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Robert Mosolgo (&lt;a href=&quot;https://github.com/rmosolgo&quot;&gt;rmosolgo&lt;/a&gt;) brought the full set of schema-building and query execution tools to Ruby, in the form of &lt;a href=&quot;https://github.com/rmosolgo/graphql-ruby&quot;&gt;graphql-ruby&lt;/a&gt; and &lt;a href=&quot;https://github.com/rmosolgo/graphql-relay-ruby&quot;&gt;graphql-relay-ruby&lt;/a&gt;. Check out his &lt;a href=&quot;https://github.com/rmosolgo/graphql-ruby-demo&quot;&gt;Rails-based demo&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Andreas Marek (&lt;a href=&quot;https://github.com/andimarek&quot;&gt;andimarek&lt;/a&gt;) has brewed up a Java implementation of GraphQL, &lt;a href=&quot;https://github.com/andimarek/graphql-java&quot;&gt;graphql-java&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/vladar&quot;&gt;vladar&lt;/a&gt; is hard at work on a PHP port of the GraphQL reference implementation, &lt;a href=&quot;https://github.com/webonyx/graphql-php&quot;&gt;graphql-php&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Taeho Kim (&lt;a href=&quot;https://github.com/dittos&quot;&gt;dittos&lt;/a&gt;) is bringing GraphQL to Python, with &lt;a href=&quot;https://github.com/dittos/graphql-py&quot;&gt;graphql-py&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Oleg Ilyenko (&lt;a href=&quot;https://github.com/OlegIlyenko&quot;&gt;OlegIlyenko&lt;/a&gt;) made a beautiful and &lt;a href=&quot;http://sangria-graphql.org/&quot;&gt;delicious-looking website&lt;/a&gt; for a Scala implementation of GraphQL, &lt;a href=&quot;https://github.com/sangria-graphql/sangria&quot;&gt;sangria&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Joe McBride (&lt;a href=&quot;https://github.com/joemcbride&quot;&gt;joemcbride&lt;/a&gt;) has an up-and-running example of GraphQL for .NET, &lt;a href=&quot;https://github.com/joemcbride/graphql-dotnet&quot;&gt;graphql-dotnet&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;show-me-dont-tell-me&quot;&gt;&lt;/a&gt;Show me, don&amp;#39;t tell me &lt;a class=&quot;hash-link&quot; href=&quot;#show-me-dont-tell-me&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Interact with this &lt;a href=&quot;http://sgwilym.github.io/relay-visual-learners/&quot;&gt;visual tour of Relay&amp;#39;s architecture&lt;/a&gt; by Sam Gwilym (&lt;a href=&quot;https://github.com/sgwilym&quot;&gt;sgwilym&lt;/a&gt;).&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://sgwilym.github.io/relay-visual-learners/&quot;&gt;
-  &lt;img src=&quot;/react/img/blog/relay-visual-architecture-tour.png&quot; alt=&quot;Relay for visual learners&quot; style=&quot;max-width:100%&quot;&gt;
-&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Sam has already launched a product that leverages Relay&amp;#39;s data-fetching, optimistic responses, pagination, and mutations &amp;ndash; all atop a Ruby GraphQL server: &lt;a href=&quot;http://new.comique.co/&quot;&gt;new.comique.co&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;prototyping-in-the-browser&quot;&gt;&lt;/a&gt;Prototyping in the browser &lt;a class=&quot;hash-link&quot; href=&quot;#prototyping-in-the-browser&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;I (&lt;a href=&quot;https://github.com/steveluscher&quot;&gt;steveluscher&lt;/a&gt;) whipped up &lt;a href=&quot;https://facebook.github.io/relay/prototyping/playground.html&quot;&gt;a prototyping tool&lt;/a&gt; that you can use to hack on a schema and a React/Relay app, from the comfort of your browser. Thanks to Jimmy Jia (&lt;a href=&quot;https://github.com/taion&quot;&gt;taion&lt;/a&gt;) for supplying the local-only network layer, &lt;a href=&quot;https://github.com/relay-tools/relay-local-schema&quot;&gt;relay-local-schema&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;skeletons-in-the-closet&quot;&gt;&lt;/a&gt;Skeletons in the closet &lt;a class=&quot;hash-link&quot; href=&quot;#skeletons-in-the-closet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Joseph Rollins (&lt;a href=&quot;https://github.com/fortruce&quot;&gt;fortruce&lt;/a&gt;) created a hot-reloading, auto schema-regenerating, &lt;a href=&quot;https://github.com/fortruce/relay-skeleton&quot;&gt;Relay skeleton&lt;/a&gt; that you can use to get up and running quickly.&lt;/p&gt;
-
-&lt;p&gt;Michael Hart (&lt;a href=&quot;https://mhart&quot;&gt;mhart&lt;/a&gt;) built a &lt;a href=&quot;https://github.com/mhart/simple-relay-starter&quot;&gt;simple-relay-starter&lt;/a&gt; kit using Browserify.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;routing-around&quot;&gt;&lt;/a&gt;Routing around &lt;a class=&quot;hash-link&quot; href=&quot;#routing-around&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Jimmy Jia (&lt;a href=&quot;https://github.com/taion&quot;&gt;taion&lt;/a&gt;) and Gerald Monaco (&lt;a href=&quot;https://github.com/devknoll&quot;&gt;devknoll&lt;/a&gt;) have been helping lost URLs find their way to Relay apps through their work on &lt;a href=&quot;https://github.com/relay-tools/react-router-relay&quot;&gt;react-router-relay&lt;/a&gt;. Check out Christoph Pojer&amp;#39;s (&lt;a href=&quot;https://github.com/cpojer&quot;&gt;cpojer&lt;/a&gt;) &lt;a href=&quot;https://medium.com/@cpojer/relay-and-routing-36b5439bad9&quot;&gt;blog post&lt;/a&gt; on the topic. Jimmy completed the Relay TodoMVC example with routing, which you can check out at &lt;a href=&quot;https://github.com/taion/relay-todomvc&quot;&gt;taion/relay-todomvc&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Chen Hung-Tu (&lt;a href=&quot;https://github.com/transedward&quot;&gt;transedward&lt;/a&gt;) built a chat app atop the above mentioned router, with threaded conversations and pagination. Check it out at &lt;a href=&quot;https://github.com/transedward/relay-chat&quot;&gt;transedward/relay-chat&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;in-your-words&quot;&gt;&lt;/a&gt;In your words &lt;a class=&quot;hash-link&quot; href=&quot;#in-your-words&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div class=&quot;skinny-row&quot;&gt;
-  &lt;div class=&quot;skinny-col&quot;&gt;
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Relay making good on its promise to be the &amp;quot;React.js of data fetching&amp;quot;. Rebuilding small app with it. Spectacular how fast/easy building is.&lt;/p&gt;&amp;mdash; Kyle Mathews (@kylemathews) &lt;a href=&quot;https://twitter.com/kylemathews/status/640289107122368513&quot;&gt;September 5, 2015&lt;/a&gt;&lt;/blockquote&gt;
-
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;&lt;a href=&quot;https://twitter.com/hashtag/RainySundayHackathon?src=hash&quot;&gt;#RainySundayHackathon&lt;/a&gt; exploring &lt;a href=&quot;https://twitter.com/hashtag/GraphQL?src=hash&quot;&gt;#GraphQL&lt;/a&gt; &lt;a href=&quot;https://twitter.com/hashtag/RelayJS?src=hash&quot;&gt;#RelayJS&lt;/a&gt; &lt;a href=&quot;http://t.co/Mm3HlqMejJ&quot;&gt;pic.twitter.com/Mm3HlqMejJ&lt;/a&gt;&lt;/p&gt;&amp;mdash; Bastian Kistner (@passionkind) &lt;a href=&quot;https://twitter.com/passionkind/status/632846601447411712&quot;&gt;August 16, 2015&lt;/a&gt;&lt;/blockquote&gt;
-
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Friday. Time to GraphQL a MySQL database. &lt;a href=&quot;https://twitter.com/hashtag/graphql?src=hash&quot;&gt;#graphql&lt;/a&gt; &lt;a href=&quot;https://twitter.com/hashtag/relayjs?src=hash&quot;&gt;#relayjs&lt;/a&gt; &lt;a href=&quot;https://twitter.com/hashtag/reactjs?src=hash&quot;&gt;#reactjs&lt;/a&gt; &lt;a href=&quot;https://twitter.com/hashtag/webapp?src=hash&quot;&gt;#webapp&lt;/a&gt;&lt;/p&gt;&amp;mdash; xador (@xadorfr) &lt;a href=&quot;https://twitter.com/xadorfr/status/632108552765751296&quot;&gt;August 14, 2015&lt;/a&gt;&lt;/blockquote&gt;
-  &lt;/div&gt;
-  &lt;div class=&quot;skinny-col&quot;&gt;
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Started a new &lt;a href=&quot;https://twitter.com/hashtag/RelayJS?src=hash&quot;&gt;#RelayJS&lt;/a&gt; and &lt;a href=&quot;https://twitter.com/hashtag/GraphQL?src=hash&quot;&gt;#GraphQL&lt;/a&gt; meet up group! &lt;a href=&quot;http://t.co/Vt6Cv4nNH4&quot;&gt;http://t.co/Vt6Cv4nNH4&lt;/a&gt; If you&amp;#39;re in the Bay Area, I&amp;#39;d love to have you join! &lt;a href=&quot;https://twitter.com/hashtag/ReactJS?src=hash&quot;&gt;#ReactJS&lt;/a&gt;&lt;/p&gt;&amp;mdash; Gerald Monaco (@devknoll) &lt;a href=&quot;https://twitter.com/devknoll/status/636723716123000832&quot;&gt;August 27, 2015&lt;/a&gt;&lt;/blockquote&gt;
-
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;.&lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; &lt;a href=&quot;https://twitter.com/laneykuenzel&quot;&gt;@laneykuenzel&lt;/a&gt; &lt;a href=&quot;https://twitter.com/BhuwanKhattar&quot;&gt;@BhuwanKhattar&lt;/a&gt; these &lt;a href=&quot;https://twitter.com/hashtag/relayjs?src=hash&quot;&gt;#relayjs&lt;/a&gt; mutations. they&amp;#39;re mind-blowingly awesome. they make so much damn sense. thank you!&lt;/p&gt;&amp;mdash; Jimmy Jia (@jimmy_jia) &lt;a href=&quot;https://twitter.com/jimmy_jia/status/634204563709526016&quot;&gt;August 20, 2015&lt;/a&gt;&lt;/blockquote&gt;
-
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;REST is dead, long live REST! &lt;a href=&quot;https://twitter.com/hashtag/graphql?src=hash&quot;&gt;#graphql&lt;/a&gt; &lt;a href=&quot;https://twitter.com/hashtag/relayjs?src=hash&quot;&gt;#relayjs&lt;/a&gt;&lt;/p&gt;&amp;mdash; Syrus Akbary (@syrusakbary) &lt;a href=&quot;https://twitter.com/syrusakbary/status/631531666113060864&quot;&gt;August 12, 2015&lt;/a&gt;&lt;/blockquote&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-</description>
-				<pubDate>2015-09-14T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/09/14/community-roundup-27.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/09/14/community-roundup-27.html</guid>
 			</item>
 		
 	</channel>
