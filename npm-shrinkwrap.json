@@ -5532,18 +5532,31 @@
       "resolved": "file:eslint-rules"
     },
     "fbjs": {
-      "version": "0.3.1",
-      "from": "fbjs@>=0.3.1 <0.4.0",
+      "version": "0.6.0",
+      "from": "fbjs@>=0.6.0 <0.7.0",
+      "resolved": "https://registry.npmjs.org/fbjs/-/fbjs-0.6.0.tgz",
       "dependencies": {
         "core-js": {
-          "version": "1.2.1",
+          "version": "1.2.6",
           "from": "core-js@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.1.tgz"
+          "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.6.tgz"
+        },
+        "loose-envify": {
+          "version": "1.1.0",
+          "from": "loose-envify@>=1.0.0 <2.0.0",
+          "resolved": "https://registry.npmjs.org/loose-envify/-/loose-envify-1.1.0.tgz",
+          "dependencies": {
+            "js-tokens": {
+              "version": "1.0.2",
+              "from": "js-tokens@>=1.0.1 <2.0.0",
+              "resolved": "https://registry.npmjs.org/js-tokens/-/js-tokens-1.0.2.tgz"
+            }
+          }
         },
         "promise": {
-          "version": "7.0.4",
+          "version": "7.1.1",
           "from": "promise@>=7.0.3 <8.0.0",
-          "resolved": "https://registry.npmjs.org/promise/-/promise-7.0.4.tgz",
+          "resolved": "https://registry.npmjs.org/promise/-/promise-7.1.1.tgz",
           "dependencies": {
             "asap": {
               "version": "2.0.3",
@@ -5553,9 +5566,9 @@
           }
         },
         "ua-parser-js": {
-          "version": "0.7.9",
+          "version": "0.7.10",
           "from": "ua-parser-js@>=0.7.9 <0.8.0",
-          "resolved": "https://registry.npmjs.org/ua-parser-js/-/ua-parser-js-0.7.9.tgz"
+          "resolved": "https://registry.npmjs.org/ua-parser-js/-/ua-parser-js-0.7.10.tgz"
         },
         "whatwg-fetch": {
           "version": "0.9.0",
