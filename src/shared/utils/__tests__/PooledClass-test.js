@@ -111,8 +111,7 @@ describe('Pooled class', function() {
       expect(function() {
         PoolableClass.release(randomInstance);
       }).toThrow(
-        'Invariant Violation: Trying to release an instance into a pool ' +
-        'of a different type.'
+        'Trying to release an instance into a pool of a different type.'
       );
     }
   );

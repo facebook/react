@@ -558,8 +558,7 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).toThrow(
-        'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
       );
     });
 
@@ -577,7 +576,6 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrow(
-        'Invariant Violation: ' +
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
       );
@@ -587,7 +585,6 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: {foo: 'bar'} });
       }).toThrow(
-        'Invariant Violation: ' +
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
       );
@@ -610,9 +607,9 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({style: 'display: none'});
       }).toThrow(
-        'Invariant Violation: The `style` prop expects a mapping from style ' +
-        'properties to values, not a string. For example, ' +
-        'style={{marginRight: spacing + \'em\'}} when using JSX.'
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
+        'when using JSX.'
       );
     });
 
@@ -727,8 +724,7 @@ describe('ReactDOMComponent', function() {
           container
         );
       }).toThrow(
-        'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
       );
     });
 
@@ -748,9 +744,9 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<div style={1}></div>, container);
       }).toThrow(
-        'Invariant Violation: The `style` prop expects a mapping from style ' +
-        'properties to values, not a string. For example, ' +
-        'style={{marginRight: spacing + \'em\'}} when using JSX.'
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
+        'when using JSX.'
       );
     });
 
@@ -764,10 +760,9 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<Animal/>, container);
       }).toThrow(
-        'Invariant Violation: The `style` prop expects a mapping from style ' +
-        'properties to values, not a string. For example, ' +
-        'style={{marginRight: spacing + \'em\'}} when using JSX. ' +
-        'This DOM node was rendered by `Animal`.'
+        'The `style` prop expects a mapping from style properties to values, ' +
+        'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
+        'when using JSX. This DOM node was rendered by `Animal`.'
       );
     });
 
@@ -844,7 +839,7 @@ describe('ReactDOMComponent', function() {
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
       ).toThrow(
-        'Invariant Violation: Invalid tag: script tag'
+        'Invalid tag: script tag'
       );
     });
 
@@ -854,7 +849,7 @@ describe('ReactDOMComponent', function() {
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
       ).toThrow(
-        'Invariant Violation: Invalid tag: div><img /><div'
+        'Invalid tag: div><img /><div'
       );
     });
   });

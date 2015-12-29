@@ -121,7 +121,7 @@ describe('ReactStatelessComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Child test="test" />);
     }).toThrow(
-      'Invariant Violation: Stateless function components cannot have refs.'
+      'Stateless function components cannot have refs.'
     );
   });
 

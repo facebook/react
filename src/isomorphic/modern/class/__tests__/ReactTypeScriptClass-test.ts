@@ -361,18 +361,15 @@ describe('ReactTypeScriptClass', function() {
   it('should throw with non-object in the initial state property', function() {
     expect(() => test(React.createElement(ArrayState), 'span', ''))
     .toThrow(
-      'Invariant Violation: ArrayState.state: ' +
-      'must be set to an object or null'
+      'ArrayState.state: must be set to an object or null'
     );
     expect(() => test(React.createElement(StringState), 'span', ''))
     .toThrow(
-      'Invariant Violation: StringState.state: ' +
-      'must be set to an object or null'
+      'StringState.state: must be set to an object or null'
     );
     expect(() => test(React.createElement(NumberState), 'span', ''))
     .toThrow(
-      'Invariant Violation: NumberState.state: ' +
-      'must be set to an object or null'
+      'NumberState.state: must be set to an object or null'
     );
   });
 
