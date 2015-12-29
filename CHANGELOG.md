@@ -3,6 +3,13 @@
 ### React
 - Minor internal changes for better compatibility with React Native
 
+### React DOM
+- The `autoCapitalize` and `autoCorrect` props are now set as attributes in the DOM instead of properties to improve cross-browser compatibility
+- Fixed bug with controlled `<select>` elements not handling updates properly
+
+### React Perf Add-on
+- Some DOM operation names have been updated for clarity in the output of `.printDOM()`
+
 
 ## 0.14.3 (November 18, 2015)
 
