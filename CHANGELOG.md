@@ -1,3 +1,9 @@
+## 0.14.4 (December 29, 2015)
+
+### React
+- Minor internal changes for better compatibility with React Native
+
+
 ## 0.14.3 (November 18, 2015)
 
 ### React DOM
