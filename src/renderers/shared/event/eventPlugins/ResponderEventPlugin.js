@@ -47,13 +47,14 @@ var trackedTouchCount = 0;
  */
 var previousActiveTouches = 0;
 
-var changeResponder = function(nextResponderID) {
+var changeResponder = function(nextResponderID, blockNativeResponder) {
   var oldResponderID = responderID;
   responderID = nextResponderID;
   if (ResponderEventPlugin.GlobalResponderHandler !== null) {
     ResponderEventPlugin.GlobalResponderHandler.onChange(
       oldResponderID,
-      nextResponderID
+      nextResponderID,
+      blockNativeResponder
     );
   }
 };
@@ -73,7 +74,7 @@ var eventTypes = {
   /**
    * On a `scroll`, is it desired that this element become the responder? This
    * is usually not needed, but should be used to retroactively infer that a
-   * `touchStart` had occurred during momentum scroll. During a momentum scroll,
+   * `touchStart` had occured during momentum scroll. During a momentum scroll,
    * a touch start will be immediately followed by a scroll event if the view is
    * currently scrolling.
    *
@@ -323,11 +324,10 @@ to return true:wantsResponderID|                            |
  * @return {*} An accumulation of synthetic events.
  */
 function setResponderAndExtractTransfer(
-  topLevelType,
-  topLevelTargetID,
-  nativeEvent,
-  nativeEventTarget
-) {
+    topLevelType,
+    topLevelTargetID,
+    nativeEvent,
+    nativeEventTarget) {
   var shouldSetEventType =
     isStartish(topLevelType) ? eventTypes.startShouldSetResponder :
     isMoveish(topLevelType) ? eventTypes.moveShouldSetResponder :
@@ -375,6 +375,7 @@ function setResponderAndExtractTransfer(
   grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
   EventPropagators.accumulateDirectDispatches(grantEvent);
+  var blockNativeResponder = executeDirectDispatch(grantEvent) === true;
   if (responderID) {
 
     var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
@@ -402,7 +403,7 @@ function setResponderAndExtractTransfer(
       terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(terminateEvent);
       extracted = accumulate(extracted, [grantEvent, terminateEvent]);
-      changeResponder(wantsResponderID);
+      changeResponder(wantsResponderID, blockNativeResponder);
     } else {
       var rejectEvent = ResponderSyntheticEvent.getPooled(
         eventTypes.responderReject,
@@ -416,7 +417,7 @@ function setResponderAndExtractTransfer(
     }
   } else {
     extracted = accumulate(extracted, grantEvent);
-    changeResponder(wantsResponderID);
+    changeResponder(wantsResponderID, blockNativeResponder);
   }
   return extracted;
 }
@@ -429,9 +430,13 @@ function setResponderAndExtractTransfer(
  * @param {string} topLevelType Record from `EventConstants`.
  * @return {boolean} True if a transfer of responder could possibly occur.
  */
-function canTriggerTransfer(topLevelType, topLevelTargetID) {
+function canTriggerTransfer(topLevelType, topLevelTargetID, nativeEvent) {
   return topLevelTargetID && (
-    topLevelType === EventConstants.topLevelTypes.topScroll ||
+    // responderIgnoreScroll: We are trying to migrate away from specifically tracking native scroll
+    // events here and responderIgnoreScroll indicates we will send topTouchCancel to handle
+    // canceling touch events instead
+    (topLevelType === EventConstants.topLevelTypes.topScroll &&
+      !nativeEvent.responderIgnoreScroll) ||
     (trackedTouchCount > 0 &&
       topLevelType === EventConstants.topLevelTypes.topSelectionChange) ||
     isStartish(topLevelType) ||
@@ -508,7 +513,7 @@ var ResponderEventPlugin = {
 
     ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent, nativeEventTarget);
 
-    var extracted = canTriggerTransfer(topLevelType, topLevelTargetID) ?
+    var extracted = canTriggerTransfer(topLevelType, topLevelTargetID, nativeEvent) ?
       setResponderAndExtractTransfer(
         topLevelType,
         topLevelTargetID,
