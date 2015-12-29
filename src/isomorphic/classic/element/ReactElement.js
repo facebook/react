@@ -14,6 +14,7 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
+var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
@@ -28,6 +29,8 @@ var RESERVED_PROPS = {
   __self: true,
   __source: true,
 };
+
+var specialPropKeyWarningShown, specialPropRefWarningShown;
 
 /**
  * Factory method to create a new React element. This no longer adheres to
@@ -123,8 +126,15 @@ ReactElement.createElement = function(type, config, children) {
   var source = null;
 
   if (config != null) {
-    ref = config.ref === undefined ? null : config.ref;
-    key = config.key === undefined ? null : '' + config.key;
+    if (__DEV__) {
+      ref = !config.hasOwnProperty('ref') ||
+        Object.getOwnPropertyDescriptor(config, 'ref').get ? null : config.ref;
+      key = !config.hasOwnProperty('key') ||
+        Object.getOwnPropertyDescriptor(config, 'key').get ? null : '' + config.key;
+    } else {
+      ref = config.ref === undefined ? null : config.ref;
+      key = config.key === undefined ? null : '' + config.key;
+    }
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
@@ -158,7 +168,51 @@ ReactElement.createElement = function(type, config, children) {
       }
     }
   }
-
+  if (__DEV__) {
+    // Create dummy `key` and `ref` property to `props` to warn users
+    // against its use
+    if (typeof props.$$typeof === 'undefined' ||
+        props.$$typeof !== REACT_ELEMENT_TYPE) {
+      if (!props.hasOwnProperty('key')) {
+        Object.defineProperty(props, 'key', {
+          get: function() {
+            if (!specialPropKeyWarningShown) {
+              specialPropKeyWarningShown = true;
+              warning(
+                false,
+                '%s: `key` is not a prop. Trying to access it will result ' +
+                  'in `undefined` being returned. If you need to access the same ' +
+                  'value within the child component, you should pass it as a different ' +
+                  'prop. (https://fb.me/react-special-props)',
+                'displayName' in type ? type.displayName: 'Element'
+              );
+            }
+            return undefined;
+          },
+          configurable: true,
+        });
+      }
+      if (!props.hasOwnProperty('ref')) {
+        Object.defineProperty(props, 'ref', {
+          get: function() {
+            if (!specialPropRefWarningShown) {
+              specialPropRefWarningShown = true;
+              warning(
+                false,
+                '%s: `ref` is not a prop. Trying to access it will result ' +
+                  'in `undefined` being returned. If you need to access the same ' +
+                  'value within the child component, you should pass it as a different ' +
+                  'prop. (https://fb.me/react-special-props)',
+                'displayName' in type ? type.displayName: 'Element'
+              );
+            }
+            return undefined;
+          },
+          configurable: true,
+        });
+      }
+    }
+  }
   return ReactElement(
     type,
     key,
