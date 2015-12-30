@@ -26,8 +26,6 @@ var warning = require('warning');
 
 var MIXINS_KEY = keyOf({mixins: null});
 
-var ReactPerf = require('ReactPerf');
-
 /**
  * Policies that describe methods in `ReactClassInterface`.
  */
@@ -848,16 +846,6 @@ var ReactClass = {
     for (var methodName in ReactClassInterface) {
       if (!Constructor.prototype[methodName]) {
         Constructor.prototype[methodName] = null;
-      } else {
-        if (__DEV__) {
-          // spec is the user-defined component
-          // hijack the defined lifecycle methods and wrap with Perf
-          spec[methodName] = ReactPerf.measure(
-            spec.displayName,
-            methodName,
-            spec[methodName]
-          );
-        }
       }
     }
 
