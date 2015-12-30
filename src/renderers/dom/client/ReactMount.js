@@ -299,6 +299,7 @@ var ReactMount = {
    * @param {ReactElement} nextElement element to render
    * @param {DOMElement} container container to render into
    * @param {boolean} shouldReuseMarkup if we should skip the markup insertion
+   * @param {object} context if not 1st root render, context of parent & children
    * @return {ReactComponent} nextComponent
    */
   _renderNewRootComponent: function(

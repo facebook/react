@@ -113,6 +113,26 @@ var ReactDefaultPerf = {
       };
     });
   },
+  /**
+   * Pass all measurements to PerfAnalysis, then flatten
+   * @param  {array} measurements measurements taken by DefaultPerf
+   * @return {array} array of flattened objects
+   */
+  getLifecyclesSummaryMap: function(measurements) {
+    var summary = ReactDefaultPerfAnalysis.getLifecycleSummary(
+      measurements
+    );
+    return summary.map(function(item) {
+      var flattenedItem = {
+        id: item.id,
+      };
+      var lifecycles = Object.keys(item.measures);
+      lifecycles.forEach(function(method) {
+        flattenedItem[method] = item.measures[method];
+      });
+      return flattenedItem;
+    });
+  },
 
   printWasted: function(measurements) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
@@ -138,7 +158,29 @@ var ReactDefaultPerf = {
       ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
     );
   },
-
+  /**
+   * prints table of components and their lifecycle counts
+   * @param  {array} measurements array of measurements taken by DefaultPerf
+   */
+  printLifecycles: function(measurements) {
+    measurements = measurements || ReactDefaultPerf._allMeasurements[
+      ReactDefaultPerf._allMeasurements.length - 1
+    ];
+    var components = measurements.components;
+    var summary = ReactDefaultPerfAnalysis.getLifecycleSummary(components);
+    console.table(summary.map(function(item) {
+      var result = {};
+      var keys = Object.keys(item);
+      keys.forEach(function(key) {
+        if (key === 'id') {
+          result.id = item[key];
+        } else {
+          result[key] = item[key].count;
+        }
+      });
+      return result;
+    }));
+  },
   _recordWrite: function(id, fnName, totalTime, args) {
     // TODO: totalTime isn't that useful since it doesn't count paints/reflows
     var entry =
@@ -165,6 +207,15 @@ var ReactDefaultPerf = {
 
       if (fnName === '_renderNewRootComponent' ||
           fnName === 'flushBatchedUpdates') {
+        var components;
+
+        if (fnName === 'flushBatchedUpdates' && ReactDefaultPerf._allMeasurements.length) {
+          // between flushes, measurements get destroyed but we wanna keep
+          // tracking of the lifecycle methods so save off then reattach below
+          components = ReactDefaultPerf._allMeasurements[
+            ReactDefaultPerf._allMeasurements.length - 1
+          ].components;
+        }
         // A "measurement" is a set of metrics recorded for each flush. We want
         // to group the metrics for a given flush together so we can look at the
         // components that rendered and the DOM operations that actually
@@ -179,7 +230,17 @@ var ReactDefaultPerf = {
           hierarchy: {},
           totalTime: 0,
           created: {},
+          components: {}, // all components and any defined lifecycle methods
         });
+
+        if (fnName === 'flushBatchedUpdates' &&
+            components !== null && ReactDefaultPerf._allMeasurements.length) {
+          // reattach components saved off from above
+          ReactDefaultPerf._allMeasurements[
+            ReactDefaultPerf._allMeasurements.length - 1
+          ].components = components;
+        }
+
         start = performanceNow();
         rv = func.apply(this, args);
         entry.totalTime = performanceNow() - start;
@@ -294,6 +355,42 @@ var ReactDefaultPerf = {
         entry.hierarchy[this._rootNodeID] =
           ReactDefaultPerf._compositeStack.slice();
         return rv;
+      } else if (moduleName === 'ReactCompositeComponent') {
+        // TODO: defined in if/else should just be defined where hoisted
+        entry = ReactDefaultPerf._allMeasurements[
+          ReactDefaultPerf._allMeasurements.length - 1
+        ];
+
+        start = performanceNow();
+        rv = func.apply(this, args);
+        totalTime = performanceNow() - start;
+
+        // TODO: warn if no keys? assign a key? assign a random?
+        var reactId = this._reactInternalInstance._currentElement.key; // 0, 0.0, 0.1, etc.
+
+        if (!entry.components[reactId]) {
+          // first time we perf measure the component at all
+          entry.components[reactId] = {};
+          entry.components[reactId][fnName] = {
+            count: 1,
+            totalTime: totalTime,
+            averageTime: totalTime,
+          };
+        } else if (!(entry.components[reactId])[fnName]) {
+          // first time we perf a new method after initial perf above
+          entry.components[reactId][fnName]= {
+            count: 1,
+            totalTime: totalTime,
+            averageTime: totalTime,
+          };
+        } else {
+          // any subsequent perf on a known method
+          entry.components[reactId][fnName].count += 1;
+          entry.components[reactId][fnName].totalTime += totalTime;
+          entry.components[reactId][fnName].averageTime =
+            totalTime / entry.components[reactId][fnName].count;
+        }
+        return func.apply(this, args);
       } else {
         return func.apply(this, args);
       }

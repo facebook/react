@@ -226,4 +226,192 @@ describe('ReactDefaultPerf', function() {
     expect(summary).toEqual([]);
   });
 
+  it('should track component lifecycles for 1 setState cycle', function() {
+    var Parent = React.createClass({
+      // use counter to provide limit on setState calls
+      getInitialState: function() {
+        return {
+          count: 0,
+        };
+      },
+      shouldComponentUpdate: function(nextProps, nextState) {
+        if (nextState.count <= 2) {
+          return true;
+        }
+        return false;
+      },
+      // after initial mount, call set state to cause re-render
+      // to invoke shouldComponentUpdate above
+      componentDidMount: function() {
+        this.setState({
+          count: this.state.count += 1,
+        });
+      },
+      render: function() {
+        return <div><Child key="child-1" /><Child key="child-2" /></div>;
+      },
+    });
+
+    var Child = React.createClass({
+      shouldComponentUpdate: function() {
+        return true;
+      },
+      render: function() {
+        return <div><input /></div>;
+      },
+    });
+
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Parent key="parent-node" />, container);
+    });
+
+    var components = measurements[measurements.length - 1].components;
+    var ids = Object.keys(components);
+    // last entry of measurements should have object with key for parent, 2 children
+    expect(ids.length).toBe(3);
+    var parent = ids[0];
+    var child1 = ids[1];
+    var child2 = ids[2];
+    // 1st entry should be parent and have didMount and shouldUpdate
+    expect(components[parent].shouldComponentUpdate.count).toBe(1);
+    expect(components[parent].componentDidMount.count).toBe(1);
+    // 2nd and 3rd entries are for children that have shouldUpdate
+    expect(components[child1].shouldComponentUpdate.count).toBe(1);
+    expect(components[child1].shouldComponentUpdate.count).toBe(1);
+    expect(components[child2].shouldComponentUpdate.count).toBe(1);
+    expect(components[child2].shouldComponentUpdate.count).toBe(1);
+  });
+
+  it('should track component lifecycles for multiple setState cycles', function() {
+    var Parent = React.createClass({
+      // use counter to provide limit on setState calls
+      getInitialState: function() {
+        return {
+          count: 0,
+        };
+      },
+      shouldComponentUpdate: function(nextProps, nextState) {
+        if (nextState.count <= 2) {
+          return true;
+        }
+        return false;
+      },
+      // after initial mount, call set state to cause re-render
+      // to invoke shouldComponentUpdate above
+      componentDidMount: function() {
+        this.setState({
+          count: this.state.count += 1,
+        });
+      },
+      componentDidUpdate: function() {
+        this.setState({
+          count: this.state.count += 1,
+        });
+      },
+      render: function() {
+        return <div><Child key="child-1" /><Child key="child-2" /></div>;
+      },
+    });
+
+    var Child = React.createClass({
+      // use counter to provide limit on setState calls
+      getInitialState: function() {
+        return {
+          count: 0,
+        };
+      },
+      shouldComponentUpdate: function(nextProps, nextState) {
+        if (nextState.count <= 2) {
+          return true;
+        }
+        return false;
+      },
+      componentDidUpdate: function() {
+        this.setState({
+          count: this.state.count += 1,
+        });
+      },
+      render: function() {
+        return <div><input /></div>;
+      },
+    });
+
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Parent key="parent-node"/>, container);
+    });
+
+    var components = measurements[measurements.length - 1].components;
+    var ids = Object.keys(components);
+    // last entry of measurements should have object with key for parent, 2 children
+    expect(ids.length).toBe(3);
+    var parent = ids[0];
+    var child1 = ids[1];
+    var child2 = ids[2];
+    // 1st entry should be parent and have didMount, shouldUpdate, didUpdate
+    expect(components[parent].shouldComponentUpdate.count).toBe(2);
+    expect(components[parent].componentDidMount.count).toBe(1);
+    expect(components[parent].componentDidUpdate.count).toBe(1);
+    // children that have shouldUpdate 3x: 2 from parent, 1 from didUpdate
+    expect(components[child1].shouldComponentUpdate.count).toBe(3);
+    expect(components[child2].shouldComponentUpdate.count).toBe(3);
+    // children that have didUpdate 2x: 3rd update causes internal count
+    // to be > 2 and return false from shouldUpdate
+    expect(components[child1].componentDidUpdate.count).toBe(2);
+    expect(components[child2].componentDidUpdate.count).toBe(2);
+  });
+
+  it('should flatten summary for lifecycles', function() {
+    var Parent = React.createClass({
+      // use counter to provide limit on setState calls
+      getInitialState: function() {
+        return {
+          count: 0,
+        };
+      },
+      shouldComponentUpdate: function(nextProps, nextState) {
+        if (nextState.count <= 2) {
+          return true;
+        }
+        return false;
+      },
+      // after initial mount, call set state to cause re-render
+      // to invoke shouldComponentUpdate above
+      componentDidMount: function() {
+        this.setState({
+          count: this.state.count += 1,
+        });
+      },
+      render: function() {
+        return <div><Child key="child-1" /><Child key="child-2" /></div>;
+      },
+    });
+
+    var Child = React.createClass({
+      shouldComponentUpdate: function() {
+        return true;
+      },
+      render: function() {
+        return <div><input /></div>;
+      },
+    });
+
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Parent key="parent-node"/>, container);
+    });
+
+    var summary = ReactDefaultPerf.getLifecyclesSummaryMap(measurements);
+    expect(summary.length).toBe(3);
+    // parent has id, shouldUpdate, didMount
+    expect(summary[0].id).not.toBe(null);
+    expect(summary[0].shouldComponentUpdate).not.toBe(null);
+    expect(summary[0].componentDidMount).not.toBe(null);
+    // children just have id, shouldUpdate
+    expect(summary[1].id).not.toBe(null);
+    expect(summary[1].shouldComponentUpdate).not.toBe(null);
+    expect(summary[2].id).not.toBe(null);
+    expect(summary[2].shouldComponentUpdate).not.toBe(null);
+  });
 });
