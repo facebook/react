@@ -1,4 +1,4 @@
-# [React](https://facebook.github.io/react/) [![Build Status](https://travis-ci.org/facebook/react.svg?branch=master)](https://travis-ci.org/facebook/react) [![npm version](https://badge.fury.io/js/react.svg)](http://badge.fury.io/js/react)
+# [React](https://facebook.github.io/react/) [![Build Status](https://img.shields.io/travis/facebook/react/master.svg?style=flat)](https://travis-ci.org/facebook/react) [![Coverage Status](https://img.shields.io/coveralls/facebook/react/master.svg?style=flat)](https://coveralls.io/github/facebook/react?branch=master) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react)
 
 React is a JavaScript library for building user interfaces.
 
@@ -21,7 +21,7 @@ var HelloMessage = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <HelloMessage name="John" />,
   document.getElementById('container')
 );
@@ -37,12 +37,12 @@ The fastest way to get started is to serve JavaScript from the CDN (also availab
 
 ```html
 <!-- The core React library -->
-<script src="https://fb.me/react-0.13.3.js"></script>
-<!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+<script src="https://fb.me/react-0.14.5.js"></script>
+<!-- The ReactDOM Library -->
+<script src="https://fb.me/react-dom-0.14.5.js"></script>
 ```
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-0.13.3.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](https://facebook.github.io/react/downloads/react-0.14.5.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
@@ -60,7 +60,7 @@ The process to build `react.js` is built entirely on top of node.js, using many 
 
 #### Prerequisites
 
-* You have `node` installed at v0.10.0+ (it might work at lower versions, we just haven't tested) and `npm` at v2.0.0+.
+* You have `node` installed at v4.0.0+ and `npm` at v2.0.0+.
 * You are familiar with `npm` and know whether or not you need to use `sudo` when installing packages globally.
 * You are familiar with `git`.
 
@@ -84,15 +84,15 @@ We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete lis
 ```sh
 # Build and run tests with PhantomJS
 grunt test
-# Build and run tests in your browser
-grunt test --debug
-# For speed, you can use fasttest and add --filter to only run one test
-grunt fasttest --filter=ReactIdentity
 # Lint the code with ESLint
 grunt lint
 # Wipe out build directory
 grunt clean
 ```
+
+### Good First Bug
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix.  This is a great place to get started.
+
 
 ### License
 

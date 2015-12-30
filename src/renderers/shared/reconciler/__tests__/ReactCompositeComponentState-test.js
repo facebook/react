@@ -11,9 +11,8 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
+var ReactDOM;
 
 var TestComponent;
 
@@ -21,6 +20,8 @@ describe('ReactCompositeComponent-state', function() {
 
   beforeEach(function() {
     React = require('React');
+
+    ReactDOM = require('ReactDOM');
 
     TestComponent = React.createClass({
       peekAtState: function(from, state) {
@@ -123,22 +124,21 @@ describe('ReactCompositeComponent-state', function() {
         this.peekAtState('componentWillUnmount');
       },
     });
-
   });
 
   it('should support setting state', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
-    var stateListener = mocks.getMockFunction();
-    var instance = React.render(
+    var stateListener = jest.genMockFn();
+    var instance = ReactDOM.render(
       <TestComponent stateListener={stateListener} />,
       container,
       function peekAtInitialCallback() {
         this.peekAtState('initial-callback');
       }
     );
-    React.render(
+    ReactDOM.render(
       <TestComponent stateListener={stateListener} nextColor="green" />,
       container,
       instance.peekAtCallback('setProps')
@@ -146,7 +146,7 @@ describe('ReactCompositeComponent-state', function() {
     instance.setFavoriteColor('blue');
     instance.forceUpdate(instance.peekAtCallback('forceUpdate'));
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
 
     expect(stateListener.mock.calls.join('\n')).toEqual([
       // there is no state when getInitialState() is called
@@ -238,9 +238,9 @@ describe('ReactCompositeComponent-state', function() {
     });
 
     var container = document.createElement('div');
-    outer = React.render(<Outer />, container);
+    outer = ReactDOM.render(<Outer />, container);
     expect(() => {
-      React.unmountComponentAtNode(container);
+      ReactDOM.unmountComponentAtNode(container);
     }).not.toThrow();
   });
 });

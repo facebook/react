@@ -12,32 +12,36 @@
 'use strict';
 
 var React;
-var ReactEmptyComponent;
+var ReactDOM;
 var ReactTestUtils;
 var TogglingComponent;
 
 var reactComponentExpect;
 
+var log;
+
 describe('ReactEmptyComponent', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
-    ReactEmptyComponent = require('ReactEmptyComponent');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
 
     reactComponentExpect = require('reactComponentExpect');
+
+    log = jasmine.createSpy();
 
     TogglingComponent = React.createClass({
       getInitialState: function() {
         return {component: this.props.firstComponent};
       },
       componentDidMount: function() {
-        console.log(React.findDOMNode(this));
+        log(ReactDOM.findDOMNode(this));
         this.setState({component: this.props.secondComponent});
       },
       componentDidUpdate: function() {
-        console.log(React.findDOMNode(this));
+        log(ReactDOM.findDOMNode(this));
       },
       render: function() {
         var Component = this.state.component;
@@ -62,10 +66,10 @@ describe('ReactEmptyComponent', function() {
     var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
     reactComponentExpect(instance1)
       .expectRenderedChild()
-      .toBeComponentOfType(ReactEmptyComponent.emptyElement.type);
+      .toBeEmptyComponent();
     reactComponentExpect(instance2)
       .expectRenderedChild()
-      .toBeComponentOfType(ReactEmptyComponent.emptyElement.type);
+      .toBeEmptyComponent();
   });
 
   it('should still throw when rendering to undefined', () => {
@@ -75,15 +79,12 @@ describe('ReactEmptyComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrow(
-      'Invariant Violation: Component.render(): A valid ReactComponent must ' +
-      'be returned. You may have returned undefined, an array or some other ' +
-      'invalid object.'
+      'Component.render(): A valid ReactComponent must be returned. You may ' +
+      'have returned undefined, an array or some other invalid object.'
     );
   });
 
   it('should be able to switch between rendering null and a normal tag', () => {
-    spyOn(console, 'log');
-
     var instance1 =
       <TogglingComponent
         firstComponent={null}
@@ -95,22 +96,42 @@ describe('ReactEmptyComponent', function() {
         secondComponent={null}
       />;
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(instance1);
-      ReactTestUtils.renderIntoDocument(instance2);
-    }).not.toThrow();
+    ReactTestUtils.renderIntoDocument(instance1);
+    ReactTestUtils.renderIntoDocument(instance2);
 
-    expect(console.log.argsForCall.length).toBe(4);
-    expect(console.log.argsForCall[0][0]).toBe(null);
-    expect(console.log.argsForCall[1][0].tagName).toBe('DIV');
-    expect(console.log.argsForCall[2][0].tagName).toBe('DIV');
-    expect(console.log.argsForCall[3][0]).toBe(null);
+    expect(log.argsForCall.length).toBe(4);
+    expect(log.argsForCall[0][0]).toBe(null);
+    expect(log.argsForCall[1][0].tagName).toBe('DIV');
+    expect(log.argsForCall[2][0].tagName).toBe('DIV');
+    expect(log.argsForCall[3][0]).toBe(null);
+  });
+
+  it('should be able to switch in a list of children', () => {
+    var instance1 =
+      <TogglingComponent
+        firstComponent={null}
+        secondComponent={'div'}
+      />;
+
+    ReactTestUtils.renderIntoDocument(
+      <div>
+        {instance1}
+        {instance1}
+        {instance1}
+      </div>
+    );
+
+    expect(log.argsForCall.length).toBe(6);
+    expect(log.argsForCall[0][0]).toBe(null);
+    expect(log.argsForCall[1][0]).toBe(null);
+    expect(log.argsForCall[2][0]).toBe(null);
+    expect(log.argsForCall[3][0].tagName).toBe('DIV');
+    expect(log.argsForCall[4][0].tagName).toBe('DIV');
+    expect(log.argsForCall[5][0].tagName).toBe('DIV');
   });
 
   it('should distinguish between a script placeholder and an actual script tag',
     () => {
-      spyOn(console, 'log');
-
       var instance1 =
         <TogglingComponent
           firstComponent={null}
@@ -129,18 +150,17 @@ describe('ReactEmptyComponent', function() {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
-      expect(console.log.argsForCall.length).toBe(4);
-      expect(console.log.argsForCall[0][0]).toBe(null);
-      expect(console.log.argsForCall[1][0].tagName).toBe('SCRIPT');
-      expect(console.log.argsForCall[2][0].tagName).toBe('SCRIPT');
-      expect(console.log.argsForCall[3][0]).toBe(null);
+      expect(log.argsForCall.length).toBe(4);
+      expect(log.argsForCall[0][0]).toBe(null);
+      expect(log.argsForCall[1][0].tagName).toBe('SCRIPT');
+      expect(log.argsForCall[2][0].tagName).toBe('SCRIPT');
+      expect(log.argsForCall[3][0]).toBe(null);
     }
   );
 
   it('should have getDOMNode return null when multiple layers of composite ' +
-    'components render to the same null placeholder', () => {
-      spyOn(console, 'log');
-
+    'components render to the same null placeholder',
+    () => {
       var GrandChild = React.createClass({
         render: function() {
           return null;
@@ -171,11 +191,11 @@ describe('ReactEmptyComponent', function() {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
-      expect(console.log.argsForCall.length).toBe(4);
-      expect(console.log.argsForCall[0][0].tagName).toBe('DIV');
-      expect(console.log.argsForCall[1][0]).toBe(null);
-      expect(console.log.argsForCall[2][0]).toBe(null);
-      expect(console.log.argsForCall[3][0].tagName).toBe('DIV');
+      expect(log.argsForCall.length).toBe(4);
+      expect(log.argsForCall[0][0].tagName).toBe('DIV');
+      expect(log.argsForCall[1][0]).toBe(null);
+      expect(log.argsForCall[2][0]).toBe(null);
+      expect(log.argsForCall[3][0].tagName).toBe('DIV');
     }
   );
 
@@ -188,13 +208,13 @@ describe('ReactEmptyComponent', function() {
       componentDidMount: function() {
         // Make sure the DOM node resolves properly even if we're replacing a
         // `null` component
-        expect(React.findDOMNode(this)).not.toBe(null);
+        expect(ReactDOM.findDOMNode(this)).not.toBe(null);
         assertions++;
       },
       componentWillUnmount: function() {
         // Even though we're getting replaced by `null`, we haven't been
         // replaced yet!
-        expect(React.findDOMNode(this)).not.toBe(null);
+        expect(ReactDOM.findDOMNode(this)).not.toBe(null);
         assertions++;
       },
     });
@@ -208,16 +228,16 @@ describe('ReactEmptyComponent', function() {
     var component;
 
     // Render the <Inner /> component...
-    component = React.render(<Wrapper showInner={true} />, el);
-    expect(React.findDOMNode(component)).not.toBe(null);
+    component = ReactDOM.render(<Wrapper showInner={true} />, el);
+    expect(ReactDOM.findDOMNode(component)).not.toBe(null);
 
     // Switch to null...
-    component = React.render(<Wrapper showInner={false} />, el);
-    expect(React.findDOMNode(component)).toBe(null);
+    component = ReactDOM.render(<Wrapper showInner={false} />, el);
+    expect(ReactDOM.findDOMNode(component)).toBe(null);
 
     // ...then switch back.
-    component = React.render(<Wrapper showInner={true} />, el);
-    expect(React.findDOMNode(component)).not.toBe(null);
+    component = ReactDOM.render(<Wrapper showInner={true} />, el);
+    expect(ReactDOM.findDOMNode(component)).not.toBe(null);
 
     expect(assertions).toBe(3);
   });
@@ -226,9 +246,9 @@ describe('ReactEmptyComponent', function() {
     // TODO: This should actually work since `null` is a valid ReactNode
     var div = document.createElement('div');
     expect(function() {
-      React.render(null, div);
+      ReactDOM.render(null, div);
     }).toThrow(
-      'Invariant Violation: React.render(): Invalid component element.'
+      'ReactDOM.render(): Invalid component element.'
     );
   });
 
@@ -266,5 +286,26 @@ describe('ReactEmptyComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Parent />);
     }).not.toThrow();
+  });
+
+  it('preserves the dom node during updates', function() {
+    var Empty = React.createClass({
+      render: function() {
+        return null;
+      },
+    });
+
+    var container = document.createElement('div');
+
+    ReactDOM.render(<Empty />, container);
+    var noscript1 = container.firstChild;
+    expect(noscript1.nodeName).toBe('#comment');
+
+    // This update shouldn't create a DOM node
+    ReactDOM.render(<Empty />, container);
+    var noscript2 = container.firstChild;
+    expect(noscript2.nodeName).toBe('#comment');
+
+    expect(noscript1).toBe(noscript2);
   });
 });

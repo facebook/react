@@ -1,12 +1,9 @@
 {
   "name": "react-dom",
-  "version": "0.14.0-beta1",
+  "version": "0.15.0-alpha",
   "description": "React package for working with the DOM.",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/facebook/react.git"
-  },
+  "repository": "facebook/react",
   "keywords": [
     "react"
   ],
@@ -15,8 +12,7 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
-  "dependencies": {
-    "fbjs": "0.1.0-alpha.0",
-    "react": "^0.14.0-beta1"
+  "peerDependencies": {
+    "react": "^0.15.0-alpha"
   }
 }

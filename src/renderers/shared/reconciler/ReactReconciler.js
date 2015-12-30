@@ -27,18 +27,39 @@ var ReactReconciler = {
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {ReactComponent} internalInstance
-   * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {?object} the containing native component instance
+   * @param {?object} info about the native container
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
    */
-  mountComponent: function(internalInstance, rootID, transaction, context) {
-    var markup = internalInstance.mountComponent(rootID, transaction, context);
-    if (internalInstance._currentElement.ref != null) {
+  mountComponent: function(
+    internalInstance,
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
+    var markup = internalInstance.mountComponent(
+      transaction,
+      nativeParent,
+      nativeContainerInfo,
+      context
+    );
+    if (internalInstance._currentElement &&
+        internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
     return markup;
+  },
+
+  /**
+   * Returns a value that can be passed to
+   * ReactComponentEnvironment.replaceNodeWithMarkup.
+   */
+  getNativeNode: function(internalInstance) {
+    return internalInstance.getNativeNode();
   },
 
   /**
@@ -49,7 +70,7 @@ var ReactReconciler = {
    */
   unmountComponent: function(internalInstance) {
     ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
-    internalInstance.unmountComponent();
+    return internalInstance.unmountComponent();
   },
 
   /**
@@ -65,9 +86,9 @@ var ReactReconciler = {
     internalInstance, nextElement, transaction, context
   ) {
     var prevElement = internalInstance._currentElement;
+
     if (nextElement === prevElement &&
-        nextElement._owner != null
-        // TODO: Shouldn't we need to do this: `&& context === internalInstance._context`
+        context === internalInstance._context
       ) {
       // Since elements are immutable after the owner is rendered,
       // we can do a cheap identity compare here to determine if this is a
@@ -93,7 +114,9 @@ var ReactReconciler = {
 
     internalInstance.receiveComponent(nextElement, transaction, context);
 
-    if (refsChanged) {
+    if (refsChanged &&
+        internalInstance._currentElement &&
+        internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
   },

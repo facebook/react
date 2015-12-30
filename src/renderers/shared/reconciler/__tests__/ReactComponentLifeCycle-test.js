@@ -14,6 +14,7 @@
 var keyMirror = require('keyMirror');
 
 var React;
+var ReactDOM;
 var ReactInstanceMap;
 var ReactTestUtils;
 
@@ -97,8 +98,9 @@ function getLifeCycleState(instance) {
  */
 describe('ReactComponentLifeCycle', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     ReactInstanceMap = require('ReactInstanceMap');
   });
@@ -116,9 +118,9 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
     var element = <StatefulComponent />;
-    var firstInstance = React.render(element, container);
-    React.unmountComponentAtNode(container);
-    var secondInstance = React.render(element, container);
+    var firstInstance = ReactDOM.render(element, container);
+    ReactDOM.unmountComponentAtNode(container);
+    var secondInstance = ReactDOM.render(element, container);
     expect(firstInstance).not.toBe(secondInstance);
   });
 
@@ -283,7 +285,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('isMounted should return false when unmounted', function () {
+  it('isMounted should return false when unmounted', function() {
     var Component = React.createClass({
       render: function() {
         return <div/>;
@@ -291,11 +293,11 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
 
     expect(instance.isMounted()).toBe(true);
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
 
     expect(instance.isMounted()).toBe(false);
   });
@@ -311,7 +313,7 @@ describe('ReactComponentLifeCycle', function() {
       },
       render: function() {
         if (this.state.isMounted) {
-          expect(React.findDOMNode(this).tagName).toBe('DIV');
+          expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV');
         }
         return <div/>;
       },
@@ -384,7 +386,7 @@ describe('ReactComponentLifeCycle', function() {
     // yet initialized, or rendered.
     //
     var container = document.createElement('div');
-    var instance = React.render(<LifeCycleComponent />, container);
+    var instance = ReactDOM.render(<LifeCycleComponent />, container);
 
     // getInitialState
     expect(instance._testJournal.returnedFromGetInitialState).toEqual(
@@ -428,7 +430,7 @@ describe('ReactComponentLifeCycle', function() {
 
     expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
 
     expect(instance._testJournal.stateAtStartOfWillUnmount)
       .toEqual(WILL_UNMOUNT_STATE);
@@ -440,48 +442,6 @@ describe('ReactComponentLifeCycle', function() {
     // But the current lifecycle of the component is unmounted.
     expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.UNMOUNTED);
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
-  });
-
-  it('should throw when calling setProps() on an owned component', function() {
-    /**
-     * calls setProps in an componentDidMount.
-     */
-    var Inner = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-    var PropsUpdaterInOnDOMReady = React.createClass({
-      componentDidMount: function() {
-        this.refs.theSimpleComponent.setProps({
-          className: this.props.valueToUseInOnDOMReady,
-        });
-      },
-      render: function() {
-        return (
-          <Inner
-            className={this.props.valueToUseInitially}
-            ref="theSimpleComponent"
-          />
-        );
-      },
-    });
-    var instance =
-      <PropsUpdaterInOnDOMReady
-        valueToUseInitially="hello"
-        valueToUseInOnDOMReady="goodbye"
-      />;
-    spyOn(console, 'error');
-    expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow(
-      'Invariant Violation: setProps(...): You called `setProps` on a ' +
-      'component with a parent. This is an anti-pattern since props will get ' +
-      'reactively updated when rendered. Instead, change the owner\'s ' +
-      '`render` method to pass the correct value as props to the component ' +
-      'where it is created.'
-    );
-    expect(console.error.calls.length).toBe(1);  // setProps deprecated
   });
 
   it('should not throw when updating an auxiliary component', function() {
@@ -499,7 +459,7 @@ describe('ReactComponentLifeCycle', function() {
       updateTooltip: function() {
         // Even though this.props.tooltip has an owner, updating it shouldn't
         // throw here because it's mounted as a root component
-        React.render(this.props.tooltip, this.container);
+        ReactDOM.render(this.props.tooltip, this.container);
       },
     });
     var Component = React.createClass({
@@ -515,14 +475,14 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     var container = document.createElement('div');
-    React.render(
+    ReactDOM.render(
       <Component text="uno" tooltipText="one" />,
       container
     );
 
     // Since `instance` is a root component, we can set its props. This also
     // makes Tooltip rerender the tooltip component, which shouldn't throw.
-    React.render(
+    ReactDOM.render(
       <Component text="dos" tooltipText="two" />,
       container
     );
@@ -591,7 +551,7 @@ describe('ReactComponentLifeCycle', function() {
 
     var container = document.createElement('div');
     log = [];
-    React.render(<Outer x={17} />, container);
+    ReactDOM.render(<Outer x={17} />, container);
     expect(log).toEqual([
       'outer componentWillMount',
       'inner componentWillMount',
@@ -600,7 +560,7 @@ describe('ReactComponentLifeCycle', function() {
     ]);
 
     log = [];
-    React.render(<Outer x={42} />, container);
+    ReactDOM.render(<Outer x={42} />, container);
     expect(log).toEqual([
       'outer componentWillReceiveProps',
       'outer shouldComponentUpdate',
@@ -613,7 +573,7 @@ describe('ReactComponentLifeCycle', function() {
     ]);
 
     log = [];
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual([
       'outer componentWillUnmount',
       'inner componentWillUnmount',

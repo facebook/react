@@ -14,18 +14,20 @@
 var EnterLeaveEventPlugin;
 var EventConstants;
 var React;
-var ReactMount;
+var ReactDOM;
+var ReactDOMComponentTree;
 
 var topLevelTypes;
 
 describe('EnterLeaveEventPlugin', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     EventConstants = require('EventConstants');
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOM = require('ReactDOM');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
 
     topLevelTypes = EventConstants.topLevelTypes;
   });
@@ -41,13 +43,12 @@ describe('EnterLeaveEventPlugin', function() {
     );
     iframeDocument.close();
 
-    var component = React.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
-    var div = React.findDOMNode(component);
+    var component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
+    var div = ReactDOM.findDOMNode(component);
 
     var extracted = EnterLeaveEventPlugin.extractEvents(
       topLevelTypes.topMouseOver,
-      div,
-      ReactMount.getID(div),
+      ReactDOMComponentTree.getInstanceFromNode(div),
       {target: div},
       div
     );

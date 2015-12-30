@@ -13,7 +13,8 @@
 
 var EventConstants;
 var React;
-var ReactMount;
+var ReactDOM;
+var ReactDOMComponentTree;
 var ReactTestUtils;
 var SelectEventPlugin;
 
@@ -23,8 +24,7 @@ describe('SelectEventPlugin', function() {
   function extract(node, topLevelEvent) {
     return SelectEventPlugin.extractEvents(
       topLevelEvent,
-      node,
-      ReactMount.getID(node),
+      ReactDOMComponentTree.getInstanceFromNode(node),
       {target: node},
       node
     );
@@ -33,7 +33,8 @@ describe('SelectEventPlugin', function() {
   beforeEach(function() {
     EventConstants = require('EventConstants');
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOM = require('ReactDOM');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
 
@@ -48,7 +49,7 @@ describe('SelectEventPlugin', function() {
     });
 
     var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
-    var node = React.findDOMNode(rendered);
+    var node = ReactDOM.findDOMNode(rendered);
     node.focus();
 
     var mousedown = extract(node, topLevelTypes.topMouseDown);
@@ -59,20 +60,18 @@ describe('SelectEventPlugin', function() {
   });
 
   it('should extract if an `onSelect` listener is present', function() {
-    var mocks = require('mocks');
-
     var WithSelect = React.createClass({
       render: function() {
         return <input type="text" onSelect={this.props.onSelect} />;
       },
     });
 
-    var cb = mocks.getMockFunction();
+    var cb = jest.genMockFn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />
     );
-    var node = React.findDOMNode(rendered);
+    var node = ReactDOM.findDOMNode(rendered);
 
     node.selectionStart = 0;
     node.selectionEnd = 0;

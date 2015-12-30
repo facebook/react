@@ -7,6 +7,7 @@ static
 _SpecRunner.html
 __benchmarks__
 build/
+coverage/
 .module-cache
 *.gem
 docs/.bundle

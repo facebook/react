@@ -11,11 +11,11 @@
 
 'use strict';
 
-var eslint = require('eslint');
-var ESLintTester = require('eslint-tester');
-var eslintTester = new ESLintTester(eslint.linter);
+var rule = require('../warning-and-invariant-args');
+var RuleTester = require('eslint').RuleTester;
+var ruleTester = new RuleTester();
 
-eslintTester.addRuleTest('eslint-rules/warning-and-invariant-args', {
+ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
   valid: [
     "warning(true, 'hello, world');",
     "warning(true, 'expected %s, got %s', 42, 24);",
@@ -100,4 +100,3 @@ eslintTester.addRuleTest('eslint-rules/warning-and-invariant-args', {
     },
   ],
 });
-

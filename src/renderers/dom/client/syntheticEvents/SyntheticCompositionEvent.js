@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule SyntheticCompositionEvent
- * @typechecks static-only
  */
 
 'use strict';
@@ -32,7 +31,8 @@ function SyntheticCompositionEvent(
   dispatchConfig,
   dispatchMarker,
   nativeEvent,
-  nativeEventTarget) {
+  nativeEventTarget
+) {
   SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 

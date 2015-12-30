@@ -25,16 +25,6 @@ function enqueueUpdate(internalInstance) {
 }
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
-  if (__DEV__) {
-    warning(
-      ReactCurrentOwner.current == null,
-      '%s(...): Cannot update during an existing state transition ' +
-      '(such as within `render`). Render methods should be a pure function ' +
-      'of props and state.',
-      callerName
-    );
-  }
-
   var internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
     if (__DEV__) {
@@ -52,6 +42,18 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
       );
     }
     return null;
+  }
+
+  if (__DEV__) {
+    warning(
+      ReactCurrentOwner.current == null,
+      '%s(...): Cannot update during an existing state transition (such as ' +
+      'within `render` or another component\'s constructor). Render methods ' +
+      'should be a pure function of props and state; constructor ' +
+      'side-effects are an anti-pattern, but can be moved to ' +
+      '`componentWillMount`.',
+      callerName
+    );
   }
 
   return internalInstance;
@@ -109,8 +111,10 @@ var ReactUpdateQueue = {
     invariant(
       typeof callback === 'function',
       'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-      'isn\'t callable.'
+      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
+      '%s. A function is expected',
+      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
+        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
     );
     var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
@@ -139,8 +143,10 @@ var ReactUpdateQueue = {
     invariant(
       typeof callback === 'function',
       'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-      'isn\'t callable.'
+      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
+      '%s. A function is expected',
+      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
+        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
     );
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);

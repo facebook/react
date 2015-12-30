@@ -134,7 +134,7 @@ var extractUniqueID = function(entity) {
 
 describe('OrderedMap', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     OrderedMap = require('OrderedMap');
   });
 
@@ -616,9 +616,9 @@ describe('OrderedMap', function() {
       expect(res.get('dog')).toBe(undefined);
     };
     result = OrderedMap.fromArray([
-        {uniqueID: 'two', val: 'secondOM2'},
-        {uniqueID: 'three', val: 'third'},
-      ], extractUniqueID).merge(oneTwo);
+      {uniqueID: 'two', val: 'secondOM2'},
+      {uniqueID: 'three', val: 'third'},
+    ], extractUniqueID).merge(oneTwo);
     testTwoThreeMergedWithOneTwo(result);
 
   });
@@ -733,14 +733,12 @@ describe('OrderedMap', function() {
     expect(function() {
       om.mapKeyRange(duplicate, 'x', 3, scope);
     }).toThrow(
-      'Invariant Violation: mapKeyRange must be given keys ' +
-      'that are present.'
+      'mapKeyRange must be given keys that are present.'
     );
     expect(function() {
       om.forEachKeyRange(duplicate, 'x', 3, scope);
     }).toThrow(
-      'Invariant Violation: forEachKeyRange must be given keys ' +
-      'that are present.'
+      'forEachKeyRange must be given keys that are present.'
     );
 
     expect(function() {

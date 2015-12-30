@@ -11,9 +11,7 @@
 
 'use strict';
 
-var ReactFragment = require('ReactFragment');
-
-var flattenChildren = require('flattenChildren');
+var ReactChildren = require('ReactChildren');
 
 /**
  * Slice children that are typically specified as `props.children`. This version
@@ -29,23 +27,8 @@ function sliceChildren(children, start, end) {
     return children;
   }
 
-  var slicedChildren = {};
-  var flattenedMap = flattenChildren(children);
-  var ii = 0;
-  for (var key in flattenedMap) {
-    if (!flattenedMap.hasOwnProperty(key)) {
-      continue;
-    }
-    var child = flattenedMap[key];
-    if (ii >= start) {
-      slicedChildren[key] = child;
-    }
-    ii++;
-    if (end != null && ii >= end) {
-      break;
-    }
-  }
-  return ReactFragment.create(slicedChildren);
+  var array = ReactChildren.toArray(children);
+  return array.slice(start, end);
 }
 
 module.exports = sliceChildren;

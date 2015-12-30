@@ -14,8 +14,8 @@ var babel = require('gulp-babel');
 var flatten = require('gulp-flatten');
 var del = require('del');
 
-var babelPluginDEV = require('fbjs/scripts/babel/dev-expression');
-var babelPluginModules = require('fbjs/scripts/babel/rewrite-modules');
+var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
+var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
 
 var paths = {
   react: {
@@ -23,6 +23,7 @@ var paths = {
       'src/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
+      '!src/shared/vendor/**/*.js',
     ],
     lib: 'build/modules',
   },
@@ -41,8 +42,8 @@ var babelOpts = {
   _moduleMap: require('fbjs/module-map'),
 };
 
-gulp.task('react:clean', function(cb) {
-  del([paths.react.lib], cb);
+gulp.task('react:clean', function() {
+  return del([paths.react.lib]);
 });
 
 gulp.task('react:modules', function() {

@@ -13,9 +13,8 @@
 
 var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
-var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
-var ReactMount = require('ReactMount');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
 var SyntheticEvent = require('SyntheticEvent');
 var SyntheticFocusEvent = require('SyntheticFocusEvent');
@@ -30,7 +29,6 @@ var emptyFunction = require('emptyFunction');
 var getEventCharCode = require('getEventCharCode');
 var invariant = require('invariant');
 var keyOf = require('keyOf');
-var warning = require('warning');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -149,6 +147,12 @@ var eventTypes = {
       captured: keyOf({onEmptiedCapture: true}),
     },
   },
+  encrypted: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onEncrypted: true}),
+      captured: keyOf({onEncryptedCapture: true}),
+    },
+  },
   ended: {
     phasedRegistrationNames: {
       bubbled: keyOf({onEnded: true}),
@@ -171,6 +175,12 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onInput: true}),
       captured: keyOf({onInputCapture: true}),
+    },
+  },
+  invalid: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onInvalid: true}),
+      captured: keyOf({onInvalidCapture: true}),
     },
   },
   keyDown: {
@@ -245,12 +255,6 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseUp: true}),
       captured: keyOf({onMouseUpCapture: true}),
-    },
-  },
-  onEncrypted: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onEncrypted: true}),
-      captured: keyOf({onEncryptedCapture: true}),
     },
   },
   paste: {
@@ -401,10 +405,12 @@ var topLevelEventsToDispatchConfig = {
   topDrop:            eventTypes.drop,
   topDurationChange:  eventTypes.durationChange,
   topEmptied:         eventTypes.emptied,
+  topEncrypted:       eventTypes.encrypted,
   topEnded:           eventTypes.ended,
   topError:           eventTypes.error,
   topFocus:           eventTypes.focus,
   topInput:           eventTypes.input,
+  topInvalid:         eventTypes.invalid,
   topKeyDown:         eventTypes.keyDown,
   topKeyPress:        eventTypes.keyPress,
   topKeyUp:           eventTypes.keyUp,
@@ -417,17 +423,16 @@ var topLevelEventsToDispatchConfig = {
   topMouseOut:        eventTypes.mouseOut,
   topMouseOver:       eventTypes.mouseOver,
   topMouseUp:         eventTypes.mouseUp,
-  topOnEncrypted:     eventTypes.onEncrypted,
-  topPause:           eventTypes.pause,
   topPaste:           eventTypes.paste,
+  topPause:           eventTypes.pause,
   topPlay:            eventTypes.play,
   topPlaying:         eventTypes.playing,
   topProgress:        eventTypes.progress,
   topRateChange:      eventTypes.rateChange,
   topReset:           eventTypes.reset,
+  topScroll:          eventTypes.scroll,
   topSeeked:          eventTypes.seeked,
   topSeeking:         eventTypes.seeking,
-  topScroll:          eventTypes.scroll,
   topStalled:         eventTypes.stalled,
   topSubmit:          eventTypes.submit,
   topSuspend:         eventTypes.suspend,
@@ -452,44 +457,12 @@ var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
 
-  /**
-   * Same as the default implementation, except cancels the event when return
-   * value is false. This behavior will be disabled in a future release.
-   *
-   * @param {object} event Event to be dispatched.
-   * @param {function} listener Application-level callback.
-   * @param {string} domID DOM ID to pass to the callback.
-   */
-  executeDispatch: function(event, listener, domID) {
-    var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
-
-    warning(
-      typeof returnValue !== 'boolean',
-      'Returning `false` from an event handler is deprecated and will be ' +
-      'ignored in a future release. Instead, manually call ' +
-      'e.stopPropagation() or e.preventDefault(), as appropriate.'
-    );
-
-    if (returnValue === false) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-  },
-
-  /**
-   * @param {string} topLevelType Record from `EventConstants`.
-   * @param {DOMEventTarget} topLevelTarget The listening component root node.
-   * @param {string} topLevelTargetID ID of `topLevelTarget`.
-   * @param {object} nativeEvent Native browser event.
-   * @return {*} An accumulation of synthetic events.
-   * @see {EventPluginHub.extractEvents}
-   */
   extractEvents: function(
-      topLevelType,
-      topLevelTarget,
-      topLevelTargetID,
-      nativeEvent,
-      nativeEventTarget) {
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  ) {
     var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
@@ -501,14 +474,15 @@ var SimpleEventPlugin = {
       case topLevelTypes.topCanPlayThrough:
       case topLevelTypes.topDurationChange:
       case topLevelTypes.topEmptied:
+      case topLevelTypes.topEncrypted:
       case topLevelTypes.topEnded:
       case topLevelTypes.topError:
       case topLevelTypes.topInput:
+      case topLevelTypes.topInvalid:
       case topLevelTypes.topLoad:
       case topLevelTypes.topLoadedData:
       case topLevelTypes.topLoadedMetadata:
       case topLevelTypes.topLoadStart:
-      case topLevelTypes.topOnEncrypted:
       case topLevelTypes.topPause:
       case topLevelTypes.topPlay:
       case topLevelTypes.topPlaying:
@@ -528,7 +502,7 @@ var SimpleEventPlugin = {
         EventConstructor = SyntheticEvent;
         break;
       case topLevelTypes.topKeyPress:
-        // FireFox creates a keypress event for function keys too. This removes
+        // Firefox creates a keypress event for function keys too. This removes
         // the unwanted keypress events. Enter is however both printable and
         // non-printable. One would expect Tab to be as well (but it isn't).
         if (getEventCharCode(nativeEvent) === 0) {
@@ -594,7 +568,7 @@ var SimpleEventPlugin = {
     );
     var event = EventConstructor.getPooled(
       dispatchConfig,
-      topLevelTargetID,
+      targetInst,
       nativeEvent,
       nativeEventTarget
     );
@@ -602,13 +576,14 @@ var SimpleEventPlugin = {
     return event;
   },
 
-  didPutListener: function(id, registrationName, listener) {
+  didPutListener: function(inst, registrationName, listener) {
     // Mobile Safari does not fire properly bubble click events on
     // non-interactive elements, which means delegated click listeners do not
     // fire. The workaround for this bug involves attaching an empty click
     // listener on the target node.
     if (registrationName === ON_CLICK_KEY) {
-      var node = ReactMount.getNode(id);
+      var id = inst._rootNodeID;
+      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
       if (!onClickListeners[id]) {
         onClickListeners[id] = EventListener.listen(
           node,
@@ -619,8 +594,9 @@ var SimpleEventPlugin = {
     }
   },
 
-  willDeleteListener: function(id, registrationName) {
+  willDeleteListener: function(inst, registrationName) {
     if (registrationName === ON_CLICK_KEY) {
+      var id = inst._rootNodeID;
       onClickListeners[id].remove();
       delete onClickListeners[id];
     }

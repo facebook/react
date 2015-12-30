@@ -18,15 +18,17 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 var reactComponentExpect;
 
 describe('ReactContextValidator', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
 
@@ -122,8 +124,8 @@ describe('ReactContextValidator', function() {
     });
 
     var container = document.createElement('div');
-    React.render(<Parent foo="abc" />, container);
-    React.render(<Parent foo="def" />, container);
+    ReactDOM.render(<Parent foo="abc" />, container);
+    ReactDOM.render(<Parent foo="def" />, container);
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});

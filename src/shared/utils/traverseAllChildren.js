@@ -11,15 +11,14 @@
 
 'use strict';
 
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var warning = require('warning');
 
-var SEPARATOR = ReactInstanceHandles.SEPARATOR;
+var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
 /**
@@ -29,11 +28,10 @@ var SUBSEPARATOR = ':';
 
 var userProvidedKeyEscaperLookup = {
   '=': '=0',
-  '.': '=1',
   ':': '=2',
 };
 
-var userProvidedKeyEscapeRegex = /[=.:]/g;
+var userProvidedKeyEscapeRegex = /[=:]/g;
 
 var didWarnAboutMaps = false;
 
@@ -49,7 +47,9 @@ function userProvidedKeyEscaper(match) {
  * @return {string}
  */
 function getComponentKey(component, index) {
-  if (component && component.key != null) {
+  // Do some typechecking here since we call this blindly. We want to ensure
+  // that we don't block potential future ES APIs.
+  if (component && typeof component === 'object' && component.key != null) {
     // Explicit key
     return wrapUserProvidedKey(component.key);
   }
@@ -119,7 +119,7 @@ function traverseAllChildrenImpl(
   var child;
   var nextName;
   var subtreeCount = 0; // Count of children found in the current subtree.
-  var nextNamePrefix = nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR;
+  var nextNamePrefix = nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
@@ -179,28 +179,33 @@ function traverseAllChildrenImpl(
         }
       }
     } else if (type === 'object') {
-      invariant(
-        children.nodeType !== 1,
-        'traverseAllChildren(...): Encountered an invalid child; DOM ' +
-        'elements are not valid children of React components.'
-      );
-      var fragment = ReactFragment.extract(children);
-      for (var key in fragment) {
-        if (fragment.hasOwnProperty(key)) {
-          child = fragment[key];
-          nextName = (
-            nextNamePrefix +
-            wrapUserProvidedKey(key) + SUBSEPARATOR +
-            getComponentKey(child, 0)
-          );
-          subtreeCount += traverseAllChildrenImpl(
-            child,
-            nextName,
-            callback,
-            traverseContext
-          );
+      var addendum = '';
+      if (__DEV__) {
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
+          'instead or wrap the object using createFragment(object) from the ' +
+          'React add-ons.';
+        if (children._isReactElement) {
+          addendum =
+            ' It looks like you\'re using an element created by a different ' +
+            'version of React. Make sure to use only one copy of React.';
+        }
+        if (ReactCurrentOwner.current) {
+          var name = ReactCurrentOwner.current.getName();
+          if (name) {
+            addendum += ' Check the render method of `' + name + '`.';
+          }
         }
       }
+      var childrenString = String(children);
+      invariant(
+        false,
+        'Objects are not valid as a React child (found: %s).%s',
+        childrenString === '[object Object]' ?
+          'object with keys {' + Object.keys(children).join(', ') + '}' :
+          childrenString,
+        addendum
+      );
     }
   }
 

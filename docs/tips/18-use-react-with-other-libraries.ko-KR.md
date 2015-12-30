@@ -16,7 +16,7 @@ var App = React.createClass({
   },
 
   componentDidMount: function() {
-    $(React.findDOMNode(this.refs.placeholder)).append($('<span />'));
+    $(ReactDOM.findDOMNode(this.refs.placeholder)).append($('<span />'));
   },
 
   componentWillUnmount: function() {
@@ -33,7 +33,7 @@ var App = React.createClass({
   }
 });
 
-React.render(<App />, mountNode);
+ReactDOM.render(<App />, mountNode);
 ```
 
 이 방식으로 별도의 [이벤트 리스너](/react/tips/dom-event-listeners-ko-KR.html)나 [이벤트 스트림](https://baconjs.github.io) 같은 것들을 더할 수 있습니다.

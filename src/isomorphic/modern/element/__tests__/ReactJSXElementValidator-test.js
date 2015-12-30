@@ -15,7 +15,6 @@
 // of dynamic errors when using JSX with Flow.
 
 var React;
-var ReactFragment;
 var ReactTestUtils;
 
 describe('ReactJSXElementValidator', function() {
@@ -23,19 +22,18 @@ describe('ReactJSXElementValidator', function() {
   var RequiredPropComponent;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
-    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
 
-    Component = class {
+    Component = class extends React.Component {
       render() {
         return <div />;
       }
     };
 
-    RequiredPropComponent = class {
+    RequiredPropComponent = class extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
@@ -43,10 +41,6 @@ describe('ReactJSXElementValidator', function() {
     RequiredPropComponent.displayName = 'RequiredPropComponent';
     RequiredPropComponent.propTypes = {prop: React.PropTypes.string.isRequired};
   });
-
-  function frag(obj) {
-    return ReactFragment.create(obj);
-  }
 
   it('warns for keys for arrays of elements in children position', function() {
     spyOn(console, 'error');
@@ -62,13 +56,13 @@ describe('ReactJSXElementValidator', function() {
   it('warns for keys for arrays of elements with owner info', function() {
     spyOn(console, 'error');
 
-    class InnerComponent {
+    class InnerComponent extends React.Component {
       render() {
         return <Component>{this.props.childSet}</Component>;
       }
     }
 
-    class ComponentWrapper {
+    class ComponentWrapper extends React.Component {
       render() {
         return (
           <InnerComponent
@@ -83,7 +77,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop. ' +
-      'Check the render method of InnerComponent. ' +
+      'Check the render method of `InnerComponent`. ' +
       'It was passed a child from ComponentWrapper. '
     );
   });
@@ -142,17 +136,6 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
-  it('warns for numeric keys on objects as children', function() {
-    spyOn(console, 'error');
-
-    void <Component>{frag({1: <Component />, 2: <Component />})}</Component>;
-
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Child objects should have non-numeric keys so ordering is preserved.'
-    );
-  });
-
   it('does not warn for numeric keys in entry iterable as a child', function() {
     spyOn(console, 'error');
 
@@ -185,7 +168,7 @@ describe('ReactJSXElementValidator', function() {
   it('does not warn when the child array contains non-elements', function() {
     spyOn(console, 'error');
 
-    void <Component>{[ {}, {} ]}</Component>;
+    void <Component>{[{}, {}]}</Component>;
 
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -198,7 +181,7 @@ describe('ReactJSXElementValidator', function() {
     // component, we give a small hint as to which parent instantiated that
     // component as per warnings about key usage in ReactElementValidator.
     spyOn(console, 'error');
-    class MyComp {
+    class MyComp extends React.Component {
       render() {
         return <div>My color is {this.color}</div>;
       }
@@ -206,13 +189,13 @@ describe('ReactJSXElementValidator', function() {
     MyComp.propTypes = {
       color: React.PropTypes.string,
     };
-    class ParentComp {
+    class ParentComp extends React.Component {
       render() {
         return <MyComp color={123} />;
       }
     }
     ReactTestUtils.renderIntoDocument(<ParentComp />);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`. Check the render method of `ParentComp`.'
@@ -231,19 +214,19 @@ describe('ReactJSXElementValidator', function() {
     void <True />;
     void <Num />;
     expect(console.error.calls.length).toBe(4);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls[1].args[0]).toContain(
+    expect(console.error.argsForCall[1][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls[2].args[0]).toContain(
+    expect(console.error.argsForCall[2][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls[3].args[0]).toContain(
+    expect(console.error.argsForCall[3][0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
@@ -259,7 +242,7 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
@@ -271,7 +254,7 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
@@ -284,12 +267,12 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={42} />);
 
     expect(console.error.calls.length).toBe(2);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.'
     );
 
-    expect(console.error.calls[1].args[0]).toBe(
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
       '`RequiredPropComponent`, expected `string`.'
@@ -307,7 +290,7 @@ describe('ReactJSXElementValidator', function() {
     // actually occurs. Since this step is skipped in production, we should just
     // warn instead of throwing for this case.
     spyOn(console, 'error');
-    class NullPropTypeComponent {
+    class NullPropTypeComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
@@ -317,15 +300,15 @@ describe('ReactJSXElementValidator', function() {
     };
     ReactTestUtils.renderIntoDocument(<NullPropTypeComponent />);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'Invariant Violation: NullPropTypeComponent: prop type `prop` is ' +
-      'invalid; it must be a function, usually from React.PropTypes.'
+    expect(console.error.argsForCall[0][0]).toContain(
+      'NullPropTypeComponent: prop type `prop` is invalid; it must be a ' +
+      'function, usually from React.PropTypes.'
     );
   });
 
   it('should warn on invalid context types', function() {
     spyOn(console, 'error');
-    class NullContextTypeComponent {
+    class NullContextTypeComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
@@ -335,15 +318,15 @@ describe('ReactJSXElementValidator', function() {
     };
     ReactTestUtils.renderIntoDocument(<NullContextTypeComponent />);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'Invariant Violation: NullContextTypeComponent: context type `prop` is ' +
-      'invalid; it must be a function, usually from React.PropTypes.'
+    expect(console.error.argsForCall[0][0]).toContain(
+      'NullContextTypeComponent: context type `prop` is invalid; it must ' +
+      'be a function, usually from React.PropTypes.'
     );
   });
 
   it('should warn if getDefaultProps is specificed on the class', function() {
     spyOn(console, 'error');
-    class GetDefaultPropsComponent {
+    class GetDefaultPropsComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
@@ -353,7 +336,7 @@ describe('ReactJSXElementValidator', function() {
     });
     ReactTestUtils.renderIntoDocument(<GetDefaultPropsComponent />);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'getDefaultProps is only used on classic React.createClass definitions.' +
       ' Use a static property named `defaultProps` instead.'
     );

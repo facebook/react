@@ -7,13 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule CSSPropertyOperations
- * @typechecks static-only
  */
 
 'use strict';
 
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactPerf = require('ReactPerf');
 
 var camelizeStyleName = require('camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
@@ -25,8 +25,16 @@ var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
+var hasShorthandPropertyBug = false;
 var styleFloatAccessor = 'cssFloat';
 if (ExecutionEnvironment.canUseDOM) {
+  var tempStyle = document.createElement('div').style;
+  try {
+    // IE8 throws "Invalid argument." if resetting shorthand style properties.
+    tempStyle.font = '';
+  } catch (e) {
+    hasShorthandPropertyBug = true;
+  }
   // IE8 only supports accessing cssFloat (standard) as styleFloat
   if (document.documentElement.style.cssFloat === undefined) {
     styleFloatAccessor = 'styleFloat';
@@ -116,9 +124,10 @@ var CSSPropertyOperations = {
    * The result should be HTML-escaped before insertion into the DOM.
    *
    * @param {object} styles
+   * @param {ReactDOMComponent} component
    * @return {?string}
    */
-  createMarkupForStyles: function(styles) {
+  createMarkupForStyles: function(styles, component) {
     var serialized = '';
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -130,7 +139,8 @@ var CSSPropertyOperations = {
       }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(styleName, styleValue) + ';';
+        serialized +=
+          dangerousStyleValue(styleName, styleValue, component) + ';';
       }
     }
     return serialized || null;
@@ -143,7 +153,7 @@ var CSSPropertyOperations = {
    * @param {DOMElement} node
    * @param {object} styles
    */
-  setValueForStyles: function(node, styles) {
+  setValueForStyles: function(node, styles, component) {
     var style = node.style;
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -152,14 +162,20 @@ var CSSPropertyOperations = {
       if (__DEV__) {
         warnValidStyle(styleName, styles[styleName]);
       }
-      var styleValue = dangerousStyleValue(styleName, styles[styleName]);
+      var styleValue = dangerousStyleValue(
+        styleName,
+        styles[styleName],
+        component
+      );
       if (styleName === 'float') {
         styleName = styleFloatAccessor;
       }
       if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
+        var expansion =
+          hasShorthandPropertyBug &&
+          CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
           // component to placate it
@@ -174,5 +190,9 @@ var CSSPropertyOperations = {
   },
 
 };
+
+ReactPerf.measureMethods(CSSPropertyOperations, 'CSSPropertyOperations', {
+  setValueForStyles: 'setValueForStyles',
+});
 
 module.exports = CSSPropertyOperations;

@@ -2,7 +2,8 @@
 id: advanced-performance
 title: Advanced Performance
 permalink: advanced-performance.html
-prev: perf.html
+prev: shallow-compare.html
+next: context.html
 ---
 
 One of the first questions people ask when considering React for a project is whether their application will be as fast and responsive as an equivalent non-React version. The idea of re-rendering an entire subtree of components in response to every state change makes people wonder whether this process negatively impacts performance. React uses several clever techniques to minimize the number of costly DOM operations required to update the UI.
@@ -54,7 +55,7 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value</div>;
+    return <div>{this.props.value}</div>;
   }
 });
 ```
@@ -78,7 +79,7 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value.foo</div>;
+    return <div>{this.props.value.foo}</div>;
   }
 });
 ```

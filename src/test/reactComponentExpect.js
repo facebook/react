@@ -28,6 +28,7 @@ function reactComponentExpect(instance) {
   }
 
   expect(instance).not.toBeNull();
+  expect(instance).not.toBeUndefined();
 
   invariant(
     ReactTestUtils.isCompositeComponent(instance),
@@ -147,6 +148,11 @@ assign(reactComponentExpectInternal.prototype, {
     expect(elementType === 'string' || elementType === 'number').toBe(true);
     expect(this._instance._stringText).toBe(val);
     return this;
+  },
+
+  toBeEmptyComponent: function() {
+    var element = this._instance._currentElement;
+    return element === null || element === false;
   },
 
   toBePresent: function() {

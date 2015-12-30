@@ -17,14 +17,16 @@ boolean bubbles
 boolean cancelable
 DOMEventTarget currentTarget
 boolean defaultPrevented
-Number eventPhase
+number eventPhase
 boolean isTrusted
 DOMEvent nativeEvent
 void preventDefault()
+boolean isDefaultPrevented()
 void stopPropagation()
+boolean isPropagationStopped()
 DOMEventTarget target
-Date timeStamp
-String type
+number timeStamp
+string type
 ```
 
 > 注意：
@@ -54,7 +56,7 @@ DOMDataTransfer clipboardData
 ```
 
 
-### 键盘事件 
+### 键盘事件
 
 事件名称：
 
@@ -66,17 +68,17 @@ onKeyDown onKeyPress onKeyUp
 
 ```javascript
 boolean altKey
-Number charCode
+number charCode
 boolean ctrlKey
-function getModifierState(key)
-String key
-Number keyCode
-String locale
-Number location
+boolean getModifierState(key)
+string key
+number keyCode
+string locale
+number location
 boolean metaKey
 boolean repeat
 boolean shiftKey
-Number which
+number which
 ```
 
 
@@ -120,19 +122,28 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 
 ```javascript
 boolean altKey
-Number button
-Number buttons
-Number clientX
-Number clientY
+number button
+number buttons
+number clientX
+number clientY
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
-Number pageX
-Number pageY
+number pageX
+number pageY
 DOMEventTarget relatedTarget
-Number screenX
-Number screenY
+number screenX
+number screenY
 boolean shiftKey
+```
+
+
+### Selection Events
+
+事件名称:
+
+```
+onSelect
 ```
 
 
@@ -150,7 +161,7 @@ onTouchCancel onTouchEnd onTouchMove onTouchStart
 boolean altKey
 DOMTouchList changedTouches
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
 boolean shiftKey
 DOMTouchList targetTouches
@@ -169,7 +180,7 @@ onScroll
 属性：
 
 ```javascript
-Number detail
+number detail
 DOMAbstractView view
 ```
 
@@ -185,8 +196,24 @@ onWheel
 属性：
 
 ```javascript
-Number deltaMode
-Number deltaX
-Number deltaY
-Number deltaZ
+number deltaMode
+number deltaX
+number deltaY
+number deltaZ
+```
+
+### Media Events
+
+事件名称:
+
+```
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+```
+
+### Image Events
+
+事件名称:
+
+```
+onLoad onError
 ```

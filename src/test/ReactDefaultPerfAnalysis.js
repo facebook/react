@@ -22,10 +22,12 @@ var DOM_OPERATION_TYPES = {
   REMOVE_NODE: 'remove',
   SET_MARKUP: 'set innerHTML',
   TEXT_CONTENT: 'set textContent',
-  'updatePropertyByID': 'update attribute',
-  'deletePropertyByID': 'delete attribute',
-  'updateStylesByID': 'update styles',
-  'dangerouslyReplaceNodeWithMarkupByID': 'replace',
+  'setValueForProperty': 'update attribute',
+  'setValueForAttribute': 'update attribute',
+  'deleteValueForProperty': 'remove attribute',
+  'setValueForStyles': 'update styles',
+  'replaceNodeWithMarkup': 'replace',
+  'updateTextContent': 'set textContent',
 };
 
 function getTotalTime(measurements) {
@@ -173,18 +175,27 @@ function getUnchangedComponents(measurement) {
   // render anything to the DOM and return a mapping of their ID to
   // the amount of time it took to render the entire subtree.
   var cleanComponents = {};
-  var dirtyLeafIDs = Object.keys(measurement.writes);
+  var writes = measurement.writes;
+  var dirtyComposites = {};
+  Object.keys(writes).forEach(function(id) {
+    writes[id].forEach(function(write) {
+      // Root mounting (innerHTML set) is recorded with an ID of ''
+      if (id !== '') {
+        measurement.hierarchy[id].forEach((c) => dirtyComposites[c] = true);
+      }
+    });
+  });
   var allIDs = assign({}, measurement.exclusive, measurement.inclusive);
 
   for (var id in allIDs) {
     var isDirty = false;
-    // For each component that rendered, see if a component that triggered
-    // a DOM op is in its subtree.
-    for (var i = 0; i < dirtyLeafIDs.length; i++) {
-      if (dirtyLeafIDs[i].indexOf(id) === 0) {
-        isDirty = true;
-        break;
-      }
+    // See if any of the DOM operations applied to this component's subtree.
+    if (dirtyComposites[id]) {
+      isDirty = true;
+    }
+    // check if component newly created
+    if (measurement.created[id]) {
+      isDirty = true;
     }
     if (!isDirty && measurement.counts[id] > 0) {
       cleanComponents[id] = true;

@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule FallbackCompositionState
- * @typechecks static-only
  */
 
 'use strict';
@@ -35,6 +34,12 @@ function FallbackCompositionState(root) {
 }
 
 assign(FallbackCompositionState.prototype, {
+  destructor: function() {
+    this._root = null;
+    this._startText = null;
+    this._fallbackText = null;
+  },
+
   /**
    * Get current text of input.
    *

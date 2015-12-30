@@ -34,6 +34,9 @@ function detachRef(ref, component, owner) {
 }
 
 ReactRef.attachRefs = function(instance, element) {
+  if (element === null || element === false) {
+    return;
+  }
   var ref = element.ref;
   if (ref != null) {
     attachRef(ref, instance, element._owner);
@@ -53,13 +56,21 @@ ReactRef.shouldUpdateRefs = function(prevElement, nextElement) {
   // is made. It probably belongs where the key checking and
   // instantiateReactComponent is done.
 
+  var prevEmpty = prevElement === null || prevElement === false;
+  var nextEmpty = nextElement === null || nextElement === false;
+
   return (
+    // This has a few false positives w/r/t empty components.
+    prevEmpty || nextEmpty ||
     nextElement._owner !== prevElement._owner ||
     nextElement.ref !== prevElement.ref
   );
 };
 
 ReactRef.detachRefs = function(instance, element) {
+  if (element === null || element === false) {
+    return;
+  }
   var ref = element.ref;
   if (ref != null) {
     detachRef(ref, instance, element._owner);

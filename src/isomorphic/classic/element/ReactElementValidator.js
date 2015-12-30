@@ -19,11 +19,11 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var warning = require('warning');
@@ -47,39 +47,6 @@ var ownerHasKeyUseWarning = {};
 
 var loggedTypeFailures = {};
 
-var NUMERIC_PROPERTY_REGEX = /^\d+$/;
-
-/**
- * Gets the instance's name for use in warnings.
- *
- * @internal
- * @return {?string} Display name or undefined
- */
-function getName(instance) {
-  var publicInstance = instance && instance.getPublicInstance();
-  if (!publicInstance) {
-    return undefined;
-  }
-  var constructor = publicInstance.constructor;
-  if (!constructor) {
-    return undefined;
-  }
-  return constructor.displayName || constructor.name || undefined;
-}
-
-/**
- * Gets the current owner's displayName for use in warnings.
- *
- * @internal
- * @return {?string} Display name or undefined
- */
-function getCurrentOwnerDisplayName() {
-  var current = ReactCurrentOwner.current;
-  return (
-    current && getName(current) || undefined
-  );
-}
-
 /**
  * Warn if the element doesn't have an explicit key assigned to it.
  * This element is in an array. The array could grow and shrink or be
@@ -91,7 +58,7 @@ function getCurrentOwnerDisplayName() {
  * @param {*} parentType element's parent's type.
  */
 function validateExplicitKey(element, parentType) {
-  if (element._store.validated || element.key != null) {
+  if (!element._store || element._store.validated || element.key != null) {
     return;
   }
   element._store.validated = true;
@@ -112,34 +79,6 @@ function validateExplicitKey(element, parentType) {
 }
 
 /**
- * Warn if the key is being defined as an object property but has an incorrect
- * value.
- *
- * @internal
- * @param {string} name Property name of the key.
- * @param {ReactElement} element Component that requires a key.
- * @param {*} parentType element's parent's type.
- */
-function validatePropertyKey(name, element, parentType) {
-  if (!NUMERIC_PROPERTY_REGEX.test(name)) {
-    return;
-  }
-  var addenda = getAddendaForKeyUse('numericKeys', element, parentType);
-  if (addenda === null) {
-    // we already showed the warning
-    return;
-  }
-  warning(
-    false,
-    'Child objects should have non-numeric keys so ordering is preserved.' +
-    '%s%s%s',
-    addenda.parentOrOwner || '',
-    addenda.childOwner || '',
-    addenda.url || ''
-  );
-}
-
-/**
  * Shared warning and monitoring code for the key warnings.
  *
  * @internal
@@ -150,24 +89,25 @@ function validatePropertyKey(name, element, parentType) {
  * if the warning has already been shown before (and shouldn't be shown again).
  */
 function getAddendaForKeyUse(messageType, element, parentType) {
-  var ownerName = getCurrentOwnerDisplayName();
-  var parentName = typeof parentType === 'string' ?
-    parentType : parentType.displayName || parentType.name;
+  var addendum = getDeclarationErrorAddendum();
+  if (!addendum) {
+    var parentName = typeof parentType === 'string' ?
+      parentType : parentType.displayName || parentType.name;
+    if (parentName) {
+      addendum = ` Check the top-level render call using <${parentName}>.`;
+    }
+  }
 
-  var useName = ownerName || parentName;
   var memoizer = ownerHasKeyUseWarning[messageType] || (
     ownerHasKeyUseWarning[messageType] = {}
   );
-  if (memoizer[useName]) {
+  if (memoizer[addendum]) {
     return null;
   }
-  memoizer[useName] = true;
+  memoizer[addendum] = true;
 
   var addenda = {
-    parentOrOwner:
-      ownerName ? ` Check the render method of ${ownerName}.` :
-      parentName ? ` Check the React.render call using <${parentName}>.` :
-      null,
+    parentOrOwner: addendum,
     url: ' See https://fb.me/react-warning-keys for more information.',
     childOwner: null,
   };
@@ -180,7 +120,7 @@ function getAddendaForKeyUse(messageType, element, parentType) {
       element._owner !== ReactCurrentOwner.current) {
     // Give the component that originally created this child.
     addenda.childOwner =
-      ` It was passed a child from ${getName(element._owner)}.`;
+      ` It was passed a child from ${element._owner.getName()}.`;
   }
 
   return addenda;
@@ -196,6 +136,9 @@ function getAddendaForKeyUse(messageType, element, parentType) {
  * @param {*} parentType node's parent's type.
  */
 function validateChildKeys(node, parentType) {
+  if (typeof node !== 'object') {
+    return;
+  }
   if (Array.isArray(node)) {
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
@@ -205,7 +148,9 @@ function validateChildKeys(node, parentType) {
     }
   } else if (ReactElement.isValidElement(node)) {
     // This element was passed in a valid location.
-    node._store.validated = true;
+    if (node._store) {
+      node._store.validated = true;
+    }
   } else if (node) {
     var iteratorFn = getIteratorFn(node);
     // Entry iterators provide implicit keys.
@@ -217,13 +162,6 @@ function validateChildKeys(node, parentType) {
           if (ReactElement.isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
           }
-        }
-      }
-    } else if (typeof node === 'object') {
-      var fragment = ReactFragment.extractIfFragment(node);
-      for (var key in fragment) {
-        if (fragment.hasOwnProperty(key)) {
-          validatePropertyKey(key, fragment[key], parentType);
         }
       }
     }
@@ -317,9 +255,11 @@ function validatePropTypes(element) {
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
+    var validType = typeof type === 'string' || typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
-    warning(typeof type === 'string' || typeof type === 'function',
+    warning(
+      validType,
       'React.createElement: type should not be null, undefined, boolean, or ' +
         'number. It should be a string (for DOM elements) or a ReactClass ' +
         '(for composite components).%s',
@@ -334,8 +274,15 @@ var ReactElementValidator = {
       return element;
     }
 
-    for (var i = 2; i < arguments.length; i++) {
-      validateChildKeys(arguments[i], type);
+    // Skip key warning if the type isn't valid since our key validation logic
+    // doesn't expect a non-string/function type and can throw confusing errors.
+    // We don't want exception behavior to differ between dev and prod.
+    // (Rendering will throw with a helpful message and as soon as the type is
+    // fixed, the key warnings will appear.)
+    if (validType) {
+      for (var i = 2; i < arguments.length; i++) {
+        validateChildKeys(arguments[i], type);
+      }
     }
 
     validatePropTypes(element);
@@ -352,7 +299,7 @@ var ReactElementValidator = {
     validatedFactory.type = type;
 
     if (__DEV__) {
-      try {
+      if (canDefineProperty) {
         Object.defineProperty(
           validatedFactory,
           'type',
@@ -371,8 +318,6 @@ var ReactElementValidator = {
             },
           }
         );
-      } catch (x) {
-        // IE will fail on defineProperty (es5-shim/sham too)
       }
     }
 

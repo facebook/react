@@ -11,10 +11,10 @@ next: self-closing-tag.html
 
 ```js
 // This JSX:
-React.render(<div id="msg">Hello World!</div>, mountNode);
+ReactDOM.render(<div id="msg">Hello World!</div>, mountNode);
 
 // Is transformed to this JS:
-React.render(React.createElement("div", {id:"msg"}, "Hello World!"), mountNode);
+ReactDOM.render(React.createElement("div", {id:"msg"}, "Hello World!"), mountNode);
 ```
 
 This means that `if` statements don't fit in. Take this example:
@@ -30,7 +30,7 @@ React.createElement("div", {id: if (condition) { 'msg' }}, "Hello World!");
 That's not valid JS. You probably want to make use of a ternary expression:
 
 ```js
-React.render(<div id={condition ? 'msg' : ''}>Hello World!</div>, mountNode);
+ReactDOM.render(<div id={condition ? 'msg' : null}>Hello World!</div>, mountNode);
 ```
 
 If a ternary expression isn't robust enough, you can use `if` statements outside of your JSX to determine which components should be used:
@@ -78,4 +78,4 @@ return (
 >
 > In the example above, an ES6 [arrow function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) is utilized to lexically bind the value of `this`.
 
-Try using it today with the [JSX compiler](/react/jsx-compiler.html).
+Try using it today with the [Babel REPL](https://babeljs.io/repl/).

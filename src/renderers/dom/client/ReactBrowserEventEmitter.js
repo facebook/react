@@ -7,13 +7,11 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactBrowserEventEmitter
- * @typechecks static-only
  */
 
 'use strict';
 
 var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
@@ -107,6 +105,7 @@ var topEventMapping = {
   topDrop: 'drop',
   topDurationChange: 'durationchange',
   topEmptied: 'emptied',
+  topEncrypted: 'encrypted',
   topEnded: 'ended',
   topError: 'error',
   topFocus: 'focus',
@@ -122,16 +121,15 @@ var topEventMapping = {
   topMouseOut: 'mouseout',
   topMouseOver: 'mouseover',
   topMouseUp: 'mouseup',
-  topOnEncrypted: 'onencrypted',
-  topPause: 'pause',
   topPaste: 'paste',
+  topPause: 'pause',
   topPlay: 'play',
   topPlaying: 'playing',
   topProgress: 'progress',
   topRateChange: 'ratechange',
-  topSeeking: 'seeking',
-  topSeeked: 'seeked',
   topScroll: 'scroll',
+  topSeeked: 'seeked',
+  topSeeking: 'seeking',
   topSelectionChange: 'selectionchange',
   topStalled: 'stalled',
   topSuspend: 'suspend',
@@ -165,7 +163,7 @@ function getListeningForDocument(mountAt) {
  * `ReactBrowserEventEmitter` is used to attach top-level event listeners. For
  * example:
  *
- *   ReactBrowserEventEmitter.putListener('myID', 'onClick', myFunction);
+ *   EventPluginHub.putListener('myID', 'onClick', myFunction);
  *
  * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
  *
@@ -358,18 +356,6 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
       isMonitoringScrollValue = true;
     }
   },
-
-  eventNameDispatchConfigs: EventPluginHub.eventNameDispatchConfigs,
-
-  registrationNameModules: EventPluginHub.registrationNameModules,
-
-  putListener: EventPluginHub.putListener,
-
-  getListener: EventPluginHub.getListener,
-
-  deleteListener: EventPluginHub.deleteListener,
-
-  deleteAllListeners: EventPluginHub.deleteAllListeners,
 
 });
 

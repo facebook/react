@@ -26,6 +26,8 @@ var isUnitlessNumber = {
   flexShrink: true,
   flexNegative: true,
   flexOrder: true,
+  gridRow: true,
+  gridColumn: true,
   fontWeight: true,
   lineClamp: true,
   lineHeight: true,
@@ -39,6 +41,7 @@ var isUnitlessNumber = {
 
   // SVG-related properties
   fillOpacity: true,
+  stopOpacity: true,
   strokeDashoffset: true,
   strokeOpacity: true,
   strokeWidth: true,
@@ -79,10 +82,16 @@ Object.keys(isUnitlessNumber).forEach(function(prop) {
  */
 var shorthandPropertyExpansions = {
   background: {
-    backgroundImage: true,
-    backgroundPosition: true,
-    backgroundRepeat: true,
+    backgroundAttachment: true,
     backgroundColor: true,
+    backgroundImage: true,
+    backgroundPositionX: true,
+    backgroundPositionY: true,
+    backgroundRepeat: true,
+  },
+  backgroundPosition: {
+    backgroundPositionX: true,
+    backgroundPositionY: true,
   },
   border: {
     borderWidth: true,
@@ -116,6 +125,11 @@ var shorthandPropertyExpansions = {
     fontSize: true,
     lineHeight: true,
     fontFamily: true,
+  },
+  outline: {
+    outlineWidth: true,
+    outlineStyle: true,
+    outlineColor: true,
   },
 };
 

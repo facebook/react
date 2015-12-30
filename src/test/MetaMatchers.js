@@ -20,7 +20,7 @@
 function getRunnerWithResults(describeFunction) {
   if (describeFunction._cachedRunner) {
     // Cached result of execution. This is a convenience way to test against
-    // the same authorative function multiple times.
+    // the same authoritative function multiple times.
     return describeFunction._cachedRunner;
   }
   // Patch the current global environment.

@@ -26,7 +26,4 @@ declare module 'React' {
   }
   export var PropTypes : any;
   export function createElement(tag : any, props ?: any, ...children : any[]) : any
-  export function render(element : any, container : any) : any
-  export function unmountComponentAtNode(container : any) : void
-  export function findDOMNode(instance : any) : any
 }

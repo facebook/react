@@ -7,14 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactChildReconciler
- * @typechecks static-only
  */
 
 'use strict';
 
 var ReactReconciler = require('ReactReconciler');
 
-var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseAllChildren = require('traverseAllChildren');
@@ -33,7 +31,7 @@ function instantiateChild(childInstances, child, name) {
     );
   }
   if (child != null && keyUnique) {
-    childInstances[name] = instantiateReactComponent(child, null);
+    childInstances[name] = instantiateReactComponent(child);
   }
 }
 
@@ -64,7 +62,7 @@ var ReactChildReconciler = {
    * Updates the rendered children and returns a new set of children.
    *
    * @param {?object} prevChildren Previously initialized set of children.
-   * @param {?object} nextNestedChildrenElements Nested child element maps.
+   * @param {?object} nextChildren Flat child element maps.
    * @param {ReactReconcileTransaction} transaction
    * @param {object} context
    * @return {?object} A new set of child instances.
@@ -72,7 +70,7 @@ var ReactChildReconciler = {
    */
   updateChildren: function(
     prevChildren,
-    nextNestedChildrenElements,
+    nextChildren,
     transaction,
     context) {
     // We currently don't have a way to track moves here but if we use iterators
@@ -80,7 +78,6 @@ var ReactChildReconciler = {
     // moved.
     // TODO: If nothing has changed, return the prevChildren object so that we
     // can quickly bailout if nothing has changed.
-    var nextChildren = flattenChildren(nextNestedChildrenElements);
     if (!nextChildren && !prevChildren) {
       return null;
     }
@@ -92,7 +89,8 @@ var ReactChildReconciler = {
       var prevChild = prevChildren && prevChildren[name];
       var prevElement = prevChild && prevChild._currentElement;
       var nextElement = nextChildren[name];
-      if (shouldUpdateReactComponent(prevElement, nextElement)) {
+      if (prevChild != null &&
+          shouldUpdateReactComponent(prevElement, nextElement)) {
         ReactReconciler.receiveComponent(
           prevChild, nextElement, transaction, context
         );
@@ -102,10 +100,7 @@ var ReactChildReconciler = {
           ReactReconciler.unmountComponent(prevChild, name);
         }
         // The child must be instantiated before it's mounted.
-        var nextChildInstance = instantiateReactComponent(
-          nextElement,
-          null
-        );
+        var nextChildInstance = instantiateReactComponent(nextElement);
         nextChildren[name] = nextChildInstance;
       }
     }

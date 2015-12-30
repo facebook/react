@@ -20,11 +20,11 @@ UIについて、最も基本的なことは、いくつかのデータを表示
     <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
 
       // ** コードをここに書きます！ **
 
@@ -48,7 +48,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -66,7 +66,7 @@ setInterval(function() {
 
 ## コンポーネントは関数のようなものです。
 
-Reactのコンポーネントはとても単純です。それらは `props` や `state`　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの下では、コンポーネントは簡単に理解することができます。
+Reactのコンポーネントはとても単純です。それらは `props` や `state`　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの元、コンポーネントは簡単に理解することができます。
 
 > 注意:
 >
@@ -94,7 +94,6 @@ JSXはとても小さいです。さらに学ぶためには、[JSXの深層](/r
 
 JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては[JSXの理解](/react/docs/jsx-gotchas.html) をご覧ください。
 
-The easiest way to get started with JSX is to use the in-browser `JSXTransformer`. We strongly recommend that you don't use this in production. You can precompile your code using our command-line [react-tools](https://www.npmjs.com/package/react-tools) package.
 JSXを初めて使う際に最も簡単なのは、ブラウザで `JSXTransformer` を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの[react-tools](https://www.npmjs.com/package/react-tools)パッケージを使うことでプリコンパイルできます。
 
 ## JSXを使わないReact
@@ -105,7 +104,7 @@ JSXは完全にオプションです。Reactと一緒にJSXを使う必要はあ
 var child1 = React.createElement('li', null, 'First Text Content');
 var child2 = React.createElement('li', null, 'Second Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 便利に書くために、カスタムコンポーネントで要素を作るために簡略した記法でファクトリー関数を作ることができます。
 
@@ -113,7 +112,7 @@ React.render(root, document.getElementById('example'));
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 Reactはすでに、共通なHTMLのタグについてはビルトインの関数を持っています。

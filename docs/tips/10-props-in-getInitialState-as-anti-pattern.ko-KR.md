@@ -26,7 +26,7 @@ var MessageBox = React.createClass({
   }
 });
 
-React.render(<MessageBox name="Rogers"/>, mountNode);
+ReactDOM.render(<MessageBox name="Rogers"/>, mountNode);
 ```
 
 더 나은 코드:
@@ -38,7 +38,7 @@ var MessageBox = React.createClass({
   }
 });
 
-React.render(<MessageBox name="Rogers"/>, mountNode);
+ReactDOM.render(<MessageBox name="Rogers"/>, mountNode);
 ```
 
 (복잡한 로직이라, 메소드에서 계산하는 부분만 떼어 왔습니다.)
@@ -63,5 +63,5 @@ var Counter = React.createClass({
   }
 });
 
-React.render(<Counter initialCount={7}/>, mountNode);
+ReactDOM.render(<Counter initialCount={7}/>, mountNode);
 ```

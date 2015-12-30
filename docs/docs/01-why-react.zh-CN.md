@@ -5,13 +5,13 @@ permalink: why-react-zh-CN.html
 next: displaying-data-zh-CN.html
 ---
 
-React 是一个 Facebook 和 Instagram 用来创建用户界面的 JavaScript 库。很人多认为 React 是 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 中的 **V**（视图）。
+React 是一个 Facebook 和 Instagram 用来创建用户界面的 JavaScript 库。很多人选择将 React 认为是 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 中的 **V**（视图）。
 
-我们创造 React 是为了解决一个问题：**构建随着时间数据不断变化的大规模应用程序**。为了达到这个目标，React 采用下面两个主要的思想。
+我们创造 React 是为了解决一个问题：**构建随着时间数据不断变化的大规模应用程序**。
 
 ### 简单
 
-仅仅只要表达出你的应用程序在任一个时间点应该长的样子，然后当底层的数据变了，React 会自动处理所有用户界面的更新。
+仅仅只要表达出你的应用程序在任一个时间点应该呈现的样子，然后当底层的数据变了，React 会自动处理所有用户界面的更新。
 
 ### 声明式 (Declarative)
 

@@ -1,14 +1,9 @@
 ---
-layout: default
+layout: single
 title: JSX Compiler Service
 id: jsx-compiler
 ---
-<div class="jsxCompiler">
-  <h1>JSX Compiler</h1>
-  <p>
-    This tool demonstrates how <a href="/react/docs/jsx-in-depth.html">JSX syntax</a>
-    is desugared into native JavaScript.
-  </p>
-  <div id="jsxCompiler"></div>
-  <script src="js/jsx-compiler.js"></script>
-</div>
+
+**_This tool has been removed as JSXTransformer has been deprecated._**
+
+We recommend using another tool such as [the Babel REPL](https://babeljs.io/repl/).

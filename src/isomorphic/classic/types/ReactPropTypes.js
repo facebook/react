@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var emptyFunction = require('emptyFunction');
@@ -145,6 +144,11 @@ function createAnyTypeChecker() {
 
 function createArrayOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside arrayOf.`
+      );
+    }
     var propValue = props[propName];
     if (!Array.isArray(propValue)) {
       var locationName = ReactPropTypeLocationNames[location];
@@ -190,9 +194,11 @@ function createInstanceTypeChecker(expectedClass) {
     if (!(props[propName] instanceof expectedClass)) {
       var locationName = ReactPropTypeLocationNames[location];
       var expectedClassName = expectedClass.name || ANONYMOUS;
+      var actualClassName = getClassName(props[propName]);
       return new Error(
-        `Invalid ${locationName} \`${propFullName}\` supplied to ` +
-        `\`${componentName}\`, expected instance of \`${expectedClassName}\`.`
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${actualClassName}\` supplied to \`${componentName}\`, expected ` +
+        `instance of \`${expectedClassName}\`.`
       );
     }
     return null;
@@ -229,6 +235,11 @@ function createEnumTypeChecker(expectedValues) {
 
 function createObjectOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside objectOf.`
+      );
+    }
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== 'object') {
@@ -369,12 +380,7 @@ function isNode(propValue) {
           }
         }
       } else {
-        propValue = ReactFragment.extractIfFragment(propValue);
-        for (var k in propValue) {
-          if (!isNode(propValue[k])) {
-            return false;
-          }
-        }
+        return false;
       }
 
       return true;
@@ -410,6 +416,14 @@ function getPreciseType(propValue) {
     }
   }
   return propType;
+}
+
+// Returns class name of the object, if any.
+function getClassName(propValue) {
+  if (!propValue.constructor || !propValue.constructor.name) {
+    return ANONYMOUS;
+  }
+  return propValue.constructor.name;
 }
 
 module.exports = ReactPropTypes;

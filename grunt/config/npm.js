@@ -1,1 +1,3 @@
+'use strict';
+
 exports.pack = {};

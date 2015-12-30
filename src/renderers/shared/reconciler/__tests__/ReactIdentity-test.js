@@ -12,92 +12,62 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactFragment;
 var ReactTestUtils;
-var ReactMount;
 
 describe('ReactIdentity', function() {
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
-    ReactMount = require('ReactMount');
   });
-
-  var idExp = /^\.[^.]+(.*)$/;
-  function checkID(child, expectedID) {
-    var actual = idExp.exec(ReactMount.getID(child));
-    var expected = idExp.exec(expectedID);
-    expect(actual).toBeTruthy();
-    expect(expected).toBeTruthy();
-    expect(actual[1]).toEqual(expected[1]);
-  }
 
   function frag(obj) {
     return ReactFragment.create(obj);
   }
 
-  it('should allow keyed objects to express identity', function() {
-    var instance =
-      <div>
-        {frag({
-          first: <div />,
-          second: <div />,
-        })}
-      </div>;
-
-    instance = React.render(instance, document.createElement('div'));
-    var node = React.findDOMNode(instance);
-    expect(node.childNodes.length).toBe(2);
-    checkID(node.childNodes[0], '.0.$first:0');
-    checkID(node.childNodes[1], '.0.$second:0');
-  });
-
   it('should allow key property to express identity', function() {
-    var instance =
-      <div>
-        <div key="apple" />
-        <div key="banana" />
-        <div key={0} />
-        <div key={123} />
+    var node;
+    var Component = (props) =>
+      <div ref={(c) => node = c}>
+        <div key={props.swap ? 'banana' : 'apple'} />
+        <div key={props.swap ? 'apple' : 'banana'} />
       </div>;
 
-    instance = React.render(instance, document.createElement('div'));
-    var node = React.findDOMNode(instance);
-    expect(node.childNodes.length).toBe(4);
-    checkID(node.childNodes[0], '.0.$apple');
-    checkID(node.childNodes[1], '.0.$banana');
-    checkID(node.childNodes[2], '.0.$0');
-    checkID(node.childNodes[3], '.0.$123');
+    var container = document.createElement('div');
+    ReactDOM.render(<Component />, container);
+    var origChildren = Array.from(node.childNodes);
+    ReactDOM.render(<Component swap={true} />, container);
+    var newChildren = Array.from(node.childNodes);
+    expect(origChildren[0]).toBe(newChildren[1]);
+    expect(origChildren[1]).toBe(newChildren[0]);
   });
 
-  it('should use instance identity', function() {
+  it('should use composite identity', function() {
 
     var Wrapper = React.createClass({
       render: function() {
-        return <a key="i_get_overwritten">{this.props.children}</a>;
+        return <a>{this.props.children}</a>;
       },
     });
 
-    var instance =
-      <div>
-        <Wrapper key="wrap1"><span key="squirrel" /></Wrapper>
-        <Wrapper key="wrap2"><span key="bunny" /></Wrapper>
-        <Wrapper><span key="chipmunk" /></Wrapper>
-      </div>;
+    var container = document.createElement('div');
+    var node1;
+    var node2;
+    ReactDOM.render(
+      <Wrapper key="wrap1"><span ref={(c) => node1 = c} /></Wrapper>,
+      container
+    );
+    ReactDOM.render(
+      <Wrapper key="wrap2"><span ref={(c) => node2 = c} /></Wrapper>,
+      container
+    );
 
-    instance = React.render(instance, document.createElement('div'));
-    var node = React.findDOMNode(instance);
-    expect(node.childNodes.length).toBe(3);
-
-    checkID(node.childNodes[0], '.0.$wrap1');
-    checkID(node.childNodes[0].firstChild, '.0.$wrap1.$squirrel');
-    checkID(node.childNodes[1], '.0.$wrap2');
-    checkID(node.childNodes[1].firstChild, '.0.$wrap2.$bunny');
-    checkID(node.childNodes[2], '.0.2');
-    checkID(node.childNodes[2].firstChild, '.0.2.$chipmunk');
+    expect(node1).not.toBe(node2);
   });
 
   function renderAComponentWithKeyIntoContainer(key, container) {
@@ -115,17 +85,12 @@ describe('ReactIdentity', function() {
 
     });
 
-    var instance = React.render(<Wrapper />, container);
+    var instance = ReactDOM.render(<Wrapper />, container);
     var span1 = instance.refs.span1;
     var span2 = instance.refs.span2;
 
-    expect(React.findDOMNode(span1)).not.toBe(null);
-    expect(React.findDOMNode(span2)).not.toBe(null);
-
-    key = key.replace(/=/g, '=0');
-
-    checkID(React.findDOMNode(span1), '.0.$' + key);
-    checkID(React.findDOMNode(span2), '.0.1:$' + key + ':0');
+    expect(ReactDOM.findDOMNode(span1)).not.toBe(null);
+    expect(ReactDOM.findDOMNode(span2)).not.toBe(null);
   }
 
   it('should allow any character as a key, in a detached parent', function() {
@@ -294,15 +259,17 @@ describe('ReactIdentity', function() {
 
     var wrapped = <TestContainer first={instance0} second={instance1} />;
 
-    wrapped = React.render(wrapped, document.createElement('div'));
+    wrapped = ReactDOM.render(wrapped, document.createElement('div'));
+    var div = ReactDOM.findDOMNode(wrapped);
 
-    var beforeID = ReactMount.getID(React.findDOMNode(wrapped).firstChild);
-
+    var beforeA = div.childNodes[0];
+    var beforeB = div.childNodes[1];
     wrapped.swap();
+    var afterA = div.childNodes[1];
+    var afterB = div.childNodes[0];
 
-    var afterID = ReactMount.getID(React.findDOMNode(wrapped).firstChild);
-
-    expect(beforeID).not.toEqual(afterID);
+    expect(beforeA).toBe(afterA);
+    expect(beforeB).toBe(afterB);
 
   });
 

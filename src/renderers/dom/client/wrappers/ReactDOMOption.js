@@ -17,13 +17,11 @@ var ReactDOMSelect = require('ReactDOMSelect');
 var assign = require('Object.assign');
 var warning = require('warning');
 
-var valueContextKey = ReactDOMSelect.valueContextKey;
-
 /**
  * Implements an <option> native component that warns when `selected` is set.
  */
 var ReactDOMOption = {
-  mountWrapper: function(inst, props, context) {
+  mountWrapper: function(inst, props, nativeParent) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
       warning(
@@ -33,10 +31,13 @@ var ReactDOMOption = {
       );
     }
 
-    // Look up whether this option is 'selected' via context
-    var selectValue = context[valueContextKey];
+    // Look up whether this option is 'selected'
+    var selectValue = null;
+    if (nativeParent != null && nativeParent._tag === 'select') {
+      selectValue = ReactDOMSelect.getSelectValueContext(nativeParent);
+    }
 
-    // If context key is null (e.g., no specified value or after initial mount)
+    // If the value is null (e.g., no specified value or after initial mount)
     // or missing (e.g., for <datalist>), we don't change props.selected
     var selected = null;
     if (selectValue != null) {
@@ -57,7 +58,7 @@ var ReactDOMOption = {
     inst._wrapperState = {selected: selected};
   },
 
-  getNativeProps: function(inst, props, context) {
+  getNativeProps: function(inst, props) {
     var nativeProps = assign({selected: undefined, children: undefined}, props);
 
     // Read state only from initial mount because <select> updates value

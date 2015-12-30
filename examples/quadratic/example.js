@@ -53,7 +53,7 @@ var QuadraticCalculator = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <QuadraticCalculator />,
   document.getElementById('container')
 );

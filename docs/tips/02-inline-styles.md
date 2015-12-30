@@ -17,7 +17,7 @@ var divStyle = {
   msTransition: 'all' // 'ms' is the only lowercase vendor prefix
 };
 
-React.render(<div style={divStyle}>Hello World!</div>, mountNode);
+ReactDOM.render(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
 Style keys are camelCased in order to be consistent with accessing the properties on DOM nodes from JS (e.g. `node.style.backgroundImage`). Vendor prefixes [other than `ms`](http://www.andismith.com/blog/2012/02/modernizr-prefixed/) should begin with a capital letter. This is why `WebkitTransition` has an uppercase "W".

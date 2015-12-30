@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule instantiateReactComponent
- * @typechecks static-only
  */
 
 'use strict';
@@ -67,10 +66,8 @@ function instantiateReactComponent(node) {
   var instance;
 
   if (node === null || node === false) {
-    node = ReactEmptyComponent.emptyElement;
-  }
-
-  if (typeof node === 'object') {
+    instance = ReactEmptyComponent.create(instantiateReactComponent);
+  } else if (typeof node === 'object') {
     var element = node;
     invariant(
       element && (typeof element.type === 'function' ||
@@ -86,7 +83,7 @@ function instantiateReactComponent(node) {
       instance = ReactNativeComponent.createInternalComponent(element);
     } else if (isInternalComponentType(element.type)) {
       // This is temporarily available for custom components that are not string
-      // represenations. I.e. ART. Once those are updated to use the string
+      // representations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
       instance = new element.type(element);
     } else {
@@ -107,6 +104,7 @@ function instantiateReactComponent(node) {
       typeof instance.construct === 'function' &&
       typeof instance.mountComponent === 'function' &&
       typeof instance.receiveComponent === 'function' &&
+      typeof instance.getNativeNode === 'function' &&
       typeof instance.unmountComponent === 'function',
       'Only React Components can be mounted.'
     );

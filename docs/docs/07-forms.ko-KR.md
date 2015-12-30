@@ -68,6 +68,9 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
 
 이것은 사용자 입력을 받아들이지만, 시작에서부터 140자로 값을 자릅니다.
 
+### 체크박스와 라디오 버튼의 잠제적인 문제
+
+변경 핸들링을 일반화하기 위해 React는 `change` 이벤트 대신에 `click` 이벤트를 사용하는 것에 주의하세요. `change` 핸들러 안에서 `preventDefault`를 호출하는 경우를 재외하고 이 동작은 예상대로 동작합니다. 이런 경우 `preventDefault`를 제거하거나,  `setTimeout`에 `checked`의 전환을 넣어서 해결 가능합니다.
 
 ## 제어되지 않는(Uncontrolled) 컴포넌트
 
@@ -91,7 +94,7 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
   }
 ```
 
-이 예제는 위에있는 **제어되는 컴포넌트**에 더 가깝게 동작할 것입니다.
+이 예제는 위에있는 **제어되지 않는 컴포넌트**에 더 가깝게 동작할 것입니다.
 
 마찬가지로, `<input>`은 `defaultChecked`를 지원하고 `<select>`는 `defaultValue`를 지원합니다.
 
@@ -99,9 +102,7 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
 >
 > `defaultValue`, `defaultChecked` prop은 최초 렌더에서만 사용됩니다. 뒤에 일어나는 렌더에서 값을 업데이트할 필요가 있다면,  [제어되는(controlled) 컴포넌트](#controlled-components)를 사용하셔야 합니다.
 
-
 ## 심화 주제
-
 
 ### 왜 제어되는 컴포넌트인가요?
 
@@ -123,7 +124,6 @@ HTML과 다르게, React 컴포넌트는 초기화 시점 뿐만 아니라, 어�
 
 이 메소드가 어떤 시점에도 뷰를 기술하기 때문에, 텍스트 input의 값은 *언제나* `Untitled`입니다.
 
-
 ### 왜 Textarea에 value를 사용하나요?
 
 HTML에서, `<textarea>`의 값은 보통 그것의 자식들로 설정됩니다.
@@ -140,7 +140,6 @@ HTML에서는 이렇게 하면 여러 줄의 값을 쉽게 개발자가 넣을 �
 ```
 
 자식들을 사용하기로 *했다면*, 자식들은 `defaultValue`처럼 동작할 것입니다.
-
 
 ### 왜 Select에 value를 사용하나요?
 

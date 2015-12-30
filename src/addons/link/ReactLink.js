@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactLink
- * @typechecks static-only
  */
 
 'use strict';
@@ -26,7 +25,7 @@
  *     var valueLink = new ReactLink(this.state.value, this._handleValueChange);
  *     return <input valueLink={valueLink} />;
  *   },
- *   this._handleValueChange: function(newValue) {
+ *   _handleValueChange: function(newValue) {
  *     this.setState({value: newValue});
  *   }
  * });

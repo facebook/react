@@ -76,6 +76,22 @@ function getModernOffsets(node) {
 
   var currentRange = selection.getRangeAt(0);
 
+  // In Firefox, range.startContainer and range.endContainer can be "anonymous
+  // divs", e.g. the up/down buttons on an <input type="number">. Anonymous
+  // divs do not seem to expose properties, triggering a "Permission denied
+  // error" if any of its properties are accessed. The only seemingly possible
+  // way to avoid erroring is to access a property that typically works for
+  // non-anonymous divs and catch any error that may otherwise arise. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=208427
+  try {
+    /* eslint-disable no-unused-expressions */
+    currentRange.startContainer.nodeType;
+    currentRange.endContainer.nodeType;
+    /* eslint-enable no-unused-expressions */
+  } catch (e) {
+    return null;
+  }
+
   // If the node and offset values are the same, the selection is collapsed.
   // `Selection.isCollapsed` is available natively, but IE sometimes gets
   // this value wrong.
@@ -146,7 +162,7 @@ function setIEOffsets(node, offsets) {
  *
  * Note: IE10+ supports the Selection object, but it does not support
  * the `extend` method, which means that even in modern IE, it's not possible
- * to programatically create a backward selection. Thus, for all IE
+ * to programmatically create a backward selection. Thus, for all IE
  * versions, we use the old IE API to create our selections.
  *
  * @param {DOMElement|DOMTextNode} node

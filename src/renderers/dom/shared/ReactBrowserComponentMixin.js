@@ -30,7 +30,7 @@ var ReactBrowserComponentMixin = {
     warning(
       this.constructor[didWarnKey],
       '%s.getDOMNode(...) is deprecated. Please use ' +
-      'React.findDOMNode(instance) instead.',
+      'ReactDOM.findDOMNode(instance) instead.',
       ReactInstanceMap.get(this).getName() || this.tagName || 'Unknown'
     );
     this.constructor[didWarnKey] = true;

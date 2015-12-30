@@ -11,11 +11,10 @@
 
 'use strict';
 
-require('mock-modules');
-
 var React = require('React');
+var ReactDOM = require('ReactDOM');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
 
 var mapObject = require('mapObject');
 
@@ -123,7 +122,7 @@ var FriendsStatusDisplay = React.createClass({
 });
 
 
-function getInteralStateByUserName(statusDisplays) {
+function getInternalStateByUserName(statusDisplays) {
   return mapObject(statusDisplays, function(statusDisplay, key) {
     return statusDisplay.getInternalState();
   });
@@ -186,12 +185,13 @@ function verifyStatesPreserved(lastInternalStates, statusDisplays) {
  * accurately reflects what is in the DOM.
  */
 function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
-  var containerNode = React.findDOMNode(parentInstance);
+  var containerNode = ReactDOM.findDOMNode(parentInstance);
   var statusDisplayNodes = containerNode.childNodes;
   var i;
   var orderedDomIDs = [];
   for (i = 0; i < statusDisplayNodes.length; i++) {
-    orderedDomIDs.push(ReactMount.getID(statusDisplayNodes[i]));
+    var inst = ReactDOMComponentTree.getInstanceFromNode(statusDisplayNodes[i]);
+    orderedDomIDs.push(inst._rootNodeID);
   }
 
   var orderedLogicalIDs = [];
@@ -201,7 +201,9 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
       continue;
     }
     var statusDisplay = statusDisplays[username];
-    orderedLogicalIDs.push(ReactInstanceMap.get(statusDisplay)._rootNodeID);
+    orderedLogicalIDs.push(
+      ReactInstanceMap.get(statusDisplay)._renderedComponent._rootNodeID
+    );
   }
   expect(orderedDomIDs).toEqual(orderedLogicalIDs);
 }
@@ -212,16 +214,16 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
 function testPropsSequence(sequence) {
   var i;
   var container = document.createElement('div');
-  var parentInstance = React.render(
+  var parentInstance = ReactDOM.render(
     <FriendsStatusDisplay {...sequence[0]} />,
     container
   );
   var statusDisplays = parentInstance.getStatusDisplays();
-  var lastInternalStates = getInteralStateByUserName(statusDisplays);
+  var lastInternalStates = getInternalStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
   for (i = 1; i < sequence.length; i++) {
-    React.render(
+    ReactDOM.render(
       <FriendsStatusDisplay {...sequence[i]} />,
       container
     );
@@ -230,13 +232,13 @@ function testPropsSequence(sequence) {
     verifyStatesPreserved(lastInternalStates, statusDisplays);
     verifyDomOrderingAccurate(parentInstance, statusDisplays);
 
-    lastInternalStates = getInteralStateByUserName(statusDisplays);
+    lastInternalStates = getInternalStateByUserName(statusDisplays);
   }
 }
 
 describe('ReactMultiChildReconcile', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   it('should reset internal state if removed then readded', function() {
@@ -248,7 +250,7 @@ describe('ReactMultiChildReconcile', function() {
     };
 
     var container = document.createElement('div');
-    var parentInstance = React.render(
+    var parentInstance = ReactDOM.render(
       <FriendsStatusDisplay {...props} />,
       container
     );
@@ -256,7 +258,7 @@ describe('ReactMultiChildReconcile', function() {
     var startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    React.render(
+    ReactDOM.render(
       <FriendsStatusDisplay />,
       container
     );
@@ -264,7 +266,7 @@ describe('ReactMultiChildReconcile', function() {
     expect(statusDisplays.jcw).toBeFalsy();
 
     // Now reset the props that cause there to be a child
-    React.render(
+    ReactDOM.render(
       <FriendsStatusDisplay {...props} />,
       container
     );
@@ -282,7 +284,7 @@ describe('ReactMultiChildReconcile', function() {
       bob: 'bobStatus',
     };
 
-    testPropsSequence([ {usernameToStatus: usernameToStatus} ]);
+    testPropsSequence([{usernameToStatus: usernameToStatus}]);
   });
 
   it('should preserve order if children order has not changed', function() {
@@ -540,8 +542,7 @@ describe('ReactMultiChildReconcile', function() {
   });
 
 
-  it('should remove nulled out children and ignore ' +
-     'new null children', function() {
+  it('should remove nulled out children and ignore new null children', function() {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {

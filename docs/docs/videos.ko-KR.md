@@ -110,7 +110,7 @@ By [Tom Occhino](http://tomocchino.com/), [Jordan Walke](https://github.com/jord
 ### Backbone + React + Middleman Screencast
 <iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
-Backbone은 React로 REST API를 제공하기 위한 아주 좋은 방법입니다. 이 화면중개는 [Backbone-React-Component](https://github.com/magalhas/backbone-react-component)을 이용해서 어떻게 이 두가지를 병합하는지 보여줍니다. Middleman은 이 예제에서 사용되는 프레임워크이지만, 쉽게 다른 프레임워크로 대체하실 수 있습니다. 지원되는 템플릿은 [이곳](https://github.com/jbhatab/middleman-backbone-react-template)에서 찾으실 수 있습니다. -- [열린 마음의 혁명들](http://www.openmindedinnovations.com/)
+Backbone은 React로 REST API를 제공하기 위한 아주 좋은 방법입니다. 이 화면중개는 [Backbone-React-Component](https://github.com/magalhas/backbone-react-component)을 이용해서 어떻게 이 두가지를 연동하는지 보여줍니다. Middleman은 이 예제에서 사용되는 프레임워크이지만, 쉽게 다른 프레임워크로 대체하실 수 있습니다. 지원되는 템플릿은 [이곳](https://github.com/jbhatab/middleman-backbone-react-template)에서 찾으실 수 있습니다. -- [열린 마음의 혁명들](http://www.openmindedinnovations.com/)
 
 * * *
 
@@ -169,6 +169,6 @@ Server-side rendering을 위해 [SoundCloud](https://developers.soundcloud.com/b
 
 ### Introducing React Native (+Playlist) - React.js Conf 2015
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/watch?v=KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/v/KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
 
 2015년에 [Tom Occhino](https://twitter.com/tomocchino)님이 React의 과거와 현재를 리뷰하고 나아갈 방향을 제시했습니다.

@@ -8,6 +8,7 @@
  */
 
 import React = require('React');
+import ReactDOM = require('ReactDOM');
 
 // Before Each
 
@@ -27,7 +28,7 @@ class Inner extends React.Component {
 }
 
 function test(element, expectedTag, expectedClassName) {
-  var instance = React.render(element, container);
+  var instance = ReactDOM.render(element, container);
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -44,7 +45,7 @@ function test(element, expectedTag, expectedClassName) {
 class Empty extends React.Component { }
 
 // it renders a simple stateless component with prop
-class SimpleStateless {
+class SimpleStateless extends React.Component {
   props : any;
   render() {
     return React.createElement(Inner, {name: this.props.bar});
@@ -123,19 +124,19 @@ class RenderOnce extends React.Component {
 }
 
 // it should throw with non-object in the initial state property
-class ArrayState {
+class ArrayState extends React.Component {
   state = ['an array'];
   render() {
     return React.createElement('span');
   }
 }
-class StringState {
+class StringState extends React.Component {
   state = 'a string';
   render() {
     return React.createElement('span');
   }
 }
-class NumberState {
+class NumberState extends React.Component {
   state = 1234;
   render() {
     return React.createElement('span');
@@ -202,7 +203,7 @@ class ForceUpdateWithNoState extends React.Component {
 
 // it will call all the normal life cycle methods
 var lifeCycles = [];
-class NormalLifeCycles {
+class NormalLifeCycles extends React.Component {
   props : any;
   state = {};
   componentWillMount() {
@@ -253,7 +254,7 @@ class ClassicProperties extends React.Component {
 }
 
 // it should warn when misspelling shouldComponentUpdate
-class MisspelledComponent1 {
+class MisspelledComponent1 extends React.Component {
   componentShouldUpdate() {
     return false;
   }
@@ -263,7 +264,7 @@ class MisspelledComponent1 {
 }
 
 // it should warn when misspelling componentWillReceiveProps
-class MisspelledComponent2 {
+class MisspelledComponent2 extends React.Component {
   componentWillRecieveProps() {
     return false;
   }
@@ -279,7 +280,7 @@ class ReadContext extends React.Component {
     return React.createElement('div', { className: this.context.bar });
   }
 }
-class ProvideContext {
+class ProvideContext extends React.Component {
   static childContextTypes = { bar: React.PropTypes.string };
   getChildContext() {
     return { bar: 'bar-through-context' };
@@ -290,7 +291,7 @@ class ProvideContext {
 }
 
 // it supports classic refs
-class ClassicRefs {
+class ClassicRefs extends React.Component {
   render() {
     return React.createElement(Inner, {name: 'foo', ref: 'inner'});
   }
@@ -313,15 +314,14 @@ describe('ReactTypeScriptClass', function() {
   it('throws if no render function is defined', function() {
     spyOn(console, 'error');
 
-    expect(() => React.render(React.createElement(Empty), container)).toThrow();
+    expect(() => ReactDOM.render(React.createElement(Empty), container)).toThrow();
 
     expect((<any>console.error).argsForCall.length).toBe(1);
     expect((<any>console.error).argsForCall[0][0]).toBe(
-      'Warning: Empty(...): ' +
-      'No `render` method found on the returned component instance: you may ' +
-      'have forgotten to define `render` in your component or you may have ' +
-      'accidentally tried to render an element whose type is a function that ' +
-      'isn\'t a React component.'
+      'Warning: Empty(...): No `render` method found on the returned ' +
+      'component instance: you may have forgotten to define `render`, ' +
+      'returned null/false from a stateless component, or tried to render an ' +
+      'element whose type is a function that isn\'t a React component.'
     );
   });
 
@@ -361,18 +361,15 @@ describe('ReactTypeScriptClass', function() {
   it('should throw with non-object in the initial state property', function() {
     expect(() => test(React.createElement(ArrayState), 'span', ''))
     .toThrow(
-      'Invariant Violation: ArrayState.state: ' +
-      'must be set to an object or null'
+      'ArrayState.state: must be set to an object or null'
     );
     expect(() => test(React.createElement(StringState), 'span', ''))
     .toThrow(
-      'Invariant Violation: StringState.state: ' +
-      'must be set to an object or null'
+      'StringState.state: must be set to an object or null'
     );
     expect(() => test(React.createElement(NumberState), 'span', ''))
     .toThrow(
-      'Invariant Violation: NumberState.state: ' +
-      'must be set to an object or null'
+      'NumberState.state: must be set to an object or null'
     );
   });
 
@@ -425,7 +422,7 @@ describe('ReactTypeScriptClass', function() {
       'did-update', { value: 'foo' }, {}
     ]);
     lifeCycles = []; // reset
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(lifeCycles).toEqual([
       'will-unmount'
     ]);
@@ -494,7 +491,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() => instance.isMounted()).toThrow();
     expect(() => instance.setProps({ name: 'bar' })).toThrow();
     expect(() => instance.replaceProps({ name: 'bar' })).toThrow();
-    expect((<any>console.error).argsForCall.length).toBe(5);
+    expect((<any>console.error).argsForCall.length).toBe(3);
     expect((<any>console.error).argsForCall[0][0]).toContain(
       'getDOMNode(...) is deprecated in plain JavaScript React classes'
     );
@@ -503,12 +500,6 @@ describe('ReactTypeScriptClass', function() {
     );
     expect((<any>console.error).argsForCall[2][0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
-    );
-    expect((<any>console.error).argsForCall[3][0]).toContain(
-      'setProps(...) is deprecated in plain JavaScript React classes'
-    );
-    expect((<any>console.error).argsForCall[4][0]).toContain(
-      'replaceProps(...) is deprecated in plain JavaScript React classes'
     );
   });
 
@@ -527,7 +518,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    var node = React.findDOMNode(instance);
+    var node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
 
