@@ -248,6 +248,9 @@ var EventPluginUtils = {
   getParentInstance: function(inst) {
     return TreeTraversal.getParentInstance(inst);
   },
+  traverseUntil: function(inst, fn) {
+    return TreeTraversal.traverseUntil(inst, fn);
+  },
   traverseTwoPhase: function(target, fn, arg) {
     return TreeTraversal.traverseTwoPhase(target, fn, arg);
   },

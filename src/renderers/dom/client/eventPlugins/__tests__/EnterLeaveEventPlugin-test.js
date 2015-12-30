@@ -10,55 +10,163 @@
  */
 
 'use strict';
+var ReactTestUtils = require('ReactTestUtils');
+var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+var EventConstants = require('EventConstants');
+var React = require('React');
+var ReactDOM = require('ReactDOM');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var EnterLeaveEventPlugin;
-var EventConstants;
-var React;
-var ReactDOM;
-var ReactDOMComponentTree;
+var topLevelTypes = EventConstants.topLevelTypes;
 
-var topLevelTypes;
+function createIframe() {
+  var iframe = document.createElement('iframe');
+  document.body.appendChild(iframe);
+
+  EnterLeaveEventPlugin.isEnterLeaveSupported = false;
+
+  var iframeDocument = iframe.contentDocument;
+
+  iframeDocument.write(
+    '<!DOCTYPE html><html><head></head><body><div></div></body></html>'
+  );
+  iframeDocument.close();
+
+  return iframe;
+}
 
 describe('EnterLeaveEventPlugin', function() {
-  beforeEach(function() {
-    jest.resetModuleRegistry();
 
-    EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-    EventConstants = require('EventConstants');
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMComponentTree = require('ReactDOMComponentTree');
+  it('should use native mouseenter is supported', function() {
+    if (!EnterLeaveEventPlugin.isEnterLeaveSupported) {
+      return;
+    }
 
-    topLevelTypes = EventConstants.topLevelTypes;
+    var called = 0;
+
+    function onEnter(e) {
+      called += 1;
+      expect(e.type).toBe('mouseenter');
+      expect(e.relatedTarget).toBe(root);
+    }
+
+    var inst = ReactTestUtils.renderIntoDocument(
+      <div>
+        <div onMouseEnter={onEnter} style={{ padding: 30 }}>
+          foo
+        </div>
+      </div>
+    );
+
+    var root = ReactDOM.findDOMNode(inst);
+    var inner = root.firstChild;
+
+    ReactTestUtils.SimulateNative.mouseEnter(inner, { relatedTarget: root });
+    expect(called).toBe(1);
   });
 
-  it('should set relatedTarget properly in iframe', function() {
-    var iframe = document.createElement('iframe');
-    document.body.appendChild(iframe);
+  it('should use native mouseleave is supported', function() {
+    if (!EnterLeaveEventPlugin.isEnterLeaveSupported) {
+      return;
+    }
 
+    var called = 0;
+
+    function onLeave(e) {
+      called += 1;
+      expect(e.type).toBe('mouseleave');
+      expect(e.relatedTarget).toBe(root);
+    }
+
+    var inst = ReactTestUtils.renderIntoDocument(
+      <div>
+        <div onMouseLeave={onLeave} style={{ padding: 30 }}>
+          foo
+        </div>
+      </div>
+    );
+
+    var root = ReactDOM.findDOMNode(inst);
+    var inner = root.firstChild;
+
+    ReactTestUtils.SimulateNative.mouseLeave(inner, { relatedTarget: root });
+    expect(called).toBe(1);
+  });
+
+  describe('EnterLeave Polyfill', function() {
+
+    beforeEach(function() {
+      EnterLeaveEventPlugin.isEnterLeaveSupported = false;
+    });
+
+    it('should use the relatedTarget from mouseover', function() {
+      var called = 0;
+
+      function onEnter(e) {
+        called += 1;
+        expect(e.type).toBe('mouseenter');
+        expect(e.relatedTarget).toBe(root);
+      }
+
+      var inst = ReactTestUtils.renderIntoDocument(
+        <div>
+          <div onMouseEnter={onEnter} style={{ padding: 30 }}>
+            foo
+          </div>
+        </div>
+      );
+
+      var root = ReactDOM.findDOMNode(inst);
+      var inner = root.firstChild;
+
+      ReactTestUtils.SimulateNative.mouseOver(inner, { relatedTarget: root });
+      expect(called).toBe(1);
+    });
+
+    it('should use the relatedTarget from mouseout', function() {
+      var called = 0;
+
+      function onLeave(e) {
+        called += 1;
+        expect(e.type).toBe('mouseleave');
+        expect(e.relatedTarget).toBe(root);
+      }
+
+      var inst = ReactTestUtils.renderIntoDocument(
+        <div>
+          <div onMouseLeave={onLeave} style={{ padding: 30 }}>
+            foo
+          </div>
+        </div>
+      );
+
+      var root = ReactDOM.findDOMNode(inst);
+      var inner = root.firstChild;
+
+      ReactTestUtils.SimulateNative.mouseOut(inner, { relatedTarget: root });
+      expect(called).toBe(1);
+    });
+  });
+
+  it('should set relatedTarget to the iframe window', function() {
+    var noop = function() {};
+    var iframe = createIframe();
     var iframeDocument = iframe.contentDocument;
 
-    iframeDocument.write(
-      '<!DOCTYPE html><html><head></head><body><div></div></body></html>'
+    var div = ReactDOM.render(
+      <div onMouseEnter={noop} onMouseLeave={noop}/>,
+      iframeDocument.body.getElementsByTagName('div')[0]
     );
-    iframeDocument.close();
 
-    var component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
-    var div = ReactDOM.findDOMNode(component);
+    var inst = ReactDOMComponentTree.getInstanceFromNode(div);
 
-    var extracted = EnterLeaveEventPlugin.extractEvents(
+    var enter = EnterLeaveEventPlugin.extractEvents(
       topLevelTypes.topMouseOver,
-      ReactDOMComponentTree.getInstanceFromNode(div),
-      {target: div},
+      inst,
+      { target: div },
       div
     );
-    expect(extracted.length).toBe(2);
 
-    var leave = extracted[0];
-    var enter = extracted[1];
-
-    expect(leave.target).toBe(iframe.contentWindow);
-    expect(leave.relatedTarget).toBe(div);
     expect(enter.target).toBe(div);
     expect(enter.relatedTarget).toBe(iframe.contentWindow);
   });
