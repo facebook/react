@@ -103,8 +103,8 @@ describe('ReactServerRendering', function() {
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
           '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">My name is </span>' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">child</span>' +
+            '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
+            '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
           '</span>' +
         '</div>'
       );
@@ -153,8 +153,8 @@ describe('ReactServerRendering', function() {
           '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
             ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
+            '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
+            '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
           '</span>'
         );
         expect(lifecycle).toEqual(

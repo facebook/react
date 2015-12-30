@@ -27,6 +27,7 @@ var DOM_OPERATION_TYPES = {
   'deleteValueForProperty': 'remove attribute',
   'setValueForStyles': 'update styles',
   'replaceNodeWithMarkup': 'replace',
+  'replaceDelimitedText': 'replace',
   'updateTextContent': 'set textContent',
 };
 

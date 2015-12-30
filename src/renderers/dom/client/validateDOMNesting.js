@@ -384,6 +384,11 @@ if (__DEV__) {
       }
       didWarn[warnKey] = true;
 
+      var tagDisplayName = childTag;
+      if (childTag !== '#text') {
+        tagDisplayName = '<' + childTag + '>';
+      }
+
       if (invalidParent) {
         var info = '';
         if (ancestorTag === 'table' && childTag === 'tr') {
@@ -393,9 +398,9 @@ if (__DEV__) {
         }
         warning(
           false,
-          'validateDOMNesting(...): <%s> cannot appear as a child of <%s>. ' +
+          'validateDOMNesting(...): %s cannot appear as a child of <%s>. ' +
           'See %s.%s',
-          childTag,
+          tagDisplayName,
           ancestorTag,
           ownerInfo,
           info
@@ -403,9 +408,9 @@ if (__DEV__) {
       } else {
         warning(
           false,
-          'validateDOMNesting(...): <%s> cannot appear as a descendant of ' +
+          'validateDOMNesting(...): %s cannot appear as a descendant of ' +
           '<%s>. See %s.',
-          childTag,
+          tagDisplayName,
           ancestorTag,
           ownerInfo
         );
