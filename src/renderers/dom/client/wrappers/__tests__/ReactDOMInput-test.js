@@ -13,6 +13,9 @@
 
 
 var emptyFunction = require('emptyFunction');
+var ChangeEventPlugin = require('ChangeEventPlugin');
+
+var lastInputValue = ChangeEventPlugin.__lastInputValue;
 
 describe('ReactDOMInput', function() {
   var EventConstants;
@@ -150,6 +153,7 @@ describe('ReactDOMInput', function() {
     var node = ReactDOM.render(stub, container);
 
     node.value = 'giraffe';
+    lastInputValue.set(node, undefined);
 
     var fakeNativeEvent = new function() {};
     fakeNativeEvent.target = node;

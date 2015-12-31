@@ -26,7 +26,14 @@ var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
-var LAST_VALUE_KEY = '__reactLastInputValue';
+function isCheckable(elem) {
+  var type = elem.type;
+  var nodeName = elem.nodeName;
+  return (
+    (nodeName && nodeName.toLowerCase() === 'input') &&
+    (type === 'checkbox' || type === 'radio')
+  );
+}
 
 var eventTypes = {
   change: {
@@ -47,12 +54,28 @@ var eventTypes = {
   },
 };
 
+var LAST_VALUE_KEY = '__reactLastInputValue';
+var lastInputValue = {
+  get: function(elem) {
+    if (elem) {
+      return elem[LAST_VALUE_KEY];
+    }
+  },
+
+  set: function(elem, value) {
+    if (elem) {
+      // cast to a string for comparisons
+      elem[LAST_VALUE_KEY] = '' + value;
+    }
+  },
+};
+
 function getInstIfValueChanged(targetInst, target) {
   var value = getInputValue(target);
-  var lastValue = target[LAST_VALUE_KEY];
+  var lastValue = lastInputValue.get(target);
 
   if (!target.hasOwnProperty(LAST_VALUE_KEY) || value !== lastValue) {
-    target[LAST_VALUE_KEY] = value;
+    lastInputValue.set(target, value);
     return targetInst;
   }
 }
@@ -61,14 +84,8 @@ function getInputValue(elem) {
   var value;
 
   if (elem) {
-    var type = elem.type;
-    var nodeName = elem.nodeName;
-
-    if (
-      (nodeName && nodeName.toLowerCase() === 'input') &&
-      (type === 'checkbox' || type === 'radio')
-    ) {
-      value = elem.checked;
+    if (isCheckable(elem)) {
+      value = '' + elem.checked;
     } else {
       value = elem.value;
     }
@@ -148,12 +165,14 @@ function stopWatchingForChangeEventIE8() {
 
 function getTargetInstForChangeEvent(
   topLevelType,
-  targetInst
+  targetInst,
+  target
 ) {
   if (topLevelType === topLevelTypes.topChange) {
     return targetInst;
   }
 }
+
 function handleEventsForChangeEventIE8(
   topLevelType,
   target,
@@ -319,10 +338,7 @@ function shouldUseClickEvent(elem) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
-  return (
-    (elem.nodeName && elem.nodeName.toLowerCase() === 'input') &&
-    (elem.type === 'checkbox' || elem.type === 'radio')
-  );
+  return isCheckable(elem);
 }
 
 function getTargetInstForClickEvent(
@@ -363,6 +379,41 @@ var ChangeEventPlugin = {
   eventTypes: eventTypes,
 
   _isInputEventSupported: isInputEventSupported,
+
+  willDeleteListener(inst) {
+    var targetNode;
+
+    // An uglier internal check to avoid a try/catch
+    // if the instance is unmounted the node will already be removed
+    if (inst._nativeNode !== null) {
+      targetNode = ReactDOMComponentTree.getNodeFromInstance(inst);
+    }
+
+    if (targetNode) {
+      delete targetNode.value;
+    }
+  },
+
+  didPutListener: function(inst, registrationName) {
+    var targetNode = ReactDOMComponentTree.getNodeFromInstance(inst);
+    var valueField = isCheckable(targetNode) ? 'checked' : 'value';
+    var descriptor = Object.getOwnPropertyDescriptor(
+      targetNode.constructor.prototype,
+      valueField
+    );
+
+    Object.defineProperty(targetNode, valueField, {
+      enumerable: descriptor.enumerable,
+      configurable: true,
+      get: function() {
+        return descriptor.get.call(this);
+      },
+      set: function(val) {
+        lastInputValue.set(this, val);
+        descriptor.set.call(this, val);
+      },
+    });
+  },
 
   extractEvents: function(
     topLevelType,
@@ -416,5 +467,8 @@ var ChangeEventPlugin = {
   },
 
 };
+
+// exposed for testing ONLY
+ChangeEventPlugin.__lastInputValue = lastInputValue;
 
 module.exports = ChangeEventPlugin;

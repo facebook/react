@@ -12,8 +12,18 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var ChangeEventPlugin = require('ChangeEventPlugin');
+
+var lastInputValue = ChangeEventPlugin.__lastInputValue;
+
+function setUntrackedValue(elem, value) {
+  var current = lastInputValue.get(elem);
+
+  elem.value = value;
+  lastInputValue.set(elem, current);
+}
 
 describe('ChangeEventPlugin', function() {
   it('should fire change for checkbox input', function() {
@@ -27,6 +37,69 @@ describe('ChangeEventPlugin', function() {
     var input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
     ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
+  });
+
+  it('should catch setting the value programmatically', function() {
+
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="text" defaultValue="foo"/>
+    );
+
+    input.value = 'bar';
+
+    expect(lastInputValue.get(input)).toBe('bar');
+  });
+
+  it('should not fire change when setting the value programmatically', function() {
+    var called = 0;
+
+    function cb(e) {
+      called += 1;
+      expect(e.type).toBe('change');
+    }
+
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="text" onChange={cb} defaultValue="foo"/>
+    );
+
+    input.value = 'bar';
+    ReactTestUtils.SimulateNative.change(input);
+    expect(called).toBe(0);
+
+    setUntrackedValue(input, 'foo');
+    ReactTestUtils.SimulateNative.change(input);
+
+    expect(called).toBe(1);
+  });
+
+  it('should not fire change when setting checked programmatically', function() {
+    var called = 0;
+
+    function cb(e) {
+      called += 1;
+      expect(e.type).toBe('change');
+    }
+
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" onChange={cb} defaultChecked={true} />
+    );
+
+    input.checked = true;
+    ReactTestUtils.SimulateNative.click(input);
+    expect(called).toBe(0);
+
+    input.checked = false;
+    lastInputValue.set(input, undefined);
+    ReactTestUtils.SimulateNative.click(input);
+
+    expect(called).toBe(1);
+  });
+
+  it('should unmount', function() {
+    var container = document.createElement('div');
+    var input = ReactDOM.render(<input />, container);
+    
+    ReactDOM.unmountComponentAtNode(container);
   });
 
   it('should only fire change for checked radio button once', function() {
@@ -92,7 +165,9 @@ describe('ChangeEventPlugin', function() {
     var input = ReactTestUtils.renderIntoDocument(<input type="range" onChange={cb}/>);
 
     ReactTestUtils.SimulateNative.input(input);
-    input.value = 'foo';
+
+    setUntrackedValue(input, 'foo');
+
     ReactTestUtils.SimulateNative.change(input);
 
     expect(called).toBe(2);
@@ -110,7 +185,9 @@ describe('ChangeEventPlugin', function() {
 
     ReactTestUtils.SimulateNative.input(input);
     ReactTestUtils.SimulateNative.change(input);
-    input.value = 'foo';
+
+    setUntrackedValue(input, 'foo');
+
     ReactTestUtils.SimulateNative.input(input);
     ReactTestUtils.SimulateNative.change(input);
     expect(called).toBe(2);
