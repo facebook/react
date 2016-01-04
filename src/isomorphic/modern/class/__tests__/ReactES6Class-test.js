@@ -276,8 +276,11 @@ describe('ReactES6Class', function() {
       componentDidMount() {
         lifeCycles.push('did-mount');
       }
-      componentWillReceiveProps(nextProps) {
-        lifeCycles.push('receive-props', nextProps);
+      componentWillReceiveProps(nextProps, nextContext) {
+        lifeCycles.push('receive-props', nextProps, nextContext);
+      }
+      componentWillReceiveContext(nextContext) {
+        lifeCycles.push('receive-context', nextContext);
       }
       shouldComponentUpdate(nextProps, nextState) {
         lifeCycles.push('should-update', nextProps, nextState);
@@ -304,7 +307,7 @@ describe('ReactES6Class', function() {
     lifeCycles = []; // reset
     test(<Foo value="bar" />, 'SPAN', 'bar');
     expect(lifeCycles).toEqual([
-      'receive-props', freeze({value: 'bar'}),
+      'receive-props', freeze({value: 'bar'}), {},
       'should-update', freeze({value: 'bar'}), {},
       'will-update', freeze({value: 'bar'}), {},
       'did-update', freeze({value: 'foo'}), {},
@@ -314,6 +317,52 @@ describe('ReactES6Class', function() {
     expect(lifeCycles).toEqual([
       'will-unmount',
     ]);
+  });
+
+  it('will call context life cycle methods', function() {
+    var lifeCycles = [];
+
+    class Child extends React.Component {
+      componentWillReceiveProps(nextProps, nextContext) {
+        lifeCycles.push('receive-props', nextProps, nextContext);
+      }
+      componentWillReceiveContext(nextContext) {
+        lifeCycles.push('receive-context', nextContext);
+      }
+      render() {
+        return <span className={this.props.value} />;
+      }
+    }
+    Child.contextTypes = {
+      foo: React.PropTypes.string,
+    };
+
+    class Parent extends React.Component {
+      getChildContext() {
+        return {
+          foo: 'foo',
+        };
+      }
+      render() {
+        return (
+            <div><Child value={this.props.value} /></div>
+        );
+      }
+    }
+    Parent.childContextTypes = {
+      foo: React.PropTypes.string,
+    };
+
+    test(<Parent value="bar" />, 'DIV', '');
+    expect(lifeCycles).toEqual([]);
+
+    test(<Parent value="baz" />, 'DIV', '');
+    expect(lifeCycles).toEqual([
+      'receive-props', freeze({value: 'baz'}), freeze({foo: 'foo'}),
+      'receive-context', freeze({foo: 'foo'}),
+    ]);
+
+    ReactDOM.unmountComponentAtNode(container);
   });
 
   it('warns when classic properties are defined on the instance, but does not invoke them.', function() {
@@ -396,6 +445,27 @@ describe('ReactES6Class', function() {
       'Warning: ' +
       'NamedComponent has a method called componentWillRecieveProps(). Did ' +
       'you mean componentWillReceiveProps()?'
+    );
+  });
+
+  it('should warn when misspelling componentWillReceiveContext', function() {
+    spyOn(console, 'error');
+
+    class NamedComponent extends React.Component {
+      componentWillRecieveContext() {
+        return false;
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+    test(<NamedComponent />, 'SPAN', 'foo');
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: ' +
+        'NamedComponent has a method called componentWillRecieveContext(). Did ' +
+        'you mean componentWillReceiveContext()?'
     );
   });
 

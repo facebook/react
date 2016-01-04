@@ -140,6 +140,9 @@ describe('ReactServerRendering', function() {
           componentWillReceiveProps: function() {
             lifecycle.push('componentWillReceiveProps');
           },
+          componentWillReceiveContext: function() {
+            lifecycle.push('componentWillReceiveContext');
+          },
           componentWillUnmount: function() {
             lifecycle.push('componentWillUnmount');
           },
@@ -330,6 +333,9 @@ describe('ReactServerRendering', function() {
           },
           componentWillReceiveProps: function() {
             lifecycle.push('componentWillReceiveProps');
+          },
+          componentWillReceiveContext: function() {
+            lifecycle.push('componentWillReceiveContext');
           },
           componentWillUnmount: function() {
             lifecycle.push('componentWillUnmount');

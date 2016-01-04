@@ -73,6 +73,7 @@ describe('ReactContextValidator', function() {
 
   it('should filter context properly in callbacks', function() {
     var actualComponentWillReceiveProps;
+    var actualComponentWillReceiveContext;
     var actualShouldComponentUpdate;
     var actualComponentWillUpdate;
     var actualComponentDidUpdate;
@@ -105,6 +106,11 @@ describe('ReactContextValidator', function() {
         return true;
       },
 
+      componentWillReceiveContext: function(nextContext) {
+        actualComponentWillReceiveContext = nextContext;
+        return true;
+      },
+
       shouldComponentUpdate: function(nextProps, nextState, nextContext) {
         actualShouldComponentUpdate = nextContext;
         return true;
@@ -127,6 +133,7 @@ describe('ReactContextValidator', function() {
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
+    expect(actualComponentWillReceiveContext).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});
     expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
