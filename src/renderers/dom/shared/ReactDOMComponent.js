@@ -1009,10 +1009,6 @@ ReactDOMComponent.Mixin = {
     }
   },
 
-  getNativeNode: function() {
-    return getNode(this);
-  },
-
   /**
    * Destroys all event registrations for this instance. Does not remove from
    * the DOM. That must be done by the parent.
@@ -1057,6 +1053,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
+    var nativeNode = getNode(this);
     this.unmountChildren();
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
@@ -1064,6 +1061,7 @@ ReactDOMComponent.Mixin = {
     this._rootNodeID = null;
     this._domID = null;
     this._wrapperState = null;
+    return nativeNode;
   },
 
   getPublicInstance: function() {

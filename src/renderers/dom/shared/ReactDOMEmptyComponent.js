@@ -57,11 +57,10 @@ assign(ReactDOMEmptyComponent.prototype, {
   },
   receiveComponent: function() {
   },
-  getNativeNode: function() {
-    return ReactDOMComponentTree.getNodeFromInstance(this);
-  },
   unmountComponent: function() {
+    var node = ReactDOMComponentTree.getNodeFromInstance(this);
     ReactDOMComponentTree.uncacheNode(this);
+    return node;
   },
 });
 

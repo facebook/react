@@ -104,7 +104,6 @@ function instantiateReactComponent(node) {
       typeof instance.construct === 'function' &&
       typeof instance.mountComponent === 'function' &&
       typeof instance.receiveComponent === 'function' &&
-      typeof instance.getNativeNode === 'function' &&
       typeof instance.unmountComponent === 'function',
       'Only React Components can be mounted.'
     );

@@ -381,10 +381,6 @@ NoopInternalComponent.prototype = {
     this._currentElement = element;
   },
 
-  getNativeNode: function() {
-    return undefined;
-  },
-
   unmountComponent: function() {
   },
 
