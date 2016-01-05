@@ -265,6 +265,7 @@ function trapBubbledEventsLocal() {
 
   switch (inst._tag) {
     case 'iframe':
+    case 'object':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
           EventConstants.topLevelTypes.topLoad,
@@ -465,6 +466,7 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'iframe':
+      case 'object':
       case 'img':
       case 'form':
       case 'video':
@@ -1022,6 +1024,7 @@ ReactDOMComponent.Mixin = {
   unmountComponent: function() {
     switch (this._tag) {
       case 'iframe':
+      case 'object':
       case 'img':
       case 'form':
       case 'video':
