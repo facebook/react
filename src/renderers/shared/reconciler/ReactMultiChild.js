@@ -354,7 +354,6 @@ var ReactMultiChild = {
         }
       }
       if (updates) {
-        this.prepareToManageChildren();
         processQueue(this, updates);
       }
       this._renderedChildren = nextChildren;
@@ -371,14 +370,6 @@ var ReactMultiChild = {
       var renderedChildren = this._renderedChildren;
       ReactChildReconciler.unmountChildren(renderedChildren);
       this._renderedChildren = null;
-    },
-
-    /**
-     * Hook used by the DOM implementation to precache the nodes before we apply
-     * any reorders here.
-     */
-    prepareToManageChildren: function() {
-      // TODO: This sucks. Figure out a better design here.
     },
 
     /**
