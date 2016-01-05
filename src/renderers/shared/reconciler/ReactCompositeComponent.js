@@ -806,13 +806,7 @@ var ReactCompositeComponentMixin = {
         this._processChildContext(context)
       );
     } else {
-      // TODO: This is currently necessary due to the unfortunate caching
-      // that ReactMount does which makes it exceedingly difficult to unmount
-      // a set of siblings without accidentally repopulating the node cache (see
-      // #5151). Once ReactMount no longer stores the nodes by ID, this method
-      // can go away.
       var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
-
       ReactReconciler.unmountComponent(prevComponentInstance);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
