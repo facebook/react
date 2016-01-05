@@ -1009,6 +1009,10 @@ ReactDOMComponent.Mixin = {
     }
   },
 
+  getNativeNode: function() {
+    return getNode(this);
+  },
+
   /**
    * Destroys all event registrations for this instance. Does not remove from
    * the DOM. That must be done by the parent.
@@ -1053,7 +1057,6 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    var nativeNode = getNode(this);
     this.unmountChildren();
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
@@ -1061,7 +1064,6 @@ ReactDOMComponent.Mixin = {
     this._rootNodeID = null;
     this._domID = null;
     this._wrapperState = null;
-    return nativeNode;
   },
 
   getPublicInstance: function() {
@@ -1078,16 +1080,7 @@ ReactPerf.measureMethods(ReactDOMComponent.Mixin, 'ReactDOMComponent', {
 assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
-  ReactMultiChild.Mixin,
-  {
-    prepareToManageChildren: function() {
-      // Before we add, remove, or reorder the children of a node, make sure
-      // we have references to all of its children so we don't lose them, even
-      // if nefarious browser plugins add extra nodes to our tree. This could be
-      // called once per child so it should be fast.
-      ReactDOMComponentTree.precacheChildNodes(this, getNode(this));
-    },
-  }
+  ReactMultiChild.Mixin
 );
 
 module.exports = ReactDOMComponent;
