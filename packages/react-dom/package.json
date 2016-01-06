@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "0.14.5",
+  "version": "0.14.6-alpha",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -13,6 +13,6 @@
   },
   "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
   "peerDependencies": {
-    "react": "^0.14.5"
+    "react": "^0.14.6-alpha"
   }
 }
