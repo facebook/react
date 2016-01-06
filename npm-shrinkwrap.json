@@ -5532,9 +5532,8 @@
       "resolved": "file:eslint-rules"
     },
     "fbjs": {
-      "version": "0.6.0",
-      "from": "fbjs@>=0.6.0 <0.7.0",
-      "resolved": "https://registry.npmjs.org/fbjs/-/fbjs-0.6.0.tgz",
+      "version": "0.6.1",
+      "from": "fbjs@>=0.6.1 <0.7.0",
       "dependencies": {
         "core-js": {
           "version": "1.2.6",
