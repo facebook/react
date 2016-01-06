@@ -1,3 +1,9 @@
+## 0.14.6 (January 6, 2016)
+
+### React
+- Updated `fbjs` dependency to pick up change affecting handling of undefined document.
+
+
 ## 0.14.5 (December 29, 2015)
 
 ### React
