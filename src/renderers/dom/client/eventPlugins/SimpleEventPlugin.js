@@ -22,6 +22,7 @@ var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 var SyntheticDragEvent = require('SyntheticDragEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
+var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
@@ -365,6 +366,12 @@ var eventTypes = {
       captured: keyOf({onTouchStartCapture: true}),
     },
   },
+  transitionEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTransitionEnd: true}),
+      captured: keyOf({onTransitionEndCapture: true}),
+    },
+  },
   volumeChange: {
     phasedRegistrationNames: {
       bubbled: keyOf({onVolumeChange: true}),
@@ -441,6 +448,7 @@ var topLevelEventsToDispatchConfig = {
   topTouchEnd:        eventTypes.touchEnd,
   topTouchMove:       eventTypes.touchMove,
   topTouchStart:      eventTypes.touchStart,
+  topTransitionEnd:   eventTypes.transitionEnd,
   topVolumeChange:    eventTypes.volumeChange,
   topWaiting:         eventTypes.waiting,
   topWheel:           eventTypes.wheel,
@@ -548,6 +556,9 @@ var SimpleEventPlugin = {
       case topLevelTypes.topTouchMove:
       case topLevelTypes.topTouchStart:
         EventConstructor = SyntheticTouchEvent;
+        break;
+      case topLevelTypes.topTransitionEnd:
+        EventConstructor = SyntheticTransitionEvent;
         break;
       case topLevelTypes.topScroll:
         EventConstructor = SyntheticUIEvent;
