@@ -61,7 +61,7 @@ Adesso che abbiamo identificato i componenti nel nostro mock, organizziamoli in 
 
 ## Passo 2: Costruisci una versione statica in React
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 Adesso che hai la tua gerarchia di componenti, è venuto il momento di implementare la tua applicazione. La maniera più semplice è costruire una versione che prende il tuo modello di dati e visualizza la UI ma non è interattiva. È buona norma disaccoppiare questi processi perché costruire una versione statica richiede la scrittura di parecchio codice e poco pensare, mentre aggiungere l'interattività richiede un parecchio pensare ma non un granché di scrittura. Vedremo perché.
 
@@ -105,7 +105,7 @@ Quindi, per concludere, il nostro stato è:
 
 ## Passo 4: Identifica dove debba risiedere il tuo stato
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 OK, abbiamo dunque identificato quale sia l'insieme minimo dello stato dell'applicazione. Successivamente, dobbiamo identificare quale componente muta, o *possiede*, questo stato.
 
@@ -130,7 +130,7 @@ Puoi cominciare a vedere come si comporterà la tua applicazione: imposta `filte
 
 ## Passo 5: Aggiungi il flusso dati inverso
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 Finora abbiamo costruito un'applicazione che visualizza correttamente come una funzione di proprietà e stato che fluiscono verso il basso della gerarchia. Adesso è il momento di supportare il flusso dei dati nella direzione opposta: i componenti del modulo in profondità nella gerarchia devono aggiornare lo stato in `FilterableProductTable`.
 
