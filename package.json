@@ -35,6 +35,7 @@
     "object-assign": "^4.0.1",
     "optimist": "^0.6.1",
     "platform": "^1.1.0",
+    "process": "^0.11.2",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
