@@ -61,7 +61,7 @@ React许多优秀的部分之一是它如何使你随着构建 app 来思考 app
 
 ## Step 2: 用React创建一个静态版本
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 既然你已经有了你的组件层级,时候实现你的app了.简单的方式是构建一个版本,它采取你的数据模型并渲染UI但是没有互动性.最好是分离这些过程,因为构建一个静态版本需要无脑的打很多字,然而添加互动性需要很多思考但不需要打太多字.我们会看到是为什么:
 
@@ -105,7 +105,7 @@ React许多优秀的部分之一是它如何使你随着构建 app 来思考 app
 
 ## 第四步:确定你的 state 应该存在于哪里
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 好,我们已经确定了app state 的最小组是什么.接下来,我们需要确定哪个组件变动,或者 *拥有*,这 个state.
 
@@ -130,7 +130,7 @@ React许多优秀的部分之一是它如何使你随着构建 app 来思考 app
 
 ## 第五步:添加反向数据流
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 到目前为止，我们已经构建了一个应用, 它以props 和 state 沿着层级向下流动的功能正确渲染。现在是时候支持数据的另一种流动了：在层级深处的表单组件需要更新 `FilterableProductTable` 里的state.
 
