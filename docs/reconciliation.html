@@ -415,7 +415,7 @@
 <h2><a class="anchor" name="motivation"></a>Motivation <a class="hash-link" href="#motivation">#</a></h2>
 <p>Generating the minimum number of operations to transform one tree into another is a complex and well-studied problem. The <a href="http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf">state of the art algorithms</a> have a complexity in the order of O(n<sup>3</sup>) where n is the number of nodes in the tree.</p>
 
-<p>This means that displaying 1000 nodes would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instruction per second. So even with the most performant implementation, we wouldn&#39;t be able to compute that diff in less than a second.</p>
+<p>This means that displaying 1000 nodes would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instructions per second. So even with the most performant implementation, we wouldn&#39;t be able to compute that diff in less than a second.</p>
 
 <p>Since an optimal algorithm is not tractable, we implement a non-optimal O(n) algorithm using heuristics based on two assumptions:</p>
 

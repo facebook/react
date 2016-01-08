@@ -487,6 +487,8 @@
 <blockquote>
 <p>Note:</p>
 
+<p>One common mistake is for code executed during this lifecycle method to assume that props have changed.  To understand why this is invalid, read <a href="/react/blog/2016/01/08/A-implies-B-does-not-imply-B-implies-A.html">A implies B does not imply B implies A</a></p>
+
 <p>There is no analogous method <code>componentWillReceiveState</code>. An incoming prop transition may cause a state change, but the opposite is not true. If you need to perform operations in response to a state change, use <code>componentWillUpdate</code>.</p>
 </blockquote>
 <h3><a class="anchor" name="updating-shouldcomponentupdate"></a>Updating: shouldComponentUpdate <a class="hash-link" href="#updating-shouldcomponentupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span>
