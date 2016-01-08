@@ -271,7 +271,7 @@ onLoad onError
 Event names:
 
 ```
-onTransitionEnd
+onTransitionStart onTransitionEnd onTransitionCancel
 ```
 
 Properties:

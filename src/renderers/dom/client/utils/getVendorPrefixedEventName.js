@@ -11,41 +11,59 @@
 
 'use strict';
 
+function makeTransitionMap(suffix) {
+  var suffixCapitalized = suffix.charAt(0).toUpperCase() + suffix.substr(1);
+
+  return {
+    transition: 'transition' + suffix,
+    WebkitTransition: 'webkitTransition' + suffixCapitalized,
+    MozTransition: 'mozTransition' + suffixCapitalized,
+    msTransition: 'MSTransition' + suffixCapitalized,
+    OTransition: 'oTransition' + suffixCapitalized + ' otransition' + suffix,
+  };
+}
+
+function makeTransitionValidator(suffix) {
+  return function() {
+    if (!('TransitionEvent' in window)) {
+      delete vendorPrefixes['transition' + suffix].transition;
+    }
+  };
+}
+
 /**
  * A list of event names to a configurable list of vendor prefixes.
  */
 var vendorPrefixes = {
   animationend: {
-    // On some platforms, in particular some releases of Android 4.x,
-    // the un-prefixed "animation" and "transition" properties are defined on the
-    // style object but the events that fire will still be prefixed, so we need
-    // to check if the un-prefixed events are useable, and if not remove them
-    // from the map
-    preCheck: function() {
-      if (!('AnimationEvent' in window)) {
-        delete vendorPrefixes.animationend.animation;
-      }
-    },
     animation: 'animationend',
     WebkitAnimation: 'webkitAnimationEnd',
     MozAnimation: 'mozAnimationEnd',
     msAnimation: 'MSAnimationEnd',
     OAnimation: 'oAnimationEnd oanimationend',
   },
+  transitionstart: makeTransitionMap('start'),
+  transitionend: makeTransitionMap('end'),
+  transitioncancel: makeTransitionMap('cancel'),
+};
 
-  transitionend: {
-    // Same as above
-    preCheck: function() {
-      if (!('TransitionEvent' in window)) {
-        delete vendorPrefixes.transitionend.transition;
-      }
-    },
-    transition: 'transitionend',
-    WebkitTransition: 'webkitTransitionEnd',
-    MozTransition: 'mozTransitionEnd',
-    msTransition: 'MSTransitionEnd',
-    OTransition: 'oTransitionEnd otransitionend',
+/**
+ * Validation functions to run on the first initial lookup.
+ */
+var initialValidators = {
+  // On some platforms, in particular some releases of Android 4.x,
+  // the un-prefixed "animation" and "transition" properties are defined on the
+  // style object but the events that fire will still be prefixed, so we need
+  // to check if the un-prefixed events are useable, and if not remove them from the map
+  animationend: function() {
+    if (!('AnimationEvent' in window)) {
+      delete vendorPrefixes.animationend.animation;
+    }
   },
+  // Same as above
+  transitionstart: makeTransitionValidator('start'),
+  transitionend: makeTransitionValidator('end'),
+  transitioncancel: makeTransitionValidator('cancel'),
 };
 
 /**
@@ -68,14 +86,16 @@ function getVendorPrefixedEventName(eventName) {
   }
 
   var prefixMap = vendorPrefixes[eventName];
+  var validator = initialValidators[eventName];
   var style = document.createElement('div').style;
 
-  if (typeof prefixMap.preCheck === 'function') {
-    prefixMap.preCheck(style);
+  if (validator && !validator.checked) {
+    validator(style);
+    validator.checked = true;
   }
 
   for (var styleProp in prefixMap) {
-    if (styleProp !== 'preCheck' && prefixMap.hasOwnProperty(styleProp) && styleProp in style) {
+    if (prefixMap.hasOwnProperty(styleProp) && styleProp in style) {
       prefixedEventNames[eventName] = prefixMap[styleProp];
 
       return prefixedEventNames[eventName];

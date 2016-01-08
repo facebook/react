@@ -366,10 +366,22 @@ var eventTypes = {
       captured: keyOf({onTouchStartCapture: true}),
     },
   },
+  transitionStart: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTransitionStart: true}),
+      captured: keyOf({onTransitionStartCapture: true}),
+    },
+  },
   transitionEnd: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTransitionEnd: true}),
       captured: keyOf({onTransitionEndCapture: true}),
+    },
+  },
+  transitionCancel: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTransitionCancel: true}),
+      captured: keyOf({onTransitionCancelCapture: true}),
     },
   },
   volumeChange: {
@@ -448,7 +460,9 @@ var topLevelEventsToDispatchConfig = {
   topTouchEnd:        eventTypes.touchEnd,
   topTouchMove:       eventTypes.touchMove,
   topTouchStart:      eventTypes.touchStart,
+  topTransitionStart: eventTypes.transitionStart,
   topTransitionEnd:   eventTypes.transitionEnd,
+  topTransitionCancel:eventTypes.transitionCancel,
   topVolumeChange:    eventTypes.volumeChange,
   topWaiting:         eventTypes.waiting,
   topWheel:           eventTypes.wheel,
@@ -557,7 +571,9 @@ var SimpleEventPlugin = {
       case topLevelTypes.topTouchStart:
         EventConstructor = SyntheticTouchEvent;
         break;
+      case topLevelTypes.topTransitionStart:
       case topLevelTypes.topTransitionEnd:
+      case topLevelTypes.topTransitionCancel:
         EventConstructor = SyntheticTransitionEvent;
         break;
       case topLevelTypes.topScroll:
