@@ -29,7 +29,7 @@ var ReactPerf = {
   storedMeasure: _noMeasure,
 
   /**
-   * @param {object} object
+   * @param {Object} object
    * @param {string} objectName
    * @param {object<string>} methodNames
    */
@@ -53,8 +53,8 @@ var ReactPerf = {
    *
    * @param {string} objName
    * @param {string} fnName
-   * @param {function} func
-   * @return {function}
+   * @param {Function} func
+   * @return {Function}
    */
   measure: function(objName, fnName, func) {
     if (__DEV__) {
@@ -76,7 +76,7 @@ var ReactPerf = {
 
   injection: {
     /**
-     * @param {function} measure
+     * @param {Function} measure
      */
     injectMeasure: function(measure) {
       ReactPerf.storedMeasure = measure;
@@ -89,8 +89,8 @@ var ReactPerf = {
  *
  * @param {string} objName
  * @param {string} fnName
- * @param {function} func
- * @return {function}
+ * @param {Function} func
+ * @return {Function}
  */
 function _noMeasure(objName, fnName, func) {
   return func;

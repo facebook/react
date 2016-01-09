@@ -43,7 +43,7 @@ function getDeclarationErrorAddendum(owner) {
  * Check if the type reference is a known internal type. I.e. not a user
  * provided composite type.
  *
- * @param {function} type
+ * @param {Function} type
  * @return {boolean} Returns true if this is a valid internal type.
  */
 function isInternalComponentType(type) {
@@ -59,7 +59,7 @@ function isInternalComponentType(type) {
  * Given a ReactNode, create an instance that will actually be mounted.
  *
  * @param {ReactNode} node
- * @return {object} A new instance of the element's constructor.
+ * @return {Object} A new instance of the element's constructor.
  * @protected
  */
 function instantiateReactComponent(node) {

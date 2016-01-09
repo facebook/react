@@ -42,7 +42,7 @@ var ReactNativeComponentInjection = {
  * Get a composite component wrapper class for a specific tag.
  *
  * @param {ReactElement} element The tag for which to get the class.
- * @return {function} The React class constructor function.
+ * @return {Function} The React class constructor function.
  */
 function getComponentClassForElement(element) {
   if (typeof element.type === 'function') {
@@ -60,7 +60,7 @@ function getComponentClassForElement(element) {
  * Get a native internal component class for a specific tag.
  *
  * @param {ReactElement} element The element to create.
- * @return {function} The internal class constructor function.
+ * @return {Function} The internal class constructor function.
  */
 function createInternalComponent(element) {
   invariant(

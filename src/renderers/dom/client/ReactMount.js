@@ -85,7 +85,7 @@ function internalGetID(node) {
 /**
  * Mounts this component and inserts it into the DOM.
  *
- * @param {ReactComponent} componentInstance The instance to mount.
+ * @param {ReactComponent} wrapperInstance The instance to mount.
  * @param {DOMElement} container DOM element to mount into.
  * @param {ReactReconcileTransaction} transaction
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
@@ -265,7 +265,7 @@ var ReactMount = {
    * change.
    *
    * @param {DOMElement} container The `container` being rendered into.
-   * @param {function} renderCallback This must be called once to do the render.
+   * @param {Function} renderCallback This must be called once to do the render.
    */
   scrollMonitor: function(container, renderCallback) {
     renderCallback();
@@ -276,7 +276,7 @@ var ReactMount = {
    * @param {ReactComponent} prevComponent component instance already in the DOM
    * @param {ReactElement} nextElement component instance to render
    * @param {DOMElement} container container to render into
-   * @param {?function} callback function triggered on completion
+   * @param {?Function} callback function triggered on completion
    */
   _updateRootComponent: function(
       prevComponent,
@@ -360,7 +360,7 @@ var ReactMount = {
    * @param {ReactComponent} parentComponent The conceptual parent of this render tree.
    * @param {ReactElement} nextElement Component element to render.
    * @param {DOMElement} container DOM element to render into.
-   * @param {?function} callback function triggered on completion
+   * @param {?Function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
@@ -498,7 +498,7 @@ var ReactMount = {
    *
    * @param {ReactElement} nextElement Component element to render.
    * @param {DOMElement} container DOM element to render into.
-   * @param {?function} callback function triggered on completion
+   * @param {?Function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   render: function(nextElement, container, callback) {

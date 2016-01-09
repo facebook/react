@@ -48,7 +48,7 @@ var ReactNoopUpdateQueue = {
    * have processed.
    *
    * @param {ReactClass} publicInstance The instance to use as `this` context.
-   * @param {?function} callback Called after state is updated.
+   * @param {?Function} callback Called after state is updated.
    * @internal
    */
   enqueueCallback: function(publicInstance, callback) { },
@@ -78,7 +78,7 @@ var ReactNoopUpdateQueue = {
    * accessing `this.state` after calling this method may return the old value.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} completeState Next state.
+   * @param {Object} completeState Next state.
    * @internal
    */
   enqueueReplaceState: function(publicInstance, completeState) {
@@ -92,7 +92,7 @@ var ReactNoopUpdateQueue = {
    * during the merge.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} partialState Next partial state to be merged with state.
+   * @param {Object} partialState Next partial state to be merged with state.
    * @internal
    */
   enqueueSetState: function(publicInstance, partialState) {

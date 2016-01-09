@@ -23,9 +23,9 @@ var InputEventInterface = {
 };
 
 /**
- * @param {object} dispatchConfig Configuration used to dispatch this event.
+ * @param {Object} dispatchConfig Configuration used to dispatch this event.
  * @param {string} dispatchMarker Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
+ * @param {Object} nativeEvent Native browser event.
  * @extends {SyntheticUIEvent}
  */
 function SyntheticInputEvent(

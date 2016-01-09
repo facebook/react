@@ -84,7 +84,7 @@ function wrapUserProvidedKey(key) {
 /**
  * @param {?*} children Children tree container.
  * @param {!string} nameSoFar Name of the key path so far.
- * @param {!function} callback Callback to invoke with each child found.
+ * @param {!Function} callback Callback to invoke with each child found.
  * @param {?*} traverseContext Used to pass information throughout the traversal
  * process.
  * @return {!number} The number of children in this subtree.
@@ -224,7 +224,7 @@ function traverseAllChildrenImpl(
  * the callback might find relevant.
  *
  * @param {?*} children Children tree object.
- * @param {!function} callback To invoke upon traversing each child.
+ * @param {!Function} callback To invoke upon traversing each child.
  * @param {?*} traverseContext Context for traversal.
  * @return {!number} The number of children in this subtree.
  */

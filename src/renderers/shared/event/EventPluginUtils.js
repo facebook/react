@@ -97,7 +97,7 @@ if (__DEV__) {
  * Dispatch the event to the listener.
  * @param {SyntheticEvent} event SyntheticEvent to handle
  * @param {boolean} simulated If the event is simulated (changes exn behavior)
- * @param {function} listener Application-level callback
+ * @param {Function} listener Application-level callback
  * @param {*} inst Internal component instance
  */
 function executeDispatch(event, simulated, listener, inst) {

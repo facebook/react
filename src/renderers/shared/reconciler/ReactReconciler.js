@@ -28,8 +28,8 @@ var ReactReconciler = {
    *
    * @param {ReactComponent} internalInstance
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {?object} the containing native component instance
-   * @param {?object} info about the native container
+   * @param {?Object} nativeParent the containing native component instance
+   * @param {?Object} nativeContainerInfo info about the native container
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -79,7 +79,7 @@ var ReactReconciler = {
    * @param {ReactComponent} internalInstance
    * @param {ReactElement} nextElement
    * @param {ReactReconcileTransaction} transaction
-   * @param {object} context
+   * @param {Object} context
    * @internal
    */
   receiveComponent: function(

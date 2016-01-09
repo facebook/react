@@ -45,8 +45,8 @@ var ReactChildReconciler = {
    * Generates a "mount image" for each of the supplied children. In the case
    * of `ReactDOMComponent`, a mount image is a string of markup.
    *
-   * @param {?object} nestedChildNodes Nested child maps.
-   * @return {?object} A set of child instances.
+   * @param {?Object} nestedChildNodes Nested child maps.
+   * @return {?Object} A set of child instances.
    * @internal
    */
   instantiateChildren: function(nestedChildNodes, transaction, context) {
@@ -61,11 +61,11 @@ var ReactChildReconciler = {
   /**
    * Updates the rendered children and returns a new set of children.
    *
-   * @param {?object} prevChildren Previously initialized set of children.
-   * @param {?object} nextChildren Flat child element maps.
+   * @param {?Object} prevChildren Previously initialized set of children.
+   * @param {?Object} nextChildren Flat child element maps.
    * @param {ReactReconcileTransaction} transaction
-   * @param {object} context
-   * @return {?object} A new set of child instances.
+   * @param {Object} context
+   * @return {?Object} A new set of child instances.
    * @internal
    */
   updateChildren: function(
@@ -122,7 +122,7 @@ var ReactChildReconciler = {
    * Unmounts all rendered children. This should be used to clean up children
    * when this component is unmounted.
    *
-   * @param {?object} renderedChildren Previously initialized set of children.
+   * @param {?Object} renderedChildren Previously initialized set of children.
    * @internal
    */
   unmountChildren: function(renderedChildren) {

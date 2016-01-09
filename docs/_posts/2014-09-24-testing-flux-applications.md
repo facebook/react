@@ -273,7 +273,7 @@ var TodoApp = React.createClass({
 ...
 
   /**
-   * @return {object}
+   * @return {Object}
    */
   render: function() {
     return (

@@ -134,8 +134,8 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
 }
 
 /**
- * @param {object} component
- * @param {?object} props
+ * @param {Object} component
+ * @param {?Object} props
  */
 function assertValidProps(component, props) {
   if (!props) {
@@ -446,8 +446,8 @@ ReactDOMComponent.Mixin = {
    * @internal
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?ReactDOMComponent} the containing DOM component instance
-   * @param {?object} info about the native container
-   * @param {object} context
+   * @param {?Object} info about the native container
+   * @param {Object} context
    * @return {string} The computed markup.
    */
   mountComponent: function(
@@ -613,7 +613,7 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {object} props
+   * @param {Object} props
    * @return {string} Markup of opening tag.
    */
   _createOpenTagMarkupAndPutListeners: function(transaction, props) {
@@ -676,8 +676,8 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {object} props
-   * @param {object} context
+   * @param {Object} props
+   * @param {Object} context
    * @return {string} Content markup.
    */
   _createContentMarkup: function(transaction, props, context) {
@@ -755,7 +755,7 @@ ReactDOMComponent.Mixin = {
    * @internal
    * @param {ReactElement} nextElement
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {object} context
+   * @param {Object} context
    */
   receiveComponent: function(nextElement, transaction, context) {
     var prevElement = this._currentElement;
@@ -830,8 +830,8 @@ ReactDOMComponent.Mixin = {
    * TODO: Benchmark areas that can be improved with caching.
    *
    * @private
-   * @param {object} lastProps
-   * @param {object} nextProps
+   * @param {Object} lastProps
+   * @param {Object} nextProps
    * @param {?DOMElement} node
    */
   _updateDOMProperties: function(lastProps, nextProps, transaction) {
@@ -964,10 +964,10 @@ ReactDOMComponent.Mixin = {
    * Reconciles the children with the various properties that affect the
    * children content.
    *
-   * @param {object} lastProps
-   * @param {object} nextProps
+   * @param {Object} lastProps
+   * @param {Object} nextProps
    * @param {ReactReconcileTransaction} transaction
-   * @param {object} context
+   * @param {Object} context
    */
   _updateDOMChildren: function(lastProps, nextProps, transaction, context) {
     var lastContent =

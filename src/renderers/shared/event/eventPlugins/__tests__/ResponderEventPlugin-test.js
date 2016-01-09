@@ -103,7 +103,7 @@ var _touchConfig = function(
  * process of being removed.
  * @param {Array<NodeHandle>} changedIndices Indices of `allTouchHandles` that
  * have changed.
- * @return {object} Config data used by test cases for extracting responder
+ * @return {Object} Config data used by test cases for extracting responder
  * events.
  */
 var startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
@@ -205,8 +205,8 @@ var oneEventLoopTestConfig = function(readableIDToID) {
 };
 
 /**
- * @param {object} eventTestConfig
- * @param {object} readableIDToID
+ * @param {Object} eventTestConfig
+ * @param {Object} readableIDToID
  */
 var registerTestHandlers = function(eventTestConfig, readableIDToID) {
   var runs = {dispatchCount: 0};

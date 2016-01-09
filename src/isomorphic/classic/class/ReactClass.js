@@ -81,7 +81,7 @@ var ReactClassInterface = {
   /**
    * An array of Mixin objects to include when defining your component.
    *
-   * @type {array}
+   * @type {Array}
    * @optional
    */
   mixins: SpecPolicy.DEFINE_MANY,
@@ -90,7 +90,7 @@ var ReactClassInterface = {
    * An object containing properties and methods that should be defined on
    * the component's constructor instead of its prototype (static methods).
    *
-   * @type {object}
+   * @type {Object}
    * @optional
    */
   statics: SpecPolicy.DEFINE_MANY,
@@ -98,7 +98,7 @@ var ReactClassInterface = {
   /**
    * Definition of prop types for this component.
    *
-   * @type {object}
+   * @type {Object}
    * @optional
    */
   propTypes: SpecPolicy.DEFINE_MANY,
@@ -106,7 +106,7 @@ var ReactClassInterface = {
   /**
    * Definition of context types for this component.
    *
-   * @type {object}
+   * @type {Object}
    * @optional
    */
   contextTypes: SpecPolicy.DEFINE_MANY,
@@ -114,7 +114,7 @@ var ReactClassInterface = {
   /**
    * Definition of context types this component sets for its children.
    *
-   * @type {object}
+   * @type {Object}
    * @optional
    */
   childContextTypes: SpecPolicy.DEFINE_MANY,
@@ -128,7 +128,7 @@ var ReactClassInterface = {
    * This method is invoked before `getInitialState` and therefore cannot rely
    * on `this.state` or use `this.setState`.
    *
-   * @return {object}
+   * @return {Object}
    * @optional
    */
   getDefaultProps: SpecPolicy.DEFINE_MANY_MERGED,
@@ -144,13 +144,13 @@ var ReactClassInterface = {
    *     }
    *   }
    *
-   * @return {object}
+   * @return {Object}
    * @optional
    */
   getInitialState: SpecPolicy.DEFINE_MANY_MERGED,
 
   /**
-   * @return {object}
+   * @return {Object}
    * @optional
    */
   getChildContext: SpecPolicy.DEFINE_MANY_MERGED,
@@ -214,7 +214,7 @@ var ReactClassInterface = {
    * transition may cause a state change, but the opposite is not true. If you
    * need it, you are probably looking for `componentWillUpdate`.
    *
-   * @param {object} nextProps
+   * @param {Object} nextProps
    * @optional
    */
   componentWillReceiveProps: SpecPolicy.DEFINE_MANY,
@@ -233,9 +233,9 @@ var ReactClassInterface = {
    *       !equal(nextContext, this.context);
    *   }
    *
-   * @param {object} nextProps
-   * @param {?object} nextState
-   * @param {?object} nextContext
+   * @param {Object} nextProps
+   * @param {?Object} nextState
+   * @param {?Object} nextContext
    * @return {boolean} True if the component should update.
    * @optional
    */
@@ -250,9 +250,9 @@ var ReactClassInterface = {
    *
    * NOTE: You **cannot** use `this.setState()` in this method.
    *
-   * @param {object} nextProps
-   * @param {?object} nextState
-   * @param {?object} nextContext
+   * @param {Object} nextProps
+   * @param {?Object} nextState
+   * @param {?Object} nextContext
    * @param {ReactReconcileTransaction} transaction
    * @optional
    */
@@ -264,9 +264,9 @@ var ReactClassInterface = {
    * Use this as an opportunity to operate on the DOM when the component has
    * been updated.
    *
-   * @param {object} prevProps
-   * @param {?object} prevState
-   * @param {?object} prevContext
+   * @param {Object} prevProps
+   * @param {?Object} prevState
+   * @param {?Object} prevContext
    * @param {DOMElement} rootNode DOM element representing the component.
    * @optional
    */
@@ -568,9 +568,9 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
 /**
  * Merge two objects, but throw if both contain the same key.
  *
- * @param {object} one The first object, which is mutated.
- * @param {object} two The second object
- * @return {object} one after it has been mutated to contain everything in two.
+ * @param {Object} one The first object, which is mutated.
+ * @param {Object} two The second object
+ * @return {Object} one after it has been mutated to contain everything in two.
  */
 function mergeIntoWithNoDuplicateKeys(one, two) {
   invariant(
@@ -598,9 +598,9 @@ function mergeIntoWithNoDuplicateKeys(one, two) {
 /**
  * Creates a function that invokes two functions and merges their return values.
  *
- * @param {function} one Function to invoke first.
- * @param {function} two Function to invoke second.
- * @return {function} Function that invokes the two argument functions.
+ * @param {Function} one Function to invoke first.
+ * @param {Function} two Function to invoke second.
+ * @return {Function} Function that invokes the two argument functions.
  * @private
  */
 function createMergedResultFunction(one, two) {
@@ -622,9 +622,9 @@ function createMergedResultFunction(one, two) {
 /**
  * Creates a function that invokes two functions and ignores their return vales.
  *
- * @param {function} one Function to invoke first.
- * @param {function} two Function to invoke second.
- * @return {function} Function that invokes the two argument functions.
+ * @param {Function} one Function to invoke first.
+ * @param {Function} two Function to invoke second.
+ * @return {Function} Function that invokes the two argument functions.
  * @private
  */
 function createChainedFunction(one, two) {
@@ -637,9 +637,9 @@ function createChainedFunction(one, two) {
 /**
  * Binds a method to the component.
  *
- * @param {object} component Component whose method is going to be bound.
- * @param {function} method Method to be bound.
- * @return {function} The bound method.
+ * @param {Object} component Component whose method is going to be bound.
+ * @param {Function} method Method to be bound.
+ * @return {Function} The bound method.
  */
 function bindAutoBindMethod(component, method) {
   var boundMethod = method.bind(component);
@@ -683,7 +683,7 @@ function bindAutoBindMethod(component, method) {
 /**
  * Binds all auto-bound methods in a component.
  *
- * @param {object} component Component whose method is going to be bound.
+ * @param {Object} component Component whose method is going to be bound.
  */
 function bindAutoBindMethods(component) {
   var pairs = component.__reactAutoBindPairs;
@@ -742,8 +742,8 @@ var ReactClass = {
   /**
    * Creates a composite component class given a class specification.
    *
-   * @param {object} spec Class specification (which must define `render`).
-   * @return {function} Component constructor function.
+   * @param {Object} spec Class specification (which must define `render`).
+   * @return {Function} Component constructor function.
    * @public
    */
   createClass: function(spec) {

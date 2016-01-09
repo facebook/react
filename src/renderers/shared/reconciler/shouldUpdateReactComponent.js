@@ -17,8 +17,8 @@
  * instance. Both arguments are elements. This ensures that this logic can
  * operate on stateless trees without any backing instance.
  *
- * @param {?object} prevElement
- * @param {?object} nextElement
+ * @param {?Object} prevElement
+ * @param {?Object} nextElement
  * @return {boolean} True if the existing instance should be updated.
  * @protected
  */

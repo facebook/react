@@ -46,7 +46,7 @@ var invariant = require('invariant');
 var ReactOwner = {
 
   /**
-   * @param {?object} object
+   * @param {?Object} object
    * @return {boolean} True if `object` is a valid owner.
    * @final
    */

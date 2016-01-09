@@ -178,7 +178,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
 
   injection: {
     /**
-     * @param {object} ReactEventListener
+     * @param {Object} ReactEventListener
      */
     injectReactEventListener: function(ReactEventListener) {
       ReactEventListener.setHandleTopLevel(
@@ -228,7 +228,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
    * they bubble to document.
    *
    * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {object} contentDocumentHandle Document which owns the container
+   * @param {Object} contentDocumentHandle Document which owns the container
    */
   listenTo: function(registrationName, contentDocumentHandle) {
     var mountAt = contentDocumentHandle;

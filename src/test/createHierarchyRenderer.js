@@ -49,8 +49,8 @@ var React = require('React');
  * each invocation of the hierarchy renderer. If new classes are needed, you
  * should re-execute `createHierarchyRenderer` with the same arguments.
  *
- * @param {array<function>} ...renderMethods
- * @return {function}
+ * @param {array<Function>} ...renderMethods
+ * @return {Function}
  */
 function createHierarchyRenderer(...renderMethods) {
   var instances;
@@ -68,7 +68,7 @@ function createHierarchyRenderer(...renderMethods) {
     []
   );
   /**
-   * @param {function} renderComponent
+   * @param {Function} renderComponent
    * @return {array<array<*>>}
    */
   function renderHierarchy(renderComponent) {

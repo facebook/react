@@ -175,7 +175,7 @@ var ReactTestUtils = {
   /**
    * Finds all instance of components in the rendered tree that are DOM
    * components with the class name matching `className`.
-   * @return {array} an array of all the matches.
+   * @return {Array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, classNames) {
     if (!Array.isArray(classNames)) {
@@ -219,7 +219,7 @@ var ReactTestUtils = {
   /**
    * Finds all instance of components in the rendered tree that are DOM
    * components with the tag name matching `tagName`.
-   * @return {array} an array of all the matches.
+   * @return {Array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
@@ -248,7 +248,7 @@ var ReactTestUtils = {
 
   /**
    * Finds all instances of components with type equal to `componentType`.
-   * @return {array} an array of all the matches.
+   * @return {Array} an array of all the matches.
    */
   scryRenderedComponentsWithType: function(root, componentType) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
@@ -285,12 +285,12 @@ var ReactTestUtils = {
    * Instead of rendering as usual, the component will become a simple
    * <div> containing any provided children.
    *
-   * @param {object} module the mock function object exported from a
+   * @param {Object} module the mock function object exported from a
    *                        module that defines the component to be mocked
    * @param {?string} mockTagName optional dummy root tag name to return
    *                              from render method (overrides
    *                              module.mockTagName if provided)
-   * @return {object} the ReactTestUtils object (for chaining)
+   * @return {Object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
     mockTagName = mockTagName || module.mockTagName || 'div';
@@ -522,7 +522,7 @@ function buildSimulators() {
   for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
-     * @param {?object} eventData Fake event data to use in SyntheticEvent.
+     * @param {?Object} eventData Fake event data to use in SyntheticEvent.
      */
     ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
   }

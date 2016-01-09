@@ -37,8 +37,8 @@ assign(CallbackQueue.prototype, {
   /**
    * Enqueues a callback to be invoked when `notifyAll` is invoked.
    *
-   * @param {function} callback Invoked when `notifyAll` is invoked.
-   * @param {?object} context Context to call `callback` with.
+   * @param {Function} callback Invoked when `notifyAll` is invoked.
+   * @param {?Object} context Context to call `callback` with.
    * @internal
    */
   enqueue: function(callback, context) {

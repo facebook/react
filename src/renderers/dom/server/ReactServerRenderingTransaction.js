@@ -42,14 +42,14 @@ var Mixin = {
    * @see Transaction
    * @abstract
    * @final
-   * @return {array} Empty list of operation wrap procedures.
+   * @return {Array} Empty list of operation wrap procedures.
    */
   getTransactionWrappers: function() {
     return TRANSACTION_WRAPPERS;
   },
 
   /**
-   * @return {object} The queue to collect `onDOMReady` callbacks with.
+   * @return {Object} The queue to collect `onDOMReady` callbacks with.
    */
   getReactMountReady: function() {
     return noopCallbackQueue;

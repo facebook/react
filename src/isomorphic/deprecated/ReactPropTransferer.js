@@ -19,8 +19,8 @@ var joinClasses = require('joinClasses');
  * Creates a transfer strategy that will merge prop values using the supplied
  * `mergeStrategy`. If a prop was previously unset, this just sets it.
  *
- * @param {function} mergeStrategy
- * @return {function}
+ * @param {Function} mergeStrategy
+ * @return {Function}
  */
 function createTransferStrategy(mergeStrategy) {
   return function(props, key, value) {
@@ -63,9 +63,9 @@ var TransferStrategies = {
  * Mutates the first argument by transferring the properties from the second
  * argument.
  *
- * @param {object} props
- * @param {object} newProps
- * @return {object}
+ * @param {Object} props
+ * @param {Object} newProps
+ * @return {Object}
  */
 function transferInto(props, newProps) {
   for (var thisKey in newProps) {
@@ -95,9 +95,9 @@ var ReactPropTransferer = {
   /**
    * Merge two props objects using TransferStrategies.
    *
-   * @param {object} oldProps original props (they take precedence)
-   * @param {object} newProps new props to merge in
-   * @return {object} a new object containing both sets of props merged.
+   * @param {Object} oldProps original props (they take precedence)
+   * @param {Object} newProps new props to merge in
+   * @return {Object} a new object containing both sets of props merged.
    */
   mergeProps: function(oldProps, newProps) {
     return transferInto(assign({}, oldProps), newProps);

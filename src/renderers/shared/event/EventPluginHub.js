@@ -33,7 +33,7 @@ var eventQueue = null;
 /**
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
- * @param {?object} event Synthetic event to be dispatched.
+ * @param {?Object} event Synthetic event to be dispatched.
  * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
@@ -83,13 +83,13 @@ var EventPluginHub = {
   injection: {
 
     /**
-     * @param {array} InjectedEventPluginOrder
+     * @param {Array} InjectedEventPluginOrder
      * @public
      */
     injectEventPluginOrder: EventPluginRegistry.injectEventPluginOrder,
 
     /**
-     * @param {object} injectedNamesToPlugins Map from names to plugin modules.
+     * @param {Object} injectedNamesToPlugins Map from names to plugin modules.
      */
     injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
 
@@ -100,7 +100,7 @@ var EventPluginHub = {
    *
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {?function} listener The callback to store.
+   * @param {?Function} listener The callback to store.
    */
   putListener: function(inst, registrationName, listener) {
     invariant(
@@ -123,7 +123,7 @@ var EventPluginHub = {
   /**
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @return {?function} The stored callback.
+   * @return {?Function} The stored callback.
    */
   getListener: function(inst, registrationName) {
     var bankForRegistrationName = listenerBank[registrationName];

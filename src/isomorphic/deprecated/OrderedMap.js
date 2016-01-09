@@ -22,7 +22,7 @@ var PREFIX = 'key:';
  * `keyExtractor` callback. The `keyExtractor` must extract non-empty strings or
  * numbers.
  * @param {Array<Object!>} arr Array of items.
- * @param {function} keyExtractor Extracts a unique key from each item.
+ * @param {Function} keyExtractor Extracts a unique key from each item.
  * @return {Object} Map from unique key to originating value that the key was
  * extracted from.
  * @throws Exception if the initialization array has duplicate extracted keys.

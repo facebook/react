@@ -15,7 +15,7 @@
  * Gets the target node from a native browser event by accounting for
  * inconsistencies in browser DOM APIs.
  *
- * @param {object} nativeEvent Native browser event.
+ * @param {Object} nativeEvent Native browser event.
  * @return {DOMEventTarget} Target node.
  */
 function getEventTarget(nativeEvent) {

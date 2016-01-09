@@ -23,7 +23,7 @@ var ReactDOMIDOperations = {
   /**
    * Updates a component's children by processing a series of updates.
    *
-   * @param {array<object>} updates List of update configurations.
+   * @param {array<Object>} updates List of update configurations.
    * @internal
    */
   dangerouslyProcessChildrenUpdates: function(parentInst, updates) {

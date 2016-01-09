@@ -67,7 +67,7 @@ var translateToKey = {
 };
 
 /**
- * @param {object} nativeEvent Native browser event.
+ * @param {Object} nativeEvent Native browser event.
  * @return {string} Normalized `key` property.
  */
 function getEventKey(nativeEvent) {

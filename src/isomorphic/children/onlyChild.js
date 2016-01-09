@@ -21,7 +21,7 @@ var invariant = require('invariant');
  * purpose of this helper function is to abstract away the particular structure
  * of children.
  *
- * @param {?object} children Child collection structure.
+ * @param {?Object} children Child collection structure.
  * @return {ReactComponent} The first and only `ReactComponent` contained in the
  * structure.
  */
