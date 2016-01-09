@@ -17,7 +17,6 @@ var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
 
 var assign = require('Object.assign');
-var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
 var isEventSupported = require('isEventSupported');
 
 /**
@@ -140,9 +139,6 @@ var topEventMapping = {
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
-  topTransitionStart: getVendorPrefixedEventName('transitionstart') || 'transitionstart',
-  topTransitionEnd: getVendorPrefixedEventName('transitionend') || 'transitionend',
-  topTransitionCancel: getVendorPrefixedEventName('transitioncancel') || 'transitioncancel',
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
   topWheel: 'wheel',

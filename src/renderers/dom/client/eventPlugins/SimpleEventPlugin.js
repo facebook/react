@@ -22,7 +22,6 @@ var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 var SyntheticDragEvent = require('SyntheticDragEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
-var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
@@ -366,24 +365,6 @@ var eventTypes = {
       captured: keyOf({onTouchStartCapture: true}),
     },
   },
-  transitionStart: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onTransitionStart: true}),
-      captured: keyOf({onTransitionStartCapture: true}),
-    },
-  },
-  transitionEnd: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onTransitionEnd: true}),
-      captured: keyOf({onTransitionEndCapture: true}),
-    },
-  },
-  transitionCancel: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onTransitionCancel: true}),
-      captured: keyOf({onTransitionCancelCapture: true}),
-    },
-  },
   volumeChange: {
     phasedRegistrationNames: {
       bubbled: keyOf({onVolumeChange: true}),
@@ -460,9 +441,6 @@ var topLevelEventsToDispatchConfig = {
   topTouchEnd:        eventTypes.touchEnd,
   topTouchMove:       eventTypes.touchMove,
   topTouchStart:      eventTypes.touchStart,
-  topTransitionStart: eventTypes.transitionStart,
-  topTransitionEnd:   eventTypes.transitionEnd,
-  topTransitionCancel:eventTypes.transitionCancel,
   topVolumeChange:    eventTypes.volumeChange,
   topWaiting:         eventTypes.waiting,
   topWheel:           eventTypes.wheel,
@@ -570,11 +548,6 @@ var SimpleEventPlugin = {
       case topLevelTypes.topTouchMove:
       case topLevelTypes.topTouchStart:
         EventConstructor = SyntheticTouchEvent;
-        break;
-      case topLevelTypes.topTransitionStart:
-      case topLevelTypes.topTransitionEnd:
-      case topLevelTypes.topTransitionCancel:
-        EventConstructor = SyntheticTransitionEvent;
         break;
       case topLevelTypes.topScroll:
         EventConstructor = SyntheticUIEvent;

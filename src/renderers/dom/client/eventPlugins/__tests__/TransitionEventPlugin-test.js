@@ -15,7 +15,7 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('SimpleEventPlugin', function() {
+describe('TransitionEventPlugin', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
 
@@ -40,11 +40,19 @@ describe('SimpleEventPlugin', function() {
         });
       },
 
+      onTransitionStart(e) {
+        expect(e.type).toBe('transitionstart');
+      },
+
       onTransitionEnd(e) {
         called = true;
         expect(e.type).toBe('transitionend');
         expect(e.propertyName).toBe('color');
         expect(e.elapsedTime).toBeDefined();
+      },
+
+      onTransitionCancel(e) {
+        expect(e.type).toBe('transitioncancel');
       },
 
       render() {
@@ -54,7 +62,12 @@ describe('SimpleEventPlugin', function() {
         };
 
         return (
-          <div onClick={this.onClick} onTransitionEnd={this.onTransitionEnd} style={style}>Foo</div>
+          <div
+            onClick={this.onClick}
+            onTransitionStart={this.onTransitionStart}
+            onTransitionEnd={this.onTransitionEnd}
+            onTransitionCancel={this.onTransitionCancel}
+            style={style}>Foo</div>
         );
       },
     });

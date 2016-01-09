@@ -11,18 +11,31 @@
 
 'use strict';
 
-function makeTransitionMap(suffix) {
-  var suffixCapitalized = suffix.charAt(0).toUpperCase() + suffix.substr(1);
+/**
+ * Generate a mapping of standard vendor prefixes using the defined style property and event name.
+ *
+ * @param {string} styleProp
+ * @param {string} eventName
+ * @returns {object}
+ */
+function makePrefixMap(styleProp, eventName) {
+  var prefixes = {};
 
-  return {
-    transition: 'transition' + suffix,
-    WebkitTransition: 'webkitTransition' + suffixCapitalized,
-    MozTransition: 'mozTransition' + suffixCapitalized,
-    msTransition: 'MSTransition' + suffixCapitalized,
-    OTransition: 'oTransition' + suffixCapitalized + ' otransition' + suffix,
-  };
+  prefixes[styleProp.toLowerCase()] = eventName.toLowerCase();
+  prefixes['Webkit' + styleProp] = 'webkit' + eventName;
+  prefixes['Moz' + styleProp] = 'moz' + eventName;
+  prefixes['ms' + styleProp] = 'MS' + eventName;
+  prefixes['O' + styleProp] = 'o' + eventName + ' o' + eventName.toLowerCase();
+
+  return prefixes;
 }
 
+/**
+ * Generate a simple transition validator function.
+ *
+ * @param {string} suffix
+ * @returns {function}
+ */
 function makeTransitionValidator(suffix) {
   return function() {
     if (!('TransitionEvent' in window)) {
@@ -35,16 +48,10 @@ function makeTransitionValidator(suffix) {
  * A list of event names to a configurable list of vendor prefixes.
  */
 var vendorPrefixes = {
-  animationend: {
-    animation: 'animationend',
-    WebkitAnimation: 'webkitAnimationEnd',
-    MozAnimation: 'mozAnimationEnd',
-    msAnimation: 'MSAnimationEnd',
-    OAnimation: 'oAnimationEnd oanimationend',
-  },
-  transitionstart: makeTransitionMap('start'),
-  transitionend: makeTransitionMap('end'),
-  transitioncancel: makeTransitionMap('cancel'),
+  animationend: makePrefixMap('Animation', 'AnimationEnd'),
+  transitionstart: makePrefixMap('Transition', 'TransitionStart'),
+  transitionend: makePrefixMap('Transition', 'TransitionEnd'),
+  transitioncancel: makePrefixMap('Transition', 'TransitionCancel'),
 };
 
 /**
