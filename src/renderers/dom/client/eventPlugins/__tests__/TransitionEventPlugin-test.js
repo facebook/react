@@ -41,33 +41,40 @@ describe('TransitionEventPlugin', function() {
       },
 
       onTransitionStart(e) {
-        expect(e.type).toBe('transitionstart');
+        // expect(e.type).toBe('transitionstart');
+        console.log('onTransitionStart');
       },
 
       onTransitionEnd(e) {
-        called = true;
+        /*called = true;
         expect(e.type).toBe('transitionend');
         expect(e.propertyName).toBe('color');
-        expect(e.elapsedTime).toBeDefined();
+        expect(e.elapsedTime).toBeDefined();*/
+        console.log('onTransitionEnd');
       },
 
       onTransitionCancel(e) {
-        expect(e.type).toBe('transitioncancel');
+        // expect(e.type).toBe('transitioncancel');
+        console.log('onTransitionCancel');
       },
 
       render() {
         var style = {
           color: this.state.color,
-          transition: 'all 1ms linear',
+          background: '#fff',
+          transition: 'color 1ms linear, background 1s ease',
         };
 
         return (
           <div
+            className="trans-test"
             onClick={this.onClick}
             onTransitionStart={this.onTransitionStart}
             onTransitionEnd={this.onTransitionEnd}
             onTransitionCancel={this.onTransitionCancel}
-            style={style}>Foo</div>
+            style={style}>
+              Foo
+          </div>
         );
       },
     });
@@ -79,5 +86,7 @@ describe('TransitionEventPlugin', function() {
     ReactTestUtils.Simulate.click(container.childNodes[0]);
 
     expect(called).toBe(true);
+
+    jest.runAllTimers();
   });
 });
