@@ -44,4 +44,18 @@ SyntheticEvent.augmentClass(
   TransitionEventInterface
 );
 
+// Polyfill for the browsers `TransitionEvent`
+SyntheticTransitionEvent.TransitionEvent = function(type) {
+  this.type = type || '';
+  this.target = null;
+  this.propertyName = '';
+  this.elapsedTime = 0;
+  this.pseudoElement = '';
+  this.bubbles = true;
+  this.cancelable = false;
+  this.defaultPrevented = false;
+  this.isTrusted = true;
+  this.eventPhase = 0;
+};
+
 module.exports = SyntheticTransitionEvent;

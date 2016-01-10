@@ -25,45 +25,46 @@ describe('TransitionEventPlugin', function() {
   });
 
   it('should fire transitionend events', function() {
-    var called = false;
+    var startOrder = [];
+    var endOrder = [];
 
     var TransTest = React.createClass({
       getInitialState() {
         return {
           color: 'black',
+          background: '#fff',
+          padding: 10,
         };
       },
 
       onClick() {
         this.setState({
-          color: (this.state.color === 'red') ? 'black' : 'red',
+          color: 'red',
+          background: '#000',
+          padding: 15,
         });
       },
 
       onTransitionStart(e) {
-        // expect(e.type).toBe('transitionstart');
-        console.log('onTransitionStart');
+        expect(e.type).toBe('transitionstart');
+        startOrder.push(e.propertyName);
+        // console.log('onTransitionStart', e.type, e.propertyName, e.elapsedTime);
       },
 
       onTransitionEnd(e) {
-        /*called = true;
         expect(e.type).toBe('transitionend');
-        expect(e.propertyName).toBe('color');
-        expect(e.elapsedTime).toBeDefined();*/
-        console.log('onTransitionEnd');
+        endOrder.push(e.propertyName);
+        // console.log('onTransitionEnd', e.type, e.propertyName, e.elapsedTime);
       },
 
       onTransitionCancel(e) {
-        // expect(e.type).toBe('transitioncancel');
-        console.log('onTransitionCancel');
+        expect(e.type).toBe('transitioncancel');
+        // console.log('onTransitionCancel', e.type, e.propertyName, e.elapsedTime);
       },
 
       render() {
-        var style = {
-          color: this.state.color,
-          background: '#fff',
-          transition: 'color 1ms linear, background 1s ease',
-        };
+        var style = this.state;
+        style.transition = 'color 100ms linear, background 1s ease, padding .5s';
 
         return (
           <div
@@ -85,8 +86,9 @@ describe('TransitionEventPlugin', function() {
 
     ReactTestUtils.Simulate.click(container.childNodes[0]);
 
-    expect(called).toBe(true);
-
     jest.runAllTimers();
+
+    expect(startOrder).toEqual(['background-color', 'background', 'color', 'padding']);
+    expect(endOrder).toEqual(['color', 'padding', 'background-color', 'background']);
   });
 });

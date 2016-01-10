@@ -82,9 +82,10 @@ var prefixedEventNames = {};
  * Attempts to determine the correct vendor prefixed event name.
  *
  * @param {string} eventName
+ * @param {boolean} returnDefault
  * @returns {string}
  */
-function getVendorPrefixedEventName(eventName) {
+function getVendorPrefixedEventName(eventName, returnDefault) {
   if (prefixedEventNames[eventName]) {
     return prefixedEventNames[eventName];
 
@@ -109,7 +110,7 @@ function getVendorPrefixedEventName(eventName) {
     }
   }
 
-  return '';
+  return returnDefault ? eventName : '';
 }
 
 module.exports = getVendorPrefixedEventName;

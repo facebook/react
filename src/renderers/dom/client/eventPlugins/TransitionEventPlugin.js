@@ -13,8 +13,13 @@
 
 /* eslint no-unused-vars: 0 */
 
+var EventConstants = require('EventConstants');
+var EventListener = require('EventListener');
+var EventPluginHub = require('EventPluginHub');
+var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactUpdates = require('ReactUpdates');
 var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
 
 var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
@@ -30,6 +35,7 @@ var supportsTransitions = (
 // Events and their corresponding property names.
 var eventTypes = {
   fakeTransitionStart: {
+    eventName: getVendorPrefixedEventName('transitionstart', true),
     phasedRegistrationNames: {
       bubbled: keyOf({onTransitionStart: true}),
       captured: keyOf({onTransitionStartCapture: true}),
@@ -37,6 +43,7 @@ var eventTypes = {
     dependencies: [],
   },
   fakeTransitionEnd: {
+    eventName: getVendorPrefixedEventName('transitionend', true),
     phasedRegistrationNames: {
       bubbled: keyOf({onTransitionEnd: true}),
       captured: keyOf({onTransitionEndCapture: true}),
@@ -44,6 +51,7 @@ var eventTypes = {
     dependencies: [],
   },
   fakeTransitionCancel: {
+    eventName: getVendorPrefixedEventName('transitioncancel', true),
     phasedRegistrationNames: {
       bubbled: keyOf({onTransitionCancel: true}),
       captured: keyOf({onTransitionCancelCapture: true}),
@@ -125,16 +133,31 @@ function extractDOMElementTransitions(style) {
  *
  * @param {string} transition
  * @returns {object}
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/transition
  */
 function extractReactElementTransitions(transition) {
   var transitions = {};
 
+  if (transition === 'initial' || transition === 'none' || transition === 'inherit') {
+    return transitions; // TODO inherit?
+  }
+
+  // TODO handle functions like cubic-bezier()
   transition.split(',').forEach(trans => {
-    var transParts = trans.trim().split(' '); // TODO handle functions like cubic-bezier()
+    var transParts = trans.trim().split(' ');
     var prop = transParts[0];
-    var delay = transParts[1]; // TODO, how is delay defined when all combined?
     var duration = transParts[1];
-    var timing = transParts[2];
+    var delay = '0s';
+    var timing = 'ease';
+
+    if (transParts[2]) {
+      if (transParts[2].match(/[\.\d]+m?s/)) {
+        delay = transParts[2];
+      } else {
+        timing = transParts[2];
+        delay = transParts[3];
+      }
+    }
 
     transitions[prop] = {
       property: prop,
@@ -142,7 +165,7 @@ function extractReactElementTransitions(transition) {
       delay: convertTimeToMilliseconds(delay),
       durationString: duration || '',
       duration: convertTimeToMilliseconds(duration),
-      timingFunc: timing || 'ease',
+      timingFunc: timing,
     };
   });
 
@@ -153,11 +176,11 @@ function extractReactElementTransitions(transition) {
  * Generate a function that monitors for changes on an element's style object.
  * If a property has changed, emit the "start -> end / cancel" cycle.
  *
- * @param {object} config
+ * @param {object} monitorConfig
  * @param {function} oldOnChange
  * @returns {function}
  */
-function monitorStyleChanges(config, oldOnChange) {
+function monitorStyleChanges(monitorConfig, oldOnChange) {
   return function(cssText) {
     oldOnChange.apply(oldOnChange, arguments);
 
@@ -168,27 +191,28 @@ function monitorStyleChanges(config, oldOnChange) {
 
       var cssDeclParts = cssDecl.trim().split(':', 2);
       var prop = cssDeclParts[0].trim();
-      var groupProp = (prop.indexOf('-') >= 0) ? prop.split('-')[0] : prop; // background-color -> background
+      var shorthandProp = (prop.indexOf('-') >= 0) ? prop.split('-')[0] : prop; // background-color -> background
       var value = cssDeclParts[1].trim();
 
       // Determine if we are monitoring this specific prop for transition changes
-      var transitionConfig = config.transitions[prop] || config.transitions[groupProp];
+      var transitionConfig = monitorConfig.transitions[prop] || monitorConfig.transitions[shorthandProp];
 
       if (!transitionConfig) {
         return;
       }
 
-      // Compare it to the current style
+      // TODO this doesn't work?
+      // Compare the new style to the current style
       // If they are different, start the transition event cycle
-      if (config.currentStyle[prop] && value !== config.currentStyle[prop]) {
-        config.previousStyle[prop] = config.currentStyle[prop];
-        config.currentStyle[prop] = value;
+      //if (monitorConfig.currentStyle[prop] && value !== monitorConfig.currentStyle[prop]) {
+      //  monitorConfig.previousStyle[prop] = monitorConfig.currentStyle[prop];
+      //  monitorConfig.currentStyle[prop] = value;
 
-        emitStartEvent(config, transitionConfig, prop, value);
-      }
+      startEventCycle(monitorConfig, transitionConfig, prop, value);
+      //}
 
       // Make sure the cached instance is updated
-      monitoredElements[config.id] = config;
+      monitoredElements[monitorConfig.id] = monitorConfig;
     });
   };
 }
@@ -223,54 +247,124 @@ function prepareElementMonitoring(inst) {
     timers: {
       start: {},
       end: {},
-      cancel: {},
     },
   };
 
   // Override the built-in style onChange event
+  // TODO Does this work correctly and consistently?
   style._onChange = monitorStyleChanges(config, style._onChange);
 
   return config;
 }
 
 /**
- * Starts the transition event cycle.
+ * Create a `SyntheticTransitionEvent` based on the browsers DOM `TransitionEvent`.
  *
- * @param {object} config
+ * @parma {object} dispatchConfig
+ * @param {string} type
+ * @param {ReactDOMComponent} inst
+ * @returns {SyntheticTransitionEvent}
+ */
+function createSyntheticEvent(dispatchConfig, type, inst) {
+  var event = new SyntheticTransitionEvent.TransitionEvent(type);
+  event.target = event.currentTarget = ReactDOMComponentTree.getNodeFromInstance(inst);
+
+  return new SyntheticTransitionEvent(dispatchConfig, inst, event, event.target);
+}
+
+/**
+ * Start the transition event cycle by setting timers for the "start" and "end" events.
+ * Once these timers execute, they will dispatch an event to React's internal event system.
+ *
+ * @param {object} monitorConfig
  * @param {object} transitionConfig
- * @param {string} prop
+ * @param {string} propName
  * @param {string} value
  */
-function emitStartEvent(config, transitionConfig, prop, value) {
-  var startListener = config.listeners.start;
-  var endListener = config.listeners.end;
-  var cancelListener = config.listeners.cancel;
+function startEventCycle(monitorConfig, transitionConfig, propName, value) {
+  // If a display none occurs, we must cancel all events
+  if (propName === 'display' && value === 'none') {
+    cancelAllEvents(monitorConfig);
+    return;
+  }
 
-  // TODO - Replace with reacts built-in events
-  // This is merely for testing right now
-  clearTimeout(config.timers.start[prop]);
-  clearTimeout(config.timers.end[prop]);
+  // Clear previous timers and trigger "cancel" event if necessary
+  cancelEventCycle(monitorConfig, transitionConfig, propName);
 
-  config.timers.start[prop] = setTimeout(function() {
-    var startTime = Date.now();
-    console.log('TRANSITIONSTART', startTime);
+  // Fire the start event
+  monitorConfig.timers.start[propName] = setTimeout(function() {
+    transitionConfig.startTime = Date.now();
+    dispatchEvent(eventTypes.fakeTransitionStart, transitionConfig, monitorConfig.instance, propName);
 
-    // Trigger the bound client listener
-    if (startListener) {
-      startListener.apply(startListener, arguments);
-    }
-
-    // Start the timer for the end event
-    config.timers.end[prop] = setTimeout(function() {
-      var endTime = Date.now();
-      console.log('TRANSITIONEND', endTime, endTime - startTime);
-
-      // Trigger the bound client listener
-      if (endListener) {
-        endListener.apply(endListener, arguments);
-      }
+    // Fire the end event after the start
+    monitorConfig.timers.end[propName] = setTimeout(function() {
+      transitionConfig.endTime = Date.now();
+      dispatchEvent(eventTypes.fakeTransitionEnd, transitionConfig, monitorConfig.instance, propName);
     }, transitionConfig.duration || 0);
+
   }, transitionConfig.delay || 0);
+}
+
+/**
+ * Reset the "start" and "end" event timers for a single property, and trigger a "cancel" event if applicable.
+ *
+ * @param {object} monitorConfig
+ * @param {object} transitionConfig
+ * @param {string} propName
+ */
+function cancelEventCycle(monitorConfig, transitionConfig, propName) {
+  var isRunning = !!monitorConfig.timers.end[propName];
+
+  // Clear previous timers
+  clearTimeout(monitorConfig.timers.start[propName]);
+  clearTimeout(monitorConfig.timers.end[propName]);
+  monitorConfig.timers.start[propName] = null;
+  monitorConfig.timers.end[propName] = null;
+
+  // Fire the cancel event if applicable
+  if (isRunning) {
+    transitionConfig.endTime = Date.now();
+    dispatchEvent(eventTypes.fakeTransitionCancel, transitionConfig, monitorConfig.instance, propName);
+  }
+}
+
+/**
+ * Reset all "start" and "end" events and fire "cancel" events.
+ *
+ * @param {object} monitorConfig
+ */
+function cancelAllEvents(monitorConfig) {
+  for (var propName in monitorConfig.transitions) {
+    cancelEventCycle(monitorConfig, monitorConfig.transitions[propName], propName);
+  }
+}
+
+/**
+ * Create a synthetic event and dispatch it to React's event system.
+ *
+ * @param {object} dispatchConfig
+ * @param {object} transitionConfig
+ * @param {ReactDOMComponent} inst
+ * @param {string} propName
+ */
+function dispatchEvent(dispatchConfig, transitionConfig, inst, propName) {
+  var event = createSyntheticEvent(dispatchConfig, dispatchConfig.eventName, inst);
+  event.propertyName = event.nativeEvent.propertyName = propName;
+
+  if (transitionConfig.endTime && transitionConfig.startTime) {
+    event.elapsedTime = event.nativeEvent.elapsedTime = (transitionConfig.endTime - transitionConfig.startTime) / 1000; // Needs to be in seconds
+  }
+
+  if (dispatchConfig.phasedRegistrationNames) {
+    EventPropagators.accumulateTwoPhaseDispatches(event);
+  } else {
+    EventPropagators.accumulateDirectDispatches(event);
+  }
+
+  ReactUpdates.batchedUpdates(function() {
+    EventPluginHub.enqueueEvents(event);
+    EventPluginHub.processEventQueue(true);
+  });
 }
 
 var TransitionEventPlugin = {
@@ -280,7 +374,7 @@ var TransitionEventPlugin = {
   /**
    * Transitions don't require top level events.
    */
-  extractEvents: function(topLevelType, targetInst, nativeEvent, nativeEventTarget) {
+  extractEvents: function() {
     return null;
   },
 
@@ -308,6 +402,15 @@ var TransitionEventPlugin = {
     }
 
     monitoredElements[inst._rootNodeID] = monitorInst;
+  },
+
+  /**
+   * Remove the monitoring.
+   *
+   * @param {ReactDOMComponent} inst
+   */
+  willDeleteListener: function(inst) {
+    delete monitoredElements[inst._rootNodeID];
   },
 };
 
