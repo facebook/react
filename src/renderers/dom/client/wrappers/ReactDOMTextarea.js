@@ -22,6 +22,7 @@ var warning = require('warning');
 
 var didWarnValueLink = false;
 var didWarnValueNull = false;
+var didWarnValDefaultVal = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
@@ -90,6 +91,16 @@ var ReactDOMTextarea = {
           '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
         );
         didWarnValueLink = true;
+      }
+      if (props.value !== undefined && props.defaultValue !== undefined && !didWarnValDefaultVal) {
+        warning(
+          false,
+          'Textarea elements must be either controlled or uncontrolled (specify either the value ' +
+          'prop, or the defaultValue prop, but not both). Decide between using a controlled or ' +
+          'uncontrolled input and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components'
+        );
+        didWarnValDefaultVal = true;
       }
       warnIfValueIsNull(props);
     }
