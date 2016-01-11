@@ -278,4 +278,22 @@ describe('ReactDOMTextarea', function() {
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
     expect(console.error.argsForCall.length).toBe(1);
   });
+
+  it('should throw warning message if value and defaultValue are specified', function() {
+    spyOn(console, 'error');
+    ReactTestUtils.renderIntoDocument(
+      <textarea value="foo" defaultValue="bar" readOnly={true} />
+    );
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Textarea elements must be either controlled or uncontrolled (specify either the value ' +
+      'prop, or the defaultValue prop, but not both). Decide between using a controlled or ' +
+      'uncontrolled input and remove one of these props. More info: ' +
+      'https://fb.me/react-controlled-components'
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <textarea value="foo" defaultValue="bar" readOnly={true} />
+    );
+    expect(console.error.argsForCall.length).toBe(1);
+  });
 });
