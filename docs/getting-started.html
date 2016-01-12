@@ -433,7 +433,7 @@
 <div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babelify babel-preset-react
 <span class="nv">$ </span>browserify -t <span class="o">[</span> babelify --presets <span class="o">[</span> react <span class="o">]</span> <span class="o">]</span> main.js -o bundle.js
 </code></pre></div>
-<p>To install React DOM and build your bundle with webpack:  </p>
+<p>To install React DOM and build your bundle with webpack:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babel-preset-react
 <span class="nv">$ </span>webpack
 </code></pre></div>
@@ -442,7 +442,14 @@
 
 <p>If you are using ES2015, you will want to also use the <code>babel-preset-es2015</code> package.</p>
 </blockquote>
-<h2><a class="anchor" name="quick-start-without-npm"></a>Quick Start Without npm <a class="hash-link" href="#quick-start-without-npm">#</a></h2>
+
+<p><strong>Note:</strong> by default, React will be in development mode, which is slower, and not advised for production. To use React in production mode, set the environment variable <code>NODE_ENV</code> to <code>production</code> (using envify or webpack&#39;s DefinePlugin). For example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">DefinePlugin</span><span class="p">({</span>
+  <span class="s2">&quot;process.env&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">NODE_ENV</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="s2">&quot;production&quot;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div><h2><a class="anchor" name="quick-start-without-npm"></a>Quick Start Without npm <a class="hash-link" href="#quick-start-without-npm">#</a></h2>
 <p>If you&#39;re not ready to use npm yet, you can download the starter kit which includes prebuilt copies of React and React DOM.</p>
 
 <div class="buttons-unit downloads">
