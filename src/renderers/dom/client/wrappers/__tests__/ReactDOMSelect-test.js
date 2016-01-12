@@ -462,7 +462,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should throw warning message if value is null', function() {
+  it('should warn if value is null', function() {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
@@ -491,7 +491,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toBe('giraffe');
   });
 
-  it('should throw warning message if value and defaultValue props are specified', function() {
+  it('should warn if value and defaultValue props are specified', function() {
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(
       <select value="giraffe" defaultValue="giraffe" readOnly={true}>
@@ -501,9 +501,10 @@ describe('ReactDOMSelect', function() {
       </select>
     );
     expect(console.error.argsForCall[0][0]).toContain(
-      'Select elements must be either controlled or uncontrolled (specify either the ' +
-      'value prop, or the defaultValue prop, but not both). Decide between using a ' +
-      'controlled or uncontrolled select element and remove one of these props. More info: ' +
+      'Select elements must be either controlled or uncontrolled ' +
+      '(specify either the value prop, or the defaultValue prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled select ' +
+      'element and remove one of these props. More info: ' +
       'https://fb.me/react-controlled-components'
     );
 
