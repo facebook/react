@@ -66,9 +66,7 @@ factoryFunction createFactory(
 )
 ```
 
-Return a function that produces ReactElements of a given type. Like `React.createElement`,
-the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a
-`ReactClass`.
+Return a function that produces ReactElements of a given type. Like `React.createElement`, the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a `ReactClass`.
 
 
 ### React.isValidElement
