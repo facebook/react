@@ -45,7 +45,7 @@ describe('ReactElement', function() {
   });
 
   it('uses the fallback value when in an environment without Symbol', function() {
-    expect(<div />.$$typeof).toBe(0xeac7);
+    expect(<div />.$$typeof).toBe(Infinity);
   });
 
   it('returns a complete element according to spec', function() {
@@ -207,7 +207,9 @@ describe('ReactElement', function() {
     expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
 
     var jsonElement = JSON.stringify(React.createElement('div'));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(true);
+    // Should be false, even with Symbol not present, due to Infinity value
+    // which cannot be serialized into/from JSON.
+    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
   it('allows the use of PropTypes validators in statics', function() {
