@@ -247,6 +247,7 @@ number deltaY
 number deltaZ
 ```
 
+
 ### Media Events
 
 Event names:
@@ -255,10 +256,28 @@ Event names:
 onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
 ```
 
+
 ### Image Events
 
 Event names:
 
 ```
 onLoad onError
+```
+
+
+### Transition Events
+
+Event names:
+
+```
+onTransitionStart onTransitionEnd onTransitionCancel
+```
+
+Properties:
+
+```javascript
+string propertyName
+string pseudoElement
+float elapsedTime
 ```

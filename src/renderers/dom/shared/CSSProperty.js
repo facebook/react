@@ -131,6 +131,18 @@ var shorthandPropertyExpansions = {
     outlineStyle: true,
     outlineColor: true,
   },
+  padding: {
+    paddingTop: true,
+    paddingRight: true,
+    paddingBottom: true,
+    paddingLeft: true,
+  },
+  margin: {
+    marginTop: true,
+    marginRight: true,
+    marginBottom: true,
+    marginLeft: true,
+  },
 };
 
 var CSSProperty = {
