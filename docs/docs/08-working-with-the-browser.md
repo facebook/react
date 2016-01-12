@@ -12,7 +12,7 @@ React provides powerful abstractions that free you from touching the DOM directl
 
 React is very fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. `render()` methods actually return a *description* of the DOM, and React can compare this description with the in-memory representation to compute the fastest way to update the browser.
 
-Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and efficiently across browsers. You can even use some HTML5 events in IE8!
+Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and efficiently across browsers. You can even use some HTML5 events in older browsers that don't ordinarily support them!
 
 Most of the time you should stay within React's "faked browser" world since it's more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.
 
@@ -53,45 +53,8 @@ _Mounted_ composite components also support the following method:
 
 * `component.forceUpdate()` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`.
 
-## Browser Support and Polyfills
+## Browser Support
 
-At Facebook, we support older browsers, including IE8. We've had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don't have a bunch of hacks scattered throughout our codebase and we can still expect our code to "just work". For example, instead of seeing `+new Date()`, we can just write `Date.now()`. Since the open source React is the same as what we use internally, we've carried over this philosophy of using forward thinking JS.
+React supports most popular browsers, including Internet Explorer 9 and above.
 
-In addition to that philosophy, we've also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there's a good chance you'd be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you're already using something like [es5-shim](https://github.com/es-shims/es5-shim).
-
-### Polyfills Needed to Support Older Browsers
-
-`es5-shim.js` from [kriskowal's es5-shim](https://github.com/es-shims/es5-shim) provides the following that React needs:
-
-* `Array.isArray`
-* `Array.prototype.every`
-* `Array.prototype.forEach`
-* `Array.prototype.indexOf`
-* `Array.prototype.map`
-* `Date.now`
-* `Function.prototype.bind`
-* `Object.keys`
-* `String.prototype.split`
-* `String.prototype.trim`
-
-`es5-sham.js`, also from [kriskowal's es5-shim](https://github.com/es-shims/es5-shim), provides the following that React needs:
-
-* `Object.create`
-* `Object.freeze`
-
-The unminified build of React needs the following from [paulmillr's console-polyfill](https://github.com/paulmillr/console-polyfill).
-
-* `console.*`
-
-When using HTML5 elements in IE8 including `<section>`, `<article>`, `<nav>`, `<header>`, and `<footer>`, it's also necessary to include [html5shiv](https://github.com/aFarkas/html5shiv) or a similar script.
-
-### Cross-browser Issues
-
-Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn't find a workaround for.
-
-#### onScroll event on IE8
-
-On IE8 the `onScroll` event doesn't bubble and IE8 doesn't have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
-Currently a handler to this event is ignored on IE8.
-
-See the [onScroll doesn't work in IE8](https://github.com/facebook/react/issues/631) GitHub issue for more information.
+(We don't support older browsers that don't support ES5 methods, but you may find that your apps do work in older browsers if polyfills such as [es5-shim and es5-sham](https://github.com/es-shims/es5-shim) are included in the page. You're on your own if you choose to take this path.)
