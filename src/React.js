@@ -16,53 +16,11 @@ var ReactDOMServer = require('ReactDOMServer');
 var ReactIsomorphic = require('ReactIsomorphic');
 
 var assign = require('Object.assign');
-var deprecated = require('deprecated');
 
 // `version` will be added here by ReactIsomorphic.
 var React = {};
 
 assign(React, ReactIsomorphic);
-
-assign(React, {
-  // ReactDOM
-  findDOMNode: deprecated(
-    'findDOMNode',
-    'ReactDOM',
-    'react-dom',
-    ReactDOM,
-    ReactDOM.findDOMNode
-  ),
-  render: deprecated(
-    'render',
-    'ReactDOM',
-    'react-dom',
-    ReactDOM,
-    ReactDOM.render
-  ),
-  unmountComponentAtNode: deprecated(
-    'unmountComponentAtNode',
-    'ReactDOM',
-    'react-dom',
-    ReactDOM,
-    ReactDOM.unmountComponentAtNode
-  ),
-
-  // ReactDOMServer
-  renderToString: deprecated(
-    'renderToString',
-    'ReactDOMServer',
-    'react-dom/server',
-    ReactDOMServer,
-    ReactDOMServer.renderToString
-  ),
-  renderToStaticMarkup: deprecated(
-    'renderToStaticMarkup',
-    'ReactDOMServer',
-    'react-dom/server',
-    ReactDOMServer,
-    ReactDOMServer.renderToStaticMarkup
-  ),
-});
 
 React.__SECRET_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactDOM;
 React.__SECRET_DOM_SERVER_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactDOMServer;
