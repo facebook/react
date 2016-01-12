@@ -434,7 +434,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name="event-handling-and-synthetic-events"></a>Event Handling and Synthetic Events <a class="hash-link" href="#event-handling-and-synthetic-events">#</a></h2>
-<p>With React you simply pass your event handler as a camelCased prop similar to how you&#39;d do it in normal HTML. React ensures that all events behave identically in IE8 and above by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with <a href="http://www.w3.org/TR/DOM-Level-3-Events/">the W3C spec</a>, regardless of which browser you&#39;re using.</p>
+<p>With React you simply pass your event handler as a camelCased prop similar to how you&#39;d do it in normal HTML. React ensures that all events behave similarly in all browsers by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with <a href="http://www.w3.org/TR/DOM-Level-3-Events/">the W3C spec</a>, regardless of which browser you&#39;re using.</p>
 <h2><a class="anchor" name="under-the-hood-autobinding-and-event-delegation"></a>Under the Hood: Autobinding and Event Delegation <a class="hash-link" href="#under-the-hood-autobinding-and-event-delegation">#</a></h2>
 <p>Under the hood, React does a few things to keep your code performant and easy to understand.</p>
 

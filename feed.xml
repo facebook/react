@@ -7,6 +7,19 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Discontinuing IE 8 Support in React DOM</title>
+				<description>&lt;p&gt;Since its 2013 release, React has supported all popular browsers, including Internet Explorer 8 and above. We handle normalizing many quirks present in old browser versions, including event system differences, so that your app code doesn&amp;#39;t have to worry about most browser bugs.&lt;/p&gt;
+
+&lt;p&gt;Today, Microsoft &lt;a href=&quot;https://www.microsoft.com/en-us/WindowsForBusiness/End-of-IE-support&quot;&gt;discontinued support for older versions of IE&lt;/a&gt;. Starting with React v15, we&amp;#39;re discontinuing React DOM&amp;#39;s support for IE 8. We&amp;#39;ve heard that most React DOM apps already don&amp;#39;t support old versions of Internet Explorer, so this shouldn&amp;#39;t affect many people. This change will help us develop faster and make React DOM even better. (We won&amp;#39;t actively remove IE 8–related code quite yet, but we will deprioritize new bugs that are reported. If you need to support IE 8 we recommend you stay on React v0.14.)&lt;/p&gt;
+
+&lt;p&gt;React DOM will continue to support IE 9 and above for the foreseeable future.&lt;/p&gt;
+</description>
+				<pubDate>2016-01-12T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/01/12/discontinuing-ie8-support.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/01/12/discontinuing-ie8-support.html</guid>
+			</item>
+		
+			<item>
 				<title>(A =&gt; B) !=&gt; (B =&gt; A)</title>
 				<description>&lt;p&gt;The documentation for &lt;code&gt;componentWillReceiveProps&lt;/code&gt; states that &lt;code&gt;componentWillReceiveProps&lt;/code&gt; will be invoked when the props change as the result of a rerender. Some people assume this means &amp;quot;if &lt;code&gt;componentWillReceiveProps&lt;/code&gt; is called, then the props must have changed&amp;quot;, but that conclusion is logically incorrect.&lt;/p&gt;
 
@@ -753,195 +766,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.1.m
 				<pubDate>2015-10-19T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/10/19/reactiflux-is-moving-to-discord.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/10/19/reactiflux-is-moving-to-discord.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.14</title>
-				<description>&lt;p&gt;We’re happy to announce the release of React 0.14 today! This release has a few major changes, primarily designed to simplify the code you write every day and to better support environments like React Native.&lt;/p&gt;
-
-&lt;p&gt;If you tried the release candidate, thank you – your support is invaluable and we&amp;#39;ve fixed a few bugs that you reported.&lt;/p&gt;
-
-&lt;p&gt;As with all of our releases, we consider this version to be stable enough to use in production and recommend that you upgrade in order to take advantage of our latest improvements.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrade-guide&quot;&gt;&lt;/a&gt;Upgrade Guide &lt;a class=&quot;hash-link&quot; href=&quot;#upgrade-guide&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Like always, we have a few breaking changes in this release. We know changes can be painful (the Facebook codebase has over 15,000 React components), so we always try to make changes gradually in order to minimize the pain.&lt;/p&gt;
-
-&lt;p&gt;If your code is free of warnings when running under React 0.13, upgrading should be easy. We have two new small breaking changes that didn&amp;#39;t give a warning in 0.13 (see below). Every new change in 0.14, including the major changes below, is introduced with a runtime warning and will work as before until 0.15, so you don&amp;#39;t have to worry about your app breaking with this upgrade.&lt;/p&gt;
-
-&lt;p&gt;For the two major changes which require significant code changes, we&amp;#39;ve included &lt;a href=&quot;https://github.com/reactjs/react-codemod/blob/master/README.md&quot;&gt;codemod scripts&lt;/a&gt; to help you upgrade your code automatically.&lt;/p&gt;
-
-&lt;p&gt;See the changelog below for more details.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;npm install --save react react-dom&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
-
-&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we provide pre-built browser builds for your convenience, which are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.0.js&quot;&gt;https://fb.me/react-0.14.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.0.min.js&quot;&gt;https://fb.me/react-0.14.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.0.js&quot;&gt;https://fb.me/react-with-addons-0.14.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.0.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.0.js&quot;&gt;https://fb.me/react-dom-0.14.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.0.min.js&quot;&gt;https://fb.me/react-dom-0.14.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;major-changes&quot;&gt;&lt;/a&gt;Major changes &lt;a class=&quot;hash-link&quot; href=&quot;#major-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;two-packages-react-and-react-dom&quot;&gt;&lt;/a&gt;Two Packages: React and React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#two-packages-react-and-react-dom&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;As we look at packages like &lt;a href=&quot;https://github.com/facebook/react-native&quot;&gt;react-native&lt;/a&gt;, &lt;a href=&quot;https://github.com/reactjs/react-art&quot;&gt;react-art&lt;/a&gt;, &lt;a href=&quot;https://github.com/Flipboard/react-canvas&quot;&gt;react-canvas&lt;/a&gt;, and &lt;a href=&quot;https://github.com/Izzimach/react-three&quot;&gt;react-three&lt;/a&gt;, it has become clear that the beauty and essence of React has nothing to do with browsers or the DOM.&lt;/p&gt;
-
-&lt;p&gt;To make this more clear and to make it easier to build more environments that React can render to, we’re splitting the main &lt;code&gt;react&lt;/code&gt; package into two: &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-dom&lt;/code&gt;. &lt;strong&gt;This paves the way to writing components that can be shared between the web version of React and React Native.&lt;/strong&gt; We don’t expect all the code in an app to be shared, but we want to be able to share the components that do behave the same across platforms.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code&gt;react&lt;/code&gt; package contains &lt;code&gt;React.createElement&lt;/code&gt;, &lt;code&gt;.createClass&lt;/code&gt;, &lt;code&gt;.Component&lt;/code&gt;, &lt;code&gt;.PropTypes&lt;/code&gt;, &lt;code&gt;.Children&lt;/code&gt;, and the other helpers related to elements and component classes. We think of these as the &lt;a href=&quot;http://nerds.airbnb.com/isomorphic-javascript-future-web-apps/&quot;&gt;&lt;em&gt;isomorphic&lt;/em&gt;&lt;/a&gt; or &lt;a href=&quot;https://medium.com/@mjackson/universal-javascript-4761051b7ae9&quot;&gt;&lt;em&gt;universal&lt;/em&gt;&lt;/a&gt; helpers that you need to build components.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code&gt;react-dom&lt;/code&gt; package has &lt;code&gt;ReactDOM.render&lt;/code&gt;, &lt;code&gt;.unmountComponentAtNode&lt;/code&gt;, and &lt;code&gt;.findDOMNode&lt;/code&gt;. In &lt;code&gt;react-dom/server&lt;/code&gt; we have server-side rendering support with &lt;code&gt;ReactDOMServer.renderToString&lt;/code&gt; and &lt;code&gt;.renderToStaticMarkup&lt;/code&gt;.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react-dom&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Hello&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;World&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;The old names will continue to work with a warning until 0.15 is released, and we’ve published the &lt;a href=&quot;https://github.com/reactjs/react-codemod/blob/master/README.md&quot;&gt;automated codemod script&lt;/a&gt; we used at Facebook to help you with this transition.&lt;/p&gt;
-
-&lt;p&gt;The add-ons have moved to separate packages as well:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;react-addons-clone-with-props&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-create-fragment&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-css-transition-group&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-linked-state-mixin&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-perf&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-pure-render-mixin&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-shallow-compare&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-test-utils&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-transition-group&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;react-addons-update&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;ReactDOM.unstable_batchedUpdates&lt;/code&gt; in &lt;code&gt;react-dom&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;For now, please use matching versions of &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-dom&lt;/code&gt; (and the add-ons, if you use them) in your apps to avoid versioning problems.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;dom-node-refs&quot;&gt;&lt;/a&gt;DOM node refs &lt;a class=&quot;hash-link&quot; href=&quot;#dom-node-refs&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;The other big change we’re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a &lt;code&gt;ref&lt;/code&gt; to a React DOM component and realized that the only useful thing you can do with it is call &lt;code&gt;this.refs.giraffe.getDOMNode()&lt;/code&gt; to get the underlying DOM node. Starting with this release, &lt;code&gt;this.refs.giraffe&lt;/code&gt; &lt;em&gt;is&lt;/em&gt; the actual DOM node. &lt;strong&gt;Note that refs to custom (user-defined) components work exactly as before; only the built-in DOM components are affected by this change.&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Zoo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Giraffe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;giraffe&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;showName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Previously: var input = this.refs.giraffe.getDOMNode();&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;refs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;giraffe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This change also applies to the return result of &lt;code&gt;ReactDOM.render&lt;/code&gt; when passing a DOM node as the top component. As with refs, this change does not affect custom components.&lt;/p&gt;
-
-&lt;p&gt;With this change, we’re deprecating &lt;code&gt;.getDOMNode()&lt;/code&gt; and replacing it with &lt;code&gt;ReactDOM.findDOMNode&lt;/code&gt; (see below). If your components are currently using &lt;code&gt;.getDOMNode()&lt;/code&gt;, they will continue to work with a warning until 0.15.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;stateless-functional-components&quot;&gt;&lt;/a&gt;Stateless functional components &lt;a class=&quot;hash-link&quot; href=&quot;#stateless-functional-components&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;In idiomatic React code, most of the components you write will be stateless, simply composing other components. We’re introducing a new, simpler syntax for these components where you can take &lt;code&gt;props&lt;/code&gt; as an argument and return the element you want to render:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// A functional component using an ES2015 (ES6) arrow function:&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Aquarium&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;fish&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;getFish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;species&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Tank&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;fish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Tank&amp;gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// Or with destructuring and an implicit return, simply:&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Aquarium&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;species&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Tank&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getFish&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;species&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Tank&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// Then use: &amp;lt;Aquarium species=&amp;quot;rainbowfish&amp;quot; /&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;These components behave just like a React class with only a &lt;code&gt;render&lt;/code&gt; method defined. Since no component instance is created for a functional component, any &lt;code&gt;ref&lt;/code&gt; added to one will evaluate to &lt;code&gt;null&lt;/code&gt;. Functional components do not have lifecycle methods, but you can set &lt;code&gt;.propTypes&lt;/code&gt; and &lt;code&gt;.defaultProps&lt;/code&gt; as properties on the function.&lt;/p&gt;
-
-&lt;p&gt;This pattern is designed to encourage the creation of these simple components that should comprise large portions of your apps. In the future, we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecation-of-react-tools&quot;&gt;&lt;/a&gt;Deprecation of react-tools &lt;a class=&quot;hash-link&quot; href=&quot;#deprecation-of-react-tools&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;The &lt;code&gt;react-tools&lt;/code&gt; package and &lt;code&gt;JSXTransformer.js&lt;/code&gt; browser file &lt;a href=&quot;/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html&quot;&gt;have been deprecated&lt;/a&gt;. You can continue using version &lt;code&gt;0.13.3&lt;/code&gt; of both, but we no longer support them and recommend migrating to &lt;a href=&quot;http://babeljs.io/&quot;&gt;Babel&lt;/a&gt;, which has built-in support for React and JSX.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;compiler-optimizations&quot;&gt;&lt;/a&gt;Compiler optimizations &lt;a class=&quot;hash-link&quot; href=&quot;#compiler-optimizations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;React now supports two compiler optimizations that can be enabled in Babel 5.8.24 and newer. Both of these transforms &lt;strong&gt;should be enabled only in production&lt;/strong&gt; (e.g., just before minifying your code) because although they improve runtime performance, they make warning messages more cryptic and skip important checks that happen in development mode, including propTypes.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Inlining React elements:&lt;/strong&gt; The &lt;code&gt;optimisation.react.inlineElements&lt;/code&gt; transform converts JSX elements to object literals like &lt;code&gt;{type: &amp;#39;div&amp;#39;, props: ...}&lt;/code&gt; instead of calls to &lt;code&gt;React.createElement&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Constant hoisting for React elements:&lt;/strong&gt; The &lt;code&gt;optimisation.react.constantElements&lt;/code&gt; transform hoists element creation to the top level for subtrees that are fully static, which reduces calls to &lt;code&gt;React.createElement&lt;/code&gt; and the resulting allocations. More importantly, it tells React that the subtree hasn’t changed so React can completely skip it when reconciling.&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;In almost all cases, we change our APIs gradually and warn for at least one release to give you time to clean up your code. These two breaking changes did not have a warning in 0.13 but should be easy to find and clean up:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.initializeTouchEvents&lt;/code&gt; is no longer necessary and has been removed completely. Touch events now work automatically.&lt;/li&gt;
-&lt;li&gt;Add-Ons: Due to the DOM node refs change mentioned above, &lt;code&gt;TestUtils.findAllInRenderedTree&lt;/code&gt; and related helpers are no longer able to take a DOM component, only a custom component.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;These three breaking changes had a warning in 0.13, so you shouldn’t have to do anything if your code is already free of warnings:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;The &lt;code&gt;props&lt;/code&gt; object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, &lt;a href=&quot;/react/docs/top-level-api.html#react.cloneelement&quot;&gt;&lt;code&gt;React.cloneElement&lt;/code&gt;&lt;/a&gt; should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.&lt;/li&gt;
-&lt;li&gt;Plain objects are no longer supported as React children; arrays should be used instead. You can use the &lt;a href=&quot;/react/docs/create-fragment.html&quot;&gt;&lt;code&gt;createFragment&lt;/code&gt;&lt;/a&gt; helper to migrate, which now returns an array.&lt;/li&gt;
-&lt;li&gt;Add-Ons: &lt;code&gt;classSet&lt;/code&gt; has been removed. Use &lt;a href=&quot;https://github.com/JedWatson/classnames&quot;&gt;classnames&lt;/a&gt; instead.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-deprecations-introduced-with-a-warning&quot;&gt;&lt;/a&gt;New deprecations, introduced with a warning &lt;a class=&quot;hash-link&quot; href=&quot;#new-deprecations-introduced-with-a-warning&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Each of these changes will continue to work as before with a new warning until the release of 0.15 so you can upgrade your code gradually.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Due to the DOM node refs change mentioned above, &lt;code&gt;this.getDOMNode()&lt;/code&gt; is now deprecated and &lt;code&gt;ReactDOM.findDOMNode(this)&lt;/code&gt; can be used instead. Note that in most cases, calling &lt;code&gt;findDOMNode&lt;/code&gt; is now unnecessary – see the example above in the “DOM node refs” section.&lt;/p&gt;
-
-&lt;p&gt;With each returned DOM node, we&amp;#39;ve added a &lt;code&gt;getDOMNode&lt;/code&gt; method for backwards compatibility that will work with a warning until 0.15. If you have a large codebase, you can use our &lt;a href=&quot;https://github.com/reactjs/react-codemod/blob/master/README.md&quot;&gt;automated codemod script&lt;/a&gt; to change your code automatically.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;&lt;code&gt;setProps&lt;/code&gt; and &lt;code&gt;replaceProps&lt;/code&gt; are now deprecated. Instead, call ReactDOM.render again at the top level with the new props.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;ES6 component classes must now extend &lt;code&gt;React.Component&lt;/code&gt; in order to enable stateless function components. The &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages&quot;&gt;ES3 module pattern&lt;/a&gt; will continue to work.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Reusing and mutating a &lt;code&gt;style&lt;/code&gt; object between renders has been deprecated. This mirrors our change to freeze the &lt;code&gt;props&lt;/code&gt; object.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Add-Ons: &lt;code&gt;cloneWithProps&lt;/code&gt; is now deprecated. Use &lt;a href=&quot;/react/docs/top-level-api.html#react.cloneelement&quot;&gt;&lt;code&gt;React.cloneElement&lt;/code&gt;&lt;/a&gt; instead (unlike &lt;code&gt;cloneWithProps&lt;/code&gt;, &lt;code&gt;cloneElement&lt;/code&gt; does not merge &lt;code&gt;className&lt;/code&gt; or &lt;code&gt;style&lt;/code&gt; automatically; you can merge them manually if needed).&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Add-Ons: To improve reliability, &lt;code&gt;CSSTransitionGroup&lt;/code&gt; will no longer listen to transition events. Instead, you should specify transition durations manually using props such as &lt;code&gt;transitionEnterTimeout={500}&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-enhancements&quot;&gt;&lt;/a&gt;Notable enhancements &lt;a class=&quot;hash-link&quot; href=&quot;#notable-enhancements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added &lt;code&gt;React.Children.toArray&lt;/code&gt; which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your &lt;code&gt;render&lt;/code&gt; methods, especially if you want to reorder or slice &lt;code&gt;this.props.children&lt;/code&gt; before passing it down. In addition, &lt;code&gt;React.Children.map&lt;/code&gt; now returns plain arrays too.&lt;/li&gt;
-&lt;li&gt;React uses &lt;code&gt;console.error&lt;/code&gt; instead of &lt;code&gt;console.warn&lt;/code&gt; for warnings so that browsers show a full stack trace in the console. (Our warnings appear when you use patterns that will break in future releases and for code that is likely to behave unexpectedly, so we do consider our warnings to be “must-fix” errors.)&lt;/li&gt;
-&lt;li&gt;Previously, including untrusted objects as React children &lt;a href=&quot;http://danlec.com/blog/xss-via-a-spoofed-react-element&quot;&gt;could result in an XSS security vulnerability&lt;/a&gt;. This problem should be avoided by properly validating input at the application layer and by never passing untrusted objects around your application code. As an additional layer of protection, &lt;a href=&quot;https://github.com/facebook/react/pull/4832&quot;&gt;React now tags elements&lt;/a&gt; with a specific &lt;a href=&quot;http://www.2ality.com/2014/12/es6-symbols.html&quot;&gt;ES2015 (ES6) &lt;code&gt;Symbol&lt;/code&gt;&lt;/a&gt; in browsers that support it, in order to ensure that React never considers untrusted JSON to be a valid element. If this extra security protection is important to you, you should add a &lt;code&gt;Symbol&lt;/code&gt; polyfill for older browsers, such as the one included by &lt;a href=&quot;http://babeljs.io/docs/usage/polyfill/&quot;&gt;Babel’s polyfill&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;When possible, React DOM now generates XHTML-compatible markup.&lt;/li&gt;
-&lt;li&gt;React DOM now supports these standard HTML attributes: &lt;code&gt;capture&lt;/code&gt;, &lt;code&gt;challenge&lt;/code&gt;, &lt;code&gt;inputMode&lt;/code&gt;, &lt;code&gt;is&lt;/code&gt;, &lt;code&gt;keyParams&lt;/code&gt;, &lt;code&gt;keyType&lt;/code&gt;, &lt;code&gt;minLength&lt;/code&gt;, &lt;code&gt;summary&lt;/code&gt;, &lt;code&gt;wrap&lt;/code&gt;. It also now supports these non-standard attributes: &lt;code&gt;autoSave&lt;/code&gt;, &lt;code&gt;results&lt;/code&gt;, &lt;code&gt;security&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;React DOM now supports these SVG attributes, which render into namespaced attributes: &lt;code&gt;xlinkActuate&lt;/code&gt;, &lt;code&gt;xlinkArcrole&lt;/code&gt;, &lt;code&gt;xlinkHref&lt;/code&gt;, &lt;code&gt;xlinkRole&lt;/code&gt;, &lt;code&gt;xlinkShow&lt;/code&gt;, &lt;code&gt;xlinkTitle&lt;/code&gt;, &lt;code&gt;xlinkType&lt;/code&gt;, &lt;code&gt;xmlBase&lt;/code&gt;, &lt;code&gt;xmlLang&lt;/code&gt;, &lt;code&gt;xmlSpace&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;image&lt;/code&gt; SVG tag is now supported by React DOM.&lt;/li&gt;
-&lt;li&gt;In React DOM, arbitrary attributes are supported on custom elements (those with a hyphen in the tag name or an &lt;code&gt;is=&amp;quot;...&amp;quot;&lt;/code&gt; attribute).&lt;/li&gt;
-&lt;li&gt;React DOM now supports these media events on &lt;code&gt;audio&lt;/code&gt; and &lt;code&gt;video&lt;/code&gt; tags: &lt;code&gt;onAbort&lt;/code&gt;, &lt;code&gt;onCanPlay&lt;/code&gt;, &lt;code&gt;onCanPlayThrough&lt;/code&gt;, &lt;code&gt;onDurationChange&lt;/code&gt;, &lt;code&gt;onEmptied&lt;/code&gt;, &lt;code&gt;onEncrypted&lt;/code&gt;, &lt;code&gt;onEnded&lt;/code&gt;, &lt;code&gt;onError&lt;/code&gt;, &lt;code&gt;onLoadedData&lt;/code&gt;, &lt;code&gt;onLoadedMetadata&lt;/code&gt;, &lt;code&gt;onLoadStart&lt;/code&gt;, &lt;code&gt;onPause&lt;/code&gt;, &lt;code&gt;onPlay&lt;/code&gt;, &lt;code&gt;onPlaying&lt;/code&gt;, &lt;code&gt;onProgress&lt;/code&gt;, &lt;code&gt;onRateChange&lt;/code&gt;, &lt;code&gt;onSeeked&lt;/code&gt;, &lt;code&gt;onSeeking&lt;/code&gt;, &lt;code&gt;onStalled&lt;/code&gt;, &lt;code&gt;onSuspend&lt;/code&gt;, &lt;code&gt;onTimeUpdate&lt;/code&gt;, &lt;code&gt;onVolumeChange&lt;/code&gt;, &lt;code&gt;onWaiting&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Many small performance improvements have been made.&lt;/li&gt;
-&lt;li&gt;Many warnings show more context than before.&lt;/li&gt;
-&lt;li&gt;Add-Ons: A &lt;a href=&quot;https://github.com/facebook/react/pull/3355&quot;&gt;&lt;code&gt;shallowCompare&lt;/code&gt;&lt;/a&gt; add-on has been added as a migration path for &lt;code&gt;PureRenderMixin&lt;/code&gt; in ES6 classes.&lt;/li&gt;
-&lt;li&gt;Add-Ons: &lt;code&gt;CSSTransitionGroup&lt;/code&gt; can now use &lt;a href=&quot;https://github.com/facebook/react/blob/48942b85/docs/docs/10.1-animation.md#custom-classes&quot;&gt;custom class names&lt;/a&gt; instead of appending &lt;code&gt;-enter-active&lt;/code&gt; or similar to the transition name.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-helpful-warnings&quot;&gt;&lt;/a&gt;New helpful warnings &lt;a class=&quot;hash-link&quot; href=&quot;#new-helpful-warnings&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.&lt;/li&gt;
-&lt;li&gt;Passing &lt;code&gt;document.body&lt;/code&gt; directly as the container to &lt;code&gt;ReactDOM.render&lt;/code&gt; now gives a warning as doing so can cause problems with browser extensions that modify the DOM.&lt;/li&gt;
-&lt;li&gt;Using multiple instances of React together is not supported, so we now warn when we detect this case to help you avoid running into the resulting problems.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-bug-fixes&quot;&gt;&lt;/a&gt;Notable bug fixes &lt;a class=&quot;hash-link&quot; href=&quot;#notable-bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Click events are handled by React DOM more reliably in mobile browsers, particularly in Mobile Safari.&lt;/li&gt;
-&lt;li&gt;SVG elements are created with the correct namespace in more cases.&lt;/li&gt;
-&lt;li&gt;React DOM now renders &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; elements with multiple text children properly and renders &lt;code&gt;&amp;lt;select&amp;gt;&lt;/code&gt; elements on the server with the correct option selected.&lt;/li&gt;
-&lt;li&gt;When two separate copies of React add nodes to the same document (including when a browser extension uses React), React DOM tries harder not to throw exceptions during event handling.&lt;/li&gt;
-&lt;li&gt;Using non-lowercase HTML tag names in React DOM (e.g., &lt;code&gt;React.createElement(&amp;#39;DIV&amp;#39;)&lt;/code&gt;) no longer causes problems, though we continue to recommend lowercase for consistency with the JSX tag name convention (lowercase names refer to built-in components, capitalized names refer to custom components).&lt;/li&gt;
-&lt;li&gt;React DOM understands that these CSS properties are unitless and does not append “px” to their values: &lt;code&gt;animationIterationCount&lt;/code&gt;, &lt;code&gt;boxOrdinalGroup&lt;/code&gt;, &lt;code&gt;flexOrder&lt;/code&gt;, &lt;code&gt;tabSize&lt;/code&gt;, &lt;code&gt;stopOpacity&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Add-Ons: When using the test utils, &lt;code&gt;Simulate.mouseEnter&lt;/code&gt; and &lt;code&gt;Simulate.mouseLeave&lt;/code&gt; now work.&lt;/li&gt;
-&lt;li&gt;Add-Ons: ReactTransitionGroup now correctly handles multiple nodes being removed simultaneously.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2015-10-07T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/10/07/react-v0.14.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/10/07/react-v0.14.html</guid>
 			</item>
 		
 	</channel>

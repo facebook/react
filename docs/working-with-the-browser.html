@@ -415,7 +415,7 @@
 <h2><a class="anchor" name="the-virtual-dom"></a>The Virtual DOM <a class="hash-link" href="#the-virtual-dom">#</a></h2>
 <p>React is very fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. <code>render()</code> methods actually return a <em>description</em> of the DOM, and React can compare this description with the in-memory representation to compute the fastest way to update the browser.</p>
 
-<p>Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and efficiently across browsers. You can even use some HTML5 events in IE8!</p>
+<p>Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and efficiently across browsers. You can even use some HTML5 events in older browsers that don&#39;t ordinarily support them!</p>
 
 <p>Most of the time you should stay within React&#39;s &quot;faked browser&quot; world since it&#39;s more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.</p>
 <h2><a class="anchor" name="refs-and-finddomnode"></a>Refs and findDOMNode() <a class="hash-link" href="#refs-and-finddomnode">#</a></h2>
@@ -453,47 +453,10 @@
 <ul>
 <li><code>component.forceUpdate()</code> can be invoked on any mounted component when you know that some deeper aspect of the component&#39;s state has changed without using <code>this.setState()</code>.</li>
 </ul>
-<h2><a class="anchor" name="browser-support-and-polyfills"></a>Browser Support and Polyfills <a class="hash-link" href="#browser-support-and-polyfills">#</a></h2>
-<p>At Facebook, we support older browsers, including IE8. We&#39;ve had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don&#39;t have a bunch of hacks scattered throughout our codebase and we can still expect our code to &quot;just work&quot;. For example, instead of seeing <code>+new Date()</code>, we can just write <code>Date.now()</code>. Since the open source React is the same as what we use internally, we&#39;ve carried over this philosophy of using forward thinking JS.</p>
+<h2><a class="anchor" name="browser-support"></a>Browser Support <a class="hash-link" href="#browser-support">#</a></h2>
+<p>React supports most popular browsers, including Internet Explorer 9 and above.</p>
 
-<p>In addition to that philosophy, we&#39;ve also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there&#39;s a good chance you&#39;d be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you&#39;re already using something like <a href="https://github.com/es-shims/es5-shim">es5-shim</a>.</p>
-<h3><a class="anchor" name="polyfills-needed-to-support-older-browsers"></a>Polyfills Needed to Support Older Browsers <a class="hash-link" href="#polyfills-needed-to-support-older-browsers">#</a></h3>
-<p><code>es5-shim.js</code> from <a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a> provides the following that React needs:</p>
-
-<ul>
-<li><code>Array.isArray</code></li>
-<li><code>Array.prototype.every</code></li>
-<li><code>Array.prototype.forEach</code></li>
-<li><code>Array.prototype.indexOf</code></li>
-<li><code>Array.prototype.map</code></li>
-<li><code>Date.now</code></li>
-<li><code>Function.prototype.bind</code></li>
-<li><code>Object.keys</code></li>
-<li><code>String.prototype.split</code></li>
-<li><code>String.prototype.trim</code></li>
-</ul>
-
-<p><code>es5-sham.js</code>, also from <a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a>, provides the following that React needs:</p>
-
-<ul>
-<li><code>Object.create</code></li>
-<li><code>Object.freeze</code></li>
-</ul>
-
-<p>The unminified build of React needs the following from <a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>.</p>
-
-<ul>
-<li><code>console.*</code></li>
-</ul>
-
-<p>When using HTML5 elements in IE8 including <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;header&gt;</code>, and <code>&lt;footer&gt;</code>, it&#39;s also necessary to include <a href="https://github.com/aFarkas/html5shiv">html5shiv</a> or a similar script.</p>
-<h3><a class="anchor" name="cross-browser-issues"></a>Cross-browser Issues <a class="hash-link" href="#cross-browser-issues">#</a></h3>
-<p>Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn&#39;t find a workaround for.</p>
-<h4><a class="anchor" name="onscroll-event-on-ie8"></a>onScroll event on IE8 <a class="hash-link" href="#onscroll-event-on-ie8">#</a></h4>
-<p>On IE8 the <code>onScroll</code> event doesn&#39;t bubble and IE8 doesn&#39;t have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
-Currently a handler to this event is ignored on IE8.</p>
-
-<p>See the <a href="https://github.com/facebook/react/issues/631">onScroll doesn&#39;t work in IE8</a> GitHub issue for more information.</p>
+<p>(We don&#39;t support older browsers that don&#39;t support ES5 methods, but you may find that your apps do work in older browsers if polyfills such as <a href="https://github.com/es-shims/es5-shim">es5-shim and es5-sham</a> are included in the page. You&#39;re on your own if you choose to take this path.)</p>
 
 
     <div class="docs-prevnext">
