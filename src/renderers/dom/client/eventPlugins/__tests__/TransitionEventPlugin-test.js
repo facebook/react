@@ -24,7 +24,7 @@ describe('TransitionEventPlugin', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should fire transitionend events', function() {
+  it('should fire transition events', function() {
     var startOrder = [];
     var endOrder = [];
 
@@ -48,18 +48,18 @@ describe('TransitionEventPlugin', function() {
       onTransitionStart(e) {
         expect(e.type).toBe('transitionstart');
         startOrder.push(e.propertyName);
-        // console.log('onTransitionStart', e.type, e.propertyName, e.elapsedTime);
+        //console.log('onTransitionStart', e);
       },
 
       onTransitionEnd(e) {
         expect(e.type).toBe('transitionend');
         endOrder.push(e.propertyName);
-        // console.log('onTransitionEnd', e.type, e.propertyName, e.elapsedTime);
+        //console.log('onTransitionEnd', e);
       },
 
       onTransitionCancel(e) {
         expect(e.type).toBe('transitioncancel');
-        // console.log('onTransitionCancel', e.type, e.propertyName, e.elapsedTime);
+        //console.log('onTransitionCancel', e);
       },
 
       render() {

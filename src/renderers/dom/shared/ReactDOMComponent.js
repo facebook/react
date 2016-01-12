@@ -34,6 +34,7 @@ var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var TransitionUtils = require('TransitionUtils');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -600,6 +601,8 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
+    transaction.getReactMountReady().enqueue(TransitionUtils.notifyMount, this);
+
     return mountImage;
   },
 
@@ -816,6 +819,8 @@ ReactDOMComponent.Mixin = {
       // reconciliation
       transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, this);
     }
+
+    transaction.getReactMountReady().enqueue(TransitionUtils.notifyUpdate, this);
   },
 
   /**
