@@ -92,12 +92,17 @@ var ReactDOMTextarea = {
         );
         didWarnValueLink = true;
       }
-      if (props.value !== undefined && props.defaultValue !== undefined && !didWarnValDefaultVal) {
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnValDefaultVal
+      ) {
         warning(
           false,
-          'Textarea elements must be either controlled or uncontrolled (specify either the value ' +
-          'prop, or the defaultValue prop, but not both). Decide between using a controlled or ' +
-          'uncontrolled input and remove one of these props. More info: ' +
+          'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components'
         );
         didWarnValDefaultVal = true;

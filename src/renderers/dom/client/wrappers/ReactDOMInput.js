@@ -106,24 +106,32 @@ var ReactDOMInput = {
         );
         didWarnCheckedLink = true;
       }
-      if (props.checked !== undefined && props.defaultChecked !== undefined &&
-        !didWarnCheckedDefaultChecked) {
+      if (
+        props.checked !== undefined &&
+        props.defaultChecked !== undefined &&
+        !didWarnCheckedDefaultChecked
+      ) {
         warning(
           false,
-          'Input elements must be either controlled or uncontrolled (specify either the ' +
-          'checked prop, or the defaultChecked prop, but not both). Decide between using a ' +
-          'controlled or uncontrolled input and remove one of these props. More info: ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the checked prop, or the defaultChecked prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components'
         );
         didWarnCheckedDefaultChecked = true;
       }
-      if (props.value !== undefined && props.defaultValue !== undefined &&
-        !didWarnValueDefaultValue) {
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnValueDefaultValue
+      ) {
         warning(
           false,
-          'Input elements must be either controlled or uncontrolled (specify either the value ' +
-          'prop, or the defaultValue prop, but not both). Decide between using a controlled ' +
-          'or uncontrolled input and remove one of these props. More info: ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components'
         );
         didWarnValueDefaultValue = true;

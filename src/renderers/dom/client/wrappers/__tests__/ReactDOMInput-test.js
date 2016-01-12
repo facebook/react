@@ -403,7 +403,7 @@ describe('ReactDOMInput', function() {
     expect(() => ReactDOM.render(instance, node)).toThrow();
   });
 
-  it('should throw warning message if value is null', function() {
+  it('should warn if value is null', function() {
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
     expect(console.error.argsForCall[0][0]).toContain(
       '`value` prop on `input` should not be null. ' +
@@ -415,14 +415,15 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
   });
 
-  it('should throw warning message if checked and defaultChecked props are specified', function() {
+  it('should warn if checked and defaultChecked props are specified', function() {
     ReactTestUtils.renderIntoDocument(
       <input type="radio" checked={true} defaultChecked={true} readOnly={true} />
     );
     expect(console.error.argsForCall[0][0]).toContain(
-      'Input elements must be either controlled or uncontrolled (specify either the ' +
-      'checked prop, or the defaultChecked prop, but not both). Decide between using a ' +
-      'controlled or uncontrolled input and remove one of these props. More info: ' +
+      'Input elements must be either controlled or uncontrolled ' +
+      '(specify either the checked prop, or the defaultChecked prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled input ' +
+      'element and remove one of these props. More info: ' +
       'https://fb.me/react-controlled-components'
     );
 
@@ -432,14 +433,15 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
   });
 
-  it('should throw warning message if value and defaultValue props are specified', function() {
+  it('should warn if value and defaultValue props are specified', function() {
     ReactTestUtils.renderIntoDocument(
       <input type="text" value="foo" defaultValue="bar" readOnly={true} />
     );
     expect(console.error.argsForCall[0][0]).toContain(
-      'Input elements must be either controlled or uncontrolled (specify either the value ' +
-      'prop, or the defaultValue prop, but not both). Decide between using a controlled or ' +
-      'uncontrolled input and remove one of these props. More info: ' +
+      'Input elements must be either controlled or uncontrolled ' +
+      '(specify either the value prop, or the defaultValue prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled input ' +
+      'element and remove one of these props. More info: ' +
       'https://fb.me/react-controlled-components'
     );
 
