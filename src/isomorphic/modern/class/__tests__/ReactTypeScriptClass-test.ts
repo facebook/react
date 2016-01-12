@@ -486,19 +486,15 @@ describe('ReactTypeScriptClass', function() {
       React.createElement(Inner, {name: 'foo'}),
       'DIV','foo'
     );
-    expect(() => instance.getDOMNode()).toThrow();
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
     expect(() => instance.setProps({ name: 'bar' })).toThrow();
     expect(() => instance.replaceProps({ name: 'bar' })).toThrow();
-    expect((<any>console.error).argsForCall.length).toBe(3);
+    expect((<any>console.error).argsForCall.length).toBe(2);
     expect((<any>console.error).argsForCall[0][0]).toContain(
-      'getDOMNode(...) is deprecated in plain JavaScript React classes'
-    );
-    expect((<any>console.error).argsForCall[1][0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     );
-    expect((<any>console.error).argsForCall[2][0]).toContain(
+    expect((<any>console.error).argsForCall[1][0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     );
   });

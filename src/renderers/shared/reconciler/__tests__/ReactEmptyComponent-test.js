@@ -158,7 +158,7 @@ describe('ReactEmptyComponent', function() {
     }
   );
 
-  it('should have getDOMNode return null when multiple layers of composite ' +
+  it('should have findDOMNode return null when multiple layers of composite ' +
     'components render to the same null placeholder',
     () => {
       var GrandChild = React.createClass({
