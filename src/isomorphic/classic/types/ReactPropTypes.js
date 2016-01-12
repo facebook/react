@@ -85,6 +85,11 @@ var ReactPropTypes = {
   shape: createShapeTypeChecker,
 };
 
+ReactPropTypes.children = ReactPropTypes.oneOfType([
+  ReactPropTypes.node,
+  ReactPropTypes.arrayOf(ReactPropTypes.node),
+]);
+
 function createChainableTypeChecker(validate) {
   function checkType(
     isRequired,
