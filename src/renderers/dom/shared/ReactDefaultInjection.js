@@ -17,7 +17,6 @@ var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMComponent = require('ReactDOMComponent');
@@ -74,8 +73,6 @@ function inject() {
   ReactInjection.NativeComponent.injectTextComponentClass(
     ReactDOMTextComponent
   );
-
-  ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);

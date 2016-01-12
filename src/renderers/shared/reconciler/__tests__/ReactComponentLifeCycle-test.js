@@ -322,7 +322,7 @@ describe('ReactComponentLifeCycle', function() {
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'Component is accessing getDOMNode or findDOMNode inside its render()'
+      'Component is accessing findDOMNode inside its render()'
     );
   });
 
