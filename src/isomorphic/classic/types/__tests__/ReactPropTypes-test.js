@@ -466,6 +466,11 @@ describe('ReactPropTypes', function() {
     it('should accept empty array for required props', function() {
       typeCheckPass(PropTypes.node.isRequired, []);
     });
+
+    it('should accept both single child and array of children for the children prop type', function() {
+      typeCheckPass(PropTypes.children, <div/>);
+      typeCheckPass(PropTypes.children, [<div/>, <div/>]);
+    });
   });
 
   describe('ObjectOf Type', function() {
