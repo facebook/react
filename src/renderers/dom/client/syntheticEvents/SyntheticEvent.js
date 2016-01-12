@@ -51,6 +51,7 @@ var EventInterface = {
  * @param {object} dispatchConfig Configuration used to dispatch this event.
  * @param {*} targetInst Marker identifying the event target.
  * @param {object} nativeEvent Native browser event.
+ * @param {DOMEventTarget} nativeEventTarget Target node.
  */
 function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
   this.dispatchConfig = dispatchConfig;
