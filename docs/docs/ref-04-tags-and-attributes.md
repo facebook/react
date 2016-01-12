@@ -34,7 +34,7 @@ circle clipPath defs ellipse g line linearGradient mask path pattern polygon pol
 radialGradient rect stop svg text tspan
 ```
 
-You may also be interested in [react-art](https://github.com/facebook/react-art), a drawing library for React that can render to Canvas, SVG, or VML (for IE8).
+You may also be interested in [react-art](https://github.com/facebook/react-art), a cross-browser drawing library for React.
 
 
 ## Supported Attributes
