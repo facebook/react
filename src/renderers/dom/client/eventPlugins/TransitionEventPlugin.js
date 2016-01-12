@@ -13,7 +13,7 @@
 
 /* eslint no-unused-vars: 0 */
 
-var EventListener = require('EventListener');
+var CSSProperty = require('CSSProperty');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
@@ -27,34 +27,34 @@ var keyOf = require('keyOf');
 
 // Check if the current browser supports transitions.
 // We can use the same check as we do for vendor prefixes.
-/*var supportsTransitions = (
+var supportsTransitions = (
   ExecutionEnvironment.canUseDOM &&
   getVendorPrefixedEventName('transitionend') !== ''
-);*/
+);
 
 // Events and their corresponding property names.
 var eventTypes = {
   fakeTransitionStart: {
     eventName: getVendorPrefixedEventName('transitionstart', true),
     phasedRegistrationNames: {
-      bubbled: keyOf({onTransitionStart: true}),
-      captured: keyOf({onTransitionStartCapture: true}),
+      bubbled: keyOf({ onTransitionStart: true }),
+      captured: keyOf({ onTransitionStartCapture: true }),
     },
     dependencies: [],
   },
   fakeTransitionEnd: {
     eventName: getVendorPrefixedEventName('transitionend', true),
     phasedRegistrationNames: {
-      bubbled: keyOf({onTransitionEnd: true}),
-      captured: keyOf({onTransitionEndCapture: true}),
+      bubbled: keyOf({ onTransitionEnd: true }),
+      captured: keyOf({ onTransitionEndCapture: true }),
     },
     dependencies: [],
   },
   fakeTransitionCancel: {
     eventName: getVendorPrefixedEventName('transitioncancel', true),
     phasedRegistrationNames: {
-      bubbled: keyOf({onTransitionCancel: true}),
-      captured: keyOf({onTransitionCancelCapture: true}),
+      bubbled: keyOf({ onTransitionCancel: true }),
+      captured: keyOf({ onTransitionCancelCapture: true }),
     },
     dependencies: [],
   },
@@ -85,11 +85,7 @@ function convertTimeToMilliseconds(time) {
     return 0;
   }
 
-  if (time.indexOf('ms') >= 0) {
-    return parseFloat(time);
-  }
-
-  return parseFloat(time) * 1000;
+  return (time.indexOf('ms') >= 0) ? parseFloat(time) : parseFloat(time) * 1000;
 }
 
 /**
@@ -97,75 +93,54 @@ function convertTimeToMilliseconds(time) {
  * This mapping will contain the property to change, its delay and duration,
  * and the timing function used.
  *
- * @param {object} style
+ * @param {CSSStyleDeclaration} style
  * @returns {object}
  */
-function extractDOMElementTransitions(style) {
-  var transitions = {};
-  var props = splitStyleProperty(style.transitionProperty || style['transition-property']);
+function extractTransitionConfig(style) {
+  var props = splitStyleProperty(style.transitionProperty);
 
   if (!props.length) {
     return null;
   }
 
-  var delays = splitStyleProperty(style.transitionDelay || style['transition-delay']);
-  var durations = splitStyleProperty(style.transitionDuration || style['transition-duration']);
-  var timings = splitStyleProperty(style.transitionTimingFunction || style['transition-timing-function']);
+  var transitions = {};
+  var delays = splitStyleProperty(style.transitionDelay);
+  var durations = splitStyleProperty(style.transitionDuration);
+  var shorthand = CSSProperty.shorthandPropertyExpansions;
+  var properties = [];
 
-  props.forEach((prop, i) => {
+  props.forEach(function(prop, i) {
+    var propNames = shorthand[prop] ? Object.keys(shorthand[prop]) : [prop];
+
+    properties = properties.concat(propNames);
+
     transitions[prop] = {
-      property: prop,
+      properties: propNames,
       delay: convertTimeToMilliseconds(delays[i]),
       duration: convertTimeToMilliseconds(durations[i]),
-      timingFunc: timings[i] || 'ease',
     };
   });
+
+  transitions.properties = properties;
 
   return transitions;
 }
 
 /**
- * Extract a mapping of all transitions from a React element's style.
+ * Extract a mapping of all transitions from a DOM element's style.
  * This mapping will contain the property to change, its delay and duration,
  * and the timing function used.
  *
- * @param {string} transition
+ * @param {CSSStyleDeclaration} style
+ * @param {string[]} properties
  * @returns {object}
- * @see https://developer.mozilla.org/en-US/docs/Web/CSS/transition
  */
-function extractReactElementTransitions(transition) {
-  var transitions = {};
+function extractStylesToMonitor(style, properties) {
+  var styles = {};
 
-  if (!transition || transition === 'initial' || transition === 'none' || transition === 'inherit') {
-    return null;
-  }
+  properties.forEach(propName => styles[propName] = style[propName]);
 
-  // TODO handle functions like cubic-bezier()
-  transition.split(',').forEach(trans => {
-    var transParts = trans.trim().split(' ');
-    var prop = transParts[0];
-    var duration = transParts[1];
-    var delay = '0s';
-    var timing = 'ease';
-
-    if (transParts[2]) {
-      if (transParts[2].match(/[\.\d]+m?s/)) {
-        delay = transParts[2];
-      } else {
-        timing = transParts[2];
-        delay = transParts[3];
-      }
-    }
-
-    transitions[prop] = {
-      property: prop,
-      delay: convertTimeToMilliseconds(delay),
-      duration: convertTimeToMilliseconds(duration),
-      timingFunc: timing,
-    };
-  });
-
-  return transitions;
+  return styles;
 }
 
 /**
@@ -174,11 +149,9 @@ function extractReactElementTransitions(transition) {
  *
  * @param {ReactDOMComponent} inst
  */
-function monitorChanges(inst) {
-  var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-  var monitorConfig = monitoredElements[inst._rootNodeID];
-
-  // TODO - Check for style changes
+function validateStyleChanges(inst) {
+  // TODO BUT CANT :[
+  // startEventCycle();
 }
 
 /**
@@ -186,26 +159,29 @@ function monitorChanges(inst) {
  *
  * @param {ReactDOMComponent} inst
  */
-function prepareElementMonitoring(inst) {
+function monitorTransitions(inst) {
   if (monitoredElements[inst._rootNodeID]) {
     return;
   }
 
   var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-  var transitions = extractReactElementTransitions(node.style.transition);
+  var style = getComputedStyle(node);
+  var transitions = extractTransitionConfig(style);
 
   // If no transitions found, we don't need to monitor
   if (transitions === null) {
     return;
   }
 
-  TransitionUtils.monitorUpdate(inst, monitorChanges);
+  // Monitor for instance changes
+  TransitionUtils.monitorUpdate(inst, validateStyleChanges);
 
+  // Cache the configuration
   monitoredElements[inst._rootNodeID] = {
     inst: inst,
     node: node,
-    currentClass: node._classList,
-    currentStyle: node.style,
+    styles: extractStylesToMonitor(style, transitions.properties),
+    className: node.className,
     transitions: transitions,
     timers: {
       start: {},
@@ -357,7 +333,9 @@ var TransitionEventPlugin = {
    * @param {ReactDOMComponent} inst
    */
   didPutListener: function(inst) {
-    prepareElementMonitoring(inst);
+    if (supportsTransitions) {
+      monitorTransitions(inst);
+    }
   },
 
   /**
@@ -366,8 +344,10 @@ var TransitionEventPlugin = {
    * @param {ReactDOMComponent} inst
    */
   willDeleteListener: function(inst) {
-    TransitionUtils.unmonitorUpdate(inst, monitorChanges);
-    delete monitoredElements[inst._rootNodeID];
+    if (supportsTransitions) {
+      TransitionUtils.unmonitorUpdate(inst, validateStyleChanges);
+      delete monitoredElements[inst._rootNodeID];
+    }
   },
 };
 

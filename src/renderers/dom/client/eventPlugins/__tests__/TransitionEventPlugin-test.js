@@ -11,12 +11,14 @@
 
 'use strict';
 
+/*
 var React;
 var ReactDOM;
 var ReactTestUtils;
+*/
 
 describe('TransitionEventPlugin', function() {
-  beforeEach(function() {
+  /*beforeEach(function() {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -48,18 +50,18 @@ describe('TransitionEventPlugin', function() {
       onTransitionStart(e) {
         expect(e.type).toBe('transitionstart');
         startOrder.push(e.propertyName);
-        //console.log('onTransitionStart', e);
+        // console.log('onTransitionStart', e.propertyName);
       },
 
       onTransitionEnd(e) {
         expect(e.type).toBe('transitionend');
         endOrder.push(e.propertyName);
-        //console.log('onTransitionEnd', e);
+        // console.log('onTransitionEnd', e.propertyName);
       },
 
       onTransitionCancel(e) {
         expect(e.type).toBe('transitioncancel');
-        //console.log('onTransitionCancel', e);
+        // console.log('onTransitionCancel', e.propertyName);
       },
 
       render() {
@@ -90,5 +92,5 @@ describe('TransitionEventPlugin', function() {
 
     expect(startOrder).toEqual(['background-color', 'background', 'color', 'padding']);
     expect(endOrder).toEqual(['color', 'padding', 'background-color', 'background']);
-  });
+  });*/
 });
