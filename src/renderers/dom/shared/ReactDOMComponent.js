@@ -333,10 +333,6 @@ function trapBubbledEventsLocal() {
   }
 }
 
-function mountReadyInputWrapper() {
-  ReactDOMInput.mountReadyWrapper(this);
-}
-
 function postUpdateSelectWrapper() {
   ReactDOMSelect.postUpdateWrapper(this);
 }
@@ -582,13 +578,8 @@ ReactDOMComponent.Mixin = {
     }
 
     switch (this._tag) {
-      case 'input':
-        transaction.getReactMountReady().enqueue(
-          mountReadyInputWrapper,
-          this
-        );
-        // falls through
       case 'button':
+      case 'input':
       case 'select':
       case 'textarea':
         if (props.autoFocus) {
@@ -1032,9 +1023,6 @@ ReactDOMComponent.Mixin = {
             listeners[i].remove();
           }
         }
-        break;
-      case 'input':
-        ReactDOMInput.unmountWrapper(this);
         break;
       case 'html':
       case 'head':
