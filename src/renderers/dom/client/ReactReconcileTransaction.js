@@ -29,7 +29,7 @@ var SELECTION_RESTORATION = {
    */
   initialize: ReactInputSelection.getSelectionInformation,
   /**
-   * @param {Selection} sel Selection information returned from `initialize`.
+   * @param {Selection} Selection information returned from `initialize`.
    */
   close: ReactInputSelection.restoreSelection,
 };
