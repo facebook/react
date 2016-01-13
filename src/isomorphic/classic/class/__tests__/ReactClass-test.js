@@ -381,4 +381,24 @@ describe('ReactClass-spec', function() {
     );
   });
 
+  it('should warn on invalid prop types', function() {
+    React.createClass({
+      displayName: 'Component',
+      propTypes: {
+        optionalNumber: React.PropTypes.number,
+        optionalEnum: React.PropTypes.oneOf('foo'),
+        optionalUnion: React.PropTypes.oneOfType(React.PropTypes.string, React.PropTypes.number),
+      },
+      render: function() {
+        return <span>{this.props.prop}</span>;
+      },
+    });
+    expect(console.error.calls.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toContain(
+        'Invalid argument supplied to oneOf, expected an instance of array.'
+    );
+    expect(console.error.argsForCall[1][0]).toContain(
+        'Invalid argument supplied to oneOfType, expected an instance of array.'
+    );
+  });
 });
