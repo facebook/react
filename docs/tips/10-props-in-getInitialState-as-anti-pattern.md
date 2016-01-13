@@ -11,7 +11,9 @@ next: dom-event-listeners.html
 >
 > This isn't really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
 
-Using props, passed down from parent, to generate state in `getInitialState` often leads to duplication of "source of truth", i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.
+Using props to generate state in `getInitialState` often leads to duplication of "source of truth", i.e. where the real data is. This is because `getInitialState` is only invoked when the component is first created.
+
+Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.
 
 **Bad example:**
 
@@ -43,7 +45,7 @@ ReactDOM.render(<MessageBox name="Rogers"/>, mountNode);
 
 (For more complex logic, simply isolate the computation in a method.)
 
-However, it's **not** an anti-pattern if you make it clear that synchronization's not the goal here:
+However, it's **not** an anti-pattern if you make it clear that the prop is only seed data for the component's internally-controlled state:
 
 ```js
 var Counter = React.createClass({
