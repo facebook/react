@@ -59,8 +59,7 @@ describe('ReactDOMInput', function() {
   it('should update `defaultValue` for uncontrolled input', function() {
     var container = document.createElement('div');
 
-    var el = ReactDOM.render(<input type="text" defaultValue="0" />, container);
-    var node = ReactDOM.findDOMNode(el);
+    var node = ReactDOM.render(<input type="text" defaultValue="0" />, container);
 
     expect(node.value).toBe('0');
 
@@ -69,47 +68,10 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('1');
   });
 
-  it('should take `defaultValue` for a controlled input', function() {
-    var container = document.createElement('div');
-
-    var el = ReactDOM.render(<input type="text" value={null} defaultValue="0" />, container);
-    var node = ReactDOM.findDOMNode(el);
-
-    expect(node.value).toBe('0');
-
-    ReactDOM.render(<input type="text" value={null} defaultValue="1" />, container);
-
-    expect(node.value).toBe('1');
-
-    ReactDOM.render(<input type="text" value={3} defaultValue="2" />, container);
-
-    expect(node.value).toBe('3');
-
-    ReactDOM.render(<input type="text" value={5} defaultValue="4" />, container);
-
-    expect(node.value).toBe('5');
-    expect(node.getAttribute('value')).toBe('5');
-    expect(node.defaultValue).toBe('5');
-  });
-
-  it('should update `value` when changing to controlled input', function() {
-    var container = document.createElement('div');
-
-    var el = ReactDOM.render(<input type="text" defaultValue="0" />, container);
-    var node = ReactDOM.findDOMNode(el);
-
-    expect(node.value).toBe('0');
-
-    ReactDOM.render(<input type="text" value="1" defaultValue="0" />, container);
-
-    expect(node.value).toBe('1');
-  });
-
   it('should take `defaultValue` when changing to uncontrolled input', function() {
     var container = document.createElement('div');
 
-    var el = ReactDOM.render(<input type="text" value="0" readOnly="true" />, container);
-    var node = ReactDOM.findDOMNode(el);
+    var node = ReactDOM.render(<input type="text" value="0" readOnly="true" />, container);
 
     expect(node.value).toBe('0');
 
@@ -143,8 +105,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `true`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    var node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('yolo');
 
@@ -158,8 +119,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `false`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
-    stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    var node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('yolo');
 
@@ -173,8 +133,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `objToString`', function() {
     var container = document.createElement('div');
     var stub = <input type="text" value="foo" onChange={emptyFunction} />;
-    stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    var node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('foo');
 
