@@ -1073,21 +1073,11 @@ describe('ReactCompositeComponent', function() {
     expect(ReactDOM.findDOMNode(comp.refs.static0).textContent).toBe('A');
     expect(ReactDOM.findDOMNode(comp.refs.static1).textContent).toBe('B');
 
-    expect(ReactDOM.findDOMNode(comp.refs.static0))
-      .toBe(comp.refs.static0.getDOMNode());
-    expect(ReactDOM.findDOMNode(comp.refs.static1))
-      .toBe(comp.refs.static1.getDOMNode());
-
     // When flipping the order, the refs should update even though the actual
     // contents do not
     ReactDOM.render(<Component flipped={true} />, container);
     expect(ReactDOM.findDOMNode(comp.refs.static0).textContent).toBe('B');
     expect(ReactDOM.findDOMNode(comp.refs.static1).textContent).toBe('A');
-
-    expect(ReactDOM.findDOMNode(comp.refs.static0))
-      .toBe(comp.refs.static0.getDOMNode());
-    expect(ReactDOM.findDOMNode(comp.refs.static1))
-      .toBe(comp.refs.static1.getDOMNode());
   });
 
   it('should allow access to findDOMNode in componentWillUnmount', function() {
@@ -1096,11 +1086,11 @@ describe('ReactCompositeComponent', function() {
     var Component = React.createClass({
       componentDidMount: function() {
         a = ReactDOM.findDOMNode(this);
-        expect(a).toBe(this.getDOMNode());
+        expect(a).not.toBe(null);
       },
       componentWillUnmount: function() {
         b = ReactDOM.findDOMNode(this);
-        expect(b).toBe(this.getDOMNode());
+        expect(b).not.toBe(null);
       },
       render: function() {
         return <div />;

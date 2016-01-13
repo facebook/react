@@ -362,23 +362,4 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('warns when calling getDOMNode', function() {
-    var MyComponent = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<MyComponent />, container);
-
-    instance.getDOMNode();
-
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'MyComponent.getDOMNode(...) is deprecated. Please use ' +
-      'ReactDOM.findDOMNode(instance) instead.'
-    );
-  });
-
 });

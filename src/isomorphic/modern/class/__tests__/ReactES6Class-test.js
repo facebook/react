@@ -402,20 +402,15 @@ describe('ReactES6Class', function() {
   it('should throw AND warn when trying to access classic APIs', function() {
     spyOn(console, 'error');
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    expect(() => instance.getDOMNode()).toThrow();
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
     expect(() => instance.setProps({name: 'bar'})).toThrow();
     expect(() => instance.replaceProps({name: 'bar'})).toThrow();
-    expect(console.error.calls.length).toBe(3);
+    expect(console.error.calls.length).toBe(2);
     expect(console.error.argsForCall[0][0]).toContain(
-      'getDOMNode(...) is deprecated in plain JavaScript React classes. ' +
-      'Use ReactDOM.findDOMNode(component) instead.'
-    );
-    expect(console.error.argsForCall[1][0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     );
-    expect(console.error.argsForCall[2][0]).toContain(
+    expect(console.error.argsForCall[1][0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     );
   });

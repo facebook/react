@@ -106,10 +106,6 @@ ReactComponent.prototype.forceUpdate = function(callback) {
  */
 if (__DEV__) {
   var deprecatedAPIs = {
-    getDOMNode: [
-      'getDOMNode',
-      'Use ReactDOM.findDOMNode(component) instead.',
-    ],
     isMounted: [
       'isMounted',
       'Instead, make sure to clean up subscriptions and pending requests in ' +
