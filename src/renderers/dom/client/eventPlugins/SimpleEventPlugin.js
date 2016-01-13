@@ -24,6 +24,8 @@ var SyntheticDragEvent = require('SyntheticDragEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
+var SyntheticAnimationEvent = require('SyntheticAnimationEvent');
+var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
 
 var emptyFunction = require('emptyFunction');
 var getEventCharCode = require('getEventCharCode');
@@ -37,6 +39,24 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onAbort: true}),
       captured: keyOf({onAbortCapture: true}),
+    },
+  },
+  animationStart: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onAnimationStart: true}),
+      captured: keyOf({onAnimationStartCapture: true}),
+    },
+  },
+  animationEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onAnimationEnd: true}),
+      captured: keyOf({onAnimationEndCapture: true}),
+    },
+  },
+  animationIteration: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onAnimationIteration: true}),
+      captured: keyOf({onAnimationIterationCapture: true}),
     },
   },
   blur: {
@@ -365,6 +385,12 @@ var eventTypes = {
       captured: keyOf({onTouchStartCapture: true}),
     },
   },
+  transitionEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTransitionEnd: true}),
+      captured: keyOf({onTransitionEndCapture: true}),
+    },
+  },
   volumeChange: {
     phasedRegistrationNames: {
       bubbled: keyOf({onVolumeChange: true}),
@@ -386,64 +412,68 @@ var eventTypes = {
 };
 
 var topLevelEventsToDispatchConfig = {
-  topAbort:           eventTypes.abort,
-  topBlur:            eventTypes.blur,
-  topCanPlay:         eventTypes.canPlay,
-  topCanPlayThrough:  eventTypes.canPlayThrough,
-  topClick:           eventTypes.click,
-  topContextMenu:     eventTypes.contextMenu,
-  topCopy:            eventTypes.copy,
-  topCut:             eventTypes.cut,
-  topDoubleClick:     eventTypes.doubleClick,
-  topDrag:            eventTypes.drag,
-  topDragEnd:         eventTypes.dragEnd,
-  topDragEnter:       eventTypes.dragEnter,
-  topDragExit:        eventTypes.dragExit,
-  topDragLeave:       eventTypes.dragLeave,
-  topDragOver:        eventTypes.dragOver,
-  topDragStart:       eventTypes.dragStart,
-  topDrop:            eventTypes.drop,
-  topDurationChange:  eventTypes.durationChange,
-  topEmptied:         eventTypes.emptied,
-  topEncrypted:       eventTypes.encrypted,
-  topEnded:           eventTypes.ended,
-  topError:           eventTypes.error,
-  topFocus:           eventTypes.focus,
-  topInput:           eventTypes.input,
-  topInvalid:         eventTypes.invalid,
-  topKeyDown:         eventTypes.keyDown,
-  topKeyPress:        eventTypes.keyPress,
-  topKeyUp:           eventTypes.keyUp,
-  topLoad:            eventTypes.load,
-  topLoadedData:      eventTypes.loadedData,
-  topLoadedMetadata:  eventTypes.loadedMetadata,
-  topLoadStart:       eventTypes.loadStart,
-  topMouseDown:       eventTypes.mouseDown,
-  topMouseMove:       eventTypes.mouseMove,
-  topMouseOut:        eventTypes.mouseOut,
-  topMouseOver:       eventTypes.mouseOver,
-  topMouseUp:         eventTypes.mouseUp,
-  topPaste:           eventTypes.paste,
-  topPause:           eventTypes.pause,
-  topPlay:            eventTypes.play,
-  topPlaying:         eventTypes.playing,
-  topProgress:        eventTypes.progress,
-  topRateChange:      eventTypes.rateChange,
-  topReset:           eventTypes.reset,
-  topScroll:          eventTypes.scroll,
-  topSeeked:          eventTypes.seeked,
-  topSeeking:         eventTypes.seeking,
-  topStalled:         eventTypes.stalled,
-  topSubmit:          eventTypes.submit,
-  topSuspend:         eventTypes.suspend,
-  topTimeUpdate:      eventTypes.timeUpdate,
-  topTouchCancel:     eventTypes.touchCancel,
-  topTouchEnd:        eventTypes.touchEnd,
-  topTouchMove:       eventTypes.touchMove,
-  topTouchStart:      eventTypes.touchStart,
-  topVolumeChange:    eventTypes.volumeChange,
-  topWaiting:         eventTypes.waiting,
-  topWheel:           eventTypes.wheel,
+  topAbort:               eventTypes.abort,
+  topAnimationStart:      eventTypes.animationStart,
+  topAnimationEnd:        eventTypes.animationEnd,
+  topAnimationIteration:  eventTypes.animationIteration,
+  topBlur:                eventTypes.blur,
+  topCanPlay:             eventTypes.canPlay,
+  topCanPlayThrough:      eventTypes.canPlayThrough,
+  topClick:               eventTypes.click,
+  topContextMenu:         eventTypes.contextMenu,
+  topCopy:                eventTypes.copy,
+  topCut:                 eventTypes.cut,
+  topDoubleClick:         eventTypes.doubleClick,
+  topDrag:                eventTypes.drag,
+  topDragEnd:             eventTypes.dragEnd,
+  topDragEnter:           eventTypes.dragEnter,
+  topDragExit:            eventTypes.dragExit,
+  topDragLeave:           eventTypes.dragLeave,
+  topDragOver:            eventTypes.dragOver,
+  topDragStart:           eventTypes.dragStart,
+  topDrop:                eventTypes.drop,
+  topDurationChange:      eventTypes.durationChange,
+  topEmptied:             eventTypes.emptied,
+  topEncrypted:           eventTypes.encrypted,
+  topEnded:               eventTypes.ended,
+  topError:               eventTypes.error,
+  topFocus:               eventTypes.focus,
+  topInput:               eventTypes.input,
+  topInvalid:             eventTypes.invalid,
+  topKeyDown:             eventTypes.keyDown,
+  topKeyPress:            eventTypes.keyPress,
+  topKeyUp:               eventTypes.keyUp,
+  topLoad:                eventTypes.load,
+  topLoadedData:          eventTypes.loadedData,
+  topLoadedMetadata:      eventTypes.loadedMetadata,
+  topLoadStart:           eventTypes.loadStart,
+  topMouseDown:           eventTypes.mouseDown,
+  topMouseMove:           eventTypes.mouseMove,
+  topMouseOut:            eventTypes.mouseOut,
+  topMouseOver:           eventTypes.mouseOver,
+  topMouseUp:             eventTypes.mouseUp,
+  topPaste:               eventTypes.paste,
+  topPause:               eventTypes.pause,
+  topPlay:                eventTypes.play,
+  topPlaying:             eventTypes.playing,
+  topProgress:            eventTypes.progress,
+  topRateChange:          eventTypes.rateChange,
+  topReset:               eventTypes.reset,
+  topScroll:              eventTypes.scroll,
+  topSeeked:              eventTypes.seeked,
+  topSeeking:             eventTypes.seeking,
+  topStalled:             eventTypes.stalled,
+  topSubmit:              eventTypes.submit,
+  topSuspend:             eventTypes.suspend,
+  topTimeUpdate:          eventTypes.timeUpdate,
+  topTouchCancel:         eventTypes.touchCancel,
+  topTouchEnd:            eventTypes.touchEnd,
+  topTouchMove:           eventTypes.touchMove,
+  topTouchStart:          eventTypes.touchStart,
+  topTransitionEnd:       eventTypes.transitionEnd,
+  topVolumeChange:        eventTypes.volumeChange,
+  topWaiting:             eventTypes.waiting,
+  topWheel:               eventTypes.wheel,
 };
 
 for (var type in topLevelEventsToDispatchConfig) {
@@ -548,6 +578,14 @@ var SimpleEventPlugin = {
       case topLevelTypes.topTouchMove:
       case topLevelTypes.topTouchStart:
         EventConstructor = SyntheticTouchEvent;
+        break;
+      case topLevelTypes.topAnimationStart:
+      case topLevelTypes.topAnimationEnd:
+      case topLevelTypes.topAnimationIteration:
+        EventConstructor = SyntheticAnimationEvent;
+        break;
+      case topLevelTypes.topTransitionEnd:
+        EventConstructor = SyntheticTransitionEvent;
         break;
       case topLevelTypes.topScroll:
         EventConstructor = SyntheticUIEvent;

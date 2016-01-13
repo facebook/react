@@ -32,7 +32,6 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
-var DirectElementEventPlugin = require('DirectElementEventPlugin');
 
 var alreadyInjected = false;
 
@@ -66,7 +65,6 @@ function inject() {
     ChangeEventPlugin: ChangeEventPlugin,
     SelectEventPlugin: SelectEventPlugin,
     BeforeInputEventPlugin: BeforeInputEventPlugin,
-    DirectElementEventPlugin: DirectElementEventPlugin,
   });
 
   ReactInjection.NativeComponent.injectGenericComponentClass(

@@ -30,7 +30,6 @@ var DefaultEventPluginOrder = [
   keyOf({ChangeEventPlugin: null}),
   keyOf({SelectEventPlugin: null}),
   keyOf({BeforeInputEventPlugin: null}),
-  keyOf({DirectElementEventPlugin: null}),
 ];
 
 module.exports = DefaultEventPluginOrder;
