@@ -273,6 +273,7 @@ Properties:
 
 ```javascript
 string animationName
+string pseudoElement
 float elapsedTime
 ```
 

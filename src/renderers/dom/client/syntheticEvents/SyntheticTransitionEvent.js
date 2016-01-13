@@ -19,9 +19,9 @@ var SyntheticEvent = require('SyntheticEvent');
  * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
  */
 var TransitionEventInterface = {
-    propertyName: null,
-    elapsedTime: null,
-    pseudoElement: null,
+  propertyName: null,
+  elapsedTime: null,
+  pseudoElement: null,
 };
 
 /**
@@ -31,17 +31,17 @@ var TransitionEventInterface = {
  * @extends {SyntheticEvent}
  */
 function SyntheticTransitionEvent(
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget
+  dispatchConfig,
+  dispatchMarker,
+  nativeEvent,
+  nativeEventTarget
 ) {
-    SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticEvent.augmentClass(
-    SyntheticTransitionEvent,
-    TransitionEventInterface
+  SyntheticTransitionEvent,
+  TransitionEventInterface
 );
 
 module.exports = SyntheticTransitionEvent;

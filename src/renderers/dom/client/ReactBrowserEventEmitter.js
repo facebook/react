@@ -84,9 +84,9 @@ var reactTopListenersCounter = 0;
 // events so we don't include them here
 var topEventMapping = {
   topAbort: 'abort',
-  topAnimationStart: getVendorPrefixedEventName('animationstart'),
-  topAnimationEnd: getVendorPrefixedEventName('animationend'),
-  topAnimationIteration: getVendorPrefixedEventName('animationiteration'),
+  topAnimationStart: getVendorPrefixedEventName('animationstart', true),
+  topAnimationEnd: getVendorPrefixedEventName('animationend', true),
+  topAnimationIteration: getVendorPrefixedEventName('animationiteration', true),
   topBlur: 'blur',
   topCanPlay: 'canplay',
   topCanPlayThrough: 'canplaythrough',
@@ -143,7 +143,7 @@ var topEventMapping = {
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
-  topTransitionEnd: getVendorPrefixedEventName('transitionend'),
+  topTransitionEnd: getVendorPrefixedEventName('transitionend', true),
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
   topWheel: 'wheel',

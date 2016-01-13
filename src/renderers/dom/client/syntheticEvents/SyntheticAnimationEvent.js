@@ -19,9 +19,9 @@ var SyntheticEvent = require('SyntheticEvent');
  * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
  */
 var AnimationEventInterface = {
-    animationName: null,
-    elapsedTime: null,
-    pseudoElement: null,
+  animationName: null,
+  elapsedTime: null,
+  pseudoElement: null,
 };
 
 /**
@@ -31,17 +31,17 @@ var AnimationEventInterface = {
  * @extends {SyntheticEvent}
  */
 function SyntheticAnimationEvent(
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget
+  dispatchConfig,
+  dispatchMarker,
+  nativeEvent,
+  nativeEventTarget
 ) {
-    SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticEvent.augmentClass(
-    SyntheticAnimationEvent,
-    AnimationEventInterface
+  SyntheticAnimationEvent,
+  AnimationEventInterface
 );
 
 module.exports = SyntheticAnimationEvent;
