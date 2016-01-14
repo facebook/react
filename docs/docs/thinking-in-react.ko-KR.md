@@ -61,7 +61,7 @@ React의 많은 뛰어난 점들 중 하나는 생각을 하면서 애플리케�
 
 ## 2단계: 정적 버전을 만드세요.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 계층구조의 컴포넌트들을 가지고 있으니, 이젠 애플리케이션을 구현할 시간입니다. 가장 쉬운 방법은 상호작용을 하지 않는 채로 자료 모델을 이용해 UI를 그리는 것입니다. 정적 버전을 만드는 데에는 적은 생각과 많은 노동이 필요하고, 상호작용을 추가하는 데에는 많은 생각과 적은 노동이 필요하기 때문에 둘을 분리하는 것이 가장 좋습니다. 왜 그런지 봅시다.
 
@@ -105,7 +105,7 @@ product 들의 원본 목록은 props를 통해서 전달되기 때문에, state
 
 ## 4단계: 어디서 state가 유지되어야 하는지 확인하세요.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 이제 최소한의 state가 무엇인지 알아냈습니다. 다음은, 어떤 컴포넌트가 이 state를 변형하거나 만들어낼지 알아내야 합니다.
 
@@ -130,7 +130,7 @@ product 들의 원본 목록은 props를 통해서 전달되기 때문에, state
 
 ## 5단계: 반대방향 자료 흐름을 추가하세요.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 앞서 우리는 계층적으로 아랫방향 흐름의 props, state전달로 잘 동작하는 애플리케이션을 만들었습니다. 이제 다른방향의 자료 흐름을 지원할 시간입니다: form 컴포넌트들은 `FilterableProductTable`의 state를 업데이트할 필요성이 있죠.
 
