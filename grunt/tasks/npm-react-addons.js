@@ -36,11 +36,6 @@ var addons = {
     name: 'transition-group',
     docs: 'animation',
   },
-  cloneWithProps: {
-    module: 'cloneWithProps',
-    name: 'clone-with-props',
-    docs: 'clone-with-props',
-  },
   createFragment: {
     module: 'ReactFragment',
     method: 'create',
