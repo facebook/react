@@ -50,6 +50,7 @@ if (__DEV__) {
 
   var warnedStyleNames = {};
   var warnedStyleValues = {};
+  var warnedForNaNValue = false;
 
   var warnHyphenatedStyleName = function(name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
@@ -94,6 +95,19 @@ if (__DEV__) {
     );
   };
 
+  var warnStyleValueIsNaN = function(name, value) {
+    if (warnedForNaNValue) {
+      return;
+    }
+
+    warnedForNaNValue = true;
+    warning(
+      false,
+      '`NaN` is an invalid value for the `%s` css style property',
+      name
+    );
+  };
+
   /**
    * @param {string} name
    * @param {*} value
@@ -105,6 +119,10 @@ if (__DEV__) {
       warnBadVendoredStyleName(name);
     } else if (badStyleValueWithSemicolonPattern.test(value)) {
       warnStyleValueWithSemicolon(name, value);
+    }
+
+    if (typeof value === 'number' && isNaN(value)) {
+      warnStyleValueIsNaN(name, value);
     }
   };
 }
