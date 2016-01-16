@@ -404,15 +404,20 @@ describe('ReactTestUtils', function() {
   });
 
   it('should change the value of an input field', function() {
-    var handler = jasmine.createSpy('spy');
+    var obj = {
+      handler: function(e) {
+        e.persist();
+      },
+    };
+    spyOn(obj, 'handler').andCallThrough();
     var container = document.createElement('div');
-    var instance = ReactDOM.render(<input type="text" onChange={handler} />, container);
+    var instance = ReactDOM.render(<input type="text" onChange={obj.handler} />, container);
 
     var node = ReactDOM.findDOMNode(instance);
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
 
-    expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
+    expect(obj.handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
   });
 
   it('should change the value of an input field in a component', function() {
@@ -426,15 +431,20 @@ describe('ReactTestUtils', function() {
       },
     });
 
-    var handler = jasmine.createSpy('spy');
+    var obj = {
+      handler: function(e) {
+        e.persist();
+      },
+    };
+    spyOn(obj, 'handler').andCallThrough();
     var container = document.createElement('div');
-    var instance = ReactDOM.render(<SomeComponent handleChange={handler} />, container);
+    var instance = ReactDOM.render(<SomeComponent handleChange={obj.handler} />, container);
 
     var node = ReactDOM.findDOMNode(instance.refs.input);
     node.value = 'zebra';
     ReactTestUtils.Simulate.change(node);
 
-    expect(handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
+    expect(obj.handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
   });
 
   it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', function() {
