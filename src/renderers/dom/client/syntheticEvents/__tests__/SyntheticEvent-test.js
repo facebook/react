@@ -72,6 +72,15 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.isPersistent()).toBe(true);
   });
 
+  it('should be nullified if the synthetic event has called destructor', function() {
+    var target = document.createElement('div');
+    var syntheticEvent = createEvent({srcElement: target});
+    syntheticEvent.destructor();
+    expect(syntheticEvent.type).toBe(null);
+    expect(syntheticEvent.nativeEvent).toBe(null);
+    expect(syntheticEvent.target).toBe(null);
+  });
+
   it('should warn if the synthetic event has been released when calling `preventDefault`', function() {
     spyOn(console, 'error');
     var syntheticEvent = createEvent({});
