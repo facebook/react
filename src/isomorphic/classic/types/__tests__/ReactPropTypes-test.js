@@ -82,6 +82,15 @@ describe('ReactPropTypes', function() {
       );
     });
 
+    it('should warn for invalid functions', function() {
+      typeCheckFail(
+        PropTypes.func,
+        'not a function',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `function`.'
+      );
+    });
+
     it('should fail date and regexp correctly', function() {
       typeCheckFail(
         PropTypes.string,
@@ -774,6 +783,24 @@ describe('ReactPropTypes', function() {
         PropTypes.shape({key: PropTypes.number}).isRequired,
         undefined,
         requiredMessage
+      );
+    });
+  });
+
+  describe('Function with arity', function() {
+    it('should warn for incorrect arity', function() {
+      typeCheckFail(PropTypes.funcWithArity(2),
+        function(a) { },
+        'Invalid prop `testProp` with arity of `1` supplied to `testComponent`, ' +
+        'expected arity of `2`.'
+      );
+    });
+
+    it('should warn if prop is not a function', function() {
+      typeCheckFail(PropTypes.funcWithArity(2),
+        'not-a-function',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `function`.'
       );
     });
   });

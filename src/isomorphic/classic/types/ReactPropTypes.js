@@ -83,6 +83,7 @@ var ReactPropTypes = {
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
   shape: createShapeTypeChecker,
+  funcWithArity: createFuncWithArityTypeChecker,
 };
 
 function createChainableTypeChecker(validate) {
@@ -339,6 +340,32 @@ function createShapeTypeChecker(shapeTypes) {
     }
     return null;
   }
+  return createChainableTypeChecker(validate);
+}
+
+function createFuncWithArityTypeChecker(expectedArity) {
+  var funcTypeCheck = createPrimitiveTypeChecker('function');
+
+  function validate(props, propName, componentName, location, propFullName) {
+    var funcTypeError = funcTypeCheck.apply(this, arguments);
+
+    if (funcTypeError !== null) {
+      return funcTypeError;
+    }
+
+    var propArity = props[propName].length;
+    if (propArity !== expectedArity) {
+      var locationName = ReactPropTypeLocationNames[location];
+
+      return new Error(
+        `Invalid ${locationName} \`${propFullName}\` with arity of ` +
+        `\`${propArity}\` supplied to \`${componentName}\`, expected arity of ` +
+        `\`${expectedArity}\`.`
+      );
+    }
+    return null;
+  }
+
   return createChainableTypeChecker(validate);
 }
 
