@@ -166,4 +166,17 @@ describe('CSSPropertyOperations', function() {
     expect(console.error.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
     expect(console.error.argsForCall[1][0]).toContain('Try "color: red" instead');
   });
+
+  it('should warn about style containing a NaN value', function() {
+    spyOn(console, 'error');
+
+    CSSPropertyOperations.createMarkupForStyles({
+      fontSize: NaN,
+    });
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toEqual(
+      'Warning: `NaN` is an invalid value for the `fontSize` css style property'
+    );
+  });
 });
