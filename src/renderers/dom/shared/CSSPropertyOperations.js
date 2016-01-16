@@ -48,6 +48,7 @@ if (__DEV__) {
   // style values shouldn't contain a semicolon
   var badStyleValueWithSemicolonPattern = /;\s*$/;
 
+  var warnedForNaNValue = false;
   var warnedStyleNames = {};
   var warnedStyleValues = {};
 
@@ -93,6 +94,19 @@ if (__DEV__) {
       value.replace(badStyleValueWithSemicolonPattern, '')
     );
   };
+  
+  var warnStyleValueWithNaN = function(name) {
+    if (warnedForNaNValue) {
+      return;
+    }
+
+    warnedForNaNValue = true;
+    warning(
+      false,
+      '`NaN` is an invalid value for the `%s` style property.',
+      name
+    );
+  };
 
   /**
    * @param {string} name
@@ -105,6 +119,8 @@ if (__DEV__) {
       warnBadVendoredStyleName(name);
     } else if (badStyleValueWithSemicolonPattern.test(value)) {
       warnStyleValueWithSemicolon(name, value);
+    } else if (typeof value === 'number' && isNaN(value)) {
+      warnStyleValueWithNaN(name);
     }
   };
 }
