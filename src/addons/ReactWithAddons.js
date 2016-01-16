@@ -27,7 +27,6 @@ var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactUpdates = require('ReactUpdates');
 
-var cloneWithProps = require('cloneWithProps');
 var shallowCompare = require('shallowCompare');
 var update = require('update');
 var warning = require('warning');
@@ -51,7 +50,6 @@ React.addons = {
     }
     return ReactUpdates.batchedUpdates.apply(this, arguments);
   },
-  cloneWithProps: cloneWithProps,
   createFragment: ReactFragment.create,
   shallowCompare: shallowCompare,
   update: update,
