@@ -23,19 +23,17 @@ var UserGist = React.createClass({
   },
 
   componentDidMount: function() {
-    this.setState({
-      serverRequest: $.get(this.props.source, function(result) {
-        var lastGist = result[0];
-        this.setState({
-          username: lastGist.owner.login,
-          lastGistUrl: lastGist.html_url
-        });
-      }.bind(this))
-    });
+    this.serverRequest = $.get(this.props.source, function (result) {
+      var lastGist = result[0];
+      this.setState({
+        username: lastGist.owner.login,
+        lastGistUrl: lastGist.html_url
+      });
+    }.bind(this));
   },
-  
+
   componentWillUnmount: function() {
-    this.state.serverRequest.abort();
+    this.serverRequest.abort();
   },
 
   render: function() {
