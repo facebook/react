@@ -58,6 +58,9 @@ React.createClass({
       fontSize: React.PropTypes.number
     }),
 
+    // A function with a specific arity
+    optionalFuncWithArity: React.PropTypes.funcWithArity(2)
+
     // You can chain any of the above with `isRequired` to make sure a warning
     // is shown if the prop isn't provided.
     requiredFunc: React.PropTypes.func.isRequired,
