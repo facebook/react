@@ -63,4 +63,12 @@ describe('ReactDOMOption', function() {
     expect(console.error.calls.length).toBe(0);
     expect(node.innerHTML).toBe('1  2');
   });
+
+  it('should be able to use dangerouslySetInnerHTML on option', function() {
+    var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+
+    var node = ReactDOM.findDOMNode(stub);
+    expect(node.innerHTML).toBe('foobar');
+  });
 });
