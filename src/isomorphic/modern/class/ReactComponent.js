@@ -71,6 +71,15 @@ ReactComponent.prototype.setState = function(partialState, callback) {
       'setState(...): You passed an undefined or null state object; ' +
       'instead, use forceUpdate().'
     );
+    if (this._reactInternalInstance &&
+        this._reactInternalInstance._isServerSideRendered) {
+      warning(
+        false,
+        'setState(...): method calls are ignored if component was ' +
+        'rendered on server.'
+      );
+      return;
+    }
   }
   this.updater.enqueueSetState(this, partialState);
   if (callback) {
@@ -93,6 +102,17 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponent.prototype.forceUpdate = function(callback) {
+  if (__DEV__) {
+    if (this._reactInternalInstance &&
+        this._reactInternalInstance._isServerSideRendered) {
+      warning(
+        false,
+        'forceUpdate(...): method calls are ignored if component was ' +
+        'rendered on server.'
+      );
+      return;
+    }
+  }
   this.updater.enqueueForceUpdate(this);
   if (callback) {
     this.updater.enqueueCallback(this, callback);
