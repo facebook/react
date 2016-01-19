@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -333,10 +333,6 @@ function trapBubbledEventsLocal() {
   }
 }
 
-function mountReadyInputWrapper() {
-  ReactDOMInput.mountReadyWrapper(this);
-}
-
 function postUpdateSelectWrapper() {
   ReactDOMSelect.postUpdateWrapper(this);
 }
@@ -582,13 +578,8 @@ ReactDOMComponent.Mixin = {
     }
 
     switch (this._tag) {
-      case 'input':
-        transaction.getReactMountReady().enqueue(
-          mountReadyInputWrapper,
-          this
-        );
-        // falls through
       case 'button':
+      case 'input':
       case 'select':
       case 'textarea':
         if (props.autoFocus) {
@@ -647,6 +638,8 @@ ReactDOMComponent.Mixin = {
           if (propKey !== CHILDREN) {
             markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
           }
+        } else if (this._namespaceURI === DOMNamespaces.svg) {
+          markup = DOMPropertyOperations.createMarkupForSVGAttribute(propKey, propValue);
         } else {
           markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
         }
@@ -858,6 +851,11 @@ ReactDOMComponent.Mixin = {
           // listener (e.g., onClick={null})
           deleteListener(this, propKey);
         }
+      } else if (this._namespaceURI === DOMNamespaces.svg) {
+        DOMPropertyOperations.deleteValueForSVGAttribute(
+          getNode(this),
+          propKey
+        );
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
@@ -920,6 +918,12 @@ ReactDOMComponent.Mixin = {
           nextProp = null;
         }
         DOMPropertyOperations.setValueForAttribute(
+          getNode(this),
+          propKey,
+          nextProp
+        );
+      } else if (this._namespaceURI === DOMNamespaces.svg) {
+        DOMPropertyOperations.setValueForSVGAttribute(
           getNode(this),
           propKey,
           nextProp
@@ -1020,9 +1024,6 @@ ReactDOMComponent.Mixin = {
           }
         }
         break;
-      case 'input':
-        ReactDOMInput.unmountWrapper(this);
-        break;
       case 'html':
       case 'head':
       case 'body':
@@ -1067,16 +1068,7 @@ ReactPerf.measureMethods(ReactDOMComponent.Mixin, 'ReactDOMComponent', {
 assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
-  ReactMultiChild.Mixin,
-  {
-    prepareToManageChildren: function() {
-      // Before we add, remove, or reorder the children of a node, make sure
-      // we have references to all of its children so we don't lose them, even
-      // if nefarious browser plugins add extra nodes to our tree. This could be
-      // called once per child so it should be fast.
-      ReactDOMComponentTree.precacheChildNodes(this, getNode(this));
-    },
-  }
+  ReactMultiChild.Mixin
 );
 
 module.exports = ReactDOMComponent;

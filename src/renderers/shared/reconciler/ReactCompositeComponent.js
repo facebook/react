@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -647,11 +647,17 @@ var ReactCompositeComponentMixin = {
     nextUnmaskedContext
   ) {
     var inst = this._instance;
-
-    var nextContext = this._context === nextUnmaskedContext ?
-      inst.context :
-      this._processContext(nextUnmaskedContext);
+    var willReceive = false;
+    var nextContext;
     var nextProps;
+
+    // Determine if the context has changed or not
+    if (this._context === nextUnmaskedContext) {
+      nextContext = inst.context;
+    } else {
+      nextContext = this._processContext(nextUnmaskedContext);
+      willReceive = true;
+    }
 
     // Distinguish between a props update versus a simple state update
     if (prevParentElement === nextParentElement) {
@@ -660,13 +666,14 @@ var ReactCompositeComponentMixin = {
       nextProps = nextParentElement.props;
     } else {
       nextProps = this._processProps(nextParentElement.props);
-      // An update here will schedule an update but immediately set
-      // _pendingStateQueue which will ensure that any state updates gets
-      // immediately reconciled instead of waiting for the next batch.
+      willReceive = true;
+    }
 
-      if (inst.componentWillReceiveProps) {
-        inst.componentWillReceiveProps(nextProps, nextContext);
-      }
+    // An update here will schedule an update but immediately set
+    // _pendingStateQueue which will ensure that any state updates gets
+    // immediately reconciled instead of waiting for the next batch.
+    if (willReceive && inst.componentWillReceiveProps) {
+      inst.componentWillReceiveProps(nextProps, nextContext);
     }
 
     var nextState = this._processPendingState(nextProps, nextContext);
@@ -806,13 +813,7 @@ var ReactCompositeComponentMixin = {
         this._processChildContext(context)
       );
     } else {
-      // TODO: This is currently necessary due to the unfortunate caching
-      // that ReactMount does which makes it exceedingly difficult to unmount
-      // a set of siblings without accidentally repopulating the node cache (see
-      // #5151). Once ReactMount no longer stores the nodes by ID, this method
-      // can go away.
       var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
-
       ReactReconciler.unmountComponent(prevComponentInstance);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -359,25 +359,6 @@ describe('ReactClass-spec', function() {
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
       'factory or JSX instead. See: https://fb.me/react-legacyfactory'
-    );
-  });
-
-  it('warns when calling getDOMNode', function() {
-    var MyComponent = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<MyComponent />, container);
-
-    instance.getDOMNode();
-
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'MyComponent.getDOMNode(...) is deprecated. Please use ' +
-      'ReactDOM.findDOMNode(instance) instead.'
     );
   });
 

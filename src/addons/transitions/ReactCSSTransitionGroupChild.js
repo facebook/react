@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -19,10 +19,6 @@ var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');
 
-// We don't remove the element from the DOM until we receive an animationend or
-// transitionend event. If the user screws up and forgets to add an animation
-// their node will be stuck in the DOM forever, so we detect if an animation
-// does not start and if it doesn't, we just call the end listener immediately.
 var TICK = 17;
 
 var ReactCSSTransitionGroupChild = React.createClass({

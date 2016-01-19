@@ -8,7 +8,6 @@ next: transferring-props-zh-CN.html
 
 设计接口的时候，把通用的设计元素（按钮，表单框，布局组件等）拆成接口良好定义的可复用的组件。这样，下次开发相同界面程序时就可以写更少的代码，也意义着更高的开发效率，更少的 Bug 和更少的程序体积。
 
-
 ## Prop 验证
 
 随着应用不断变大，保证组件被正确使用变得非常有用。为此我们引入 `propTypes`。`React.PropTypes` 提供很多验证器 (validator) 来验证传入数据的有效性。当向 props 传入无效数据时，JavaScript 控制台会抛出警告。注意为了性能考虑，只在开发环境验证 `propTypes`。下面用例子来说明不同验证器的区别：
@@ -32,10 +31,12 @@ React.createClass({
     // React 元素
     optionalElement: React.PropTypes.element,
 
+    // 你同样可以断言一个 prop 是一个类的实例。
     // 用 JS 的 instanceof 操作符声明 prop 为类的实例。
     optionalMessage: React.PropTypes.instanceOf(Message),
 
-    // 用 enum 来限制 prop 只接受指定的值。
+    // 你可以用 enum 的方式
+    // 确保你的 prop 被限定为指定值。
     optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
 
     // 指定的多个对象类型中的一个
@@ -57,14 +58,16 @@ React.createClass({
       fontSize: React.PropTypes.number
     }),
 
-    // 以后任意类型加上 `isRequired` 来使 prop 不可空。
+    // 你可以在任意东西后面加上 `isRequired`
+    // 来确保 如果 prop 没有提供 就会显示一个警告。
     requiredFunc: React.PropTypes.func.isRequired,
 
     // 不可空的任意类型
     requiredAny: React.PropTypes.any.isRequired,
 
-    // 自定义验证器。如果验证失败需要返回一个 Error 对象。不要直接
-    // 使用 `console.warn` 或抛异常，因为这样 `oneOfType` 会失效。
+    // 你可以自定义一个验证器。如果验证失败需要返回一个 Error 对象。
+    // 不要直接使用 `console.warn` 或抛异常，
+    // 因为这在 `oneOfType` 里不起作用。
     customProp: function(props, propName, componentName) {
       if (!/matchme/.test(props[propName])) {
         return new Error('Validation failed!');
@@ -75,6 +78,26 @@ React.createClass({
 });
 ```
 
+### Single Child
+
+用  `React.PropTypes.element` 你可以指定仅有一个子级能被传送给组件
+
+```javascript
+var MyComponent = React.createClass({
+  propTypes: {
+    children: React.PropTypes.element.isRequired
+  },
+
+  render: function() {
+    return (
+      <div>
+        {this.props.children} // 这里必须是一个元素否则就会警告
+      </div>
+    );
+  }
+
+});
+```
 
 ## 默认 Prop 值
 
@@ -93,9 +116,9 @@ var ComponentWithDefaultProps = React.createClass({
 
 当父级没有传入 props 时，`getDefaultProps()` 可以保证  `this.props.value` 有默认值，注意 `getDefaultProps` 的结果会被 *缓存*。得益于此，你可以直接使用 props，而不必写手动编写一些重复或无意义的代码。
 
-## 传递 Props：小技巧
+## 传递 Props：捷径
 
-有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想少写点代码来把传入组件的 props 复制到对应的 HTML 元素上。这时 JSX 的 _spread_ 语法会帮到你：
+有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想 复制任何传进你的组件的HTML属性 到底层的HTML元素上。为了减少输入，你可以用 JSX _spread_  语法来完成：
 
 ```javascript
 var CheckLink = React.createClass({
@@ -112,28 +135,6 @@ ReactDOM.render(
   document.getElementById('example')
 );
 ```
-
-## 单个子级
-
-`React.PropTypes.element` 可以限定只能有一个子级传入。
-
-```javascript
-var MyComponent = React.createClass({
-  propTypes: {
-    children: React.PropTypes.element.isRequired
-  },
-
-  render: function() {
-    return (
-      <div>
-        {this.props.children} // 有且仅有一个元素，否则会抛异常。
-      </div>
-    );
-  }
-
-});
-```
-
 
 ## Mixins
 
@@ -228,3 +229,29 @@ Counter.defaultProps = { initialCount: 0 };
 
 不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易支持这些用例不依靠mixins。
 
+## 无状态函数
+
+你也可以用 JavaScript 函数来定义你的 React 类。例如使用无状态函数语法：
+
+```javascript
+function HelloMessage(props) {
+  return <div>Hello {props.name}</div>;
+}
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+或者使用新的ES6箭头函数:
+
+```javascript
+var HelloMessage = (props) => <div>Hello {props.name}</div>;
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+这个简化的组件API旨在用于那些纯函数态的组件 。这些组件必须没有保持任何内部状态，没有备份实例，也没有组件生命周期方法。他们纯粹的函数式的转化他们的输入，没有引用。
+然而，你仍然可以以设置为函数的properties的方式来指定 `.propTypes` 和 `.defaultProps`，就像你在ES6类里设置他们那样。
+
+> 注意：
+>
+> 因为无状态函数没有备份实例，你不能附加一个引用到一个无状态函数组件。 通常这不是问题，因为无状态函数不提供一个命令式的API。没有命令式的API，你就没有任何需要实例来做的事。然而，如果用户想查找无状态函数组件的DOM节点，他们必须把这个组件包装在一个有状态组件里（比如，ES6 类组件） 并且连接一个引用到有状态的包装组件。
+
+在理想世界里，你的大多数组件都应该是无状态函数式的，因为这些无状态组件可以在React核心里经过一个快速的代码路径。 如果可能，这是推荐的模式。

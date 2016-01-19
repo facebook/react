@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -265,7 +265,7 @@ describe('ReactDOMTextarea', function() {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('should throw warning message if value is null', function() {
+  it('should warn if value is null', function() {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
@@ -276,6 +276,25 @@ describe('ReactDOMTextarea', function() {
     );
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should warn if value and defaultValue are specified', function() {
+    spyOn(console, 'error');
+    ReactTestUtils.renderIntoDocument(
+      <textarea value="foo" defaultValue="bar" readOnly={true} />
+    );
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Textarea elements must be either controlled or uncontrolled ' +
+      '(specify either the value prop, or the defaultValue prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled textarea ' +
+      'and remove one of these props. More info: ' +
+      'https://fb.me/react-controlled-components'
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <textarea value="foo" defaultValue="bar" readOnly={true} />
+    );
     expect(console.error.argsForCall.length).toBe(1);
   });
 });

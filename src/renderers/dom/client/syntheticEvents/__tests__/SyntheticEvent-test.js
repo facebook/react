@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -70,6 +70,15 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.isPersistent()).toBe(false);
     syntheticEvent.persist();
     expect(syntheticEvent.isPersistent()).toBe(true);
+  });
+
+  it('should be nullified if the synthetic event has called destructor', function() {
+    var target = document.createElement('div');
+    var syntheticEvent = createEvent({srcElement: target});
+    syntheticEvent.destructor();
+    expect(syntheticEvent.type).toBe(null);
+    expect(syntheticEvent.nativeEvent).toBe(null);
+    expect(syntheticEvent.target).toBe(null);
   });
 
   it('should warn if the synthetic event has been released when calling `preventDefault`', function() {

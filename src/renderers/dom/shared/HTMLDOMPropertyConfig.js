@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -60,8 +60,8 @@ var HTMLDOMPropertyConfig = {
     capture: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     cellPadding: MUST_USE_ATTRIBUTE,
     cellSpacing: MUST_USE_ATTRIBUTE,
-    charSet: MUST_USE_ATTRIBUTE,
     challenge: MUST_USE_ATTRIBUTE,
+    charSet: MUST_USE_ATTRIBUTE,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     classID: MUST_USE_ATTRIBUTE,
     // To set className on SVG elements, it's necessary to use .setAttribute;

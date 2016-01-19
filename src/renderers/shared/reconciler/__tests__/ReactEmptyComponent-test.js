@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, Facebook, Inc.
+ * Copyright 2014-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -158,7 +158,7 @@ describe('ReactEmptyComponent', function() {
     }
   );
 
-  it('should have getDOMNode return null when multiple layers of composite ' +
+  it('should have findDOMNode return null when multiple layers of composite ' +
     'components render to the same null placeholder',
     () => {
       var GrandChild = React.createClass({

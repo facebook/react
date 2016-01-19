@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -462,7 +462,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should throw warning message if value is null', function() {
+  it('should warn if value is null', function() {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
@@ -489,5 +489,32 @@ describe('ReactDOMSelect', function() {
     ReactTestUtils.Simulate.change(node);
 
     expect(node.value).toBe('giraffe');
+  });
+
+  it('should warn if value and defaultValue props are specified', function() {
+    spyOn(console, 'error');
+    ReactTestUtils.renderIntoDocument(
+      <select value="giraffe" defaultValue="giraffe" readOnly={true}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Select elements must be either controlled or uncontrolled ' +
+      '(specify either the value prop, or the defaultValue prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled select ' +
+      'element and remove one of these props. More info: ' +
+      'https://fb.me/react-controlled-components'
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <select value="giraffe" defaultValue="giraffe" readOnly={true}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+    expect(console.error.argsForCall.length).toBe(1);
   });
 });

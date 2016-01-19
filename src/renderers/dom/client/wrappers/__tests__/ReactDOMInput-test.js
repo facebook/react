@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -403,7 +403,7 @@ describe('ReactDOMInput', function() {
     expect(() => ReactDOM.render(instance, node)).toThrow();
   });
 
-  it('should throw warning message if value is null', function() {
+  it('should warn if value is null', function() {
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
     expect(console.error.argsForCall[0][0]).toContain(
       '`value` prop on `input` should not be null. ' +
@@ -413,5 +413,76 @@ describe('ReactDOMInput', function() {
 
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
     expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should warn if checked and defaultChecked props are specified', function() {
+    ReactTestUtils.renderIntoDocument(
+      <input type="radio" checked={true} defaultChecked={true} readOnly={true} />
+    );
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Input elements must be either controlled or uncontrolled ' +
+      '(specify either the checked prop, or the defaultChecked prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled input ' +
+      'element and remove one of these props. More info: ' +
+      'https://fb.me/react-controlled-components'
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="radio" checked={true} defaultChecked={true} readOnly={true} />
+    );
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should warn if value and defaultValue props are specified', function() {
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value="foo" defaultValue="bar" readOnly={true} />
+    );
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Input elements must be either controlled or uncontrolled ' +
+      '(specify either the value prop, or the defaultValue prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled input ' +
+      'element and remove one of these props. More info: ' +
+      'https://fb.me/react-controlled-components'
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value="foo" defaultValue="bar" readOnly={true} />
+    );
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('sets type before value always', function() {
+    var log = [];
+    var originalCreateElement = document.createElement;
+    spyOn(document, 'createElement').andCallFake(function(type) {
+      var el = originalCreateElement.apply(this, arguments);
+      if (type === 'input') {
+        Object.defineProperty(el, 'value', {
+          get: function() {},
+          set: function() {
+            log.push('set value');
+          },
+        });
+        spyOn(el, 'setAttribute').andCallFake(function(name, value) {
+          log.push('set ' + name);
+        });
+      }
+      return el;
+    });
+
+    ReactTestUtils.renderIntoDocument(<input value="hi" type="radio" />);
+    // Setting value before type does bad things. Make sure we set type first.
+    expect(log).toEqual([
+      'set data-reactroot',
+      'set type',
+      'set value',
+    ]);
+  });
+
+  it('sets value properly with type coming later in props', function() {
+    var input = ReactTestUtils.renderIntoDocument(
+      <input value="hi" type="radio" />
+    );
+    expect(input.value).toBe('hi');
   });
 });

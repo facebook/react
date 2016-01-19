@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -31,7 +31,7 @@ function findDOMNode(componentOrElement) {
     if (owner !== null) {
       warning(
         owner._warnedAboutRefsInRender,
-        '%s is accessing getDOMNode or findDOMNode inside its render(). ' +
+        '%s is accessing findDOMNode inside its render(). ' +
         'render() should be a pure function of props and state. It should ' +
         'never access something that requires stale data from the previous ' +
         'render, such as refs. Move this logic to componentDidMount and ' +

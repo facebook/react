@@ -20,7 +20,7 @@ React 里有一个非常常用的模式就是对组件做一层抽象。组件�
 React.createElement(Component, Object.assign({}, this.props, { more: 'values' }));
 ```
 
-下面的教程介绍一些最佳实践。使用了 JSX 和 ES7 的还在试验阶段的特性。
+下面的教程介绍一些最佳实践。使用了 JSX 和 试验性的ECMAScript 语法。
 
 ## 手动传递
 
@@ -100,7 +100,6 @@ var FancyCheckbox = React.createClass({
 });
 ```
 
-
 ## 使用和传递同一个 Prop
 
 如果组件需要使用一个属性又要往下传递，可以直接使用 `checked={checked}` 再传一次。这样做比传整个 `this.props` 对象要好，因为更利于重构和语法检查。
@@ -129,12 +128,11 @@ var FancyCheckbox = React.createClass({
 >
 > 顺序很重要，把 `{...other}` 放到 JSX props 前面会使它不被覆盖。上面例子中我们可以保证 input 的 type 是 `"checkbox"`。
 
-
 ## 剩余属性和展开属性 `...`
 
 剩余属性可以把对象剩下的属性提取到一个新的对象。会把所有在解构赋值中列出的属性剔除。
 
-这是 [ES7 草案](https://github.com/sebmarkbage/ecmascript-rest-spread) 中的试验特性。
+这是 [ECMAScript 草案](https://github.com/sebmarkbage/ecmascript-rest-spread) 中的试验特性。
 
 ```javascript
 var { x, y, ...z } = { x: 1, y: 2, a: 3, b: 4 };
@@ -145,8 +143,7 @@ z; // { a: 3, b: 4 }
 
 > 注意:
 >
-> 使用 [JSX 命令行工具](https://www.npmjs.com/package/react-tools) 配合 `--harmony` 标记来启用 ES7 语法。
-
+> 要用 Babel 6转换 rest 和 spread 属性，你需要安装 [`es2015`](https://babeljs.io/docs/plugins/preset-es2015/) preset，[`transform-object-rest-spread`](https://babeljs.io/docs/plugins/transform-object-rest-spread/) 插件并在 `.babelrc` 里配置他们.
 
 ## 使用 Underscore 来传递
 
