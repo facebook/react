@@ -319,9 +319,7 @@ describe('ReactTypeScriptClass', function() {
     expect((<any>console.error).argsForCall.length).toBe(1);
     expect((<any>console.error).argsForCall[0][0]).toBe(
       'Warning: Empty(...): No `render` method found on the returned ' +
-      'component instance: you may have forgotten to define `render`, ' +
-      'returned null/false from a stateless component, or tried to render an ' +
-      'element whose type is a function that isn\'t a React component.'
+      'component instance: you may have forgotten to define `render`.'
     );
   });
 
