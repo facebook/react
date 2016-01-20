@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -38,8 +38,8 @@ var ClickCounter = React.createClass({
       children.push(
         <div
           className="clickLogDiv"
-          key={"clickLog" + i}
-          ref={"clickLog" + i}
+          key={'clickLog' + i}
+          ref={'clickLog' + i}
         />
       );
     }
@@ -48,7 +48,7 @@ var ClickCounter = React.createClass({
         {children}
       </span>
     );
-  }
+  },
 });
 
 /**
@@ -59,7 +59,7 @@ var ClickCounter = React.createClass({
 var GeneralContainerComponent = React.createClass({
   render: function() {
     return <div>{this.props.children}</div>;
-  }
+  },
 });
 
 /**
@@ -81,7 +81,7 @@ var TestRefsComponent = React.createClass({
         </GeneralContainerComponent>
       </div>
     );
-  }
+  },
 });
 
 /**
@@ -115,14 +115,14 @@ var expectClickLogsLengthToBe = function(instance, length) {
 
 describe('reactiverefs', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   /**
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
-  it("Should increase refs with an increase in divs", function() {
+  it('Should increase refs with an increase in divs', function() {
     var testRefsComponent = renderTestRefsComponent();
     var clickIncrementer =
       ReactTestUtils.findRenderedDOMComponentWithClass(
@@ -158,7 +158,7 @@ describe('reactiverefs', function() {
  */
 describe('ref swapping', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   var RefHopsAround = React.createClass({
@@ -192,10 +192,10 @@ describe('ref swapping', function() {
           />
         </div>
       );
-    }
+    },
   });
 
-  it("Allow refs to hop around children correctly", function() {
+  it('Allow refs to hop around children correctly', function() {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
     var firstDiv =
@@ -234,7 +234,7 @@ describe('ref swapping', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);

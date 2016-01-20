@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -21,12 +21,12 @@ var RESET_BATCHED_UPDATES = {
   initialize: emptyFunction,
   close: function() {
     ReactDefaultBatchingStrategy.isBatchingUpdates = false;
-  }
+  },
 };
 
 var FLUSH_BATCHED_UPDATES = {
   initialize: emptyFunction,
-  close: ReactUpdates.flushBatchedUpdates.bind(ReactUpdates)
+  close: ReactUpdates.flushBatchedUpdates.bind(ReactUpdates),
 };
 
 var TRANSACTION_WRAPPERS = [FLUSH_BATCHED_UPDATES, RESET_BATCHED_UPDATES];
@@ -41,7 +41,7 @@ assign(
   {
     getTransactionWrappers: function() {
       return TRANSACTION_WRAPPERS;
-    }
+    },
   }
 );
 
@@ -65,7 +65,7 @@ var ReactDefaultBatchingStrategy = {
     } else {
       transaction.perform(callback, null, a, b, c, d, e);
     }
-  }
+  },
 };
 
 module.exports = ReactDefaultBatchingStrategy;

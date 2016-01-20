@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactLifeCycle = require('ReactLifeCycle');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -22,24 +21,10 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 function enqueueUpdate(internalInstance) {
-  if (internalInstance !== ReactLifeCycle.currentlyMountingInstance) {
-    // If we're in a componentWillMount handler, don't enqueue a rerender
-    // because ReactUpdates assumes we're in a browser context (which is
-    // wrong for server rendering) and we're about to do a render anyway.
-    // See bug in #1740.
-    ReactUpdates.enqueueUpdate(internalInstance);
-  }
+  ReactUpdates.enqueueUpdate(internalInstance);
 }
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
-  invariant(
-    ReactCurrentOwner.current == null,
-    '%s(...): Cannot update during an existing state transition ' +
-    '(such as within `render`). Render methods should be a pure function ' +
-    'of props and state.',
-    callerName
-  );
-
   var internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
     if (__DEV__) {
@@ -49,17 +34,26 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
       warning(
         !callerName,
         '%s(...): Can only update a mounted or mounting component. ' +
-        'This usually means you called %s() on an unmounted ' +
-        'component. This is a no-op.',
+        'This usually means you called %s() on an unmounted component. ' +
+        'This is a no-op. Please check the code for the %s component.',
         callerName,
-        callerName
+        callerName,
+        publicInstance.constructor.displayName
       );
     }
     return null;
   }
 
-  if (internalInstance === ReactLifeCycle.currentlyUnmountingInstance) {
-    return null;
+  if (__DEV__) {
+    warning(
+      ReactCurrentOwner.current == null,
+      '%s(...): Cannot update during an existing state transition (such as ' +
+      'within `render` or another component\'s constructor). Render methods ' +
+      'should be a pure function of props and state; constructor ' +
+      'side-effects are an anti-pattern, but can be moved to ' +
+      '`componentWillMount`.',
+      callerName
+    );
   }
 
   return internalInstance;
@@ -70,6 +64,40 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
  * reconciliation step.
  */
 var ReactUpdateQueue = {
+
+  /**
+   * Checks whether or not this composite component is mounted.
+   * @param {ReactClass} publicInstance The instance we want to test.
+   * @return {boolean} True if mounted, false otherwise.
+   * @protected
+   * @final
+   */
+  isMounted: function(publicInstance) {
+    if (__DEV__) {
+      var owner = ReactCurrentOwner.current;
+      if (owner !== null) {
+        warning(
+          owner._warnedAboutRefsInRender,
+          '%s is accessing isMounted inside its render() function. ' +
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+          owner.getName() || 'A component'
+        );
+        owner._warnedAboutRefsInRender = true;
+      }
+    }
+    var internalInstance = ReactInstanceMap.get(publicInstance);
+    if (internalInstance) {
+      // During componentWillMount and render this will still be null but after
+      // that will always render to something. At least for now. So we can use
+      // this hack.
+      return !!internalInstance._renderedComponent;
+    } else {
+      return false;
+    }
+  },
 
   /**
    * Enqueue a callback that will be executed after all the pending updates
@@ -83,8 +111,10 @@ var ReactUpdateQueue = {
     invariant(
       typeof callback === 'function',
       'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-      'isn\'t callable.'
+      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
+      '%s. A function is expected',
+      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
+        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
     );
     var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
@@ -93,8 +123,7 @@ var ReactUpdateQueue = {
     // behavior we have in other enqueue* methods.
     // We also need to ignore callbacks in componentWillMount. See
     // enqueueUpdates.
-    if (!internalInstance ||
-        internalInstance === ReactLifeCycle.currentlyMountingInstance) {
+    if (!internalInstance) {
       return null;
     }
 
@@ -114,8 +143,10 @@ var ReactUpdateQueue = {
     invariant(
       typeof callback === 'function',
       'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-      'isn\'t callable.'
+      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
+      '%s. A function is expected',
+      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
+        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
     );
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
@@ -132,7 +163,7 @@ var ReactUpdateQueue = {
    * You may want to call this when you know that some deeper aspect of the
    * component's state has changed but `setState` was not called.
    *
-   * This will not invoke `shouldUpdateComponent`, but it will invoke
+   * This will not invoke `shouldComponentUpdate`, but it will invoke
    * `componentWillUpdate` and `componentDidUpdate`.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
@@ -220,13 +251,16 @@ var ReactUpdateQueue = {
       publicInstance,
       'setProps'
     );
-
     if (!internalInstance) {
       return;
     }
+    ReactUpdateQueue.enqueueSetPropsInternal(internalInstance, partialProps);
+  },
 
+  enqueueSetPropsInternal: function(internalInstance, partialProps) {
+    var topLevelWrapper = internalInstance._topLevelWrapper;
     invariant(
-      internalInstance._isTopLevel,
+      topLevelWrapper,
       'setProps(...): You called `setProps` on a ' +
       'component with a parent. This is an anti-pattern since props will ' +
       'get reactively updated when rendered. Instead, change the owner\'s ' +
@@ -236,15 +270,16 @@ var ReactUpdateQueue = {
 
     // Merge with the pending element if it exists, otherwise with existing
     // element props.
-    var element = internalInstance._pendingElement ||
-                  internalInstance._currentElement;
+    var wrapElement = topLevelWrapper._pendingElement ||
+                      topLevelWrapper._currentElement;
+    var element = wrapElement.props;
     var props = assign({}, element.props, partialProps);
-    internalInstance._pendingElement = ReactElement.cloneAndReplaceProps(
-      element,
-      props
+    topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
+      wrapElement,
+      ReactElement.cloneAndReplaceProps(element, props)
     );
 
-    enqueueUpdate(internalInstance);
+    enqueueUpdate(topLevelWrapper);
   },
 
   /**
@@ -259,13 +294,16 @@ var ReactUpdateQueue = {
       publicInstance,
       'replaceProps'
     );
-
     if (!internalInstance) {
       return;
     }
+    ReactUpdateQueue.enqueueReplacePropsInternal(internalInstance, props);
+  },
 
+  enqueueReplacePropsInternal: function(internalInstance, props) {
+    var topLevelWrapper = internalInstance._topLevelWrapper;
     invariant(
-      internalInstance._isTopLevel,
+      topLevelWrapper,
       'replaceProps(...): You called `replaceProps` on a ' +
       'component with a parent. This is an anti-pattern since props will ' +
       'get reactively updated when rendered. Instead, change the owner\'s ' +
@@ -275,20 +313,21 @@ var ReactUpdateQueue = {
 
     // Merge with the pending element if it exists, otherwise with existing
     // element props.
-    var element = internalInstance._pendingElement ||
-                  internalInstance._currentElement;
-    internalInstance._pendingElement = ReactElement.cloneAndReplaceProps(
-      element,
-      props
+    var wrapElement = topLevelWrapper._pendingElement ||
+                      topLevelWrapper._currentElement;
+    var element = wrapElement.props;
+    topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
+      wrapElement,
+      ReactElement.cloneAndReplaceProps(element, props)
     );
 
-    enqueueUpdate(internalInstance);
+    enqueueUpdate(topLevelWrapper);
   },
 
   enqueueElementInternal: function(internalInstance, newElement) {
     internalInstance._pendingElement = newElement;
     enqueueUpdate(internalInstance);
-  }
+  },
 
 };
 

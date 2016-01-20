@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,13 +7,11 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactBrowserEventEmitter
- * @typechecks static-only
  */
 
 'use strict';
 
 var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
@@ -84,7 +82,10 @@ var reactTopListenersCounter = 0;
 // lower node than `document`), binding at `document` would cause duplicate
 // events so we don't include them here
 var topEventMapping = {
+  topAbort: 'abort',
   topBlur: 'blur',
+  topCanPlay: 'canplay',
+  topCanPlayThrough: 'canplaythrough',
   topChange: 'change',
   topClick: 'click',
   topCompositionEnd: 'compositionend',
@@ -102,25 +103,45 @@ var topEventMapping = {
   topDragOver: 'dragover',
   topDragStart: 'dragstart',
   topDrop: 'drop',
+  topDurationChange: 'durationchange',
+  topEmptied: 'emptied',
+  topEncrypted: 'encrypted',
+  topEnded: 'ended',
+  topError: 'error',
   topFocus: 'focus',
   topInput: 'input',
   topKeyDown: 'keydown',
   topKeyPress: 'keypress',
   topKeyUp: 'keyup',
+  topLoadedData: 'loadeddata',
+  topLoadedMetadata: 'loadedmetadata',
+  topLoadStart: 'loadstart',
   topMouseDown: 'mousedown',
   topMouseMove: 'mousemove',
   topMouseOut: 'mouseout',
   topMouseOver: 'mouseover',
   topMouseUp: 'mouseup',
   topPaste: 'paste',
+  topPause: 'pause',
+  topPlay: 'play',
+  topPlaying: 'playing',
+  topProgress: 'progress',
+  topRateChange: 'ratechange',
   topScroll: 'scroll',
+  topSeeked: 'seeked',
+  topSeeking: 'seeking',
   topSelectionChange: 'selectionchange',
+  topStalled: 'stalled',
+  topSuspend: 'suspend',
   topTextInput: 'textInput',
+  topTimeUpdate: 'timeupdate',
   topTouchCancel: 'touchcancel',
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
-  topWheel: 'wheel'
+  topVolumeChange: 'volumechange',
+  topWaiting: 'waiting',
+  topWheel: 'wheel',
 };
 
 /**
@@ -142,7 +163,7 @@ function getListeningForDocument(mountAt) {
  * `ReactBrowserEventEmitter` is used to attach top-level event listeners. For
  * example:
  *
- *   ReactBrowserEventEmitter.putListener('myID', 'onClick', myFunction);
+ *   EventPluginHub.putListener('myID', 'onClick', myFunction);
  *
  * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
  *
@@ -164,7 +185,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
         ReactBrowserEventEmitter.handleTopLevel
       );
       ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
-    }
+    },
   },
 
   /**
@@ -212,8 +233,8 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
   listenTo: function(registrationName, contentDocumentHandle) {
     var mountAt = contentDocumentHandle;
     var isListening = getListeningForDocument(mountAt);
-    var dependencies = EventPluginRegistry.
-      registrationNameDependencies[registrationName];
+    var dependencies =
+      EventPluginRegistry.registrationNameDependencies[registrationName];
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0; i < dependencies.length; i++) {
@@ -335,18 +356,6 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
       isMonitoringScrollValue = true;
     }
   },
-
-  eventNameDispatchConfigs: EventPluginHub.eventNameDispatchConfigs,
-
-  registrationNameModules: EventPluginHub.registrationNameModules,
-
-  putListener: EventPluginHub.putListener,
-
-  getListener: EventPluginHub.getListener,
-
-  deleteListener: EventPluginHub.deleteListener,
-
-  deleteAllListeners: EventPluginHub.deleteAllListeners
 
 });
 

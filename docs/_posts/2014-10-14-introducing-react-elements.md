@@ -1,6 +1,6 @@
 ---
 title: "Introducing React Elements"
-author: Sebastian Markbåge
+author: sebmarkbage
 redirect_from: "blog/2014/10/14/introducting-react-elements.html"
 ---
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,15 +12,15 @@
 'use strict';
 
 var React;
-var ReactInstanceMap;
-var ReactMount;
+var ReactDOM;
+var ReactDOMServer;
 
 var getTestDocument;
 
 var testDocument;
 
 var UNMOUNT_INVARIANT_MESSAGE =
-  'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
+  '<html> tried to unmount. ' +
   'Because of cross-browser quirks it is impossible to unmount some ' +
   'top-level components (eg <html>, <head>, and <body>) reliably and ' +
   'efficiently. To fix this, have a single top-level component that ' +
@@ -28,17 +28,17 @@ var UNMOUNT_INVARIANT_MESSAGE =
 
 describe('rendering React components at document', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
-    ReactInstanceMap = require('ReactInstanceMap');
-    ReactMount = require('ReactMount');
+    ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
     getTestDocument = require('getTestDocument');
 
     testDocument = getTestDocument();
   });
 
-  it('should be able to get root component id for document node', function() {
+  it('should be able to adopt server markup', function() {
     expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
@@ -49,22 +49,24 @@ describe('rendering React components at document', function() {
               <title>Hello World</title>
             </head>
             <body>
-              Hello world
+              {'Hello ' + this.props.hello}
             </body>
           </html>
         );
-      }
+      },
     });
 
-    var markup = React.renderToString(<Root />);
+    var markup = ReactDOMServer.renderToString(<Root hello="world" />);
     testDocument = getTestDocument(markup);
-    var component = React.render(<Root />, testDocument);
+    var body = testDocument.body;
+
+    ReactDOM.render(<Root hello="world" />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
-    // TODO: This is a bad test. I have no idea what this is testing.
-    // Node IDs is an implementation detail and not part of the public API.
-    var componentID = ReactMount.getReactRootID(testDocument);
-    expect(componentID).toBe(ReactInstanceMap.get(component)._rootNodeID);
+    ReactDOM.render(<Root hello="moon" />, testDocument);
+    expect(testDocument.body.innerHTML).toBe('Hello moon');
+
+    expect(body).toBe(testDocument.body);
   });
 
   it('should not be able to unmount component from document node', function() {
@@ -82,16 +84,16 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      }
+      },
     });
 
-    var markup = React.renderToString(<Root />);
+    var markup = ReactDOMServer.renderToString(<Root />);
     testDocument = getTestDocument(markup);
-    React.render(<Root />, testDocument);
+    ReactDOM.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     expect(function() {
-      React.unmountComponentAtNode(testDocument);
+      ReactDOM.unmountComponentAtNode(testDocument);
     }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -112,7 +114,7 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      }
+      },
     });
 
     var Component2 = React.createClass({
@@ -127,19 +129,19 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      }
+      },
     });
 
-    var markup = React.renderToString(<Component />);
+    var markup = ReactDOMServer.renderToString(<Component />);
     testDocument = getTestDocument(markup);
 
-    React.render(<Component />, testDocument);
+    ReactDOM.render(<Component />, testDocument);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     // Reactive update
     expect(function() {
-      React.render(<Component2 />, testDocument);
+      ReactDOM.render(<Component2 />, testDocument);
     }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -160,15 +162,15 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      }
+      },
     });
 
-    var markup = React.renderToString(
+    var markup = ReactDOMServer.renderToString(
       <Component text="Hello world" />
     );
     testDocument = getTestDocument(markup);
 
-    React.render(<Component text="Hello world" />, testDocument);
+    ReactDOM.render(<Component text="Hello world" />, testDocument);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
@@ -188,19 +190,18 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      }
+      },
     });
 
-    var markup = React.renderToString(
+    var markup = ReactDOMServer.renderToString(
       <Component text="Goodbye world" />
     );
     testDocument = getTestDocument(markup);
 
     expect(function() {
       // Notice the text is different!
-      React.render(<Component text="Hello world" />, testDocument);
+      ReactDOM.render(<Component text="Hello world" />, testDocument);
     }).toThrow(
-      'Invariant Violation: ' +
       'You\'re trying to render a component to the document using ' +
       'server rendering but the checksum was invalid. This usually ' +
       'means you rendered a different component type or props on ' +
@@ -209,8 +210,8 @@ describe('rendering React components at document', function() {
       'quirks by rendering at the document root. You should look for ' +
       'environment dependent code in your components and ensure ' +
       'the props are the same client and server side:\n' +
-      ' (client) data-reactid=".0.1">Hello world</body></\n' +
-      ' (server) data-reactid=".0.1">Goodbye world</body>'
+      ' (client) dy data-reactid="4">Hello world</body></\n' +
+      ' (server) dy data-reactid="4">Goodbye world</body>'
     );
   });
 
@@ -231,16 +232,16 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      }
+      },
     });
 
     expect(function() {
-      React.render(<Component />, container);
+      ReactDOM.render(<Component />, container);
     }).toThrow(
-      'Invariant Violation: You\'re trying to render a component to the ' +
-      'document but you didn\'t use server rendering. We can\'t do this ' +
-      'without using server rendering due to cross-browser quirks. See ' +
-      'React.renderToString() for server rendering.'
+      'You\'re trying to render a component to the document but you didn\'t ' +
+      'use server rendering. We can\'t do this without using server ' +
+      'rendering due to cross-browser quirks. See ' +
+      'ReactDOMServer.renderToString() for server rendering.'
     );
   });
 
@@ -255,10 +256,10 @@ describe('rendering React components at document', function() {
         </body>
       </html>;
 
-    var markup = React.renderToString(tree);
+    var markup = ReactDOMServer.renderToString(tree);
     testDocument = getTestDocument(markup);
-    var component = React.render(tree, testDocument);
+    var component = ReactDOM.render(tree, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
-    expect(React.findDOMNode(component).tagName).toBe('HTML');
+    expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
   });
 });

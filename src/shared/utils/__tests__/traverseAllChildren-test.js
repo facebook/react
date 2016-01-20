@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -16,6 +16,7 @@ describe('traverseAllChildren', function() {
   var React;
   var ReactFragment;
   beforeEach(function() {
+    jest.resetModuleRegistry();
     traverseAllChildren = require('traverseAllChildren');
     React = require('React');
     ReactFragment = require('ReactFragment');
@@ -64,6 +65,7 @@ describe('traverseAllChildren', function() {
   });
 
   it('should treat single child in array as expected', function() {
+    spyOn(console, 'error');
     var traverseContext = [];
     var traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
@@ -79,6 +81,8 @@ describe('traverseAllChildren', function() {
       '.0'
     );
     expect(traverseContext.length).toEqual(1);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child', function() {
@@ -158,10 +162,10 @@ describe('traverseAllChildren', function() {
       traverseContext, div, '.$divNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, span, '.1:0:$span:$spanNode'
+      traverseContext, <span key="span/.$spanNode" />, '.1:0:$span/.$spanNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext, a, '.2:$a:$aNode'
+      traverseContext, <a key="a/.$aNode" />, '.2:$a/.$aNode'
     );
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext, 'string', '.3'
@@ -205,48 +209,41 @@ describe('traverseAllChildren', function() {
 
     var instance = (
       <div>{
-        [frag({
-          firstHalfKey: [zero, one, two],
-          secondHalfKey: [three, four],
-          keyFive: five
-        })]
+        [
+          frag({
+            firstHalfKey: [zero, one, two],
+            secondHalfKey: [three, four],
+            keyFive: five,
+          }),
+        ]
       }</div>
     );
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
-    expect(traverseFn.calls.length).toBe(6);
-    expect(traverseContext.length).toEqual(6);
+    expect(traverseFn.calls.length).toBe(4);
+    expect(traverseContext.length).toEqual(4);
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
-      zero,
-      '.0:$firstHalfKey:0:$keyZero'
-    );
-
-    expect(traverseFn)
-      .toHaveBeenCalledWith(traverseContext, one, '.0:$firstHalfKey:0:1');
-
-    expect(traverseFn).toHaveBeenCalledWith(
-      traverseContext,
-      two,
-      '.0:$firstHalfKey:0:$keyTwo'
+      <div key="firstHalfKey/.$keyZero" />,
+      '.0:$firstHalfKey/.$keyZero'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
-      three,
-      '.0:$secondHalfKey:0:0'
+      <div key="firstHalfKey/.$keyTwo" />,
+      '.0:$firstHalfKey/.$keyTwo'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
-      four,
-      '.0:$secondHalfKey:0:$keyFour'
+      <div key="secondHalfKey/.$keyFour" />,
+      '.0:$secondHalfKey/.$keyFour'
     );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
-      five,
-      '.0:$keyFive:$keyFiveInner'
+      <div key="keyFive/.$keyFiveInner" />,
+      '.0:$keyFive/.$keyFiveInner'
     );
   });
 
@@ -281,6 +278,7 @@ describe('traverseAllChildren', function() {
   });
 
   it('should be called for each child in an iterable without keys', function() {
+    spyOn(console, 'error');
     var threeDivIterable = {
       '@@iterator': function() {
         var i = 0;
@@ -291,9 +289,9 @@ describe('traverseAllChildren', function() {
             } else {
               return {value: undefined, done: true};
             }
-          }
+          },
         };
-      }
+      },
     };
 
     var traverseContext = [];
@@ -326,6 +324,9 @@ describe('traverseAllChildren', function() {
       traverseContext[2],
       '.2'
     );
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child in an iterable with keys', function() {
@@ -339,9 +340,9 @@ describe('traverseAllChildren', function() {
             } else {
               return {value: undefined, done: true};
             }
-          }
+          },
         };
-      }
+      },
     };
 
     var traverseContext = [];
@@ -389,9 +390,9 @@ describe('traverseAllChildren', function() {
             } else {
               return {value: undefined, done: true};
             }
-          }
+          },
         };
-      }
+      },
     };
     threeDivEntryIterable.entries = threeDivEntryIterable['@@iterator'];
 
@@ -431,6 +432,103 @@ describe('traverseAllChildren', function() {
       'Warning: Using Maps as children is not yet fully supported. It is an ' +
       'experimental feature that might be removed. Convert it to a sequence ' +
       '/ iterable of keyed ReactElements instead.'
+    );
+  });
+
+  it('should not enumerate enumerable numbers (#4776)', function() {
+    /*eslint-disable no-extend-native */
+    Number.prototype['@@iterator'] = function() {
+      throw new Error('number iterator called');
+    };
+    /*eslint-enable no-extend-native */
+
+    try {
+      var instance = (
+        <div>
+          {5}
+          {12}
+          {13}
+        </div>
+      );
+
+      var traverseFn = jasmine.createSpy();
+
+      traverseAllChildren(instance.props.children, traverseFn, null);
+      expect(traverseFn.calls.length).toBe(3);
+
+      expect(traverseFn).toHaveBeenCalledWith(
+        null,
+        5,
+        '.0'
+      );
+      expect(traverseFn).toHaveBeenCalledWith(
+        null,
+        12,
+        '.1'
+      );
+      expect(traverseFn).toHaveBeenCalledWith(
+        null,
+        13,
+        '.2'
+      );
+    } finally {
+      delete Number.prototype['@@iterator'];
+    }
+  });
+
+  it('should allow extension of native prototypes', function() {
+    /*eslint-disable no-extend-native */
+    String.prototype.key = 'react';
+    Number.prototype.key = 'rocks';
+    /*eslint-enable no-extend-native */
+
+    var instance = (
+      <div>
+        {'a'}
+        {13}
+      </div>
+    );
+
+    var traverseFn = jasmine.createSpy();
+
+    traverseAllChildren(instance.props.children, traverseFn, null);
+    expect(traverseFn.calls.length).toBe(2);
+
+    expect(traverseFn).toHaveBeenCalledWith(
+      null,
+      'a',
+      '.0'
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      null,
+      13,
+      '.1'
+    );
+
+    delete String.prototype.key;
+    delete Number.prototype.key;
+  });
+
+  it('should throw on object', function() {
+    expect(function() {
+      traverseAllChildren({a: 1, b: 2}, function() {}, null);
+    }).toThrow(
+      'Objects are not valid as a React child (found: object with keys ' +
+      '{a, b}). If you meant to render a collection of children, use an ' +
+      'array instead or wrap the object using createFragment(object) from ' +
+      'the React add-ons.'
+    );
+  });
+
+  it('should throw on regex', function() {
+    // Really, we care about dates (#4840) but those have nondeterministic
+    // serialization (timezones) so let's test a regex instead:
+    expect(function() {
+      traverseAllChildren(/abc/, function() {}, null);
+    }).toThrow(
+      'Objects are not valid as a React child (found: /abc/). If you meant ' +
+      'to render a collection of children, use an array instead or wrap the ' +
+      'object using createFragment(object) from the React add-ons.'
     );
   });
 

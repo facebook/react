@@ -13,29 +13,66 @@ redirect_from: "docs/index-zh-CN.html"
  * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
  * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
-## 入门教程包 (Starter Kit)
+## 通过 npm 使用 React
 
-开始先下载入门教程包。
+我们建议在 React 中使用 CommonJS 模块系统，比如 [browserify](http://browserify.org/) 或 [webpack](https://webpack.github.io/)。使用 [`react`](https://www.npmjs.com/package/react) 和 [`react-dom`](https://www.npmjs.com/package/react-dom) npm 包.
+
+```js
+// main.js
+var React = require('react');
+var ReactDOM = require('react-dom');
+
+ReactDOM.render(
+  <h1>Hello, world!</h1>,
+  document.getElementById('example')
+);
+```
+
+要用 browserify 安装 React DOM 和构建你的包。
+
+```sh
+$ npm install --save react react-dom babelify babel-preset-react
+$ browserify -t [ babelify --presets [ react ] ] main.js -o bundle.js
+```
+
+要用 webpack 安装 React DOM 和构建你的包:  
+
+```sh
+$ npm install --save react react-dom babel-preset-react
+$ webpack
+```
+
+> 注意:
+>
+> 如果你正在使用 ES2015, 你将要使用 `babel-preset-es2015` 包.
+
+
+## 不用 npm 的快速开始
+
+如果你现在还没准备要使用npm,你可以下载这个已经包含了预构建的 React 和 React DOM 拷贝的入门套件. 
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
-    下载入门教程 {{site.react_version}}
+    下载入门套件 {{site.react_version}}
   </a>
 </div>
 
-在入门教程包的根目录，创建一个含有下面代码的 `helloworld.html`。
+在入门教程包的根目录，创建一个含有如下代码的 `helloworld.html`。
 
 ```html
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
+    <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <script src="build/JSXTransformer.js"></script>
+    <script src="build/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
-      React.render(
+    <script type="text/babel">
+      ReactDOM.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
       );
@@ -44,14 +81,14 @@ redirect_from: "docs/index-zh-CN.html"
 </html>
 ```
 
-在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 [JSX 语法](/react/docs/jsx-in-depth.html) 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 `<script type="text/jsx">` 标签包裹着含有 JSX 的代码，然后引入 `JSXTransformer.js` 库来实现在浏览器里的代码转换。
+在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 [JSX 语法](/react/docs/jsx-in-depth.html) 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 `<script type="text/babel">` 标签，并引入 Babel 来完成在浏览器里的代码转换。
 
 ### 分离文件
 
 你的 React JSX 代码文件可以写在另外的文件里。新建下面的 `src/helloworld.js`。
 
 ```javascript
-React.render(
+ReactDOM.render(
   <h1>Hello, world!</h1>,
   document.getElementById('example')
 );
@@ -60,28 +97,34 @@ React.render(
 然后在 `helloworld.html` 引用该文件：
 
 ```html{10}
-<script type="text/jsx" src="src/helloworld.js"></script>
+<script type="text/babel" src="src/helloworld.js"></script>
 ```
+
+注意一些浏览器（比如 Chrome ）会在使用 HTTP 以外的协议加载文件时失败。
 
 ### 离线转换
 
-先安装命令行工具（依赖 [npm](https://www.npmjs.com/)）：
+先安装[Babel](http://babeljs.io/)命令行工具（需要 [npm](https://www.npmjs.com/)）：
 
 ```
-npm install -g react-tools
+npm install --global babel-cli
+npm install babel-preset-react
 ```
 
 然后把你的 `src/helloworld.js` 文件转成标准的 JavaScript:
 
 ```
-jsx --watch src/ build/
-
+babel --presets react src --watch --out-dir build
 ```
 
-只要你修改了， `build/helloworld.js` 文件会自动生成。
+> 注意:
+>
+> 如果你正在使用 ES2015, 你将需要使用 `babel-preset-es2015` 包.
+
+`build/helloworld.js` 会在你对文件进行修改时自动生成。 阅读 [Babel CLI 文档](http://babeljs.io/docs/usage/cli/) 了解高级用法。
 
 ```javascript{2}
-React.render(
+ReactDOM.render(
   React.createElement('h1', null, 'Hello, world!'),
   document.getElementById('example')
 );
@@ -89,13 +132,15 @@ React.render(
 
 对照下面更新你的 HTML 代码
 
-```html{6,10}
+```html{8,12}
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <!-- 不需要 JSXTransformer！ -->
+    <script src="build/react-dom.js"></script>
+    <!-- 不需要 Babel! -->
   </head>
   <body>
     <div id="example"></div>
@@ -103,12 +148,6 @@ React.render(
   </body>
 </html>
 ```
-
-
-## 想用 CommonJS？
-
-如果你想在 [browserify](http://browserify.org/)，[webpack](https://webpack.github.io/) 或者或其它兼容CommonJS的模块系统里使用 React，只要使用 [`react` npm 包](https://www.npmjs.com/package/react) 即可。而且，`jsx` 转换工具可以很轻松的地集成到大部分打包系统里（不仅仅是 CommonJS）。
-
 
 ## 下一步
 

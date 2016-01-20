@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -30,9 +30,10 @@ function isInDocument(node) {
 var ReactInputSelection = {
 
   hasSelectionCapabilities: function(elem) {
-    return elem && (
-      (elem.nodeName === 'INPUT' && elem.type === 'text') ||
-      elem.nodeName === 'TEXTAREA' ||
+    var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+    return nodeName && (
+      (nodeName === 'input' && elem.type === 'text') ||
+      nodeName === 'textarea' ||
       elem.contentEditable === 'true'
     );
   },
@@ -44,7 +45,7 @@ var ReactInputSelection = {
       selectionRange:
           ReactInputSelection.hasSelectionCapabilities(focusedElem) ?
           ReactInputSelection.getSelection(focusedElem) :
-          null
+          null,
     };
   },
 
@@ -82,9 +83,10 @@ var ReactInputSelection = {
       // Modern browser with input or textarea.
       selection = {
         start: input.selectionStart,
-        end: input.selectionEnd
+        end: input.selectionEnd,
       };
-    } else if (document.selection && input.nodeName === 'INPUT') {
+    } else if (document.selection &&
+        (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
       // IE8 input.
       var range = document.selection.createRange();
       // There can only be one selection per document in IE, so it must
@@ -92,7 +94,7 @@ var ReactInputSelection = {
       if (range.parentElement() === input) {
         selection = {
           start: -range.moveStart('character', -input.value.length),
-          end: -range.moveEnd('character', -input.value.length)
+          end: -range.moveEnd('character', -input.value.length),
         };
       }
     } else {
@@ -119,7 +121,8 @@ var ReactInputSelection = {
     if ('selectionStart' in input) {
       input.selectionStart = start;
       input.selectionEnd = Math.min(end, input.value.length);
-    } else if (document.selection && input.nodeName === 'INPUT') {
+    } else if (document.selection &&
+        (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
       var range = input.createTextRange();
       range.collapse(true);
       range.moveStart('character', start);
@@ -128,7 +131,7 @@ var ReactInputSelection = {
     } else {
       ReactDOMSelection.setOffsets(input, offsets);
     }
-  }
+  },
 };
 
 module.exports = ReactInputSelection;

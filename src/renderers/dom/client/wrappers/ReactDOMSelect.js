@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,68 +11,111 @@
 
 'use strict';
 
-var AutoFocusMixin = require('AutoFocusMixin');
 var LinkedValueUtils = require('LinkedValueUtils');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactClass = require('ReactClass');
-var ReactElement = require('ReactElement');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
-var ReactPropTypes = require('ReactPropTypes');
 
 var assign = require('Object.assign');
-var findDOMNode = require('findDOMNode');
+var warning = require('warning');
 
-var select = ReactElement.createFactory('select');
-
-var valueContextKey =
-  '__ReactDOMSelect_value$' + Math.random().toString(36).slice(2);
+var didWarnValueLink = false;
+var didWarnValueNull = false;
+var didWarnValueDefaultValue = false;
 
 function updateOptionsIfPendingUpdateAndMounted() {
-  /*jshint validthis:true */
-  if (this._pendingUpdate) {
-    this._pendingUpdate = false;
-    var value = LinkedValueUtils.getValue(this.props);
-    if (value != null && this.isMounted()) {
-      updateOptions(this, value);
+  if (this._rootNodeID && this._wrapperState.pendingUpdate) {
+    this._wrapperState.pendingUpdate = false;
+
+    var props = this._currentElement.props;
+    var value = LinkedValueUtils.getValue(props);
+
+    if (value != null) {
+      updateOptions(this, Boolean(props.multiple), value);
     }
   }
 }
+
+function getDeclarationErrorAddendum(owner) {
+  if (owner) {
+    var name = owner.getName();
+    if (name) {
+      return ' Check the render method of `' + name + '`.';
+    }
+  }
+  return '';
+}
+
+function warnIfValueIsNull(props) {
+  if (props != null && props.value === null && !didWarnValueNull) {
+    warning(
+      false,
+      '`value` prop on `select` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
+    );
+
+    didWarnValueNull = true;
+  }
+}
+
+var valuePropNames = ['value', 'defaultValue'];
 
 /**
  * Validation function for `value` and `defaultValue`.
  * @private
  */
-function selectValueType(props, propName, componentName) {
-  if (props[propName] == null) {
-    return null;
+function checkSelectPropTypes(inst, props) {
+  var owner = inst._currentElement._owner;
+  LinkedValueUtils.checkPropTypes(
+    'select',
+    props,
+    owner
+  );
+
+  if (props.valueLink !== undefined && !didWarnValueLink) {
+    warning(
+      false,
+      '`valueLink` prop on `select` is deprecated; set `value` and `onChange` instead.'
+    );
+    didWarnValueLink = true;
   }
-  if (props.multiple) {
-    if (!Array.isArray(props[propName])) {
-      return new Error(
-        `The \`${propName}\` prop supplied to <select> must be an array if ` +
-        `\`multiple\` is true.`
-      );
+
+  for (var i = 0; i < valuePropNames.length; i++) {
+    var propName = valuePropNames[i];
+    if (props[propName] == null) {
+      continue;
     }
-  } else {
-    if (Array.isArray(props[propName])) {
-      return new Error(
-        `The \`${propName}\` prop supplied to <select> must be a scalar ` +
-        `value if \`multiple\` is false.`
+    if (props.multiple) {
+      warning(
+        Array.isArray(props[propName]),
+        'The `%s` prop supplied to <select> must be an array if ' +
+        '`multiple` is true.%s',
+        propName,
+        getDeclarationErrorAddendum(owner)
+      );
+    } else {
+      warning(
+        !Array.isArray(props[propName]),
+        'The `%s` prop supplied to <select> must be a scalar ' +
+        'value if `multiple` is false.%s',
+        propName,
+        getDeclarationErrorAddendum(owner)
       );
     }
   }
 }
 
 /**
- * @param {ReactComponent} component Instance of ReactDOMSelect
+ * @param {ReactDOMComponent} inst
+ * @param {boolean} multiple
  * @param {*} propValue A stringable (with `multiple`, a list of stringables).
  * @private
  */
-function updateOptions(component, propValue) {
+function updateOptions(inst, multiple, propValue) {
   var selectedValue, i;
-  var options = findDOMNode(component).options;
+  var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
 
-  if (component.props.multiple) {
+  if (multiple) {
     selectedValue = {};
     for (i = 0; i < propValue.length; i++) {
       selectedValue['' + propValue[i]] = true;
@@ -114,92 +157,88 @@ function updateOptions(component, propValue) {
  * If `defaultValue` is provided, any options with the supplied values will be
  * selected.
  */
-var ReactDOMSelect = ReactClass.createClass({
-  displayName: 'ReactDOMSelect',
-  tagName: 'SELECT',
-
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
-
-  statics: {
-    valueContextKey: valueContextKey
+var ReactDOMSelect = {
+  getNativeProps: function(inst, props) {
+    return assign({}, props, {
+      onChange: inst._wrapperState.onChange,
+      value: undefined,
+    });
   },
 
-  propTypes: {
-    defaultValue: selectValueType,
-    value: selectValueType
-  },
+  mountWrapper: function(inst, props) {
+    if (__DEV__) {
+      checkSelectPropTypes(inst, props);
+      warnIfValueIsNull(props);
+    }
 
-  getInitialState: function() {
-    // Pass down initial value so initial generated markup has correct
-    // `selected` attributes
-    var value = LinkedValueUtils.getValue(this.props);
-    if (value != null) {
-      return {initialValue: value};
-    } else {
-      return {initialValue: this.props.defaultValue};
+    var value = LinkedValueUtils.getValue(props);
+    inst._wrapperState = {
+      pendingUpdate: false,
+      initialValue: value != null ? value : props.defaultValue,
+      listeners: null,
+      onChange: _handleChange.bind(inst),
+      wasMultiple: Boolean(props.multiple),
+    };
+
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnValueDefaultValue
+    ) {
+      warning(
+        false,
+        'Select elements must be either controlled or uncontrolled ' +
+        '(specify either the value prop, or the defaultValue prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled select ' +
+        'element and remove one of these props. More info: ' +
+        'https://fb.me/react-controlled-components'
+      );
+      didWarnValueDefaultValue = true;
     }
   },
 
-  childContextTypes: (function() {
-    var obj = {};
-    obj[valueContextKey] = ReactPropTypes.any;
-    return obj;
-  })(),
-
-  getChildContext: function() {
-    var obj = {};
-    obj[valueContextKey] = this.state.initialValue;
-    return obj;
+  getSelectValueContext: function(inst) {
+    // ReactDOMOption looks at this initial value so the initial generated
+    // markup has correct `selected` attributes
+    return inst._wrapperState.initialValue;
   },
 
-  render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
+  postUpdateWrapper: function(inst) {
+    var props = inst._currentElement.props;
+    if (__DEV__) {
+      warnIfValueIsNull(props);
+    }
 
-    props.onChange = this._handleChange;
-    props.value = null;
-
-    return select(props, this.props.children);
-  },
-
-  componentWillMount: function() {
-    this._pendingUpdate = false;
-  },
-
-  componentWillReceiveProps: function(nextProps) {
     // After the initial mount, we control selected-ness manually so don't pass
-    // the context value down
-    this.setState({initialValue: null});
-  },
+    // this value down
+    inst._wrapperState.initialValue = undefined;
 
-  componentDidUpdate: function(prevProps) {
-    var value = LinkedValueUtils.getValue(this.props);
+    var wasMultiple = inst._wrapperState.wasMultiple;
+    inst._wrapperState.wasMultiple = Boolean(props.multiple);
+
+    var value = LinkedValueUtils.getValue(props);
     if (value != null) {
-      this._pendingUpdate = false;
-      updateOptions(this, value);
-    } else if (!prevProps.multiple !== !this.props.multiple) {
+      inst._wrapperState.pendingUpdate = false;
+      updateOptions(inst, Boolean(props.multiple), value);
+    } else if (wasMultiple !== Boolean(props.multiple)) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
-      if (this.props.defaultValue != null) {
-        updateOptions(this, this.props.defaultValue);
+      if (props.defaultValue != null) {
+        updateOptions(inst, Boolean(props.multiple), props.defaultValue);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(this, this.props.multiple ? [] : '');
+        updateOptions(inst, Boolean(props.multiple), props.multiple ? [] : '');
       }
     }
   },
+};
 
-  _handleChange: function(event) {
-    var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this.props);
-    if (onChange) {
-      returnValue = onChange.call(this, event);
-    }
+function _handleChange(event) {
+  var props = this._currentElement.props;
+  var returnValue = LinkedValueUtils.executeOnChange(props, event);
 
-    this._pendingUpdate = true;
-    ReactUpdates.asap(updateOptionsIfPendingUpdateAndMounted, this);
-    return returnValue;
-  }
-
-});
+  this._wrapperState.pendingUpdate = true;
+  ReactUpdates.asap(updateOptionsIfPendingUpdateAndMounted, this);
+  return returnValue;
+}
 
 module.exports = ReactDOMSelect;

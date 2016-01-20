@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,6 +8,8 @@
  *
  * @providesModule ReactDefaultPerfAnalysis
  */
+
+'use strict';
 
 var assign = require('Object.assign');
 
@@ -18,12 +20,14 @@ var DOM_OPERATION_TYPES = {
   INSERT_MARKUP: 'set innerHTML',
   MOVE_EXISTING: 'move',
   REMOVE_NODE: 'remove',
+  SET_MARKUP: 'set innerHTML',
   TEXT_CONTENT: 'set textContent',
-  'updatePropertyByID': 'update attribute',
-  'deletePropertyByID': 'delete attribute',
-  'updateStylesByID': 'update styles',
-  'updateInnerHTMLByID': 'set innerHTML',
-  'dangerouslyReplaceNodeWithMarkupByID': 'replace'
+  'setValueForProperty': 'update attribute',
+  'setValueForAttribute': 'update attribute',
+  'deleteValueForProperty': 'remove attribute',
+  'setValueForStyles': 'update styles',
+  'replaceNodeWithMarkup': 'replace',
+  'updateTextContent': 'set textContent',
 };
 
 function getTotalTime(measurements) {
@@ -41,20 +45,17 @@ function getTotalTime(measurements) {
 
 function getDOMSummary(measurements) {
   var items = [];
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
-    var id;
-
-    for (id in measurement.writes) {
+  measurements.forEach(function(measurement) {
+    Object.keys(measurement.writes).forEach(function(id) {
       measurement.writes[id].forEach(function(write) {
         items.push({
           id: id,
           type: DOM_OPERATION_TYPES[write.type] || write.type,
-          args: write.args
+          args: write.args,
         });
       });
-    }
-  }
+    });
+  });
   return items;
 }
 
@@ -78,7 +79,7 @@ function getExclusiveSummary(measurements) {
         inclusive: 0,
         exclusive: 0,
         render: 0,
-        count: 0
+        count: 0,
       };
       if (measurement.render[id]) {
         candidates[displayName].render += measurement.render[id];
@@ -142,7 +143,7 @@ function getInclusiveSummary(measurements, onlyClean) {
       candidates[inclusiveKey] = candidates[inclusiveKey] || {
         componentName: inclusiveKey,
         time: 0,
-        count: 0
+        count: 0,
       };
 
       if (measurement.inclusive[id]) {
@@ -174,18 +175,27 @@ function getUnchangedComponents(measurement) {
   // render anything to the DOM and return a mapping of their ID to
   // the amount of time it took to render the entire subtree.
   var cleanComponents = {};
-  var dirtyLeafIDs = Object.keys(measurement.writes);
+  var writes = measurement.writes;
+  var dirtyComposites = {};
+  Object.keys(writes).forEach(function(id) {
+    writes[id].forEach(function(write) {
+      // Root mounting (innerHTML set) is recorded with an ID of ''
+      if (id !== '') {
+        measurement.hierarchy[id].forEach((c) => dirtyComposites[c] = true);
+      }
+    });
+  });
   var allIDs = assign({}, measurement.exclusive, measurement.inclusive);
 
   for (var id in allIDs) {
     var isDirty = false;
-    // For each component that rendered, see if a component that triggered
-    // a DOM op is in its subtree.
-    for (var i = 0; i < dirtyLeafIDs.length; i++) {
-      if (dirtyLeafIDs[i].indexOf(id) === 0) {
-        isDirty = true;
-        break;
-      }
+    // See if any of the DOM operations applied to this component's subtree.
+    if (dirtyComposites[id]) {
+      isDirty = true;
+    }
+    // check if component newly created
+    if (measurement.created[id]) {
+      isDirty = true;
     }
     if (!isDirty && measurement.counts[id] > 0) {
       cleanComponents[id] = true;
@@ -198,7 +208,7 @@ var ReactDefaultPerfAnalysis = {
   getExclusiveSummary: getExclusiveSummary,
   getInclusiveSummary: getInclusiveSummary,
   getDOMSummary: getDOMSummary,
-  getTotalTime: getTotalTime
+  getTotalTime: getTotalTime,
 };
 
 module.exports = ReactDefaultPerfAnalysis;

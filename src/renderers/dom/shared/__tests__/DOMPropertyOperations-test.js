@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -15,17 +15,13 @@ describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
 
-  var mocks;
-
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     var ReactDefaultInjection = require('ReactDefaultInjection');
     ReactDefaultInjection.inject();
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
-
-    mocks = require('mocks');
   });
 
   describe('createMarkupForProperty', function() {
@@ -52,26 +48,6 @@ describe('DOMPropertyOperations', function() {
         'id',
         'simple'
       )).toBe('id="simple"');
-    });
-
-    it('should warn about incorrect casing', function() {
-      spyOn(console, 'error');
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'tabindex',
-        '1'
-      )).toBe(null);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
-    });
-
-    it('should warn about class', function() {
-      spyOn(console, 'error');
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'class',
-        'muffins'
-      )).toBe(null);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('className');
     });
 
     it('should create markup for boolean properties', function() {
@@ -179,6 +155,21 @@ describe('DOMPropertyOperations', function() {
 
   });
 
+  describe('createMarkupForProperty', function() {
+
+    it('should allow custom properties on web components', function() {
+      expect(DOMPropertyOperations.createMarkupForCustomAttribute(
+        'awesomeness',
+        5
+      )).toBe('awesomeness="5"');
+
+      expect(DOMPropertyOperations.createMarkupForCustomAttribute(
+        'dev',
+        'jim'
+      )).toBe('dev="jim"');
+    });
+  });
+
   describe('setValueForProperty', function() {
     var stubNode;
 
@@ -209,10 +200,23 @@ describe('DOMPropertyOperations', function() {
         .toEqual(['http://www.w3.org/1999/xlink', 'xlink:href', 'about:blank']);
     });
 
+    it('should set values as boolean properties', function() {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', 'disabled');
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', true);
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', false);
+      expect(stubNode.getAttribute('disabled')).toBe(null);
+    });
+
     it('should convert attribute values to string first', function() {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
-      var obj = {toString: function() { return '<html>'; }};
+      var obj = {
+        toString: function() {
+          return '<html>';
+        },
+      };
       DOMPropertyOperations.setValueForProperty(stubNode, 'role', obj);
       expect(stubNode.getAttribute('role')).toBe('<html>');
     });
@@ -242,13 +246,13 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should use mutation method where applicable', function() {
-      var foobarSetter = mocks.getMockFunction();
+      var foobarSetter = jest.genMockFn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: null},
         DOMMutationMethods: {
-          foobar: foobarSetter
-        }
+          foobar: foobarSetter,
+        },
       });
 
       DOMPropertyOperations.setValueForProperty(
@@ -286,8 +290,8 @@ describe('DOMPropertyOperations', function() {
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: DOMProperty.injection.MUST_USE_PROPERTY},
         DOMPropertyNames: {
-          foobar: 'className'
-        }
+          foobar: 'className',
+        },
       });
 
       DOMPropertyOperations.setValueForProperty(
@@ -328,7 +332,7 @@ describe('DOMPropertyOperations', function() {
         isCustomAttribute: function(name) {
           return name.indexOf('foo-') === 0;
         },
-        Properties: {foobar: null}
+        Properties: {foobar: null},
       });
 
       // Ensure old attributes still work

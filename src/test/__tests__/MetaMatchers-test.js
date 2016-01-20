@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,6 +8,8 @@
  *
  * @emails react-core
  */
+
+'use strict';
 
 var MetaMatchers = require('MetaMatchers');
 

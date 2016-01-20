@@ -1,6 +1,6 @@
 ---
 title: "Testing Flux Applications"
-author: Bill Fisher
+author: fisherwebdev
 ---
 
 **A more up-to-date version of this post is available as part of the [Flux documentation](https://facebook.github.io/flux/docs/testing-flux-applications.html).**

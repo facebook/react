@@ -390,6 +390,38 @@ h1, h2, h3, h4, h5, h6 {
   @include clearfix;
 }
 
+/* JSX Compiler */
+
+.jsxCompiler {
+  margin: 0 auto;
+  padding-top: 20px;
+  width: 1220px;
+
+  label.compiler-option {
+    display: block;
+    margin-top: 5px;
+  }
+
+  #jsxCompiler {
+    margin-top: 20px;
+  }
+
+  .playgroundPreview {
+    padding: 0;
+    width: 600px;
+
+    pre {
+      @include code-typography;
+    }
+  }
+
+  .playgroundError {
+    // The compiler view kills padding in order to render the CodeMirror code
+    // more nicely. For the error view, put a padding back
+    padding: 15px 20px;
+  }
+}
+
 .docs-prev {
   float: left;
 }
@@ -479,38 +511,6 @@ section.black content {
 .docs-prevnext {
   padding-top: 40px;
   padding-bottom: 40px;
-}
-
-/* JSX Compiler */
-
-.jsxCompiler {
-  margin: 0 auto;
-  padding-top: 20px;
-  width: 1220px;
-
-  label.compiler-option {
-    display: block;
-    margin-top: 5px;
-  }
-
-  #jsxCompiler {
-    margin-top: 20px;
-  }
-
-  .playgroundPreview {
-    padding: 0;
-    width: 600px;
-
-    pre {
-      @include code-typography;
-    }
-  }
-
-  .playgroundError {
-    // The compiler view kills padding in order to render the CodeMirror code
-    // more nicely. For the error view, put a padding back
-    padding: 15px 20px;
-  }
 }
 
 /* Button */
@@ -643,6 +643,12 @@ p code {
   color: #555;
   background-color: rgba(0, 0, 0, .04);
   padding: 1px 3px;
+}
+
+small a code,
+li a code,
+p a code {
+  color: inherit;
 }
 
 .cm-s-default span.cm-string-2 {
@@ -792,6 +798,10 @@ p code {
 
 .post {
   margin-bottom: 30px;
+}
+
+.post img {
+  max-width: 100%;
 }
 
 .pagination {

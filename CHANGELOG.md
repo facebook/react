@@ -1,3 +1,169 @@
+## 0.14.6 (January 6, 2016)
+
+### React
+- Updated `fbjs` dependency to pick up change affecting handling of undefined document.
+
+
+## 0.14.5 (December 29, 2015)
+
+### React
+- More minor internal changes for better compatibility with React Native
+
+
+## 0.14.4 (December 29, 2015)
+
+### React
+- Minor internal changes for better compatibility with React Native
+
+### React DOM
+- The `autoCapitalize` and `autoCorrect` props are now set as attributes in the DOM instead of properties to improve cross-browser compatibility
+- Fixed bug with controlled `<select>` elements not handling updates properly
+
+### React Perf Add-on
+- Some DOM operation names have been updated for clarity in the output of `.printDOM()`
+
+
+## 0.14.3 (November 18, 2015)
+
+### React DOM
+- Added support for `nonce` attribute for `<script>` and `<style>` elements
+- Added support for `reversed` attribute for `<ol>` elements
+
+### React TestUtils Add-on
+- Fixed bug with shallow rendering and function refs
+
+### React CSSTransitionGroup Add-on
+- Fixed bug resulting in timeouts firing incorrectly when mounting and unmounting rapidly
+
+### React on Bower
+- Added `react-dom-server.js` to expose `renderToString` and `renderToStaticMarkup` for usage in the browser
+
+
+## 0.14.2 (November 2, 2015)
+
+### React DOM
+- Fixed bug with development build preventing events from firing in some versions of Internet Explorer & Edge
+- Fixed bug with development build when using es5-sham in older versions of Internet Explorer
+- Added support for `integrity` attribute
+- Fixed bug resulting in `children` prop being coerced to a string for custom elements, which was not the desired behavior
+- Moved `react` from `dependencies` to `peerDependencies` to match expectations and align with `react-addons-*` packages
+
+
+## 0.14.1 (October 28, 2015)
+
+### React DOM
+- Fixed bug where events wouldn't fire in old browsers when using React in development mode
+- Fixed bug preventing use of `dangerouslySetInnerHTML` with Closure Compiler Advanced mode
+- Added support for `srcLang`, `default`, and `kind` attributes for `<track>` elements
+- Added support for `color` attribute
+- Ensured legacy `.props` access on DOM nodes is updated on re-renders
+
+### React TestUtils Add-on
+- Fixed `scryRenderedDOMComponentsWithClass` so it works with SVG
+
+### React CSSTransitionGroup Add-on
+- Fix bug preventing `0` to be used as a timeout value
+
+### React on Bower
+- Added `react-dom.js` to `main` to improve compatibility with tooling
+
+
+## 0.14.0 (October 7, 2015)
+
+### Major changes
+
+- Split the main `react` package into two: `react` and `react-dom`.  This paves the way to writing components that can be shared between the web version of React and React Native.  This means you will need to include both files and some functions have been moved from `React` to `ReactDOM`.
+- Addons have been moved to seperate packages (`react-addons-clone-with-props`, `react-addons-create-fragment`, `react-addons-css-transition-group`, `react-addons-linked-state-mixin`, `react-addons-perf`, `react-addons-pure-render-mixin`, `react-addons-shallow-compare`, `react-addons-test-utils`, `react-addons-transition-group`, `react-addons-update`, `ReactDOM.unstable_batchedUpdates`).
+- Stateless functional components - React components were previously created using React.createClass or using ES6 classes.  This release adds a [new syntax](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions) where a user defines a single [stateless render function](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions) (with one parameter: `props`) which returns a JSX element, and this function may be used as a component.
+- Refs to DOM components as the DOM node itself. Previously the only useful thing you can do with a DOM component is call `getDOMNode()` to get the underlying DOM node. Starting with this release, a ref to a DOM component _is_ the actual DOM node. **Note that refs to custom (user-defined) components work exactly as before; only the built-in DOM components are affected by this change.**
+
+
+### Breaking changes
+
+- `React.initializeTouchEvents` is no longer necessary and has been removed completely. Touch events now work automatically.
+- Add-Ons: Due to the DOM node refs change mentioned above, `TestUtils.findAllInRenderedTree` and related helpers are no longer able to take a DOM component, only a custom component.
+- The `props` object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, [`React.cloneElement`](https://facebook.github.io/react/docs/top-level-api.html#react.cloneelement) should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.
+- Plain objects are no longer supported as React children; arrays should be used instead. You can use the [`createFragment`](https://facebook.github.io/react/docs/create-fragment.html) helper to migrate, which now returns an array.
+- Add-Ons: `classSet` has been removed. Use [classnames](https://github.com/JedWatson/classnames) instead.
+- Web components (custom elements) now use native property names.  Eg: `class` instead of `className`.
+
+### Deprecations
+
+- `this.getDOMNode()` is now deprecated and `ReactDOM.findDOMNode(this)` can be used instead. Note that in the common case, `findDOMNode` is now unnecessary since a ref to the DOM component is now the actual DOM node.
+- `setProps` and `replaceProps` are now deprecated. Instead, call ReactDOM.render again at the top level with the new props.
+- ES6 component classes must now extend `React.Component` in order to enable stateless function components. The [ES3 module pattern](https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages) will continue to work.
+- Reusing and mutating a `style` object between renders has been deprecated. This mirrors our change to freeze the `props` object.
+- Add-Ons: `cloneWithProps` is now deprecated. Use [`React.cloneElement`](https://facebook.github.io/react/docs/top-level-api.html#react.cloneelement) instead (unlike `cloneWithProps`, `cloneElement` does not merge `className` or `style` automatically; you can merge them manually if needed).
+- Add-Ons: To improve reliability, `CSSTransitionGroup` will no longer listen to transition events. Instead, you should specify transition durations manually using props such as `transitionEnterTimeout={500}`.
+
+### Notable enhancements
+
+- Added `React.Children.toArray` which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your `render` methods, especially if you want to reorder or slice `this.props.children` before passing it down. In addition, `React.Children.map` now returns plain arrays too.
+- React uses `console.error` instead of `console.warn` for warnings so that browsers show a full stack trace in the console. (Our warnings appear when you use patterns that will break in future releases and for code that is likely to behave unexpectedly, so we do consider our warnings to be “must-fix” errors.)
+- Previously, including untrusted objects as React children [could result in an XSS security vulnerability](http://danlec.com/blog/xss-via-a-spoofed-react-element). This problem should be avoided by properly validating input at the application layer and by never passing untrusted objects around your application code. As an additional layer of protection, [React now tags elements](https://github.com/facebook/react/pull/4832) with a specific [ES2015 (ES6) `Symbol`](http://www.2ality.com/2014/12/es6-symbols.html) in browsers that support it, in order to ensure that React never considers untrusted JSON to be a valid element. If this extra security protection is important to you, you should add a `Symbol` polyfill for older browsers, such as the one included by [Babel’s polyfill](http://babeljs.io/docs/usage/polyfill/).
+- When possible, React DOM now generates XHTML-compatible markup.
+- React DOM now supports these standard HTML attributes: `capture`, `challenge`, `inputMode`, `is`, `keyParams`, `keyType`, `minLength`, `summary`, `wrap`. It also now supports these non-standard attributes: `autoSave`, `results`, `security`.
+- React DOM now supports these SVG attributes, which render into namespaced attributes: `xlinkActuate`, `xlinkArcrole`, `xlinkHref`, `xlinkRole`, `xlinkShow`, `xlinkTitle`, `xlinkType`, `xmlBase`, `xmlLang`, `xmlSpace`.
+- The `image` SVG tag is now supported by React DOM.
+- In React DOM, arbitrary attributes are supported on custom elements (those with a hyphen in the tag name or an `is="..."` attribute).
+- React DOM now supports these media events on `audio` and `video` tags: `onAbort`, `onCanPlay`, `onCanPlayThrough`, `onDurationChange`, `onEmptied`, `onEncrypted`, `onEnded`, `onError`, `onLoadedData`, `onLoadedMetadata`, `onLoadStart`, `onPause`, `onPlay`, `onPlaying`, `onProgress`, `onRateChange`, `onSeeked`, `onSeeking`, `onStalled`, `onSuspend`, `onTimeUpdate`, `onVolumeChange`, `onWaiting`.
+- Many small performance improvements have been made.
+- Many warnings show more context than before.
+- Add-Ons: A [`shallowCompare`](https://github.com/facebook/react/pull/3355) add-on has been added as a migration path for `PureRenderMixin` in ES6 classes.
+- Add-Ons: `CSSTransitionGroup` can now use [custom class names](https://github.com/facebook/react/blob/48942b85/docs/docs/10.1-animation.md#custom-classes) instead of appending `-enter-active` or similar to the transition name.
+
+### New helpful warnings
+
+- React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.
+- Passing `document.body` directly as the container to `ReactDOM.render` now gives a warning as doing so can cause problems with browser extensions that modify the DOM.
+- Using multiple instances of React together is not supported, so we now warn when we detect this case to help you avoid running into the resulting problems.
+
+### Notable bug fixes
+
+- Click events are handled by React DOM more reliably in mobile browsers, particularly in Mobile Safari.
+- SVG elements are created with the correct namespace in more cases.
+- React DOM now renders `<option>` elements with multiple text children properly and renders `<select>` elements on the server with the correct option selected.
+- When two separate copies of React add nodes to the same document (including when a browser extension uses React), React DOM tries harder not to throw exceptions during event handling.
+- Using non-lowercase HTML tag names in React DOM (e.g., `React.createElement('DIV')`) no longer causes problems, though we continue to recommend lowercase for consistency with the JSX tag name convention (lowercase names refer to built-in components, capitalized names refer to custom components).
+- React DOM understands that these CSS properties are unitless and does not append “px” to their values: `animationIterationCount`, `boxOrdinalGroup`, `flexOrder`, `tabSize`, `stopOpacity`.
+- Add-Ons: When using the test utils, `Simulate.mouseEnter` and `Simulate.mouseLeave` now work.
+- Add-Ons: ReactTransitionGroup now correctly handles multiple nodes being removed simultaneously.
+
+
+### React Tools / Babel
+
+#### Breaking Changes
+
+- The `react-tools` package and `JSXTransformer.js` browser file [have been deprecated](https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html). You can continue using version `0.13.3` of both, but we no longer support them and recommend migrating to [Babel](http://babeljs.io/), which has built-in support for React and JSX.
+
+#### New Features
+
+- Babel 5.8.24 introduces **Inlining React elements:** The `optimisation.react.inlineElements` transform converts JSX elements to object literals like `{type: 'div', props: ...}` instead of calls to `React.createElement`.  This should only be enabled in production, since it disables some development warnings/checks.
+- Babel 5.8.24 introduces **Constant hoisting for React elements:** The `optimisation.react.constantElements` transform hoists element creation to the top level for subtrees that are fully static, which reduces calls to `React.createElement` and the resulting allocations. More importantly, it tells React that the subtree hasn’t changed so React can completely skip it when reconciling.  This should only be enabled in production, since it disables some development warnings/checks.
+
+
+## 0.13.3 (May 8, 2015)
+
+### React Core
+
+#### New Features
+
+* Added `clipPath` element and attribute for SVG
+* Improved warnings for deprecated methods in plain JS classes
+
+#### Bug Fixes
+
+* Loosened `dangerouslySetInnerHTML` restrictions so `{__html: undefined}` will no longer throw
+* Fixed extraneous context warning with non-pure `getChildContext`
+* Ensure `replaceState(obj)` retains prototype of `obj`
+
+### React with Add-ons
+
+### Bug Fixes
+
+* Test Utils: Ensure that shallow rendering works when components define `contextTypes`
+
+
 ## 0.13.2 (April 18, 2015)
 
 ### React Core
@@ -70,7 +236,7 @@
 
 * Support for using ES6 classes to build React components; see the [v0.13.0 beta 1 notes](https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html) for details.
 * Added new top-level API `React.findDOMNode(component)`, which should be used in place of `component.getDOMNode()`. The base class for ES6-based components will not have `getDOMNode`. This change will enable some more patterns moving forward.
-* Added a new top-level API `React.cloneElement(el, props)` for making copies of React elements – see the [v0.13 RC2 notes](/react/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement) for more details.
+* Added a new top-level API `React.cloneElement(el, props)` for making copies of React elements – see the [v0.13 RC2 notes](https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement) for more details.
 * New `ref` style, allowing a callback to be used in place of a name: `<Photo ref={(c) => this._photo = c} />` allows you to reference the component with `this._photo` (as opposed to `ref="photo"` which gives `this.refs.photo`).
 * `this.setState()` can now take a function as the first argument for transactional state updates, such as `this.setState((state, props) => ({count: state.count + 1}));` – this means that you no longer need to use `this._pendingState`, which is now gone.
 * Support for iterators and immutable-js sequences as children.
@@ -84,7 +250,7 @@
 
 #### New Features
 
-* [`React.addons.createFragment` was added](/react/docs/create-fragment.html) for adding keys to entire sets of children.
+* [`React.addons.createFragment` was added](https://facebook.github.io/react/docs/create-fragment.html) for adding keys to entire sets of children.
 
 #### Deprecations
 

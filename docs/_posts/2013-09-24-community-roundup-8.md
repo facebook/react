@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #8"
-author: Vjeux
+author: vjeux
 ---
 
 A lot has happened in the month since our last update. Here are some of the more interesting things we've found. But first, we have a couple updates before we share links.

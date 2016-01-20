@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -14,18 +14,20 @@
 var EnterLeaveEventPlugin;
 var EventConstants;
 var React;
-var ReactMount;
+var ReactDOM;
+var ReactDOMComponentTree;
 
 var topLevelTypes;
 
 describe('EnterLeaveEventPlugin', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     EventConstants = require('EventConstants');
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOM = require('ReactDOM');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
 
     topLevelTypes = EventConstants.topLevelTypes;
   });
@@ -37,18 +39,18 @@ describe('EnterLeaveEventPlugin', function() {
     var iframeDocument = iframe.contentDocument;
 
     iframeDocument.write(
-      '<!DOCTYPE html><html><head></head><body></body></html>'
+      '<!DOCTYPE html><html><head></head><body><div></div></body></html>'
     );
     iframeDocument.close();
 
-    var component = React.render(<div />, iframeDocument.body);
-    var div = React.findDOMNode(component);
+    var component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
+    var div = ReactDOM.findDOMNode(component);
 
     var extracted = EnterLeaveEventPlugin.extractEvents(
       topLevelTypes.topMouseOver,
-      div,
-      ReactMount.getID(div),
-      {target: div}
+      ReactDOMComponentTree.getInstanceFromNode(div),
+      {target: div},
+      div
     );
     expect(extracted.length).toBe(2);
 

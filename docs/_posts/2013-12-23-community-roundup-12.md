@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #12"
-author: Vjeux
+author: vjeux
 ---
 
 React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the [docs](/react/docs/getting-started.html) and do not hesitate to ask questions on the [Google Group](https://groups.google.com/group/reactjs), [IRC](irc://chat.freenode.net/reactjs) or [Stack Overflow](http://stackoverflow.com/questions/tagged/reactjs). We are trying our best to help you out!

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule getEventCharCode
- * @typechecks static-only
  */
 
 'use strict';
@@ -20,7 +19,7 @@
  * presumably because it does not produce a tab-character in browsers.
  *
  * @param {object} nativeEvent Native browser event.
- * @return {string} Normalized `charCode` property.
+ * @return {number} Normalized `charCode` property.
  */
 function getEventCharCode(nativeEvent) {
   var charCode;

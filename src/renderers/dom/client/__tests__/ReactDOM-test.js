@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var div = React.createFactory('div');
 
@@ -36,7 +37,7 @@ describe('ReactDOM', function() {
         return <form><input type="submit" value="Submit" /></form>;
       },
       componentDidMount: function() {
-        form = React.findDOMNode(this);
+        form = ReactDOM.findDOMNode(this);
       }
     });
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
@@ -45,25 +46,25 @@ describe('ReactDOM', function() {
   });
   */
 
-  it("allows a DOM element to be used with a string", function() {
+  it('allows a DOM element to be used with a string', function() {
     var element = React.createElement('div', {className: 'foo'});
     var instance = ReactTestUtils.renderIntoDocument(element);
-    expect(React.findDOMNode(instance).tagName).toBe('DIV');
+    expect(ReactDOM.findDOMNode(instance).tagName).toBe('DIV');
   });
 
-  it("should allow children to be passed as an argument", function() {
+  it('should allow children to be passed as an argument', function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       div(null, 'child')
     );
-    var argNode = React.findDOMNode(argDiv);
+    var argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
-  it("should overwrite props.children with children argument", function() {
+  it('should overwrite props.children with children argument', function() {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       div({children: 'fakechild'}, 'child')
     );
-    var conflictNode = React.findDOMNode(conflictDiv);
+    var conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -71,7 +72,7 @@ describe('ReactDOM', function() {
    * We need to make sure that updates occur to the actual node that's in the
    * DOM, instead of a stale cache.
    */
-  it("should purge the DOM cache when removing nodes", function() {
+  it('should purge the DOM cache when removing nodes', function() {
     var myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dog" />,
@@ -79,33 +80,33 @@ describe('ReactDOM', function() {
       </div>
     );
     // Warm the cache with theDog
-    myDiv.setProps({
-      children: [
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
         <div key="theDog" className="dogbeforedelete" />,
-        <div key="theBird" className="bird" />
-      ]
-    });
+        <div key="theBird" className="bird" />,
+      </div>
+    );
     // Remove theDog - this should purge the cache
-    myDiv.setProps({
-      children: [
-        <div key="theBird" className="bird" />
-      ]
-    });
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
+        <div key="theBird" className="bird" />,
+      </div>
+    );
     // Now, put theDog back. It's now a different DOM node.
-    myDiv.setProps({
-      children: [
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
         <div key="theDog" className="dog" />,
-        <div key="theBird" className="bird" />
-      ]
-    });
+        <div key="theBird" className="bird" />,
+      </div>
+    );
     // Change the className of theDog. It will use the same element
-    myDiv.setProps({
-      children: [
+    myDiv = ReactTestUtils.renderIntoDocument(
+      <div>
         <div key="theDog" className="bigdog" />,
-        <div key="theBird" className="bird" />
-      ]
-    });
-    var root = React.findDOMNode(myDiv);
+        <div key="theBird" className="bird" />,
+      </div>
+    );
+    var root = ReactDOM.findDOMNode(myDiv);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });

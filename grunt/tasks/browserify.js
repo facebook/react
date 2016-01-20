@@ -13,6 +13,7 @@ module.exports = function() {
   // grunt.config.requires('outfile');
   // grunt.config.requires('entries');
   config.transforms = config.transforms || [];
+  config.globalTransforms = config.globalTransforms || [];
   config.plugins = config.plugins || [];
   config.after = config.after || [];
 
@@ -23,13 +24,17 @@ module.exports = function() {
   var options = {
     entries: entries,
     debug: config.debug, // sourcemaps
-    standalone: config.standalone // global
+    standalone: config.standalone, // global
   };
 
   var bundle = browserify(options);
 
   config.transforms.forEach(function(transform) {
     bundle.transform({}, transform);
+  });
+
+  config.globalTransforms.forEach(function(transform) {
+    bundle.transform({global: true}, transform);
   });
 
   config.plugins.forEach(bundle.plugin, bundle);

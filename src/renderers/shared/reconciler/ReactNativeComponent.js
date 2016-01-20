@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, Facebook, Inc.
+ * Copyright 2014-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -36,11 +36,6 @@ var ReactNativeComponentInjection = {
   injectComponentClasses: function(componentClasses) {
     assign(tagToComponentClass, componentClasses);
   },
-  // Temporary hack since we expect DOM refs to behave like composites,
-  // for this release.
-  injectAutoWrapper: function(wrapperFactory) {
-    autoGenerateWrapperClass = wrapperFactory;
-  }
 };
 
 /**
@@ -97,7 +92,7 @@ var ReactNativeComponent = {
   createInternalComponent: createInternalComponent,
   createInstanceForText: createInstanceForText,
   isTextComponent: isTextComponent,
-  injection: ReactNativeComponentInjection
+  injection: ReactNativeComponentInjection,
 };
 
 module.exports = ReactNativeComponent;

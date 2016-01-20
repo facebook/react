@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -20,7 +20,7 @@ var TestComponentWithMixin;
 
 describe('ReactStateSetters', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     TestComponent = React.createClass({
       getInitialState: function() {
@@ -29,7 +29,7 @@ describe('ReactStateSetters', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     TestComponentWithMixin = React.createClass({
@@ -41,7 +41,7 @@ describe('ReactStateSetters', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
   });
 
@@ -55,7 +55,7 @@ describe('ReactStateSetters', function() {
       function(a, b, c) {
         return {
           foo: a + b + c,
-          bar: a * b * c
+          bar: a * b * c,
         };
       }
     );
@@ -108,7 +108,7 @@ describe('ReactStateSetters', function() {
       function(a, b, c) {
         return {
           foo: a + b + c,
-          bar: a * b * c
+          bar: a * b * c,
         };
       }
     );

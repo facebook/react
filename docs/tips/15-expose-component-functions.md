@@ -4,7 +4,7 @@ title: Expose Component Functions
 layout: tips
 permalink: expose-component-functions.html
 prev: communicate-between-components.html
-next: references-to-components.html
+next: children-undefined.html
 ---
 
 There's another (uncommon) way of [communicating between components](/react/tips/communicate-between-components.html): simply expose a method on the child component for the parent to call.
@@ -53,7 +53,7 @@ var Todos = React.createClass({
   }
 });
 
-React.render(<Todos />, mountNode);
+ReactDOM.render(<Todos />, mountNode);
 ```
 
 Alternatively, you could have achieved this by passing the `todo` an `isLastUnfinishedItem` prop, let it check this prop in `componentDidUpdate`, then animate itself; however, this quickly gets messy if you pass around different props to control animations.

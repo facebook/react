@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -16,6 +16,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 
 var assign = require('Object.assign');
+var invariant = require('invariant');
 
 function reactComponentExpect(instance) {
   if (instance instanceof reactComponentExpectInternal) {
@@ -27,7 +28,12 @@ function reactComponentExpect(instance) {
   }
 
   expect(instance).not.toBeNull();
+  expect(instance).not.toBeUndefined();
 
+  invariant(
+    ReactTestUtils.isCompositeComponent(instance),
+    'reactComponentExpect(...): instance must be a composite component'
+  );
   var internalInstance = ReactInstanceMap.get(instance);
 
   expect(typeof internalInstance).toBe('object');
@@ -80,7 +86,7 @@ assign(reactComponentExpectInternal.prototype, {
     // change soon.
     this.toBeDOMComponent();
     var renderedChildren =
-      this._instance._renderedComponent._renderedChildren || {};
+      this._instance._renderedChildren || {};
     for (var name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
@@ -96,7 +102,7 @@ assign(reactComponentExpectInternal.prototype, {
 
   toBeDOMComponentWithChildCount: function(count) {
     this.toBeDOMComponent();
-    var renderedChildren = this._instance._renderedComponent._renderedChildren;
+    var renderedChildren = this._instance._renderedChildren;
     expect(renderedChildren).toBeTruthy();
     expect(Object.keys(renderedChildren).length).toBe(count);
     return this;
@@ -104,7 +110,7 @@ assign(reactComponentExpectInternal.prototype, {
 
   toBeDOMComponentWithNoChildren: function() {
     this.toBeDOMComponent();
-    expect(this._instance._renderedComponent._renderedChildren).toBeFalsy();
+    expect(this._instance._renderedChildren).toBeFalsy();
     return this;
   },
 
@@ -142,6 +148,11 @@ assign(reactComponentExpectInternal.prototype, {
     expect(elementType === 'string' || elementType === 'number').toBe(true);
     expect(this._instance._stringText).toBe(val);
     return this;
+  },
+
+  toBeEmptyComponent: function() {
+    var element = this._instance._currentElement;
+    return element === null || element === false;
   },
 
   toBePresent: function() {
@@ -213,7 +224,7 @@ assign(reactComponentExpectInternal.prototype, {
         .toEqual(contextNameToExpectedValue[contextName]);
     }
     return this;
-  }
+  },
 });
 
 module.exports = reactComponentExpect;

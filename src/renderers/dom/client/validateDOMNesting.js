@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -41,7 +41,7 @@ if (__DEV__) {
     'object', 'ol', 'p', 'param', 'plaintext', 'pre', 'script', 'section',
     'select', 'source', 'style', 'summary', 'table', 'tbody', 'td', 'template',
     'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'track', 'ul', 'wbr',
-    'xmp'
+    'xmp',
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
@@ -52,7 +52,7 @@ if (__DEV__) {
     // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
     // TODO: Distinguish by namespace here -- for <title>, including it here
     // errs on the side of fewer warnings
-    'foreignObject', 'desc', 'title'
+    'foreignObject', 'desc', 'title',
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
@@ -63,7 +63,7 @@ if (__DEV__) {
     ['dd', 'dt', 'li', 'option', 'optgroup', 'p', 'rp', 'rt'];
 
   var emptyAncestorInfo = {
-    parentTag: null,
+    current: null,
 
     formTag: null,
     aTagInScope: null,
@@ -72,7 +72,7 @@ if (__DEV__) {
     pTagInButtonScope: null,
 
     listItemTagAutoclosing: null,
-    dlItemTagAutoclosing: null
+    dlItemTagAutoclosing: null,
   };
 
   var updatedAncestorInfo = function(oldInfo, tag, instance) {
@@ -98,7 +98,7 @@ if (__DEV__) {
       ancestorInfo.dlItemTagAutoclosing = null;
     }
 
-    ancestorInfo.parentTag = info;
+    ancestorInfo.current = info;
 
     if (tag === 'form') {
       ancestorInfo.formTag = info;
@@ -186,6 +186,8 @@ if (__DEV__) {
       // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
       case 'html':
         return tag === 'head' || tag === 'body';
+      case '#document':
+        return tag === 'html';
     }
 
     // Probably in the "in body" parsing mode, so we outlaw only tag combos
@@ -212,6 +214,7 @@ if (__DEV__) {
       case 'colgroup':
       case 'frame':
       case 'head':
+      case 'html':
       case 'tbody':
       case 'td':
       case 'tfoot':
@@ -310,18 +313,18 @@ if (__DEV__) {
     }
 
     var stack = [];
-    /*eslint-disable space-after-keywords */
     do {
-    /*eslint-enable space-after-keywords */
       stack.push(instance);
     } while ((instance = instance._currentElement._owner));
     stack.reverse();
     return stack;
   };
 
+  var didWarn = {};
+
   validateDOMNesting = function(childTag, childInstance, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
-    var parentInfo = ancestorInfo.parentTag;
+    var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
 
     var invalidParent =
@@ -374,6 +377,13 @@ if (__DEV__) {
         childTag
       ).join(' > ');
 
+      var warnKey =
+        !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + ownerInfo;
+      if (didWarn[warnKey]) {
+        return;
+      }
+      didWarn[warnKey] = true;
+
       if (invalidParent) {
         var info = '';
         if (ancestorTag === 'table' && childTag === 'tr') {
@@ -403,15 +413,12 @@ if (__DEV__) {
     }
   };
 
-  validateDOMNesting.ancestorInfoContextKey =
-    '__validateDOMNesting_ancestorInfo$' + Math.random().toString(36).slice(2);
-
   validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
 
   // For testing
   validateDOMNesting.isTagValidInContext = function(tag, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
-    var parentInfo = ancestorInfo.parentTag;
+    var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
     return (
       isTagValidWithParent(tag, parentTag) &&

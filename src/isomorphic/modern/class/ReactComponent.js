@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,18 +11,26 @@
 
 'use strict';
 
-var ReactUpdateQueue = require('ReactUpdateQueue');
+var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
+var canDefineProperty = require('canDefineProperty');
+var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
 
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactComponent(props, context) {
+function ReactComponent(props, context, updater) {
   this.props = props;
   this.context = context;
+  this.refs = emptyObject;
+  // We initialize the default updater but the real one gets injected by the
+  // renderer.
+  this.updater = updater || ReactNoopUpdateQueue;
 }
+
+ReactComponent.prototype.isReactComponent = {};
 
 /**
  * Sets a subset of the state. Always use this to mutate
@@ -64,9 +72,9 @@ ReactComponent.prototype.setState = function(partialState, callback) {
       'instead, use forceUpdate().'
     );
   }
-  ReactUpdateQueue.enqueueSetState(this, partialState);
+  this.updater.enqueueSetState(this, partialState);
   if (callback) {
-    ReactUpdateQueue.enqueueCallback(this, callback);
+    this.updater.enqueueCallback(this, callback);
   }
 };
 
@@ -85,9 +93,9 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponent.prototype.forceUpdate = function(callback) {
-  ReactUpdateQueue.enqueueForceUpdate(this);
+  this.updater.enqueueForceUpdate(this);
   if (callback) {
-    ReactUpdateQueue.enqueueCallback(this, callback);
+    this.updater.enqueueCallback(this, callback);
   }
 };
 
@@ -98,31 +106,19 @@ ReactComponent.prototype.forceUpdate = function(callback) {
  */
 if (__DEV__) {
   var deprecatedAPIs = {
-    getDOMNode: [
-      'getDOMNode',
-      'Use React.findDOMNode(component) instead.'
-    ],
     isMounted: [
       'isMounted',
       'Instead, make sure to clean up subscriptions and pending requests in ' +
-      'componentWillUnmount to prevent memory leaks.'
-    ],
-    replaceProps: [
-      'replaceProps',
-      'Instead, call React.render again at the top level.'
+      'componentWillUnmount to prevent memory leaks.',
     ],
     replaceState: [
       'replaceState',
       'Refactor your code to use setState instead (see ' +
-      'https://github.com/facebook/react/issues/3236).'
+      'https://github.com/facebook/react/issues/3236).',
     ],
-    setProps: [
-      'setProps',
-      'Instead, call React.render again at the top level.'
-    ]
   };
   var defineDeprecationWarning = function(methodName, info) {
-    try {
+    if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           warning(
@@ -132,10 +128,8 @@ if (__DEV__) {
             info[1]
           );
           return undefined;
-        }
+        },
       });
-    } catch (x) {
-      // IE will fail on defineProperty (es5-shim/sham too)
     }
   };
   for (var fnName in deprecatedAPIs) {

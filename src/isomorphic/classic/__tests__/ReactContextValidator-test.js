@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -18,19 +18,19 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 var reactComponentExpect;
-var mocks;
 
 describe('ReactContextValidator', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
-    mocks = require('mocks');
 
     spyOn(console, 'error');
   });
@@ -41,30 +41,30 @@ describe('ReactContextValidator', function() {
   it('should filter out context not in contextTypes', function() {
     var Component = React.createClass({
       contextTypes: {
-        foo: React.PropTypes.string
+        foo: React.PropTypes.string,
       },
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     var ComponentInFooBarContext = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string,
-        bar: React.PropTypes.number
+        bar: React.PropTypes.number,
       },
 
       getChildContext: function() {
         return {
           foo: 'abc',
-          bar: 123
+          bar: 123,
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
@@ -80,24 +80,24 @@ describe('ReactContextValidator', function() {
     var Parent = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
-        bar: React.PropTypes.string.isRequired
+        bar: React.PropTypes.string.isRequired,
       },
 
       getChildContext: function() {
         return {
           foo: this.props.foo,
-          bar: "bar"
+          bar: 'bar',
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     var Component = React.createClass({
       contextTypes: {
-        foo: React.PropTypes.string
+        foo: React.PropTypes.string,
       },
 
       componentWillReceiveProps: function(nextProps, nextContext) {
@@ -120,12 +120,12 @@ describe('ReactContextValidator', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
-    var instance = <Parent foo="abc" />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.replaceProps({foo: "def"});
+    var container = document.createElement('div');
+    ReactDOM.render(<Parent foo="abc" />, container);
+    ReactDOM.render(<Parent foo="def" />, container);
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});
@@ -135,12 +135,12 @@ describe('ReactContextValidator', function() {
   it('should check context types', function() {
     var Component = React.createClass({
       contextTypes: {
-        foo: React.PropTypes.string.isRequired
+        foo: React.PropTypes.string.isRequired,
       },
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Component />);
@@ -153,18 +153,18 @@ describe('ReactContextValidator', function() {
 
     var ComponentInFooStringContext = React.createClass({
       childContextTypes: {
-        foo: React.PropTypes.string
+        foo: React.PropTypes.string,
       },
 
       getChildContext: function() {
         return {
-          foo: this.props.fooValue
+          foo: this.props.fooValue,
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -176,18 +176,18 @@ describe('ReactContextValidator', function() {
 
     var ComponentInFooNumberContext = React.createClass({
       childContextTypes: {
-        foo: React.PropTypes.number
+        foo: React.PropTypes.number,
       },
 
       getChildContext: function() {
         return {
-          foo: this.props.fooValue
+          foo: this.props.fooValue,
         };
       },
 
       render: function() {
         return <Component />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
@@ -205,7 +205,7 @@ describe('ReactContextValidator', function() {
     var Component = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
-        bar: React.PropTypes.number
+        bar: React.PropTypes.number,
       },
 
       getChildContext: function() {
@@ -214,24 +214,20 @@ describe('ReactContextValidator', function() {
 
       render: function() {
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
-    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed Context Types: ' +
-      'Required child context `foo` was not specified in `Component`.'
-    );
-    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: Failed Context Types: ' +
       'Required child context `foo` was not specified in `Component`.'
     );
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
 
-    expect(console.error.argsForCall.length).toBe(4);
-    expect(console.error.argsForCall[3][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: Failed Context Types: ' +
       'Invalid child context `foo` of type `number` ' +
       'supplied to `Component`, expected `string`.'
@@ -246,7 +242,7 @@ describe('ReactContextValidator', function() {
     );
 
     // Previous calls should not log errors
-    expect(console.error.argsForCall.length).toBe(4);
+    expect(console.error.argsForCall.length).toBe(2);
   });
 
 });

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,12 +11,8 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
-var ReactInstanceMap;
-var ReactTestUtils;
-var reactComponentExpect;
+var ReactDOM;
 
 var TestComponent;
 
@@ -24,9 +20,8 @@ describe('ReactCompositeComponent-state', function() {
 
   beforeEach(function() {
     React = require('React');
-    ReactInstanceMap = require('ReactInstanceMap');
-    ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
+
+    ReactDOM = require('ReactDOM');
 
     TestComponent = React.createClass({
       peekAtState: function(from, state) {
@@ -127,33 +122,33 @@ describe('ReactCompositeComponent-state', function() {
 
       componentWillUnmount: function() {
         this.peekAtState('componentWillUnmount');
-      }
+      },
     });
-
   });
 
   it('should support setting state', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
-    var stateListener = mocks.getMockFunction();
-    var instance = React.render(
+    var stateListener = jest.genMockFn();
+    var instance = ReactDOM.render(
       <TestComponent stateListener={stateListener} />,
       container,
       function peekAtInitialCallback() {
         this.peekAtState('initial-callback');
       }
     );
-    instance.setProps(
-      {nextColor: 'green'},
+    ReactDOM.render(
+      <TestComponent stateListener={stateListener} nextColor="green" />,
+      container,
       instance.peekAtCallback('setProps')
     );
     instance.setFavoriteColor('blue');
     instance.forceUpdate(instance.peekAtCallback('forceUpdate'));
 
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
 
-    expect(stateListener.mock.calls).toEqual([
+    expect(stateListener.mock.calls.join('\n')).toEqual([
       // there is no state when getInitialState() is called
       ['getInitialState', null],
       ['componentWillMount-start', 'red'],
@@ -179,6 +174,8 @@ describe('ReactCompositeComponent-state', function() {
       ['render', 'yellow'],
       ['componentDidUpdate-currentState', 'yellow'],
       ['componentDidUpdate-prevState', 'orange'],
+      ['setState-sunrise', 'yellow'],
+      ['setState-orange', 'yellow'],
       ['setState-yellow', 'yellow'],
       ['initial-callback', 'yellow'],
       ['componentWillReceiveProps-start', 'yellow'],
@@ -215,8 +212,8 @@ describe('ReactCompositeComponent-state', function() {
       ['forceUpdate', 'blue'],
       // unmountComponent()
       // state is available within `componentWillUnmount()`
-      ['componentWillUnmount', 'blue']
-    ]);
+      ['componentWillUnmount', 'blue'],
+    ].join('\n'));
   });
 
   it('should batch unmounts', function() {
@@ -229,7 +226,7 @@ describe('ReactCompositeComponent-state', function() {
         // This should get silently ignored (maybe with a warning), but it
         // shouldn't break React.
         outer.setState({showInner: false});
-      }
+      },
     });
     var Outer = React.createClass({
       getInitialState: function() {
@@ -237,13 +234,13 @@ describe('ReactCompositeComponent-state', function() {
       },
       render: function() {
         return <div>{this.state.showInner && <Inner />}</div>;
-      }
+      },
     });
 
     var container = document.createElement('div');
-    outer = React.render(<Outer />, container);
+    outer = ReactDOM.render(<Outer />, container);
     expect(() => {
-      React.unmountComponentAtNode(container);
+      ReactDOM.unmountComponentAtNode(container);
     }).not.toThrow();
   });
 });

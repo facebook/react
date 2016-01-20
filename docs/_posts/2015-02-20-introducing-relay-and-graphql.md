@@ -1,7 +1,7 @@
 ---
 title: "Introducing Relay and GraphQL"
 layout: post
-author: Greg Hurrell
+author: wincent
 ---
 
 ## Data fetching for React applications

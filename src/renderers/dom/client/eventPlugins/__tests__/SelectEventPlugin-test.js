@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,16 +11,12 @@
 
 'use strict';
 
-var mockModules = require('mock-modules');
-mockModules.mock('getActiveElement');
-
 var EventConstants;
 var React;
-var ReactMount;
+var ReactDOM;
+var ReactDOMComponentTree;
 var ReactTestUtils;
 var SelectEventPlugin;
-
-var getActiveElement;
 
 var topLevelTypes;
 
@@ -28,22 +24,19 @@ describe('SelectEventPlugin', function() {
   function extract(node, topLevelEvent) {
     return SelectEventPlugin.extractEvents(
       topLevelEvent,
-      node,
-      ReactMount.getID(node),
-      {target: node}
+      ReactDOMComponentTree.getInstanceFromNode(node),
+      {target: node},
+      node
     );
   }
 
   beforeEach(function() {
-    mockModules.dumpCache();
-
     EventConstants = require('EventConstants');
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOM = require('ReactDOM');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
-
-    getActiveElement = require('getActiveElement');
 
     topLevelTypes = EventConstants.topLevelTypes;
   });
@@ -52,12 +45,12 @@ describe('SelectEventPlugin', function() {
     var WithoutSelect = React.createClass({
       render: function() {
         return <input type="text" />;
-      }
+      },
     });
 
     var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
-    var node = React.findDOMNode(rendered);
-    getActiveElement.mockReturnValue(node);
+    var node = ReactDOM.findDOMNode(rendered);
+    node.focus();
 
     var mousedown = extract(node, topLevelTypes.topMouseDown);
     expect(mousedown).toBe(null);
@@ -67,24 +60,22 @@ describe('SelectEventPlugin', function() {
   });
 
   it('should extract if an `onSelect` listener is present', function() {
-    var mocks = require('mocks');
-
     var WithSelect = React.createClass({
       render: function() {
         return <input type="text" onSelect={this.props.onSelect} />;
-      }
+      },
     });
 
-    var cb = mocks.getMockFunction();
+    var cb = jest.genMockFn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />
     );
-    var node = React.findDOMNode(rendered);
+    var node = ReactDOM.findDOMNode(rendered);
 
     node.selectionStart = 0;
     node.selectionEnd = 0;
-    getActiveElement.mockReturnValue(node);
+    node.focus();
 
     var focus = extract(node, topLevelTypes.topFocus);
     expect(focus).toBe(null);

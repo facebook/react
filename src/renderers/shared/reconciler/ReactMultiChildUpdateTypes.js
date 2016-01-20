@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -25,7 +25,8 @@ var ReactMultiChildUpdateTypes = keyMirror({
   INSERT_MARKUP: null,
   MOVE_EXISTING: null,
   REMOVE_NODE: null,
-  TEXT_CONTENT: null
+  SET_MARKUP: null,
+  TEXT_CONTENT: null,
 });
 
 module.exports = ReactMultiChildUpdateTypes;

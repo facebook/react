@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,32 +11,23 @@
 
 'use strict';
 
-require('mock-modules')
-  .dontMock('ExecutionEnvironment')
-  .dontMock('React')
-  .dontMock('ReactMount')
-  .dontMock('ReactServerRendering')
-  .dontMock('ReactTestUtils')
-  .dontMock('ReactMarkupChecksum');
-
-var mocks = require('mocks');
-
 var ExecutionEnvironment;
 var React;
+var ReactDOM;
 var ReactMarkupChecksum;
-var ReactMount;
 var ReactReconcileTransaction;
 var ReactTestUtils;
 var ReactServerRendering;
 
 var ID_ATTRIBUTE_NAME;
+var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactServerRendering', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
 
@@ -46,7 +37,7 @@ describe('ReactServerRendering', function() {
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-    spyOn(console, 'error');
+    ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
   describe('renderToString', function() {
@@ -55,14 +46,37 @@ describe('ReactServerRendering', function() {
         <span>hello world</span>
       );
       expect(response).toMatch(
-        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
+      );
+    });
+
+    it('should generate simple markup for self-closing tags', function() {
+      var response = ReactServerRendering.renderToString(
+        <img />
+      );
+      expect(response).toMatch(
+        '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
+      );
+    });
+
+    it('should generate simple markup for attribute with `>` symbol', function() {
+      var response = ReactServerRendering.renderToString(
+        <img data-attr=">" />
+      );
+      expect(response).toMatch(
+        '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
       );
     });
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = mocks.getMockFunction();
+      var cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -74,18 +88,19 @@ describe('ReactServerRendering', function() {
       var Parent = React.createClass({
         render: function() {
           return <div><Child name="child" /></div>;
-        }
+        },
       });
       var Child = React.createClass({
         render: function() {
           return <span>My name is {this.props.name}</span>;
-        }
+        },
       });
       var response = ReactServerRendering.renderToString(
         <Parent />
       );
       expect(response).toMatch(
-        '<div ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+        '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
           '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">My name is </span>' +
@@ -127,7 +142,7 @@ describe('ReactServerRendering', function() {
           },
           componentWillUnmount: function() {
             lifecycle.push('componentWillUnmount');
-          }
+          },
         });
 
         var response = ReactServerRendering.renderToString(
@@ -135,7 +150,8 @@ describe('ReactServerRendering', function() {
         );
 
         expect(response).toMatch(
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+          '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
+            ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
             '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
@@ -171,24 +187,24 @@ describe('ReactServerRendering', function() {
           return (
             <span ref="span" onClick={this.click}>Name: {this.props.name}</span>
           );
-        }
+        },
       });
 
       var element = document.createElement('div');
-      React.render(<TestComponent />, element);
+      ReactDOM.render(<TestComponent />, element);
 
       var lastMarkup = element.innerHTML;
 
       // Exercise the update path. Markup should not change,
       // but some lifecycle methods should be run again.
-      React.render(<TestComponent name="x" />, element);
+      ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(1);
 
       // Unmount and remount. We should get another mount event and
       // we should get different markup, as the IDs are unique each time.
-      React.unmountComponentAtNode(element);
+      ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
-      React.render(<TestComponent name="x" />, element);
+      ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(2);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -196,7 +212,7 @@ describe('ReactServerRendering', function() {
       // we used server rendering. We should mount again, but the markup should
       // be unchanged. We will append a sentinel at the end of innerHTML to be
       // sure that innerHTML was not changed.
-      React.unmountComponentAtNode(element);
+      ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
 
       ExecutionEnvironment.canUseDOM = false;
@@ -206,16 +222,17 @@ describe('ReactServerRendering', function() {
       ExecutionEnvironment.canUseDOM = true;
       element.innerHTML = lastMarkup;
 
-      React.render(<TestComponent name="x" />, element);
+      ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
       expect(element.innerHTML).toBe(lastMarkup);
-      React.unmountComponentAtNode(element);
+      ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
 
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
-      var instance = React.render(<TestComponent name="y" />, element);
+      spyOn(console, 'error');
+      var instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expect(console.error.argsForCall.length).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -223,7 +240,7 @@ describe('ReactServerRendering', function() {
 
       // Ensure the events system works
       expect(numClicks).toEqual(0);
-      ReactTestUtils.Simulate.click(React.findDOMNode(instance.refs.span));
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
       expect(numClicks).toEqual(1);
     });
 
@@ -234,8 +251,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderToString(): You must pass ' +
-        'a valid ReactElement.'
+        'renderToString(): You must pass a valid ReactElement.'
       );
     });
   });
@@ -245,13 +261,13 @@ describe('ReactServerRendering', function() {
       var NestedComponent = React.createClass({
         render: function() {
           return <div>inner text</div>;
-        }
+        },
       });
 
       var TestComponent = React.createClass({
         render: function() {
           return <span><NestedComponent /></span>;
-        }
+        },
       });
 
       var response = ReactServerRendering.renderToStaticMarkup(
@@ -265,7 +281,7 @@ describe('ReactServerRendering', function() {
       var TestComponent = React.createClass({
         render: function() {
           return <span>{'hello'} {'world'}</span>;
-        }
+        },
       });
 
       var response = ReactServerRendering.renderToStaticMarkup(
@@ -277,7 +293,7 @@ describe('ReactServerRendering', function() {
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = mocks.getMockFunction();
+      var cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -317,7 +333,7 @@ describe('ReactServerRendering', function() {
           },
           componentWillUnmount: function() {
             lifecycle.push('componentWillUnmount');
-          }
+          },
         });
 
         var response = ReactServerRendering.renderToStaticMarkup(
@@ -344,8 +360,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderToStaticMarkup(): You must pass ' +
-        'a valid ReactElement.'
+        'renderToString(): You must pass a valid ReactElement.'
       );
     });
 
@@ -356,7 +371,7 @@ describe('ReactServerRendering', function() {
         },
         render: function() {
           return <div>{this.state.text}</div>;
-        }
+        },
       });
 
       ReactReconcileTransaction.prototype.perform = function() {

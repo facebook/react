@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,14 +13,13 @@
 
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
-var warning = require('warning');
 
 var dirtyComponents = [];
 var asapCallbackQueue = CallbackQueue.getPooled();
@@ -52,7 +51,7 @@ var NESTED_UPDATES = {
     } else {
       dirtyComponents.length = 0;
     }
-  }
+  },
 };
 
 var UPDATE_QUEUEING = {
@@ -61,7 +60,7 @@ var UPDATE_QUEUEING = {
   },
   close: function() {
     this.callbackQueue.notifyAll();
-  }
+  },
 };
 
 var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
@@ -70,38 +69,41 @@ function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
   this.dirtyComponentsLength = null;
   this.callbackQueue = CallbackQueue.getPooled();
-  this.reconcileTransaction =
-    ReactUpdates.ReactReconcileTransaction.getPooled();
+  this.reconcileTransaction = ReactUpdates.ReactReconcileTransaction.getPooled(
+    /* useCreateElement */ true
+  );
 }
 
 assign(
   ReactUpdatesFlushTransaction.prototype,
-  Transaction.Mixin, {
-  getTransactionWrappers: function() {
-    return TRANSACTION_WRAPPERS;
-  },
+  Transaction.Mixin,
+  {
+    getTransactionWrappers: function() {
+      return TRANSACTION_WRAPPERS;
+    },
 
-  destructor: function() {
-    this.dirtyComponentsLength = null;
-    CallbackQueue.release(this.callbackQueue);
-    this.callbackQueue = null;
-    ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
-    this.reconcileTransaction = null;
-  },
+    destructor: function() {
+      this.dirtyComponentsLength = null;
+      CallbackQueue.release(this.callbackQueue);
+      this.callbackQueue = null;
+      ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
+      this.reconcileTransaction = null;
+    },
 
-  perform: function(method, scope, a) {
-    // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
-    // with this transaction's wrappers around it.
-    return Transaction.Mixin.perform.call(
-      this,
-      this.reconcileTransaction.perform,
-      this.reconcileTransaction,
-      method,
-      scope,
-      a
-    );
+    perform: function(method, scope, a) {
+      // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
+      // with this transaction's wrappers around it.
+      return Transaction.Mixin.perform.call(
+        this,
+        this.reconcileTransaction.perform,
+        this.reconcileTransaction,
+        method,
+        scope,
+        a
+      );
+    },
   }
-});
+);
 
 PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
 
@@ -148,10 +150,28 @@ function runBatchedUpdates(transaction) {
     var callbacks = component._pendingCallbacks;
     component._pendingCallbacks = null;
 
+    var markerName;
+    if (ReactFeatureFlags.logTopLevelRenders) {
+      var namedComponent = component;
+      // Duck type TopLevelWrapper. This is probably always true.
+      if (
+        component._currentElement.props ===
+        component._renderedComponent._currentElement
+      ) {
+        namedComponent = component._renderedComponent;
+      }
+      markerName = 'React update: ' + namedComponent.getName();
+      console.time(markerName);
+    }
+
     ReactReconciler.performUpdateIfNecessary(
       component,
       transaction.reconcileTransaction
     );
+
+    if (markerName) {
+      console.timeEnd(markerName);
+    }
 
     if (callbacks) {
       for (var j = 0; j < callbacks.length; j++) {
@@ -203,13 +223,6 @@ function enqueueUpdate(component) {
   // verify that that's the case. (This is called by each top-level update
   // function, like setProps, setState, forceUpdate, etc.; creation and
   // destruction of top-level components is guarded in ReactMount.)
-  warning(
-    ReactCurrentOwner.current == null,
-    'enqueueUpdate(): Render methods should be a pure function of props ' +
-    'and state; triggering nested component updates from render is not ' +
-    'allowed. If necessary, trigger nested updates in ' +
-    'componentDidUpdate.'
-  );
 
   if (!batchingStrategy.isBatchingUpdates) {
     batchingStrategy.batchedUpdates(enqueueUpdate, component);
@@ -256,7 +269,7 @@ var ReactUpdatesInjection = {
       'ReactUpdates: must provide an isBatchingUpdates boolean attribute'
     );
     batchingStrategy = _batchingStrategy;
-  }
+  },
 };
 
 var ReactUpdates = {
@@ -272,7 +285,7 @@ var ReactUpdates = {
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,
   injection: ReactUpdatesInjection,
-  asap: asap
+  asap: asap,
 };
 
 module.exports = ReactUpdates;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,87 +11,67 @@
 
 'use strict';
 
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactChildren = require('ReactChildren');
-var ReactClass = require('ReactClass');
 var ReactDOMSelect = require('ReactDOMSelect');
-var ReactElement = require('ReactElement');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactPropTypes = require('ReactPropTypes');
 
 var assign = require('Object.assign');
 var warning = require('warning');
 
-var option = ReactElement.createFactory('option');
-
-var valueContextKey = ReactDOMSelect.valueContextKey;
-
 /**
  * Implements an <option> native component that warns when `selected` is set.
  */
-var ReactDOMOption = ReactClass.createClass({
-  displayName: 'ReactDOMOption',
-  tagName: 'OPTION',
-
-  mixins: [ReactBrowserComponentMixin],
-
-  getInitialState: function() {
-    return {selected: null};
-  },
-
-  contextTypes: (function() {
-    var obj = {};
-    obj[valueContextKey] = ReactPropTypes.any;
-    return obj;
-  })(),
-
-  componentWillMount: function() {
+var ReactDOMOption = {
+  mountWrapper: function(inst, props, nativeParent) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
       warning(
-        this.props.selected == null,
+        props.selected == null,
         'Use the `defaultValue` or `value` props on <select> instead of ' +
         'setting `selected` on <option>.'
       );
     }
 
-    // Look up whether this option is 'selected' via parent-based context
-    var context = ReactInstanceMap.get(this)._context;
-    var selectValue = context[valueContextKey];
+    // Look up whether this option is 'selected'
+    var selectValue = null;
+    if (nativeParent != null && nativeParent._tag === 'select') {
+      selectValue = ReactDOMSelect.getSelectValueContext(nativeParent);
+    }
 
-    // If context key is null (e.g., no specified value or after initial mount)
-    // or missing (e.g., for <datalist>) skip props
+    // If the value is null (e.g., no specified value or after initial mount)
+    // or missing (e.g., for <datalist>), we don't change props.selected
+    var selected = null;
     if (selectValue != null) {
-      var selected = false;
+      selected = false;
       if (Array.isArray(selectValue)) {
         // multiple
         for (var i = 0; i < selectValue.length; i++) {
-          if ('' + selectValue[i] === '' + this.props.value) {
+          if ('' + selectValue[i] === '' + props.value) {
             selected = true;
             break;
           }
         }
       } else {
-        selected = ('' + selectValue === '' + this.props.value);
+        selected = ('' + selectValue === '' + props.value);
       }
-      this.setState({selected: selected});
     }
+
+    inst._wrapperState = {selected: selected};
   },
 
-  render: function() {
-    var props = this.props;
+  getNativeProps: function(inst, props) {
+    var nativeProps = assign({selected: undefined, children: undefined}, props);
 
     // Read state only from initial mount because <select> updates value
     // manually; we need the initial state only for server rendering
-    if (this.state.selected != null) {
-      props = assign({}, props, {selected: this.state.selected});
+    if (inst._wrapperState.selected != null) {
+      nativeProps.selected = inst._wrapperState.selected;
     }
 
     var content = '';
 
     // Flatten children and warn if they aren't strings or numbers;
     // invalid types are ignored.
-    ReactChildren.forEach(this.props.children, function(child) {
+    ReactChildren.forEach(props.children, function(child) {
       if (child == null) {
         return;
       }
@@ -105,9 +85,13 @@ var ReactDOMOption = ReactClass.createClass({
       }
     });
 
-    return option(props, content);
-  }
+    if (content) {
+      nativeProps.children = content;
+    }
 
-});
+    return nativeProps;
+  },
+
+};
 
 module.exports = ReactDOMOption;

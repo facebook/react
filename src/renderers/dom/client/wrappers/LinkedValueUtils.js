@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,14 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule LinkedValueUtils
- * @typechecks static-only
  */
 
 'use strict';
 
 var ReactPropTypes = require('ReactPropTypes');
+var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 var invariant = require('invariant');
+var warning = require('warning');
 
 var hasReadOnlyValue = {
   'button': true,
@@ -23,7 +24,7 @@ var hasReadOnlyValue = {
   'hidden': true,
   'radio': true,
   'reset': true,
-  'submit': true
+  'submit': true,
 };
 
 function _assertSingleLink(inputProps) {
@@ -52,20 +53,48 @@ function _assertCheckedLink(inputProps) {
   );
 }
 
-/**
- * @param {SyntheticEvent} e change event to handle
- */
-function _handleLinkedValueChange(e) {
-  /*jshint validthis:true */
-  this.props.valueLink.requestChange(e.target.value);
-}
+var propTypes = {
+  value: function(props, propName, componentName) {
+    if (!props[propName] ||
+        hasReadOnlyValue[props.type] ||
+        props.onChange ||
+        props.readOnly ||
+        props.disabled) {
+      return null;
+    }
+    return new Error(
+      'You provided a `value` prop to a form field without an ' +
+      '`onChange` handler. This will render a read-only field. If ' +
+      'the field should be mutable use `defaultValue`. Otherwise, ' +
+      'set either `onChange` or `readOnly`.'
+    );
+  },
+  checked: function(props, propName, componentName) {
+    if (!props[propName] ||
+        props.onChange ||
+        props.readOnly ||
+        props.disabled) {
+      return null;
+    }
+    return new Error(
+      'You provided a `checked` prop to a form field without an ' +
+      '`onChange` handler. This will render a read-only field. If ' +
+      'the field should be mutable use `defaultChecked`. Otherwise, ' +
+      'set either `onChange` or `readOnly`.'
+    );
+  },
+  onChange: ReactPropTypes.func,
+};
 
-/**
-  * @param {SyntheticEvent} e change event to handle
-  */
-function _handleLinkedCheckChange(e) {
-  /*jshint validthis:true */
-  this.props.checkedLink.requestChange(e.target.checked);
+var loggedTypeFailures = {};
+function getDeclarationErrorAddendum(owner) {
+  if (owner) {
+    var name = owner.getName();
+    if (name) {
+      return ' Check the render method of `' + name + '`.';
+    }
+  }
+  return '';
 }
 
 /**
@@ -73,38 +102,24 @@ function _handleLinkedCheckChange(e) {
  * this outside of the ReactDOM controlled form components.
  */
 var LinkedValueUtils = {
-  Mixin: {
-    propTypes: {
-      value: function(props, propName, componentName) {
-        if (!props[propName] ||
-            hasReadOnlyValue[props.type] ||
-            props.onChange ||
-            props.readOnly ||
-            props.disabled) {
-          return null;
-        }
-        return new Error(
-          'You provided a `value` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultValue`. Otherwise, ' +
-          'set either `onChange` or `readOnly`.'
+  checkPropTypes: function(tagName, props, owner) {
+    for (var propName in propTypes) {
+      if (propTypes.hasOwnProperty(propName)) {
+        var error = propTypes[propName](
+          props,
+          propName,
+          tagName,
+          ReactPropTypeLocations.prop
         );
-      },
-      checked: function(props, propName, componentName) {
-        if (!props[propName] ||
-            props.onChange ||
-            props.readOnly ||
-            props.disabled) {
-          return null;
-        }
-        return new Error(
-          'You provided a `checked` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultChecked`. Otherwise, ' +
-          'set either `onChange` or `readOnly`.'
-        );
-      },
-      onChange: ReactPropTypes.func
+      }
+      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
+        // Only monitor this failure once because there tends to be a lot of the
+        // same error.
+        loggedTypeFailures[error.message] = true;
+
+        var addendum = getDeclarationErrorAddendum(owner);
+        warning(false, 'Failed form propType: %s%s', error.message, addendum);
+      }
     }
   },
 
@@ -135,18 +150,19 @@ var LinkedValueUtils = {
 
   /**
    * @param {object} inputProps Props for form component
-   * @return {function} change callback either from onChange prop or link.
+   * @param {SyntheticEvent} event change event to handle
    */
-  getOnChange: function(inputProps) {
+  executeOnChange: function(inputProps, event) {
     if (inputProps.valueLink) {
       _assertValueLink(inputProps);
-      return _handleLinkedValueChange;
+      return inputProps.valueLink.requestChange(event.target.value);
     } else if (inputProps.checkedLink) {
       _assertCheckedLink(inputProps);
-      return _handleLinkedCheckChange;
+      return inputProps.checkedLink.requestChange(event.target.checked);
+    } else if (inputProps.onChange) {
+      return inputProps.onChange.call(undefined, event);
     }
-    return inputProps.onChange;
-  }
+  },
 };
 
 module.exports = LinkedValueUtils;

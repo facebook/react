@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -14,76 +14,40 @@
 describe('sliceChildren', function() {
 
   var React;
-  var ReactFragment;
-  var ReactTestUtils;
 
   var sliceChildren;
-  var reactComponentExpect;
-
-  var Partial;
 
   beforeEach(function() {
     React = require('React');
-    ReactFragment = require('ReactFragment');
-    ReactTestUtils = require('ReactTestUtils');
 
     sliceChildren = require('sliceChildren');
-    reactComponentExpect = require('reactComponentExpect');
-
-    Partial = React.createClass({
-      render: function() {
-        return (
-          <div>
-            {sliceChildren(
-              this.props.children,
-              this.props.start,
-              this.props.end
-            )}
-          </div>
-        );
-      }
-    });
   });
-
-  function renderAndSlice(set, start, end) {
-    var instance = <Partial start={start} end={end}>{set}</Partial>;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    var rendered = reactComponentExpect(instance)
-      .expectRenderedChild()
-      .instance();
-    return rendered.props.children;
-  }
-
-  function testKeyValuePairs(children, expectedPairs) {
-    var obj = ReactFragment.extract(children);
-    expect(obj).toEqual(expectedPairs);
-  }
 
   it('should render the whole set if start zero is supplied', function() {
     var fullSet = [
       <div key="A" />,
       <div key="B" />,
-      <div key="C" />
+      <div key="C" />,
     ];
-    var children = renderAndSlice(fullSet, 0);
-    testKeyValuePairs(children, {
-      '.$A': fullSet[0],
-      '.$B': fullSet[1],
-      '.$C': fullSet[2]
-    });
+    var children = sliceChildren(fullSet, 0);
+    expect(children).toEqual([
+      <div key=".$A" />,
+      <div key=".$B" />,
+      <div key=".$C" />,
+    ]);
   });
 
   it('should render the remaining set if no end index is supplied', function() {
     var fullSet = [
       <div key="A" />,
       <div key="B" />,
-      <div key="C" />
+      <div key="C" />,
     ];
-    var children = renderAndSlice(fullSet, 1);
-    testKeyValuePairs(children, {
-      '.$B': fullSet[1],
-      '.$C': fullSet[2]
-    });
+    var children = sliceChildren(fullSet, 1);
+    expect(children).toEqual([
+      <div key=".$B" />,
+      <div key=".$C" />,
+    ]);
   });
 
   it('should exclude everything at or after the end index', function() {
@@ -91,28 +55,39 @@ describe('sliceChildren', function() {
       <div key="A" />,
       <div key="B" />,
       <div key="C" />,
-      <div key="D" />
+      <div key="D" />,
     ];
-    var children = renderAndSlice(fullSet, 1, 2);
-    testKeyValuePairs(children, {
-      '.$B': fullSet[1]
-    });
+    var children = sliceChildren(fullSet, 1, 2);
+    expect(children).toEqual([
+      <div key=".$B" />,
+    ]);
   });
 
   it('should allow static children to be sliced', function() {
-    var a = <div />;
-    var b = <div />;
-    var c = <div />;
+    var a = <a />;
+    var b = <b />;
+    var c = <i />;
 
-    var instance = <Partial start={1} end={2}>{a}{b}{c}</Partial>;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    var rendered = reactComponentExpect(instance)
-      .expectRenderedChild()
-      .instance();
+    var el = <div>{a}{b}{c}</div>;
+    var children = sliceChildren(el.props.children, 1, 2);
+    expect(children).toEqual([
+      <b key=".1" />,
+    ]);
+  });
 
-    testKeyValuePairs(rendered.props.children, {
-      '.1': b
-    });
+  it('should slice nested children', function() {
+    var fullSet = [
+      <div key="A" />,
+      [
+        <div key="B" />,
+        <div key="C" />,
+      ],
+      <div key="D" />,
+    ];
+    var children = sliceChildren(fullSet, 1, 2);
+    expect(children).toEqual([
+      <div key=".1:$B" />,
+    ]);
   });
 
 });

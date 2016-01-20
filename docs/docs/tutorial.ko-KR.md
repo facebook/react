@@ -26,33 +26,38 @@ next: thinking-in-react-ko-KR.html
 
 ### 서버 구동하기
 
-이 튜토리얼을 시작할 때 필요한 건 아니지만, 나중에 실행 중인 서버에 `POST` 요청을 하는 기능을 추가하게 될 것입니다. 서버를 구성하는 것이 익숙하다면, 본인이 편한 방식대로 서버를 구성해 주세요. 서버사이드에 대한 고민없이 React의 학습 그 자체에 집중하고 싶은 분들을 위해서, 몇 가지 언어로 간단한 서버코드를 작성해 놓았습니다 - JavaScript (Node.js), Python, Ruby, Go, PHP 버전이 있고, GitHub에서 찾아보실 수 있습니다. [소스를 확인](https://github.com/reactjs/react-tutorial/)하거나 [zip 파일을 다운로드](https://github.com/reactjs/react-tutorial/archive/master.zip)하고 시작하세요.
+이 튜토리얼을 시작하기 위해, 서버를 구동할 필요가 있습니다. 이 서버는 순수하게 우리가 받고 저장할 데이터의 API 엔드포인트로써만 사용합니다. 이를 가능한한 쉽게하기 위해, 필요한 것만 제공하는 간단한 서버를 몇가지 스크립트 언어로 만들었습니다. **시작하는데 필요한 모든 것이 들어있는 [소스](https://github.com/reactjs/react-tutorial/)를 보시거나 [zip 파일](https://github.com/reactjs/react-tutorial/archive/master.zip)을 다운로드 할 수 있습니다.**
 
-튜토리얼을 시작하려면, `public/index.html`을 열고 바로 시작하세요.
+단순하게 하기위해, 서버는 `JSON` 파일을 데이터베이스로 사용합니다. 프로덕션에서 사용할 수는 없지만 이렇게 하면 API를 사용할 때 시뮬레이션이 단순해집니다. 서버가 시작되면, API 엔드포인트를 제공하고 필요한 정적 페이지를 서빙합니다.
 
 ### 시작하기
 
-이 튜토리얼에서는 CDN에 있는 미리 빌드된 JavaScript 파일들을 사용합니다. 선호하는 에디터를 열어, 새로운 HTML 문서를 만드세요:
+이 튜토리얼에서는 가능한한 간단하게 만들겠습니다. 위에서 언급된 서버 패키지에 우리가 작업할 HTML 파일 포함되어 있습니다. 편한 편집기에서 `public/index.html`를 여세요. 이는 이런 내용이어야 합니다.(아마 조금 다를 수 있습니다만, 여기에 나중에 `<script>` 태그를 추가 할 것입니다.)
 
 ```html
 <!-- index.html -->
+<!DOCTYPE html>
 <html>
   <head>
-    <title>Hello React</title>
-    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <meta charset="utf-8" />
+    <title>React Tutorial</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
-    <script type="text/jsx">
-      // 여기에 코드를 작성합니다
+    <script type="text/babel" src="scripts/example.js"></script>
+    <script type="text/babel">
+      // 이 튜토리얼을 시작하려면, 그냥 scripts/example.js를 로드하는 스크립트
+      // 태그를 제거하고 여기에 코드를 적으세요.
     </script>
   </body>
 </html>
 ```
 
-다음 진행을 위해, 위의 스크립트 태그안에 JavaScript 코드를 작성합니다.
+다음 진행을 위해, 위의 스크립트 태그안에 JavaScript 코드를 작성합니다. (이 튜토리얼에서는) 진보된 라이브 리로드가 없기 때문에, 수정 사항을 저장한 다음에는 브라우저를 새로고침해서 확인해야 합니다. 서버를 시작한 다음 브라우저에서 `http://localhost:3000`를 열어 따라해 보세요. 아무런 수정도 하지 않았다면, 최초 로드시 우리가 만들 제품의 완성품을 확인할 수 있을 것입니다. 작업할 준비가 되면, 이전의 `<script>` 태그를 삭제하고 진행하세요.
 
 > 주의:
 >
@@ -82,7 +87,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -105,7 +110,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -121,11 +126,13 @@ JSX의 사용은 선택적이지만 JSX 문법이 일반 JavsScript보다 사용
 
 일반적인 HTML만 리턴할 수 있는 것은 아닙니다. 여러분이 직접 만든 (또는 다른 사람들이 만들어 놓은) 컴포넌트의 트리를 리턴할 수도 있습니다. 이것이 React를 **조합가능(composable)하게 만듭니다**: 유지보수 가능한 프론트엔드를 위한 핵심 교리(key tenet)지요.
 
-`React.render()`는 최상위 컴포넌트의 인스턴스를 만들고, 두 번째 인수로 전달받은 DOM 엘리먼트에 마크업을 삽입해 프레임워크를 시작합니다.
+`ReactDOM.render()`는 최상위 컴포넌트의 인스턴스를 만들고, 두 번째 인수로 전달받은 DOM 엘리먼트에 마크업을 삽입해 프레임워크를 시작합니다.
+
+`ReactDOM` 모듈은 DOM 특정 메소드를 노출해, `React`가 코어 툴을 다른 플렛폼(예를 들어, [React Native](http://facebook.github.io/react-native/))에 공유할 수 있게 합니다.
 
 ## 컴포넌트 조합하기
 
-이제 `CommentList`와 `CommentForm`을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 `<div>` 태그 하나 입니다.
+이제 `CommentList`와 `CommentForm`을 위한 뼈대를 구축해 봅시다. 이전과 마찬가지로 단순히 `<div>` 태그 하나 입니다. 파일에 두 컴포넌트를 추가해, 이미 있는 `CommentBox` 선언을 참고로 `ReactDOM.render`를 호출합시다.
 
 ```javascript
 // tutorial2.js
@@ -218,13 +225,15 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
 
 먼저 서드파티 라이브러리인 **marked**를 애플리케이션에 추가합니다. 이 JavaScript 라이브러리는 Markdown 텍스트를 HTML 문법으로 변환해줍니다. head 태그안에 스크립트 태그를 추가해 주세요. (React playground에는 이미 포함되어 있습니다):
 
-```html{7}
+```html{9}
 <!-- index.html -->
 <head>
-  <title>Hello React</title>
-  <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-  <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <meta charset="utf-8" />
+  <title>React Tutorial</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
 </head>
 ```
@@ -253,17 +262,21 @@ var Comment = React.createClass({
 
 React는 이런 식으로 [XSS 공격](https://en.wikipedia.org/wiki/Cross-site_scripting)을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:
 
-```javascript{4,10}
+```javascript{4,14}
 // tutorial7.js
 var Comment = React.createClass({
-  render: function() {
+  rawMarkup: function() {
     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    return { __html: rawMarkup };
+  },
+
+  render: function() {
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        <span dangerouslySetInnerHTML={{"{{"}}__html: rawMarkup}} />
+        <span dangerouslySetInnerHTML={this.rawMarkup()} />
       </div>
     );
   }
@@ -286,7 +299,7 @@ var data = [
 ];
 ```
 
-이 데이터를 모듈화된 방식으로 `CommentList`에 넣어야 합니다. props을 이용해 데이터를 넘기도록 `CommentBox`와 `React.render()` 호출 코드를 수정합시다.
+이 데이터를 모듈화된 방식으로 `CommentList`에 넣어야 합니다. props을 이용해 데이터를 넘기도록 `CommentBox`와 `ReactDOM.render()` 호출 코드를 수정합시다.
 
 ```javascript{7,15}
 // tutorial9.js
@@ -302,7 +315,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -338,13 +351,15 @@ var CommentList = React.createClass({
 
 ```javascript{3}
 // tutorial11.js
-React.render(
-  <CommentBox url="comments.json" />,
+ReactDOM.render(
+  <CommentBox url="/api/comments" />,
   document.getElementById('content')
 );
 ```
 
 이 컴포넌트는 이전 것과 다르게, 스스로 다시 렌더링해야 합니다. 컴포넌트는 서버에서 요청이 들어올때까지는 아무 데이터도 가지고 있지 않다가, 특정한 시점에서 새로운 댓글을 렌더할 필요가 있을 것입니다.
+
+주의: 이 단계에서 코드는 아직 동작하지 않습니다.
 
 ### 반응적 state
 
@@ -376,19 +391,14 @@ var CommentBox = React.createClass({
 
 ### state 업데이트하기
 
-컴포넌트의 최초 생성 시에, 서버에서 GET 방식으로 JSON을 넘겨받아 최신의 데이터가 state에 반영되길 원했습니다. 실제 애플리케이션에선 이것이 동적인 엔드포인트이지만, 이 예제에서는 정적 JSON 파일을 사용해서 간단하게 만들어보겠습니다.
+컴포넌트의 최초 생성 시에, 서버에서 GET 방식으로 JSON을 넘겨받아 최신의 데이터가 state에 반영되길 원했습니다. jQuery를 사용해 서버에 비동기 요청을 만들어 필요한 데이터를 빨리 가져올 수 있게 하겠습니다. 이런 식입니다.
 
-```javascript
-// tutorial13.json
+```json
 [
   {"author": "Pete Hunt", "text": "댓글입니다"},
   {"author": "Jordan Walke", "text": "*또 다른* 댓글입니다"}
 ]
 ```
-
-서버에 비동기 요청을 위해 jQuery를 사용합니다.
-
-주의: 우리의 앱이 AJAX 애플리케이션으로 변화하고 있기 때문에, 이제 파일 시스템의 파일을 참조하는 대신 웹서버를 사용하도록 앱을 개발해야 합니다. [위에서 언급한 바와 같이](#running-a-server), 우리는 튜토리얼의 나머지 부분에 필요한 기능을 제공하는 서버를 몇 가지 준비해 놓았습니다. [GitHub에 올려놓았으니](https://github.com/reactjs/react-tutorial) 확인해 보세요.
 
 ```javascript{6-18}
 // tutorial13.js
@@ -457,14 +467,14 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
-  <CommentBox url="comments.json" pollInterval={2000} />,
+ReactDOM.render(
+  <CommentBox url="/api/comments" pollInterval={2000} />,
   document.getElementById('content')
 );
 
 ```
 
-우리가 여기서 한것은 AJAX 호출을 별도의 메소드로 분리하고 컴포넌트가 처음 로드된 시점부터 2초 간격으로 계속 호출되도록 한 것입니다. 브라우저에서 직접 돌려보고 `comments.json`파일을 수정해보세요; 2초 간격으로 변화되는 모습이 보일 것입니다!
+우리가 여기서 한것은 AJAX 호출을 별도의 메소드로 분리하고 컴포넌트가 처음 로드된 시점부터 2초 간격으로 계속 호출되도록 한 것입니다. 브라우저에서 직접 돌려보고 `comments.json` 파일(서버의 같은 디렉토리에 있습니다)을 수정해보세요. 2초 간격으로 변화되는 모습이 보일 것입니다!
 
 ### 새로운 댓글 추가하기
 
@@ -492,14 +502,14 @@ var CommentForm = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = this.refs.author.value.trim();
+    var text = this.refs.text.value.trim();
     if (!text || !author) {
       return;
     }
     // TODO: 서버에 요청을 전송합니다
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    this.refs.author.value = '';
+    this.refs.text.value = '';
     return;
   },
   render: function() {
@@ -522,7 +532,7 @@ React는 카멜케이스 네이밍 컨벤션으로 컴포넌트에 이벤트 핸
 
 ##### Refs
 
-우리는 자식 컴포넌트의 이름을 지정하기 위해 `ref` 어트리뷰트를, 컴포넌트를 참조하기 위해 `this.refs`를 사용합니다. 고유한(native) 브라우저 DOM 엘리먼트를 얻기 위해 `React.findDOMNode(component)`를 호출할 수 있습니다.
+자식 컴포넌트의 이름을 지정하기 위해 `ref` 어트리뷰트를, DOM 노드를 참조하기 위해 `this.refs`를 사용합니다.
 
 ##### props으로 콜백 처리하기
 
@@ -575,14 +585,14 @@ var CommentBox = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = this.refs.author.value.trim();
+    var text = this.refs.text.value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    this.refs.author.value = '';
+    this.refs.text.value = '';
     return;
   },
   render: function() {
@@ -652,7 +662,7 @@ var CommentBox = React.createClass({
 
 우리의 애플리케이션은 이제 모든 기능을 갖추었습니다. 하지만 댓글이 목록에 업데이트되기 전에 완료요청을 기다리는 게 조금 느린듯한 느낌이 드네요. 우리는 낙관적 업데이트를 통해 댓글이 목록에 추가되도록 함으로써 앱이 좀 더 빨라진 것처럼 느껴지도록 할 수 있습니다.
 
-```javascript{17-19}
+```javascript{17-19,29}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -681,6 +691,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
+        this.setState({data: comments});
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });

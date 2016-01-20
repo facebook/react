@@ -1,6 +1,7 @@
 ---
 id: getting-started-ja-JP
 title: 始めてみましょう
+permalink: getting-started-ja-JP.html
 next: tutorial-ja-JP.html
 redirect_from: "docs/index-ja-JP.html"
 ---
@@ -23,17 +24,20 @@ React でのハッキングを始めるにあたり、一番簡単なものと�
 </div>
 
 スターターキットのルートディレクトリに `helloworld.html` を作り、次のように書いてみましょう。
+
 ```html
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
+    <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <script src="build/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
-      React.render(
+    <script type="text/babel">
+      ReactDOM.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
       );
@@ -49,7 +53,7 @@ JavaScript の中に書かれた XML シンタックスは JSX と呼ばれる�
 React の JSX コードは別ファイルに分離することができます。 次のような `src/helloworld.js` を作ってみましょう。
 
 ```javascript
-React.render(
+ReactDOM.render(
   <h1>Hello, world!</h1>,
   document.getElementById('example')
 );
@@ -58,7 +62,7 @@ React.render(
 それが終わったら、`helloworld.js` への参照を `helloworld.html` に書き込みましょう。
 
 ```html{10}
-<script type="text/jsx" src="src/helloworld.js"></script>
+<script type="text/babel" src="src/helloworld.js"></script>
 ```
 
 ### オフラインでの変換
@@ -79,7 +83,7 @@ jsx --watch src/ build/
 すると、`src/helloword.js` に変更を加えるごとに `build/helloworld.js` が自動で生成されるようになります。
 
 ```javascript{2}
-React.render(
+ReactDOM.render(
   React.createElement('h1', null, 'Hello, world!'),
   document.getElementById('example')
 );
@@ -88,13 +92,14 @@ React.render(
 
 最後に HTML ファイルを以下のように書き換えましょう。
 
-```html{6,10}
+```html{7,11}
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <!-- JSXTransformer は必要ありません！ -->
+    <!-- Babel は必要ありません！ -->
   </head>
   <body>
     <div id="example"></div>
@@ -109,7 +114,7 @@ React を [browserify](http://browserify.org/) や [webpack](https://webpack.git
 
 ## 次にすること
 
-[チュートリアル](/react/docs/tutorial.html) や、スターターキットの `examples` ディレクトリに入っている他の例を読んでみてください。
+[チュートリアル](/react/docs/tutorial-ja-JP.html) や、スターターキットの `examples` ディレクトリに入っている他の例を読んでみてください。
 
 また、[ワークフロー、UIコンポーネント、ルーティング、データマネジメントなど](https://github.com/facebook/react/wiki/Complementary-Tools)の方面で貢献しているコミュニティの wiki もあります。
 

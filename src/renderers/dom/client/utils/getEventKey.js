@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule getEventKey
- * @typechecks static-only
  */
 
 'use strict';
@@ -30,7 +29,7 @@ var normalizeKey = {
   'Menu': 'ContextMenu',
   'Apps': 'ContextMenu',
   'Scroll': 'ScrollLock',
-  'MozPrintableKey': 'Unidentified'
+  'MozPrintableKey': 'Unidentified',
 };
 
 /**
@@ -64,7 +63,7 @@ var translateToKey = {
   118: 'F7', 119: 'F8', 120: 'F9', 121: 'F10', 122: 'F11', 123: 'F12',
   144: 'NumLock',
   145: 'ScrollLock',
-  224: 'Meta'
+  224: 'Meta',
 };
 
 /**

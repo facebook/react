@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #5"
-author: Vjeux
+author: vjeux
 ---
 
 We launched the [React Facebook Page](https://www.facebook.com/react) along with the React v0.4 launch. 700 people already liked it to get updated on the project :)

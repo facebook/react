@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, Facebook, Inc.
+ * Copyright 2014-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,137 +11,105 @@
 
 'use strict';
 
-var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var assign = require('Object.assign');
-var warning = require('warning');
+var canDefineProperty = require('canDefineProperty');
+
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
 
 var RESERVED_PROPS = {
   key: true,
-  ref: true
+  ref: true,
+  __self: true,
+  __source: true,
 };
 
 /**
- * Warn for mutations.
- *
- * @internal
- * @param {object} object
- * @param {string} key
- */
-function defineWarningProperty(object, key) {
-  Object.defineProperty(object, key, {
-
-    configurable: false,
-    enumerable: true,
-
-    get: function() {
-      if (!this._store) {
-        return null;
-      }
-      return this._store[key];
-    },
-
-    set: function(value) {
-      warning(
-        false,
-        'Don\'t set the %s property of the React element. Instead, ' +
-        'specify the correct value when initially creating the element.',
-        key
-      );
-      this._store[key] = value;
-    }
-
-  });
-}
-
-/**
- * This is updated to true if the membrane is successfully created.
- */
-var useMutationMembrane = false;
-
-/**
- * Warn for mutations.
- *
- * @internal
- * @param {object} element
- */
-function defineMutationMembrane(prototype) {
-  try {
-    var pseudoFrozenProperties = {
-      props: true
-    };
-    for (var key in pseudoFrozenProperties) {
-      defineWarningProperty(prototype, key);
-    }
-    useMutationMembrane = true;
-  } catch (x) {
-    // IE will fail on defineProperty
-  }
-}
-
-function markChildArrayValidated(childArray) {
-  // To make comparing ReactElements easier for testing purposes, we make the
-  // validation flag non-enumerable (where possible, which should include every
-  // environment we run tests in), so the test framework ignores it.
-  try {
-    Object.defineProperty(childArray, '_reactChildKeysValidated', {
-      configurable: false,
-      enumerable: false,
-      writable: true
-    });
-  } catch (x) {
-  }
-  childArray._reactChildKeysValidated = true;
-}
-
-/**
- * Base constructor for all React elements. This is only used to make this
- * work with a dynamic instanceof check. Nothing should live on this prototype.
+ * Factory method to create a new React element. This no longer adheres to
+ * the class pattern, so do not use new to call it. Also, no instanceof check
+ * will work. Instead test $$typeof field against Symbol.for('react.element') to check
+ * if something is a React Element.
  *
  * @param {*} type
- * @param {string|object} ref
  * @param {*} key
+ * @param {string|object} ref
+ * @param {*} self A *temporary* helper to detect places where `this` is
+ * different from the `owner` when React.createElement is called, so that we
+ * can warn. We want to get rid of owner and replace string `ref`s with arrow
+ * functions, and as long as `this` and owner are the same, there will be no
+ * change in behavior.
+ * @param {*} source An annotation object (added by a transpiler or otherwise)
+ * indicating filename, line number, and/or other information.
+ * @param {*} owner
  * @param {*} props
  * @internal
  */
-var ReactElement = function(type, key, ref, owner, context, props) {
-  // Built-in properties that belong on the element
-  this.type = type;
-  this.key = key;
-  this.ref = ref;
+var ReactElement = function(type, key, ref, self, source, owner, props) {
+  var element = {
+    // This tag allow us to uniquely identify this as a React Element
+    $$typeof: REACT_ELEMENT_TYPE,
 
-  // Record the component responsible for creating this element.
-  this._owner = owner;
+    // Built-in properties that belong on the element
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+
+    // Record the component responsible for creating this element.
+    _owner: owner,
+  };
 
   if (__DEV__) {
-    // The validation flag and props are currently mutative. We put them on
+    // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
-    this._store = {props: props, originalProps: assign({}, props)};
+    element._store = {};
 
-    // We're not allowed to set props directly on the object so we early
-    // return and rely on the prototype membrane to forward to the backing
-    // store.
-    if (useMutationMembrane) {
-      Object.freeze(this);
-      return;
+    // To make comparing ReactElements easier for testing purposes, we make
+    // the validation flag non-enumerable (where possible, which should
+    // include every environment we run tests in), so the test framework
+    // ignores it.
+    if (canDefineProperty) {
+      Object.defineProperty(element._store, 'validated', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: false,
+      });
+      // self and source are DEV only properties.
+      Object.defineProperty(element, '_self', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: self,
+      });
+      // Two elements created in two different places should be considered
+      // equal for testing purposes and therefore we hide it from enumeration.
+      Object.defineProperty(element, '_source', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: source,
+      });
+    } else {
+      element._store.validated = false;
+      element._self = self;
+      element._source = source;
+    }
+    if (Object.freeze) {
+      Object.freeze(element.props);
+      Object.freeze(element);
     }
   }
 
-  this.props = props;
+  return element;
 };
-
-// We intentionally don't expose the function on the constructor property.
-// ReactElement should be indistinguishable from a plain object.
-ReactElement.prototype = {
-  _isReactElement: true
-};
-
-if (__DEV__) {
-  defineMutationMembrane(ReactElement.prototype);
-}
 
 ReactElement.createElement = function(type, config, children) {
   var propName;
@@ -151,10 +119,14 @@ ReactElement.createElement = function(type, config, children) {
 
   var key = null;
   var ref = null;
+  var self = null;
+  var source = null;
 
   if (config != null) {
     ref = config.ref === undefined ? null : config.ref;
     key = config.key === undefined ? null : '' + config.key;
+    self = config.__self === undefined ? null : config.__self;
+    source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (config.hasOwnProperty(propName) &&
@@ -171,9 +143,6 @@ ReactElement.createElement = function(type, config, children) {
     props.children = children;
   } else if (childrenLength > 1) {
     var childArray = Array(childrenLength);
-    if (__DEV__) {
-      markChildArrayValidated(childArray);
-    }
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
@@ -190,12 +159,13 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
-  return new ReactElement(
+  return ReactElement(
     type,
     key,
     ref,
+    self,
+    source,
     ReactCurrentOwner.current,
-    ReactContext.current,
     props
   );
 };
@@ -211,15 +181,36 @@ ReactElement.createFactory = function(type) {
   return factory;
 };
 
+ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
+  var newElement = ReactElement(
+    oldElement.type,
+    newKey,
+    oldElement.ref,
+    oldElement._self,
+    oldElement._source,
+    oldElement._owner,
+    oldElement.props
+  );
+
+  return newElement;
+};
+
 ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
-  var newElement = new ReactElement(
+  var newElement = ReactElement(
     oldElement.type,
     oldElement.key,
     oldElement.ref,
+    oldElement._self,
+    oldElement._source,
     oldElement._owner,
-    oldElement._context,
     newProps
   );
+
+  if (__DEV__) {
+    // If the key on the original is valid, then the clone is valid
+    newElement._store.validated = oldElement._store.validated;
+  }
+
   return newElement;
 };
 
@@ -232,6 +223,12 @@ ReactElement.cloneElement = function(element, config, children) {
   // Reserved names are extracted
   var key = element.key;
   var ref = element.ref;
+  // Self is preserved since the owner is preserved.
+  var self = element._self;
+  // Source is preserved since cloneElement is unlikely to be targeted by a
+  // transpiler, and the original source is probably a better indicator of the
+  // true owner.
+  var source = element._source;
 
   // Owner will be preserved, unless ref is overridden
   var owner = element._owner;
@@ -261,21 +258,19 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = children;
   } else if (childrenLength > 1) {
     var childArray = Array(childrenLength);
-    if (__DEV__) {
-      markChildArrayValidated(childArray);
-    }
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
     props.children = childArray;
   }
 
-  return new ReactElement(
+  return ReactElement(
     element.type,
     key,
     ref,
+    self,
+    source,
     owner,
-    element._context,
     props
   );
 };
@@ -286,17 +281,11 @@ ReactElement.cloneElement = function(element, config, children) {
  * @final
  */
 ReactElement.isValidElement = function(object) {
-  // ReactTestUtils is often used outside of beforeEach where as React is
-  // within it. This leads to two different instances of React on the same
-  // page. To identify a element from a different React instance we use
-  // a flag instead of an instanceof check.
-  var isElement = !!(object && object._isReactElement);
-  // if (isElement && !(object instanceof ReactElement)) {
-  // This is an indicator that you're using multiple versions of React at the
-  // same time. This will screw with ownership and stuff. Fix it, please.
-  // TODO: We could possibly warn here.
-  // }
-  return isElement;
+  return (
+    typeof object === 'object' &&
+    object !== null &&
+    object.$$typeof === REACT_ELEMENT_TYPE
+  );
 };
 
 module.exports = ReactElement;

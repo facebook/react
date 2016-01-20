@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -84,10 +84,10 @@ var Mixin = {
    */
   reinitializeTransaction: function() {
     this.transactionWrappers = this.getTransactionWrappers();
-    if (!this.wrapperInitData) {
-      this.wrapperInitData = [];
-    } else {
+    if (this.wrapperInitData) {
       this.wrapperInitData.length = 0;
+    } else {
+      this.wrapperInitData = [];
     }
     this._isInTransaction = false;
   },
@@ -107,13 +107,19 @@ var Mixin = {
   /**
    * Executes the function within a safety window. Use this for the top level
    * methods that result in large amounts of computation/mutations that would
-   * need to be safety checked.
+   * need to be safety checked. The optional arguments helps prevent the need
+   * to bind in many cases.
    *
    * @param {function} method Member of scope to call.
    * @param {Object} scope Scope to invoke from.
-   * @param {Object?=} args... Arguments to pass to the method (optional).
-   *                           Helps prevent need to bind in many cases.
-   * @return Return value from `method`.
+   * @param {Object?=} a Argument to pass to the method.
+   * @param {Object?=} b Argument to pass to the method.
+   * @param {Object?=} c Argument to pass to the method.
+   * @param {Object?=} d Argument to pass to the method.
+   * @param {Object?=} e Argument to pass to the method.
+   * @param {Object?=} f Argument to pass to the method.
+   *
+   * @return {*} Return value from `method`.
    */
   perform: function(method, scope, a, b, c, d, e, f) {
     invariant(
@@ -220,7 +226,7 @@ var Mixin = {
       }
     }
     this.wrapperInitData.length = 0;
-  }
+  },
 };
 
 var Transaction = {
@@ -228,9 +234,9 @@ var Transaction = {
   Mixin: Mixin,
 
   /**
-   * Token to look for to determine if an error occured.
+   * Token to look for to determine if an error occurred.
    */
-  OBSERVED_ERROR: {}
+  OBSERVED_ERROR: {},
 
 };
 

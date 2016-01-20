@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule SyntheticClipboardEvent
- * @typechecks static-only
  */
 
 'use strict';
@@ -25,7 +24,7 @@ var ClipboardEventInterface = {
         event.clipboardData :
         window.clipboardData
     );
-  }
+  },
 };
 
 /**
@@ -34,8 +33,8 @@ var ClipboardEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticUIEvent}
  */
-function SyntheticClipboardEvent(dispatchConfig, dispatchMarker, nativeEvent) {
-  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+function SyntheticClipboardEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);

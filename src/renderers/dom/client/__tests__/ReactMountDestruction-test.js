@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,36 +12,77 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 
 describe('ReactMount', function() {
-  it("should destroy a react root upon request", function() {
+  it('should destroy a react root upon request', function() {
     var mainContainerDiv = document.createElement('div');
     document.body.appendChild(mainContainerDiv);
 
-    var instanceOne = (
-      <div className="firstReactDiv">
-      </div>
-    );
+    var instanceOne = <div className="firstReactDiv" />;
     var firstRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(firstRootDiv);
-    React.render(instanceOne, firstRootDiv);
+    ReactDOM.render(instanceOne, firstRootDiv);
 
-    var instanceTwo = (
-      <div className="secondReactDiv">
-      </div>
-    );
+    var instanceTwo = <div className="secondReactDiv" />;
     var secondRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(secondRootDiv);
-    React.render(instanceTwo, secondRootDiv);
+    ReactDOM.render(instanceTwo, secondRootDiv);
 
     // Test that two react roots are rendered in isolation
     expect(firstRootDiv.firstChild.className).toBe('firstReactDiv');
     expect(secondRootDiv.firstChild.className).toBe('secondReactDiv');
 
     // Test that after unmounting each, they are no longer in the document.
-    React.unmountComponentAtNode(firstRootDiv);
+    ReactDOM.unmountComponentAtNode(firstRootDiv);
     expect(firstRootDiv.firstChild).toBeNull();
-    React.unmountComponentAtNode(secondRootDiv);
+    ReactDOM.unmountComponentAtNode(secondRootDiv);
     expect(secondRootDiv.firstChild).toBeNull();
+  });
+
+  it('should warn when unmounting a non-container root node', function() {
+    var mainContainerDiv = document.createElement('div');
+
+    var component =
+      <div>
+        <div />
+      </div>;
+    ReactDOM.render(component, mainContainerDiv);
+
+    // Test that unmounting at a root node gives a helpful warning
+    var rootDiv = mainContainerDiv.firstChild;
+    spyOn(console, 'error');
+    ReactDOM.unmountComponentAtNode(rootDiv);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
+      'unmount was rendered by React and is not a top-level container. You ' +
+      'may have accidentally passed in a React root node instead of its ' +
+      'container.'
+    );
+  });
+
+  it('should warn when unmounting a non-container, non-root node', function() {
+    var mainContainerDiv = document.createElement('div');
+
+    var component =
+      <div>
+        <div>
+          <div />
+        </div>
+      </div>;
+    ReactDOM.render(component, mainContainerDiv);
+
+    // Test that unmounting at a non-root node gives a different warning
+    var nonRootDiv = mainContainerDiv.firstChild.firstChild;
+    spyOn(console, 'error');
+    ReactDOM.unmountComponentAtNode(nonRootDiv);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
+      'unmount was rendered by React and is not a top-level container. ' +
+      'Instead, have the parent component update its state and rerender in ' +
+      'order to remove this component.'
+    );
   });
 });

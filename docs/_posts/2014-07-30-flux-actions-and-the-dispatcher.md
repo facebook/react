@@ -1,6 +1,6 @@
 ---
 title: "Flux: Actions and the Dispatcher"
-author: Bill Fisher
+author: fisherwebdev
 ---
 
 Flux is the application architecture Facebook uses to build JavaScript applications. It's based on a unidirectional data flow.  We've built everything from small widgets to huge applications with Flux, and it's handled everything we've thrown at it. Because we've found it to be a great way to structure our code, we're excited to share it with the open source community. [Jing Chen presented Flux](http://youtu.be/nYkdrAPrdcw?t=10m20s) at the F8 conference, and since that time we've seen a lot of interest in it. We've also published an [overview of Flux](https://facebook.github.io/flux/docs/overview.html) and a [TodoMVC example](https://github.com/facebook/flux/tree/master/examples/flux-todomvc/), with an accompanying [tutorial](https://facebook.github.io/flux/docs/todo-list.html).

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,12 +13,14 @@
 
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactServerRendering = require('ReactServerRendering');
+var ReactVersion = require('ReactVersion');
 
 ReactDefaultInjection.inject();
 
 var ReactDOMServer = {
   renderToString: ReactServerRendering.renderToString,
-  renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup
+  renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
+  version: ReactVersion,
 };
 
 module.exports = ReactDOMServer;

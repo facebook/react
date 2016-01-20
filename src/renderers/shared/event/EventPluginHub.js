@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,11 +13,11 @@
 
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
+var ReactErrorUtils = require('ReactErrorUtils');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
-var warning = require('warning');
 
 /**
  * Internal store for event listeners
@@ -34,40 +34,24 @@ var eventQueue = null;
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
  * @param {?object} event Synthetic event to be dispatched.
+ * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
-var executeDispatchesAndRelease = function(event) {
+var executeDispatchesAndRelease = function(event, simulated) {
   if (event) {
-    var executeDispatch = EventPluginUtils.executeDispatch;
-    // Plugins can provide custom behavior when dispatching events.
-    var PluginModule = EventPluginRegistry.getPluginModuleForEvent(event);
-    if (PluginModule && PluginModule.executeDispatch) {
-      executeDispatch = PluginModule.executeDispatch;
-    }
-    EventPluginUtils.executeDispatchesInOrder(event, executeDispatch);
+    EventPluginUtils.executeDispatchesInOrder(event, simulated);
 
     if (!event.isPersistent()) {
       event.constructor.release(event);
     }
   }
 };
-
-/**
- * - `InstanceHandle`: [required] Module that performs logical traversals of DOM
- *   hierarchy given ids of the logical DOM elements involved.
- */
-var InstanceHandle = null;
-
-function validateInstanceHandle() {
-  var valid =
-    InstanceHandle &&
-    InstanceHandle.traverseTwoPhase &&
-    InstanceHandle.traverseEnterLeave;
-  warning(
-    valid,
-    'InstanceHandle not injected before use!'
-  );
-}
+var executeDispatchesAndReleaseSimulated = function(e) {
+  return executeDispatchesAndRelease(e, true);
+};
+var executeDispatchesAndReleaseTopLevel = function(e) {
+  return executeDispatchesAndRelease(e, false);
+};
 
 /**
  * This is a unified interface for event plugins to be installed and configured.
@@ -99,30 +83,6 @@ var EventPluginHub = {
   injection: {
 
     /**
-     * @param {object} InjectedMount
-     * @public
-     */
-    injectMount: EventPluginUtils.injection.injectMount,
-
-    /**
-     * @param {object} InjectedInstanceHandle
-     * @public
-     */
-    injectInstanceHandle: function(InjectedInstanceHandle) {
-      InstanceHandle = InjectedInstanceHandle;
-      if (__DEV__) {
-        validateInstanceHandle();
-      }
-    },
-
-    getInstanceHandle: function() {
-      if (__DEV__) {
-        validateInstanceHandle();
-      }
-      return InstanceHandle;
-    },
-
-    /**
      * @param {array} InjectedEventPluginOrder
      * @public
      */
@@ -131,13 +91,9 @@ var EventPluginHub = {
     /**
      * @param {object} injectedNamesToPlugins Map from names to plugin modules.
      */
-    injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName
+    injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
 
   },
-
-  eventNameDispatchConfigs: EventPluginRegistry.eventNameDispatchConfigs,
-
-  registrationNameModules: EventPluginRegistry.registrationNameModules,
 
   /**
    * Stores `listener` at `listenerBank[registrationName][id]`. Is idempotent.
@@ -146,7 +102,7 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {?function} listener The callback to store.
    */
-  putListener: function(id, registrationName, listener) {
+  putListener: function(inst, registrationName, listener) {
     invariant(
       typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',
@@ -155,12 +111,12 @@ var EventPluginHub = {
 
     var bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
-    bankForRegistrationName[id] = listener;
+    bankForRegistrationName[inst._rootNodeID] = listener;
 
     var PluginModule =
       EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.didPutListener) {
-      PluginModule.didPutListener(id, registrationName, listener);
+      PluginModule.didPutListener(inst, registrationName, listener);
     }
   },
 
@@ -169,9 +125,9 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @return {?function} The stored callback.
    */
-  getListener: function(id, registrationName) {
+  getListener: function(inst, registrationName) {
     var bankForRegistrationName = listenerBank[registrationName];
-    return bankForRegistrationName && bankForRegistrationName[id];
+    return bankForRegistrationName && bankForRegistrationName[inst._rootNodeID];
   },
 
   /**
@@ -180,17 +136,17 @@ var EventPluginHub = {
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
-  deleteListener: function(id, registrationName) {
+  deleteListener: function(inst, registrationName) {
     var PluginModule =
       EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.willDeleteListener) {
-      PluginModule.willDeleteListener(id, registrationName);
+      PluginModule.willDeleteListener(inst, registrationName);
     }
 
     var bankForRegistrationName = listenerBank[registrationName];
     // TODO: This should never be null -- when is it?
     if (bankForRegistrationName) {
-      delete bankForRegistrationName[id];
+      delete bankForRegistrationName[inst._rootNodeID];
     }
   },
 
@@ -199,19 +155,19 @@ var EventPluginHub = {
    *
    * @param {string} id ID of the DOM element.
    */
-  deleteAllListeners: function(id) {
+  deleteAllListeners: function(inst) {
     for (var registrationName in listenerBank) {
-      if (!listenerBank[registrationName][id]) {
+      if (!listenerBank[registrationName][inst._rootNodeID]) {
         continue;
       }
 
       var PluginModule =
         EventPluginRegistry.registrationNameModules[registrationName];
       if (PluginModule && PluginModule.willDeleteListener) {
-        PluginModule.willDeleteListener(id, registrationName);
+        PluginModule.willDeleteListener(inst, registrationName);
       }
 
-      delete listenerBank[registrationName][id];
+      delete listenerBank[registrationName][inst._rootNodeID];
     }
   },
 
@@ -219,18 +175,14 @@ var EventPluginHub = {
    * Allows registered plugins an opportunity to extract events from top-level
    * native browser events.
    *
-   * @param {string} topLevelType Record from `EventConstants`.
-   * @param {DOMEventTarget} topLevelTarget The listening component root node.
-   * @param {string} topLevelTargetID ID of `topLevelTarget`.
-   * @param {object} nativeEvent Native browser event.
    * @return {*} An accumulation of synthetic events.
    * @internal
    */
   extractEvents: function(
       topLevelType,
-      topLevelTarget,
-      topLevelTargetID,
-      nativeEvent) {
+      targetInst,
+      nativeEvent,
+      nativeEventTarget) {
     var events;
     var plugins = EventPluginRegistry.plugins;
     for (var i = 0; i < plugins.length; i++) {
@@ -239,9 +191,9 @@ var EventPluginHub = {
       if (possiblePlugin) {
         var extractedEvents = possiblePlugin.extractEvents(
           topLevelType,
-          topLevelTarget,
-          topLevelTargetID,
-          nativeEvent
+          targetInst,
+          nativeEvent,
+          nativeEventTarget
         );
         if (extractedEvents) {
           events = accumulateInto(events, extractedEvents);
@@ -269,17 +221,29 @@ var EventPluginHub = {
    *
    * @internal
    */
-  processEventQueue: function() {
+  processEventQueue: function(simulated) {
     // Set `eventQueue` to null before processing it so that we can tell if more
     // events get enqueued while processing.
     var processingEventQueue = eventQueue;
     eventQueue = null;
-    forEachAccumulated(processingEventQueue, executeDispatchesAndRelease);
+    if (simulated) {
+      forEachAccumulated(
+        processingEventQueue,
+        executeDispatchesAndReleaseSimulated
+      );
+    } else {
+      forEachAccumulated(
+        processingEventQueue,
+        executeDispatchesAndReleaseTopLevel
+      );
+    }
     invariant(
       !eventQueue,
       'processEventQueue(): Additional events were enqueued while processing ' +
       'an event queue. Support for this has not yet been implemented.'
     );
+    // This would be a good time to rethrow if any of the event handlers threw.
+    ReactErrorUtils.rethrowCaughtError();
   },
 
   /**
@@ -291,7 +255,7 @@ var EventPluginHub = {
 
   __getListenerBank: function() {
     return listenerBank;
-  }
+  },
 
 };
 

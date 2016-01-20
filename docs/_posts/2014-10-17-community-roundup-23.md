@@ -1,7 +1,7 @@
 ---
 title: "Community Round-up #23"
 layout: post
-author: Lou Husson
+author: LoukaN
 ---
 
 This round-up is a special edition on [Flux](https://facebook.github.io/flux/). If you expect to see diagrams showing arrows that all point in the same direction, you won't be disappointed!

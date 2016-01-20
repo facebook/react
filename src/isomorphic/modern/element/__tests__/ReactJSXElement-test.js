@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,23 +11,23 @@
 
 'use strict';
 
-var mocks;
-
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactJSXElement', function() {
   var Component;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
-
-    mocks = require('mocks');
+    jest.resetModuleRegistry();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    Component = class {
-      render() { return <div />; }
+    Component = class extends React.Component {
+      render() {
+        return <div />;
+      }
     };
   });
 
@@ -36,7 +36,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe(Component);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('allows a lower-case to be passed as the string type', function() {
@@ -44,7 +46,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('allows a string to be passed as the type', function() {
@@ -53,7 +57,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({});
+    var expectation = {};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('returns an immutable element', function() {
@@ -74,7 +80,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    expect(element.props).toEqual({foo:'56'});
+    var expectation = {foo:'56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('coerces the key to a string', function() {
@@ -82,7 +90,9 @@ describe('ReactJSXElement', function() {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    expect(element.props).toEqual({foo:'56'});
+    var expectation = {foo:'56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('merges JSX children onto the children prop', function() {
@@ -109,7 +119,9 @@ describe('ReactJSXElement', function() {
 
   it('merges JSX children onto the children prop in an array', function() {
     spyOn(console, 'error');
-    var a = 1, b = 2, c = 3;
+    var a = 1;
+    var b = 2;
+    var c = 3;
     var element = <Component>{a}{b}{c}</Component>;
     expect(element.props.children).toEqual([1, 2, 3]);
     expect(console.error.argsForCall.length).toBe(0);
@@ -118,7 +130,7 @@ describe('ReactJSXElement', function() {
   it('allows static methods to be called using the type property', function() {
     spyOn(console, 'error');
 
-    class Component {
+    class StaticMethodComponent {
       static someStaticMethod() {
         return 'someReturnValue';
       }
@@ -127,26 +139,21 @@ describe('ReactJSXElement', function() {
       }
     }
 
-    var element = <Component />;
+    var element = <StaticMethodComponent />;
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
     expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('identifies valid elements', function() {
-    class Component {
-      render() {
-        return <div />;
-      }
-    }
-
     expect(React.isValidElement(<div />)).toEqual(true);
     expect(React.isValidElement(<Component />)).toEqual(true);
 
     expect(React.isValidElement(null)).toEqual(false);
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement("string")).toEqual(false);
+    expect(React.isValidElement('string')).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
+    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
   });
 
   it('is indistinguishable from a plain object', function() {
@@ -156,36 +163,32 @@ describe('ReactJSXElement', function() {
   });
 
   it('should use default prop value when removing a prop', function() {
-    class Component {
-      render() {
-        return <span />;
-      }
-    }
     Component.defaultProps = {fruit: 'persimmon'};
 
     var container = document.createElement('div');
-    var instance = React.render(
+    var instance = ReactDOM.render(
       <Component fruit="mango" />,
       container
     );
     expect(instance.props.fruit).toBe('mango');
 
-    React.render(<Component />, container);
+    ReactDOM.render(<Component />, container);
     expect(instance.props.fruit).toBe('persimmon');
   });
 
   it('should normalize props with default values', function() {
-    class Component {
+    class NormalizingComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.defaultProps = {prop: 'testKey'};
+    NormalizingComponent.defaultProps = {prop: 'testKey'};
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = ReactTestUtils.renderIntoDocument(<NormalizingComponent />);
     expect(instance.props.prop).toBe('testKey');
 
-    var inst2 = ReactTestUtils.renderIntoDocument(<Component prop={null} />);
+    var inst2 =
+      ReactTestUtils.renderIntoDocument(<NormalizingComponent prop={null} />);
     expect(inst2.props.prop).toBe(null);
   });
 

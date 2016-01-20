@@ -6,7 +6,7 @@ prev: tutorial-ko-KR.html
 next: videos-ko-KR.html
 ---
 
-이 문서의 원본은 [공식 블로그](/react/blog)의 [포스팅](/react/blog/2013/11/05/thinking-in-react.html) 입니다.
+Pete Hunt의 글입니다.
 
 제가 생각하기에, React는 JavaScript로 크고 빠른 웹 애플리케이션을 만드는데 최고입니다. 페이스북과 인스타그램에서 우리에게 잘 맞도록 조정되어 왔습니다.
 
@@ -61,7 +61,7 @@ React의 많은 뛰어난 점들 중 하나는 생각을 하면서 애플리케�
 
 ## 2단계: 정적 버전을 만드세요.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 계층구조의 컴포넌트들을 가지고 있으니, 이젠 애플리케이션을 구현할 시간입니다. 가장 쉬운 방법은 상호작용을 하지 않는 채로 자료 모델을 이용해 UI를 그리는 것입니다. 정적 버전을 만드는 데에는 적은 생각과 많은 노동이 필요하고, 상호작용을 추가하는 데에는 많은 생각과 적은 노동이 필요하기 때문에 둘을 분리하는 것이 가장 좋습니다. 왜 그런지 봅시다.
 
@@ -69,7 +69,7 @@ React의 많은 뛰어난 점들 중 하나는 생각을 하면서 애플리케�
 
 껍데기부터 혹은 속알맹이부터 만들 수 있습니다. 즉 계층구조상 위에서부터 (`FilterableProductTable` 부터) 혹은 아래에서부터 (`ProductRow`), 어느 방향에서든 시작해도 됩니다. 통상 큰 프로젝트에서는 계층구조상 위에서부터 시작하는 것이 쉽고, 테스트를 작성할때는, 아래에서부터 시작하는 것이 쉽습니다.
 
-이 단계의 결과, 자료 모델을 그리는 재활용 가능한 컴포넌트의 라이브러리를 갖게 되었습니다. 정적버전 이후로 컴포넌트들은 오직 `render()` 메소드만 갖고 있습니다. 계층구조상 가장 위의 컴포넌트 (`FilterableProductTable`)은 자료 모델을 prop으로 취할 것입니다. 자료 모델이 변했을 때, `React.render()`를 다시 부르면 UI가 업데이트 됩니다. 어떻게 UI가 업데이트 되는지 참 알기 쉽습니다. 자료가 바뀌어도 처리해야 할 복잡한 일이 아무것도 없습니다. React의 **단일 방향 자료 흐름** (혹은 *단일방향 바인딩*)이 모든것을 모듈식으로, 추론하기 쉽게, 그리고 빠르게 유지해줍니다.
+이 단계의 결과, 자료 모델을 그리는 재활용 가능한 컴포넌트의 라이브러리를 갖게 되었습니다. 정적버전 이후로 컴포넌트들은 오직 `render()` 메소드만 갖고 있습니다. 계층구조상 가장 위의 컴포넌트 (`FilterableProductTable`)은 자료 모델을 prop으로 취할 것입니다. 자료 모델이 변했을 때, `ReactDOM.render()`를 다시 부르면 UI가 업데이트 됩니다. 어떻게 UI가 업데이트 되는지 참 알기 쉽습니다. 자료가 바뀌어도 처리해야 할 복잡한 일이 아무것도 없습니다. React의 **단일 방향 자료 흐름** (혹은 *단일방향 바인딩*)이 모든것을 모듈식으로, 추론하기 쉽게, 그리고 빠르게 유지해줍니다.
 
 이 단계를 진행하는 데에 도움이 필요하시다면, [React 문서](/react/docs/getting-started-ko-KR.html)를 참조하세요.
 
@@ -105,7 +105,7 @@ product 들의 원본 목록은 props를 통해서 전달되기 때문에, state
 
 ## 4단계: 어디서 state가 유지되어야 하는지 확인하세요.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 이제 최소한의 state가 무엇인지 알아냈습니다. 다음은, 어떤 컴포넌트가 이 state를 변형하거나 만들어낼지 알아내야 합니다.
 
@@ -130,7 +130,7 @@ product 들의 원본 목록은 props를 통해서 전달되기 때문에, state
 
 ## 5단계: 반대방향 자료 흐름을 추가하세요.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 앞서 우리는 계층적으로 아랫방향 흐름의 props, state전달로 잘 동작하는 애플리케이션을 만들었습니다. 이제 다른방향의 자료 흐름을 지원할 시간입니다: form 컴포넌트들은 `FilterableProductTable`의 state를 업데이트할 필요성이 있죠.
 

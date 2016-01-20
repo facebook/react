@@ -1,6 +1,6 @@
 ---
 title: React.js Conf Updates
-author: Vjeux
+author: vjeux
 ---
 
 Yesterday was the [React.js Conf](http://conf.reactjs.com/index.html) call for presenters submission deadline. We were
@@ -17,7 +17,7 @@ stick with the originally planned format and venue on Facebook's campus.
 
 Unfortunately, this means that we can only accept a small number of the awesome
 conference talk proposals. In order to make sure attendees get a fair shot at
-registering, we're going to to sell tickets in three separate first-come,
+registering, we're going to sell tickets in three separate first-come,
 first-serve phases. **Tickets will cost $200 regardless of which phase they are
 purchased from and all proceeds will go to charity**.
 

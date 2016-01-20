@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,15 +11,15 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -38,12 +38,14 @@ describe('ReactCompositeComponentNestedState-state', function() {
 
       render: function() {
         this.props.logger('parent-render', this.state.color);
-        return <ChildComponent
-          logger={this.props.logger}
-          color={this.state.color}
-          onSelectColor={this.handleColor}
-        />;
-      }
+        return (
+          <ChildComponent
+            logger={this.props.logger}
+            color={this.state.color}
+            onSelectColor={this.handleColor}
+          />
+        );
+      },
     });
 
     var ChildComponent = React.createClass({
@@ -58,7 +60,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
         this.setState(function(state, props) {
           this.props.logger('setState-this', this.state.hue, this.props.color);
           this.props.logger('setState-args', state.hue, props.color);
-          return {hue: shade + ' ' + props.color}
+          return {hue: shade + ' ' + props.color};
         }, function() {
           this.props.logger('after-setState', this.state.hue, this.props.color);
         });
@@ -66,29 +68,31 @@ describe('ReactCompositeComponentNestedState-state', function() {
 
       render: function() {
         this.props.logger('render', this.state.hue, this.props.color);
-        return <div>
-          <button onClick={this.handleHue.bind(this, 'dark', 'blue')}>
-            Dark Blue
-          </button>
-          <button onClick={this.handleHue.bind(this, 'light', 'blue')}>
-            Light Blue
-          </button>
-          <button onClick={this.handleHue.bind(this, 'dark', 'green')}>
-            Dark Green
-          </button>
-          <button onClick={this.handleHue.bind(this, 'light', 'green')}>
-            Light Green
-          </button>
-        </div>
-      }
+        return (
+          <div>
+            <button onClick={this.handleHue.bind(this, 'dark', 'blue')}>
+              Dark Blue
+            </button>
+            <button onClick={this.handleHue.bind(this, 'light', 'blue')}>
+              Light Blue
+            </button>
+            <button onClick={this.handleHue.bind(this, 'dark', 'green')}>
+              Dark Green
+            </button>
+            <button onClick={this.handleHue.bind(this, 'light', 'green')}>
+              Light Green
+            </button>
+          </div>
+        );
+      },
     });
 
     var container = document.createElement('div');
     document.body.appendChild(container);
 
-    var logger = mocks.getMockFunction();
+    var logger = jest.genMockFn();
 
-    var instance = React.render(
+    void ReactDOM.render(
       <ParentComponent logger={logger} />,
       container
     );
@@ -109,7 +113,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
       ['setState-args', 'dark blue', 'green'],
       ['render', 'light green', 'green'],
       ['parent-after-setState', 'green'],
-      ['after-setState', 'light green', 'green']
+      ['after-setState', 'light green', 'green'],
     ]);
   });
 });

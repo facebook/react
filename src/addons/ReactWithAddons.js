@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -27,10 +27,11 @@ var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactUpdates = require('ReactUpdates');
 
-var cloneWithProps = require('cloneWithProps');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var shallowCompare = require('shallowCompare');
 var update = require('update');
+var warning = require('warning');
+
+var warnedAboutBatchedUpdates = false;
 
 React.addons = {
   CSSTransitionGroup: ReactCSSTransitionGroup,
@@ -38,12 +39,20 @@ React.addons = {
   PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
 
-  batchedUpdates: ReactUpdates.batchedUpdates,
-  cloneWithProps: cloneWithProps,
+  batchedUpdates: function() {
+    if (__DEV__) {
+      warning(
+        warnedAboutBatchedUpdates,
+        'React.addons.batchedUpdates is deprecated. Use ' +
+        'ReactDOM.unstable_batchedUpdates instead.'
+      );
+      warnedAboutBatchedUpdates = true;
+    }
+    return ReactUpdates.batchedUpdates.apply(this, arguments);
+  },
   createFragment: ReactFragment.create,
-  renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   shallowCompare: shallowCompare,
-  update: update
+  update: update,
 };
 
 if (__DEV__) {

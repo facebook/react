@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -46,7 +46,7 @@ var ReactStateSetters = {
     // Memoize the setters.
     var cache = component.__keySetters || (component.__keySetters = {});
     return cache[key] || (cache[key] = createStateKeySetter(component, key));
-  }
+  },
 };
 
 function createStateKeySetter(component, key) {
@@ -98,7 +98,7 @@ ReactStateSetters.Mixin = {
    */
   createStateKeySetter: function(key) {
     return ReactStateSetters.createStateKeySetter(this, key);
-  }
+  },
 };
 
 module.exports = ReactStateSetters;

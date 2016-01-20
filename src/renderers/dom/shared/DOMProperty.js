@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule DOMProperty
- * @typechecks static-only
  */
 
 'use strict';
@@ -60,6 +59,7 @@ var DOMPropertyInjection = {
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
+    var Injection = DOMPropertyInjection;
     var Properties = domPropertyConfig.Properties || {};
     var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
@@ -74,7 +74,7 @@ var DOMPropertyInjection = {
 
     for (var propName in Properties) {
       invariant(
-        !DOMProperty.isStandardName.hasOwnProperty(propName),
+        !DOMProperty.properties.hasOwnProperty(propName),
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
         '\'%s\' which has already been injected. You may be accidentally ' +
         'injecting the same DOM property config twice, or you may be ' +
@@ -82,77 +82,75 @@ var DOMPropertyInjection = {
         propName
       );
 
-      DOMProperty.isStandardName[propName] = true;
-
       var lowerCased = propName.toLowerCase();
-      DOMProperty.getPossibleStandardName[lowerCased] = propName;
-
-      if (DOMAttributeNames.hasOwnProperty(propName)) {
-        var attributeName = DOMAttributeNames[propName];
-        DOMProperty.getPossibleStandardName[attributeName] = propName;
-        DOMProperty.getAttributeName[propName] = attributeName;
-      } else {
-        DOMProperty.getAttributeName[propName] = lowerCased;
-      }
-
-      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-        DOMProperty.getAttributeNamespace[propName] =
-          DOMAttributeNamespaces[propName];
-      } else {
-        DOMProperty.getAttributeNamespace[propName] = null;
-      }
-
-      DOMProperty.getPropertyName[propName] =
-        DOMPropertyNames.hasOwnProperty(propName) ?
-          DOMPropertyNames[propName] :
-          propName;
-
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
-        DOMProperty.getMutationMethod[propName] = DOMMutationMethods[propName];
-      } else {
-        DOMProperty.getMutationMethod[propName] = null;
-      }
-
       var propConfig = Properties[propName];
-      DOMProperty.mustUseAttribute[propName] =
-        checkMask(propConfig, DOMPropertyInjection.MUST_USE_ATTRIBUTE);
-      DOMProperty.mustUseProperty[propName] =
-        checkMask(propConfig, DOMPropertyInjection.MUST_USE_PROPERTY);
-      DOMProperty.hasSideEffects[propName] =
-        checkMask(propConfig, DOMPropertyInjection.HAS_SIDE_EFFECTS);
-      DOMProperty.hasBooleanValue[propName] =
-        checkMask(propConfig, DOMPropertyInjection.HAS_BOOLEAN_VALUE);
-      DOMProperty.hasNumericValue[propName] =
-        checkMask(propConfig, DOMPropertyInjection.HAS_NUMERIC_VALUE);
-      DOMProperty.hasPositiveNumericValue[propName] =
-        checkMask(propConfig, DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE);
-      DOMProperty.hasOverloadedBooleanValue[propName] =
-        checkMask(propConfig, DOMPropertyInjection.HAS_OVERLOADED_BOOLEAN_VALUE);
+
+      var propertyInfo = {
+        attributeName: lowerCased,
+        attributeNamespace: null,
+        propertyName: propName,
+        mutationMethod: null,
+
+        mustUseAttribute: checkMask(propConfig, Injection.MUST_USE_ATTRIBUTE),
+        mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
+        hasSideEffects: checkMask(propConfig, Injection.HAS_SIDE_EFFECTS),
+        hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
+        hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
+        hasPositiveNumericValue:
+          checkMask(propConfig, Injection.HAS_POSITIVE_NUMERIC_VALUE),
+        hasOverloadedBooleanValue:
+          checkMask(propConfig, Injection.HAS_OVERLOADED_BOOLEAN_VALUE),
+      };
 
       invariant(
-        !DOMProperty.mustUseAttribute[propName] ||
-          !DOMProperty.mustUseProperty[propName],
+        !propertyInfo.mustUseAttribute || !propertyInfo.mustUseProperty,
         'DOMProperty: Cannot require using both attribute and property: %s',
         propName
       );
       invariant(
-        DOMProperty.mustUseProperty[propName] ||
-          !DOMProperty.hasSideEffects[propName],
+        propertyInfo.mustUseProperty || !propertyInfo.hasSideEffects,
         'DOMProperty: Properties that have side effects must use property: %s',
         propName
       );
       invariant(
-        !!DOMProperty.hasBooleanValue[propName] +
-          !!DOMProperty.hasNumericValue[propName] +
-          !!DOMProperty.hasOverloadedBooleanValue[propName] <= 1,
+        propertyInfo.hasBooleanValue + propertyInfo.hasNumericValue +
+          propertyInfo.hasOverloadedBooleanValue <= 1,
         'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
         'numeric value, but not a combination: %s',
         propName
       );
+
+      if (__DEV__) {
+        DOMProperty.getPossibleStandardName[lowerCased] = propName;
+      }
+
+      if (DOMAttributeNames.hasOwnProperty(propName)) {
+        var attributeName = DOMAttributeNames[propName];
+        propertyInfo.attributeName = attributeName;
+        if (__DEV__) {
+          DOMProperty.getPossibleStandardName[attributeName] = propName;
+        }
+      }
+
+      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
+        propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
+      }
+
+      if (DOMPropertyNames.hasOwnProperty(propName)) {
+        propertyInfo.propertyName = DOMPropertyNames[propName];
+      }
+
+      if (DOMMutationMethods.hasOwnProperty(propName)) {
+        propertyInfo.mutationMethod = DOMMutationMethods[propName];
+      }
+
+      DOMProperty.properties[propName] = propertyInfo;
     }
-  }
+  },
 };
 var defaultValueCache = {};
+
+var ATTRIBUTE_NAME_START_CHAR = ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
 
 /**
  * DOMProperty exports lookup objects that can be used like functions:
@@ -170,95 +168,55 @@ var defaultValueCache = {};
 var DOMProperty = {
 
   ID_ATTRIBUTE_NAME: 'data-reactid',
+  ROOT_ATTRIBUTE_NAME: 'data-reactroot',
+
+  ATTRIBUTE_NAME_START_CHAR: ATTRIBUTE_NAME_START_CHAR,
+  ATTRIBUTE_NAME_CHAR: ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\uB7\\u0300-\\u036F\\u203F-\\u2040',
 
   /**
-   * Checks whether a property name is a standard property.
-   * @type {Object}
+   * Map from property "standard name" to an object with info about how to set
+   * the property in the DOM. Each object contains:
+   *
+   * attributeName:
+   *   Used when rendering markup or with `*Attribute()`.
+   * attributeNamespace
+   * propertyName:
+   *   Used on DOM node instances. (This includes properties that mutate due to
+   *   external factors.)
+   * mutationMethod:
+   *   If non-null, used instead of the property or `setAttribute()` after
+   *   initial render.
+   * mustUseAttribute:
+   *   Whether the property must be accessed and mutated using `*Attribute()`.
+   *   (This includes anything that fails `<propName> in <element>`.)
+   * mustUseProperty:
+   *   Whether the property must be accessed and mutated as an object property.
+   * hasSideEffects:
+   *   Whether or not setting a value causes side effects such as triggering
+   *   resources to be loaded or text selection changes. If true, we read from
+   *   the DOM before updating to ensure that the value is only set if it has
+   *   changed.
+   * hasBooleanValue:
+   *   Whether the property should be removed when set to a falsey value.
+   * hasNumericValue:
+   *   Whether the property must be numeric or parse as a numeric and should be
+   *   removed when set to a falsey value.
+   * hasPositiveNumericValue:
+   *   Whether the property must be positive numeric or parse as a positive
+   *   numeric and should be removed when set to a falsey value.
+   * hasOverloadedBooleanValue:
+   *   Whether the property can be used as a flag as well as with a value.
+   *   Removed when strictly equal to false; present without a value when
+   *   strictly equal to true; present with a value otherwise.
    */
-  isStandardName: {},
+  properties: {},
 
   /**
    * Mapping from lowercase property names to the properly cased version, used
-   * to warn in the case of missing properties.
+   * to warn in the case of missing properties. Available only in __DEV__.
    * @type {Object}
    */
-  getPossibleStandardName: {},
-
-  /**
-   * Mapping from normalized names to attribute names that differ. Attribute
-   * names are used when rendering markup or with `*Attribute()`.
-   * @type {Object}
-   */
-  getAttributeName: {},
-
-  /**
-   * Mapping from normalized names to namespaces.
-   * @type {Object}
-   */
-  getAttributeNamespace: {},
-
-  /**
-   * Mapping from normalized names to properties on DOM node instances.
-   * (This includes properties that mutate due to external factors.)
-   * @type {Object}
-   */
-  getPropertyName: {},
-
-  /**
-   * Mapping from normalized names to mutation methods. This will only exist if
-   * mutation cannot be set simply by the property or `setAttribute()`.
-   * @type {Object}
-   */
-  getMutationMethod: {},
-
-  /**
-   * Whether the property must be accessed and mutated as an object property.
-   * @type {Object}
-   */
-  mustUseAttribute: {},
-
-  /**
-   * Whether the property must be accessed and mutated using `*Attribute()`.
-   * (This includes anything that fails `<propName> in <element>`.)
-   * @type {Object}
-   */
-  mustUseProperty: {},
-
-  /**
-   * Whether or not setting a value causes side effects such as triggering
-   * resources to be loaded or text selection changes. We must ensure that
-   * the value is only set if it has changed.
-   * @type {Object}
-   */
-  hasSideEffects: {},
-
-  /**
-   * Whether the property should be removed when set to a falsey value.
-   * @type {Object}
-   */
-  hasBooleanValue: {},
-
-  /**
-   * Whether the property must be numeric or parse as a
-   * numeric and should be removed when set to a falsey value.
-   * @type {Object}
-   */
-  hasNumericValue: {},
-
-  /**
-   * Whether the property must be positive numeric or parse as a positive
-   * numeric and should be removed when set to a falsey value.
-   * @type {Object}
-   */
-  hasPositiveNumericValue: {},
-
-  /**
-   * Whether the property can be used as a flag as well as with a value. Removed
-   * when strictly equal to false; present without a value when strictly equal
-   * to true; present with a value otherwise.
-   * @type {Object}
-   */
-  hasOverloadedBooleanValue: {},
+  getPossibleStandardName: __DEV__ ? {} : null,
 
   /**
    * All of the isCustomAttribute() functions that have been injected.
@@ -300,7 +258,7 @@ var DOMProperty = {
     return nodeDefaults[prop];
   },
 
-  injection: DOMPropertyInjection
+  injection: DOMPropertyInjection,
 };
 
 module.exports = DOMProperty;

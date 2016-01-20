@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule SyntheticWheelEvent
- * @typechecks static-only
  */
 
 'use strict';
@@ -41,7 +40,7 @@ var WheelEventInterface = {
   // notch on the scroll is always +/- 120, roughly equivalent to pixels.
   // A good approximation of DOM_DELTA_LINE (1) is 5% of viewport size or
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
-  deltaMode: null
+  deltaMode: null,
 };
 
 /**
@@ -50,8 +49,8 @@ var WheelEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticMouseEvent}
  */
-function SyntheticWheelEvent(dispatchConfig, dispatchMarker, nativeEvent) {
-  SyntheticMouseEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+function SyntheticWheelEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  SyntheticMouseEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticMouseEvent.augmentClass(SyntheticWheelEvent, WheelEventInterface);

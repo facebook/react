@@ -1,0 +1,18 @@
+{
+  "name": "react-dom",
+  "version": "0.15.0-alpha",
+  "description": "React package for working with the DOM.",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "react"
+  ],
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
+  "peerDependencies": {
+    "react": "^0.15.0-alpha"
+  }
+}

@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #11"
-author: Vjeux
+author: vjeux
 ---
 
 This round-up is the proof that React has taken off from its Facebook's root: it features three in-depth presentations of React done by external people. This is awesome, keep them coming!

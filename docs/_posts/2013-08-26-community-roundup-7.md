@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #7"
-author: Vjeux
+author: vjeux
 ---
 
 It's been three months since we open sourced React and it is going well. Some stats so far:

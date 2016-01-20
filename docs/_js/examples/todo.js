@@ -1,8 +1,8 @@
 var TODO_COMPONENT = `
 var TodoList = React.createClass({
   render: function() {
-    var createItem = function(itemText, index) {
-      return <li key={index + itemText}>{itemText}</li>;
+    var createItem = function(item) {
+      return <li key={item.id}>{item.text}</li>;
     };
     return <ul>{this.props.items.map(createItem)}</ul>;
   }
@@ -16,7 +16,7 @@ var TodoApp = React.createClass({
   },
   handleSubmit: function(e) {
     e.preventDefault();
-    var nextItems = this.state.items.concat([this.state.text]);
+    var nextItems = this.state.items.concat([{text: this.state.text, id: Date.now()}]);
     var nextText = '';
     this.setState({items: nextItems, text: nextText});
   },
@@ -34,10 +34,10 @@ var TodoApp = React.createClass({
   }
 });
 
-React.render(<TodoApp />, mountNode);
+ReactDOM.render(<TodoApp />, mountNode);
 `;
 
-React.render(
+ReactDOM.render(
   <ReactPlayground codeText={TODO_COMPONENT} />,
   document.getElementById('todoExample')
 );

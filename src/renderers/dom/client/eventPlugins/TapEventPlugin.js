@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule TapEventPlugin
- * @typechecks static-only
  */
 
 'use strict';
@@ -34,7 +33,7 @@ var startCoords = {x: null, y: null};
 
 var Axis = {
   x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
-  y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'}
+  y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'},
 };
 
 function getAxisCoordOfEvent(axis, nativeEvent) {
@@ -60,23 +59,23 @@ var touchEvents = [
   topLevelTypes.topTouchStart,
   topLevelTypes.topTouchCancel,
   topLevelTypes.topTouchEnd,
-  topLevelTypes.topTouchMove
+  topLevelTypes.topTouchMove,
 ];
 
 var dependencies = [
   topLevelTypes.topMouseDown,
   topLevelTypes.topMouseMove,
-  topLevelTypes.topMouseUp
+  topLevelTypes.topMouseUp,
 ].concat(touchEvents);
 
 var eventTypes = {
   touchTap: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchTap: null}),
-      captured: keyOf({onTouchTapCapture: null})
+      captured: keyOf({onTouchTapCapture: null}),
     },
-    dependencies: dependencies
-  }
+    dependencies: dependencies,
+  },
 };
 
 var usedTouch = false;
@@ -89,19 +88,12 @@ var TapEventPlugin = {
 
   eventTypes: eventTypes,
 
-  /**
-   * @param {string} topLevelType Record from `EventConstants`.
-   * @param {DOMEventTarget} topLevelTarget The listening component root node.
-   * @param {string} topLevelTargetID ID of `topLevelTarget`.
-   * @param {object} nativeEvent Native browser event.
-   * @return {*} An accumulation of synthetic events.
-   * @see {EventPluginHub.extractEvents}
-   */
   extractEvents: function(
-      topLevelType,
-      topLevelTarget,
-      topLevelTargetID,
-      nativeEvent) {
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  ) {
     if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
       return null;
     }
@@ -121,8 +113,9 @@ var TapEventPlugin = {
     if (isEndish(topLevelType) && distance < tapMoveThreshold) {
       event = SyntheticUIEvent.getPooled(
         eventTypes.touchTap,
-        topLevelTargetID,
-        nativeEvent
+        targetInst,
+        nativeEvent,
+        nativeEventTarget
       );
     }
     if (isStartish(topLevelType)) {
@@ -134,7 +127,7 @@ var TapEventPlugin = {
     }
     EventPropagators.accumulateTwoPhaseDispatches(event);
     return event;
-  }
+  },
 
 };
 

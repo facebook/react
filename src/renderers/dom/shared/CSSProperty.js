@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -15,14 +15,19 @@
  * CSS properties which accept numbers but are not in units of "px".
  */
 var isUnitlessNumber = {
+  animationIterationCount: true,
   boxFlex: true,
   boxFlexGroup: true,
+  boxOrdinalGroup: true,
   columnCount: true,
   flex: true,
   flexGrow: true,
   flexPositive: true,
   flexShrink: true,
   flexNegative: true,
+  flexOrder: true,
+  gridRow: true,
+  gridColumn: true,
   fontWeight: true,
   lineClamp: true,
   lineHeight: true,
@@ -36,9 +41,10 @@ var isUnitlessNumber = {
 
   // SVG-related properties
   fillOpacity: true,
+  stopOpacity: true,
   strokeDashoffset: true,
   strokeOpacity: true,
-  strokeWidth: true
+  strokeWidth: true,
 };
 
 /**
@@ -76,35 +82,41 @@ Object.keys(isUnitlessNumber).forEach(function(prop) {
  */
 var shorthandPropertyExpansions = {
   background: {
+    backgroundAttachment: true,
+    backgroundColor: true,
     backgroundImage: true,
-    backgroundPosition: true,
+    backgroundPositionX: true,
+    backgroundPositionY: true,
     backgroundRepeat: true,
-    backgroundColor: true
+  },
+  backgroundPosition: {
+    backgroundPositionX: true,
+    backgroundPositionY: true,
   },
   border: {
     borderWidth: true,
     borderStyle: true,
-    borderColor: true
+    borderColor: true,
   },
   borderBottom: {
     borderBottomWidth: true,
     borderBottomStyle: true,
-    borderBottomColor: true
+    borderBottomColor: true,
   },
   borderLeft: {
     borderLeftWidth: true,
     borderLeftStyle: true,
-    borderLeftColor: true
+    borderLeftColor: true,
   },
   borderRight: {
     borderRightWidth: true,
     borderRightStyle: true,
-    borderRightColor: true
+    borderRightColor: true,
   },
   borderTop: {
     borderTopWidth: true,
     borderTopStyle: true,
-    borderTopColor: true
+    borderTopColor: true,
   },
   font: {
     fontStyle: true,
@@ -112,13 +124,18 @@ var shorthandPropertyExpansions = {
     fontWeight: true,
     fontSize: true,
     lineHeight: true,
-    fontFamily: true
-  }
+    fontFamily: true,
+  },
+  outline: {
+    outlineWidth: true,
+    outlineStyle: true,
+    outlineColor: true,
+  },
 };
 
 var CSSProperty = {
   isUnitlessNumber: isUnitlessNumber,
-  shorthandPropertyExpansions: shorthandPropertyExpansions
+  shorthandPropertyExpansions: shorthandPropertyExpansions,
 };
 
 module.exports = CSSProperty;

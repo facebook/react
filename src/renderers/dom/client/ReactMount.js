@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,14 +11,15 @@
 
 'use strict';
 
+var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
-var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
@@ -26,36 +27,20 @@ var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
-var containsNode = require('containsNode');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
-var SEPARATOR = ReactInstanceHandles.SEPARATOR;
-
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-var nodeCache = {};
+var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
 var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
-/** Mapping from reactRootID to React component instance. */
 var instancesByReactRootID = {};
-
-/** Mapping from reactRootID to `container` nodes. */
-var containersByReactRootID = {};
-
-if (__DEV__) {
-  /** __DEV__-only mapping from reactRootID to root elements. */
-  var rootElementsByReactRootID = {};
-}
-
-// Used to store breadth-first search state in findComponentRoot.
-var findComponentRootReusableArray = [];
 
 /**
  * Finds the index of the first character
@@ -90,215 +75,82 @@ function getReactRootElementInContainer(container) {
   }
 }
 
-/**
- * @param {DOMElement} container DOM element that may contain a React component.
- * @return {?string} A "reactRoot" ID, if a React component is rendered.
- */
-function getReactRootID(container) {
-  var rootElement = getReactRootElementInContainer(container);
-  return rootElement && ReactMount.getID(rootElement);
-}
-
-/**
- * Accessing node[ATTR_NAME] or calling getAttribute(ATTR_NAME) on a form
- * element can return its control whose name or ID equals ATTR_NAME. All
- * DOM nodes support `getAttributeNode` but this can also get called on
- * other objects so just return '' if we're given something other than a
- * DOM node (such as window).
- *
- * @param {?DOMElement|DOMWindow|DOMDocument|DOMTextNode} node DOM node.
- * @return {string} ID of the supplied `domNode`.
- */
-function getID(node) {
-  var id = internalGetID(node);
-  if (id) {
-    if (nodeCache.hasOwnProperty(id)) {
-      var cached = nodeCache[id];
-      if (cached !== node) {
-        invariant(
-          !isValid(cached, id),
-          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
-        );
-
-        nodeCache[id] = node;
-      }
-    } else {
-      nodeCache[id] = node;
-    }
-  }
-
-  return id;
-}
-
 function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
-}
-
-/**
- * Sets the React-specific ID of the given node.
- *
- * @param {DOMElement} node The DOM node whose ID will be set.
- * @param {string} id The value of the ID attribute.
- */
-function setID(node, id) {
-  var oldID = internalGetID(node);
-  if (oldID !== id) {
-    delete nodeCache[oldID];
-  }
-  node.setAttribute(ATTR_NAME, id);
-  nodeCache[id] = node;
-}
-
-/**
- * Finds the node with the supplied React-generated DOM ID.
- *
- * @param {string} id A React-generated DOM ID.
- * @return {DOMElement} DOM node with the suppled `id`.
- * @internal
- */
-function getNode(id) {
-  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
-    nodeCache[id] = ReactMount.findReactNodeByID(id);
-  }
-  return nodeCache[id];
-}
-
-/**
- * Finds the node with the supplied public React instance.
- *
- * @param {*} instance A public React instance.
- * @return {?DOMElement} DOM node with the suppled `id`.
- * @internal
- */
-function getNodeFromInstance(instance) {
-  var id = ReactInstanceMap.get(instance)._rootNodeID;
-  if (ReactEmptyComponent.isNullComponentID(id)) {
-    return null;
-  }
-  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
-    nodeCache[id] = ReactMount.findReactNodeByID(id);
-  }
-  return nodeCache[id];
-}
-
-/**
- * A node is "valid" if it is contained by a currently mounted container.
- *
- * This means that the node does not have to be contained by a document in
- * order to be considered valid.
- *
- * @param {?DOMElement} node The candidate DOM node.
- * @param {string} id The expected ID of the node.
- * @return {boolean} Whether the node is contained by a mounted container.
- */
-function isValid(node, id) {
-  if (node) {
-    invariant(
-      internalGetID(node) === id,
-      'ReactMount: Unexpected modification of `%s`',
-      ATTR_NAME
-    );
-
-    var container = ReactMount.findReactContainerForID(id);
-    if (container && containsNode(container, node)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Causes the cache to forget about one React-specific ID.
- *
- * @param {string} id The ID to forget.
- */
-function purgeID(id) {
-  delete nodeCache[id];
-}
-
-var deepestNodeSoFar = null;
-function findDeepestCachedAncestorImpl(ancestorID) {
-  var ancestor = nodeCache[ancestorID];
-  if (ancestor && isValid(ancestor, ancestorID)) {
-    deepestNodeSoFar = ancestor;
-  } else {
-    // This node isn't populated in the cache, so presumably none of its
-    // descendants are. Break out of the loop.
-    return false;
-  }
-}
-
-/**
- * Return the deepest cached node whose ID is a prefix of `targetID`.
- */
-function findDeepestCachedAncestor(targetID) {
-  deepestNodeSoFar = null;
-  ReactInstanceHandles.traverseAncestors(
-    targetID,
-    findDeepestCachedAncestorImpl
-  );
-
-  var foundNode = deepestNodeSoFar;
-  deepestNodeSoFar = null;
-  return foundNode;
+  return node.getAttribute && node.getAttribute(ATTR_NAME) || '';
 }
 
 /**
  * Mounts this component and inserts it into the DOM.
  *
  * @param {ReactComponent} componentInstance The instance to mount.
- * @param {string} rootID DOM ID of the root node.
  * @param {DOMElement} container DOM element to mount into.
  * @param {ReactReconcileTransaction} transaction
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
 function mountComponentIntoNode(
-    componentInstance,
-    rootID,
-    container,
-    transaction,
-    shouldReuseMarkup,
-    context) {
-  if (__DEV__) {
-    if (context === emptyObject) {
-      context = {};
-    }
-    var tag = container.nodeName.toLowerCase();
-    context[validateDOMNesting.ancestorInfoContextKey] =
-      validateDOMNesting.updatedAncestorInfo(null, tag, null);
+  wrapperInstance,
+  container,
+  transaction,
+  shouldReuseMarkup,
+  context
+) {
+  var markerName;
+  if (ReactFeatureFlags.logTopLevelRenders) {
+    var wrappedElement = wrapperInstance._currentElement.props;
+    var type = wrappedElement.type;
+    markerName = 'React mount: ' + (
+      typeof type === 'string' ? type :
+      type.displayName || type.name
+    );
+    console.time(markerName);
   }
+
   var markup = ReactReconciler.mountComponent(
-    componentInstance, rootID, transaction, context
+    wrapperInstance,
+    transaction,
+    null,
+    ReactDOMContainerInfo(wrapperInstance, container),
+    context
   );
-  componentInstance._isTopLevel = true;
-  ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
+
+  if (markerName) {
+    console.timeEnd(markerName);
+  }
+
+  wrapperInstance._renderedComponent._topLevelWrapper = wrapperInstance;
+  ReactMount._mountImageIntoNode(
+    markup,
+    container,
+    wrapperInstance,
+    shouldReuseMarkup,
+    transaction
+  );
 }
 
 /**
  * Batched mount.
  *
  * @param {ReactComponent} componentInstance The instance to mount.
- * @param {string} rootID DOM ID of the root node.
  * @param {DOMElement} container DOM element to mount into.
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
 function batchedMountComponentIntoNode(
-    componentInstance,
-    rootID,
-    container,
-    shouldReuseMarkup,
-    context) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+  componentInstance,
+  container,
+  shouldReuseMarkup,
+  context
+) {
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
+    /* useCreateElement */
+    !shouldReuseMarkup && ReactDOMFeatureFlags.useCreateElement
+  );
   transaction.perform(
     mountComponentIntoNode,
     null,
     componentInstance,
-    rootID,
     container,
     transaction,
     shouldReuseMarkup,
@@ -330,6 +182,57 @@ function unmountComponentFromNode(instance, container) {
 }
 
 /**
+ * True if the supplied DOM node has a direct React-rendered child that is
+ * not a React root element. Useful for warning in `render`,
+ * `unmountComponentAtNode`, etc.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM element contains a direct child that was
+ * rendered by React but is not a root element.
+ * @internal
+ */
+function hasNonRootReactChild(container) {
+  var rootEl = getReactRootElementInContainer(container);
+  if (rootEl) {
+    var inst = ReactDOMComponentTree.getInstanceFromNode(rootEl);
+    return !!(inst && inst._nativeParent);
+  }
+}
+
+function getNativeRootInstanceInContainer(container) {
+  var rootEl = getReactRootElementInContainer(container);
+  var prevNativeInstance =
+    rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl);
+  return (
+    prevNativeInstance && !prevNativeInstance._nativeParent ?
+    prevNativeInstance : null
+  );
+}
+
+function getTopLevelWrapperInContainer(container) {
+  var root = getNativeRootInstanceInContainer(container);
+  return root ? root._nativeContainerInfo._topLevelWrapper : null;
+}
+
+/**
+ * Temporary (?) hack so that we can store all top-level pending updates on
+ * composites instead of having to worry about different types of components
+ * here.
+ */
+var topLevelRootCounter = 1;
+var TopLevelWrapper = function() {
+  this.rootID = topLevelRootCounter++;
+};
+TopLevelWrapper.prototype.isReactComponent = {};
+if (__DEV__) {
+  TopLevelWrapper.displayName = 'TopLevelWrapper';
+}
+TopLevelWrapper.prototype.render = function() {
+  // this.props is actually a ReactElement
+  return this.props;
+};
+
+/**
  * Mounting is the process of initializing a React component by creating its
  * representative DOM elements and inserting them into a supplied `container`.
  * Any prior content inside `container` is destroyed in the process.
@@ -348,7 +251,12 @@ function unmountComponentFromNode(instance, container) {
  * Inside of `container`, the first element rendered is the "reactRoot".
  */
 var ReactMount = {
-  /** Exposed for debugging purposes **/
+
+  TopLevelWrapper: TopLevelWrapper,
+
+  /**
+   * Used by devtools. The keys are not important.
+   */
   _instancesByReactRootID: instancesByReactRootID,
 
   /**
@@ -375,10 +283,6 @@ var ReactMount = {
       nextElement,
       container,
       callback) {
-    if (__DEV__) {
-      ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
-    }
-
     ReactMount.scrollMonitor(container, function() {
       ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement);
       if (callback) {
@@ -386,41 +290,12 @@ var ReactMount = {
       }
     });
 
-    if (__DEV__) {
-      // Record the root element in case it later gets transplanted.
-      rootElementsByReactRootID[getReactRootID(container)] =
-        getReactRootElementInContainer(container);
-    }
-
     return prevComponent;
   },
 
   /**
-   * Register a component into the instance map and starts scroll value
-   * monitoring
-   * @param {ReactComponent} nextComponent component instance to render
-   * @param {DOMElement} container container to render into
-   * @return {string} reactRoot ID prefix
-   */
-  _registerComponent: function(nextComponent, container) {
-    invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE ||
-        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
-      ),
-      '_registerComponent(...): Target container is not a DOM element.'
-    );
-
-    ReactBrowserEventEmitter.ensureScrollValueMonitoring();
-
-    var reactRootID = ReactMount.registerContainer(container);
-    instancesByReactRootID[reactRootID] = nextComponent;
-    return reactRootID;
-  },
-
-  /**
-   * Render a new component into the DOM.
+   * Render a new component into the DOM. Hooked by devtools!
+   *
    * @param {ReactElement} nextElement element to render
    * @param {DOMElement} container container to render into
    * @param {boolean} shouldReuseMarkup if we should skip the markup insertion
@@ -445,11 +320,17 @@ var ReactMount = {
         'ReactCompositeComponent'
     );
 
-    var componentInstance = instantiateReactComponent(nextElement, null);
-    var reactRootID = ReactMount._registerComponent(
-      componentInstance,
-      container
+    invariant(
+      container && (
+        container.nodeType === ELEMENT_NODE_TYPE ||
+        container.nodeType === DOC_NODE_TYPE ||
+        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
+      ),
+      '_registerComponent(...): Target container is not a DOM element.'
     );
+
+    ReactBrowserEventEmitter.ensureScrollValueMonitoring();
+    var componentInstance = instantiateReactComponent(nextElement);
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -458,17 +339,13 @@ var ReactMount = {
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
       componentInstance,
-      reactRootID,
       container,
       shouldReuseMarkup,
       context
     );
 
-    if (__DEV__) {
-      // Record the root element in case it later gets transplanted.
-      rootElementsByReactRootID[reactRootID] =
-        getReactRootElementInContainer(container);
-    }
+    var wrapperID = componentInstance._instance.rootID;
+    instancesByReactRootID[wrapperID] = componentInstance;
 
     return componentInstance;
   },
@@ -502,7 +379,7 @@ var ReactMount = {
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     invariant(
       ReactElement.isValidElement(nextElement),
-      'React.render(): Invalid component element.%s',
+      'ReactDOM.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
           ' Instead of passing an element string, make sure to instantiate ' +
@@ -519,7 +396,8 @@ var ReactMount = {
     );
 
     warning(
-      container && container.tagName !== 'BODY',
+      !container || !container.tagName ||
+      container.tagName.toUpperCase() !== 'BODY',
       'render(): Rendering components directly into document.body is ' +
       'discouraged, since its children are often manipulated by third-party ' +
       'scripts and browser extensions. This may lead to subtle ' +
@@ -527,17 +405,33 @@ var ReactMount = {
       'for your app.'
     );
 
-    var prevComponent = instancesByReactRootID[getReactRootID(container)];
+    var nextWrappedElement = new ReactElement(
+      TopLevelWrapper,
+      null,
+      null,
+      null,
+      null,
+      null,
+      nextElement
+    );
+
+    var prevComponent = getTopLevelWrapperInContainer(container);
 
     if (prevComponent) {
-      var prevElement = prevComponent._currentElement;
+      var prevWrappedElement = prevComponent._currentElement;
+      var prevElement = prevWrappedElement.props;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
-        return ReactMount._updateRootComponent(
+        var publicInst = prevComponent._renderedComponent.getPublicInstance();
+        var updatedCallback = callback && function() {
+          callback.call(publicInst);
+        };
+        ReactMount._updateRootComponent(
           prevComponent,
-          nextElement,
+          nextWrappedElement,
           container,
-          callback
-        ).getPublicInstance();
+          updatedCallback
+        );
+        return publicInst;
       } else {
         ReactMount.unmountComponentAtNode(container);
       }
@@ -545,13 +439,22 @@ var ReactMount = {
 
     var reactRootElement = getReactRootElementInContainer(container);
     var containerHasReactMarkup =
-      reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
+      reactRootElement && !!internalGetID(reactRootElement);
+    var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
+      warning(
+        !containerHasNonRootReactChild,
+        'render(...): Replacing React-rendered children with a new root ' +
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.'
+      );
+
       if (!containerHasReactMarkup || reactRootElement.nextSibling) {
         var rootElementSibling = reactRootElement;
         while (rootElementSibling) {
-          if (ReactMount.isRenderedByReact(rootElementSibling)) {
+          if (internalGetID(rootElementSibling)) {
             warning(
               false,
               'render(): Target node has markup rendered by React, but there ' +
@@ -560,15 +463,17 @@ var ReactMount = {
             );
             break;
           }
-
           rootElementSibling = rootElementSibling.nextSibling;
         }
       }
     }
 
-    var shouldReuseMarkup = containerHasReactMarkup && !prevComponent;
+    var shouldReuseMarkup =
+      containerHasReactMarkup &&
+      !prevComponent &&
+      !containerHasNonRootReactChild;
     var component = ReactMount._renderNewRootComponent(
-      nextElement,
+      nextWrappedElement,
       container,
       shouldReuseMarkup,
       parentComponent != null ?
@@ -576,7 +481,7 @@ var ReactMount = {
           parentComponent._reactInternalInstance._context
         ) :
         emptyObject
-    ).getPublicInstance();
+    )._renderedComponent.getPublicInstance();
     if (callback) {
       callback.call(component);
     }
@@ -598,61 +503,6 @@ var ReactMount = {
    */
   render: function(nextElement, container, callback) {
     return ReactMount._renderSubtreeIntoContainer(null, nextElement, container, callback);
-  },
-
-  /**
-   * Constructs a component instance of `constructor` with `initialProps` and
-   * renders it into the supplied `container`.
-   *
-   * @param {function} constructor React component constructor.
-   * @param {?object} props Initial props of the component instance.
-   * @param {DOMElement} container DOM element to render into.
-   * @return {ReactComponent} Component instance rendered in `container`.
-   */
-  constructAndRenderComponent: function(constructor, props, container) {
-    var element = ReactElement.createElement(constructor, props);
-    return ReactMount.render(element, container);
-  },
-
-  /**
-   * Constructs a component instance of `constructor` with `initialProps` and
-   * renders it into a container node identified by supplied `id`.
-   *
-   * @param {function} componentConstructor React component constructor
-   * @param {?object} props Initial props of the component instance.
-   * @param {string} id ID of the DOM element to render into.
-   * @return {ReactComponent} Component instance rendered in the container node.
-   */
-  constructAndRenderComponentByID: function(constructor, props, id) {
-    var domNode = document.getElementById(id);
-    invariant(
-      domNode,
-      'Tried to get element with id of "%s" but it is not present on the page.',
-      id
-    );
-    return ReactMount.constructAndRenderComponent(constructor, props, domNode);
-  },
-
-  /**
-   * Registers a container node into which React components will be rendered.
-   * This also creates the "reactRoot" ID that will be assigned to the element
-   * rendered within.
-   *
-   * @param {DOMElement} container DOM element to register as a container.
-   * @return {string} The "reactRoot" ID of elements rendered within.
-   */
-  registerContainer: function(container) {
-    var reactRootID = getReactRootID(container);
-    if (reactRootID) {
-      // If one exists, make sure it is a valid "reactRoot" ID.
-      reactRootID = ReactInstanceHandles.getReactRootIDFromNodeID(reactRootID);
-    }
-    if (!reactRootID) {
-      // No valid "reactRoot" ID found, create one.
-      reactRootID = ReactInstanceHandles.createReactRootID();
-    }
-    containersByReactRootID[reactRootID] = container;
-    return reactRootID;
   },
 
   /**
@@ -686,191 +536,49 @@ var ReactMount = {
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
 
-    var reactRootID = getReactRootID(container);
-    var component = instancesByReactRootID[reactRootID];
-    if (!component) {
+    var prevComponent = getTopLevelWrapperInContainer(container);
+    if (!prevComponent) {
+      // Check if the node being unmounted was rendered by React, but isn't a
+      // root node.
+      var containerHasNonRootReactChild = hasNonRootReactChild(container);
+
+      // Check if the container itself is a React root node.
+      var isContainerReactRoot =
+        container.nodeType === 1 && container.hasAttribute(ROOT_ATTR_NAME);
+
+      if (__DEV__) {
+        warning(
+          !containerHasNonRootReactChild,
+          'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+          'was rendered by React and is not a top-level container. %s',
+          (
+            isContainerReactRoot ?
+              'You may have accidentally passed in a React root node instead ' +
+              'of its container.' :
+              'Instead, have the parent component update its state and ' +
+              'rerender in order to remove this component.'
+          )
+        );
+      }
+
       return false;
     }
+    delete instancesByReactRootID[prevComponent._instance.rootID];
     ReactUpdates.batchedUpdates(
       unmountComponentFromNode,
-      component,
+      prevComponent,
       container
     );
-    delete instancesByReactRootID[reactRootID];
-    delete containersByReactRootID[reactRootID];
-    if (__DEV__) {
-      delete rootElementsByReactRootID[reactRootID];
-    }
     return true;
   },
 
-  /**
-   * Finds the container DOM element that contains React component to which the
-   * supplied DOM `id` belongs.
-   *
-   * @param {string} id The ID of an element rendered by a React component.
-   * @return {?DOMElement} DOM element that contains the `id`.
-   */
-  findReactContainerForID: function(id) {
-    var reactRootID = ReactInstanceHandles.getReactRootIDFromNodeID(id);
-    var container = containersByReactRootID[reactRootID];
-
-    if (__DEV__) {
-      var rootElement = rootElementsByReactRootID[reactRootID];
-      if (rootElement && rootElement.parentNode !== container) {
-        warning(
-          // Call internalGetID here because getID calls isValid which calls
-          // findReactContainerForID (this function).
-          internalGetID(rootElement) === reactRootID,
-          'ReactMount: Root element ID differed from reactRootID.'
-        );
-        var containerChild = container.firstChild;
-        if (containerChild &&
-            reactRootID === internalGetID(containerChild)) {
-          // If the container has a new child with the same ID as the old
-          // root element, then rootElementsByReactRootID[reactRootID] is
-          // just stale and needs to be updated. The case that deserves a
-          // warning is when the container is empty.
-          rootElementsByReactRootID[reactRootID] = containerChild;
-        } else {
-          warning(
-            false,
-            'ReactMount: Root element has been removed from its original ' +
-            'container. New container:', rootElement.parentNode
-          );
-        }
-      }
-    }
-
-    return container;
-  },
-
-  /**
-   * Finds an element rendered by React with the supplied ID.
-   *
-   * @param {string} id ID of a DOM node in the React component.
-   * @return {DOMElement} Root DOM node of the React component.
-   */
-  findReactNodeByID: function(id) {
-    var reactRoot = ReactMount.findReactContainerForID(id);
-    return ReactMount.findComponentRoot(reactRoot, id);
-  },
-
-  /**
-   * True if the supplied `node` is rendered by React.
-   *
-   * @param {*} node DOM Element to check.
-   * @return {boolean} True if the DOM Element appears to be rendered by React.
-   * @internal
-   */
-  isRenderedByReact: function(node) {
-    if (node.nodeType !== 1) {
-      // Not a DOMElement, therefore not a React component
-      return false;
-    }
-    var id = ReactMount.getID(node);
-    return id ? id.charAt(0) === SEPARATOR : false;
-  },
-
-  /**
-   * Traverses up the ancestors of the supplied node to find a node that is a
-   * DOM representation of a React component.
-   *
-   * @param {*} node
-   * @return {?DOMEventTarget}
-   * @internal
-   */
-  getFirstReactDOM: function(node) {
-    var current = node;
-    while (current && current.parentNode !== current) {
-      if (ReactMount.isRenderedByReact(current)) {
-        return current;
-      }
-      current = current.parentNode;
-    }
-    return null;
-  },
-
-  /**
-   * Finds a node with the supplied `targetID` inside of the supplied
-   * `ancestorNode`.  Exploits the ID naming scheme to perform the search
-   * quickly.
-   *
-   * @param {DOMEventTarget} ancestorNode Search from this root.
-   * @pararm {string} targetID ID of the DOM representation of the component.
-   * @return {DOMEventTarget} DOM node with the supplied `targetID`.
-   * @internal
-   */
-  findComponentRoot: function(ancestorNode, targetID) {
-    var firstChildren = findComponentRootReusableArray;
-    var childIndex = 0;
-
-    var deepestAncestor = findDeepestCachedAncestor(targetID) || ancestorNode;
-
-    firstChildren[0] = deepestAncestor.firstChild;
-    firstChildren.length = 1;
-
-    while (childIndex < firstChildren.length) {
-      var child = firstChildren[childIndex++];
-      var targetChild;
-
-      while (child) {
-        var childID = ReactMount.getID(child);
-        if (childID) {
-          // Even if we find the node we're looking for, we finish looping
-          // through its siblings to ensure they're cached so that we don't have
-          // to revisit this node again. Otherwise, we make n^2 calls to getID
-          // when visiting the many children of a single node in order.
-
-          if (targetID === childID) {
-            targetChild = child;
-          } else if (ReactInstanceHandles.isAncestorIDOf(childID, targetID)) {
-            // If we find a child whose ID is an ancestor of the given ID,
-            // then we can be sure that we only want to search the subtree
-            // rooted at this child, so we can throw out the rest of the
-            // search state.
-            firstChildren.length = childIndex = 0;
-            firstChildren.push(child.firstChild);
-          }
-
-        } else {
-          // If this child had no ID, then there's a chance that it was
-          // injected automatically by the browser, as when a `<table>`
-          // element sprouts an extra `<tbody>` child as a side effect of
-          // `.innerHTML` parsing. Optimistically continue down this
-          // branch, but not before examining the other siblings.
-          firstChildren.push(child.firstChild);
-        }
-
-        child = child.nextSibling;
-      }
-
-      if (targetChild) {
-        // Emptying firstChildren/findComponentRootReusableArray is
-        // not necessary for correctness, but it helps the GC reclaim
-        // any nodes that were left at the end of the search.
-        firstChildren.length = 0;
-
-        return targetChild;
-      }
-    }
-
-    firstChildren.length = 0;
-
-    invariant(
-      false,
-      'findComponentRoot(..., %s): Unable to find element. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
-      'usually due to forgetting a <tbody> when using tables, nesting tags ' +
-      'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
-      'parent. ' +
-      'Try inspecting the child nodes of the element with React ID `%s`.',
-      targetID,
-      ReactMount.getID(ancestorNode)
-    );
-  },
-
-  _mountImageIntoNode: function(markup, container, shouldReuseMarkup) {
+  _mountImageIntoNode: function(
+    markup,
+    container,
+    instance,
+    shouldReuseMarkup,
+    transaction
+  ) {
     invariant(
       container && (
         container.nodeType === ELEMENT_NODE_TYPE ||
@@ -883,6 +591,7 @@ var ReactMount = {
     if (shouldReuseMarkup) {
       var rootElement = getReactRootElementInContainer(container);
       if (ReactMarkupChecksum.canReuseMarkup(markup, rootElement)) {
+        ReactDOMComponentTree.precacheNode(instance, rootElement);
         return;
       } else {
         var checksum = rootElement.getAttribute(
@@ -896,9 +605,29 @@ var ReactMount = {
           checksum
         );
 
-        var diffIndex = firstDifferenceIndex(markup, rootMarkup);
+        var normalizedMarkup = markup;
+        if (__DEV__) {
+          // because rootMarkup is retrieved from the DOM, various normalizations
+          // will have occurred which will not be present in `markup`. Here,
+          // insert markup into a <div> or <iframe> depending on the container
+          // type to perform the same normalizations before comparing.
+          var normalizer;
+          if (container.nodeType === ELEMENT_NODE_TYPE) {
+            normalizer = document.createElement('div');
+            normalizer.innerHTML = markup;
+            normalizedMarkup = normalizer.innerHTML;
+          } else {
+            normalizer = document.createElement('iframe');
+            document.body.appendChild(normalizer);
+            normalizer.contentDocument.write(markup);
+            normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
+            document.body.removeChild(normalizer);
+          }
+        }
+
+        var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
         var difference = ' (client) ' +
-          markup.substring(diffIndex - 20, diffIndex + 20) +
+          normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
           '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
         invariant(
@@ -936,32 +665,24 @@ var ReactMount = {
       'You\'re trying to render a component to the document but ' +
         'you didn\'t use server rendering. We can\'t do this ' +
         'without using server rendering due to cross-browser quirks. ' +
-        'See React.renderToString() for server rendering.'
+        'See ReactDOMServer.renderToString() for server rendering.'
     );
 
-    setInnerHTML(container, markup);
+    if (transaction.useCreateElement) {
+      while (container.lastChild) {
+        container.removeChild(container.lastChild);
+      }
+      DOMLazyTree.insertTreeBefore(container, markup, null);
+    } else {
+      setInnerHTML(container, markup);
+      ReactDOMComponentTree.precacheNode(instance, container.firstChild);
+    }
   },
-
-  /**
-   * React ID utilities.
-   */
-
-  getReactRootID: getReactRootID,
-
-  getID: getID,
-
-  setID: setID,
-
-  getNode: getNode,
-
-  getNodeFromInstance: getNodeFromInstance,
-
-  purgeID: purgeID
 };
 
 ReactPerf.measureMethods(ReactMount, 'ReactMount', {
   _renderNewRootComponent: '_renderNewRootComponent',
-  _mountImageIntoNode: '_mountImageIntoNode'
+  _mountImageIntoNode: '_mountImageIntoNode',
 });
 
 module.exports = ReactMount;

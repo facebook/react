@@ -1,7 +1,7 @@
 ---
 title: "Community Round-up #22"
 layout: post
-author: Lou Husson
+author: LoukaN
 ---
 
 This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb and Reddit announced that they were using React!

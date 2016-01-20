@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,18 +11,18 @@
 
 'use strict';
 
-var ReactDOMClient = require('ReactDOMClient');
+var ReactDOM = require('ReactDOM');
 var ReactDOMServer = require('ReactDOMServer');
 var ReactIsomorphic = require('ReactIsomorphic');
 
 var assign = require('Object.assign');
 
+// `version` will be added here by ReactIsomorphic.
 var React = {};
 
 assign(React, ReactIsomorphic);
-assign(React, ReactDOMClient);
-assign(React, ReactDOMServer);
 
-React.version = '0.14.0-alpha1';
+React.__SECRET_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactDOM;
+React.__SECRET_DOM_SERVER_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactDOMServer;
 
 module.exports = React;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,13 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule CSSPropertyOperations
- * @typechecks static-only
  */
 
 'use strict';
 
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactPerf = require('ReactPerf');
 
 var camelizeStyleName = require('camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
@@ -25,8 +25,16 @@ var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
+var hasShorthandPropertyBug = false;
 var styleFloatAccessor = 'cssFloat';
 if (ExecutionEnvironment.canUseDOM) {
+  var tempStyle = document.createElement('div').style;
+  try {
+    // IE8 throws "Invalid argument." if resetting shorthand style properties.
+    tempStyle.font = '';
+  } catch (e) {
+    hasShorthandPropertyBug = true;
+  }
   // IE8 only supports accessing cssFloat (standard) as styleFloat
   if (document.documentElement.style.cssFloat === undefined) {
     styleFloatAccessor = 'styleFloat';
@@ -42,6 +50,7 @@ if (__DEV__) {
 
   var warnedStyleNames = {};
   var warnedStyleValues = {};
+  var warnedForNaNValue = false;
 
   var warnHyphenatedStyleName = function(name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
@@ -86,6 +95,19 @@ if (__DEV__) {
     );
   };
 
+  var warnStyleValueIsNaN = function(name, value) {
+    if (warnedForNaNValue) {
+      return;
+    }
+
+    warnedForNaNValue = true;
+    warning(
+      false,
+      '`NaN` is an invalid value for the `%s` css style property',
+      name
+    );
+  };
+
   /**
    * @param {string} name
    * @param {*} value
@@ -97,6 +119,10 @@ if (__DEV__) {
       warnBadVendoredStyleName(name);
     } else if (badStyleValueWithSemicolonPattern.test(value)) {
       warnStyleValueWithSemicolon(name, value);
+    }
+
+    if (typeof value === 'number' && isNaN(value)) {
+      warnStyleValueIsNaN(name, value);
     }
   };
 }
@@ -116,9 +142,10 @@ var CSSPropertyOperations = {
    * The result should be HTML-escaped before insertion into the DOM.
    *
    * @param {object} styles
+   * @param {ReactDOMComponent} component
    * @return {?string}
    */
-  createMarkupForStyles: function(styles) {
+  createMarkupForStyles: function(styles, component) {
     var serialized = '';
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -130,7 +157,8 @@ var CSSPropertyOperations = {
       }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(styleName, styleValue) + ';';
+        serialized +=
+          dangerousStyleValue(styleName, styleValue, component) + ';';
       }
     }
     return serialized || null;
@@ -143,7 +171,7 @@ var CSSPropertyOperations = {
    * @param {DOMElement} node
    * @param {object} styles
    */
-  setValueForStyles: function(node, styles) {
+  setValueForStyles: function(node, styles, component) {
     var style = node.style;
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -152,14 +180,20 @@ var CSSPropertyOperations = {
       if (__DEV__) {
         warnValidStyle(styleName, styles[styleName]);
       }
-      var styleValue = dangerousStyleValue(styleName, styles[styleName]);
+      var styleValue = dangerousStyleValue(
+        styleName,
+        styles[styleName],
+        component
+      );
       if (styleName === 'float') {
         styleName = styleFloatAccessor;
       }
       if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
+        var expansion =
+          hasShorthandPropertyBug &&
+          CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
           // component to placate it
@@ -171,8 +205,12 @@ var CSSPropertyOperations = {
         }
       }
     }
-  }
+  },
 
 };
+
+ReactPerf.measureMethods(CSSPropertyOperations, 'CSSPropertyOperations', {
+  setValueForStyles: 'setValueForStyles',
+});
 
 module.exports = CSSPropertyOperations;

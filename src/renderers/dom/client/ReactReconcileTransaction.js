@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactReconcileTransaction
- * @typechecks static-only
  */
 
 'use strict';
@@ -32,7 +31,7 @@ var SELECTION_RESTORATION = {
   /**
    * @param {Selection} sel Selection information returned from `initialize`.
    */
-  close: ReactInputSelection.restoreSelection
+  close: ReactInputSelection.restoreSelection,
 };
 
 /**
@@ -53,17 +52,17 @@ var EVENT_SUPPRESSION = {
 
   /**
    * @param {boolean} previouslyEnabled Enabled status of
-   *   `ReactBrowserEventEmitter` before the reconciliation occured. `close`
+   *   `ReactBrowserEventEmitter` before the reconciliation occurred. `close`
    *   restores the previous value.
    */
   close: function(previouslyEnabled) {
     ReactBrowserEventEmitter.setEnabled(previouslyEnabled);
-  }
+  },
 };
 
 /**
  * Provides a queue for collecting `componentDidMount` and
- * `componentDidUpdate` callbacks during the the transaction.
+ * `componentDidUpdate` callbacks during the transaction.
  */
 var ON_DOM_READY_QUEUEING = {
   /**
@@ -78,7 +77,7 @@ var ON_DOM_READY_QUEUEING = {
    */
   close: function() {
     this.reactMountReady.notifyAll();
-  }
+  },
 };
 
 /**
@@ -89,7 +88,7 @@ var ON_DOM_READY_QUEUEING = {
 var TRANSACTION_WRAPPERS = [
   SELECTION_RESTORATION,
   EVENT_SUPPRESSION,
-  ON_DOM_READY_QUEUEING
+  ON_DOM_READY_QUEUEING,
 ];
 
 /**
@@ -106,7 +105,7 @@ var TRANSACTION_WRAPPERS = [
  *
  * @class ReactReconcileTransaction
  */
-function ReactReconcileTransaction() {
+function ReactReconcileTransaction(useCreateElement) {
   this.reinitializeTransaction();
   // Only server-side rendering really needs this option (see
   // `ReactServerRendering`), but server-side uses
@@ -115,6 +114,7 @@ function ReactReconcileTransaction() {
   // `ReactTextComponent` checks it in `mountComponent`.`
   this.renderToStaticMarkup = false;
   this.reactMountReady = CallbackQueue.getPooled(null);
+  this.useCreateElement = useCreateElement;
 }
 
 var Mixin = {
@@ -122,7 +122,7 @@ var Mixin = {
    * @see Transaction
    * @abstract
    * @final
-   * @return {array<object>} List of operation wrap proceedures.
+   * @return {array<object>} List of operation wrap procedures.
    *   TODO: convert to array<TransactionWrapper>
    */
   getTransactionWrappers: function() {
@@ -137,13 +137,26 @@ var Mixin = {
   },
 
   /**
+   * Save current transaction state -- if the return value from this method is
+   * passed to `rollback`, the transaction will be reset to that state.
+   */
+  checkpoint: function() {
+    // reactMountReady is the our only stateful wrapper
+    return this.reactMountReady.checkpoint();
+  },
+
+  rollback: function(checkpoint) {
+    this.reactMountReady.rollback(checkpoint);
+  },
+
+  /**
    * `PooledClass` looks for this, and will invoke this before allowing this
-   * instance to be resused.
+   * instance to be reused.
    */
   destructor: function() {
     CallbackQueue.release(this.reactMountReady);
     this.reactMountReady = null;
-  }
+  },
 };
 
 

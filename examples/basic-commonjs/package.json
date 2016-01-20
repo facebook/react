@@ -2,13 +2,13 @@
   "name": "react-basic-commonjs-example",
   "description": "Basic example of using React with CommonJS",
   "main": "index.js",
-  "devDependencies": {
-    "browserify": "^6.3.3",
-    "envify": "^3.2.0",
-    "react": "^0.13.0",
-    "reactify": "^0.17.1"
+  "dependencies": {
+    "babelify": "^6.3.0",
+    "react": "^0.14.0-rc1",
+    "react-dom": "^0.14.0-rc1",
+    "watchify": "^3.4.0"
   },
   "scripts": {
-    "build": "browserify --debug --transform reactify index.js > bundle.js"
+    "start": "watchify index.js -v -t babelify -o bundle.js"
   }
 }

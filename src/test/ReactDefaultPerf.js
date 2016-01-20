@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,12 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactDefaultPerf
- * @typechecks static-only
  */
 
 'use strict';
 
 var DOMProperty = require('DOMProperty');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
@@ -27,9 +27,26 @@ function addValue(obj, key, val) {
   obj[key] = (obj[key] || 0) + val;
 }
 
+// Composites don't have any built-in ID: we have to make our own
+var compositeIDMap;
+var compositeIDCounter = 17000;
+function getIDOfComposite(inst) {
+  if (!compositeIDMap) {
+    compositeIDMap = new WeakMap();
+  }
+  if (compositeIDMap.has(inst)) {
+    return compositeIDMap.get(inst);
+  } else {
+    var id = compositeIDCounter++;
+    compositeIDMap.set(inst, id);
+    return id;
+  }
+}
+
 var ReactDefaultPerf = {
   _allMeasurements: [], // last item in the list is the current one
   _mountStack: [0],
+  _compositeStack: [],
   _injected: false,
 
   start: function() {
@@ -60,7 +77,7 @@ var ReactDefaultPerf = {
         'Exclusive render time (ms)': roundFloat(item.render),
         'Mount time per instance (ms)': roundFloat(item.exclusive / item.count),
         'Render time per instance (ms)': roundFloat(item.render / item.count),
-        'Instances': item.count
+        'Instances': item.count,
       };
     }));
     // TODO: ReactDefaultPerfAnalysis.getTotalTime() does not return the correct
@@ -74,7 +91,7 @@ var ReactDefaultPerf = {
       return {
         'Owner > component': item.componentName,
         'Inclusive time (ms)': roundFloat(item.time),
-        'Instances': item.count
+        'Instances': item.count,
       };
     }));
     console.log(
@@ -92,7 +109,7 @@ var ReactDefaultPerf = {
       return {
         'Owner > component': item.componentName,
         'Wasted time (ms)': item.time,
-        'Instances': item.count
+        'Instances': item.count,
       };
     });
   },
@@ -112,8 +129,8 @@ var ReactDefaultPerf = {
     console.table(summary.map(function(item) {
       var result = {};
       result[DOMProperty.ID_ATTRIBUTE_NAME] = item.id;
-      result['type'] = item.type;
-      result['args'] = JSON.stringify(item.args);
+      result.type = item.type;
+      result.args = JSON.stringify(item.args);
       return result;
     }));
     console.log(
@@ -124,15 +141,15 @@ var ReactDefaultPerf = {
 
   _recordWrite: function(id, fnName, totalTime, args) {
     // TODO: totalTime isn't that useful since it doesn't count paints/reflows
-    var writes =
+    var entry =
       ReactDefaultPerf
-        ._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1]
-        .writes;
+        ._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1];
+    var writes = entry.writes;
     writes[id] = writes[id] || [];
     writes[id].push({
       type: fnName,
       time: totalTime,
-      args: args
+      args: args,
     });
   },
 
@@ -142,39 +159,46 @@ var ReactDefaultPerf = {
       var rv;
       var start;
 
+      var entry = ReactDefaultPerf._allMeasurements[
+        ReactDefaultPerf._allMeasurements.length - 1
+      ];
+
       if (fnName === '_renderNewRootComponent' ||
           fnName === 'flushBatchedUpdates') {
         // A "measurement" is a set of metrics recorded for each flush. We want
         // to group the metrics for a given flush together so we can look at the
         // components that rendered and the DOM operations that actually
         // happened to determine the amount of "wasted work" performed.
-        ReactDefaultPerf._allMeasurements.push({
+        ReactDefaultPerf._allMeasurements.push(entry = {
           exclusive: {},
           inclusive: {},
           render: {},
           counts: {},
           writes: {},
           displayNames: {},
-          totalTime: 0
+          hierarchy: {},
+          totalTime: 0,
+          created: {},
         });
         start = performanceNow();
         rv = func.apply(this, args);
-        ReactDefaultPerf._allMeasurements[
-          ReactDefaultPerf._allMeasurements.length - 1
-        ].totalTime = performanceNow() - start;
+        entry.totalTime = performanceNow() - start;
         return rv;
       } else if (fnName === '_mountImageIntoNode' ||
-          moduleName === 'ReactDOMIDOperations') {
+          moduleName === 'ReactDOMIDOperations' ||
+          moduleName === 'CSSPropertyOperations' ||
+          moduleName === 'DOMChildrenOperations' ||
+          moduleName === 'DOMPropertyOperations' ||
+          moduleName === 'ReactComponentBrowserEnvironment') {
         start = performanceNow();
         rv = func.apply(this, args);
         totalTime = performanceNow() - start;
 
         if (fnName === '_mountImageIntoNode') {
-          var mountID = ReactMount.getID(args[1]);
-          ReactDefaultPerf._recordWrite(mountID, fnName, totalTime, args[0]);
+          ReactDefaultPerf._recordWrite('', fnName, totalTime, args[0]);
         } else if (fnName === 'dangerouslyProcessChildrenUpdates') {
           // special format
-          args[0].forEach(function(update) {
+          args[1].forEach(function(update) {
             var writeArgs = {};
             if (update.fromIndex !== null) {
               writeArgs.fromIndex = update.fromIndex;
@@ -182,14 +206,11 @@ var ReactDefaultPerf = {
             if (update.toIndex !== null) {
               writeArgs.toIndex = update.toIndex;
             }
-            if (update.textContent !== null) {
-              writeArgs.textContent = update.textContent;
-            }
-            if (update.markupIndex !== null) {
-              writeArgs.markup = args[1][update.markupIndex];
+            if (update.content !== null) {
+              writeArgs.content = update.content;
             }
             ReactDefaultPerf._recordWrite(
-              update.parentID,
+              args[0]._rootNodeID,
               update.type,
               totalTime,
               writeArgs
@@ -197,8 +218,17 @@ var ReactDefaultPerf = {
           });
         } else {
           // basic format
+          var id = args[0];
+          if (moduleName === 'EventPluginHub') {
+            id = id._rootNodeID;
+          } else if (fnName === 'replaceNodeWithMarkup') {
+            // Old node is already unmounted; can't get its instance
+            id = ReactDOMComponentTree.getInstanceFromNode(args[1].node)._rootNodeID;
+          } else if (typeof id === 'object') {
+            id = ReactDOMComponentTree.getInstanceFromNode(args[0])._rootNodeID;
+          }
           ReactDefaultPerf._recordWrite(
-            args[0],
+            id,
             fnName,
             totalTime,
             Array.prototype.slice.call(args, 1)
@@ -210,30 +240,30 @@ var ReactDefaultPerf = {
         fnName === 'updateComponent' || // TODO: receiveComponent()?
         fnName === '_renderValidatedComponent')) {
 
-        if (typeof this._currentElement.type === 'string') {
+        if (this._currentElement.type === ReactMount.TopLevelWrapper) {
           return func.apply(this, args);
         }
 
-        var rootNodeID = fnName === 'mountComponent' ?
-          args[0] :
-          this._rootNodeID;
+        var rootNodeID = getIDOfComposite(this);
         var isRender = fnName === '_renderValidatedComponent';
         var isMount = fnName === 'mountComponent';
 
         var mountStack = ReactDefaultPerf._mountStack;
-        var entry = ReactDefaultPerf._allMeasurements[
-          ReactDefaultPerf._allMeasurements.length - 1
-        ];
 
         if (isRender) {
           addValue(entry.counts, rootNodeID, 1);
         } else if (isMount) {
+          entry.created[rootNodeID] = true;
           mountStack.push(0);
         }
+
+        ReactDefaultPerf._compositeStack.push(rootNodeID);
 
         start = performanceNow();
         rv = func.apply(this, args);
         totalTime = performanceNow() - start;
+
+        ReactDefaultPerf._compositeStack.pop();
 
         if (isRender) {
           addValue(entry.render, rootNodeID, totalTime);
@@ -250,15 +280,25 @@ var ReactDefaultPerf = {
           current: this.getName(),
           owner: this._currentElement._owner ?
             this._currentElement._owner.getName() :
-            '<root>'
+            '<root>',
         };
 
+        return rv;
+      } else if (
+        (moduleName === 'ReactDOMComponent' ||
+         moduleName === 'ReactDOMTextComponent') &&
+        (fnName === 'mountComponent' ||
+         fnName === 'receiveComponent')) {
+
+        rv = func.apply(this, args);
+        entry.hierarchy[this._rootNodeID] =
+          ReactDefaultPerf._compositeStack.slice();
         return rv;
       } else {
         return func.apply(this, args);
       }
     };
-  }
+  },
 };
 
 module.exports = ReactDefaultPerf;

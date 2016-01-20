@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,17 +11,15 @@
 
 'use strict';
 
-require('mock-modules');
-
-var mocks = require('mocks');
-
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactElementClone', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -29,7 +27,7 @@ describe('ReactElementClone', function() {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent child={<div className="child" />} />;
-      }
+      },
     });
     var Parent = React.createClass({
       render: function() {
@@ -38,22 +36,22 @@ describe('ReactElementClone', function() {
             {React.cloneElement(this.props.child, { className: 'xyz' })}
           </div>
         );
-      }
+      },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should clone a composite component with new props', function() {
     var Child = React.createClass({
       render: function() {
         return <div className={this.props.className} />;
-      }
+      },
     });
     var Grandparent = React.createClass({
       render: function() {
         return <Parent child={<Child className="child" />} />;
-      }
+      },
     });
     var Parent = React.createClass({
       render: function() {
@@ -62,17 +60,17 @@ describe('ReactElementClone', function() {
             {React.cloneElement(this.props.child, { className: 'xyz' })}
           </div>
         );
-      }
+      },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should keep the original ref if it is not overridden', function() {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent child={<div ref="yolo" />} />;
-      }
+      },
     });
 
     var Parent = React.createClass({
@@ -82,7 +80,7 @@ describe('ReactElementClone', function() {
             {React.cloneElement(this.props.child, { className: 'xyz' })}
           </div>
         );
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
@@ -93,7 +91,7 @@ describe('ReactElementClone', function() {
     var Component = React.createClass({
       render: function() {
         return null;
-      }
+      },
     });
     var clone = React.cloneElement(<Component />, {key: 'xyz'});
     expect(clone.key).toBe('xyz');
@@ -104,7 +102,7 @@ describe('ReactElementClone', function() {
       render: function() {
         expect(this.props.children).toBe('xyz');
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -117,7 +115,7 @@ describe('ReactElementClone', function() {
       render: function() {
         expect(this.props.children).toBe('xyz');
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -129,7 +127,7 @@ describe('ReactElementClone', function() {
     var Component = React.createClass({
       render: function() {
         return null;
-      }
+      },
     });
 
     var clone = React.cloneElement(
@@ -141,7 +139,7 @@ describe('ReactElementClone', function() {
 
     expect(clone.props.children).toEqual([
       <div />,
-      <span />
+      <span />,
     ]);
   });
 
@@ -153,13 +151,13 @@ describe('ReactElementClone', function() {
         expect(clone.key).toBe('xyz');
         expect(clone.ref).toBe('xyz');
         return <div>{clone}</div>;
-      }
+      },
     });
 
     var Grandparent = React.createClass({
       render: function() {
         return <Parent ref="parent"><span key="abc" /></Parent>;
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
@@ -171,13 +169,13 @@ describe('ReactElementClone', function() {
       render: function() {
         var clone = React.cloneElement(this.props.children, {ref: 'xyz'});
         return <div>{clone}</div>;
-      }
+      },
     });
 
     var Grandparent = React.createClass({
       render: function() {
         return <Parent ref="parent"><span ref="child" /></Parent>;
-      }
+      },
     });
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
@@ -190,7 +188,7 @@ describe('ReactElementClone', function() {
       render: function() {
         expect(this.props.myprop).toBe('xyz');
         return <div />;
-      }
+      },
     });
 
     ReactTestUtils.renderIntoDocument(
@@ -237,16 +235,16 @@ describe('ReactElementClone', function() {
     spyOn(console, 'error');
     var Component = React.createClass({
       propTypes: {
-        color: React.PropTypes.string.isRequired
+        color: React.PropTypes.string.isRequired,
       },
       render: function() {
         return React.createElement('div', null, 'My color is ' + this.color);
-      }
+      },
     });
     var Parent = React.createClass({
       render: function() {
         return React.cloneElement(this.props.child, {color: 123});
-      }
+      },
     });
     var GrandParent = React.createClass({
       render: function() {
@@ -254,11 +252,11 @@ describe('ReactElementClone', function() {
           Parent,
           { child: React.createElement(Component, {color: 'red'}) }
         );
-      }
+      },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
       'expected `string`. Check the render method of `Parent`.'

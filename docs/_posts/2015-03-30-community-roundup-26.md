@@ -1,7 +1,7 @@
 ---
 title: "Community Round-up #26"
 layout: post
-author: Vjeux
+author: vjeux
 ---
 
 We open sourced React Native last week and the community reception blew away all our expectations! So many of you tried it, made cool stuff with it, raised many issues and even submitted pull requests to fix them! The entire team wants to say thank you!

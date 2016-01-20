@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 // -*- mode: js -*-
 // vim: set ft=javascript :
-"use strict";
+
+'use strict';
 
 var babel = require('babel');
 
-var constants = require('../vendor/constants')(babel);
+var devExpressionPlugin = require('fbjs/scripts/babel/dev-expression');
 
-require("commoner").version(
-  require("../package.json").version
+var TRANSFORM_IGNORE_RE = /^WebComponents$/;
+
+require('commoner').version(
+  require('../package.json').version
 ).resolve(function(id) {
   var context = this;
 
@@ -30,28 +33,15 @@ require("commoner").version(
 }).process(function(id, source) {
   var context = this;
 
-  // This is where JSX, ES6, etc. desugaring happens.
-  source = babel.transform(source, {
-    blacklist: ['spec.functionName', 'validation.react'],
-    plugins: [constants],
-    filename: id
-  }).code;
-
-  if (context.config.mocking) {
-    // Make sure there is exactly one newline at the end of the module.
-    source = source.replace(/\s+$/m, "\n");
-
-    return context.getProvidedP().then(function(idToPath) {
-      if (id !== "mock-modules" &&
-          id !== "mocks" &&
-          id !== "test/all" &&
-          idToPath.hasOwnProperty("mock-modules")) {
-        return source + '\nrequire("mock-modules").register(' +
-          JSON.stringify(id) + ', module);\n';
-      }
-
-      return source;
-    });
+  // This is hacky but that's ok… It really only matters for tests since it
+  // won't otherwise be in the dependency tree.
+  if (!TRANSFORM_IGNORE_RE.test(id)) {
+    // This is where JSX, ES6, etc. desugaring happens.
+    source = babel.transform(source, {
+      blacklist: ['spec.functionName', 'validation.react'],
+      plugins: [devExpressionPlugin],
+      filename: id,
+    }).code;
   }
 
   return source;

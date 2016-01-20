@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #3"
-author: Vjeux
+author: vjeux
 ---
 
 The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.

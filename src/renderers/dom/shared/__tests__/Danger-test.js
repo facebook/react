@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,40 +11,25 @@
 
 'use strict';
 
-var React = require('React');
-var instantiateReactComponent = require('instantiateReactComponent');
-
 describe('Danger', function() {
 
   describe('dangerouslyRenderMarkup', function() {
     var Danger;
-    var transaction;
 
     beforeEach(function() {
-      require('mock-modules').dumpCache();
+      jest.resetModuleRegistry();
       Danger = require('Danger');
-
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
-      transaction = new ReactReconcileTransaction();
     });
 
     it('should render markup', function() {
-      var markup = instantiateReactComponent(
-        <div />
-      ).mountComponent('.rX', transaction, {});
+      var markup = '<div data-reactid=".rX"></div>';
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
     });
 
     it('should render markup with props', function() {
-      var markup = instantiateReactComponent(
-        <div className="foo" />
-      ).mountComponent(
-        '.rX',
-        transaction,
-        {}
-      );
+      var markup = '<div class="foo" data-reactid=".rX"></div>';
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
@@ -52,9 +37,7 @@ describe('Danger', function() {
     });
 
     it('should render wrapped markup', function() {
-      var markup = instantiateReactComponent(
-        <th />
-      ).mountComponent('.rX', transaction, {});
+      var markup = '<th data-reactid=".rX"></th>';
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('TH');
@@ -96,10 +79,10 @@ describe('Danger', function() {
       expect(function() {
         Danger.dangerouslyRenderMarkup(['']);
       }).toThrow(
-        'Invariant Violation: dangerouslyRenderMarkup(...): Missing markup.'
+        'dangerouslyRenderMarkup(...): Missing markup.'
       );
 
-      spyOn(console, "error");
+      spyOn(console, 'error');
 
       var renderedMarkup = Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
       var args = console.error.argsForCall[0];

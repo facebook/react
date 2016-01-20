@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -20,7 +20,8 @@ describe('SyntheticWheelEvent', function() {
     SyntheticWheelEvent = require('SyntheticWheelEvent');
 
     createEvent = function(nativeEvent) {
-      return SyntheticWheelEvent.getPooled({}, '', nativeEvent);
+      var target = require('getEventTarget')(nativeEvent);
+      return SyntheticWheelEvent.getPooled({}, '', nativeEvent, target);
     };
   });
 

@@ -1,6 +1,6 @@
 ---
 title: "GraphQL Introduction"
-author: Nick Schrock
+author: schrockn
 ---
 
 At the React.js conference in late January 2015, we revealed our next major technology in the React family: [Relay](http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html). 
@@ -69,15 +69,15 @@ Obviously GraphQL is not the first system to manage client-server interactions. 
 
 ### REST
 
-REST an acronym for Representational State Transfer, which is an architectural style rather than a formal protocol. There is actually much debate about what exactly REST is and is not. We wish to avoid such debates. We are interested in the typical attributes of systems that *self-identify* as REST, rather than systems which are formally REST.
+REST, an acronym for Representational State Transfer, is an architectural style rather than a formal protocol. There is actually much debate about what exactly REST is and is not. We wish to avoid such debates. We are interested in the typical attributes of systems that *self-identify* as REST, rather than systems which are formally REST.
 
-Objects in a typical REST system are addressable by URI and interacted with using verbs in the HTTP protocol. An HTTP GET to a particular URI fetches and object and returns a server-specified set of fields. An HTTP PUT edits an object; an HTTP DELETE deletes an object; and so on.
+Objects in a typical REST system are addressable by URI and interacted with using verbs in the HTTP protocol. An HTTP GET to a particular URI fetches an object and returns a server-specified set of fields. An HTTP PUT edits an object; an HTTP DELETE deletes an object; and so on.
 
 We believe there are a number of weakness in typical REST systems, ones that are particularly problematic in mobile applications:
 
 * Fetching complicated object graphs require multiple round trips between the client and server to render single views. For mobile applications operating in variable network conditions, these multiple roundtrips are highly undesirable.
 * Invariably fields and additional data are added to REST endpoints as the system requirements change. However, old clients also receive this additional data as well, because the data fetching specification is encoded on the server rather than the client. As result, these payloads tend to grow over time for all clients. When this becomes a problem for a system, one solution is to overlay a versioning system onto the REST endpoints. Versioning also complicates a server, and results in code duplication, spaghetti code, or a sophisticated, hand-rolled infrastructure to manage it. Another solution to limit over-fetching is to provide multiple views – such as “compact” vs “full” – of the same REST endpoint, however this coarse granularity often does not offer adequate flexibility.
-* REST endpoints are usually weakly-typed and lack machine-readable metadata. While there is much debate about the merits of strong- versus weak-typing in distributed systems, we believe in strong typing because of the correctness guarantees and tooling opportunities it provides. Developer deal with systems that lack this metadata by inspecting frequently out-of-date documentation and then writing code against the documentation.
+* REST endpoints are usually weakly-typed and lack machine-readable metadata. While there is much debate about the merits of strong- versus weak-typing in distributed systems, we believe in strong typing because of the correctness guarantees and tooling opportunities it provides. Developers deal with systems that lack this metadata by inspecting frequently out-of-date documentation and then writing code against the documentation.
 * Many of these attributes are linked to the fact that “REST is intended for long-lived network-based applications that span multiple organizations” [according to its inventor](http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven). This is not a requirement for APIs that serve a client app built within the same organization.
 
 Nearly all externally facing REST APIs we know of trend or end up in these non-ideal states, as well as nearly all *internal* REST APIs. The consequences of opaqueness and over-fetching are more severe in internal APIs since their velocity of change and level of usage is almost always higher.
@@ -90,7 +90,7 @@ Because of multiple round-trips and over-fetching, applications built in the RES
 Many applications have no formalized client-server contract. Product developers access server capabilities through *ad hoc* endpoints and write custom code to fetch the data they need. Servers define procedures, and they return data. This approach has the virtue of simplicity, but can often become untenable as systems age.
 
 * These systems typically define a custom endpoint per view. For systems with a wide surface area this can quickly grow into a maintenance nightmare of orphaned endpoints, inconsistent tooling, and massive server code duplication. Disciplined engineering organizations can mitigate these issues with great engineering practices, high quality abstractions, and custom tooling. However, given our experience we believe that custom endpoints tend to lead to entropic server codebases.
-* Much like REST, the payloads of custom endpoints grow monotonically (even with mitigation from versioning systems) as the server evolves. Deployed clients cannot break, and, with rapid release cycles and backwards compatibility guarantees, distributed applications will have large numbers of extant versions. Under these constraints it is difficult remove data from a custom endpoint.
+* Much like REST, the payloads of custom endpoints grow monotonically (even with mitigation from versioning systems) as the server evolves. Deployed clients cannot break, and, with rapid release cycles and backwards compatibility guarantees, distributed applications will have large numbers of extant versions. Under these constraints it is difficult to remove data from a custom endpoint.
 * Custom endpoints tend to – for a client developer – create a clunky, multi-language, multi-environment development process. No matter if the data has been accessed before in a different view, they are required to first change the custom endpoint, then deploy that code to a server accessible from a mobile device, and only then change the client to utilize that data. In GraphQL  – unless the data in the view is completely new to the entire system  – a product developer adds a field to a GraphQL query and the work on the client continues unabated.
 * Much like REST, most systems with custom endpoints do not have a formalized type system, which eliminates the possibility for the tools and guarantees that introspective type systems can provide. Some custom-endpoint-driven systems do use a strongly typed serialization scheme, such as Protocol Buffers, Thrift, or XML. Those do allow for direct parsing of responses into typed classes and eliminating boilerplate shuffling from JSON into handwritten classes. These systems are as not as expressive and flexible as GraphQL, and the other downsides of *ad hoc* endpoints remain.
 

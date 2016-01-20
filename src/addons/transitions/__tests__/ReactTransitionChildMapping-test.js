@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -30,24 +30,24 @@ describe('ReactTransitionChildMapping', function() {
       ReactTransitionChildMapping.getChildMapping(component.props.children)
     ).toEqual({
       '.$one': one,
-      '.$two': two
+      '.$two': two,
     });
   });
 
   it('should support mergeChildMappings for adding keys', function() {
     var prev = {
       one: true,
-      two: true
+      two: true,
     };
     var next = {
       one: true,
       two: true,
-      three: true
+      three: true,
     };
     expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
-      three: true
+      three: true,
     });
   });
 
@@ -55,16 +55,16 @@ describe('ReactTransitionChildMapping', function() {
     var prev = {
       one: true,
       two: true,
-      three: true
+      three: true,
     };
     var next = {
       one: true,
-      two: true
+      two: true,
     };
     expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
-      three: true
+      three: true,
     });
   });
 
@@ -72,18 +72,18 @@ describe('ReactTransitionChildMapping', function() {
     var prev = {
       one: true,
       two: true,
-      three: true
+      three: true,
     };
     var next = {
       one: true,
       two: true,
-      four: true
+      four: true,
     };
     expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
       three: true,
-      four: true
+      four: true,
     });
   });
 
@@ -92,46 +92,46 @@ describe('ReactTransitionChildMapping', function() {
       one: true,
       two: true,
       four: true,
-      five: true
+      five: true,
     };
     var next = {
       one: true,
       two: true,
       three: true,
-      five: true
+      five: true,
     };
     expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
       three: true,
       four: true,
-      five: true
+      five: true,
     });
   });
 
   it('should support mergeChildMappings with undefined input', function() {
     var prev = {
       one: true,
-      two: true
+      two: true,
     };
 
     var next = undefined;
 
     expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
-      two: true
+      two: true,
     });
 
     prev = undefined;
 
     next = {
       three: true,
-      four: true
+      four: true,
     };
 
     expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       three: true,
-      four: true
+      four: true,
     });
   });
 });

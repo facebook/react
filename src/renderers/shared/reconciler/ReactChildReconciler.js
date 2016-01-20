@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, Facebook, Inc.
+ * Copyright 2014-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,16 +7,33 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactChildReconciler
- * @typechecks static-only
  */
 
 'use strict';
 
 var ReactReconciler = require('ReactReconciler');
 
-var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+var traverseAllChildren = require('traverseAllChildren');
+var warning = require('warning');
+
+function instantiateChild(childInstances, child, name) {
+  // We found a component instance.
+  var keyUnique = (childInstances[name] === undefined);
+  if (__DEV__) {
+    warning(
+      keyUnique,
+      'flattenChildren(...): Encountered two children with the same key, ' +
+      '`%s`. Child keys must be unique; when two children share a key, only ' +
+      'the first child will be used.',
+      name
+    );
+  }
+  if (child != null && keyUnique) {
+    childInstances[name] = instantiateReactComponent(child);
+  }
+}
 
 /**
  * ReactChildReconciler provides helpers for initializing or updating a set of
@@ -24,7 +41,6 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
  * does diffed reordering and insertion.
  */
 var ReactChildReconciler = {
-
   /**
    * Generates a "mount image" for each of the supplied children. In the case
    * of `ReactDOMComponent`, a mount image is a string of markup.
@@ -34,24 +50,19 @@ var ReactChildReconciler = {
    * @internal
    */
   instantiateChildren: function(nestedChildNodes, transaction, context) {
-    var children = flattenChildren(nestedChildNodes);
-    for (var name in children) {
-      if (children.hasOwnProperty(name)) {
-        var child = children[name];
-        // The rendered children must be turned into instances as they're
-        // mounted.
-        var childInstance = instantiateReactComponent(child, null);
-        children[name] = childInstance;
-      }
+    if (nestedChildNodes == null) {
+      return null;
     }
-    return children;
+    var childInstances = {};
+    traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
+    return childInstances;
   },
 
   /**
    * Updates the rendered children and returns a new set of children.
    *
    * @param {?object} prevChildren Previously initialized set of children.
-   * @param {?object} nextNestedChildNodes Nested child maps.
+   * @param {?object} nextChildren Flat child element maps.
    * @param {ReactReconcileTransaction} transaction
    * @param {object} context
    * @return {?object} A new set of child instances.
@@ -59,7 +70,8 @@ var ReactChildReconciler = {
    */
   updateChildren: function(
     prevChildren,
-    nextNestedChildNodes,
+    nextChildren,
+    removedNodes,
     transaction,
     context) {
     // We currently don't have a way to track moves here but if we use iterators
@@ -67,32 +79,31 @@ var ReactChildReconciler = {
     // moved.
     // TODO: If nothing has changed, return the prevChildren object so that we
     // can quickly bailout if nothing has changed.
-    var nextChildren = flattenChildren(nextNestedChildNodes);
     if (!nextChildren && !prevChildren) {
-      return null;
+      return;
     }
     var name;
+    var prevChild;
     for (name in nextChildren) {
       if (!nextChildren.hasOwnProperty(name)) {
         continue;
       }
-      var prevChild = prevChildren && prevChildren[name];
+      prevChild = prevChildren && prevChildren[name];
       var prevElement = prevChild && prevChild._currentElement;
       var nextElement = nextChildren[name];
-      if (shouldUpdateReactComponent(prevElement, nextElement)) {
+      if (prevChild != null &&
+          shouldUpdateReactComponent(prevElement, nextElement)) {
         ReactReconciler.receiveComponent(
           prevChild, nextElement, transaction, context
         );
         nextChildren[name] = prevChild;
       } else {
         if (prevChild) {
-          ReactReconciler.unmountComponent(prevChild, name);
+          removedNodes[name] = ReactReconciler.getNativeNode(prevChild);
+          ReactReconciler.unmountComponent(prevChild);
         }
         // The child must be instantiated before it's mounted.
-        var nextChildInstance = instantiateReactComponent(
-          nextElement,
-          null
-        );
+        var nextChildInstance = instantiateReactComponent(nextElement);
         nextChildren[name] = nextChildInstance;
       }
     }
@@ -100,10 +111,11 @@ var ReactChildReconciler = {
     for (name in prevChildren) {
       if (prevChildren.hasOwnProperty(name) &&
           !(nextChildren && nextChildren.hasOwnProperty(name))) {
-        ReactReconciler.unmountComponent(prevChildren[name]);
+        prevChild = prevChildren[name];
+        removedNodes[name] = ReactReconciler.getNativeNode(prevChild);
+        ReactReconciler.unmountComponent(prevChild);
       }
     }
-    return nextChildren;
   },
 
   /**
@@ -120,7 +132,7 @@ var ReactChildReconciler = {
         ReactReconciler.unmountComponent(renderedChild);
       }
     }
-  }
+  },
 
 };
 

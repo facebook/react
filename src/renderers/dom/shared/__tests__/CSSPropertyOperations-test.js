@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,40 +12,42 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
+var ReactDOMServer = require('ReactDOMServer');
 
 describe('CSSPropertyOperations', function() {
   var CSSPropertyOperations;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     CSSPropertyOperations = require('CSSPropertyOperations');
   });
 
   it('should create markup for simple styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: '#3b5998',
-      display: 'none'
+      display: 'none',
     })).toBe('background-color:#3b5998;display:none;');
   });
 
   it('should ignore undefined styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: undefined,
-      display: 'none'
+      display: 'none',
     })).toBe('display:none;');
   });
 
   it('should ignore null styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: null,
-      display: 'none'
+      display: 'none',
     })).toBe('display:none;');
   });
 
   it('should return null for no styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: null,
-      display: null
+      display: null,
     })).toBe(null);
   });
 
@@ -54,7 +56,7 @@ describe('CSSPropertyOperations', function() {
       left: 0,
       margin: 16,
       opacity: 0.5,
-      padding: '4px'
+      padding: '4px',
     })).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
   });
 
@@ -62,7 +64,7 @@ describe('CSSPropertyOperations', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       margin: '16 ',
       opacity: 0.5,
-      padding: ' 4 '
+      padding: ' 4 ',
     })).toBe('margin:16px;opacity:0.5;padding:4px;');
   });
 
@@ -80,37 +82,36 @@ describe('CSSPropertyOperations', function() {
   it('should create vendor-prefixed markup correctly', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       msTransition: 'none',
-      MozTransition: 'none'
+      MozTransition: 'none',
     })).toBe('-ms-transition:none;-moz-transition:none;');
   });
 
   it('should set style attribute when styles exist', function() {
     var styles = {
       backgroundColor: '#000',
-      display: 'none'
+      display: 'none',
     };
     var div = <div style={styles} />;
     var root = document.createElement('div');
-    div = React.render(div, root);
+    div = ReactDOM.render(div, root);
     expect(/style=".*"/.test(root.innerHTML)).toBe(true);
   });
 
   it('should not set style attribute when no styles exist', function() {
     var styles = {
       backgroundColor: null,
-      display: null
+      display: null,
     };
     var div = <div style={styles} />;
-    var root = document.createElement('div');
-    React.render(div, root);
-    expect(/style=".*"/.test(root.innerHTML)).toBe(false);
+    var html = ReactDOMServer.renderToString(div);
+    expect(/style=/.test(html)).toBe(false);
   });
 
   it('should warn when using hyphenated style names', function() {
     spyOn(console, 'error');
 
     expect(CSSPropertyOperations.createMarkupForStyles({
-      'background-color': 'crimson'
+      'background-color': 'crimson',
     })).toBe('background-color:crimson;');
 
     expect(console.error.argsForCall.length).toBe(1);
@@ -123,11 +124,11 @@ describe('CSSPropertyOperations', function() {
     var root = document.createElement('div');
     var styles = {
       '-ms-transform': 'translate3d(0, 0, 0)',
-      '-webkit-transform': 'translate3d(0, 0, 0)'
+      '-webkit-transform': 'translate3d(0, 0, 0)',
     };
 
-    React.render(<div />, root);
-    React.render(<div style={styles} />, root);
+    ReactDOM.render(<div />, root);
+    ReactDOM.render(<div style={styles} />, root);
 
     expect(console.error.argsForCall.length).toBe(2);
     expect(console.error.argsForCall[0][0]).toContain('msTransform');
@@ -140,7 +141,7 @@ describe('CSSPropertyOperations', function() {
     CSSPropertyOperations.createMarkupForStyles({
       msTransform: 'translate3d(0, 0, 0)',
       oTransform: 'translate3d(0, 0, 0)',
-      webkitTransform: 'translate3d(0, 0, 0)'
+      webkitTransform: 'translate3d(0, 0, 0)',
     });
 
     // msTransform is correct already and shouldn't warn
@@ -158,11 +159,24 @@ describe('CSSPropertyOperations', function() {
       fontFamily: 'Helvetica, arial',
       backgroundImage: 'url(foo;bar)',
       backgroundColor: 'blue;',
-      color: 'red;   '
+      color: 'red;   ',
     });
 
     expect(console.error.calls.length).toBe(2);
     expect(console.error.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
     expect(console.error.argsForCall[1][0]).toContain('Try "color: red" instead');
+  });
+
+  it('should warn about style containing a NaN value', function() {
+    spyOn(console, 'error');
+
+    CSSPropertyOperations.createMarkupForStyles({
+      fontSize: NaN,
+    });
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toEqual(
+      'Warning: `NaN` is an invalid value for the `fontSize` css style property'
+    );
   });
 });

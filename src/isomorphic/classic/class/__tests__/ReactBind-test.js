@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,7 +11,6 @@
 /*global global:true*/
 'use strict';
 
-var mocks = require('mocks');
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
@@ -21,9 +20,9 @@ describe('autobinding', function() {
 
   it('Holds reference to instance', function() {
 
-    var mouseDidEnter = mocks.getMockFunction();
-    var mouseDidLeave = mocks.getMockFunction();
-    var mouseDidClick = mocks.getMockFunction();
+    var mouseDidEnter = jest.genMockFn();
+    var mouseDidLeave = jest.genMockFn();
+    var mouseDidClick = jest.genMockFn();
 
     var TestBindComponent = React.createClass({
       getInitialState: function() {
@@ -36,8 +35,8 @@ describe('autobinding', function() {
       // auto binding only occurs on top level functions in class defs.
       badIdeas: {
         badBind: function() {
-          this.state.something;
-        }
+          void this.state.something;
+        },
       },
 
       render: function() {
@@ -48,7 +47,7 @@ describe('autobinding', function() {
             onClick={this.onClick}
           />
         );
-      }
+      },
     });
 
     var instance1 = <TestBindComponent />;
@@ -96,10 +95,10 @@ describe('autobinding', function() {
   });
 
   it('works with mixins', function() {
-    var mouseDidClick = mocks.getMockFunction();
+    var mouseDidClick = jest.genMockFn();
 
     var TestMixin = {
-      onClick: mouseDidClick
+      onClick: mouseDidClick,
     };
 
     var TestBindComponent = React.createClass({
@@ -107,7 +106,7 @@ describe('autobinding', function() {
 
       render: function() {
         return <div onClick={this.onClick} />;
-      }
+      },
     });
 
     var instance1 = <TestBindComponent />;
@@ -128,10 +127,10 @@ describe('autobinding', function() {
       handleClick: function() { },
       render: function() {
         return <div onClick={this.handleClick.bind(this)} />;
-      }
+      },
     });
 
-    ReactTestUtils.renderIntoDocument(<TestBindComponent />)
+    ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
@@ -156,10 +155,10 @@ describe('autobinding', function() {
       },
       render: function() {
         return <div onClick={this.handleClick} />;
-      }
+      },
     });
 
-    ReactTestUtils.renderIntoDocument(<TestBindComponent />)
+    ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
     expect(console.error.argsForCall.length).toBe(0);
   });

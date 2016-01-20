@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule SyntheticKeyboardEvent
- * @typechecks static-only
  */
 
 'use strict';
@@ -67,7 +66,7 @@ var KeyboardEventInterface = {
       return event.keyCode;
     }
     return 0;
-  }
+  },
 };
 
 /**
@@ -76,8 +75,8 @@ var KeyboardEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticUIEvent}
  */
-function SyntheticKeyboardEvent(dispatchConfig, dispatchMarker, nativeEvent) {
-  SyntheticUIEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+function SyntheticKeyboardEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  SyntheticUIEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticUIEvent.augmentClass(SyntheticKeyboardEvent, KeyboardEventInterface);

@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #10"
-author: Vjeux
+author: vjeux
 ---
 
 This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.

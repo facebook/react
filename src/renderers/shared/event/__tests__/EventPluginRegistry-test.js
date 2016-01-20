@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -34,10 +34,10 @@ describe('EventPluginRegistry', function() {
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      two: TwoPlugin
+      two: TwoPlugin,
     });
     EventPluginRegistry.injectEventPluginsByName({
-      three: ThreePlugin
+      three: ThreePlugin,
     });
 
     expect(EventPluginRegistry.plugins.length).toBe(3);
@@ -53,11 +53,11 @@ describe('EventPluginRegistry', function() {
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      two: TwoPlugin
+      two: TwoPlugin,
     });
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
-      three: ThreePlugin
+      three: ThreePlugin,
     });
 
     expect(EventPluginRegistry.plugins.length).toBe(3);
@@ -73,12 +73,12 @@ describe('EventPluginRegistry', function() {
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      three: ThreePlugin
+      three: ThreePlugin,
     });
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
       two: TwoPlugin,
-      three: ThreePlugin
+      three: ThreePlugin,
     });
 
     expect(EventPluginRegistry.plugins.length).toBe(3);
@@ -94,11 +94,11 @@ describe('EventPluginRegistry', function() {
 
     expect(function() {
       EventPluginRegistry.injectEventPluginsByName({
-        bad: BadPlugin
+        bad: BadPlugin,
       });
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Event plugins must ' +
-      'implement an `extractEvents` method, but `bad` does not.'
+      'EventPluginRegistry: Event plugins must implement an `extractEvents` ' +
+      'method, but `bad` does not.'
     );
   });
 
@@ -111,11 +111,11 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginsByName({
         one: OnePlugin,
-        random: RandomPlugin
+        random: RandomPlugin,
       });
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Cannot inject event plugins ' +
-      'that do not exist in the plugin ordering, `random`.'
+      'EventPluginRegistry: Cannot inject event plugins that do not exist ' +
+      'in the plugin ordering, `random`.'
     );
   });
 
@@ -127,9 +127,8 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Cannot inject event plugin ' +
-      'ordering more than once. You are likely trying to load more than one ' +
-      'copy of React.'
+      'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
+      'once. You are likely trying to load more than one copy of React.'
     );
   });
 
@@ -142,8 +141,8 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginsByName({same: TwoPlugin});
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Cannot inject two different ' +
-      'event plugins using the same name, `same`.'
+      'EventPluginRegistry: Cannot inject two different event plugins using ' +
+      'the same name, `same`.'
     );
   });
 
@@ -151,18 +150,18 @@ describe('EventPluginRegistry', function() {
     var OnePlugin = createPlugin({
       eventTypes: {
         click: {registrationName: 'onClick'},
-        focus: {registrationName: 'onFocus'}
-      }
+        focus: {registrationName: 'onFocus'},
+      },
     });
     var TwoPlugin = createPlugin({
       eventTypes: {
         magic: {
           phasedRegistrationNames: {
             bubbled: 'onMagicBubble',
-            captured: 'onMagicCapture'
-          }
-        }
-      }
+            captured: 'onMagicCapture',
+          },
+        },
+      },
     });
 
     EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
@@ -184,38 +183,38 @@ describe('EventPluginRegistry', function() {
   it('should throw if multiple registration names collide', function() {
     var OnePlugin = createPlugin({
       eventTypes: {
-        photoCapture: {registrationName: 'onPhotoCapture'}
-      }
+        photoCapture: {registrationName: 'onPhotoCapture'},
+      },
     });
     var TwoPlugin = createPlugin({
       eventTypes: {
         photo: {
           phasedRegistrationNames: {
             bubbled: 'onPhotoBubble',
-            captured: 'onPhotoCapture'
-          }
-        }
-      }
+            captured: 'onPhotoCapture',
+          },
+        },
+      },
     });
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
-      two: TwoPlugin
+      two: TwoPlugin,
     });
 
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(['one', 'two']);
     }).toThrow(
-      'Invariant Violation: EventPluginHub: More than one plugin attempted ' +
-      'to publish the same registration name, `onPhotoCapture`.'
+      'EventPluginHub: More than one plugin attempted to publish the same ' +
+      'registration name, `onPhotoCapture`.'
     );
   });
 
   it('should throw if an invalid event is published', function() {
     var OnePlugin = createPlugin({
       eventTypes: {
-        badEvent: {/* missing configuration */}
-      }
+        badEvent: {/* missing configuration */},
+      },
     });
 
     EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
@@ -223,27 +222,27 @@ describe('EventPluginRegistry', function() {
     expect(function() {
       EventPluginRegistry.injectEventPluginOrder(['one']);
     }).toThrow(
-      'Invariant Violation: EventPluginRegistry: Failed to publish event ' +
-      '`badEvent` for plugin `one`.'
+      'EventPluginRegistry: Failed to publish event `badEvent` for plugin ' +
+      '`one`.'
     );
   });
 
   it('should be able to get the plugin from synthetic events', function() {
     var clickDispatchConfig = {
-      registrationName: 'onClick'
+      registrationName: 'onClick',
     };
     var magicDispatchConfig = {
       phasedRegistrationNames: {
         bubbled: 'onMagicBubble',
-        captured: 'onMagicCapture'
-      }
+        captured: 'onMagicCapture',
+      },
     };
 
     var OnePlugin = createPlugin({
       eventTypes: {
         click: clickDispatchConfig,
-        magic: magicDispatchConfig
-      }
+        magic: magicDispatchConfig,
+      },
     });
 
     var clickEvent = {dispatchConfig: clickDispatchConfig};

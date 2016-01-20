@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #6"
-author: Vjeux
+author: vjeux
 ---
 
 This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It's great to see the adoption of React growing.

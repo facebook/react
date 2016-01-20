@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <meta charset="utf-8">
     <title>Basic Example with JSX and ES6 features</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
@@ -24,8 +24,9 @@
       <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
     <script src="../../build/react.js"></script>
-    <script src="../../build/JSXTransformer.js"></script>
-    <script type="text/jsx;harmony=true">
+    <script src="../../build/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+    <script type="text/babel">
       class ExampleApplication extends React.Component {
         render() {
           var elapsed = Math.round(this.props.elapsed  / 100);
@@ -38,7 +39,7 @@
       }
       var start = new Date().getTime();
       setInterval(() => {
-        React.render(
+        ReactDOM.render(
           <ExampleApplication elapsed={new Date().getTime() - start} />,
           document.getElementById('container')
         );

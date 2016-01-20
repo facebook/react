@@ -17,24 +17,51 @@ boolean bubbles
 boolean cancelable
 DOMEventTarget currentTarget
 boolean defaultPrevented
-Number eventPhase
+number eventPhase
 boolean isTrusted
 DOMEvent nativeEvent
 void preventDefault()
+boolean isDefaultPrevented()
 void stopPropagation()
+boolean isPropagationStopped()
 DOMEventTarget target
-Date timeStamp
-String type
+number timeStamp
+string type
 ```
 
 > 注意：
 >
-> React v0.12 中，事件处理程序返回 `false` 不再停止事件传播，取而代之，应该根据需要手动触发 `e.stopPropagation()` 或 `e.preventDefault()`。
+> React v0.14 中，事件处理程序返回 `false` 不再停止事件传播，取而代之，应该根据需要手动触发 `e.stopPropagation()` 或 `e.preventDefault()`。
 
+## 事件池
+
+`SyntheticEvent` 是池化的. 这意味着 `SyntheticEvent` 对象将会被重用并且所有的属性都会在事件回调被调用后被 nullified.
+这是因为性能的原因.
+因此,你不能异步的访问事件.
+
+```javascript
+function onClick(event) {
+  console.log(event); // => nullified object.
+  console.log(event.type); // => "click"
+  var eventType = event.type; // => "click"
+
+  setTimeout(function() {
+    console.log(event.type); // => null
+    console.log(eventType); // => "click"
+  }, 0);
+
+  this.setState({clickEvent: event}); // Won't work. this.state.clickEvent will only contain null values.
+  this.setState({eventType: event.type}); // You can still export event properties.
+}
+```
+
+> 注意:
+>
+> 如果你想异步访问事件属性,你应该在事件上调用 `event.persist()` ,这会从池中移除合成事件并允许对事件的引用被用会保留.
 
 ## 支持的事件
 
-React 将事件统一化，使事件在不同浏览器上有一致的属性。
+React 将事件统一化，使事件在不同浏览器上有一致的属性.
 
 下面的事件处理程序在事件冒泡阶段被触发。如果要注册事件捕获处理程序，应该使用 `Capture` 事件，例如使用 `onClickCapture` 处理点击事件的捕获阶段，而不是 `onClick`。
 
@@ -54,7 +81,23 @@ DOMDataTransfer clipboardData
 ```
 
 
-### 键盘事件 
+### Composition 事件
+
+事件名称:
+
+```
+onCompositionEnd onCompositionStart onCompositionUpdate
+```
+
+属性:
+
+```javascript
+string data
+
+```
+
+
+### 键盘事件
 
 事件名称：
 
@@ -62,21 +105,21 @@ DOMDataTransfer clipboardData
 onKeyDown onKeyPress onKeyUp
 ```
 
-属性：
+属性:
 
 ```javascript
 boolean altKey
-Number charCode
+number charCode
 boolean ctrlKey
-function getModifierState(key)
-String key
-Number keyCode
-String locale
-Number location
+boolean getModifierState(key)
+string key
+number keyCode
+string locale
+number location
 boolean metaKey
 boolean repeat
 boolean shiftKey
-Number which
+number which
 ```
 
 
@@ -94,6 +137,7 @@ onFocus onBlur
 DOMEventTarget relatedTarget
 ```
 
+焦点事件在所有的React DOM上工作,不仅仅是表单元素.
 
 ### 表单事件
 
@@ -116,23 +160,34 @@ onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 
+`onMouseEnter` 和 `onMouseLeave` 事件从离开的元素传播到进入的元素,代替冒泡排序并且没有捕获阶段. 
+
 属性：
 
 ```javascript
 boolean altKey
-Number button
-Number buttons
-Number clientX
-Number clientY
+number button
+number buttons
+number clientX
+number clientY
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
-Number pageX
-Number pageY
+number pageX
+number pageY
 DOMEventTarget relatedTarget
-Number screenX
-Number screenY
+number screenX
+number screenY
 boolean shiftKey
+```
+
+
+### Selection Events
+
+事件名称:
+
+```
+onSelect
 ```
 
 
@@ -150,7 +205,7 @@ onTouchCancel onTouchEnd onTouchMove onTouchStart
 boolean altKey
 DOMTouchList changedTouches
 boolean ctrlKey
-function getModifierState(key)
+boolean getModifierState(key)
 boolean metaKey
 boolean shiftKey
 DOMTouchList targetTouches
@@ -169,7 +224,7 @@ onScroll
 属性：
 
 ```javascript
-Number detail
+number detail
 DOMAbstractView view
 ```
 
@@ -185,8 +240,24 @@ onWheel
 属性：
 
 ```javascript
-Number deltaMode
-Number deltaX
-Number deltaY
-Number deltaZ
+number deltaMode
+number deltaX
+number deltaY
+number deltaZ
+```
+
+### Media Events
+
+事件名称:
+
+```
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+```
+
+### Image Events
+
+事件名称:
+
+```
+onLoad onError
 ```

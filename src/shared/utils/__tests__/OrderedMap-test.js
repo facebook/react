@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -19,7 +19,7 @@ var OrderedMap;
 var hasEmptyStringKey = {
   'thisKeyIsFine': {data: []},
   '': {thisShouldCauseAFailure: []},
-  'thisKeyIsAlsoFine': {data: []}
+  'thisKeyIsAlsoFine': {data: []},
 };
 
 /**
@@ -28,7 +28,7 @@ var hasEmptyStringKey = {
 var duplicate = function(itm, key, count) {
   return {
     uniqueID: itm.uniqueID,
-    val: itm.val + key + count + this.justToTestScope
+    val: itm.val + key + count + this.justToTestScope,
   };
 };
 
@@ -36,96 +36,96 @@ var duplicate = function(itm, key, count) {
 // distinguish. Every key MUST be a string period!
 var hasNullAndUndefStringKey = [
   {uniqueID: 'undefined', val: 'thisIsUndefined'},
-  {uniqueID: 'null', val: 'thisIsNull'}
+  {uniqueID: 'null', val: 'thisIsNull'},
 ];
 var hasNullKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
-  {uniqueID: null, data: []}
+  {uniqueID: null, data: []},
 ];
 
 var hasObjectKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
-  {uniqueID: {}, data: []}
+  {uniqueID: {}, data: []},
 ];
 
 var hasArrayKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
-  {uniqueID: [], data: []}
+  {uniqueID: [], data: []},
 ];
 
 // This should be allowed
 var hasNullStringKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
-  {uniqueID: 'null', data: []}
+  {uniqueID: 'null', data: []},
 ];
 
 var hasUndefinedKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
-  {uniqueID: undefined, data: []}
+  {uniqueID: undefined, data: []},
 ];
 
 var hasUndefinedStringKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
-  {uniqueID: 'undefined', data: []}
+  {uniqueID: 'undefined', data: []},
 ];
 
 var hasPositiveNumericKey = [
   {uniqueID: 'notANumber', data: []},
   {uniqueID: '5', data: []},
-  {uniqueID: 'notAnotherNumber', data: []}
+  {uniqueID: 'notAnotherNumber', data: []},
 ];
 
 var hasZeroStringKey = [
   {uniqueID: 'greg', data: 'grego'},
   {uniqueID: '0', data: '0o'},
-  {uniqueID: 'tom', data: 'tomo'}
+  {uniqueID: 'tom', data: 'tomo'},
 ];
 
 var hasZeroNumberKey = [
   {uniqueID: 'greg', data: 'grego'},
   {uniqueID: 0, data: '0o'},
-  {uniqueID: 'tom', data: 'tomo'}
+  {uniqueID: 'tom', data: 'tomo'},
 ];
 
 var hasAllNumericStringKeys = [
   {uniqueID: '0', name: 'Gregory'},
   {uniqueID: '2', name: 'James'},
-  {uniqueID: '1', name: 'Tom'}
+  {uniqueID: '1', name: 'Tom'},
 ];
 
 var hasAllNumericKeys = [
   {uniqueID: 0, name: 'Gregory'},
   {uniqueID: 2, name: 'James'},
-  {uniqueID: 1, name: 'Tom'}
+  {uniqueID: 1, name: 'Tom'},
 ];
 
 var hasAllValidKeys = [
   {uniqueID: 'keyOne', value: 'valueOne'},
-  {uniqueID: 'keyTwo', value: 'valueTwo'}
+  {uniqueID: 'keyTwo', value: 'valueTwo'},
 ];
 
 var hasDuplicateKeys = [
   {uniqueID: 'keyOne', value: 'valueOne'},
   {uniqueID: 'keyTwo', value: 'valueTwo'},
-  {uniqueID: 'keyOne', value: 'valueThree'}
+  {uniqueID: 'keyOne', value: 'valueThree'},
 ];
 
 var idEntities = [
   {uniqueID: 'greg', name: 'Gregory'},
   {uniqueID: 'james', name: 'James'},
-  {uniqueID: 'tom', name: 'Tom'}
+  {uniqueID: 'tom', name: 'Tom'},
 ];
 
 var hasEmptyKey = [
   {uniqueID: 'greg', name: 'Gregory'},
   {uniqueID: '', name: 'James'},
-  {uniqueID: 'tom', name: 'Tom'}
+  {uniqueID: 'tom', name: 'Tom'},
 ];
 
 var extractUniqueID = function(entity) {
@@ -134,7 +134,7 @@ var extractUniqueID = function(entity) {
 
 describe('OrderedMap', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     OrderedMap = require('OrderedMap');
   });
 
@@ -252,10 +252,8 @@ describe('OrderedMap', function() {
       expect(om.has(0)).toBe(true);
       expect(om.has('0')).toBe(true);
     };
-    var om = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
-    verifyOM(om);
-    om = OrderedMap.fromArray(hasZeroNumberKey, extractUniqueID);
-    verifyOM(om);
+    verifyOM(OrderedMap.fromArray(hasZeroStringKey, extractUniqueID));
+    verifyOM(OrderedMap.fromArray(hasZeroNumberKey, extractUniqueID));
   });
 
   it('should throw when getting invalid public key', function() {
@@ -357,9 +355,11 @@ describe('OrderedMap', function() {
   });
 
   it('should throw when accessing key before/after of non-key', function() {
-    var om = OrderedMap.fromArray([
-      {uniqueID: 'first'},
-      {uniqueID: 'two'}], extractUniqueID
+    var om = OrderedMap.fromArray(
+      [
+        {uniqueID: 'first'},
+        {uniqueID: 'two'},
+      ], extractUniqueID
     );
     expect(function() {
       om.keyBefore('dog');
@@ -381,7 +381,7 @@ describe('OrderedMap', function() {
         {uniqueID: 'one', val: 'first'},
         {uniqueID: 'two', val: 'second'},
         {uniqueID: 'three', val: 'third'},
-        {uniqueID: 'four', val: 'fourth'}
+        {uniqueID: 'four', val: 'fourth'},
       ], extractUniqueID);
 
       expect(function() {
@@ -442,7 +442,7 @@ describe('OrderedMap', function() {
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'},
       {uniqueID: 'three', val: 'third'},
-      {uniqueID: 'four', val: 'fourth'}
+      {uniqueID: 'four', val: 'fourth'},
     ], extractUniqueID);
     expect(om.keyBefore('one')).toBe(undefined); // first key
     expect(om.keyBefore('two')).toBe('one');
@@ -474,7 +474,7 @@ describe('OrderedMap', function() {
   it('should compute key indices correctly', function() {
     var om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
-      {uniqueID: 'two', val: 'second'}
+      {uniqueID: 'two', val: 'second'},
     ], extractUniqueID);
     expect(om.keyAtIndex(0)).toBe('one');
     expect(om.keyAtIndex(1)).toBe('two');
@@ -494,22 +494,22 @@ describe('OrderedMap', function() {
   });
 
   it('should compute indices on array that extracted numeric ids', function() {
-    var om = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
-    expect(om.keyAtIndex(0)).toBe('greg');
-    expect(om.keyAtIndex(1)).toBe('0');
-    expect(om.keyAtIndex(2)).toBe('tom');
-    expect(om.indexOfKey('greg')).toBe(0);
-    expect(om.indexOfKey('0')).toBe(1);
-    expect(om.indexOfKey('tom')).toBe(2);
+    var som = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
+    expect(som.keyAtIndex(0)).toBe('greg');
+    expect(som.keyAtIndex(1)).toBe('0');
+    expect(som.keyAtIndex(2)).toBe('tom');
+    expect(som.indexOfKey('greg')).toBe(0);
+    expect(som.indexOfKey('0')).toBe(1);
+    expect(som.indexOfKey('tom')).toBe(2);
 
 
-    var verifyNumericKeys = function(om) {
-      expect(om.keyAtIndex(0)).toBe('0');
-      expect(om.keyAtIndex(1)).toBe('2');
-      expect(om.keyAtIndex(2)).toBe('1');
-      expect(om.indexOfKey('0')).toBe(0);
-      expect(om.indexOfKey('2')).toBe(1); // Proove these are not ordered by
-      expect(om.indexOfKey('1')).toBe(2); // their keys
+    var verifyNumericKeys = function(nom) {
+      expect(nom.keyAtIndex(0)).toBe('0');
+      expect(nom.keyAtIndex(1)).toBe('2');
+      expect(nom.keyAtIndex(2)).toBe('1');
+      expect(nom.indexOfKey('0')).toBe(0);
+      expect(nom.indexOfKey('2')).toBe(1); // Prove these are not ordered by
+      expect(nom.indexOfKey('1')).toBe(2); // their keys
     };
     var omStringNumberKeys =
       OrderedMap.fromArray(hasAllNumericStringKeys, extractUniqueID);
@@ -522,10 +522,10 @@ describe('OrderedMap', function() {
   it('should compute indices on mutually exclusive merge', function() {
     var om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
-      {uniqueID: 'two', val: 'second'}
+      {uniqueID: 'two', val: 'second'},
     ], extractUniqueID);
     var om2 = OrderedMap.fromArray([
-      {uniqueID: 'three', val: 'third'}
+      {uniqueID: 'three', val: 'third'},
     ], extractUniqueID);
     var res = om.merge(om2);
 
@@ -555,7 +555,7 @@ describe('OrderedMap', function() {
   it('should compute indices on intersected merge', function() {
     var oneTwo = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
-      {uniqueID: 'two', val: 'secondOM1'}
+      {uniqueID: 'two', val: 'secondOM1'},
     ], extractUniqueID);
 
     var testOneTwoMergedWithTwoThree = function(res) {
@@ -581,7 +581,7 @@ describe('OrderedMap', function() {
     var result =
       oneTwo.merge(OrderedMap.fromArray([
         {uniqueID: 'two', val: 'secondOM2'},
-        {uniqueID: 'three', val: 'third'}
+        {uniqueID: 'three', val: 'third'},
       ], extractUniqueID));
     testOneTwoMergedWithTwoThree(result);
 
@@ -590,7 +590,7 @@ describe('OrderedMap', function() {
     result = oneTwo.merge(
       OrderedMap.fromArray([
         {uniqueID: 'three', val: 'third'},
-        {uniqueID: 'two', val:'secondOM2'}
+        {uniqueID: 'two', val:'secondOM2'},
       ], extractUniqueID)
     );
     testOneTwoMergedWithTwoThree(result);
@@ -616,9 +616,9 @@ describe('OrderedMap', function() {
       expect(res.get('dog')).toBe(undefined);
     };
     result = OrderedMap.fromArray([
-        {uniqueID: 'two', val: 'secondOM2'},
-        {uniqueID: 'three', val: 'third'}
-      ], extractUniqueID).merge(oneTwo);
+      {uniqueID: 'two', val: 'secondOM2'},
+      {uniqueID: 'three', val: 'third'},
+    ], extractUniqueID).merge(oneTwo);
     testTwoThreeMergedWithOneTwo(result);
 
   });
@@ -626,11 +626,11 @@ describe('OrderedMap', function() {
   it('should merge mutually exclusive keys to the end.', function() {
     var om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
-      {uniqueID: 'two', val: 'second'}
+      {uniqueID: 'two', val: 'second'},
     ], extractUniqueID);
     var om2 = OrderedMap.fromArray([
       {uniqueID: 'three', val: 'first'},
-      {uniqueID: 'four', val: 'second'}
+      {uniqueID: 'four', val: 'second'},
     ], extractUniqueID);
     var res = om.merge(om2);
     expect(res.length).toBe(4);
@@ -641,7 +641,7 @@ describe('OrderedMap', function() {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
-      {uniqueID: 'z', val: 'zz'}
+      {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
     var scope = {justToTestScope: 'justTestingScope'};
     var verifyResult = function(omResult) {
@@ -656,7 +656,7 @@ describe('OrderedMap', function() {
     var resultOM = om.map(function(itm, key, count) {
       return {
         uniqueID: itm.uniqueID,
-        val: itm.val + key + count + this.justToTestScope
+        val: itm.val + key + count + this.justToTestScope,
       };
     }, scope);
     verifyResult(resultOM);
@@ -665,7 +665,7 @@ describe('OrderedMap', function() {
     om.forEach(function(itm, key, count) {
       resArray.push({
         uniqueID: itm.uniqueID,
-        val: itm.val + key + count + this.justToTestScope
+        val: itm.val + key + count + this.justToTestScope,
       });
     }, scope);
     resultOM = OrderedMap.fromArray(resArray, extractUniqueID);
@@ -676,7 +676,7 @@ describe('OrderedMap', function() {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
-      {uniqueID: 'z', val: 'zz'}
+      {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
     var scope = {justToTestScope: 'justTestingScope'};
 
@@ -717,7 +717,7 @@ describe('OrderedMap', function() {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
-      {uniqueID: 'z', val: 'zz'}
+      {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
     var scope = {justToTestScope: 'justTestingScope'};
 
@@ -731,16 +731,14 @@ describe('OrderedMap', function() {
       om.forEachRange(duplicate, 0, 3, scope);
     }).not.toThrow();
     expect(function() {
-      om.mapKeyRange(duplicate, 'x' , 3, scope);
+      om.mapKeyRange(duplicate, 'x', 3, scope);
     }).toThrow(
-      'Invariant Violation: mapKeyRange must be given keys ' +
-      'that are present.'
+      'mapKeyRange must be given keys that are present.'
     );
     expect(function() {
       om.forEachKeyRange(duplicate, 'x', 3, scope);
     }).toThrow(
-      'Invariant Violation: forEachKeyRange must be given keys ' +
-      'that are present.'
+      'forEachKeyRange must be given keys that are present.'
     );
 
     expect(function() {
@@ -854,7 +852,7 @@ describe('OrderedMap', function() {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
-      {uniqueID: 'z', val: 'zz'}
+      {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
     var scope = {justToTestScope: 'justTestingScope'};
     var verifyThreeItems = function(omResult) {
@@ -898,7 +896,7 @@ describe('OrderedMap', function() {
     var pushToResArray = function(itm, key, count) {
       resArray.push({
         uniqueID: itm.uniqueID,
-        val: itm.val + key + count + this.justToTestScope
+        val: itm.val + key + count + this.justToTestScope,
       });
     };
 
@@ -935,7 +933,7 @@ describe('OrderedMap', function() {
     var sourceArray = [
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
-      {uniqueID: 'z', val: 'zz'}
+      {uniqueID: 'z', val: 'zz'},
     ];
     var om = OrderedMap.fromArray(sourceArray, extractUniqueID);
     expect(om.toArray()).toEqual(sourceArray);

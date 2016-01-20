@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,58 +13,24 @@
 
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
-var ClientReactRootIndex = require('ClientReactRootIndex');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactClass = require('ReactClass');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactDOMComponent = require('ReactDOMComponent');
-var ReactDOMButton = require('ReactDOMButton');
-var ReactDOMForm = require('ReactDOMForm');
-var ReactDOMImg = require('ReactDOMImg');
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactDOMIframe = require('ReactDOMIframe');
-var ReactDOMInput = require('ReactDOMInput');
-var ReactDOMOption = require('ReactDOMOption');
-var ReactDOMSelect = require('ReactDOMSelect');
-var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
+var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
-var ReactElement = require('ReactElement');
+var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
-var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
-var SelectEventPlugin = require('SelectEventPlugin');
-var ServerReactRootIndex = require('ServerReactRootIndex');
-var SimpleEventPlugin = require('SimpleEventPlugin');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
-
-var createFullPageComponent = require('createFullPageComponent');
-
-function autoGenerateWrapperClass(type) {
-  return ReactClass.createClass({
-    tagName: type.toUpperCase(),
-    render: function() {
-      // Copy owner down for debugging info
-      var internalInstance = ReactInstanceMap.get(this);
-      return new ReactElement(
-        type,
-        null,  // key
-        null,  // ref
-        internalInstance._currentElement._owner,  // owner
-        null,  // context
-        this.props
-      );
-    }
-  });
-}
+var SelectEventPlugin = require('SelectEventPlugin');
+var SimpleEventPlugin = require('SimpleEventPlugin');
 
 var alreadyInjected = false;
 
@@ -85,8 +51,8 @@ function inject() {
    * Inject modules for resolving DOM hierarchy and plugin ordering.
    */
   ReactInjection.EventPluginHub.injectEventPluginOrder(DefaultEventPluginOrder);
-  ReactInjection.EventPluginHub.injectInstanceHandle(ReactInstanceHandles);
-  ReactInjection.EventPluginHub.injectMount(ReactMount);
+  ReactInjection.EventPluginUtils.injectComponentTree(ReactDOMComponentTree);
+  ReactInjection.EventPluginUtils.injectTreeTraversal(ReactDOMTreeTraversal);
 
   /**
    * Some important event plugins included by default (without having to require
@@ -97,7 +63,7 @@ function inject() {
     EnterLeaveEventPlugin: EnterLeaveEventPlugin,
     ChangeEventPlugin: ChangeEventPlugin,
     SelectEventPlugin: SelectEventPlugin,
-    BeforeInputEventPlugin: BeforeInputEventPlugin
+    BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
   ReactInjection.NativeComponent.injectGenericComponentClass(
@@ -108,33 +74,14 @@ function inject() {
     ReactDOMTextComponent
   );
 
-  ReactInjection.NativeComponent.injectAutoWrapper(
-    autoGenerateWrapperClass
-  );
-
-  // This needs to happen before createFullPageComponent() otherwise the mixin
-  // won't be included.
-  ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
-
-  ReactInjection.NativeComponent.injectComponentClasses({
-    'button': ReactDOMButton,
-    'form': ReactDOMForm,
-    'iframe': ReactDOMIframe,
-    'img': ReactDOMImg,
-    'input': ReactDOMInput,
-    'option': ReactDOMOption,
-    'select': ReactDOMSelect,
-    'textarea': ReactDOMTextarea,
-
-    'html': createFullPageComponent('html'),
-    'head': createFullPageComponent('head'),
-    'body': createFullPageComponent('body')
-  });
-
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
-  ReactInjection.EmptyComponent.injectEmptyComponent('noscript');
+  ReactInjection.EmptyComponent.injectEmptyComponentFactory(
+    function(instantiate) {
+      return new ReactDOMEmptyComponent(instantiate);
+    }
+  );
 
   ReactInjection.Updates.injectReconcileTransaction(
     ReactReconcileTransaction
@@ -143,14 +90,7 @@ function inject() {
     ReactDefaultBatchingStrategy
   );
 
-  ReactInjection.RootIndex.injectCreateReactRootIndex(
-    ExecutionEnvironment.canUseDOM ?
-      ClientReactRootIndex.createReactRootIndex :
-      ServerReactRootIndex.createReactRootIndex
-  );
-
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
-  ReactInjection.DOMComponent.injectIDOperations(ReactDOMIDOperations);
 
   if (__DEV__) {
     var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
@@ -162,5 +102,5 @@ function inject() {
 }
 
 module.exports = {
-  inject: inject
+  inject: inject,
 };

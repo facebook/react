@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -97,7 +97,7 @@ function assertValidPublicKey(key) {
  * @param {number} length Length of range.
  * @param {number} actualLen Actual length of range that should not be
  * exceeded.
- * @return {void} description
+ * @throws Error if range arguments are out of bounds.
  */
 function assertValidRangeIndices(start, length, actualLen) {
   invariant(
@@ -227,7 +227,7 @@ var OrderedMapMethods = {
    *
    * @param {Function} cb Determines result for each item.
    * @param {number} start Start index of map range.
-   * @param {end} end End index of map range.
+   * @param {end} length End index of map range.
    * @param {*!?} context Context of callback invocation.
    * @return {OrderedMap} OrderedMap resulting from mapping the range.
    */
@@ -269,7 +269,7 @@ var OrderedMapMethods = {
    *
    * @param {Function} cb Returns true if item should be in result.
    * @param {number} start Start index of filter range.
-   * @param {number} end End index of map range.
+   * @param {number} length End index of map range.
    * @param {*!?} context Context of callback invocation.
    * @return {OrderedMap} OrderedMap resulting from filtering the range.
    */
@@ -438,7 +438,6 @@ var OrderedMapMethods = {
    * because `undefined` is not ever a valid `OrderedMap` key.
    *
    * @private
-   * @param {number} pos Position for which we're querying the name.
    * @return {string?} Name of the item at position `pos`, or `undefined` if
    * there is no item at that position.
    */
@@ -460,7 +459,7 @@ var OrderedMapMethods = {
   _computePositions: function() {
     this._computedPositions = {
       keyByIndex: {},
-      indexByKey: {}
+      indexByKey: {},
     };
     var keyByIndex = this._computedPositions.keyByIndex;
     var indexByKey = this._computedPositions.indexByKey;
@@ -473,7 +472,7 @@ var OrderedMapMethods = {
         index++;
       }
     }
-  }
+  },
 };
 
 assign(OrderedMapImpl.prototype, OrderedMapMethods);
@@ -501,7 +500,7 @@ var OrderedMap = {
       extractObjectFromArray(arr, keyExtractor),
       arr.length
     );
-  }
+  },
 };
 
 module.exports = OrderedMap;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ResponderSyntheticEvent
- * @typechecks static-only
  */
 
 'use strict';
@@ -22,7 +21,7 @@ var SyntheticEvent = require('SyntheticEvent');
 var ResponderEventInterface = {
   touchHistory: function(nativeEvent) {
     return null; // Actually doesn't even look at the native event.
-  }
+  },
 };
 
 /**
@@ -31,8 +30,8 @@ var ResponderEventInterface = {
  * @param {object} nativeEvent Native event.
  * @extends {SyntheticEvent}
  */
-function ResponderSyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent) {
-  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
+function ResponderSyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
 }
 
 SyntheticEvent.augmentClass(ResponderSyntheticEvent, ResponderEventInterface);

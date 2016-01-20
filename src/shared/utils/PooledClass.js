@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -53,6 +53,17 @@ var threeArgumentPooler = function(a1, a2, a3) {
   }
 };
 
+var fourArgumentPooler = function(a1, a2, a3, a4) {
+  var Klass = this;
+  if (Klass.instancePool.length) {
+    var instance = Klass.instancePool.pop();
+    Klass.call(instance, a1, a2, a3, a4);
+    return instance;
+  } else {
+    return new Klass(a1, a2, a3, a4);
+  }
+};
+
 var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
   var Klass = this;
   if (Klass.instancePool.length) {
@@ -70,9 +81,7 @@ var standardReleaser = function(instance) {
     instance instanceof Klass,
     'Trying to release an instance into a pool of a different type.'
   );
-  if (instance.destructor) {
-    instance.destructor();
-  }
+  instance.destructor();
   if (Klass.instancePool.length < Klass.poolSize) {
     Klass.instancePool.push(instance);
   }
@@ -106,7 +115,8 @@ var PooledClass = {
   oneArgumentPooler: oneArgumentPooler,
   twoArgumentPooler: twoArgumentPooler,
   threeArgumentPooler: threeArgumentPooler,
-  fiveArgumentPooler: fiveArgumentPooler
+  fourArgumentPooler: fourArgumentPooler,
+  fiveArgumentPooler: fiveArgumentPooler,
 };
 
 module.exports = PooledClass;

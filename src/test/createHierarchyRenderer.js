@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,6 +8,8 @@
  *
  * @providesModule createHierarchyRenderer
  */
+
+'use strict';
 
 var React = require('React');
 
@@ -31,7 +33,7 @@ var React = require('React');
  *
  *   var instances = renderHierarchy(
  *     function(ComponentA[, ComponentB, ComponentC]) {
- *       React.render(<ComponentA />, ...);
+ *       ReactDOM.render(<ComponentA />, ...);
  *     })
  *   );
  *   instances[0][0]; // First return value of first render method.
@@ -53,15 +55,15 @@ var React = require('React');
 function createHierarchyRenderer(...renderMethods) {
   var instances;
   var Components = renderMethods.reduceRight(
-    function(Components, renderMethod, depth) {
+    function(ComponentsAccumulator, renderMethod, depth) {
       var Component = React.createClass({
         displayName: renderMethod.name,
         render: function() {
           instances[depth].push(this);
-          return renderMethod.apply(this, Components);
-        }
+          return renderMethod.apply(this, ComponentsAccumulator);
+        },
       });
-      return [Component].concat(Components);
+      return [Component].concat(ComponentsAccumulator);
     },
     []
   );

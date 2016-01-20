@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,15 +11,9 @@
 
 'use strict';
 
-require('mock-modules');
-
 var React = require('React');
-var ReactFragment = require('ReactFragment');
+var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
-
-var reactComponentExpect = require('reactComponentExpect');
-
-var frag = ReactFragment.create;
 
 // Helpers
 var testAllPermutations = function(testCases) {
@@ -31,29 +25,21 @@ var testAllPermutations = function(testCases) {
       var updateWithChildren = testCases[j];
       var expectedResultAfterUpdate = testCases[j + 1];
 
-      var d = renderChildren(renderWithChildren);
+      var container = document.createElement('div');
+      var d = ReactDOM.render(<div>{renderWithChildren}</div>, container);
       expectChildren(d, expectedResultAfterRender);
 
-      updateChildren(d, updateWithChildren);
+      d = ReactDOM.render(<div>{updateWithChildren}</div>, container);
       expectChildren(d, expectedResultAfterUpdate);
     }
   }
 };
 
-var renderChildren = function(children) {
-  return ReactTestUtils.renderIntoDocument(
-    <div>{children}</div>
-  );
-};
-
-var updateChildren = function(d, children) {
-  d.replaceProps({children: children});
-};
-
 var expectChildren = function(d, children) {
+  var outerNode = ReactDOM.findDOMNode(d);
   var textNode;
   if (typeof children === 'string') {
-    textNode = React.findDOMNode(d).firstChild;
+    textNode = outerNode.firstChild;
 
     if (children === '') {
       expect(textNode != null).toBe(false);
@@ -63,32 +49,23 @@ var expectChildren = function(d, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    expect(React.findDOMNode(d).childNodes.length).toBe(children.length);
+    expect(outerNode.childNodes.length).toBe(children.length);
 
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
 
       if (typeof child === 'string') {
-        reactComponentExpect(d)
-          .expectRenderedChildAt(i)
-          .toBeTextComponentWithValue(child);
-
-        textNode = React.findDOMNode(d).childNodes[i].firstChild;
+        textNode = outerNode.childNodes[i].firstChild;
 
         if (child === '') {
-          expect(textNode != null).toBe(false);
+          expect(textNode).toBe(null);
         } else {
-          expect(textNode != null).toBe(true);
+          expect(textNode).not.toBe(null);
           expect(textNode.nodeType).toBe(3);
           expect(textNode.data).toBe('' + child);
         }
       } else {
-        var elementDOMNode = React.findDOMNode(reactComponentExpect(d)
-          .expectRenderedChildAt(i)
-          .toBeComponentOfType('div')
-          .instance()
-        );
-
+        var elementDOMNode = outerNode.childNodes[i];
         expect(elementDOMNode.tagName).toBe('DIV');
       }
     }
@@ -103,6 +80,7 @@ var expectChildren = function(d, children) {
  */
 describe('ReactMultiChildText', function() {
   it('should correctly handle all possible children for render and update', function() {
+    spyOn(console, 'error');
     testAllPermutations([
       // basic values
       undefined, [],
@@ -181,28 +159,16 @@ describe('ReactMultiChildText', function() {
       [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
       ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
 
-      // values inside objects
-      [frag({a: true}), frag({a: true})], [],
-      [frag({a: 1.2}), frag({a: 1.2})], ['1.2', '1.2'],
-      [frag({a: ''}), frag({a: ''})], ['', ''],
-      [frag({a: 'foo'}), frag({a: 'foo'})], ['foo', 'foo'],
-      [frag({a: <div />}), frag({a: <div />})], [<div />, <div />],
-
-      [frag({a: true, b: 1.2, c: <div />}), '', 'foo'], ['1.2', <div />, '', 'foo'],
-      [1.2, '', frag({a: <div />, b: 'foo', c: true})], ['1.2', '', <div />, 'foo'],
-      ['', frag({a: 'foo', b: <div />, c: true}), 1.2], ['', 'foo', <div />, '1.2'],
-
-      [true, frag({a: 1.2, b: '', c: <div />, d: 'foo'}), true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-      ['', 'foo', frag({a: true, b: <div />, c: 1.2, d: ''}), 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
-
       // values inside elements
       [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
       [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', '', <div />],
       ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
 
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
-      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo']
+      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should throw if rendering both HTML and children', function() {

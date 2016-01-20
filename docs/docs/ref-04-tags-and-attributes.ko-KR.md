@@ -8,7 +8,7 @@ next: events-ko-KR.html
 
 ## 지원되는 태그
 
-React는 모든 공통 엘리먼트를 지원하려 합니다. 필요한 엘리먼트가 목록에 없다면, 이슈로 등록해 주세요.
+React는 모든 공통 엘리먼트를 지원하려 합니다. 필요한 엘리먼트가 목록에 없다면, [이슈로 등록](https://github.com/facebook/react/issues/new)해 주세요.
 
 ### HTML 엘리먼트
 
@@ -53,16 +53,17 @@ React는 모든 `data-*`, `aria-*` 어트리뷰트와 밑에 있는 모든 어�
 
 ```
 accept acceptCharset accessKey action allowFullScreen allowTransparency alt
-async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
-classID className colSpan cols content contentEditable contextMenu controls
-coords crossOrigin data dateTime defer dir disabled download draggable encType
-form formAction formEncType formMethod formNoValidate formTarget frameBorder
-headers height hidden high href hrefLang htmlFor httpEquiv icon id label lang
-list loop low manifest marginHeight marginWidth max maxLength media mediaGroup
-method min multiple muted name noValidate open optimum pattern placeholder
-poster preload radioGroup readOnly rel required role rowSpan rows sandbox scope
-scoped scrolling seamless selected shape size sizes span spellCheck src srcDoc
-srcSet start step style tabIndex target title type useMap value width wmode
+async autoComplete autoFocus autoPlay capture cellPadding cellSpacing charSet
+challenge checked classID className cols colSpan content contentEditable contextMenu
+controls coords crossOrigin data dateTime defer dir disabled download draggable
+encType form formAction formEncType formMethod formNoValidate formTarget frameBorder
+headers height hidden high href hrefLang htmlFor httpEquiv icon id inputMode
+keyParams keyType label lang list loop low manifest marginHeight marginWidth max
+maxLength media mediaGroup method min minLength multiple muted name noValidate open
+optimum pattern placeholder poster preload radioGroup readOnly rel required role
+rows rowSpan sandbox scope scoped scrolling seamless selected shape size sizes
+span spellCheck src srcDoc srcSet start step style summary tabIndex target title
+type useMap value width wmode wrap
 ```
 
 덧붙여, 이런 비표준 어트리뷰트도 지원됩니다.
@@ -71,15 +72,19 @@ srcSet start step style tabIndex target title type useMap value width wmode
 - [오픈 그래프](http://ogp.me/) 메타 태그를 위한 `property`.
 - [HTML5 마이크로데이터](http://schema.org/docs/gs.html)를 위한 `itemProp itemScope itemType itemRef itemID`.
 - 인터넷 익스플로어를 위한 `unselectable`.
+- WebKit/Blink의 `search` 타입 input 필드를 위한 `results autoSave` 
 
 컴포넌트에 직접 HTML 문자열을 넣을 때 사용하는, React 전용 어트리뷰트 `dangerouslySetInnerHTML`([자세한 정보는 여기](/react/docs/special-non-dom-attributes-ko-KR.html))도 있습니다.
 
 ### SVG 어트리뷰트
 
 ```
-clip-path cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
-gradientUnits markerEnd markerMid markerStart offset opacity
-patternContentUnits patternUnits points preserveAspectRatio r rx ry
-spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version viewBox x1 x2 x y1 y2 y
+clipPath cx cy d dx dy fill fillOpacity fontFamily
+fontSize fx fy gradientTransform gradientUnits markerEnd
+markerMid markerStart offset opacity patternContentUnits
+patternUnits points preserveAspectRatio r rx ry spreadMethod
+stopColor stopOpacity stroke  strokeDasharray strokeLinecap
+strokeOpacity strokeWidth textAnchor transform version
+viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
+xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
 ```

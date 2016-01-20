@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -18,30 +18,32 @@ var warning = require('warning');
  * This will log a single deprecation notice per function and forward the call
  * on to the new API.
  *
- * @param {string} namespace The namespace of the call, eg 'React'
- * @param {string} oldName The old function name, eg 'renderComponent'
- * @param {string} newName The new function name, eg 'render'
+ * @param {string} fnName The name of the function
+ * @param {string} newModule The module that fn will exist in
+ * @param {string} newPackage The module that fn will exist in
  * @param {*} ctx The context this forwarded call should run in
  * @param {function} fn The function to forward on to
- * @return {*} Will be the value as returned from `fn`
+ * @return {function} The function that will warn once and then call fn
  */
-function deprecated(namespace, oldName, newName, ctx, fn) {
+function deprecated(fnName, newModule, newPackage, ctx, fn) {
   var warned = false;
   if (__DEV__) {
     var newFn = function() {
       warning(
         warned,
-        '%s.%s will be deprecated in a future version. ' +
-        'Use %s.%s instead.',
-        namespace,
-        oldName,
-        namespace,
-        newName
+        // Require examples in this string must be split to prevent React's
+        // build tools from mistaking them for real requires.
+        // Otherwise the build tools will attempt to build a '%s' module.
+        'React.%s is deprecated. Please use %s.%s from require' + '(\'%s\') ' +
+        'instead.',
+        fnName,
+        newModule,
+        fnName,
+        newPackage
       );
       warned = true;
       return fn.apply(ctx, arguments);
     };
-    newFn.displayName = `${namespace}_${oldName}`;
     // We need to make sure all properties of the original fn are copied over.
     // In particular, this is needed to support PropTypes
     return assign(newFn, fn);

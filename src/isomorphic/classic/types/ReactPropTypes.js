@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,10 +12,10 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var emptyFunction = require('emptyFunction');
+var getIteratorFn = require('getIteratorFn');
 
 /**
  * Collection of methods that allow declaration and validation of props that are
@@ -82,7 +82,7 @@ var ReactPropTypes = {
   objectOf: createObjectOfTypeChecker,
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
-  shape: createShapeTypeChecker
+  shape: createShapeTypeChecker,
 };
 
 function createChainableTypeChecker(validate) {
@@ -144,6 +144,11 @@ function createAnyTypeChecker() {
 
 function createArrayOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside arrayOf.`
+      );
+    }
     var propValue = props[propName];
     if (!Array.isArray(propValue)) {
       var locationName = ReactPropTypeLocationNames[location];
@@ -189,9 +194,11 @@ function createInstanceTypeChecker(expectedClass) {
     if (!(props[propName] instanceof expectedClass)) {
       var locationName = ReactPropTypeLocationNames[location];
       var expectedClassName = expectedClass.name || ANONYMOUS;
+      var actualClassName = getClassName(props[propName]);
       return new Error(
-        `Invalid ${locationName} \`${propFullName}\` supplied to ` +
-        `\`${componentName}\`, expected instance of \`${expectedClassName}\`.`
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${actualClassName}\` supplied to \`${componentName}\`, expected ` +
+        `instance of \`${expectedClassName}\`.`
       );
     }
     return null;
@@ -200,6 +207,14 @@ function createInstanceTypeChecker(expectedClass) {
 }
 
 function createEnumTypeChecker(expectedValues) {
+  if (!Array.isArray(expectedValues)) {
+    return createChainableTypeChecker(function() {
+      return new Error(
+        `Invalid argument supplied to oneOf, expected an instance of array.`
+      );
+    });
+  }
+
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
     for (var i = 0; i < expectedValues.length; i++) {
@@ -220,6 +235,11 @@ function createEnumTypeChecker(expectedValues) {
 
 function createObjectOfTypeChecker(typeChecker) {
   function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside objectOf.`
+      );
+    }
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== 'object') {
@@ -249,6 +269,14 @@ function createObjectOfTypeChecker(typeChecker) {
 }
 
 function createUnionTypeChecker(arrayOfTypeCheckers) {
+  if (!Array.isArray(arrayOfTypeCheckers)) {
+    return createChainableTypeChecker(function() {
+      return new Error(
+        `Invalid argument supplied to oneOfType, expected an instance of array.`
+      );
+    });
+  }
+
   function validate(props, propName, componentName, location, propFullName) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
@@ -329,12 +357,32 @@ function isNode(propValue) {
       if (propValue === null || ReactElement.isValidElement(propValue)) {
         return true;
       }
-      propValue = ReactFragment.extractIfFragment(propValue);
-      for (var k in propValue) {
-        if (!isNode(propValue[k])) {
-          return false;
+
+      var iteratorFn = getIteratorFn(propValue);
+      if (iteratorFn) {
+        var iterator = iteratorFn.call(propValue);
+        var step;
+        if (iteratorFn !== propValue.entries) {
+          while (!(step = iterator.next()).done) {
+            if (!isNode(step.value)) {
+              return false;
+            }
+          }
+        } else {
+          // Iterator will provide entry [k,v] tuples rather than values.
+          while (!(step = iterator.next()).done) {
+            var entry = step.value;
+            if (entry) {
+              if (!isNode(entry[1])) {
+                return false;
+              }
+            }
+          }
         }
+      } else {
+        return false;
       }
+
       return true;
     default:
       return false;
@@ -368,6 +416,14 @@ function getPreciseType(propValue) {
     }
   }
   return propType;
+}
+
+// Returns class name of the object, if any.
+function getClassName(propValue) {
+  if (!propValue.constructor || !propValue.constructor.name) {
+    return ANONYMOUS;
+  }
+  return propValue.constructor.name;
 }
 
 module.exports = ReactPropTypes;

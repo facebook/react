@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -14,43 +14,17 @@
 var React;
 var ReactTestUtils;
 
-var mocks;
-
-var OriginalComponent;
 var AutoMockedComponent;
 var MockedComponent;
 
 describe('ReactMockedComponent', function() {
 
   beforeEach(function() {
-    mocks = require('mocks');
-
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
-    OriginalComponent = React.createClass({
-      getDefaultProps: function() {
-        return {bar: 'baz'};
-      },
-
-      getInitialState: function() {
-        return {foo: 'bar'};
-      },
-
-      hasCustomMethod: function() {
-        return true;
-      },
-
-      render: function() {
-        return <span />;
-      }
-
-    });
-
-    var metaData = mocks.getMetadata(OriginalComponent);
-
-    AutoMockedComponent = mocks.generateFromMetadata(metaData);
-    MockedComponent = mocks.generateFromMetadata(metaData);
+    AutoMockedComponent = jest.genMockFromModule('ReactMockedComponentTestComponent');
+    MockedComponent = jest.genMockFromModule('ReactMockedComponentTestComponent');
 
     ReactTestUtils.mockComponent(MockedComponent);
   });
@@ -73,23 +47,20 @@ describe('ReactMockedComponent', function() {
       },
 
       render: function() {
-        return <AutoMockedComponent prop={this.state.foo} />;
-      }
+        return <div><AutoMockedComponent prop={this.state.foo} /></div>;
+      },
 
     });
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
-    instance.update();
-  });
 
-  it('should find an implicitly mocked component in the tree', function() {
-    var instance = ReactTestUtils.renderIntoDocument(
-      <div><span><AutoMockedComponent prop="1" /></span></div>
-    );
+    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+
     var found = ReactTestUtils.findRenderedComponentWithType(
       instance,
       AutoMockedComponent
     );
     expect(typeof found).toBe('object');
+
+    instance.update();
   });
 
   it('has custom methods on the implicitly mocked component', () => {
@@ -113,23 +84,19 @@ describe('ReactMockedComponent', function() {
       },
 
       render: function() {
-        return <MockedComponent prop={this.state.foo} />;
-      }
+        return <div><MockedComponent prop={this.state.foo} /></div>;
+      },
 
     });
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
-    instance.update();
-  });
 
-  it('should find an explicitly mocked component in the tree', function() {
-    var instance = ReactTestUtils.renderIntoDocument(
-      <div><span><MockedComponent prop="1" /></span></div>
-    );
     var found = ReactTestUtils.findRenderedComponentWithType(
       instance,
       MockedComponent
     );
     expect(typeof found).toBe('object');
+
+    instance.update();
   });
 
   it('has custom methods on the explicitly mocked component', () => {

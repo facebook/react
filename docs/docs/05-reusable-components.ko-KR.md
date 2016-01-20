@@ -8,7 +8,6 @@ next: transferring-props-ko-KR.html
 
 인터페이스를 설계할 때, 공통적으로 사용되는 디자인 요소들(버튼, 폼 필드, 레이아웃 컴포넌트 등.)을 잘 정의된 인터페이스의 재사용 가능한 컴포넌트로 분해합니다. 이런 방법으로 다음에 UI를 구축할 때에는 훨씬 적은 코드로 만들 수 있습니다. 이 말은 더 빠른 개발 시간, 더 적은 버그, 더 적은 용량으로 할 수 있다는 뜻이죠.
 
-
 ## Prop 검증
 
 앱의 규모가 커지면 컴포넌트들이 바르게 사용되었는지 확인하는게 도움이 됩니다. 확인은 `propTypes`를 명시해서 할 수 있습니다. `React.PropTypes`는 받은 데이터가 적절한지(valid) 확인하는데 사용할 수 있는 다양한 검증자(validator)를 제공합니다. prop에 부적절한 값을 명시한다면 JavaScript 콘솔에 경고가 보일 것입니다. 성능상의 문제로 `propTypes`는 개발 모드에서만 검사됩니다. 다음은 제공되는 검증자를 설명하는 예제입니다.
@@ -78,7 +77,6 @@ React.createClass({
 });
 ```
 
-
 ## 기본 Prop 값
 
 React는 매우 선언적(declarative)인 방법으로 `props`의 기본값을 정의할 수 있게 해줍니다.
@@ -108,7 +106,7 @@ var CheckLink = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CheckLink href="/checked.html">
     Click here!
   </CheckLink>,
@@ -176,7 +174,7 @@ var TickTock = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <TickTock />,
   document.getElementById('example')
 );
@@ -184,6 +182,7 @@ React.render(
 
 믹스인의 괜찮은 점은 컴포넌트가 여러 믹스인을 사용하고 여러 믹스인에서 같은 생명주기 메소드를 사용할 때(예를 들어, 여러 믹스인에서 컴포넌트가 사라질 때 뭔가 정리하려 한다면) 모든 생명주기 메소드들의 실행은 보장됩니다. 믹스인에 정의된 메소드은 컴포넌트의 메소드가 호출됨에 따라 믹스인이 나열된 순서대로 실행됩니다.
 
+<a name="es6-classes"></a>
 ## ES6 클래스
 
 React 클래스를 일반적인 JavaScript 클래스로 선언할 수도 있습니다. 다음의 예제는 ES6 클래스 문법을 사용합니다:
@@ -194,7 +193,7 @@ class HelloMessage extends React.Component {
     return <div>Hello {this.props.name}</div>;
   }
 }
-React.render(<HelloMessage name="Sebastian" />, mountNode);
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 API는 `getInitialState`를 제외하고 `React.createClass`와 유사합니다. 별도의 `getInitialState` 메소드 대신에, 필요한 `state` 프로퍼티를 생성자에서 설정할 수 있습니다.
@@ -229,3 +228,30 @@ Counter.defaultProps = { initialCount: 0 };
 ### 믹스인 안됨
 
 불행하게도 ES6는 믹스인에 대한 지원이 없이 출시되었기 때문에, React에서 ES6 클래스를 사용한다면 믹스인을 사용할 방법이 없습니다. 대신, 우리는 믹스인에 의존하지 않고도 동작하도록 만들기 위해 열심히 노력하고 있습니다.
+
+<a name="stateless-functions"></a>
+## 상태를 가지지 않는 함수
+
+React 클래스를 일반 JavaScript 함수로 작성할 수도 있습니다. 상태를 가지지 않는 함수 문법을 사용하는 예제입니다.
+
+```javascript
+function HelloMessage(props) {
+  return <div>Hello {props.name}</div>;
+}
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+아니면 ES6의 화살표 문법을 사용할 수 있습니다.
+
+```javascript
+var HelloMessage = (props) => <div>Hello {props.name}</div>;
+ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+이 단순화된 컴포넌트 API는 prop의 순수 함수인 컴포넌트를 나타냅니다. 이 컴포넌트는 내부 상태가 없어야 하고, 내부 인스턴스가 없어야 하고, 컴포넌트 생명주기 메소드가 없어야 합니다. 아무런 준비 과정없이 입력에 대한 순수한 기능적 변환이어야 합니다.
+
+> 주의:
+>
+> 상태를 가지지 않는 함수는 내부 인스턴스가 없기 때문에, ref를 상태를 가지지않는 함수에 넣을 수 없습니다. 상태를 가지지 않는 함수는 명령형(imperative) API를 제공하지 않기 때문에 일반적으로 이것은 문제가 되지 않습니다. 명령형 API없이 인스턴스에 할 수 있는 것이 많지 않기도 하죠. 하지만 상태를 가지지 않는 컴포넌트의 DOM 노드를 검색하길 원한다면, 반드시 상태 기반 컴포넌트(예. ES6 클래스 컴포넌트)로 컴포넌트를 감싸고 상태 기반 래퍼 컴포넌트에 ref를 붙여야 합니다.
+
+이상적으로는, 대부분의 컴포넌트는 상태를 가지지 않는 함수여야 합니다. 왜냐 하면 이런 상태를 가지지 않는 컴포넌트는 React 코어 안에서 더 빠른 코드 경로를 거치기 때문입니다. 이는 가능한 한 추천하는 패턴입니다.
