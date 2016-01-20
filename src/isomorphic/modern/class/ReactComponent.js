@@ -72,10 +72,12 @@ ReactComponent.prototype.setState = function(partialState, callback) {
       'instead, use forceUpdate().'
     );
     if (this._reactInternalInstance &&
-        this._reactInternalInstance._isServerSideRendered) {
+        this._reactInternalInstance._isServerSideRendered &&
+        this._reactInternalInstance._isServerSideRendered.isAfterComponentWillMount) {
       warning(
         false,
-        'setState(...): method calls are ignored if component was ' +
+        'setState(...): method calls executed after componentWillMount ' +
+        '(e.g. setTimeout() callbacks)  are ignored if component was ' +
         'rendered on server.'
       );
       return;
@@ -107,7 +109,7 @@ ReactComponent.prototype.forceUpdate = function(callback) {
         this._reactInternalInstance._isServerSideRendered) {
       warning(
         false,
-        'forceUpdate(...): method calls are ignored if component was ' +
+        'forceUpdate(...): all method calls are ignored if component was ' +
         'rendered on server.'
       );
       return;
