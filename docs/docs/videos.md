@@ -21,6 +21,13 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 * * *
 
+### React Testing Cookbook - egghead.io
+
+An [egghead.io](https://egghead.io/) course of video lessons on [writing tests for React applications](https://egghead.io/series/react-testing-cookbook). Each video is short (between 1-7 minutes long). The course walks through setting up a React testing environment, using the Shallow Render to test component output, and breaking utility modules out into their files to test them separately. It also includes a few lessons on testing Flux/Redux. Some of the lessons are free, some require a subscription.
+<figure>[![](/react/img/docs/react-testing-cookbook.png)](https://egghead.io/series/react-testing-cookbook)</figure>
+
+* * *
+
 ### Secrets of the Virtual DOM - MtnWest JS
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
