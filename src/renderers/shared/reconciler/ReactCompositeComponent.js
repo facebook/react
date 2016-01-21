@@ -350,8 +350,8 @@ var ReactCompositeComponentMixin = {
     }
 
     if (__DEV__) {
-      if (this._isServerSideRendered) {
-        this._isServerSideRendered.isAfterComponentWillMount = true;
+      if (this._serverSideRendered) {
+        this._serverSideRendered.isAfterComponentWillMount = true;
       }
     }
 

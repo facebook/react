@@ -255,14 +255,15 @@ describe('ReactServerRendering', function() {
       );
     });
 
-    it('should warn and ignore setState calls executed ' +
+    it('should warn once and ignore setState calls executed ' +
         'after componentWillMount', function() {
       spyOn(console, 'error');
 
       var Component = React.createClass({
         componentWillMount: function() {
           setTimeout(() => {
-            this.setState({text: 'hello, world'});
+            this.setState({hello: 'from the'});
+            this.setState({other: 'side'});
           });
         },
         render: function() {
@@ -288,7 +289,7 @@ describe('ReactServerRendering', function() {
       );
     });
 
-    it('should warn and ignore all forceUpdate calls', function() {
+    it('should warn once and ignore all forceUpdate calls', function() {
       spyOn(console, 'error');
 
       var Component = React.createClass({
@@ -311,13 +312,11 @@ describe('ReactServerRendering', function() {
         <Component />
       );
 
-      var expectedError = 'forceUpdate(...): all method calls are ignored ' +
-        'if component was rendered on server.';
       jest.runAllTimers();
       expect(setTimeout.mock.calls.length).toBe(1);
-      expect(console.error.calls.length).toBe(2);
-      expect(console.error.argsForCall[0][0]).toContain(expectedError);
-      expect(console.error.argsForCall[1][0]).toContain(expectedError);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('forceUpdate(...): ' +
+        'all method calls are ignored if component was rendered on server.');
     });
   });
 
