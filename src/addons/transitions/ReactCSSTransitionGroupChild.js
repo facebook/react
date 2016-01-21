@@ -92,7 +92,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
     this.queueClass(activeClassName);
 
     // If the user specified a timeout delay.
-    if (typeof(userSpecifiedDelay) === 'number') {
+    if (userSpecifiedDelay != null) {
       // Clean-up the animation after the specified delay
       timeout = setTimeout(endListener, userSpecifiedDelay);
       this.transitionTimeouts.push(timeout);
