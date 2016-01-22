@@ -1,5 +1,5 @@
-var QuadraticCalculator = React.createClass({
-  getInitialState: function() {
+const QuadraticCalculator = React.createClass({
+  getInitialState() {
     return {
       a: 1,
       b: 3,
@@ -13,20 +13,18 @@ var QuadraticCalculator = React.createClass({
    * the event. The key is the key in the state object that the value should be
    * mapped from.
    */
-  handleInputChange: function(key, event) {
-    var partialState = {};
-    partialState[key] = parseFloat(event.target.value);
+  handleInputChange(key, {target: {value}}) {
+    const partialState = {};
+    partialState[key] = parseFloat(value);
     this.setState(partialState);
   },
 
-  render: function() {
-    var a = this.state.a;
-    var b = this.state.b;
-    var c = this.state.c;
-    var root = Math.sqrt(Math.pow(b, 2) - 4 * a * c);
-    var denominator = 2 * a;
-    var x1 = (-b + root) / denominator;
-    var x2 = (-b - root) / denominator;
+  render() {
+    const {state: {a, b, c}} = this;
+    const root = Math.sqrt(Math.pow(b, 2) - 4 * a * c);
+    const denominator = 2 * a;
+    const x1 = (-b + root) / denominator;
+    const x2 = (-b - root) / denominator;
     return (
       <div>
         <strong>

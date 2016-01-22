@@ -376,4 +376,4 @@ Finally, to create elements, use [`React.createElement()`](/react/docs/top-level
 * [Streamlining React Elements](/react/blog/2015/02/24/streamlining-react-elements.html)
 * [React (Virtual) DOM Terminology](/react/docs/glossary.html)
 
-[^1]: All React elements require an additional ``$$typeof: Symbol.for(‘react.element’)`` field declared on the object for [security reasons](https://github.com/facebook/react/pull/4832). It is omitted in the examples above. This blog entry uses inline objects for elements to give you an idea of what’s happening underneath but the code won’t run as is unless you either add `$$typeof` to the elements, or change the code to use `React.createElement()` or JSX.
+[^1]: All React elements require an additional ``$$typeof: Symbol.for('react.element')`` field declared on the object for [security reasons](https://github.com/facebook/react/pull/4832). It is omitted in the examples above. This blog entry uses inline objects for elements to give you an idea of what’s happening underneath but the code won’t run as is unless you either add `$$typeof` to the elements, or change the code to use `React.createElement()` or JSX.
