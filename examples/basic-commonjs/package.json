@@ -4,8 +4,8 @@
   "main": "index.js",
   "dependencies": {
     "babelify": "^6.3.0",
-    "react": "^0.14.0-rc1",
-    "react-dom": "^0.14.0-rc1",
+    "react": "^0.14.5",
+    "react-dom": "^0.14.5",
     "watchify": "^3.4.0"
   },
   "scripts": {

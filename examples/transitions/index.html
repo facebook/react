@@ -19,7 +19,7 @@
       </p>
     </div>
     <h4>Example Details</h4>
-    <p>This is written with JSX and transformed in the browser.</p>
+    <p>This is written with ES6 and transformed in the browser.</p>
     <p>
       Learn more about React at
       <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
@@ -28,32 +28,32 @@
     <script src="../../build/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
     <script type="text/babel">
-      var CSSTransitionGroup = React.addons.CSSTransitionGroup;
-      var INTERVAL = 2000;
+      const CSSTransitionGroup = React.addons.CSSTransitionGroup;
+      const INTERVAL = 2000;
 
-      var AnimateDemo = React.createClass({
-        getInitialState: function() {
+      const AnimateDemo = React.createClass({
+        getInitialState() {
           return {current: 0};
         },
 
-        componentDidMount: function() {
+        componentDidMount() {
           this.interval = setInterval(this.tick, INTERVAL);
         },
 
-        componentWillUnmount: function() {
+        componentWillUnmount() {
           clearInterval(this.interval);
         },
 
-        tick: function() {
+        tick() {
           this.setState({current: this.state.current + 1});
         },
 
-        render: function() {
-          var children = [];
-          var pos = 0;
-          var colors = ['red', 'gray', 'blue'];
-          for (var i = this.state.current; i < this.state.current + colors.length; i++) {
-            var style = {
+        render() {
+          const children = [];
+          let pos = 0;
+          const colors = ['red', 'gray', 'blue'];
+          for (let i = this.state.current; i < this.state.current + colors.length; i++) {
+            const style = {
               left: pos * 128,
               background: colors[i % colors.length]
             };
