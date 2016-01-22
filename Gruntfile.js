@@ -1,6 +1,5 @@
 'use strict';
 
-var assign = require('object-assign');
 var path = require('path');
 var process = require('process');
 
@@ -35,7 +34,7 @@ module.exports = function(grunt) {
       // but if it breaks we'll fix it then.
       cmd: path.join('node_modules', '.bin', GULP_EXE),
       args: args,
-      opts: assign({stdio: 'inherit'}, opts),
+      opts: Object.assign({stdio: 'inherit'}, opts),
     }, function(err, result, code) {
       if (err) {
         grunt.fail.fatal('Something went wrong running gulp: ', result);

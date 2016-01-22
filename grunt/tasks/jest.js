@@ -6,7 +6,6 @@
 
 'use strict';
 
-var assign = require('object-assign');
 var async = require('async');
 var fs = require('fs');
 var glob = require('glob');
@@ -34,7 +33,7 @@ function getCollectCoverageOnlyFrom(callback) {
   var result = {};
 
   async.each(patterns, function(pattern) {
-    var options = assign({ nodir: true }, collectCoverageOnlyFrom[pattern]);
+    var options = Object.assign({ nodir: true }, collectCoverageOnlyFrom[pattern]);
     glob(pattern, options, function(err, files) {
       (files || []).reduce(function(object, key) {
         object[key] = true;
@@ -51,7 +50,7 @@ function getCollectCoverageOnlyFrom(callback) {
 function getJestConfig(callback) {
   var rootDir = path.resolve(buildPath, path.resolve(config.rootDir));
   getCollectCoverageOnlyFrom(function(err, data) {
-    callback(err, assign({}, config, {
+    callback(err, Object.assign({}, config, {
       rootDir: rootDir,
       collectCoverage: true,
       collectCoverageOnlyFrom: data,
