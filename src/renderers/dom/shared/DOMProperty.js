@@ -29,6 +29,7 @@ var DOMPropertyInjection = {
   HAS_NUMERIC_VALUE: 0x10,
   HAS_POSITIVE_NUMERIC_VALUE: 0x20 | 0x10,
   HAS_OVERLOADED_BOOLEAN_VALUE: 0x40,
+  HAS_IDL_ATTRIBUTE_ONLY: 0x80,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -100,6 +101,8 @@ var DOMPropertyInjection = {
           checkMask(propConfig, Injection.HAS_POSITIVE_NUMERIC_VALUE),
         hasOverloadedBooleanValue:
           checkMask(propConfig, Injection.HAS_OVERLOADED_BOOLEAN_VALUE),
+        hasIdlAttributeOnly:
+          checkMask(propConfig, Injection.HAS_IDL_ATTRIBUTE_ONLY),
       };
 
       invariant(
@@ -110,6 +113,11 @@ var DOMPropertyInjection = {
       invariant(
         propertyInfo.mustUseProperty || !propertyInfo.hasSideEffects,
         'DOMProperty: Properties that have side effects must use property: %s',
+        propName
+      );
+      invariant(
+        !propertyInfo.mustUseAttribute || !propertyInfo.hasIdlAttributeOnly,
+        'DOMProperty: Cannot require using the attribute and be IDL only: %s',
         propName
       );
       invariant(

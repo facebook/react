@@ -92,7 +92,8 @@ var DOMPropertyOperations = {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
-      if (shouldIgnoreValue(propertyInfo, value)) {
+      if (shouldIgnoreValue(propertyInfo, value) ||
+          propertyInfo.hasIdlAttributeOnly === true) {
         return '';
       }
       var attributeName = propertyInfo.attributeName;

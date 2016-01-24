@@ -16,6 +16,7 @@ Form components support a few props that are affected via user interactions:
 
 * `value`, supported by `<input>` and `<textarea>` components.
 * `checked`, supported by `<input>` components of type `checkbox` or `radio`.
+* `indeterminate`, supported by `<input>` components of type `checkbox`.
 * `selected`, supported by `<option>` components.
 
 In HTML, the value of `<textarea>` is set via children. In React, you should use `value` instead.
@@ -100,6 +101,11 @@ Likewise, `<input type="checkbox">` and `<input type="radio">` support `defaultC
 > Note:
 >
 > The `defaultValue` and `defaultChecked` props are only used during initial render. If you need to update the value in a subsequent render, you will need to use a [controlled component](#controlled-components).
+
+In addition to `checked`, `<input type="checkbox">` elements also support `indeterminate` and `defaultIndeterminate` props for simulating "tri-state" checkboxes. Like the the native property, the indeterminate value is _distinct_ from 
+the `checked` value, but also toggled along with `checked` value changes. Use `defaultIndeterminate` in
+the same way as `defaultChecked` to set an initial value, and `indeterminate` in combination with `onChange` to
+explicitly control the indeterminate state.
 
 ## Advanced Topics
 

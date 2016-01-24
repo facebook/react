@@ -25,6 +25,8 @@ var didWarnCheckedLink = false;
 var didWarnValueNull = false;
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
+var didWarnIndeterminateDefaultIndeterminate = false;
+var didWarnMismatchedType = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
@@ -66,6 +68,7 @@ var ReactDOMInput = {
   getNativeProps: function(inst, props) {
     var value = LinkedValueUtils.getValue(props);
     var checked = LinkedValueUtils.getChecked(props);
+    var indeterminate = props.indeterminate;
 
     var nativeProps = assign({
       // Make sure we set .type before any other properties (setting .value
@@ -74,8 +77,10 @@ var ReactDOMInput = {
     }, props, {
       defaultChecked: undefined,
       defaultValue: undefined,
+      defaultIndeterminate: undefined,
       value: value != null ? value : inst._wrapperState.initialValue,
       checked: checked != null ? checked : inst._wrapperState.initialChecked,
+      indeterminate: indeterminate != null ? indeterminate : inst._wrapperState.initialIndeterminate,
       onChange: inst._wrapperState.onChange,
     });
 
@@ -120,6 +125,35 @@ var ReactDOMInput = {
         didWarnCheckedDefaultChecked = true;
       }
       if (
+        (props.indeterminate !== undefined ||
+        props.defaultIndeterminate !== undefined) &&
+        props.type !== 'checkbox' &&
+        !didWarnMismatchedType
+      ) {
+        warning(
+          false,
+          'Only input elements of the type "checkbox" can have an ' +
+          'indeterminate or defaultIndeterminate prop. Either change the ' +
+          'type prop or remove the indeterminate prop.'
+        );
+        didWarnMismatchedType = true;
+      }
+      if (
+        props.indeterminate !== undefined &&
+        props.defaultIndeterminate !== undefined &&
+        !didWarnIndeterminateDefaultIndeterminate
+      ) {
+        warning(
+          false,
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the indeterminate prop, or the defaultIndeterminate prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components'
+        );
+        didWarnIndeterminateDefaultIndeterminate = true;
+      }
+      if (
         props.value !== undefined &&
         props.defaultValue !== undefined &&
         !didWarnValueDefaultValue
@@ -140,6 +174,7 @@ var ReactDOMInput = {
     var defaultValue = props.defaultValue;
     inst._wrapperState = {
       initialChecked: props.defaultChecked || false,
+      initialIndeterminate: props.defaultIndeterminate || false,
       initialValue: defaultValue != null ? defaultValue : null,
       listeners: null,
       onChange: _handleChange.bind(inst),
@@ -173,7 +208,31 @@ var ReactDOMInput = {
         '' + value
       );
     }
+
+    if (props.type === 'checkbox') {
+      var indeterminate = props.indeterminate;
+      if (indeterminate != null) {
+        DOMPropertyOperations.setValueForProperty(
+          ReactDOMComponentTree.getNodeFromInstance(inst),
+          'indeterminate',
+          indeterminate || false
+        );
+      }
+    }
   },
+
+  initializeIndeterminate() {
+    var props = ReactDOMInput.getNativeProps(this, this._currentElement.props);
+
+    if (props.type === 'checkbox' && props.indeterminate) {
+      DOMPropertyOperations.setValueForProperty(
+        ReactDOMComponentTree.getNodeFromInstance(this),
+        'indeterminate',
+        props.indeterminate
+      );
+    }
+  },
+
 };
 
 function _handleChange(event) {

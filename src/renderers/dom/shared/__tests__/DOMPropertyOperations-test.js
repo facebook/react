@@ -153,6 +153,12 @@ describe('DOMPropertyOperations', function() {
       )).toBe('size="1"');
     });
 
+    it('should create markup for IDL only attributes', function() {
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'indeterminate',
+        true
+      )).toBe('');
+    });
   });
 
   describe('createMarkupForProperty', function() {
