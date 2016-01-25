@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
+  "homepage": "https://facebook.github.io/react/",
   "peerDependencies": {
     "react": "^0.15.0-alpha.1"
   }
