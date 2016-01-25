@@ -67,6 +67,8 @@ var ReactCSSTransitionGroupChild = React.createClass({
     var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
     var timeout = null;
 
+    var child = this.refs.onlyChild;
+
     var endListener = function(e) {
       if (e && e.target !== node) {
         return;
@@ -77,6 +79,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
       CSSCore.removeClass(node, className);
       CSSCore.removeClass(node, activeClassName);
 
+      if (child.componentDidTransition) {
+        child.componentDidTransition(animationType);
+      }
+
       ReactTransitionEvents.removeEndEventListener(node, endListener);
 
       // Usually this optional callback is used for informing an owner of
@@ -85,6 +91,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
         finishCallback();
       }
     };
+
+    if (child.componentWillTransition) {
+      child.componentWillTransition(animationType);
+    }
 
     CSSCore.addClass(node, className);
 
@@ -159,7 +169,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   render: function() {
-    return onlyChild(this.props.children);
+    return React.cloneElement(onlyChild(this.props.children), {ref: 'onlyChild'});
   },
 });
 
