@@ -18,7 +18,7 @@ The React add-ons are a collection of useful utility modules for building React 
 
 The add-ons below are in the development (unminified) version of React only:
 
-- [`TestUtils`](test-utils.html), simple helpers for writing test cases (unminified build only).
-- [`Perf`](perf.html), for measuring performance and giving you hint where to optimize.
+- [`TestUtils`](test-utils.html), simple helpers for writing test cases.
+- [`Perf`](perf.html), a performance profiling tool for finding optimization opportunities.
 
 To get the add-ons, install them individually from npm (e.g., `npm install react-addons-pure-render-mixin`). We don't support using the addons if you're not using npm.
