@@ -12,6 +12,7 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
+  "dependencies": {},
   "peerDependencies": {
     "react": "^0.15.0-alpha.1"
   }
