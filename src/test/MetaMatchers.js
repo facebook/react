@@ -32,7 +32,7 @@ function getRunnerWithResults(describeFunction) {
     return env;
   };
   // TODO: Bring over matchers from the existing environment.
-  console.error(env);
+  // console.error(env);
   var runner = env.currentRunner();
   try {
     env.describe('', describeFunction);
