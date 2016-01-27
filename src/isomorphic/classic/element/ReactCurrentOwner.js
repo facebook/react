@@ -22,7 +22,7 @@ var ReactCurrentOwner = {
 
   inject: function(InjectedCurrentOwner) {
     ReactCurrentOwner = InjectedCurrentOwner;
-  }
+  },
 };
 
 module.exports = ReactCurrentOwner;

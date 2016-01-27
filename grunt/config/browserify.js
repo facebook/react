@@ -109,9 +109,46 @@ var addonsMin = {
   after: [minify, bannerify],
 };
 
+var reactDom = {
+  entries: [
+    './build/modules/ReactDOM.js',
+  ],
+  outfile: './build/react-dom.js',
+  debug: false,
+  standalone: 'ReactDOM',
+  packageName: 'ReactDOM',
+  transforms: [envifyProd, uglifyify],
+  globalTransforms: [envifyProd],
+  plugins: [collapser],
+  // No need to derequire because the minifier will mangle
+  // the "require" calls.
+
+  after: [minify, bannerify],
+};
+
+var reactServer = {
+  entries: [
+    './build/modules/ReactServer.js',
+  ],
+  outfile: './build/react-dom-server.js',
+  debug: false,
+  standalone: 'ReactDOM',
+  packageName: 'ReactDOMServer',
+  transforms: [envifyProd, uglifyify],
+  globalTransforms: [envifyProd],
+  plugins: [collapser],
+  // No need to derequire because the minifier will mangle
+  // the "require" calls.
+
+  after: [minify, bannerify],
+};
+
+
 module.exports = {
   basic: basic,
   min: min,
   addons: addons,
   addonsMin: addonsMin,
+  reactDom: reactDom,
+  reactServer: reactServer,
 };

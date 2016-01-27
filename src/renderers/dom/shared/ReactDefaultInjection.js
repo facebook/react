@@ -45,7 +45,7 @@ function inject() {
   alreadyInjected = true;
 
   ReactCurrentOwner.inject({
-    current: null
+    current: null,
   });
 
   ReactInjection.EventEmitter.injectReactEventListener(
