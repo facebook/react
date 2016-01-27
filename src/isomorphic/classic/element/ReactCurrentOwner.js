@@ -18,13 +18,11 @@
  * currently being constructed.
  */
 var ReactCurrentOwner = {
-
-  /**
-   * @internal
-   * @type {ReactComponent}
-   */
   current: null,
 
+  inject: function(InjectedCurrentOwner) {
+    ReactCurrentOwner = InjectedCurrentOwner;
+  }
 };
 
 module.exports = ReactCurrentOwner;
