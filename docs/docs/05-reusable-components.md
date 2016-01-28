@@ -66,7 +66,7 @@ React.createClass({
     // boolean or a function to determine if the prop is required. This will also
     // show warning if the prop isn't provided when the argument is true.
     requiredFuncIf: React.PropTypes.func.isRequiredIf(function(props, propName, componentName) {
-      return Boolean(props.otherProp) // This is only required if otherProp exists!
+      return props.hasOwnProperty(otherProp) // This is only required if otherProp exists!
     })
 
     // A value of any data type
