@@ -6,7 +6,6 @@ process.env.NODE_ENV = 'test';
 
 var path = require('path');
 
-var assign = require('object-assign');
 var babel = require('babel');
 var coffee = require('coffee-script');
 
@@ -52,8 +51,10 @@ module.exports = {
       !filePath.match(/\/node_modules\//) &&
       !filePath.match(/\/third_party\//)
     ) {
-      var rv =
-        babel.transform(src, assign({filename: filePath}, babelOptions)).code;
+      var rv = babel.transform(
+        src,
+        Object.assign({filename: filePath}, babelOptions)
+      ).code;
       // hax to turn fbjs/lib/foo into /path/to/node_modules/fbjs/lib/foo
       // because jest is slooow with node_modules paths (facebook/jest#465)
       rv = rv.replace(
