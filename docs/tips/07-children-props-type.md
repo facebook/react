@@ -21,7 +21,7 @@ var GenericWrapper = React.createClass({
 });
 
 ReactDOM.render(
-  <GenericWrapper><span/><span/><span/></GenericWrapper>,
+  <GenericWrapper><span></span></GenericWrapper>,
   mountNode
 );
 ```
