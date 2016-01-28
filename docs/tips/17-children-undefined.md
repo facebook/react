@@ -18,7 +18,7 @@ var App = React.createClass({
   },
 
   render: function() {
-    return <div><span/><span/></div>;
+    return <div><span></span></div>;
   }
 });
 
