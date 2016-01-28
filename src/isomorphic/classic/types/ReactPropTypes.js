@@ -104,9 +104,9 @@ function createChainableTypeChecker(validate) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
     if (Boolean(isRequiredIf)) {
-      if (typeof isRequiredIf == 'boolean') {
+      if (typeof isRequiredIf === 'boolean') {
         isRequired = isRequiredIf;
-      } else if (typeof isRequiredIf == 'function') {
+      } else if (typeof isRequiredIf === 'function') {
         isRequired = isRequiredIf(assign({}, props), propName, componentName);
       }
     }
@@ -129,7 +129,7 @@ function createChainableTypeChecker(validate) {
   chainedCheckType.isRequired = checkType.bind(null, true, null);
   chainedCheckType.isRequiredIf = function(condition) {
     return checkType.bind(null, false, condition);
-  }
+  };
 
   return chainedCheckType;
 }

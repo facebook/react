@@ -133,7 +133,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.string.isRequiredIf(false), undefined);
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(PropTypes.string.isRequiredIf(() => false), null);
       typeCheckPass(PropTypes.string.isRequiredIf(() => false), undefined);
     });
@@ -171,7 +171,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.any.isRequiredIf(false), undefined);
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(PropTypes.any.isRequiredIf(() => false), null);
       typeCheckPass(PropTypes.any.isRequiredIf(() => false), undefined);
     });
@@ -306,7 +306,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(
         PropTypes.arrayOf(PropTypes.number).isRequiredIf(() => false),
         null
@@ -322,7 +322,7 @@ describe('ReactPropTypes', function() {
     beforeEach(function() {
       Component = React.createClass({
         propTypes: {
-          label: PropTypes.element.isRequired
+          label: PropTypes.element.isRequired,
         },
 
         render: function() {
@@ -384,7 +384,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.element.isRequiredIf(false), undefined);
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(PropTypes.element.isRequiredIf(() => false), null);
       typeCheckPass(PropTypes.element.isRequiredIf(() => false), undefined);
     });
@@ -495,7 +495,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(
         PropTypes.instanceOf(String).isRequiredIf(() => false), null
       );
@@ -648,7 +648,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(
         PropTypes.node.isRequiredIf(() => false),
         null
@@ -665,7 +665,7 @@ describe('ReactPropTypes', function() {
 
     it('should accept empty array for requiredIf props that is a function that returns true', function() {
       typeCheckPass(PropTypes.node.isRequiredIf(() => true), []);
-    })
+    });
   });
 
   describe('ObjectOf Type', function() {
@@ -803,7 +803,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(
         PropTypes.objectOf(PropTypes.number).isRequiredIf(() => false),
         null
@@ -911,7 +911,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(
         PropTypes.oneOf(['red', 'blue']).isRequiredIf(() => false),
         null
@@ -1026,7 +1026,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequiredIf(() => false),
         null
@@ -1158,7 +1158,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn for missing requiredIf values when condition is a function that returns false', function(){
+    it('should not warn for missing requiredIf values when condition is a function that returns false', function() {
       typeCheckPass(
         PropTypes.shape({key: PropTypes.number}).isRequiredIf(() => false),
         null
