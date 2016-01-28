@@ -433,10 +433,33 @@
 <blockquote>
 <p>注意：</p>
 
-<p>React v0.12 中，事件处理程序返回 <code>false</code> 不再停止事件传播，取而代之，应该根据需要手动触发 <code>e.stopPropagation()</code> 或 <code>e.preventDefault()</code>。</p>
+<p>React v0.14 中，事件处理程序返回 <code>false</code> 不再停止事件传播，取而代之，应该根据需要手动触发 <code>e.stopPropagation()</code> 或 <code>e.preventDefault()</code>。</p>
+</blockquote>
+<h2><a class="anchor" name=""></a>事件池 <a class="hash-link" href="#">#</a></h2>
+<p><code>SyntheticEvent</code> 是池化的. 这意味着 <code>SyntheticEvent</code> 对象将会被重用并且所有的属性都会在事件回调被调用后被 nullified.
+这是因为性能的原因.
+因此,你不能异步的访问事件.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">onClick</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span> <span class="c1">// =&gt; nullified object.</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+  <span class="kd">var</span> <span class="nx">eventType</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">;</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+
+  <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span> <span class="c1">// =&gt; null</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eventType</span><span class="p">);</span> <span class="c1">// =&gt; &quot;click&quot;</span>
+  <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">clickEvent</span><span class="o">:</span> <span class="nx">event</span><span class="p">});</span> <span class="c1">// Won&#39;t work. this.state.clickEvent will only contain null values.</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">eventType</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">});</span> <span class="c1">// You can still export event properties.</span>
+<span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>注意:</p>
+
+<p>如果你想异步访问事件属性,你应该在事件上调用 <code>event.persist()</code> ,这会从池中移除合成事件并允许对事件的引用被用会保留.</p>
 </blockquote>
 <h2><a class="anchor" name=""></a>支持的事件 <a class="hash-link" href="#">#</a></h2>
-<p>React 将事件统一化，使事件在不同浏览器上有一致的属性。</p>
+<p>React 将事件统一化，使事件在不同浏览器上有一致的属性.</p>
 
 <p>下面的事件处理程序在事件冒泡阶段被触发。如果要注册事件捕获处理程序，应该使用 <code>Capture</code> 事件，例如使用 <code>onClickCapture</code> 处理点击事件的捕获阶段，而不是 <code>onClick</code>。</p>
 <h3><a class="anchor" name=""></a>剪贴板事件 <a class="hash-link" href="#">#</a></h3>
@@ -445,11 +468,17 @@
 </code></pre></div>
 <p>属性：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMDataTransfer</span> <span class="nx">clipboardData</span>
+</code></pre></div><h3><a class="anchor" name="composition-"></a>Composition 事件 <a class="hash-link" href="#composition-">#</a></h3>
+<p>事件名称:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onCompositionEnd onCompositionStart onCompositionUpdate
+</code></pre></div>
+<p>属性:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">data</span>
 </code></pre></div><h3><a class="anchor" name=""></a>键盘事件 <a class="hash-link" href="#">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
 </code></pre></div>
-<p>属性：</p>
+<p>属性:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
 <span class="nx">number</span> <span class="nx">charCode</span>
 <span class="kr">boolean</span> <span class="nx">ctrlKey</span>
@@ -468,7 +497,9 @@
 </code></pre></div>
 <p>属性：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
-</code></pre></div><h3><a class="anchor" name=""></a>表单事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div>
+<p>焦点事件在所有的React DOM上工作,不仅仅是表单元素.</p>
+<h3><a class="anchor" name=""></a>表单事件 <a class="hash-link" href="#">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onChange onInput onSubmit
 </code></pre></div>
@@ -479,6 +510,8 @@
 onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 </code></pre></div>
+<p><code>onMouseEnter</code> 和 <code>onMouseLeave</code> 事件从离开的元素传播到进入的元素,代替冒泡排序并且没有捕获阶段. </p>
+
 <p>属性：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
 <span class="nx">number</span> <span class="nx">button</span>

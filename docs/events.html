@@ -459,8 +459,7 @@ As such, you cannot access the event in an asynchronous way.</p>
 <p>If you want to access the event properties in an asynchronous way, you should call <code>event.persist()</code> on the event, which will remove the synthetic event from the pool and allow references to the event to be retained by user code.</p>
 </blockquote>
 <h2><a class="anchor" name="supported-events"></a>Supported Events <a class="hash-link" href="#supported-events">#</a></h2>
-<p>React normalizes events so that they have consistent properties across
-different browsers.</p>
+<p>React normalizes events so that they have consistent properties across different browsers.</p>
 
 <p>The event handlers below are triggered by an event in the bubbling phase. To register an event handler for the capture phase, append <code>Capture</code> to the event name; for example, instead of using <code>onClick</code>, you would use <code>onClickCapture</code> to handle the click event in the capture phase.</p>
 <h3><a class="anchor" name="clipboard-events"></a>Clipboard Events <a class="hash-link" href="#clipboard-events">#</a></h3>

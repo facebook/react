@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>组件 API | React</title>
+  <title>视频 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="组件 API | React">
+  <meta property="og:title" content="视频 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/component-api-zh-CN.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/videos-zh-CN.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -406,122 +406,154 @@
 
   <div class="inner-content">
     <h1>
-      组件 API
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-02-component-api.zh-CN.md" target="_blank">Edit on GitHub</a>
+      视频
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/videos.zh-CN.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="react.component"></a>React.Component <a class="hash-link" href="#react.component">#</a></h2>
-<p>当渲染时，React 组件的实例在 React 内部被创建。这些实例在随后的渲染中被重复使用，并可以在组件方法中通过 <code>this</code> 访问。唯一的在 React 之外获取 React 组件实例句柄的方法是保存 <code>ReactDOM.render</code> 的返回值。在其它组件内，你可以使用 <a href="/react/docs/more-about-refs-zh-CN.html">refs</a> 得到相同的结果。</p>
-<h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setState</span><span class="p">(</span>
-  <span class="kd">function</span><span class="o">|</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>执行一个 nextState 到当前 state 的浅合并。这是你从事件处理器和服务器请求回调用来触发 UI 更新的主要手段。</p>
+    <h3><a class="anchor" name="rethinking-best-practices---jsconf.eu"></a>Rethinking best practices - JSConf.eu <a class="hash-link" href="#rethinking-best-practices---jsconf.eu">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
-<p>第一个参数可以是一个对象（包含0或者多个keys来更新）或者一个（state 和 props的）函数，它返回一个包含要更新的keys的对象。</p>
+<p>&quot;在 Facebook 和 Instagram, 我们正在努力挑战React在web上能达到的极限。我的讲话会从对框架的简单介绍开始，然后深入三个有争议的话题：扔掉模板的概念并用JavaScript构建views, 当数据改变 “re-rendering” 你的整个应用，以及一个DOM和events的轻量级实现。&quot; -- <a href="http://www.petehunt.net/">Pete Hunt</a></p>
 
-<p>这里是一个简单的运用:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">({</span><span class="nx">mykey</span><span class="o">:</span> <span class="s1">&#39;my new value&#39;</span><span class="p">});</span>
-</code></pre></div>
-<p>也可以以 <code>function(state, props)</code> 传递一个函数。当你想要把一个在设置任何值之前参考前一次 state+props 的值的原子更新放在队列中 这会有很用。例如，假如我们想在 state 增加一个值:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">previousState</span><span class="p">,</span> <span class="nx">currentProps</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">{</span><span class="nx">myInteger</span><span class="o">:</span> <span class="nx">previousState</span><span class="p">.</span><span class="nx">myInteger</span> <span class="o">+</span> <span class="mi">1</span><span class="p">};</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>第二个（可选）的参数是一个将会在 <code>setState</code> 完成和组件被重绘后执行的回调函数。</p>
+<hr>
+<h3><a class="anchor" name="thinking-in-react---tagtree.tv"></a>Thinking in react - tagtree.tv <a class="hash-link" href="#thinking-in-react---tagtree.tv">#</a></h3>
+<p>一个 <a href="http://tagtree.tv/">tagtree.tv</a> 传达 <a href="/react/docs/thinking-in-react.html">Thinking in React</a> 原则的视频  在构建一个简单app时。
+<figure><a href="http://tagtree.tv/thinking-in-react"><img src="/react/img/docs/thinking-in-react-tagtree.png" alt=""></a></figure></p>
 
-<blockquote>
-<p>注意:</p>
+<hr>
+<h3><a class="anchor" name="secrets-of-the-virtual-dom---mtnwest-js"></a>Secrets of the Virtual DOM - MtnWest JS <a class="hash-link" href="#secrets-of-the-virtual-dom---mtnwest-js">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
 
-<p><em>绝对不要</em> 直接改变 <code>this.state</code>，因为之后调用 <code>setState()</code> 可能会替换掉你做的改变。把 <code>this.state</code> 当做是不可变的。</p>
+<p>&quot;在这次讲座里，我会讨论为什么我们构建了一个虚拟 DOM，它比起其他系统如何，以及它与未来浏览器技术的关系。&quot; -- <a href="http://www.petehunt.net/">Pete Hunt</a></p>
 
-<p><code>setState()</code> 不会立刻改变 <code>this.state</code>，而是创建一个即将处理的 state 转变。在调用该方法之后访问 <code>this.state</code> 可能会返回现有的值。</p>
+<hr>
+<h3><a class="anchor" name="going-big-with-react"></a>Going big with React <a class="hash-link" href="#going-big-with-react">#</a></h3>
+<p>&quot;理论上，所有的JS框架都大有可为：干净的实现,快速的代码设计,完美的执行。但是当你压力测试时Javascript会怎样？当你丢进6MB的代码时会怎样？在这次演讲中，我们会探究React在高压环境下如何表现，以及它如何帮助我们的团队在大规模时构建安全代码。 &quot;
+<figure><a href="https://skillsmatter.com/skillscasts/5429-going-big-with-react#video"><img src="https://i.vimeocdn.com/video/481670116_650.jpg" alt=""></a></figure></p>
 
-<p>对 <code>setState</code> 的调用没有任何同步性的保证，并且调用可能会为了性能收益批量执行。</p>
+<hr>
+<h3><a class="anchor" name="codewinds"></a>CodeWinds <a class="hash-link" href="#codewinds">#</a></h3>
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> 与 <a href="http://jeff.barczewski.com/">Jeff Barczewski</a> 在 CodeWinds Episode 4 上关于 React 的谈话.
+<figure><a href="http://codewinds.com/4"><img src="/react/img/docs/codewinds-004.png" alt=""></a></figure></p>
 
-<p><code>setState()</code> 将总是触发一次重绘，除非在 <code>shouldComponentUpdate()</code> 中实现了条件渲染逻辑。如果可变对象被使用了，但又不能在 <code>shouldComponentUpdate()</code> 中实现这种逻辑，仅在新 state 和之前的 state 存在差异的时候调用 <code>setState()</code> 可以避免不必要的重新渲染。</p>
-</blockquote>
-<h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceState</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>类似于 <code>setState()</code>，但是删除任何 先前存在但不在 nextState 里的 state 键。</p>
+<table width="100%"><tr><td>
+02:08 - 什么是React，为什么我们用它?<br />
+03:08 - ClojureScript 和 React 的共生关系<br />
+04:54 - React 的历史以及为什么它被创造<br />
+09:43 - 用React更新Web页面，而不绑定数据<br />
+13:11 - 用虚拟DOM来改变浏览器DOM<br />
+13:57 - 用React编程，绘制目标HTML，canvas和其他<br />
+16:45 - 和设计师一起工作，对比于Ember 和 AngularJS<br />
+21:45 - JSX编译器桥接HTML和 React javascript<br />
+23:50 - React的自动绑定JSX以及浏览器内工具<br />
+24:50 - 用React工作的提示和技巧，入门<br />
+</td><td>
+27:17 - 在服务器端用Node.js渲染HTML。后端渲染<br />
+29:20 - React在Facebook通过优胜劣汰进化<br />
+30:15 - 用web sockets，在服务器端和客户端持有状态的想法持有<br />
+32:05 - 多用户React - 用 Firebase 分布式共享可变状态<br />
+33:03 - 用状态转换，事件重放来更好的调式React<br />
+34:08 - 来自Web组件的不同之处<br />
+34:25 - 使用React的著名公司<br />
+35:16 - 一个React的后端插件可以用来创建PDF吗?<br />
+36:30 - React的未来，下一步是什么?<br />
+39:38 - 贡献和获得帮助<br />
+</td></tr></table>
 
-<blockquote>
-<p>注意:</p>
+<p><a href="http://codewinds.com/4">Read the episode notes</a></p>
 
-<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除。</p>
-</blockquote>
-<h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">forceUpdate</span><span class="p">(</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>默认情况下，当你的组件的 state 或者 props 改变，你的组件将会重绘。然而，如果它们隐式的改变（例如：在对象深处的数据改变了但没有改变对象本身）或者如果你的 <code>render()</code> 方法依赖于其他的数据，你可以用调用  <code>forceUpdate()</code> 来告诉 React 它需要重新运行 <code>render()</code>。</p>
+<hr>
+<h3><a class="anchor" name="javascript-jabber"></a>JavaScript Jabber <a class="hash-link" href="#javascript-jabber">#</a></h3>
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> 和 <a href="https://github.com/jordwalke">Jordan Walke</a> 在 JavaScript Jabber 73 上关于React的谈话.
+<figure><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="/react/img/docs/javascript-jabber.png" alt=""></a></figure></p>
 
-<p>调用 <code>forceUpdate()</code> 将会导致 <code>render()</code> 跳过 <code>shouldComponentUpdate()</code> 在组件上被调用，这会为子级触发正常的生命周期方法。包括每个子级的 <code>shouldComponentUpdate()</code> 方法。如果标记改变了，React 仍仅只更新 DOM。</p>
+<table width="100%"><tr><td>
+01:34 – Pete Hunt 介绍<br />
+02:45 – Jordan Walke 介绍<br />
+04:15 – React<br />
+06:38 – 60 帧每秒<br />
+09:34 – 数据绑定<br />
+12:31 – 性能<br />
+17:39 – Diffing 算法<br />
+19:36 – DOM 操纵
+</td><td>
+23:06 – 支持 node.js<br />
+24:03 – rendr<br />
+26:02 – JSX<br />
+30:31 – requestAnimationFrame<br />
+34:15 – React 和应用<br />
+38:12 – React 用户 Khan Academy<br />
+39:53 – 使其工作
+</td></tr></table>
 
-<p>通常你应该试着避免所有对 <code>forceUpdate()</code> 的使用并且在 <code>render()</code> 里只从 <code>this.props</code> 和 <code>this.state</code> 读取。这会使你的组件 &quot;纯粹&quot; 并且你的组件会更简单和高效。</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。如果 <code>render</code> 返回 <code>null</code> 或者 <code>false</code> 的时候，<code>this.getDOMNode()</code> 返回 <code>null</code>。</p>
+<p><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">Read the full transcript</a></p>
 
-<blockquote>
-<p>Note:</p>
+<hr>
+<h3><a class="anchor" name="introduction-to-react.js---facebook-seattle"></a>Introduction to React.js - Facebook Seattle <a class="hash-link" href="#introduction-to-react.js---facebook-seattle">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
 
-<p>getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode).</p>
+<p>由 <a href="http://tomocchino.com/">Tom Occhino</a> 和 <a href="https://github.com/jordwalke">Jordan Walke</a></p>
 
-<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除。</p>
-</blockquote>
-<h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isMounted</span><span class="p">()</span>
-</code></pre></div>
-<p>如果组件渲染到了 DOM 中，<code>isMounted()</code> 返回 true，否则返回 <code>false</code>。可以使用该方法来控制对 <code>setState()</code> 和 <code>forceUpdate()</code> 的异步调用。</p>
+<hr>
+<h3><a class="anchor" name="backbone--react--middleman-screencast"></a>Backbone + React + Middleman Screencast <a class="hash-link" href="#backbone--react--middleman-screencast">#</a></h3>
+<iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
-<blockquote>
-<p>注意:</p>
+<p>Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏博展示了用 <a href="https://github.com/magalhas/backbone-react-component">Backbone-React-Component</a>如何整合两者. Middleman 是在本例中使用的框架但很容易被替换成其他框架。对此可支持的template可以在<a href="https://github.com/jbhatab/middleman-backbone-react-template">这里</a> 找到. -- <a href="http://www.openmindedinnovations.com/">Open Minded Innovations</a></p>
 
-<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除,所以你也要移除它 <a href="/react/blog/2015/12/16/ismounted-antipattern.html">start migrating away from isMounted() now</a></p>
-</blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>当和一个外部的 JavaScript 应用整合的时候，你也许会想用 <code>ReactDOM.render()</code> 给 React 组件标示一个改变。</p>
+<hr>
+<h3><a class="anchor" name="developing-user-interfaces-with-react---super-vanjs"></a>Developing User Interfaces With React - Super VanJS <a class="hash-link" href="#developing-user-interfaces-with-react---super-vanjs">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
 
-<p>在根组件上调用 <code>setProps()</code> 会改变他的属性并触发一次重绘。另外，你可以提供一个可选的回调函数，一旦 <code>setProps</code> 完成并且组件被重绘它就执行。</p>
+<p>来自 <a href="https://github.com/steveluscher">Steven Luscher</a></p>
 
-<blockquote>
-<p>注意:</p>
+<hr>
+<h3><a class="anchor" name="introduction-to-react---lawebspeed-meetup"></a>Introduction to React - LAWebSpeed meetup <a class="hash-link" href="#introduction-to-react---lawebspeed-meetup">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
 
-<p>这个方法被弃用了并会很快移除.这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用. 取代调用 <code>setProps</code>,试着以新的 props 再次调用 <code>ReactDOM.render()</code>. 更多的注意事项,见我们的<a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
+<p>来自 <a href="http://www.phpied.com/">Stoyan Stefanov</a></p>
 
-<p>如果可能，上述的在同一个节点上再次调用 <code>ReactDOM.render()</code> 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）</p>
+<hr>
+<h3><a class="anchor" name="react-or-how-to-make-life-simpler---frontend-dev-conf-14"></a>React, or how to make life simpler - FrontEnd Dev Conf &#39;14 <a class="hash-link" href="#react-or-how-to-make-life-simpler---frontend-dev-conf-14">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
 
-<p>这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 <code>ReactDOM.render()</code> 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 <code>setProps()</code>，不要利用响应式更新，而是当子组件在 <code>render()</code> 中创建的时候传入新的 prop 到子组件中。</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>类似于 <code>setProps()</code>，但是删除任何先前存在的 props，而不是合并这两个对象。</p>
+<p><strong>俄语</strong> by <a href="http://solovyov.net/">Alexander Solovyov</a></p>
 
-<blockquote>
-<p>注意:</p>
+<hr>
+<h3><a class="anchor" name="functional-dom-programming---meteor-devshop-11"></a>&quot;Functional DOM programming&quot; - Meteor DevShop 11 <a class="hash-link" href="#functional-dom-programming---meteor-devshop-11">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
 
-<p>这个方法被弃用了并会很快移除.这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用.  取代调用 <code>replaceProps</code>,试着以新的 props 再次调用 <code>ReactDOM.render()</code>. 更多的注意事项,见我们的<a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
-</blockquote>
+<hr>
+<h3><a class="anchor" name="rethinking-web-app-development-at-facebook---facebook-f8-conference-2014"></a>&quot;Rethinking Web App Development at Facebook&quot; - Facebook F8 Conference 2014 <a class="hash-link" href="#rethinking-web-app-development-at-facebook---facebook-f8-conference-2014">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
+
+<hr>
+<h3><a class="anchor" name="react-and-flux-building-applications-with-a-unidirectional-data-flow---forward-js-2014"></a>React and Flux: Building Applications with a Unidirectional Data Flow - Forward JS 2014 <a class="hash-link" href="#react-and-flux-building-applications-with-a-unidirectional-data-flow---forward-js-2014">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+
+<p>Facebook 工程师 <a href="https://twitter.com/fisherwebdev">Bill Fisher</a> 和 <a href="https://twitter.com/jingc">Jing Chen</a> 谈论 Flux 和 React, 以及如何使用单向数据流的程序架构清理他们的代码 .</p>
+
+<hr>
+<h3><a class="anchor" name="server-side-rendering-of-isomorphic-apps-at-soundcloud"></a>Server-Side Rendering of Isomorphic Apps at SoundCloud <a class="hash-link" href="#server-side-rendering-of-isomorphic-apps-at-soundcloud">#</a></h3>
+<iframe src="https://player.vimeo.com/video/108488724" width="650" height="365" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+<p>来自 <a href="https://github.com/zertosh">Andres Suarez</a> 的演练，关于 <a href="https://developers.soundcloud.com/blog/">SoundCloud</a> 如何使用 React 和 Flux 在服务器端渲染.</p>
+
+<p><a href="https://github.com/zertosh/ssr-demo-kit">幻灯片和示例代码</a></p>
+
+<hr>
+<h3><a class="anchor" name="introducing-react-native-playlist---react.js-conf-2015"></a>Introducing React Native (+Playlist) - React.js Conf 2015 <a class="hash-link" href="#introducing-react-native-playlist---react.js-conf-2015">#</a></h3>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+
+<p><a href="https://twitter.com/tomocchino">Tom Occhino</a> 回顾了React的过去和现在，在2015年。梳理了下一步要做什么。</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/top-level-api-zh-CN.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/conferences-zh-CN.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/component-specs-zh-CN.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/complementary-tools-zh-CN.html">Next &rarr;</a>
       
     </div>
   </div>

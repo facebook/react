@@ -409,7 +409,7 @@
     <div class="subHeader"></div>
     <p>Fetch data in <code>componentDidMount</code>. When the response arrives, store the data in state, triggering a render to update your UI.</p>
 
-<p>When processing the response of an asynchronous request, be sure to check that the component is still mounted before updating its state by using <code>this.isMounted()</code>.</p>
+<p>When fetching data asynchronously, use <code>componentWillUnmount</code> to cancel any outstanding requests before the component is unmounted.</p>
 
 <p>This example fetches the desired Github user&#39;s latest gist:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">UserGist</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -421,15 +421,17 @@
   <span class="p">},</span>
 
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">source</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">serverRequest</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">source</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
       <span class="kd">var</span> <span class="nx">lastGist</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-      <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">isMounted</span><span class="p">())</span> <span class="p">{</span>
-        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-          <span class="nx">username</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">owner</span><span class="p">.</span><span class="nx">login</span><span class="p">,</span>
-          <span class="nx">lastGistUrl</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">html_url</span>
-        <span class="p">});</span>
-      <span class="p">}</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+        <span class="nx">username</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">owner</span><span class="p">.</span><span class="nx">login</span><span class="p">,</span>
+        <span class="nx">lastGistUrl</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">html_url</span>
+      <span class="p">});</span>
     <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="p">},</span>
+
+  <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">serverRequest</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
   <span class="p">},</span>
 
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

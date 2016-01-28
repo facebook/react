@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Component Specs and Lifecycle | React</title>
+  <title>组件的规范和生命周期 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Component Specs and Lifecycle | React">
+  <meta property="og:title" content="组件的规范和生命周期 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/component-specs.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/component-specs-zh-CN.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -260,7 +260,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/component-specs.html" class="active">Component Specs and Lifecycle</a>
+            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
             
           </li>
         
@@ -406,45 +406,47 @@
 
   <div class="inner-content">
     <h1>
-      Component Specs and Lifecycle
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-03-component-specs.md" target="_blank">Edit on GitHub</a>
+      组件的规范和生命周期
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-03-component-specs.zh-CN.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="component-specifications"></a>Component Specifications <a class="hash-link" href="#component-specifications">#</a></h2>
-<p>When creating a component class by invoking <code>React.createClass()</code>, you should provide a specification object that contains a <code>render</code> method and can optionally contain other lifecycle methods described here.</p>
+    <h2><a class="anchor" name="specifications"></a>组件规范(Specifications) <a class="hash-link" href="#specifications">#</a></h2>
+<p>当调用 <code>React.createClass()</code> 创建一个组件类时,你应该提供一个包含有 <code>render</code> 方法以及可选的其他生命周期方法的 规范(Specifications)对象.</p>
 
 <blockquote>
-<p>Note:</p>
+<p>注意:</p>
 
-<p>It is also possible to use plain JavaScript classes as component classes. These classes can implement most of the same methods, though there are some differences. For more information about these differences, please read our documentation about <a href="/react/docs/reusable-components.html#es6-classes">ES6 classes</a>.</p>
+<p>同样可以使用单纯的 JavaScript 类作为组件类. 这些类可以实现大多数相同的方法,虽然有一些不同.更多关于不同的信息,请阅读我们关于<a href="/react/docs/reusable-components.html#es6-classes">ES6 classes</a>的文档.</p>
 </blockquote>
 <h3><a class="anchor" name="render"></a>render <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactElement</span> <span class="nx">render</span><span class="p">()</span>
 </code></pre></div>
-<p>The <code>render()</code> method is required.</p>
+<p><code>render()</code> 是必须的</p>
 
-<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single child element. This child element can be either a virtual representation of a native DOM component (such as <code>&lt;div /&gt;</code> or <code>React.DOM.div()</code>) or another composite component that you&#39;ve defined yourself.</p>
+<p>当被调用时,它应该检查 <code>this.props</code> 和 <code>this.state</code> 并返回单个子元素.这个子元素即可以是一个 对原生DOM的虚拟表达(比如 <code>&lt;div /&gt;</code> 或 <code>React.DOM.div()</code>)也可以是其他你自定义的复合组件.</p>
 
-<p>You can also return <code>null</code> or <code>false</code> to indicate that you don&#39;t want anything rendered. Behind the scenes, React renders a <code>&lt;noscript&gt;</code> tag to work with our current diffing algorithm. When returning <code>null</code> or <code>false</code>, <code>ReactDOM.findDOMNode(this)</code> will return <code>null</code>.</p>
+<p>你也可以返回 <code>null</code> 或 <code>false</code> 来指示你不想要任何东西被渲染.幕后,React 渲染一个 <code>&lt;noscript&gt;</code> tag 来与我们当前的diffing算法协同工作.当返回 <code>null</code> 或 <code>false</code> ,<code>ReactDOM.findDOMNode(this)</code> 会返回 <code>null</code>.</p>
 
-<p>The <code>render()</code> function should be <em>pure</em>, meaning that it does not modify component state, it returns the same result each time it&#39;s invoked, and it does not read from or write to the DOM or otherwise interact with the browser (e.g., by using <code>setTimeout</code>). If you need to interact with the browser, perform your work in <code>componentDidMount()</code> or the other lifecycle methods instead. Keeping <code>render()</code> pure makes server rendering more practical and makes components easier to think about.</p>
-<h3><a class="anchor" name="getinitialstate"></a>getInitialState <a class="hash-link" href="#getinitialstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
+<p><code>render()</code> 函数应该是纯净的,意味着它不改变组件的状态,它在每次调用时返回相同的结果,并且它不读和写 DOM 或者其他方式与浏览器互动(例如,使用 <code>setTimeout</code>).如果你需要与浏览器互动,在 <code>componentDidMount()</code> 里执行你的工作,或者其他生命周期方法里.保持 <code>render()</code> 纯净使服务器渲染更实用并且让组件更容易被思考.</p>
+
+<p>### getInitialState</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked once before the component is mounted. The return value will be used as the initial value of <code>this.state</code>.</p>
+<p>当组件被挂载时调用一次.返回值会被用作为 <code>this.state</code> 的初始值.</p>
 <h3><a class="anchor" name="getdefaultprops"></a>getDefaultProps <a class="hash-link" href="#getdefaultprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getDefaultProps</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked once and cached when the class is created. Values in the mapping will be set on <code>this.props</code> if that prop is not specified by the parent component (i.e. using an <code>in</code> check).</p>
+<p>在类被创建时调用一次并被缓存.在这个mapping里的值会被设置给 <code>this.props</code> 如果父组件没有指定对应的 prop (例如 使用一个 <code>in</code> 检查).</p>
 
-<p>This method is invoked before any instances are created and thus cannot rely on <code>this.props</code>. In addition, be aware that any complex objects returned by <code>getDefaultProps()</code> will be shared across instances, not copied.</p>
+<p>这个方法在任何实例被创建之前调用,因此不能依赖于 <code>this.props</code>.另外,小心,任何被 <code>getDefaultProps()</code>返回的复杂对象会被跨实例共享,而不是被拷贝.</p>
 <h3><a class="anchor" name="proptypes"></a>propTypes <a class="hash-link" href="#proptypes">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">propTypes</span>
 </code></pre></div>
-<p>The <code>propTypes</code> object allows you to validate props being passed to your components. For more information about <code>propTypes</code>, see <a href="/react/docs/reusable-components.html">Reusable Components</a>.</p>
+<p><code>propTypes</code> 对象允许你验证传递到你的组建的 props.更多关于 <code>propTypes</code> 的信息,见 <a href="/react/docs/reusable-components.html">Reusable Components</a>.</p>
 <h3><a class="anchor" name="mixins"></a>mixins <a class="hash-link" href="#mixins">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">mixins</span>
 </code></pre></div>
-<p>The <code>mixins</code> array allows you to use mixins to share behavior among multiple components. For more information about mixins, see <a href="/react/docs/reusable-components.html">Reusable Components</a>.</p>
+<p><code>mixins</code> 数组允许你用 mixins 来在多个组件间共享行为.更多关于 mixins 的信息,见 <a href="/react/docs/reusable-components.html">Reusable Components</a>.</p>
 <h3><a class="anchor" name="statics"></a>statics <a class="hash-link" href="#statics">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">statics</span>
 </code></pre></div>
-<p>The <code>statics</code> object allows you to define static methods that can be called on the component class. For example:</p>
+<p><code>statics</code> 对象允许你定义可以在组件类上调用的静态方法.例如:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">statics</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">customMethod</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">foo</span><span class="p">)</span> <span class="p">{</span>
@@ -457,27 +459,27 @@
 
 <span class="nx">MyComponent</span><span class="p">.</span><span class="nx">customMethod</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">);</span>  <span class="c1">// true</span>
 </code></pre></div>
-<p>Methods defined within this block are <em>static</em>, meaning that you can run them before any component instances are created, and the methods do not have access to the props or state of your components. If you want to check the value of props in a static method, have the caller pass in the props as an argument to the static method.</p>
+<p>在这个块里定义的方法是 <em>static</em>,意味着你可以在任何组件实例被创建前运行他们,并且这些方法没有对你组件的  props 或 state 的访问权.如果你在静态方法里检查props的值,把调用者作为参数传入props给静态函数.</p>
 <h3><a class="anchor" name="displayname"></a>displayName <a class="hash-link" href="#displayname">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">displayName</span>
 </code></pre></div>
-<p>The <code>displayName</code> string is used in debugging messages. JSX sets this value automatically; see <a href="/react/docs/jsx-in-depth.html#the-transform">JSX in Depth</a>.</p>
+<p><code>displayName</code> 字符串被用在调试信息.JSX 自动设置这个值；见 <a href="/react/docs/jsx-in-depth.html#the-transform">JSX in Depth</a>.</p>
 <h2><a class="anchor" name="lifecycle-methods"></a>Lifecycle Methods <a class="hash-link" href="#lifecycle-methods">#</a></h2>
-<p>Various methods are executed at specific points in a component&#39;s lifecycle.</p>
+<p>多种方法在组件生命周期的特定点上被执行.</p>
 <h3><a class="anchor" name="mounting-componentwillmount"></a>Mounting: componentWillMount <a class="hash-link" href="#mounting-componentwillmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked once, both on the client and server, immediately before the initial rendering occurs. If you call <code>setState</code> within this method, <code>render()</code> will see the updated state and will be executed only once despite the state change.</p>
+<p>被调用一次,即在客户端也在服务端,在最初的渲染发生之前 立即被调用.如果你在这个方法里调用 <code>setState</code> , <code>render()</code> 将会看到更新的 state 并不论state的变化只执行一次.</p>
 <h3><a class="anchor" name="mounting-componentdidmount"></a>Mounting: componentDidMount <a class="hash-link" href="#mounting-componentdidmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentDidMount</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, you can access any refs to your children (e.g., to access the underlying DOM representation). The <code>componentDidMount()</code> method of child components is invoked before that of parent components.</p>
+<p>被调用一次,只在客户端(不在服务端),在最初的渲染发生之后 立即被调用.在生命周期的这个点上,你可以访问任何对你的子级的refs (比如 访问底层的DOM表达).子组件的 <code>componentDidMount()</code> 方法在父组件之前被调用.</p>
 
-<p>If you want to integrate with other JavaScript frameworks, set timers using <code>setTimeout</code> or <code>setInterval</code>, or send AJAX requests, perform those operations in this method.</p>
+<p>如果你想与其他 JavaScript 框架整合,用 <code>setTimeout</code> 或 <code>setInterval</code> 设置timers,或者发送 AJAX 请求,执行这些操作在此方法中.</p>
 <h3><a class="anchor" name="updating-componentwillreceiveprops"></a>Updating: componentWillReceiveProps <a class="hash-link" href="#updating-componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillReceiveProps</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Invoked when a component is receiving new props. This method is not called for the initial render.</p>
+<p>当一个组件收到新的props时被调用.这个方法不会为最初的渲染调用.</p>
 
-<p>Use this as an opportunity to react to a prop transition before <code>render()</code> is called by updating the state using <code>this.setState()</code>. The old props can be accessed via <code>this.props</code>. Calling <code>this.setState()</code> within this function will not trigger an additional render.</p>
+<p>使用它作为响应 prop 转换的时机(在<code>render()</code> 被用 <code>this.setState()</code> 更新state调用 之前) .旧的 props 可以通过 <code>this.props</code> 访问. 在这个函数里调用 <code>this.setState()</code> 不会触发任何额外的渲染.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
     <span class="nx">likesIncreasing</span><span class="o">:</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">likeCount</span> <span class="o">&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">likeCount</span>
@@ -485,61 +487,59 @@
 <span class="p">}</span>
 </code></pre></div>
 <blockquote>
-<p>Note:</p>
+<p>注意:</p>
 
-<p>One common mistake is for code executed during this lifecycle method to assume that props have changed.  To understand why this is invalid, read <a href="/react/blog/2016/01/08/A-implies-B-does-not-imply-B-implies-A.html">A implies B does not imply B implies A</a></p>
-
-<p>There is no analogous method <code>componentWillReceiveState</code>. An incoming prop transition may cause a state change, but the opposite is not true. If you need to perform operations in response to a state change, use <code>componentWillUpdate</code>.</p>
+<p>并没有类似的 <code>componentWillReceiveState</code> 方法. 一个即将到来的 prop 转变可能会导致一个 state 变化,但是反之不是. 如果你需要实现一个对 state 变化相应的操作,使用 <code>componentWillUpdate</code>.</p>
 </blockquote>
 <h3><a class="anchor" name="updating-shouldcomponentupdate"></a>Updating: shouldComponentUpdate <a class="hash-link" href="#updating-shouldcomponentupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Invoked before rendering when new props or state are being received. This method is not called for the initial render or when <code>forceUpdate</code> is used.</p>
+<p>当新的props或者state被收到,在渲染前被调用.这个方法不会在最初的渲染或者 <code>forceUpdate</code> 时被调用.</p>
 
-<p>Use this as an opportunity to <code>return false</code> when you&#39;re certain that the transition to the new props and state will not require a component update.</p>
+<p>使用此方法作为一个 <code>return false</code> 的时机,当你确定新的 props 和 state 的转换不需要组件更新时.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">id</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>If <code>shouldComponentUpdate</code> returns false, then <code>render()</code> will be completely skipped until the next state change. In addition, <code>componentWillUpdate</code> and <code>componentDidUpdate</code> will not be called.</p>
+<p>如果 <code>shouldComponentUpdate</code> 返回false, <code>render()</code> 会在下次state变化前被完全跳过. 另外,<code>componentWillUpdate</code> 和 <code>componentDidUpdate</code> 将不会被调用.</p>
 
-<p>By default, <code>shouldComponentUpdate</code> always returns <code>true</code> to prevent subtle bugs when <code>state</code> is mutated in place, but if you are careful to always treat <code>state</code> as immutable and to read only from <code>props</code> and <code>state</code> in <code>render()</code> then you can override <code>shouldComponentUpdate</code> with an implementation that compares the old props and state to their replacements.</p>
+<p>默认情况下, <code>shouldComponentUpdate</code> 总是返回 <code>true</code> 来阻止当 <code>state</code> 突变时的细微bug,但是如果你仔细的把 <code>state</code> 作为不变量对待并只从 <code>render()</code>里的 <code>props</code> 和 <code>state</code>读,你就可以用一个比较旧的props和state与他们的替换者的实现来重写 <code>shouldComponentUpdate</code>.</p>
 
-<p>If performance is a bottleneck, especially with dozens or hundreds of components, use <code>shouldComponentUpdate</code> to speed up your app.</p>
+<p>如果性能是瓶颈,尤其是随着成百上千的组件,使用 <code>shouldComponentUpdate</code> 来加速你的app.</p>
 <h3><a class="anchor" name="updating-componentwillupdate"></a>Updating: componentWillUpdate <a class="hash-link" href="#updating-componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillUpdate</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Invoked immediately before rendering when new props or state are being received. This method is not called for the initial render.</p>
+<p>当新的props或者state被接受时,在渲染前被立即调用.这个方法不会被初始渲染调用.</p>
 
-<p>Use this as an opportunity to perform preparation before an update occurs.</p>
+<p>使用这个方法作为 在更新发生前执行一些准备 的时机.</p>
 
 <blockquote>
 <p>Note:</p>
 
-<p>You <em>cannot</em> use <code>this.setState()</code> in this method. If you need to update state in response to a prop change, use <code>componentWillReceiveProps</code> instead.</p>
+<p>你 <em>不能</em> 在这个方法里使用 <code>this.setState()</code> .如果你需要响应一个prop变化来更新state,使用 <code>componentWillReceiveProps</code> 来替代.</p>
 </blockquote>
 <h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentDidUpdate</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Invoked immediately after the component&#39;s updates are flushed to the DOM. This method is not called for the initial render.</p>
+<p>在组件的更新被刷新到DOM后立即被调用.这个方法不会被初始渲染调用.</p>
 
-<p>Use this as an opportunity to operate on the DOM when the component has been updated.</p>
+<p>使用这个方法作为 当组件被更新后在DOM上操作 的时机.</p>
 <h3><a class="anchor" name="unmounting-componentwillunmount"></a>Unmounting: componentWillUnmount <a class="hash-link" href="#unmounting-componentwillunmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillUnmount</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked immediately before a component is unmounted from the DOM.</p>
+<p>在组件被从DOM卸载 前 被立即调用.</p>
 
-<p>Perform any necessary cleanup in this method, such as invalidating timers or cleaning up any DOM elements that were created in <code>componentDidMount</code>.</p>
+<p>在这个方法里执行一些必要的清理操作,比如无效化 timers 或者清理任何被 <code>componentDidMount</code> 创建的DOM元素.</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/component-api.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/component-api-zh-CN.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/tags-and-attributes.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/tags-and-attributes-zh-CN.html">Next &rarr;</a>
       
     </div>
   </div>

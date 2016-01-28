@@ -429,16 +429,25 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>在安装 browserify 之后安装 React DOM 和构建你的应用包。</p>
-<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom
-<span class="nv">$ </span>browserify -t babelify main.js -o bundle.js
-</code></pre></div><h2><a class="anchor" name="-npm-"></a>不使用 npm 快速开始 <a class="hash-link" href="#-npm-">#</a></h2>
-<p>If you&#39;re not ready to use npm yet, you can download the starter kit which includes prebuilt copies of React and React DOM.
-如果你没有做好使用 npm 的准备，你可以下载包含了 React 和 ReactDOM 预生成包的入门教程包。</p>
+<p>要用 browserify 安装 React DOM 和构建你的包。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babelify babel-preset-react
+<span class="nv">$ </span>browserify -t <span class="o">[</span> babelify --presets <span class="o">[</span> react <span class="o">]</span> <span class="o">]</span> main.js -o bundle.js
+</code></pre></div>
+<p>要用 webpack 安装 React DOM 和构建你的包:  </p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babel-preset-react
+<span class="nv">$ </span>webpack
+</code></pre></div>
+<blockquote>
+<p>注意:</p>
+
+<p>如果你正在使用 ES2015, 你将要使用 <code>babel-preset-es2015</code> 包.</p>
+</blockquote>
+<h2><a class="anchor" name="-npm-"></a>不用 npm 的快速开始 <a class="hash-link" href="#-npm-">#</a></h2>
+<p>如果你现在还没准备要使用npm,你可以下载这个已经包含了预构建的 React 和 React DOM 拷贝的入门套件. </p>
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-0.14.6.zip" class="button">
-    下载入门教程 0.14.6
+    下载入门套件 0.14.6
   </a>
 </div>
 
@@ -476,12 +485,19 @@
 </code></pre></div>
 <p>注意一些浏览器（比如 Chrome ）会在使用 HTTP 以外的协议加载文件时失败。</p>
 <h3><a class="anchor" name=""></a>离线转换 <a class="hash-link" href="#">#</a></h3>
-<p>先安装<a href="http://babeljs.io/">Babel</a>命令行工具（依赖 <a href="https://www.npmjs.com/">npm</a>）：</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install --global babel
+<p>先安装<a href="http://babeljs.io/">Babel</a>命令行工具（需要 <a href="https://www.npmjs.com/">npm</a>）：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install --global babel-cli
+npm install babel-preset-react
 </code></pre></div>
 <p>然后把你的 <code>src/helloworld.js</code> 文件转成标准的 JavaScript:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">babel src --watch --out-dir build
+<div class="highlight"><pre><code class="language-text" data-lang="text">babel --presets react src --watch --out-dir build
 </code></pre></div>
+<blockquote>
+<p>注意:</p>
+
+<p>如果你正在使用 ES2015, 你将需要使用 <code>babel-preset-es2015</code> 包.</p>
+</blockquote>
+
 <p><code>build/helloworld.js</code> 会在你对文件进行修改时自动生成。 阅读 <a href="http://babeljs.io/docs/usage/cli/">Babel CLI 文档</a> 了解高级用法。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
 <span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello, world!&#39;</span><span class="p">),</span>
@@ -495,7 +511,8 @@
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">    <span class="c">&lt;!-- 不需要 Babel！ --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">    <span class="c">&lt;!-- 不需要 Babel! --&gt;</span>
 </span>  <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>

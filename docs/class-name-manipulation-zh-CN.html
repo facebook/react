@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>组件 API | React</title>
+  <title>类名操纵 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="组件 API | React">
+  <meta property="og:title" content="类名操纵 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/component-api-zh-CN.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/class-name-manipulation-zh-CN.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -406,122 +406,24 @@
 
   <div class="inner-content">
     <h1>
-      组件 API
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-02-component-api.zh-CN.md" target="_blank">Edit on GitHub</a>
+      类名操纵
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.3-class-name-manipulation.zh-CN.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="react.component"></a>React.Component <a class="hash-link" href="#react.component">#</a></h2>
-<p>当渲染时，React 组件的实例在 React 内部被创建。这些实例在随后的渲染中被重复使用，并可以在组件方法中通过 <code>this</code> 访问。唯一的在 React 之外获取 React 组件实例句柄的方法是保存 <code>ReactDOM.render</code> 的返回值。在其它组件内，你可以使用 <a href="/react/docs/more-about-refs-zh-CN.html">refs</a> 得到相同的结果。</p>
-<h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setState</span><span class="p">(</span>
-  <span class="kd">function</span><span class="o">|</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>执行一个 nextState 到当前 state 的浅合并。这是你从事件处理器和服务器请求回调用来触发 UI 更新的主要手段。</p>
+    <blockquote>
+<p>NOTE:</p>
 
-<p>第一个参数可以是一个对象（包含0或者多个keys来更新）或者一个（state 和 props的）函数，它返回一个包含要更新的keys的对象。</p>
-
-<p>这里是一个简单的运用:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">({</span><span class="nx">mykey</span><span class="o">:</span> <span class="s1">&#39;my new value&#39;</span><span class="p">});</span>
-</code></pre></div>
-<p>也可以以 <code>function(state, props)</code> 传递一个函数。当你想要把一个在设置任何值之前参考前一次 state+props 的值的原子更新放在队列中 这会有很用。例如，假如我们想在 state 增加一个值:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">previousState</span><span class="p">,</span> <span class="nx">currentProps</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">{</span><span class="nx">myInteger</span><span class="o">:</span> <span class="nx">previousState</span><span class="p">.</span><span class="nx">myInteger</span> <span class="o">+</span> <span class="mi">1</span><span class="p">};</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>第二个（可选）的参数是一个将会在 <code>setState</code> 完成和组件被重绘后执行的回调函数。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p><em>绝对不要</em> 直接改变 <code>this.state</code>，因为之后调用 <code>setState()</code> 可能会替换掉你做的改变。把 <code>this.state</code> 当做是不可变的。</p>
-
-<p><code>setState()</code> 不会立刻改变 <code>this.state</code>，而是创建一个即将处理的 state 转变。在调用该方法之后访问 <code>this.state</code> 可能会返回现有的值。</p>
-
-<p>对 <code>setState</code> 的调用没有任何同步性的保证，并且调用可能会为了性能收益批量执行。</p>
-
-<p><code>setState()</code> 将总是触发一次重绘，除非在 <code>shouldComponentUpdate()</code> 中实现了条件渲染逻辑。如果可变对象被使用了，但又不能在 <code>shouldComponentUpdate()</code> 中实现这种逻辑，仅在新 state 和之前的 state 存在差异的时候调用 <code>setState()</code> 可以避免不必要的重新渲染。</p>
-</blockquote>
-<h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceState</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>类似于 <code>setState()</code>，但是删除任何 先前存在但不在 nextState 里的 state 键。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除。</p>
-</blockquote>
-<h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">forceUpdate</span><span class="p">(</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>默认情况下，当你的组件的 state 或者 props 改变，你的组件将会重绘。然而，如果它们隐式的改变（例如：在对象深处的数据改变了但没有改变对象本身）或者如果你的 <code>render()</code> 方法依赖于其他的数据，你可以用调用  <code>forceUpdate()</code> 来告诉 React 它需要重新运行 <code>render()</code>。</p>
-
-<p>调用 <code>forceUpdate()</code> 将会导致 <code>render()</code> 跳过 <code>shouldComponentUpdate()</code> 在组件上被调用，这会为子级触发正常的生命周期方法。包括每个子级的 <code>shouldComponentUpdate()</code> 方法。如果标记改变了，React 仍仅只更新 DOM。</p>
-
-<p>通常你应该试着避免所有对 <code>forceUpdate()</code> 的使用并且在 <code>render()</code> 里只从 <code>this.props</code> 和 <code>this.state</code> 读取。这会使你的组件 &quot;纯粹&quot; 并且你的组件会更简单和高效。</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。如果 <code>render</code> 返回 <code>null</code> 或者 <code>false</code> 的时候，<code>this.getDOMNode()</code> 返回 <code>null</code>。</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode).</p>
-
-<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除。</p>
-</blockquote>
-<h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isMounted</span><span class="p">()</span>
-</code></pre></div>
-<p>如果组件渲染到了 DOM 中，<code>isMounted()</code> 返回 true，否则返回 <code>false</code>。可以使用该方法来控制对 <code>setState()</code> 和 <code>forceUpdate()</code> 的异步调用。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除,所以你也要移除它 <a href="/react/blog/2015/12/16/ismounted-antipattern.html">start migrating away from isMounted() now</a></p>
-</blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>当和一个外部的 JavaScript 应用整合的时候，你也许会想用 <code>ReactDOM.render()</code> 给 React 组件标示一个改变。</p>
-
-<p>在根组件上调用 <code>setProps()</code> 会改变他的属性并触发一次重绘。另外，你可以提供一个可选的回调函数，一旦 <code>setProps</code> 完成并且组件被重绘它就执行。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p>这个方法被弃用了并会很快移除.这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用. 取代调用 <code>setProps</code>,试着以新的 props 再次调用 <code>ReactDOM.render()</code>. 更多的注意事项,见我们的<a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
-
-<p>如果可能，上述的在同一个节点上再次调用 <code>ReactDOM.render()</code> 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）</p>
-
-<p>这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 <code>ReactDOM.render()</code> 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 <code>setProps()</code>，不要利用响应式更新，而是当子组件在 <code>render()</code> 中创建的时候传入新的 prop 到子组件中。</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>类似于 <code>setProps()</code>，但是删除任何先前存在的 props，而不是合并这两个对象。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p>这个方法被弃用了并会很快移除.这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用.  取代调用 <code>replaceProps</code>,试着以新的 props 再次调用 <code>ReactDOM.render()</code>. 更多的注意事项,见我们的<a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
+<p>此模块已被弃用; 用 <a href="https://github.com/JedWatson/classnames">JedWatson/classnames</a> 替代.</p>
 </blockquote>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/top-level-api-zh-CN.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/two-way-binding-helpers-zh-CN.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/component-specs-zh-CN.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/test-utils-zh-CN.html">Next &rarr;</a>
       
     </div>
   </div>

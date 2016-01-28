@@ -440,13 +440,39 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>返回一个生成给定类型的 ReactElements 的函数。如同 <code>React.createElement</code>，type 参数既可以是一个 html 标签名字符串（例如. “div”，“span”，等等），也可以是一个 <code>ReactClass</code> 。</p>
-<h3><a class="anchor" name="react.render"></a>React.render <a class="hash-link" href="#react.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
+<h3><a class="anchor" name="react.isvalidelement"></a>React.isValidElement <a class="hash-link" href="#react.isvalidelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isValidElement</span><span class="p">(</span><span class="o">*</span> <span class="nx">object</span><span class="p">)</span>
+</code></pre></div>
+<p>验证对象是否是一个 ReactElement。</p>
+<h3><a class="anchor" name="react.dom"></a>React.DOM <a class="hash-link" href="#react.dom">#</a></h3>
+<p><code>React.DOM</code> 用 <code>React.createElement</code> 为 DOM 组件提供了便利的包装器。该方式应该只在不使用 JSX 的时使用。例如，<code>React.DOM.div(null, &#39;Hello World!&#39;)</code>。</p>
+<h3><a class="anchor" name="react.proptypes"></a>React.PropTypes <a class="hash-link" href="#react.proptypes">#</a></h3>
+<p><code>React.PropTypes</code> 包含了能与 组件的<code>propTypes</code> 对象一起使用的类型，用以验证传入你的组件的 props。更多有关 <code>propTypes</code> 的信息，请见 <a href="/react/docs/reusable-components-zh-CN.html">可重用组件</a>。</p>
+<h3><a class="anchor" name="react.children"></a>React.Children <a class="hash-link" href="#react.children">#</a></h3>
+<p><code>React.Children</code> 为处理 <code>this.props.children</code> 这个不透明的数据结构提供了工具。</p>
+<h4><a class="anchor" name="react.children.map"></a>React.Children.map <a class="hash-link" href="#react.children.map">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">fn</span> <span class="p">[,</span> <span class="nx">object</span> <span class="nx">thisArg</span><span class="p">])</span>
+</code></pre></div>
+<p>在每一个包含在 <code>children</code> 中的直接子级上调用 <code>fn</code> ，<code>fn</code>中的 <code>this</code> 设置为 <code>thisArg</code>。如果 <code>children</code> 是一个嵌套的对象或者数组，它将被遍历：不会传入容器对象到 <code>fn</code> 中。如果 children 是 <code>null</code> 或者 <code>undefined</code>，则返回 <code>null</code> 或者 <code>undefined</code> 而不是一个空数组。</p>
+<h4><a class="anchor" name="react.children.foreach"></a>React.Children.forEach <a class="hash-link" href="#react.children.foreach">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">fn</span> <span class="p">[,</span> <span class="nx">object</span> <span class="nx">thisArg</span><span class="p">])</span>
+</code></pre></div>
+<p>类似 <code>React.Children.map()</code>，但是不返回数组。</p>
+<h4><a class="anchor" name="react.children.count"></a>React.Children.count <a class="hash-link" href="#react.children.count">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">number</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">count</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
+</code></pre></div>
+<p>返回 <code>children</code> 中的组件总数，相等于传递给 <code>map</code> 或者 <code>forEach</code> 的回调函数应被调用次数。</p>
+<h4><a class="anchor" name="react.children.only"></a>React.Children.only <a class="hash-link" href="#react.children.only">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">only</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
+</code></pre></div>
+<p>返回 <code>children</code> 中仅有的子级。否则抛出异常。</p>
+<h4><a class="anchor" name="react.children.toarray"></a>React.Children.toArray <a class="hash-link" href="#react.children.toarray">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
+</code></pre></div>
+<p>以赋key给每个child的平坦的数组形式,返回不透明的 <code>children</code> 数据结构.如果你想操纵你的渲染方法的子级的合集这很有用,尤其如果你想在 <code>this.props.children</code> 传下之前渲染或者切割.</p>
+<h2><a class="anchor" name="reactdom"></a>ReactDOM <a class="hash-link" href="#reactdom">#</a></h2>
+<p><code>react-dom</code> 包提供了 具体的DOM方法,这些方法可以在你的app的顶层作为一个你需要时脱离React模式的安全舱口 被使用.你的大多数组件不需要使用这个模块.</p>
+<h3><a class="anchor" name="reactdom.render"></a>ReactDOM.render <a class="hash-link" href="#reactdom.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
   <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>渲染一个 ReactElement 到 DOM 里提供的 <code>容器（container）</code>中，并返回一个对组件的引用。</p>
+<p>渲染一个 ReactElement 到 DOM 里提供的 <code>容器（container）</code>中，并返回一个对 组件(或者返回 <code>null</code> 对于 <a href="/react/docs/reusable-components.html#stateless-functions">无状态组件</a>) 的<a href="/react/docs/more-about-refs.html">引用</a> </p>
 
 <p>如果 ReactElement 之前被渲染到了 <code>container</code> 中，这将对它执行一次更新，并仅变动需要变动的 DOM 来反映最新的 React 组件。</p>
 
@@ -455,49 +481,40 @@
 <blockquote>
 <p>注意:</p>
 
-<p><code>React.render()</code> 控制你传入的 container 节点的内容。
+<p><code>ReactDOM.render()</code> 控制你传入的 container 节点的内容。
  当初次调用时，任何现存于内的 DOM 元素将被替换。
  其后的调用使用 React的 diffing 算法来有效率的更新。</p>
 
-<p><code>React.render()</code> 不会修改 container 节点（只修改 container 的子级）。
+<p><code>ReactDOM.render()</code> 不会修改 container 节点（只修改 container 的子级）。
  将来，也许能够直接插入一个组件到已经存在的 DOM 节点而不覆盖
  现有的子级。</p>
 </blockquote>
-<h3><a class="anchor" name="react.unmountcomponentatnode"></a>React.unmountComponentAtNode <a class="hash-link" href="#react.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
+<h3><a class="anchor" name="reactdom.unmountcomponentatnode"></a>ReactDOM.unmountComponentAtNode <a class="hash-link" href="#reactdom.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
 </code></pre></div>
 <p>从 DOM 中移除已经挂载的 React 组件，并清除它的事件处理器和 state。如果在 container 中没有组件被挂载，调用此函数将什么都不做。如果组件被卸载返回 <code>true</code>，如果没有组件被卸载返回 <code>false</code>。</p>
-<h3><a class="anchor" name="react.rendertostring"></a>React.renderToString <a class="hash-link" href="#react.rendertostring">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToString</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+<h3><a class="anchor" name="reactdom.finddomnode"></a>ReactDOM.findDOMNode <a class="hash-link" href="#reactdom.finddomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findDOMNode</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
+</code></pre></div>
+<p>如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。<strong>在大多数情况下,你可以连接一个ref到DOM节点上,并避免使用 <code>findDOMNode</code></strong> 如果 <code>render</code> 返回 <code>null</code> 或者 <code>false</code>， <code>findDOMNode</code> 返回 <code>null</code>.</p>
+
+<blockquote>
+<p>注意:</p>
+
+<p><code>findDOMNode()</code> 是一个用来访问底层DOM节点的安全舱口.大多数情况下,使用这个安全舱口是不被鼓励的,因为它穿破了组件的抽象.</p>
+
+<p><code>findDOMNode()</code> 只在已挂载的组件上工作(即是,已经被放置到DOM里的组件).如果你尝试在没有被挂载的组件上调用这个方法(比如在 一个没有被创建的组件的<code>render()</code>里 调用 <code>findDOMNode()</code> )会抛出一个异常. </p>
+
+<p><code>findDOMNode()</code> 不能用在无状态组件.</p>
+</blockquote>
+<h2><a class="anchor" name="reactdomserver"></a>ReactDOMServer <a class="hash-link" href="#reactdomserver">#</a></h2>
+<p><code>react-dom/server</code> 允许你在服务器上渲染你的组件.</p>
+<h3><a class="anchor" name="reactdomserver.rendertostring"></a>ReactDOMServer.renderToString <a class="hash-link" href="#reactdomserver.rendertostring">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToString</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>把 ReactElement 渲染为它原始的 HTML 。这应该仅在服务器端使用。React 将会返回一个 HTML 字符串。你可以用这种方法在服务器端生成 HTML，然后在初始请求下传这些标记，以获得更快的页面加载速度及允许搜索引擎抓取页面（便于 SEO）。</p>
 
-<p>如果在一个在已经有了这种服务器预渲染标记的节点上面调用 <code>React.render()</code>，React 将会维护该节点，仅绑定事件处理器，让你有一个非常高效的初次加载体验。</p>
-<h3><a class="anchor" name="react.rendertostaticmarkup"></a>React.renderToStaticMarkup <a class="hash-link" href="#react.rendertostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+<p>如果在一个在已经有了这种服务器预渲染标记的节点上面调用 <code>ReactDOM.render()</code>，React 将会维护该节点，仅绑定事件处理器，让你有一个非常高效的初次加载体验。</p>
+<h3><a class="anchor" name="reactdomserver.rendertostaticmarkup"></a>ReactDOMServer.renderToStaticMarkup <a class="hash-link" href="#reactdomserver.rendertostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>类似于 <code>renderToString</code> ，除了不创建额外的 DOM 属性，比如 <code>data-react-id</code>，这仅在 React 内部使用的属性。如果你想用 React 做一个简单的静态页面生成器，这是很有用的，因为去除额外的属性能够节省很多字节。</p>
-<h3><a class="anchor" name="react.isvalidelement"></a>React.isValidElement <a class="hash-link" href="#react.isvalidelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isValidElement</span><span class="p">(</span><span class="o">*</span> <span class="nx">object</span><span class="p">)</span>
-</code></pre></div>
-<p>验证对象是否是一个 ReactElement。</p>
-<h3><a class="anchor" name="react.finddomnode"></a>React.findDOMNode <a class="hash-link" href="#react.finddomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findDOMNode</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
-</code></pre></div>
-<p>如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。如果 <code>render</code> 返回 <code>null</code> 或者 <code>false</code>， <code>findDOMNode</code> 返回 <code>null</code>.</p>
-<h3><a class="anchor" name="react.dom"></a>React.DOM <a class="hash-link" href="#react.dom">#</a></h3>
-<p><code>React.DOM</code> 用 <code>React.createElement</code> 为 DOM 组件提供了便利的包装器。该方式应该只在不使用 JSX 的时使用。例如，<code>React.DOM.div(null, &#39;Hello World!&#39;)</code>。</p>
-<h3><a class="anchor" name="react.proptypes"></a>React.PropTypes <a class="hash-link" href="#react.proptypes">#</a></h3>
-<p><code>React.PropTypes</code> 包含了能与 组件的<code>propTypes</code> 对象一起使用的类型，用以验证传入你的组件的 props。更多有关 <code>propTypes</code> 的信息，请见 <a href="/react/docs/reusable-components-zh-CN.html">可重用组件</a>。</p>
-<h3><a class="anchor" name="react.children"></a>React.Children <a class="hash-link" href="#react.children">#</a></h3>
-<p><code>React.Children</code> 为处理 <code>this.props.children</code> 这个不透明的数据结构提供了工具。</p>
-<h4><a class="anchor" name="react.children.map"></a>React.Children.map <a class="hash-link" href="#react.children.map">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">fn</span> <span class="p">[,</span> <span class="nx">object</span> <span class="nx">thisArg</span><span class="p">])</span>
-</code></pre></div>
-<p>在每一个包含在 <code>children</code> 中的直接子级上调用 <code>fn</code> ，<code>fn</code>中的 <code>this</code> 设置为 <code>thisArg</code>。如果 <code>children</code> 是一个嵌套的对象或者数组，它将被遍历：不会传入容器对象到 <code>fn</code> 中。如果 children 是 <code>null</code> 或者 <code>undefined</code>，则返回 <code>null</code> 或者 <code>undefined</code> 而不是一个空对象。</p>
-<h4><a class="anchor" name="react.children.foreach"></a>React.Children.forEach <a class="hash-link" href="#react.children.foreach">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">fn</span> <span class="p">[,</span> <span class="nx">object</span> <span class="nx">thisArg</span><span class="p">])</span>
-</code></pre></div>
-<p>类似 <code>React.Children.map()</code>，但是不返回对象。</p>
-<h4><a class="anchor" name="react.children.count"></a>React.Children.count <a class="hash-link" href="#react.children.count">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">number</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">count</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
-</code></pre></div>
-<p>返回 <code>children</code> 中的组件总数，相等于传递给 <code>map</code> 或者 <code>forEach</code> 的回调函数应被调用次数。</p>
-<h4><a class="anchor" name="react.children.only"></a>React.Children.only <a class="hash-link" href="#react.children.only">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">only</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
-</code></pre></div>
-<p>返回 <code>children</code> 中仅有的子级。否则抛出异常。</p>
 
 
     <div class="docs-prevnext">
