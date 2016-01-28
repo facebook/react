@@ -212,7 +212,8 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    var result = shallowRenderer.render(<SimpleComponent />);
+    shallowRenderer.render(<SimpleComponent />);
+    var result = shallowRenderer.getRenderOutput();
     expect(result).toEqual(<div>doovy</div>);
   });
 
