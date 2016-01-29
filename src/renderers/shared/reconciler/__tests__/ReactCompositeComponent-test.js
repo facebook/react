@@ -1103,19 +1103,6 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
-  it('should warn when using non-React functions in JSX', function() {
-    function NotAComponent() {
-      return [<div />, <div />];
-    }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();  // has no method 'render'
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'NotAComponent(...): No `render` method found'
-    );
-  });
-
   it('context should be passed down from the parent', function() {
     var Parent = React.createClass({
       childContextTypes: {
@@ -1245,37 +1232,6 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Outer />, container);
 
     expect(console.error.calls.length).toBe(0);
-  });
-
-  it('should warn when a class does not extend React.Component', function() {
-
-    var container = document.createElement('div');
-
-    class Foo {
-      render() {
-        return <span />;
-      }
-    }
-
-    function Bar() { }
-    Bar.prototype = Object.create(React.Component.prototype);
-    Bar.prototype.render = function() {
-      return <span />;
-    };
-
-    expect(console.error.calls.length).toBe(0);
-
-    ReactDOM.render(<Bar />, container);
-
-    expect(console.error.calls.length).toBe(0);
-
-    ReactDOM.render(<Foo />, container);
-
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'React component classes must extend React.Component'
-    );
-
   });
 
   it('should warn when mutated props are passed', function() {
