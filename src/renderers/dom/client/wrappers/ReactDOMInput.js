@@ -74,7 +74,7 @@ var ReactDOMInput = {
     }, props, {
       defaultChecked: undefined,
       defaultValue: undefined,
-      value: value != null ? value : inst._wrapperState.initialValue,
+      value: value != null ? value : props.defaultValue,
       checked: checked != null ? checked : inst._wrapperState.initialChecked,
       onChange: inst._wrapperState.onChange,
     });
@@ -137,10 +137,8 @@ var ReactDOMInput = {
       warnIfValueIsNull(props);
     }
 
-    var defaultValue = props.defaultValue;
     inst._wrapperState = {
       initialChecked: props.defaultChecked || false,
-      initialValue: defaultValue != null ? defaultValue : null,
       listeners: null,
       onChange: _handleChange.bind(inst),
     };
@@ -165,13 +163,16 @@ var ReactDOMInput = {
 
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
+      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      DOMPropertyOperations.setValueForProperty(
-        ReactDOMComponentTree.getNodeFromInstance(inst),
-        'value',
-        '' + value
-      );
+      var newValue = '' + value;
+
+      // To avoid side effects (such as losing text selection), only set value if changed
+      if (newValue !== node.value) {
+        node.value = newValue;
+      }
     }
   },
 };
