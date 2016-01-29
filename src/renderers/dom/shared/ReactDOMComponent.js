@@ -477,6 +477,7 @@ ReactDOMComponent.Mixin = {
         ReactDOMInput.mountWrapper(this, props, nativeParent);
         props = ReactDOMInput.getNativeProps(this, props);
         transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        transaction.getReactMountReady().enqueue(ReactDOMInput.initializeIndeterminate, this);
         break;
       case 'option':
         ReactDOMOption.mountWrapper(this, props, nativeParent);

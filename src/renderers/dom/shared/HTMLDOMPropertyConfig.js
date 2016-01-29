@@ -23,6 +23,8 @@ var HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
 var HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
+var HAS_IDL_ATTRIBUTE_ONLY =
+  DOMProperty.injection.HAS_IDL_ATTRIBUTE_ONLY;
 
 var hasSVG;
 if (ExecutionEnvironment.canUseDOM) {
@@ -105,6 +107,7 @@ var HTMLDOMPropertyConfig = {
     icon: null,
     id: MUST_USE_PROPERTY,
     inputMode: MUST_USE_ATTRIBUTE,
+    indeterminate: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE | HAS_IDL_ATTRIBUTE_ONLY,
     integrity: null,
     is: MUST_USE_ATTRIBUTE,
     keyParams: MUST_USE_ATTRIBUTE,

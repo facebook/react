@@ -18,6 +18,7 @@ describe('ReactDOMInput', function() {
   var EventConstants;
   var React;
   var ReactDOM;
+  var ReactDOMServer;
   var ReactLink;
   var ReactTestUtils;
 
@@ -26,6 +27,7 @@ describe('ReactDOMInput', function() {
     EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
     spyOn(console, 'error');
@@ -449,6 +451,112 @@ describe('ReactDOMInput', function() {
       <input type="text" value="foo" defaultValue="bar" readOnly={true} />
     );
     expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should warn when indeterminate is set on other input types', function() {
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" indeterminate={true} />
+    );
+
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Only input elements of the type "checkbox" can have an ' +
+      'indeterminate or defaultIndeterminate prop. Either change the ' +
+      'type prop or remove the indeterminate prop.'
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="radio" defaultIndeterminate={true} />
+    );
+
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should warn if indeterminate and defaultIndeterminate are specified', function() {
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" indeterminate={true} defaultIndeterminate={true}/>
+    );
+
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Input elements must be either controlled or uncontrolled ' +
+      '(specify either the indeterminate prop, or the defaultIndeterminate prop, but not ' +
+      'both). Decide between using a controlled or uncontrolled input ' +
+      'element and remove one of these props. More info: ' +
+      'https://fb.me/react-controlled-components'
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" indeterminate={false} defaultIndeterminate={true}/>
+    );
+
+    expect(console.error.argsForCall.length).toBe(1);
+  });
+
+  it('should properly initialize indeterminate state', function() {
+    var stub = <input type="checkbox" indeterminate={true} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.indeterminate).toBe(true);
+  });
+
+  it('should properly initialize defaultIndeterminate', function() {
+    var stub = <input type="checkbox" defaultIndeterminate={true} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.indeterminate).toBe(true);
+  });
+
+  it('should not set indeterminate attribute', function() {
+    var stub = <input type="checkbox" indeterminate={true} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.hasAttribute('indeterminate')).toBe(false);
+  });
+
+  it('should properly control indeterminate', function() {
+    var stub = <input type="checkbox" indeterminate={true} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    node.indeterminate = false;
+    ReactTestUtils.Simulate.change(node);
+    expect(node.indeterminate).toBe(true);
+  });
+
+  it('should properly leave indeterminate uncontrolled', function() {
+    var stub = <input type="checkbox" defaultIndeterminate={true} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    node.indeterminate = false;
+    ReactTestUtils.Simulate.change(node);
+    expect(node.indeterminate).toBe(false);
+  });
+
+  it('should properly set indeterminate from existing markup', function() {
+    var mount = document.createElement('div');
+    var stub = <input type="checkbox" indeterminate={true} />;
+
+    mount.innerHTML = ReactDOMServer.renderToString(stub);
+    stub = ReactDOM.render(stub, mount);
+
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.indeterminate).toBe(true);
+  });
+
+  it.only('should properly set defaultIndeterminate from existing markup', function() {
+    var mount = document.createElement('div');
+    var stub = <input type="checkbox" defaultIndeterminate={true} />;
+
+    mount.innerHTML = ReactDOMServer.renderToString(stub);
+    stub = ReactDOM.render(stub, mount);
+
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.indeterminate).toBe(true);
   });
 
   it('sets type before value always', function() {
