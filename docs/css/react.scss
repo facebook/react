@@ -743,6 +743,8 @@ p a code {
   margin-bottom: 0;
   background-color: transparent;
   border: 0;
+  float: left;
+  min-width: 100%;
 }
 
 .highlight pre code {
