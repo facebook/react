@@ -26,12 +26,18 @@ var setInnerHTML = require('setInnerHTML');
  * @internal
  */
 var setTextContent = function(node, text) {
+  if (window.Polymer !== undefined) {
+    node = window.Polymer.dom(node);
+  }
   node.textContent = text;
 };
 
 if (ExecutionEnvironment.canUseDOM) {
   if (!('textContent' in document.documentElement)) {
     setTextContent = function(node, text) {
+      if (window.Polymer !== undefined) {
+        node = window.Polymer.dom(node);
+      }
       setInnerHTML(node, escapeTextContentForBrowser(text));
     };
   }
