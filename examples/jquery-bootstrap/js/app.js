@@ -84,6 +84,11 @@ var BootstrapModal = React.createClass({
     if (this.props.onConfirm) {
       this.props.onConfirm();
     }
+  },
+  handleHidden: function(){
+    if (this.props.onHidden) {
+      this.props.onHidden();
+    }
   }
 });
 
