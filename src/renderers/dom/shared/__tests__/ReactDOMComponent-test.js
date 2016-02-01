@@ -675,7 +675,7 @@ describe('ReactDOMComponent', function() {
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div checked={false} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2); // should be 1
+      expect(nodeValueSetter.mock.calls.length).toBe(2);
 
       ReactDOM.render(<div checked={true} />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(3);
