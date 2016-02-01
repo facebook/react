@@ -145,7 +145,7 @@ var HTMLDOMPropertyConfig = {
     step: null,
     style: null,
     summary: null,
-    tabIndex: null,
+    tabIndex: MUST_USE_ATTRIBUTE,
     target: null,
     title: null,
     // Setting .type throws on non-<input> tags
