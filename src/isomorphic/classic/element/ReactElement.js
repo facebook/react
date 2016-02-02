@@ -153,7 +153,7 @@ ReactElement.createElement = function(type, config, children) {
   if (type && type.defaultProps) {
     var defaultProps = type.defaultProps;
     for (propName in defaultProps) {
-      if (typeof props[propName] === 'undefined') {
+      if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
       }
     }
