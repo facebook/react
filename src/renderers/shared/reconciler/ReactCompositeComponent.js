@@ -188,7 +188,7 @@ var ReactCompositeComponentMixin = {
         Component.displayName || Component.name || 'Component';
 
       warning(
-        typeof inst.props === 'undefined' || !propsMutated,
+        inst.props === undefined || !propsMutated,
         '%s(...): When calling super() in `%s`, make sure to pass ' +
         'up the same props that your component\'s constructor was passed.',
         componentName, componentName
@@ -673,7 +673,7 @@ var ReactCompositeComponentMixin = {
 
     if (__DEV__) {
       warning(
-        typeof shouldUpdate !== 'undefined',
+        shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
         this.getName() || 'ReactCompositeComponent'
@@ -839,7 +839,7 @@ var ReactCompositeComponentMixin = {
     var renderedComponent = inst.render();
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
-      if (typeof renderedComponent === 'undefined' &&
+      if (renderedComponent === undefined &&
           inst.render._isMockFunction) {
         // This is probably bad practice. Consider warning here and
         // deprecating this convenience.
