@@ -777,7 +777,7 @@ var ReactClass = {
       var initialState = this.getInitialState ? this.getInitialState() : null;
       if (__DEV__) {
         // We allow auto-mocks to proceed as if they're returning null.
-        if (typeof initialState === 'undefined' &&
+        if (initialState === undefined &&
             this.getInitialState._isMockFunction) {
           // This is probably bad practice. Consider warning here and
           // deprecating this convenience.
