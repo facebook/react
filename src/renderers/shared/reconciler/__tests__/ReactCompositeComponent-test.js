@@ -421,9 +421,10 @@ describe('ReactCompositeComponent', function() {
 
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow();
+    }).not.toThrow();
 
     expect(ReactCurrentOwner.current).toBe(null);
+    expect(console.error.calls.length).toBe(1);
   });
 
   it('should call componentWillUnmount before unmounting', function() {
