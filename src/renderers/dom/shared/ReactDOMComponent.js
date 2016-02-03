@@ -37,6 +37,7 @@ var ReactPerf = require('ReactPerf');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var getCssClassFromProps = require('getCssClassFromProps');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
@@ -54,6 +55,7 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
+var CLASS = keyOf({'class': null});
 var HTML = keyOf({__html: null});
 var RESERVED_PROPS = {
   children: null,
@@ -612,6 +614,9 @@ ReactDOMComponent.Mixin = {
    * @return {string} Markup of opening tag.
    */
   _createOpenTagMarkupAndPutListeners: function(transaction, props) {
+    if (__DEV__) {
+      getCssClassFromProps.isExecuting = true;
+    }
     var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
@@ -653,6 +658,10 @@ ReactDOMComponent.Mixin = {
           ret += ' ' + markup;
         }
       }
+    }
+
+    if (__DEV__) {
+      getCssClassFromProps.isExecuting = false;
     }
 
     // For static pages, no need to put React ID and checksum. Saves lots of
@@ -832,6 +841,9 @@ ReactDOMComponent.Mixin = {
    * @param {?DOMElement} node
    */
   _updateDOMProperties: function(lastProps, nextProps, transaction) {
+    if (__DEV__) {
+      getCssClassFromProps.isExecuting = true;
+    }
     var propKey;
     var styleName;
     var styleUpdates;
@@ -839,6 +851,9 @@ ReactDOMComponent.Mixin = {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey) ||
          lastProps[propKey] == null) {
+        continue;
+      }
+      if (propKey === CLASS) {
         continue;
       }
       if (propKey === STYLE) {
@@ -955,6 +970,9 @@ ReactDOMComponent.Mixin = {
         styleUpdates,
         this
       );
+    }
+    if (__DEV__) {
+      getCssClassFromProps.isExecuting = false;
     }
   },
 

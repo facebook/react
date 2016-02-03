@@ -16,6 +16,8 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var assign = require('Object.assign');
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
+var getCssClassFromProps = require('getCssClassFromProps');
+var warning = require('warning');
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -31,6 +33,42 @@ var RESERVED_PROPS = {
 };
 
 var specialPropKeyWarningShown, specialPropRefWarningShown;
+
+function setupClassProp(type, config, props) {
+  if (config != null) {
+    if (config.className !== config.class) {
+      if (config.class == null) {
+        props.class = config.className;
+      } else if (config.className == null) {
+        props.className = config.class;
+      } else {
+        warning(
+          false,
+          'class and className values (`%s` and `%s` respectively) ' +
+          'differ for element type: %s',
+          config.class,
+          config.className,
+          type
+        );
+      }
+    }
+
+    if (__DEV__ && props.className !== undefined) {
+      var className = props.className;
+      Object.defineProperty(props, 'className', {
+        get: function() {
+          warning(
+            getCssClassFromProps.isExecuting,
+            'Reading `className` prop directly from `%s` element is deprecated, ' +
+            'use `getCssClassFromProps(props)` instead.',
+            type
+          );
+          return className;
+        },
+      });
+    }
+  }
+}
 
 /**
  * Factory method to create a new React element. This no longer adheres to
@@ -144,6 +182,9 @@ ReactElement.createElement = function(type, config, children) {
         props[propName] = config[propName];
       }
     }
+    if (typeof type === 'string') {
+      setupClassProp(type, config, props);
+    }
   }
 
   // Children can be more than one argument, and those are transferred onto
@@ -250,6 +291,9 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
 };
 
 ReactElement.cloneElement = function(element, config, children) {
+  if (__DEV__) {
+    getCssClassFromProps.isExecuting = true;
+  }
   var propName;
 
   // Original props are copied
@@ -295,6 +339,10 @@ ReactElement.cloneElement = function(element, config, children) {
     }
   }
 
+  if (typeof element.type === 'string') {
+    setupClassProp(element.type, config, props);
+  }
+
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
   var childrenLength = arguments.length - 2;
@@ -306,6 +354,10 @@ ReactElement.cloneElement = function(element, config, children) {
       childArray[i] = arguments[i + 2];
     }
     props.children = childArray;
+  }
+
+  if (__DEV__) {
+    getCssClassFromProps.isExecuting = false;
   }
 
   return ReactElement(
