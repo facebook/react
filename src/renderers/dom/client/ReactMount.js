@@ -405,7 +405,7 @@ var ReactMount = {
       'for your app.'
     );
 
-    var nextWrappedElement = new ReactElement(
+    var nextWrappedElement = ReactElement(
       TopLevelWrapper,
       null,
       null,
