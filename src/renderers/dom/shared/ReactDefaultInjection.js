@@ -19,6 +19,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
@@ -42,6 +43,10 @@ function inject() {
     return;
   }
   alreadyInjected = true;
+
+  ReactCurrentOwner.inject({
+    current: null,
+  });
 
   ReactInjection.EventEmitter.injectReactEventListener(
     ReactEventListener
