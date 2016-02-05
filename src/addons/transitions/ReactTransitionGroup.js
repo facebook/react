@@ -46,20 +46,21 @@ var ReactTransitionGroup = React.createClass({
 
   componentWillMount: function () {
     this.actionsToPerform = {};
-  },
-
-  componentDidMount: function () {
     this.isInitialMount = true;
-    
     this.setState({
       DOMChildren: this.updateDOMChildren(this.state.objectiveChildren)
     });
+  },
+
+  componentDidMount: function () {
+    this.performDOMChildrenActions();
   },
 
   componentWillReceiveProps: function (nextProps) {
     this.isInitialMount = false;
 
     var nextChildMapping = ReactTransitionChildMapping.getChildMapping(nextProps.children);
+
     var nextDOMChildren = this.updateDOMChildren(nextChildMapping);
 
     this.setState({
@@ -186,10 +187,14 @@ var ReactTransitionGroup = React.createClass({
   _handleDoneLeaving: function (key) {
     if (this.state.DOMChildren[key].shouldBeInDOM) return;
     
-    var newDOMChildren = this.state.DOMChildren;
+    var component = this.refs[key];
 
+    if (component.componentDidLeave) {
+      component.componentDidLeave();
+    }
+
+    var newDOMChildren = this.state.DOMChildren;
     delete newDOMChildren[key];
-    
     this.setState({
       DOMChildren: newDOMChildren
     });
