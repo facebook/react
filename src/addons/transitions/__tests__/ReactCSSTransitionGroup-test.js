@@ -23,7 +23,7 @@ describe('ReactCSSTransitionGroup', function() {
   var container;
 
   beforeEach(function() {
-    jest.resetModuleRegistry();
+    require('mock-modules').dumpCache();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
@@ -90,8 +90,8 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
-    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
-    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('two');
 
     // For some reason jst is adding extra setTimeout()s and grunt test isn't,
     // so we need to do this disgusting hack.
@@ -125,8 +125,8 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
-    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
-    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
+    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('two');
   });
 
   it('should switch transitionLeave from false to true', function() {
@@ -160,8 +160,8 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
-    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('three');
-    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('two');
+    expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
+    expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('three');
   });
 
   it('should work with no children', function() {
