@@ -79,6 +79,40 @@ describe('ReactErrorBoundaries', function() {
     expect(EventPluginHub.putListener).toBeCalled();
   });
 
+  it('correctly handles composite siblings', function() {
+    class ErrorBoundary extends React.Component {
+      constructor() {
+        super();
+        this.state = {error: false};
+      }
+      
+      render() {
+        if (!this.state.error) {
+          return <div>{this.props.children}</div>;
+        }
+        return <div>Error has been caught</div>;
+      }
+      
+      unstable_handleError() {
+        this.setState({error: true});
+      }
+    }
+
+    function Broken() {
+      throw new Error('Always broken.');
+    }
+
+    function Composite() {
+      return <div />;
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary><Broken /><Composite /></ErrorBoundary>,
+      container
+    );
+    ReactDOM.unmountComponentAtNode(container);
+  });
 
   it('catches errors from children', function() {
     var log = [];
@@ -144,15 +178,16 @@ describe('ReactErrorBoundaries', function() {
     var container = document.createElement('div');
     ReactDOM.render(<Box />, container);
     expect(container.textContent).toBe('Error: Please, do not render me.');
+    ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual([
       'Box render',
       'Inquisitive render',
       'Angry render',
       'Inquisitive ref null',
       'Inquisitive componentWillUnmount',
-      'Angry componentWillUnmount',
       'Box renderError',
       'Box componentDidMount',
+      'Box componentWillUnmount',
     ]);
   });
 });
