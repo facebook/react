@@ -11,5 +11,6 @@ docs/vendor/bundle/
 examples/
 # Ignore built files.
 build/
+coverage/
 scripts/bench/bench-*.js
 vendor/*

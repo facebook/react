@@ -5,7 +5,7 @@
   "devDependencies": {
     "async": "^1.5.0",
     "babel": "^5.8.29",
-    "babel-eslint": "4.1.5",
+    "babel-eslint": "4.1.8",
     "browserify": "^12.0.1",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
