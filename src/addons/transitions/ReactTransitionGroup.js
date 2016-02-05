@@ -14,7 +14,6 @@
 var React = require('React');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
-var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 
 var ReactTransitionGroup = React.createClass({
@@ -22,17 +21,17 @@ var ReactTransitionGroup = React.createClass({
 
   propTypes: {
     component: React.PropTypes.any,
-    childFactory: React.PropTypes.func
+    childFactory: React.PropTypes.func,
   },
 
-  getDefaultProps: function () {
+  getDefaultProps: function() {
     return {
       component: 'span',
-      childFactory: emptyFunction.thatReturnsArgument
+      childFactory: emptyFunction.thatReturnsArgument,
     };
   },
 
-  getInitialState: function () {
+  getInitialState: function() {
     // objectiveChildren - the set of children that we are trying to acheive
     // DOMChildren - expresses our current state and is what we actually render
   
@@ -44,19 +43,19 @@ var ReactTransitionGroup = React.createClass({
     };
   },
 
-  componentWillMount: function () {
+  componentWillMount: function() {
     this.actionsToPerform = {};
     this.isInitialMount = true;
     this.setState({
-      DOMChildren: this.updateDOMChildren(this.state.objectiveChildren)
+      DOMChildren: this.updateDOMChildren(this.state.objectiveChildren),
     });
   },
 
-  componentDidMount: function () {
+  componentDidMount: function() {
     this.performDOMChildrenActions();
   },
 
-  componentWillReceiveProps: function (nextProps) {
+  componentWillReceiveProps: function(nextProps) {
     this.isInitialMount = false;
 
     var nextChildMapping = ReactTransitionChildMapping.getChildMapping(nextProps.children);
@@ -65,11 +64,11 @@ var ReactTransitionGroup = React.createClass({
 
     this.setState({
       objectiveChildren: nextChildMapping,
-      DOMChildren: nextDOMChildren
+      DOMChildren: nextDOMChildren,
     });
   },
 
-  componentDidUpdate: function () {
+  componentDidUpdate: function() {
     this.performDOMChildrenActions();
   },
 
@@ -78,7 +77,7 @@ var ReactTransitionGroup = React.createClass({
     var newDOMChildren = {};
 
     // Find new children and add
-    for(var key in newObjectiveChildren) {
+    for (var key in newObjectiveChildren) {
 
       if (oldDOMChildren[key]) {
         // Already exists
@@ -97,15 +96,15 @@ var ReactTransitionGroup = React.createClass({
         // Is new
         newDOMChildren[key] = {
           child: newObjectiveChildren[key],
-          shouldBeInDOM: true
-        }
+          shouldBeInDOM: true,
+        };
         // Queue action to be performed during componentDidUpdate
         this.actionsToPerform[key] = newDOMChildren[key];
       }
     }
 
     // Should no longer exist, mark for removal
-    for(var key in oldDOMChildren) {
+    for (key in oldDOMChildren) {
       newDOMChildren[key] = oldDOMChildren[key];
       newDOMChildren[key].shouldBeInDOM = false;
       // Queue action to be performed during componentDidUpdate
@@ -117,21 +116,21 @@ var ReactTransitionGroup = React.createClass({
   
   performDOMChildrenActions: function() {
     for (var key in this.actionsToPerform) {
-        if (this.actionsToPerform[key].shouldBeInDOM) {
-          if (this.isInitialMount) {
-            this.performAppear(key);
-          } else {
-            this.performEnter(key);
-          }
+      if (this.actionsToPerform[key].shouldBeInDOM) {
+        if (this.isInitialMount) {
+          this.performAppear(key);
         } else {
-          this.performLeave(key);
+          this.performEnter(key);
         }
+      } else {
+        this.performLeave(key);
+      }
     }
     // Reset actions since we've performed all of them.
     this.actionsToPerform = {};
   },
 
-  performAppear: function (key) {
+  performAppear: function(key) {
     var component = this.refs[key];
 
     if (component.componentWillAppear) {
@@ -141,8 +140,10 @@ var ReactTransitionGroup = React.createClass({
     }
   },
 
-  _handleDoneAppearing: function (key) {
-    if (!this.state.DOMChildren[key].shouldBeInDOM) return;
+  _handleDoneAppearing: function(key) {
+    if (!this.state.DOMChildren[key].shouldBeInDOM) {
+      return;
+    }
 
     var component = this.refs[key];
     
@@ -151,7 +152,7 @@ var ReactTransitionGroup = React.createClass({
     }
   },
 
-  performEnter: function (key) {
+  performEnter: function(key) {
     var component = this.refs[key];
 
     if (component.componentWillEnter) {
@@ -161,8 +162,10 @@ var ReactTransitionGroup = React.createClass({
     }
   },
 
-  _handleDoneEntering: function (key) {
-    if (!this.state.DOMChildren[key].shouldBeInDOM) return;
+  _handleDoneEntering: function(key) {
+    if (!this.state.DOMChildren[key].shouldBeInDOM) {
+      return;
+    }
 
     var component = this.refs[key];
 
@@ -171,7 +174,7 @@ var ReactTransitionGroup = React.createClass({
     }
   },
 
-  performLeave: function (key) {
+  performLeave: function(key) {
     var component = this.refs[key];
 
     if (component.componentWillLeave) {
@@ -184,8 +187,10 @@ var ReactTransitionGroup = React.createClass({
     }
   },
 
-  _handleDoneLeaving: function (key) {
-    if (this.state.DOMChildren[key].shouldBeInDOM) return;
+  _handleDoneLeaving: function(key) {
+    if (this.state.DOMChildren[key].shouldBeInDOM) {
+      return;
+    }
     
     var component = this.refs[key];
 
@@ -196,11 +201,11 @@ var ReactTransitionGroup = React.createClass({
     var newDOMChildren = this.state.DOMChildren;
     delete newDOMChildren[key];
     this.setState({
-      DOMChildren: newDOMChildren
+      DOMChildren: newDOMChildren,
     });
   },
 
-  render: function () {
+  render: function() {
     // TODO: we could get rid of the need for the wrapper node
     // by cloning a single child
     var childrenToRender = [];
@@ -218,12 +223,13 @@ var ReactTransitionGroup = React.createClass({
         ));
       }
     }
+
     return React.createElement(
-      this.props.component, 
-      this.props, 
-      childrenToRender
+      this.props.component,
+      this.props,
+      childrenToRender,
     );
-  }
+  },
 });
 
 module.exports = ReactTransitionGroup;

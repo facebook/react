@@ -143,14 +143,14 @@ describe('ReactTransitionGroup', function() {
     instance.setState({count: 1});
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 'didEnter', 
-      'willLeave', 'didLeave', 'willUnmount'
+      'willLeave', 'didLeave', 'willUnmount',
     ]);
 
     instance.setState({count: 2});
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 'didEnter', 
       'willLeave', 'didLeave', 'willUnmount',
-      'didMount', 'willEnter', 'didEnter'
+      'didMount', 'willEnter', 'didEnter',
     ]);
 
     instance.setState({count: 1});
@@ -158,7 +158,7 @@ describe('ReactTransitionGroup', function() {
       'didMount', 'didMount', 'willEnter', 'didEnter', 
       'willLeave', 'didLeave', 'willUnmount',
       'didMount', 'willEnter', 'didEnter',
-      'willLeave', 'didLeave', 'willUnmount'
+      'willLeave', 'didLeave', 'willUnmount',
     ]);
   });
 
@@ -213,14 +213,14 @@ describe('ReactTransitionGroup', function() {
     instance.setState({count: 1});
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 
-      'willLeave', 'didLeave', 'willUnmount'
+      'willLeave', 'didLeave', 'willUnmount',
     ]);
 
     instance.setState({count: 2});
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 
       'willLeave', 'didLeave', 'willUnmount',
-      'didMount', 'willEnter'
+      'didMount', 'willEnter',
     ]);
 
     instance.setState({count: 1});
@@ -228,11 +228,11 @@ describe('ReactTransitionGroup', function() {
       'didMount', 'didMount', 'willEnter', 
       'willLeave', 'didLeave', 'willUnmount',
       'didMount', 'willEnter',
-      'willLeave', 'didLeave', 'willUnmount'
+      'willLeave', 'didLeave', 'willUnmount',
     ]);
   });
 
-it('should handle enter/leave/enter/leave correctly when unable to complete leave transition', function() {
+  it('should handle enter/leave/enter/leave correctly when unable to complete leave transition', function() {
     var log = [];
     var leaveCB;
 
@@ -284,14 +284,14 @@ it('should handle enter/leave/enter/leave correctly when unable to complete leav
     instance.setState({count: 1});
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 'didEnter',
-      'willLeave'
+      'willLeave',
     ]);
 
     instance.setState({count: 2});
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 'didEnter',
       'willLeave', 
-      'willEnter', 'didEnter'
+      'willEnter', 'didEnter',
     ]);
 
     instance.setState({count: 1});
@@ -309,7 +309,7 @@ it('should handle enter/leave/enter/leave correctly when unable to complete leav
       'willLeave', 
       'willEnter', 'didEnter',
       'willLeave',
-      'didLeave', 'willUnmount'
+      'didLeave', 'willUnmount',
     ]);
   });
 
