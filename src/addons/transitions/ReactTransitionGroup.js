@@ -102,11 +102,13 @@ var ReactTransitionGroup = React.createClass({
 
     // Find nodes that should longer exist, mark for removal
     var objectiveChildrenKeys = Object.keys(newObjectiveChildren);
-    var keysForRemoval = Object.keys(DOMChildren).filter(function(key) {return objectiveChildrenKeys.indexOf(key) < 0;});
-    keysForRemoval.forEach(function(key) {
-      DOMChildren[key].shouldBeInDOM = false;
+    var keysForRemoval = Object.keys(DOMChildren).filter(function(k) {
+      return objectiveChildrenKeys.indexOf(k) < 0;
+    });
+    keysForRemoval.forEach(function(keyToRemove) {
+      DOMChildren[keyToRemove].shouldBeInDOM = false;
       // Queue action to be performed during componentDidUpdate
-      nextActionsToPerform[key] = DOMChildren[key];
+      nextActionsToPerform[keyToRemove] = DOMChildren[keyToRemove];
     });
 
     this.actionsToPerform = nextActionsToPerform;
