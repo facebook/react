@@ -369,6 +369,9 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   unmountComponent: function() {
+    if (!this._renderedComponent) {
+      return;
+    }
     var inst = this._instance;
 
     if (inst.componentWillUnmount) {
