@@ -224,7 +224,7 @@ describe('ReactStatelessComponent', function() {
   it('should allow simple functions to return false', function() {
     function Child() {
       return false;
-    };
+    }
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
   });
 
