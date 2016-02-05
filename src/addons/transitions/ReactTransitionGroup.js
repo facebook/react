@@ -73,45 +73,45 @@ var ReactTransitionGroup = React.createClass({
   },
 
   updateDOMChildren: function(newObjectiveChildren) {
-    var oldDOMChildren = this.state.DOMChildren;
-    var newDOMChildren = {};
+    newObjectiveChildren = newObjectiveChildren || {};
+    var DOMChildren = this.state.DOMChildren;
+    var nextActionsToPerform = {};
 
     // Find new children and add
     for (var key in newObjectiveChildren) {
 
-      if (oldDOMChildren[key]) {
+      if (DOMChildren[key]) {
         // Already exists
-        newDOMChildren[key] = oldDOMChildren[key];
 
         // Exists but was on it's way out. Let's interrupt
-        if (!oldDOMChildren[key].shouldBeInDOM) {
-          newDOMChildren[key].shouldBeInDOM = true;
+        if (!DOMChildren[key].shouldBeInDOM) {
+          DOMChildren[key].shouldBeInDOM = true;
           // Queue action to be performed during componentDidUpdate
-          this.actionsToPerform[key] = newDOMChildren[key];
+          nextActionsToPerform[key] = DOMChildren[key];
         }
-
-        // Delete so we can see the diff later below 
-        delete oldDOMChildren[key];
       } else {
         // Is new
-        newDOMChildren[key] = {
+        DOMChildren[key] = {
           child: newObjectiveChildren[key],
           shouldBeInDOM: true,
         };
         // Queue action to be performed during componentDidUpdate
-        this.actionsToPerform[key] = newDOMChildren[key];
+        nextActionsToPerform[key] = DOMChildren[key];
       }
     }
 
-    // Should no longer exist, mark for removal
-    for (key in oldDOMChildren) {
-      newDOMChildren[key] = oldDOMChildren[key];
-      newDOMChildren[key].shouldBeInDOM = false;
+    // Find nodes that should longer exist, mark for removal
+    var objectiveChildrenKeys = Object.keys(newObjectiveChildren);
+    var keysForRemoval = Object.keys(DOMChildren).filter(function(key) {return objectiveChildrenKeys.indexOf(key) < 0;});
+    keysForRemoval.forEach(function(key) {
+      DOMChildren[key].shouldBeInDOM = false;
       // Queue action to be performed during componentDidUpdate
-      this.actionsToPerform[key] = newDOMChildren[key];
-    }
+      nextActionsToPerform[key] = DOMChildren[key];
+    });
 
-    return newDOMChildren;
+    this.actionsToPerform = nextActionsToPerform;
+
+    return DOMChildren;
   },
   
   performDOMChildrenActions: function() {
