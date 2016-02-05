@@ -22,149 +22,157 @@ var ReactTransitionGroup = React.createClass({
 
   propTypes: {
     component: React.PropTypes.any,
-    childFactory: React.PropTypes.func,
+    childFactory: React.PropTypes.func
   },
 
-  getDefaultProps: function() {
+  getDefaultProps: function () {
     return {
       component: 'span',
-      childFactory: emptyFunction.thatReturnsArgument,
+      childFactory: emptyFunction.thatReturnsArgument
     };
   },
 
-  getInitialState: function() {
+  getInitialState: function () {
+    // objectiveChildren - the set of children that we are trying to acheive
+    // DOMChildren - expresses our current state and is what we actually render
+  
+    var objectiveChildren = ReactTransitionChildMapping.getChildMapping(this.props.children);
+    
     return {
-      children: ReactTransitionChildMapping.getChildMapping(this.props.children),
+      objectiveChildren: objectiveChildren,
+      DOMChildren: {},
     };
   },
 
-  componentWillMount: function() {
-    this.currentlyTransitioningKeys = {};
-    this.keysToEnter = [];
-    this.keysToLeave = [];
+  componentWillMount: function () {
+    this.actionsToPerform = {};
   },
 
-  componentDidMount: function() {
-    var initialChildMapping = this.state.children;
-    for (var key in initialChildMapping) {
-      if (initialChildMapping[key]) {
-        this.performAppear(key);
-      }
-    }
+  componentDidMount: function () {
+    this.isInitialMount = true;
+    
+    this.setState({
+      DOMChildren: this.updateDOMChildren(this.state.objectiveChildren)
+    });
   },
 
-  componentWillReceiveProps: function(nextProps) {
-    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
-      nextProps.children
-    );
-    var prevChildMapping = this.state.children;
+  componentWillReceiveProps: function (nextProps) {
+    this.isInitialMount = false;
+
+    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(nextProps.children);
+    var nextDOMChildren = this.updateDOMChildren(nextChildMapping);
 
     this.setState({
-      children: ReactTransitionChildMapping.mergeChildMappings(
-        prevChildMapping,
-        nextChildMapping
-      ),
+      objectiveChildren: nextChildMapping,
+      DOMChildren: nextDOMChildren
     });
+  },
 
-    var key;
+  componentDidUpdate: function () {
+    this.performDOMChildrenActions();
+  },
 
-    for (key in nextChildMapping) {
-      var hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
-      if (nextChildMapping[key] && !hasPrev &&
-          !this.currentlyTransitioningKeys[key]) {
-        this.keysToEnter.push(key);
+  updateDOMChildren: function(newObjectiveChildren) {
+    var oldDOMChildren = this.state.DOMChildren;
+    var newDOMChildren = {};
+
+    // Find new children and add
+    for(var key in newObjectiveChildren) {
+
+      if (oldDOMChildren[key]) {
+        // Already exists
+        newDOMChildren[key] = oldDOMChildren[key];
+
+        // Exists but was on it's way out. Let's interrupt
+        if (!oldDOMChildren[key].shouldBeInDOM) {
+          newDOMChildren[key].shouldBeInDOM = true;
+          // Queue action to be performed during componentDidUpdate
+          this.actionsToPerform[key] = newDOMChildren[key];
+        }
+
+        // Delete so we can see the diff later below 
+        delete oldDOMChildren[key];
+      } else {
+        // Is new
+        newDOMChildren[key] = {
+          child: newObjectiveChildren[key],
+          shouldBeInDOM: true
+        }
+        // Queue action to be performed during componentDidUpdate
+        this.actionsToPerform[key] = newDOMChildren[key];
       }
     }
 
-    for (key in prevChildMapping) {
-      var hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
-      if (prevChildMapping[key] && !hasNext &&
-          !this.currentlyTransitioningKeys[key]) {
-        this.keysToLeave.push(key);
-      }
+    // Should no longer exist, mark for removal
+    for(var key in oldDOMChildren) {
+      newDOMChildren[key] = oldDOMChildren[key];
+      newDOMChildren[key].shouldBeInDOM = false;
+      // Queue action to be performed during componentDidUpdate
+      this.actionsToPerform[key] = newDOMChildren[key];
     }
 
-    // If we want to someday check for reordering, we could do it here.
+    return newDOMChildren;
+  },
+  
+  performDOMChildrenActions: function() {
+    for (var key in this.actionsToPerform) {
+        if (this.actionsToPerform[key].shouldBeInDOM) {
+          if (this.isInitialMount) {
+            this.performAppear(key);
+          } else {
+            this.performEnter(key);
+          }
+        } else {
+          this.performLeave(key);
+        }
+    }
+    // Reset actions since we've performed all of them.
+    this.actionsToPerform = {};
   },
 
-  componentDidUpdate: function() {
-    var keysToEnter = this.keysToEnter;
-    this.keysToEnter = [];
-    keysToEnter.forEach(this.performEnter);
-
-    var keysToLeave = this.keysToLeave;
-    this.keysToLeave = [];
-    keysToLeave.forEach(this.performLeave);
-  },
-
-  performAppear: function(key) {
-    this.currentlyTransitioningKeys[key] = true;
-
+  performAppear: function (key) {
     var component = this.refs[key];
 
     if (component.componentWillAppear) {
-      component.componentWillAppear(
-        this._handleDoneAppearing.bind(this, key)
-      );
+      component.componentWillAppear(this._handleDoneAppearing.bind(this, key));
     } else {
       this._handleDoneAppearing(key);
     }
   },
 
-  _handleDoneAppearing: function(key) {
+  _handleDoneAppearing: function (key) {
+    if (!this.state.DOMChildren[key].shouldBeInDOM) return;
+
     var component = this.refs[key];
+    
     if (component.componentDidAppear) {
       component.componentDidAppear();
     }
-
-    delete this.currentlyTransitioningKeys[key];
-
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
-
-    if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
-      // This was removed before it had fully appeared. Remove it.
-      this.performLeave(key);
-    }
   },
 
-  performEnter: function(key) {
-    this.currentlyTransitioningKeys[key] = true;
-
+  performEnter: function (key) {
     var component = this.refs[key];
 
     if (component.componentWillEnter) {
-      component.componentWillEnter(
-        this._handleDoneEntering.bind(this, key)
-      );
+      component.componentWillEnter(this._handleDoneEntering.bind(this, key));
     } else {
       this._handleDoneEntering(key);
     }
   },
 
-  _handleDoneEntering: function(key) {
+  _handleDoneEntering: function (key) {
+    if (!this.state.DOMChildren[key].shouldBeInDOM) return;
+
     var component = this.refs[key];
+
     if (component.componentDidEnter) {
       component.componentDidEnter();
     }
-
-    delete this.currentlyTransitioningKeys[key];
-
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
-
-    if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
-      // This was removed before it had fully entered. Remove it.
-      this.performLeave(key);
-    }
   },
 
-  performLeave: function(key) {
-    this.currentlyTransitioningKeys[key] = true;
-
+  performLeave: function (key) {
     var component = this.refs[key];
+
     if (component.componentWillLeave) {
       component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
     } else {
@@ -175,37 +183,24 @@ var ReactTransitionGroup = React.createClass({
     }
   },
 
-  _handleDoneLeaving: function(key) {
-    var component = this.refs[key];
+  _handleDoneLeaving: function (key) {
+    if (this.state.DOMChildren[key].shouldBeInDOM) return;
+    
+    var newDOMChildren = this.state.DOMChildren;
 
-    if (component.componentDidLeave) {
-      component.componentDidLeave();
-    }
-
-    delete this.currentlyTransitioningKeys[key];
-
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
-
-    if (currentChildMapping && currentChildMapping.hasOwnProperty(key)) {
-      // This entered again before it fully left. Add it again.
-      this.performEnter(key);
-    } else {
-      this.setState(function(state) {
-        var newChildren = assign({}, state.children);
-        delete newChildren[key];
-        return {children: newChildren};
-      });
-    }
+    delete newDOMChildren[key];
+    
+    this.setState({
+      DOMChildren: newDOMChildren
+    });
   },
 
-  render: function() {
+  render: function () {
     // TODO: we could get rid of the need for the wrapper node
     // by cloning a single child
     var childrenToRender = [];
-    for (var key in this.state.children) {
-      var child = this.state.children[key];
+    for (var key in this.state.DOMChildren) {
+      var child = this.state.DOMChildren[key].child;
       if (child) {
         // You may need to apply reactive updates to a child as it is leaving.
         // The normal React way to do it won't work since the child will have
@@ -213,17 +208,17 @@ var ReactTransitionGroup = React.createClass({
         // a childFactory function to wrap every child, even the ones that are
         // leaving.
         childrenToRender.push(React.cloneElement(
-          this.props.childFactory(child),
-          {ref: key, key: key}
+          this.props.childFactory(child), 
+          { ref: key, key: key }
         ));
       }
     }
     return React.createElement(
-      this.props.component,
-      this.props,
+      this.props.component, 
+      this.props, 
       childrenToRender
     );
-  },
+  }
 });
 
 module.exports = ReactTransitionGroup;
