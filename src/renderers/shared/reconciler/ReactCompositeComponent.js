@@ -347,15 +347,7 @@ var ReactCompositeComponentMixin = {
       renderedElement
     );
 
-    var markup = ReactReconciler.mountComponent(
-      this._renderedComponent,
-      transaction,
-      nativeParent,
-      nativeContainerInfo,
-      this._processChildContext(context)
-    );
-
-    return markup;
+    return this._renderedComponent;
   },
 
   getNativeNode: function() {

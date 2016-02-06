@@ -571,7 +571,7 @@ ReactDOMComponent.Mixin = {
         mountImage = tagOpen + '/>';
       } else {
         mountImage =
-          tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
+          [tagOpen + '>'].concat(tagContent, '</' + this._currentElement.type + '>');
       }
     }
 
@@ -691,7 +691,7 @@ ReactDOMComponent.Mixin = {
           transaction,
           context
         );
-        ret = mountImages.join('');
+        ret = mountImages;
       }
     }
     if (newlineEatingTags[this._tag] && ret.charAt(0) === '\n') {
@@ -716,7 +716,7 @@ ReactDOMComponent.Mixin = {
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
+        lazyTree.html = innerHTML.__html;
       }
     } else {
       var contentToUse =
@@ -724,16 +724,15 @@ ReactDOMComponent.Mixin = {
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
-        DOMLazyTree.queueText(lazyTree, contentToUse);
+        lazyTree.text = contentToUse;
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
           context
         );
-        for (var i = 0; i < mountImages.length; i++) {
-          DOMLazyTree.queueChild(lazyTree, mountImages[i]);
-        }
+        lazyTree.children = mountImages;
+        return mountImages;
       }
     }
   },

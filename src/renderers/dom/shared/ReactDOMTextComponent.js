@@ -97,7 +97,7 @@ assign(ReactDOMTextComponent.prototype, {
       var el = ownerDocument.createElement('span');
       ReactDOMComponentTree.precacheNode(this, el);
       var lazyTree = DOMLazyTree(el);
-      DOMLazyTree.queueText(lazyTree, this._stringText);
+      lazyTree.text = this._stringText;
       return lazyTree;
     } else {
       var escapedText = escapeTextContentForBrowser(this._stringText);

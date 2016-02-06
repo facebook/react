@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactRef = require('ReactRef');
+var DOMLazyTree = require('DOMLazyTree');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -41,17 +42,84 @@ var ReactReconciler = {
     nativeContainerInfo,
     context
   ) {
-    var markup = internalInstance.mountComponent(
-      transaction,
-      nativeParent,
-      nativeContainerInfo,
-      context
-    );
+    var child = internalInstance.mountComponent(
+        transaction,
+        nativeParent,
+        nativeContainerInfo,
+        context
+      );
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
-    return markup;
+
+    var join = true;
+    if (!Array.isArray(child)) {
+      child = [child];
+      join = false;
+    }
+    var processedChildren = child.map(function(childOfChild) {
+      return ReactReconciler.processChild(
+        childOfChild,
+        internalInstance,
+        transaction,
+        nativeParent,
+        nativeContainerInfo,
+        context
+      );
+    });
+
+    return join ? processedChildren.join('') : processedChildren[0];
+  },
+
+  processChild: function(
+    child,
+    internalInstance,
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
+    if ('string' === typeof child || 'number' === typeof child) {
+      return child;
+    } else if (child.node) {
+      // DOMLazyTree
+      if (child.html) {
+        // dangerouslySetInnerHTML
+        DOMLazyTree.queueHTML(child, child.html);
+      } else if (child.text) {
+        // ReactTextComponent
+        DOMLazyTree.queueText(child, child.text);
+      } else if (child.children) {
+        // ReactDOMComponent
+        for (var i=0; i<child.children.length; ++i) {
+          var childOfChild = child.children[i];
+          var mountImage2 = ReactReconciler.mountComponent(
+            childOfChild,
+            transaction,
+            internalInstance,
+            internalInstance._nativeContainerInfo,
+            internalInstance._processChildContext ?
+              internalInstance._processChildContext(context) : context,
+          );
+          DOMLazyTree.queueChild(child, mountImage2);
+        }
+      } else {
+        throw new Error('Unknown child type');
+      }
+      return child;
+    } else {
+      // ReactCompositeComponent
+      var mountImage = ReactReconciler.mountComponent(
+        child,
+        transaction,
+        nativeParent,
+        internalInstance._nativeContainerInfo,
+        internalInstance._processChildContext ?
+          internalInstance._processChildContext(context) : context,
+      );
+      return mountImage;
+    }
   },
 
   /**
