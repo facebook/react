@@ -8,5 +8,5 @@ var ReactUpdates = require('./ReactUpdates');
 // this module and this file can go away.
 
 module.exports = {
-  unstable_batchedUpdates: ReactUpdates.batchedUpdates,
+  unstable_batchedUpdates: ReactUpdates.batchedUpdates
 };
