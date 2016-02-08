@@ -441,12 +441,12 @@
 <p>For <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code>, <code>onChange</code> supersedes — and should generally be used instead of — the DOM&#39;s built-in <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> event handler.</p>
 </blockquote>
 <h2><a class="anchor" name="controlled-components"></a>Controlled Components <a class="hash-link" href="#controlled-components">#</a></h2>
-<p>An <code>&lt;input&gt;</code> with <code>value</code> set is a <em>controlled</em> component. In a controlled <code>&lt;input&gt;</code>, the value of the rendered element will always reflect the <code>value</code> prop. For example:</p>
+<p>A <strong>controlled</strong> <code>&lt;input&gt;</code> has a <code>value</code> prop. Rendering a controlled <code>&lt;input&gt;</code> will reflect the value of the <code>value</code> prop.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>This will render an input that always has a value of <code>Hello!</code>. Any user input will have no effect on the rendered element because React has declared the value to be <code>Hello!</code>. If you wanted to update the value in response to user input, you could use the <code>onChange</code> event:</p>
+<p>User input will have no effect on the rendered element because React has declared the value to be <code>Hello!</code>. To update the value in response to user input, you could use the <code>onChange</code> event:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -454,25 +454,34 @@
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">input</span>
+        <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+        <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+        <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
+      <span class="o">/&gt;</span>
+    <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>In this example, we are simply accepting the newest value provided by the user and updating the <code>value</code> prop of the <code>&lt;input&gt;</code> component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:</p>
+<p>In this example, we are accepting the value provided by the user and updating the <code>value</code> prop of the <code>&lt;input&gt;</code> component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">)});</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>This would accept user input but truncate the value to the first 140 characters.</p>
+<p>This would accept user input and truncate the value to the first 140 characters.</p>
+
+<p>A <strong>Controlled</strong> component maintains its own internal state; the component renders purely based on props.</p>
 <h3><a class="anchor" name="potential-issues-with-checkboxes-and-radio-buttons"></a>Potential Issues With Checkboxes and Radio Buttons <a class="hash-link" href="#potential-issues-with-checkboxes-and-radio-buttons">#</a></h3>
 <p>Be aware that, in an attempt to normalize change handling for checkbox and radio inputs, React uses a <code>click</code> event in place of a <code>change</code> event. For the most part this behaves as expected, except when calling <code>preventDefault</code> in a <code>change</code> handler. <code>preventDefault</code> stops the browser from visually updating the input, even if <code>checked</code> gets toggled. This can be worked around either by removing the call to <code>preventDefault</code>, or putting the toggle of <code>checked</code> in a <code>setTimeout</code>.</p>
 <h2><a class="anchor" name="uncontrolled-components"></a>Uncontrolled Components <a class="hash-link" href="#uncontrolled-components">#</a></h2>
-<p>An <code>&lt;input&gt;</code> that does not supply a <code>value</code> (or sets it to <code>null</code>) is an <em>uncontrolled</em> component. In an uncontrolled <code>&lt;input&gt;</code>, the value of the rendered element will reflect the user&#39;s input. For example:</p>
+<p>An <code>&lt;input&gt;</code> without a <code>value</code> property is an <em>uncontrolled</em> component:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
 <p>This will render an input that starts off with an empty value. Any user input will be immediately reflected by the rendered element. If you wanted to listen to updates to the value, you could use the <code>onChange</code> event just like you can with controlled components.</p>
+
+<p>An <strong>uncontrolled</strong> component maintains its own internal state.</p>
 <h3><a class="anchor" name="default-value"></a>Default Value <a class="hash-link" href="#default-value">#</a></h3>
 <p>If you want to initialize the component with a non-empty value, you can supply a <code>defaultValue</code> prop. For example:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
