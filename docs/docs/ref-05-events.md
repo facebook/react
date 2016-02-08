@@ -212,7 +212,6 @@ DOMTouchList targetTouches
 DOMTouchList touches
 ```
 
-
 ### UI Events
 
 Event names:
@@ -227,7 +226,6 @@ Properties:
 number detail
 DOMAbstractView view
 ```
-
 
 ### Wheel Events
 
@@ -260,4 +258,36 @@ Event names:
 
 ```
 onLoad onError
+```
+
+### Animation Events
+
+Event names:
+
+```
+onAnimationStart onAnimationEnd onAnimationIteration
+```
+
+Properties:
+
+```javascript
+string animationName
+string pseudoElement
+float elapsedTime
+```
+
+### Transition Events
+
+Event names:
+
+```
+onTransitionEnd
+```
+
+Properties:
+
+```javascript
+string propertyName
+string pseudoElement
+float elapsedTime
 ```
