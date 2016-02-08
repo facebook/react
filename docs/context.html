@@ -541,6 +541,33 @@
   <span class="p">);</span>
 <span class="p">}</span>
 <span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
+</code></pre></div><h2><a class="anchor" name="updating-context"></a>Updating context <a class="hash-link" href="#updating-context">#</a></h2>
+<p>The <code>getChildContext</code> function will be called when the state or props changes. In order to update data in the context, trigger a local state update with <code>this.setState</code>. This will trigger a new context and changes will be received by the children.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MediaQuery</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span><span class="s1">&#39;desktop&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">childContextTypes</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+  <span class="p">},</span>
+  <span class="nx">getChildContext</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">checkMediaQuery</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+      <span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">matchMedia</span><span class="p">(</span><span class="s2">&quot;min-width: 1025px&quot;</span><span class="p">).</span><span class="nx">matches</span> <span class="o">?</span> <span class="s1">&#39;desktop&#39;</span> <span class="o">:</span> <span class="s1">&#39;mobile&#39;</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">type</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">){</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">type</span><span class="o">:</span><span class="nx">type</span><span class="p">});</span> 
+      <span class="p">}</span>
+    <span class="p">};</span>
+
+    <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;resize&#39;</span><span class="p">,</span> <span class="nx">checkMediaQuery</span><span class="p">);</span>
+    <span class="nx">checkMediaQuery</span><span class="p">();</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="when-not-to-use-context"></a>When not to use context <a class="hash-link" href="#when-not-to-use-context">#</a></h2>
 <p>Just as global variables are best avoided when writing clear code, you should avoid using context in most cases. In particular, think twice before using it to &quot;save typing&quot; and using it instead of passing explicit props.</p>
 

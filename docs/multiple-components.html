@@ -415,44 +415,44 @@
 <h2><a class="anchor" name="motivation-separation-of-concerns"></a>Motivation: Separation of Concerns <a class="hash-link" href="#motivation-separation-of-concerns">#</a></h2>
 <p>By building modular components that reuse other components with well-defined interfaces, you get much of the same benefits that you get by using functions or classes. Specifically you can <em>separate the different concerns</em> of your app however you please simply by building new components. By building a custom component library for your application, you are expressing your UI in a way that best fits your domain.</p>
 <h2><a class="anchor" name="composition-example"></a>Composition Example <a class="hash-link" href="#composition-example">#</a></h2>
-<p>Let&#39;s create a simple Avatar component which shows a profile picture and username using the Facebook Graph API.</p>
+<p>Let&#39;s create a simple Avatar component which shows a Facebook page picture and name using the Facebook Graph API.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">ProfilePic</span> <span class="nx">username</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">username</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">ProfileLink</span> <span class="nx">username</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">username</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">PagePic</span> <span class="nx">pagename</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">PageLink</span> <span class="nx">pagename</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span><span class="p">}</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="kd">var</span> <span class="nx">ProfilePic</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<span class="kd">var</span> <span class="nx">PagePic</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://graph.facebook.com/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">username</span> <span class="o">+</span> <span class="s1">&#39;/picture&#39;</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://graph.facebook.com/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span> <span class="o">+</span> <span class="s1">&#39;/picture&#39;</span><span class="p">}</span> <span class="o">/&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="kd">var</span> <span class="nx">ProfileLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<span class="kd">var</span> <span class="nx">PageLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://www.facebook.com/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">username</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">username</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://www.facebook.com/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span><span class="p">}</span>
       <span class="o">&lt;</span><span class="err">/a&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">username</span><span class="o">=</span><span class="s2">&quot;pwh&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">pagename</span><span class="o">=</span><span class="s2">&quot;Engineering&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name="ownership"></a>Ownership <a class="hash-link" href="#ownership">#</a></h2>
-<p>In the above example, instances of <code>Avatar</code> <em>own</em> instances of <code>ProfilePic</code> and <code>ProfileLink</code>. In React, <strong>an owner is the component that sets the <code>props</code> of other components</strong>. More formally, if a component <code>X</code> is created in component <code>Y</code>&#39;s <code>render()</code> method, it is said that <code>X</code> is <em>owned by</em> <code>Y</code>. As discussed earlier, a component cannot mutate its <code>props</code> — they are always consistent with what its owner sets them to. This fundamental invariant leads to UIs that are guaranteed to be consistent.</p>
+<p>In the above example, instances of <code>Avatar</code> <em>own</em> instances of <code>PagePic</code> and <code>PageLink</code>. In React, <strong>an owner is the component that sets the <code>props</code> of other components</strong>. More formally, if a component <code>X</code> is created in component <code>Y</code>&#39;s <code>render()</code> method, it is said that <code>X</code> is <em>owned by</em> <code>Y</code>. As discussed earlier, a component cannot mutate its <code>props</code> — they are always consistent with what its owner sets them to. This fundamental invariant leads to UIs that are guaranteed to be consistent.</p>
 
-<p>It&#39;s important to draw a distinction between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, <code>Avatar</code> owns the <code>div</code>, <code>ProfilePic</code> and <code>ProfileLink</code> instances, and <code>div</code> is the <strong>parent</strong> (but not owner) of the <code>ProfilePic</code> and <code>ProfileLink</code> instances.</p>
+<p>It&#39;s important to draw a distinction between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, <code>Avatar</code> owns the <code>div</code>, <code>PagePic</code> and <code>PageLink</code> instances, and <code>div</code> is the <strong>parent</strong> (but not owner) of the <code>PagePic</code> and <code>PageLink</code> instances.</p>
 <h2><a class="anchor" name="children"></a>Children <a class="hash-link" href="#children">#</a></h2>
 <p>When you create a React component instance, you can include additional React components or JavaScript expressions between the opening and closing tags like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
