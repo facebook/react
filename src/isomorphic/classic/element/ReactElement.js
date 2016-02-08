@@ -243,10 +243,19 @@ ReactElement.cloneElement = function(element, config, children) {
       key = '' + config.key;
     }
     // Remaining properties override existing props
+    var defaultProps;
+    if (element.type && element.type.defaultProps) {
+      defaultProps = element.type.defaultProps;
+    }
     for (propName in config) {
       if (config.hasOwnProperty(propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
-        props[propName] = config[propName];
+        if (config[propName] === undefined && defaultProps !== undefined) {
+          // Resolve default props
+          props[propName] = defaultProps[propName];
+        } else {
+          props[propName] = config[propName];
+        }
       }
     }
   }
