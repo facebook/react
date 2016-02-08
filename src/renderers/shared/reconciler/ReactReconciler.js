@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactRef = require('ReactRef');
-var DOMLazyTree = require('DOMLazyTree');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -21,6 +20,8 @@ var DOMLazyTree = require('DOMLazyTree');
 function attachRefs() {
   ReactRef.attachRefs(this, this._currentElement);
 }
+
+var lazyTreeImpls = {};
 
 var ReactReconciler = {
 
@@ -82,14 +83,15 @@ var ReactReconciler = {
   ) {
     if ('string' === typeof child || 'number' === typeof child) {
       return child;
-    } else if (child.node) {
+    } else if (child.lazy) {
+      var lazyImpl = lazyTreeImpls[child.lazy];
       // DOMLazyTree
       if (child.html) {
         // dangerouslySetInnerHTML
-        DOMLazyTree.queueHTML(child, child.html);
+        lazyImpl.queueHTML(child, child.html);
       } else if (child.text) {
         // ReactTextComponent
-        DOMLazyTree.queueText(child, child.text);
+        lazyImpl.queueText(child, child.text);
       } else if (child.children) {
         // ReactDOMComponent
         for (var i=0; i<child.children.length; ++i) {
@@ -102,7 +104,7 @@ var ReactReconciler = {
             internalInstance._processChildContext ?
               internalInstance._processChildContext(context) : context,
           );
-          DOMLazyTree.queueChild(child, mountImage2);
+          lazyImpl.queueChild(child, mountImage2);
         }
       } else {
         throw new Error('Unknown child type');
@@ -201,6 +203,12 @@ var ReactReconciler = {
     transaction
   ) {
     internalInstance.performUpdateIfNecessary(transaction);
+  },
+
+  injection: {
+    injectLazyTreeImpl: function(lazyTreeImpl) {
+      lazyTreeImpls[lazyTreeImpl.treeType] = lazyTreeImpl;
+    },
   },
 
 };

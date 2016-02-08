@@ -31,6 +31,8 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
+var DOMLazyTree = require('DOMLazyTree');
+
 
 var alreadyInjected = false;
 
@@ -91,6 +93,8 @@ function inject() {
   );
 
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
+
+  ReactInjection.ReactReconciler.injectLazyTreeImpl(DOMLazyTree);
 
   if (__DEV__) {
     var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
