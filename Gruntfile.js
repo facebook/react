@@ -1,7 +1,6 @@
 'use strict';
 
 var path = require('path');
-var process = require('process');
 
 var GULP_EXE = 'gulp';
 if (process.platform === 'win32') {
