@@ -168,8 +168,8 @@ function batchedMountComponentIntoNode(
  * @internal
  * @see {ReactMount.unmountComponentAtNode}
  */
-function unmountComponentFromNode(instance, container) {
-  ReactReconciler.unmountComponent(instance);
+function unmountComponentFromNode(instance, container, safely) {
+  ReactReconciler.unmountComponent(instance, safely);
 
   if (container.nodeType === DOC_NODE_TYPE) {
     container = container.documentElement;
@@ -567,7 +567,8 @@ var ReactMount = {
     ReactUpdates.batchedUpdates(
       unmountComponentFromNode,
       prevComponent,
-      container
+      container,
+      false
     );
     return true;
   },

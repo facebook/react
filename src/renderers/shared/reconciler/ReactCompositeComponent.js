@@ -14,6 +14,7 @@
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
+var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactNodeTypes = require('ReactNodeTypes');
 var ReactPerf = require('ReactPerf');
@@ -316,7 +317,7 @@ var ReactCompositeComponentMixin = {
       }
       checkpoint = transaction.checkpoint();
 
-      this._renderedComponent.unmountComponent();
+      this._renderedComponent.unmountComponent(true);
       transaction.rollback(checkpoint);
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
@@ -368,18 +369,23 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
-  unmountComponent: function() {
+  unmountComponent: function(safely) {
     if (!this._renderedComponent) {
       return;
     }
     var inst = this._instance;
 
     if (inst.componentWillUnmount) {
-      inst.componentWillUnmount();
+      if (safely) {
+        var name = this.getName() + '.componentWillUnmount()';
+        ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+      } else {
+        inst.componentWillUnmount();
+      }
     }
 
     if (this._renderedComponent) {
-      ReactReconciler.unmountComponent(this._renderedComponent);
+      ReactReconciler.unmountComponent(this._renderedComponent, safely);
       this._renderedNodeType = null;
       this._renderedComponent = null;
       this._instance = null;
@@ -805,7 +811,7 @@ var ReactCompositeComponentMixin = {
       );
     } else {
       var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
-      ReactReconciler.unmountComponent(prevComponentInstance);
+      ReactReconciler.unmountComponent(prevComponentInstance, false);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(

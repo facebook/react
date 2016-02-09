@@ -1008,7 +1008,7 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    */
-  unmountComponent: function() {
+  unmountComponent: function(safely) {
     switch (this._tag) {
       case 'iframe':
       case 'img':
@@ -1043,7 +1043,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    this.unmountChildren();
+    this.unmountChildren(safely);
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
