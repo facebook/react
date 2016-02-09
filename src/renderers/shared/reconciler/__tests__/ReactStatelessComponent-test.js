@@ -108,8 +108,8 @@ describe('ReactStatelessComponent', function() {
     }).toThrow();
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'NotAComponent must be a class extending React.Component or be a stateless ' +
-      'function that returns a valid React element.'
+      'NotAComponent(...): A valid React element (or null) must be returned. '+
+      'You may have returned undefined, an array or some other invalid object.'
     );
   });
 
@@ -238,8 +238,8 @@ describe('ReactStatelessComponent', function() {
     }).toThrow();  // has no method 'render'
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'Warning: NotAComponent must be a class extending React.Component or be a stateless ' +
-      'function that returns a valid React element.'
+      'NotAComponent(...): A valid React element (or null) must be returned. You may ' +
+      'have returned undefined, an array or some other invalid object.'
     );
   });
 });

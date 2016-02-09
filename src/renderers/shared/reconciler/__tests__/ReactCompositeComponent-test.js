@@ -72,6 +72,21 @@ describe('ReactCompositeComponent', function() {
     spyOn(console, 'error');
   });
 
+  it('should support module pattern components', function() {
+    function Child({test}) {
+      return {
+        render() {
+          return <div>{test}</div>;
+        },
+      };
+    }
+
+    var el = document.createElement('div');
+    ReactDOM.render(<Child test="test" />, el);
+
+    expect(el.textContent).toBe('test');
+  });
+
   it('should support rendering to different child types over time', function() {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
