@@ -24,32 +24,48 @@ If you're just starting out, make sure to use the development version.
 The uncompressed, development version of [react.js](https://fb.me/react-{{site.react_version}}.js) and [react-dom.js](https://fb.me/react-dom-{{site.react_version}}.js) with inline documentation (you need both files).
 
 ```html
-<script src="https://fb.me/react-{{site.react_version}}.js" integrity="sha384-{{site.react_hashes.dev}}" crossorigin="anonymous"></script>
-<script src="https://fb.me/react-dom-{{site.react_version}}.js" integrity="sha384-{{site.react_hashes.dom_dev}}" crossorigin="anonymous"></script>
+<script src="https://fb.me/react-{{site.react_version}}.js"
+        integrity="sha384-{{site.react_hashes.dev}}"
+        crossorigin="anonymous"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.js"
+        integrity="sha384-{{site.react_hashes.dom_dev}}"
+        crossorigin="anonymous"></script>
 ```
 
 #### React {{site.react_version}} (production)
 The compressed, production version of [react.js](https://fb.me/react-{{site.react_version}}.min.js) and [react-dom.js](https://fb.me/react-dom-{{site.react_version}}.min.js) (you need both).
 
 ```html
-<script src="https://fb.me/react-{{site.react_version}}.min.js" integrity="sha384-{{site.react_hashes.prod}}" crossorigin="anonymous"></script>
-<script src="https://fb.me/react-dom-{{site.react_version}}.min.js" integrity="sha384-{{site.react_hashes.dom_prod}}" crossorigin="anonymous"></script>
+<script src="https://fb.me/react-{{site.react_version}}.min.js"
+        integrity="sha384-{{site.react_hashes.prod}}"
+        crossorigin="anonymous"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.min.js"
+        integrity="sha384-{{site.react_hashes.dom_prod}}"
+        crossorigin="anonymous"></script>
 ```
 
 #### React with Add-Ons {{site.react_version}} (development)
 The uncompressed, development version of React with [optional add-ons](/react/docs/addons.html).
 
 ```html
-<script src="https://fb.me/react-with-addons-{{site.react_version}}.js" integrity="sha384-{{site.react_hashes.addons_dev}}" crossorigin="anonymous"></script>
-<script src="https://fb.me/react-dom-{{site.react_version}}.js" integrity="sha384-{{site.react_hashes.dom_dev}}" crossorigin="anonymous"></script>
+<script src="https://fb.me/react-with-addons-{{site.react_version}}.js"
+        integrity="sha384-{{site.react_hashes.addons_dev}}"
+        crossorigin="anonymous"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.js"
+        integrity="sha384-{{site.react_hashes.dom_dev}}"
+        crossorigin="anonymous"></script>
 ```
 
 #### React with Add-Ons {{site.react_version}} (production)
 The compressed, production version of React with [optional add-ons](/react/docs/addons.html).
 
 ```html
-<script src="https://fb.me/react-with-addons-{{site.react_version}}.min.js" integrity="sha384-{{site.react_hashes.addons_prod}}" crossorigin="anonymous"></script>
-<script src="https://fb.me/react-dom-{{site.react_version}}.min.js" integrity="sha384-{{site.react_hashes.dom_prod}}" crossorigin="anonymous"></script>
+<script src="https://fb.me/react-with-addons-{{site.react_version}}.min.js"
+        integrity="sha384-{{site.react_hashes.addons_prod}}"
+        crossorigin="anonymous"></script>
+<script src="https://fb.me/react-dom-{{site.react_version}}.min.js"
+        integrity="sha384-{{site.react_hashes.dom_prod}}"
+        crossorigin="anonymous"></script>
 ```
 
 All scripts are also available via [CDNJS](https://cdnjs.com/libraries/react/).
