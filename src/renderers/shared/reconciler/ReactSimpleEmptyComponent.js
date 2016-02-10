@@ -28,7 +28,7 @@ assign(ReactSimpleEmptyComponent.prototype, {
     nativeContainerInfo,
     context
   ) {
-    return [this._renderedComponent];
+    return this._renderedComponent;
   },
   receiveComponent: function() {
   },
