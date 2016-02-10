@@ -25,13 +25,9 @@ var ReactComponentWithPureRenderMixin =
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');
-var ReactUpdates = require('ReactUpdates');
 
 var shallowCompare = require('shallowCompare');
 var update = require('update');
-var warning = require('warning');
-
-var warnedAboutBatchedUpdates = false;
 
 React.addons = {
   CSSTransitionGroup: ReactCSSTransitionGroup,
@@ -39,17 +35,6 @@ React.addons = {
   PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
 
-  batchedUpdates: function() {
-    if (__DEV__) {
-      warning(
-        warnedAboutBatchedUpdates,
-        'React.addons.batchedUpdates is deprecated. Use ' +
-        'ReactDOM.unstable_batchedUpdates instead.'
-      );
-      warnedAboutBatchedUpdates = true;
-    }
-    return ReactUpdates.batchedUpdates.apply(this, arguments);
-  },
   createFragment: ReactFragment.create,
   shallowCompare: shallowCompare,
   update: update,
