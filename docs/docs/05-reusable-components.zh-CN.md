@@ -243,7 +243,7 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 或者使用新的ES6箭头函数:
 
 ```javascript
-var HelloMessage = (props) => <div>Hello {props.name}</div>;
+const HelloMessage = (props) => <div>Hello {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
