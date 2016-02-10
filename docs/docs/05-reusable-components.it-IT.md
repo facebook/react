@@ -249,7 +249,7 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 Oppure usando la nuova sintassi freccia di ES6:
 
 ```javascript
-var HelloMessage = (props) => <div>Ciao {props.name}</div>;
+const HelloMessage = (props) => <div>Ciao {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 

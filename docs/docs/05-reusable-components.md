@@ -243,7 +243,7 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 Or using the new ES6 arrow syntax:
 
 ```javascript
-var HelloMessage = (props) => <div>Hello {props.name}</div>;
+const HelloMessage = (props) => <div>Hello {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 

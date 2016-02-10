@@ -244,7 +244,7 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 아니면 ES6의 화살표 문법을 사용할 수 있습니다.
 
 ```javascript
-var HelloMessage = (props) => <div>Hello {props.name}</div>;
+const HelloMessage = (props) => <div>Hello {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
