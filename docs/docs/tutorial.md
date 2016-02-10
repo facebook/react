@@ -235,16 +235,16 @@ var Comment = React.createClass({
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {marked(this.props.children.toString())}
+        {marked(this.props.children)}
       </div>
     );
   }
 });
 ```
 
-All we're doing here is calling the marked library. We need to convert `this.props.children` from React's wrapped text to a raw string that marked will understand so we explicitly call `toString()`.
+All we're doing here is calling the marked library. Since the passed-in children of each `<Comment>` component is a single string, `this.props.children` is a string. (If we had passed more than one child when creating the `<Comment>` element, `this.props.children` would instead be an array.)
 
-But there's a problem! Our rendered comments look like this in the browser: "`<p>`This is `<em>`another`</em>` comment`</p>`". We want those tags to actually render as HTML.
+But there's a problem! Our rendered comments look like this in the browser: "&lt;p&gt;This is &lt;em&gt;another&lt;/em&gt; comment&lt;/p&gt;". We want those tags to actually render as HTML.
 
 That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/Cross-site_scripting). There's a way to get around it but the framework warns you not to use it:
 
@@ -252,7 +252,7 @@ That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/C
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
-    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    var rawMarkup = marked(this.props.children, {sanitize: true});
     return { __html: rawMarkup };
   },
 
