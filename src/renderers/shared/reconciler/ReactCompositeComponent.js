@@ -289,10 +289,6 @@ var ReactCompositeComponentMixin = {
       markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
     }
 
-    if (inst.componentDidMount) {
-      transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
-    }
-
     return markup;
   },
 
@@ -352,6 +348,18 @@ var ReactCompositeComponentMixin = {
 
   getNativeNode: function() {
     return ReactReconciler.getNativeNode(this._renderedComponent);
+  },
+
+  /**
+   * Called after recursion of children has completed
+   * @final
+   * @internal
+   */
+  postMount: function(transaction) {
+    var inst = this._instance;
+    if (inst.componentDidMount) {
+      transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
+    }
   },
 
   /**

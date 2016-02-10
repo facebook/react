@@ -575,6 +575,11 @@ ReactDOMComponent.Mixin = {
       }
     }
 
+    return mountImage;
+  },
+
+  postMount: function(transaction) {
+    var props = this._currentElement.props;
     switch (this._tag) {
       case 'button':
       case 'input':
@@ -588,8 +593,6 @@ ReactDOMComponent.Mixin = {
         }
         break;
     }
-
-    return mountImage;
   },
 
   /**

@@ -44,11 +44,12 @@ var ReactReconciler = {
     context
   ) {
     var child = internalInstance.mountComponent(
-        transaction,
-        nativeParent,
-        nativeContainerInfo,
-        context
-      );
+      transaction,
+      nativeParent,
+      nativeContainerInfo,
+      context
+    );
+
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
@@ -59,7 +60,7 @@ var ReactReconciler = {
       child = [child];
       join = false;
     }
-    var processedChildren = child.map(function(childOfChild) {
+    var processedChildren = child.map(function processChild(childOfChild) {
       return ReactReconciler.processChild(
         childOfChild,
         internalInstance,
@@ -96,7 +97,7 @@ var ReactReconciler = {
         // ReactDOMComponent
         for (var i=0; i<child.children.length; ++i) {
           var childOfChild = child.children[i];
-          var mountImage2 = ReactReconciler.mountComponent(
+          var childMountImage = ReactReconciler.mountComponent(
             childOfChild,
             transaction,
             internalInstance,
@@ -104,7 +105,11 @@ var ReactReconciler = {
             internalInstance._processChildContext ?
               internalInstance._processChildContext(context) : context,
           );
-          lazyImpl.queueChild(child, mountImage2);
+          lazyImpl.queueChild(child, childMountImage);
+
+          if (internalInstance.postMount) {
+            internalInstance.postMount(transaction);
+          }
         }
       } else {
         throw new Error('Unknown child type');
@@ -120,6 +125,11 @@ var ReactReconciler = {
         internalInstance._processChildContext ?
           internalInstance._processChildContext(context) : context,
       );
+
+      if (internalInstance.postMount) {
+        internalInstance.postMount(transaction);
+      }
+
       return mountImage;
     }
   },
