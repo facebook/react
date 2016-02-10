@@ -24,6 +24,25 @@ task :update_version do
   end
 end
 
+desc "update SRI hashes"
+task :update_hashes do
+  map = {
+    'react.js': 'dev',
+    'react.min.js': 'prod',
+    'react-with-addons.js': 'addons_dev',
+    'react-with-addons.min.js': 'addons_prod',
+    'react-dom.js': 'dom_dev',
+    'react-dom.min.js': 'dom_prod',
+    'react-dom-server.js': 'dom_server_dev',
+    'react-dom-server.min.js': 'dom_server_prod'
+  }
+  site_config = YAML.load_file('_config.yml')
+  map.each do |file, key|
+    site_config['react_hashes'][key] = `openssl dgst -sha384 -binary ../../react-bower/#{file} | openssl base64 -A`
+  end
+  File.open('_config.yml', 'w+') { |f| f.write(site_config.to_yaml) }
+end
+
 desc "update acknowledgements list"
 task :update_acknowledgements do
   authors = File.readlines('../AUTHORS').map {|author| author.gsub(/ <.*\n/,'')}
