@@ -342,7 +342,6 @@ var ReactCompositeComponentMixin = {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
       }
       checkpoint = transaction.checkpoint();
-
       this._renderedComponent.unmountComponent(true);
       transaction.rollback(checkpoint);
 
@@ -814,7 +813,11 @@ var ReactCompositeComponentMixin = {
     inst.state = nextState;
     inst.context = nextContext;
 
-    this._updateRenderedComponent(transaction, unmaskedContext);
+    if (inst.unstable_handleError) {
+      this._updateRenderedComponentWithErrorHandling(transaction, unmaskedContext);
+    } else {
+      this._updateRenderedComponent(transaction, unmaskedContext);
+    }
 
     if (hasComponentDidUpdate) {
       transaction.getReactMountReady().enqueue(
@@ -830,20 +833,60 @@ var ReactCompositeComponentMixin = {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
+  _updateRenderedComponentWithErrorHandling: function(transaction, context) {
+    var checkpoint = transaction.checkpoint();
+    try {
+      this._updateRenderedComponent(transaction, context);
+    } catch (e) {
+      // Roll back to checkpoint, handle error (which may add items to the transaction),
+      // and take a new checkpoint
+      transaction.rollback(checkpoint);
+      this._instance.unstable_handleError(e);
+      if (this._pendingStateQueue) {
+        this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+      }
+      checkpoint = transaction.checkpoint();
+
+      // Gracefully update to a clean state
+      this._updateRenderedComponentWithNextElement(transaction, context, null, true);
+
+      // Try again - we've informed the component about the error, so they can render an error message this time.
+      // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
+      this._updateRenderedComponent(transaction, context);
+    }
+  },
+
+  /**
+   * Call the component's `render` method and update the DOM accordingly.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
   _updateRenderedComponent: function(transaction, context) {
+    var nextRenderedElement = this._renderValidatedComponent();
+    this._updateRenderedComponentWithNextElement(transaction, context, nextRenderedElement, false);
+  },
+
+  /**
+   * Call the component's `render` method and update the DOM accordingly.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
+  _updateRenderedComponentWithNextElement: function(transaction, context, nextRenderedElement, safely) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
-    var nextRenderedElement = this._renderValidatedComponent();
     if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
       ReactReconciler.receiveComponent(
         prevComponentInstance,
         nextRenderedElement,
         transaction,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        safely
       );
     } else {
       var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
-      ReactReconciler.unmountComponent(prevComponentInstance, false);
+      ReactReconciler.unmountComponent(prevComponentInstance, safely);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(
