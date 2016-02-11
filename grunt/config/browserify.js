@@ -50,7 +50,7 @@ function simpleBannerify(src) {
 // Our basic config which we'll add to to make our other builds
 var basic = {
   entries: [
-    './build/modules/React.js',
+    './build/modules/ReactBrowser.js',
   ],
   outfile: './build/react.js',
   debug: false,
@@ -63,7 +63,7 @@ var basic = {
 
 var min = {
   entries: [
-    './build/modules/React.js',
+    './build/modules/ReactBrowser.js',
   ],
   outfile: './build/react.min.js',
   debug: false,
