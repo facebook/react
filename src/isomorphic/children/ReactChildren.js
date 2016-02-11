@@ -117,8 +117,8 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
         // traverseAllChildren used to do for objects as children
         keyPrefix +
         (
-          mappedChild !== child ?
-          escapeUserProvidedKey(mappedChild.key || '') + '/' :
+          (mappedChild.key && (!child || (child.key !== mappedChild.key))) ?
+          escapeUserProvidedKey(mappedChild.key) + '/' :
           ''
         ) +
         childKey
