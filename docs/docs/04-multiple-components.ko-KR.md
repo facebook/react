@@ -100,7 +100,7 @@ React 컴포넌트 인스턴스를 만들 때, 추가적인 React 컴포넌트�
 </Card>
 // Render Pass 2
 <Card>
-  <p style={{'{{'}}display: 'none'}}>Paragraph 1</p>
+  <p style={{display: 'none'}}>Paragraph 1</p>
   <p>Paragraph 2</p>
 </Card>
 ```

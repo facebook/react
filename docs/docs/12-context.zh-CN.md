@@ -27,7 +27,7 @@ React最大的优势之一是他很容易从你的React组件里跟踪数据流�
 var Button = React.createClass({
   render: function() {
     return (
-      <button style={{'{{'}}background: this.props.color}}>
+      <button style={{background: this.props.color}}>
         {this.props.children}
       </button>
     );
@@ -64,7 +64,7 @@ var Button = React.createClass({
   },
   render: function() {
     return (
-      <button style={{'{{'}}background: this.context.color}}>
+      <button style={{background: this.context.color}}>
         {this.props.children}
       </button>
     );
@@ -152,7 +152,7 @@ void componentDidUpdate(
 ```javascript
 function Button(props, context) {
   return (
-    <button style={{'{{'}}background: context.color}}>
+    <button style={{background: context.color}}>
       {props.children}
     </button>
   );
@@ -170,4 +170,4 @@ context最好的使用场景是隐式的传入登录的用户,当前的语言,�
 
 ## 已知的限制
 
-如果一个由组件提供的context值变动,使用那个值的子级不会更新,如果一个直接的父级从 `shouldComponentUpdate` 返回 `false` .详见 issue [#2517](https://github.com/facebook/react/issues/2517) . 
+如果一个由组件提供的context值变动,使用那个值的子级不会更新,如果一个直接的父级从 `shouldComponentUpdate` 返回 `false` .详见 issue [#2517](https://github.com/facebook/react/issues/2517) .

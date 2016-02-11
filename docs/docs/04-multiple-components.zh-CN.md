@@ -100,7 +100,7 @@ ReactDOM.render(
 </Card>
 // 第二次渲染
 <Card>
-  <p style={{'{{'}}display: 'none'}}>Paragraph 1</p>
+  <p style={{display: 'none'}}>Paragraph 1</p>
   <p>Paragraph 2</p>
 </Card>
 ```

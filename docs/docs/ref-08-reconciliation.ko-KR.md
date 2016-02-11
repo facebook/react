@@ -66,8 +66,8 @@ renderB: <div id="after" />
 스타일을 불명확한 문자열로 다루지 않고 키-값 객체를 사용합니다. 이는 변경된 프로퍼티만 업데이트 하도록 해줍니다.
 
 ```xml
-renderA: <div style={{'{{'}}color: 'red'}} />
-renderB: <div style={{'{{'}}fontWeight: 'bold'}} />
+renderA: <div style={{color: 'red'}} />
+renderB: <div style={{fontWeight: 'bold'}} />
 => [removeStyle color], [addStyle font-weight 'bold']
 ```
 

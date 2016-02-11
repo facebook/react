@@ -66,8 +66,8 @@ renderB: <div id="after" />
 Instead of treating style as an opaque string, a key-value object is used instead. This lets us update only the properties that changed.
 
 ```xml
-renderA: <div style={{'{{'}}color: 'red'}} />
-renderB: <div style={{'{{'}}fontWeight: 'bold'}} />
+renderA: <div style={{color: 'red'}} />
+renderB: <div style={{fontWeight: 'bold'}} />
 => [removeStyle color], [addStyle font-weight 'bold']
 ```
 
