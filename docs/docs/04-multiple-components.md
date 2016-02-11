@@ -100,7 +100,7 @@ In most cases, this can be sidestepped by hiding elements instead of destroying 
 </Card>
 // Render Pass 2
 <Card>
-  <p style={{'{{'}}display: 'none'}}>Paragraph 1</p>
+  <p style={{display: 'none'}}>Paragraph 1</p>
   <p>Paragraph 2</p>
 </Card>
 ```

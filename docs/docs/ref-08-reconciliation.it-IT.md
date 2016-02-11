@@ -66,8 +66,8 @@ renderB: <div id="after" />
 Anziché trattare lo stile come una stringa opaca, viene rappresentato come un oggetto chiave-valore. Ciò ci permette di aggiornare solo le proprietà che sono cambiate.
 
 ```xml
-renderA: <div style={{'{{'}}color: 'red'}} />
-renderB: <div style={{'{{'}}fontWeight: 'bold'}} />
+renderA: <div style={{color: 'red'}} />
+renderB: <div style={{fontWeight: 'bold'}} />
 => [removeStyle color], [addStyle font-weight 'bold']
 ```
 

@@ -27,7 +27,7 @@ Suppose you have a structure like:
 var Button = React.createClass({
   render: function() {
     return (
-      <button style={{'{{'}}background: this.props.color}}>
+      <button style={{background: this.props.color}}>
         {this.props.children}
       </button>
     );
@@ -64,7 +64,7 @@ var Button = React.createClass({
   },
   render: function() {
     return (
-      <button style={{'{{'}}background: this.context.color}}>
+      <button style={{background: this.context.color}}>
         {this.props.children}
       </button>
     );
@@ -152,7 +152,7 @@ Stateless functional components are also able to reference `context` if `context
 ```javascript
 function Button(props, context) {
   return (
-    <button style={{'{{'}}background: context.color}}>
+    <button style={{background: context.color}}>
       {props.children}
     </button>
   );
@@ -179,10 +179,10 @@ var MediaQuery = React.createClass({
     var checkMediaQuery = function(){
       var type = window.matchMedia("min-width: 1025px").matches ? 'desktop' : 'mobile';
       if (type !== this.state.type){
-        this.setState({type:type}); 
+        this.setState({type:type});
       }
     };
-    
+
     window.addEventListener('resize', checkMediaQuery);
     checkMediaQuery();
   },

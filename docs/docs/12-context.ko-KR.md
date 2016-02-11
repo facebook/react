@@ -5,7 +5,7 @@ permalink: context-ko-KR.html
 prev: advanced-performance-ko-KR.html
 ---
 
-React의 가장 큰 장점 중 하나는 React 컴포넌트를 통해 데이터의 흐름을 추적하기 쉽다는 것입니다. 컴포넌트를 보면 각각의 프로퍼티가 어떻게 전달되었는지 쉽게 파악할 수 있습니다. 
+React의 가장 큰 장점 중 하나는 React 컴포넌트를 통해 데이터의 흐름을 추적하기 쉽다는 것입니다. 컴포넌트를 보면 각각의 프로퍼티가 어떻게 전달되었는지 쉽게 파악할 수 있습니다.
 
 때때로 컴포넌트 트리를 통해 props을 전단하는 대신 수동으로 모든 레벨에서 데이터를 전달하고 싶은 경우가 있습니다. React의 "컨텍스트" 기능은 이를 가능하게 해줍니다.
 
@@ -18,7 +18,7 @@ React의 가장 큰 장점 중 하나는 React 컴포넌트를 통해 데이터�
 >
 > **만약 컨텍스트를 사용해야 하는 경우에도, 가능한 아껴 사용하세요.**
 >
-> 구축하는것이 애플리케이션이든 라이브러리든간에, 가능한 컨텍스트의 사용은 작은 영역으로 격리하고 직접적으로 컨텍스트 API를 사용하는 것을 피하세요. 그렇게 하면 API가 변경 되더라도 쉽게 업데이트 할 수 있습니다. 
+> 구축하는것이 애플리케이션이든 라이브러리든간에, 가능한 컨텍스트의 사용은 작은 영역으로 격리하고 직접적으로 컨텍스트 API를 사용하는 것을 피하세요. 그렇게 하면 API가 변경 되더라도 쉽게 업데이트 할 수 있습니다.
 
 ## 트리를 통해 정보를 자동으로 전달하기
 
@@ -28,7 +28,7 @@ React의 가장 큰 장점 중 하나는 React 컴포넌트를 통해 데이터�
 var Button = React.createClass({
   render: function() {
     return (
-      <button style={{'{{'}}background: this.props.color}}>
+      <button style={{background: this.props.color}}>
         {this.props.children}
       </button>
     );
@@ -65,7 +65,7 @@ var Button = React.createClass({
   },
   render: function() {
     return (
-      <button style={{'{{'}}background: this.context.color}}>
+      <button style={{background: this.context.color}}>
         {this.props.children}
       </button>
     );
@@ -122,7 +122,7 @@ var MessageList = React.createClass({
 <Menu items={['가지', '땅콩호박', '클레멘타인']} />
 ```
 
-원한다면 전체 React 컴포넌트를 프로퍼티로 전달할 수도 있습니다. 
+원한다면 전체 React 컴포넌트를 프로퍼티로 전달할 수도 있습니다.
 
 ## Referencing context in lifecycle methods
 
@@ -153,7 +153,7 @@ Stateless functional components are also able to reference `context` if `context
 ```javascript
 function Button(props, context) {
   return (
-    <button style={{'{{'}}background: context.color}}>
+    <button style={{background: context.color}}>
       {props.children}
     </button>
   );
@@ -165,9 +165,9 @@ Button.contextTypes = {color: React.PropTypes.string};
 
 대부분의 경우, 깔끔한 코드를 위해 전역 변수를 피하는 것과 마찬가지로 컨텍스트의 사용을 피해야 합니다. 특히 "타이핑을 줄이거나" 명시적인 프로퍼티 전달 대신 이를 사용하려는 경우 다시 한번 생각해 보세요.
 
-컨텍스트의 가장 적절한 사용 사례는 로그인한 유저, 언어 설정, 테마 정보 등을 암시적으로 전달하는 것입니다. 컨텍스트를 사용함으로써 이런 정보들을 전역으로 다루는 대신 단일 React 서브트리 내에서 다룰 수 있습니다. 
+컨텍스트의 가장 적절한 사용 사례는 로그인한 유저, 언어 설정, 테마 정보 등을 암시적으로 전달하는 것입니다. 컨텍스트를 사용함으로써 이런 정보들을 전역으로 다루는 대신 단일 React 서브트리 내에서 다룰 수 있습니다.
 
-모델 데이터를 컴포넌트로 전달하는데 컨텍스트를 사용하지 마세요. 트리를 통해 명시적으로 데이터를 엮어 전달하는 것이 훨씬 이해하기 쉽습니다. 컨텍스트는 렌더되는 위치에 따라 다르게 작동하기 때문에 컴포넌트를 더욱 연결되고(coupled) 재사용성이 떨어지게 만듭니다. 
+모델 데이터를 컴포넌트로 전달하는데 컨텍스트를 사용하지 마세요. 트리를 통해 명시적으로 데이터를 엮어 전달하는 것이 훨씬 이해하기 쉽습니다. 컨텍스트는 렌더되는 위치에 따라 다르게 작동하기 때문에 컴포넌트를 더욱 연결되고(coupled) 재사용성이 떨어지게 만듭니다.
 
 ## 알려진 한계점
 

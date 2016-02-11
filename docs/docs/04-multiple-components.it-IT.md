@@ -106,7 +106,7 @@ In molti casi, questo problema può essere aggirato nascondendo gli elementi anz
 </Card>
 // Seconda passata di rendering
 <Card>
-  <p style={{'{{'}}display: 'none'}}>Paragrafo 1</p>
+  <p style={{display: 'none'}}>Paragrafo 1</p>
   <p>Paragrafo 2</p>
 </Card>
 ```

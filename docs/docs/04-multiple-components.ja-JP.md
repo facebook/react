@@ -105,7 +105,7 @@ Reactのコンポーネントのインスタンスを作成する時には、以
 </Card>
 // パス2のレンダリング
 <Card>
-  <p style={{'{{'}}display: 'none'}}>Paragraph 1</p>
+  <p style={{display: 'none'}}>Paragraph 1</p>
   <p>Paragraph 2</p>
 </Card>
 ```
