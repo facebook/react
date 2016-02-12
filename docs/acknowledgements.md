@@ -16,4 +16,8 @@ We'd like to thank all of our contributors:
   {% endfor %}
 </div>
 
-In addition, we're grateful to [Jeff Barczewski](https://github.com/jeffbski) for allowing us to use the [react](https://www.npmjs.com/package/react) package name on npm and to [Christopher Aue](http://christopheraue.net/) for letting us use the [reactjs.com](http://reactjs.com/) domain name and the [@reactjs](https://twitter.com/reactjs) username on Twitter.  We'd also like to thank [ProjectMoon](https://github.com/ProjectMoon) for letting us use the [flux](https://www.npmjs.com/package/flux) package name on npm.
+In addition, we're grateful to
+ - [Jeff Barczewski](https://github.com/jeffbski) for allowing us to use the [react](https://www.npmjs.com/package/react) package name on npm.
+ - [Christopher Aue](http://christopheraue.net/) for letting us use the [reactjs.com](http://reactjs.com/) domain name and the [@reactjs](https://twitter.com/reactjs) username on Twitter.
+ - [ProjectMoon](https://github.com/ProjectMoon) for letting us use the [flux](https://www.npmjs.com/package/flux) package name on npm.
+ - Shane Anderson for allowing us to use the [react](https://github.com/react) org on GitHub.
