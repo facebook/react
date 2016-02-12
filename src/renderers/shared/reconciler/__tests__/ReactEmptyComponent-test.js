@@ -79,7 +79,7 @@ describe('ReactEmptyComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrow(
-      'Component.render(): A valid ReactComponent must be returned. You may ' +
+      'Component.render(): A valid React element (or null) must be returned. You may ' +
       'have returned undefined, an array or some other invalid object.'
     );
   });

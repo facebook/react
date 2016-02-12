@@ -44,16 +44,20 @@ function StatelessComponent(Component) {
 StatelessComponent.prototype.render = function() {
   var Component = ReactInstanceMap.get(this)._currentElement.type;
   var element = Component(this.props, this.context, this.updater);
+  warnIfInvalidElement(Component, element);
+  return element;
+};
+
+function warnIfInvalidElement(Component, element) {
   if (__DEV__) {
     warning(
       element === null || element === false || ReactElement.isValidElement(element),
-      '%s must be a class extending React.Component or be a stateless ' +
-      'function that returns a valid React element.',
+      '%s(...): A valid React element (or null) must be returned. You may have ' +
+      'returned undefined, an array or some other invalid object.',
       Component.displayName || Component.name || 'Component'
     );
   }
-  return element;
-};
+}
 
 /**
  * ------------------ The Life-Cycle of a Composite Component ------------------
@@ -168,7 +172,29 @@ var ReactCompositeComponentMixin = {
         inst = new Component(publicProps, publicContext, ReactUpdateQueue);
       }
     } else {
-      inst = new StatelessComponent(Component);
+      if (__DEV__) {
+        ReactCurrentOwner.current = this;
+        try {
+          inst = Component(publicProps, publicContext, ReactUpdateQueue);
+        } finally {
+          ReactCurrentOwner.current = null;
+        }
+      } else {
+        inst = Component(publicProps, publicContext, ReactUpdateQueue);
+      }
+      if (inst == null || inst.render == null) {
+        renderedElement = inst;
+        warnIfInvalidElement(Component, renderedElement);
+        invariant(
+          inst === null ||
+          inst === false ||
+          ReactElement.isValidElement(inst),
+          '%s(...): A valid React element (or null) must be returned. You may have ' +
+          'returned undefined, an array or some other invalid object.',
+          Component.displayName || Component.name || 'Component'
+        );
+        inst = new StatelessComponent(Component);
+      }
     }
 
     if (__DEV__) {
@@ -869,7 +895,7 @@ var ReactCompositeComponentMixin = {
       // TODO: An `isValidNode` function would probably be more appropriate
       renderedComponent === null || renderedComponent === false ||
       ReactElement.isValidElement(renderedComponent),
-      '%s.render(): A valid ReactComponent must be returned. You may have ' +
+      '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'
     );
