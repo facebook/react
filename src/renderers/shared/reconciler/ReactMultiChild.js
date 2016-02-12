@@ -242,7 +242,7 @@ var ReactMultiChild = {
     updateTextContent: function(nextContent) {
       var prevChildren = this._renderedChildren;
       // Remove any rendered children.
-      ReactChildReconciler.unmountChildren(prevChildren);
+      ReactChildReconciler.unmountChildren(prevChildren, false);
       for (var name in prevChildren) {
         if (prevChildren.hasOwnProperty(name)) {
           invariant(false, 'updateTextContent called on non-empty component.');
@@ -262,7 +262,7 @@ var ReactMultiChild = {
     updateMarkup: function(nextMarkup) {
       var prevChildren = this._renderedChildren;
       // Remove any rendered children.
-      ReactChildReconciler.unmountChildren(prevChildren);
+      ReactChildReconciler.unmountChildren(prevChildren, false);
       for (var name in prevChildren) {
         if (prevChildren.hasOwnProperty(name)) {
           invariant(false, 'updateTextContent called on non-empty component.');
@@ -366,9 +366,9 @@ var ReactMultiChild = {
      *
      * @internal
      */
-    unmountChildren: function() {
+    unmountChildren: function(safely) {
       var renderedChildren = this._renderedChildren;
-      ReactChildReconciler.unmountChildren(renderedChildren);
+      ReactChildReconciler.unmountChildren(renderedChildren, safely);
       this._renderedChildren = null;
     },
 

@@ -448,7 +448,7 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
 
 ReactShallowRenderer.prototype.unmount = function() {
   if (this._instance) {
-    this._instance.unmountComponent();
+    this._instance.unmountComponent(false);
   }
 };
 

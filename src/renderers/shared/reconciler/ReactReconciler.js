@@ -68,9 +68,9 @@ var ReactReconciler = {
    * @final
    * @internal
    */
-  unmountComponent: function(internalInstance) {
+  unmountComponent: function(internalInstance, safely) {
     ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
-    return internalInstance.unmountComponent();
+    return internalInstance.unmountComponent(safely);
   },
 
   /**
