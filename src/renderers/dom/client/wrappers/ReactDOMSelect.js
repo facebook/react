@@ -236,7 +236,9 @@ function _handleChange(event) {
   var props = this._currentElement.props;
   var returnValue = LinkedValueUtils.executeOnChange(props, event);
 
-  this._wrapperState.pendingUpdate = true;
+  if (this._rootNodeID) {
+    this._wrapperState.pendingUpdate = true;
+  }
   ReactUpdates.asap(updateOptionsIfPendingUpdateAndMounted, this);
   return returnValue;
 }
