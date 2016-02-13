@@ -118,6 +118,7 @@ var HTMLDOMPropertyConfig = {
     placeholder: null,
     poster: null,
     preload: null,
+    profile: null,
     radioGroup: null,
     readOnly: HAS_BOOLEAN_VALUE,
     rel: null,
