@@ -8,7 +8,32 @@ React is a JavaScript library for building user interfaces.
 
 **NEW**! Check out our newest project [React Native](https://github.com/facebook/react-native), which uses React and JavaScript to create native mobile apps.
 
+
+
+
 [Learn how to use React in your own project](https://facebook.github.io/react/docs/getting-started.html).
+
+##What is ReactJs and When to Use It 
+
+#####What is reactjs
+
+**ReactJS** is a JavaScript library for building UIs. ReactJS can be thougft of as "the V in MVC"; to say it handles your view rendering. Take a JavaScript application framework, like BackboneJS. Your views would be built with React **Components**. 
+
+It's when your project uses the **AngularJS** framework, that it settles in nicely. React Components mimic Angular's Directives.
+
+
+#####When to use reactjs
+
+Say you want to abstract your Views from the rest of the Application frameworks syntax. React would be a possible solution. It is a framework agnostic library that enhances your UIs.
+
+React is a library for rendering views in any MV* framework. It won't replace your Backbone, Angular or Ember application logic, entirely, but it will work in harmony with your legacy code. 
+
+Possible Application scenarios: 
+
+*	You have a JavaScript Application or static site generator and want to increase your performance 
+
+*	You want to build your Views outside of the Framework's syntax
+
 
 ## Examples
 
