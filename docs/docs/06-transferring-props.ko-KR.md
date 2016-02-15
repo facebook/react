@@ -27,16 +27,14 @@ React.createElement(Component, Object.assign({}, this.props, { more: 'values' })
 대부분의 경우 명시적으로 프로퍼티를 아래로 전달해야 합니다. 이는 동작을 확신하는 내부 API의 일부만 공개하도록 합니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      <div className={fancyClass} onClick={this.props.onClick}>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    <div className={fancyClass} onClick={props.onClick}>
+      {props.children}
+    </div>
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     세상아 안녕!
@@ -59,22 +57,20 @@ ReactDOM.render(
 소비할 프로퍼티들을 나열하고, 그 뒤에 `...other`를 넣습니다.
 
 ```javascript
-var { checked, ...other } = this.props;
+var { checked, ...other } = props;
 ```
 
 이는 지금 소비한 props를 *제외한* 나머지를 아래로 전달합니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    // `other`에는 { onClick: console.log }가 포함되지만 checked 프로퍼티는 제외됩니다
-    return (
-      <div {...other} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  // `other`에는 { onClick: console.log }가 포함되지만 checked 프로퍼티는 제외됩니다
+  return (
+    <div {...other} className={fancyClass} />
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     세상아 안녕!
@@ -90,15 +86,13 @@ ReactDOM.render(
 미상의 `other` props을 전달할 때는 항상 구조 해체 패턴을 사용하세요.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    // 반례: `checked` 또한 내부 컴포넌트로 전달될 것입니다
-    return (
-      <div {...this.props} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  // 반례: `checked` 또한 내부 컴포넌트로 전달될 것입니다
+  return (
+    <div {...props} className={fancyClass} />
+  );
+}
 ```
 
 ## 같은 Prop을 소비하고 전달하기
@@ -106,23 +100,21 @@ var FancyCheckbox = React.createClass({
 컴포넌트가 프로퍼티를 사용하지만 계속 넘기길 원한다면, `checked={checked}`처럼 명시적으로 다시 넘길 수 있습니다. 리팩토링과 린트(lint)하기가 더 쉬우므로 이 방식이 `this.props` 객체 전부를 넘기는 것보다 낫습니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, title, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    var fancyTitle = checked ? 'X ' + title : 'O ' + title;
-    return (
-      <label>
-        <input {...other}
-          checked={checked}
-          className={fancyClass}
-          type="checkbox"
-        />
-        {fancyTitle}
-      </label>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, title, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  var fancyTitle = checked ? 'X ' + title : 'O ' + title;
+  return (
+    <label>
+      <input {...other}
+        checked={checked}
+        className={fancyClass}
+        type="checkbox"
+      />
+      {fancyTitle}
+    </label>
+  );
+}
 ```
 
 > 주의:
@@ -152,14 +144,12 @@ z; // { a: 3, b: 4 }
 JSX를 사용하지 않는다면 라이브러리를 사용해 같은 패턴을 쓸 수 있습니다. Underscore에서는 `_.omit`을 사용해 특정 프로퍼티를 제외하거나 `_.extend`를 사용해 새로운 객체로 프로퍼티를 복사할 수 있습니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var checked = this.props.checked;
-    var other = _.omit(this.props, 'checked');
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      React.DOM.div(_.extend({}, other, { className: fancyClass }))
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var checked = props.checked;
+  var other = _.omit(props, 'checked');
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    React.DOM.div(_.extend({}, other, { className: fancyClass }))
+  );
+}
 ```

@@ -13,23 +13,21 @@ For child-parent communication:
 Say your `GroceryList` component has a list of items generated through an array. When a list item is clicked, you want to display its name:
 
 ```js
-var GroceryList = React.createClass({
-  handleClick: function(i) {
-    console.log('You clicked: ' + this.props.items[i]);
-  },
+var handleClick = function(i, props) {
+  console.log('You clicked: ' + props.items[i]);
+}
 
-  render: function() {
-    return (
-      <div>
-        {this.props.items.map(function(item, i) {
-          return (
-            <div onClick={this.handleClick.bind(this, i)} key={i}>{item}</div>
-          );
-        }, this)}
-      </div>
-    );
-  }
-});
+function GroceryList(props) {  
+  return (
+    <div>
+      {props.items.map(function(item, i) {
+        return (
+          <div onClick={handleClick.bind(this, i, props)} key={i}>{item}</div>
+        );
+      })}
+    </div>
+  );
+}
 
 ReactDOM.render(
   <GroceryList items={['Apple', 'Banana', 'Cranberry']} />, mountNode
