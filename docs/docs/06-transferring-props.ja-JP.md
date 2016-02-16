@@ -29,16 +29,14 @@ React.createElement(Component, Object.assign({}, this.props, { more: 'values' })
 ほとんどの場合、プロパティを明確に子要素に渡すべきです。それは、内部のAPIのサブセットだけを外に出していることと、認識しているプロパティが動作することを保証します。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      <div className={fancyClass} onClick={this.props.onClick}>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    <div className={fancyClass} onClick={props.onClick}>
+      {props.children}
+    </div>
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
@@ -59,22 +57,20 @@ ReactDOM.render(
 以下のように `...other` を使うことで、使いたいプロパティを一覧にすることができます。
 
 ```javascript
-var { checked, ...other } = this.props;
+var { checked, ...other } = props;
 ```
 
 これは、自分で指定したものは 除き 、全てのpropsを渡すことを保証します。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    // `other` は { onClick: console.log } を含みますが、 checked プロパティは含みません。
-    return (
-      <div {...other} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  // `other` は { onClick: console.log } を含みますが、 checked プロパティは含みません。
+  return (
+    <div {...other} className={fancyClass} />
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
@@ -89,15 +85,13 @@ ReactDOM.render(
 未知の `other` propsを移譲する際には、分割代入パターンを常に使ってください。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    // アンチパターン: `checked` が内部のコンポーネントに渡されます。
-    return (
-      <div {...this.props} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  // アンチパターン: `checked` が内部のコンポーネントに渡されます。
+  return (
+    <div {...props} className={fancyClass} />
+  );
+}
 ```
 
 ## 同じpropを使い、移譲する
@@ -105,23 +99,21 @@ var FancyCheckbox = React.createClass({
 コンポーネントがプロパティを使うだけでなく、子要素に渡したい場合は、明確に `checked={checked}` と記述することで再度渡すことができます。 `this.props` オブジェクトで全てを渡すほうが、リファクタリングやチェックをしやすいので好ましいです。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, title, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    var fancyTitle = checked ? 'X ' + title : 'O ' + title;
-    return (
-      <label>
-        <input {...other}
-          checked={checked}
-          className={fancyClass}
-          type="checkbox"
-        />
-        {fancyTitle}
-      </label>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, title, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  var fancyTitle = checked ? 'X ' + title : 'O ' + title;
+  return (
+    <label>
+      <input {...other}
+        checked={checked}
+        className={fancyClass}
+        type="checkbox"
+      />
+      {fancyTitle}
+    </label>
+  );
+}
 ```
 
 > 注意:
@@ -148,14 +140,12 @@ z; // { a: 3, b: 4 }
 JSXを使わない際には、同じパターンを行うライブラリを使うことができます。Underscoreでは、 `_.omit` を使ってプロパティをフィルタしたり、 `_.extend` を使って新しいオブジェクトにプロパティをコピーしたりできます。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var checked = this.props.checked;
-    var other = _.omit(this.props, 'checked');
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      React.DOM.div(_.extend({}, other, { className: fancyClass }))
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var checked = props.checked;
+  var other = _.omit(props, 'checked');
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    React.DOM.div(_.extend({}, other, { className: fancyClass }))
+  );
+}
 ```

@@ -27,16 +27,14 @@ Nel resto di questo tutorial vengono illustrate le best practices, usando JSX e 
 Nella maggior parte dei casi dovresti esplicitamente passare le proprietà. Ciò assicura che venga esposto soltanto un sottoinsieme dell'API interna, del cui funzionamento si è certi.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      <div className={fancyClass} onClick={this.props.onClick}>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    <div className={fancyClass} onClick={props.onClick}>
+      {props.children}
+    </div>
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Ciao mondo!
@@ -58,22 +56,20 @@ A volte passare manualmente ciascuna proprietà può essere noioso e fragile. In
 Elenca tutte le proprietà che desideri consumare, seguite da `...other`.
 
 ```javascript
-var { checked, ...other } = this.props;
+var { checked, ...other } = props;
 ```
 
 Ciò assicura che vengano passate tutte le proprietà TRANNE quelle che stai consumando tu stesso.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    // `other` contiene { onClick: console.log } ma non la proprietà checked
-    return (
-      <div {...other} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  // `other` contiene { onClick: console.log } ma non la proprietà checked
+  return (
+    <div {...other} className={fancyClass} />
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Ciao mondo!
@@ -89,15 +85,13 @@ ReactDOM.render(
 Usa sempre il pattern di destrutturazione quando trasferisci altre proprietà sconosciute in `other`.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    // ANTI-PATTERN: `checked` sarebbe passato al componente interno
-    return (
-      <div {...this.props} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  // ANTI-PATTERN: `checked` sarebbe passato al componente interno
+  return (
+    <div {...props} className={fancyClass} />
+  );
+}
 ```
 
 ## Consumare e Trasferire la Stessa Proprietà
@@ -105,23 +99,21 @@ var FancyCheckbox = React.createClass({
 Se il tuo componente desidera consumare una proprietà, ma anche passarla ad altri, puoi passarla esplicitamente mediante `checked={checked}`. Questo è preferibile a passare l'intero oggetto `this.props` dal momento che è più facile effettuarne il linting e il refactoring.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, title, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    var fancyTitle = checked ? 'X ' + title : 'O ' + title;
-    return (
-      <label>
-        <input {...other}
-          checked={checked}
-          className={fancyClass}
-          type="checkbox"
-        />
-        {fancyTitle}
-      </label>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, title, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  var fancyTitle = checked ? 'X ' + title : 'O ' + title;
+  return (
+    <label>
+      <input {...other}
+        checked={checked}
+        className={fancyClass}
+        type="checkbox"
+      />
+      {fancyTitle}
+    </label>
+  );
+}
 ```
 
 > NOTA:
@@ -150,14 +142,12 @@ z; // { a: 3, b: 4 }
 Se non usi JSX, puoi usare una libreria per ottenere il medesimo pattern. Underscore supporta `_.omit` per omettere delle proprietà ed `_.extend` per copiare le proprietà in un nuovo oggetto.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var checked = this.props.checked;
-    var other = _.omit(this.props, 'checked');
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      React.DOM.div(_.extend({}, other, { className: fancyClass }))
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var checked = props.checked;
+  var other = _.omit(props, 'checked');
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    React.DOM.div(_.extend({}, other, { className: fancyClass }))
+  );
+}
 ```
