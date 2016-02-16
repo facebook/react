@@ -86,7 +86,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -109,7 +109,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -125,11 +125,11 @@ React.render(
 
 你没有必要返回基本的 HTML。你可以返回一个你（或者其他人）创建的组件树。这就使 React **组件化**：一个可维护前端的关键原则。
 
-`React.render()` 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。
+`ReactDOM.render()` 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。
 
 ## 组合组件
 
-让我们为 `CommentList` 和 `CommentForm` 建造骨架，它们将会，再一次的，是一些简单的 `<div>`。添加这两个组件到你的文件里，保持现存的 `CommentBox` 声明和 `React.render` 调用:
+让我们为 `CommentList` 和 `CommentForm` 建造骨架，它们将会，再一次的，是一些简单的 `<div>`。添加这两个组件到你的文件里，保持现存的 `CommentBox` 声明和 `ReactDOM.render` 调用:
 
 ```javascript
 // tutorial2.js
@@ -295,7 +295,7 @@ var data = [
 ];
 ```
 
-我们需要以一种模块化的方式将这个数据传入到 `CommentList`。修改 `CommentBox` 和 `React.render()` 方法，以通过 props 传入数据到 `CommentList`：
+我们需要以一种模块化的方式将这个数据传入到 `CommentList`。修改 `CommentBox` 和 `ReactDOM.render()` 方法，以通过 props 传入数据到 `CommentList`：
 
 ```javascript{7,15}
 // tutorial9.js
@@ -311,7 +311,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -347,7 +347,7 @@ var CommentList = React.createClass({
 
 ```javascript{3}
 // tutorial11.js
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" />,
   document.getElementById('content')
 );
@@ -462,7 +462,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" pollInterval={2000} />,
   document.getElementById('content')
 );
