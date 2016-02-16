@@ -58,6 +58,64 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
+  it('should warn when `key` is being accessed', function() {
+    spyOn(console, 'error');
+    var container = document.createElement('div');
+    var Child = React.createClass({
+      render: function() {
+        return <div> {this.props.key} </div>;
+      },
+    });
+    var Parent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Child key="0" />
+            <Child key="1" />
+            <Child key="2" />
+          </div>
+        );
+      },
+    });
+    expect(console.error.calls.length).toBe(0);
+    ReactDOM.render(<Parent />, container);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Child: `key` is not a prop. Trying to access it will result ' +
+      'in `undefined` being returned. If you need to access the same ' +
+      'value within the child component, you should pass it as a different ' +
+      'prop. (https://fb.me/react-special-props)'
+    );
+  });
+
+  it('should warn when `ref` is being accessed', function() {
+    spyOn(console, 'error');
+    var container = document.createElement('div');
+    var Child = React.createClass({
+      render: function() {
+        return <div> {this.props.ref} </div>;
+      },
+    });
+    var Parent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Child ref="childElement" />
+          </div>
+        );
+      },
+    });
+    expect(console.error.calls.length).toBe(0);
+    ReactDOM.render(<Parent />, container);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Child: `ref` is not a prop. Trying to access it will result ' +
+      'in `undefined` being returned. If you need to access the same ' +
+      'value within the child component, you should pass it as a different ' +
+      'prop. (https://fb.me/react-special-props)'
+    );
+  });
+
   it('allows a string to be passed as the type', function() {
     var element = React.createFactory('div')();
     expect(element.type).toBe('div');
