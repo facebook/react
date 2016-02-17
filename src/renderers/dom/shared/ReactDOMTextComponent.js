@@ -38,28 +38,20 @@ var getNode = ReactDOMComponentTree.getNodeFromInstance;
  * @extends ReactComponent
  * @internal
  */
-var ReactDOMTextComponent = function(props) {
-  // This constructor and its argument is currently used by mocks.
+var ReactDOMTextComponent = function(text) {
+  // TODO: This is really a ReactText (ReactNode), not a ReactElement
+  this._currentElement = text;
+  this._stringText = '' + text;
+  // ReactDOMComponentTree uses these:
+  this._nativeNode = null;
+  this._nativeParent = null;
+
+  // Properties
+  this._domID = null;
+  this._mountIndex = 0;
 };
 
 assign(ReactDOMTextComponent.prototype, {
-
-  /**
-   * @param {ReactText} text
-   * @internal
-   */
-  construct: function(text) {
-    // TODO: This is really a ReactText (ReactNode), not a ReactElement
-    this._currentElement = text;
-    this._stringText = '' + text;
-    // ReactDOMComponentTree uses these:
-    this._nativeNode = null;
-    this._nativeParent = null;
-
-    // Properties
-    this._domID = null;
-    this._mountIndex = 0;
-  },
 
   /**
    * Creates the markup for this text node. This node is not intended to have

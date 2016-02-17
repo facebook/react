@@ -393,7 +393,9 @@ NoopInternalComponent.prototype = {
   },
 };
 
-var ShallowComponentWrapper = function() { };
+var ShallowComponentWrapper = function(element) {
+  this.construct(element);
+};
 assign(
   ShallowComponentWrapper.prototype,
   ReactCompositeComponent.Mixin, {
@@ -457,10 +459,7 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
     this._instance.receiveComponent(element, transaction, context);
   } else {
     var instance = new ShallowComponentWrapper(element.type);
-    instance.construct(element);
-
     instance.mountComponent(transaction, null, null, context);
-
     this._instance = instance;
   }
 };

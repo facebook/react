@@ -405,8 +405,10 @@ var globalIdCounter = 1;
  * @constructor ReactDOMComponent
  * @extends ReactMultiChild
  */
-function ReactDOMComponent(tag) {
+function ReactDOMComponent(element) {
+  var tag = element.type;
   validateDangerousTag(tag);
+  this._currentElement = element;
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
   this._renderedChildren = null;
@@ -428,10 +430,6 @@ function ReactDOMComponent(tag) {
 ReactDOMComponent.displayName = 'ReactDOMComponent';
 
 ReactDOMComponent.Mixin = {
-
-  construct: function(element) {
-    this._currentElement = element;
-  },
 
   /**
    * Generates root tag markup then recurses. This method has side effects and

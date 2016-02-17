@@ -20,8 +20,6 @@ var ReactSimpleEmptyComponent = function(placeholderElement, instantiate) {
   this._renderedComponent = instantiate(placeholderElement);
 };
 assign(ReactSimpleEmptyComponent.prototype, {
-  construct: function(element) {
-  },
   mountComponent: function(
     transaction,
     nativeParent,
