@@ -28,7 +28,7 @@
     "gulp-babel": "^5.3.0",
     "gulp-flatten": "^0.2.0",
     "gzip-js": "~0.3.2",
-    "jest-cli": "^0.6.1",
+    "jest-cli": "^0.9.0-fb1",
     "platform": "^1.1.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",

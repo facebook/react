@@ -24,7 +24,7 @@ describe('ReactDefaultPerf', function() {
 
   beforeEach(function() {
     var now = 0;
-    jest.setMock('performanceNow', function() {
+    jest.setMock('fbjs/lib/performanceNow', function() {
       return now++;
     });
 
