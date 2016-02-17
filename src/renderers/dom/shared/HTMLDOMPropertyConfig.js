@@ -50,6 +50,7 @@ var HTMLDOMPropertyConfig = {
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     classID: null,
     className: null,
+    clipPathUnits: null,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
     colSpan: null,
     content: null,
