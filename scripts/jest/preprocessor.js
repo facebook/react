@@ -51,26 +51,10 @@ module.exports = {
       !filePath.match(/\/node_modules\//) &&
       !filePath.match(/\/third_party\//)
     ) {
-      var rv = babel.transform(
+      return babel.transform(
         src,
         Object.assign({filename: filePath}, babelOptions)
       ).code;
-      // hax to turn fbjs/lib/foo into /path/to/node_modules/fbjs/lib/foo
-      // because jest is slooow with node_modules paths (facebook/jest#465)
-      rv = rv.replace(
-        /require\('(fbjs\/lib\/.+)'\)/g,
-        function(call, arg) {
-          return (
-            'require(' +
-            JSON.stringify(
-              path.join(__dirname, '../../node_modules', arg)
-            ) +
-            ')'
-          );
-        }
-      );
-
-      return rv;
     }
     return src;
   },
