@@ -87,10 +87,12 @@ function precacheChildNodes(inst, node) {
     }
     // We assume the child nodes are in the same order as the child instances.
     for (; childNode !== null; childNode = childNode.nextSibling) {
-      if (childNode.nodeType === 1 &&
-          childNode.getAttribute(ATTR_NAME) === String(childID) ||
-          childNode.nodeType === 8 &&
-          childNode.nodeValue === ' react-empty: ' + childID + ' ') {
+      if ((childNode.nodeType === 1 &&
+           childNode.getAttribute(ATTR_NAME) === String(childID)) ||
+          (childNode.nodeType === 8 &&
+           childNode.nodeValue === ' react-text: ' + childID + ' ') ||
+          (childNode.nodeType === 8 &&
+           childNode.nodeValue === ' react-empty: ' + childID + ' ')) {
         precacheNode(childInst, childNode);
         continue outer;
       }
