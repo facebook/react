@@ -620,7 +620,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-Let's call the callback from the `CommentForm` when the user submits the form:
+Now that the callback has been conveniently rendered into the child's properties, we can find and call it from the `CommentForm` when the user submits the form:
 
 ```javascript{19}
 // tutorial19.js
