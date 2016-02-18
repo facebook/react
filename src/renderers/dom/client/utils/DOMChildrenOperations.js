@@ -9,6 +9,8 @@
  * @providesModule DOMChildrenOperations
  */
 
+/* globals MSApp */
+
 'use strict';
 
 var DOMLazyTree = require('DOMLazyTree');
@@ -35,7 +37,14 @@ function insertChildAt(parentNode, childNode, referenceNode) {
   // We rely exclusively on `insertBefore(node, null)` instead of also using
   // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
   // we are careful to use `null`.)
-  parentNode.insertBefore(childNode, referenceNode);
+
+  if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
+    MSApp.execUnsafeLocalFunction(function() {
+      parentNode.insertBefore(childNode, referenceNode);
+    });
+  } else {
+    parentNode.insertBefore(childNode, referenceNode);
+  }
 }
 
 function insertLazyTreeChildAt(parentNode, childTree, referenceNode) {
