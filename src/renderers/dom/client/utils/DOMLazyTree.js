@@ -51,6 +51,9 @@ function insertTreeChildren(tree) {
 }
 
 function insertTreeBefore(parentNode, tree, referenceNode) {
+  if (window.Polymer !== undefined) {
+    parentNode = window.Polymer.dom(parentNode);
+  }
   parentNode.insertBefore(tree.node, referenceNode);
   insertTreeChildren(tree);
 }

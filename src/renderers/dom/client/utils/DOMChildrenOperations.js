@@ -20,7 +20,13 @@ var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 
 function getNodeAfter(parentNode, node) {
-  return node ? node.nextSibling : parentNode.firstChild;
+  if (node) {
+    return node.nextSibling;
+  }
+  if (window.Polymer !== undefined) {
+    parentNode = window.Polymer.dom(parentNode);
+  }
+  return parentNode.firstChild;
 }
 
 /**
