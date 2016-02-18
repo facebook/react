@@ -9,6 +9,8 @@
  * @providesModule DOMLazyTree
  */
 
+/* globals MSApp */
+
 'use strict';
 
 var setTextContent = require('setTextContent');
@@ -51,7 +53,14 @@ function insertTreeChildren(tree) {
 }
 
 function insertTreeBefore(parentNode, tree, referenceNode) {
-  parentNode.insertBefore(tree.node, referenceNode);
+  if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
+    MSApp.execUnsafeLocalFunction(function() {
+      parentNode.insertBefore(tree.node, referenceNode);
+    });
+  } else {
+    parentNode.insertBefore(tree.node, referenceNode);
+  }
+
   insertTreeChildren(tree);
 }
 
