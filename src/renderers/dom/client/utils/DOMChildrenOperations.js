@@ -9,8 +9,6 @@
  * @providesModule DOMChildrenOperations
  */
 
-/* globals MSApp */
-
 'use strict';
 
 var DOMLazyTree = require('DOMLazyTree');
@@ -18,6 +16,7 @@ var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactPerf = require('ReactPerf');
 
+var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 
@@ -33,19 +32,14 @@ function getNodeAfter(parentNode, node) {
  * @param {number} index Index at which to insert the child.
  * @internal
  */
-function insertChildAt(parentNode, childNode, referenceNode) {
-  // We rely exclusively on `insertBefore(node, null)` instead of also using
-  // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
-  // we are careful to use `null`.)
-
-  if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
-    MSApp.execUnsafeLocalFunction(function() {
-      parentNode.insertBefore(childNode, referenceNode);
-    });
-  } else {
+var insertChildAt = createMicrosoftUnsafeLocalFunction(
+  function(parentNode, childNode, referenceNode) {
+    // We rely exclusively on `insertBefore(node, null)` instead of also using
+    // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
+    // we are careful to use `null`.)
     parentNode.insertBefore(childNode, referenceNode);
   }
-}
+);
 
 function insertLazyTreeChildAt(parentNode, childTree, referenceNode) {
   DOMLazyTree.insertTreeBefore(parentNode, childTree, referenceNode);
