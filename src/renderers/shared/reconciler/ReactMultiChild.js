@@ -219,15 +219,8 @@ var ReactMultiChild = {
       for (var name in children) {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
-          var mountImage = ReactReconciler.mountComponent(
-            child,
-            transaction,
-            this,
-            this._nativeContainerInfo,
-            context
-          );
           child._mountIndex = index++;
-          mountImages.push(mountImage);
+          mountImages.push(child);
         }
       }
       return mountImages;

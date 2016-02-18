@@ -34,6 +34,8 @@ var enableLazy = (
   /\bEdge\/\d/.test(navigator.userAgent)
 );
 
+var TREE_TYPE = 'dom';
+
 function insertTreeChildren(tree) {
   if (!enableLazy) {
     return;
@@ -89,6 +91,7 @@ function queueText(tree, text) {
 
 function DOMLazyTree(node) {
   return {
+    lazy: TREE_TYPE,
     node: node,
     children: [],
     html: null,
@@ -96,6 +99,7 @@ function DOMLazyTree(node) {
   };
 }
 
+DOMLazyTree.treeType = TREE_TYPE;
 DOMLazyTree.insertTreeBefore = insertTreeBefore;
 DOMLazyTree.replaceChildWithTree = replaceChildWithTree;
 DOMLazyTree.queueChild = queueChild;

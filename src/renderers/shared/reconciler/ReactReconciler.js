@@ -21,6 +21,8 @@ function attachRefs() {
   ReactRef.attachRefs(this, this._currentElement);
 }
 
+var lazyTreeImpls = {};
+
 var ReactReconciler = {
 
   /**
@@ -41,17 +43,95 @@ var ReactReconciler = {
     nativeContainerInfo,
     context
   ) {
-    var markup = internalInstance.mountComponent(
+    var child = internalInstance.mountComponent(
       transaction,
       nativeParent,
       nativeContainerInfo,
       context
     );
+
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
-    return markup;
+
+    var join = true;
+    if (!Array.isArray(child)) {
+      child = [child];
+      join = false;
+    }
+    var processedChildren = child.map(function processChild(childOfChild) {
+      return ReactReconciler.processChild(
+        childOfChild,
+        internalInstance,
+        transaction,
+        nativeParent,
+        nativeContainerInfo,
+        context
+      );
+    });
+
+    return join ? processedChildren.join('') : processedChildren[0];
+  },
+
+  processChild: function(
+    child,
+    internalInstance,
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
+    if ('string' === typeof child || 'number' === typeof child) {
+      return child;
+    } else if (child.lazy) {
+      var lazyImpl = lazyTreeImpls[child.lazy];
+      // DOMLazyTree
+      if (child.html) {
+        // dangerouslySetInnerHTML
+        lazyImpl.queueHTML(child, child.html);
+      } else if (child.text) {
+        // ReactTextComponent
+        lazyImpl.queueText(child, child.text);
+      } else if (child.children) {
+        // ReactDOMComponent
+        for (var i=0; i<child.children.length; ++i) {
+          var childOfChild = child.children[i];
+          var childMountImage = ReactReconciler.mountComponent(
+            childOfChild,
+            transaction,
+            internalInstance,
+            internalInstance._nativeContainerInfo,
+            internalInstance._processChildContext ?
+              internalInstance._processChildContext(context) : context,
+          );
+          lazyImpl.queueChild(child, childMountImage);
+
+          if (internalInstance.postMount) {
+            internalInstance.postMount(transaction);
+          }
+        }
+      } else {
+        throw new Error('Unknown child type');
+      }
+      return child;
+    } else {
+      // ReactCompositeComponent
+      var mountImage = ReactReconciler.mountComponent(
+        child,
+        transaction,
+        nativeParent,
+        internalInstance._nativeContainerInfo,
+        internalInstance._processChildContext ?
+          internalInstance._processChildContext(context) : context,
+      );
+
+      if (internalInstance.postMount) {
+        internalInstance.postMount(transaction);
+      }
+
+      return mountImage;
+    }
   },
 
   /**
@@ -133,6 +213,12 @@ var ReactReconciler = {
     transaction
   ) {
     internalInstance.performUpdateIfNecessary(transaction);
+  },
+
+  injection: {
+    injectLazyTreeImpl: function(lazyTreeImpl) {
+      lazyTreeImpls[lazyTreeImpl.treeType] = lazyTreeImpl;
+    },
   },
 
 };

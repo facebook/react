@@ -11,6 +11,7 @@
 'use strict';
 
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
+var ReactReconciler = require('ReactReconciler');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -41,7 +42,8 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element);
-      var markup = componentInstance.mountComponent(
+      var markup = ReactReconciler.mountComponent(
+        componentInstance,
         transaction,
         null,
         ReactDOMContainerInfo(),

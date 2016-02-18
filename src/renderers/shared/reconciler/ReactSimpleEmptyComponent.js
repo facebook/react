@@ -26,13 +26,7 @@ assign(ReactSimpleEmptyComponent.prototype, {
     nativeContainerInfo,
     context
   ) {
-    return ReactReconciler.mountComponent(
-      this._renderedComponent,
-      transaction,
-      nativeParent,
-      nativeContainerInfo,
-      context
-    );
+    return this._renderedComponent;
   },
   receiveComponent: function() {
   },

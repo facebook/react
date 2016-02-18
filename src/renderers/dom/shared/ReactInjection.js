@@ -20,6 +20,7 @@ var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactNativeComponent = require('ReactNativeComponent');
 var ReactPerf = require('ReactPerf');
+var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
 var ReactInjection = {
@@ -32,6 +33,7 @@ var ReactInjection = {
   EventEmitter: ReactBrowserEventEmitter.injection,
   NativeComponent: ReactNativeComponent.injection,
   Perf: ReactPerf.injection,
+  ReactReconciler: ReactReconciler.injection,
   Updates: ReactUpdates.injection,
 };
 
