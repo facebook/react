@@ -117,9 +117,9 @@
 <hr>
 
 <div class="post">
-  <p>Today we&#39;re announcing that we&#39;re switching to major revisions for React. The next release will be: <strong>15.0.0</strong></p>
+  <p>Today we&#39;re announcing that we&#39;re switching to major revisions for React. The current version is 0.14.7. The next release will be: <strong>15.0.0</strong></p>
 
-<p>This change shouldn&#39;t materially affect most of you. Moving to major versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&#39;t have to wait as long to take advantage of improvements to React. Plus, if you&#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&#39;t need to leave anyone behind.</p>
+<p>This change shouldn&#39;t materially affect most of you. Moving to major semver versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&#39;t have to wait as long to take advantage of improvements to React. Plus, if you&#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&#39;t need to leave anyone behind.</p>
 
 <p>The core of the React API has been stable for years. Our business as well as many of yours all depend heavily on the use of React as a core piece of our infrastructure. We&#39;re committed to the stability as well as the progress of React going forward.</p>
 <h2><a class="anchor" name="bring-everyone-along"></a>Bring Everyone Along <a class="hash-link" href="#bring-everyone-along">#</a></h2>
@@ -130,9 +130,7 @@
 <p>Therefore it is important that we don&#39;t just upgrade our own codebases but that we bring our whole community with us. We take the upgrade path very seriously - for everyone.</p>
 
 <p><img src="/react/img/blog/versioning-poll.png" width="596"></p>
-
-<p>Introducing Minor Releases</p>
-
+<h2><a class="anchor" name="introducing-minor-releases"></a>Introducing Minor Releases <a class="hash-link" href="#introducing-minor-releases">#</a></h2>
 <p>Ideally everyone could just depend on the latest version of React all the time.</p>
 
 <p><img src="/react/img/blog/versioning-2.png" width="463"></p>
@@ -143,7 +141,7 @@
 
 <p>That means that if one component needs a new API, there is no need for any of the other components to do any further work. They remain compatible.</p>
 <h2><a class="anchor" name="what-happened-to-1.0.0"></a>What Happened to 1.0.0? <a class="hash-link" href="#what-happened-to-1.0.0">#</a></h2>
-<p>Part of React&#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. We&#39;re just communicating stability by moving the 0 from the beginning to the end.</p>
+<p>Part of React&#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. There are too many preconceived notions of what v1.0 is. We&#39;re still following semver. We&#39;re just communicating stability by moving the 0 from the beginning to the end.</p>
 <h2><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h2>
 <p>Minor revision releases will include deprecation warnings and tips for how to upgrade an API or pattern that will be removed or changed in the future.</p>
 

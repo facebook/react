@@ -8,9 +8,9 @@
 		
 			<item>
 				<title>New Versioning Scheme</title>
-				<description>&lt;p&gt;Today we&amp;#39;re announcing that we&amp;#39;re switching to major revisions for React. The next release will be: &lt;strong&gt;15.0.0&lt;/strong&gt;&lt;/p&gt;
+				<description>&lt;p&gt;Today we&amp;#39;re announcing that we&amp;#39;re switching to major revisions for React. The current version is 0.14.7. The next release will be: &lt;strong&gt;15.0.0&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;This change shouldn&amp;#39;t materially affect most of you. Moving to major versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&amp;#39;t have to wait as long to take advantage of improvements to React. Plus, if you&amp;#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&amp;#39;t need to leave anyone behind.&lt;/p&gt;
+&lt;p&gt;This change shouldn&amp;#39;t materially affect most of you. Moving to major semver versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&amp;#39;t have to wait as long to take advantage of improvements to React. Plus, if you&amp;#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&amp;#39;t need to leave anyone behind.&lt;/p&gt;
 
 &lt;p&gt;The core of the React API has been stable for years. Our business as well as many of yours all depend heavily on the use of React as a core piece of our infrastructure. We&amp;#39;re committed to the stability as well as the progress of React going forward.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;bring-everyone-along&quot;&gt;&lt;/a&gt;Bring Everyone Along &lt;a class=&quot;hash-link&quot; href=&quot;#bring-everyone-along&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -21,9 +21,7 @@
 &lt;p&gt;Therefore it is important that we don&amp;#39;t just upgrade our own codebases but that we bring our whole community with us. We take the upgrade path very seriously - for everyone.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-poll.png&quot; width=&quot;596&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;Introducing Minor Releases&lt;/p&gt;
-
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;introducing-minor-releases&quot;&gt;&lt;/a&gt;Introducing Minor Releases &lt;a class=&quot;hash-link&quot; href=&quot;#introducing-minor-releases&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Ideally everyone could just depend on the latest version of React all the time.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-2.png&quot; width=&quot;463&quot;&gt;&lt;/p&gt;
@@ -34,7 +32,7 @@
 
 &lt;p&gt;That means that if one component needs a new API, there is no need for any of the other components to do any further work. They remain compatible.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-happened-to-1.0.0&quot;&gt;&lt;/a&gt;What Happened to 1.0.0? &lt;a class=&quot;hash-link&quot; href=&quot;#what-happened-to-1.0.0&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Part of React&amp;#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. We&amp;#39;re just communicating stability by moving the 0 from the beginning to the end.&lt;/p&gt;
+&lt;p&gt;Part of React&amp;#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. There are too many preconceived notions of what v1.0 is. We&amp;#39;re still following semver. We&amp;#39;re just communicating stability by moving the 0 from the beginning to the end.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Minor revision releases will include deprecation warnings and tips for how to upgrade an API or pattern that will be removed or changed in the future.&lt;/p&gt;
 
