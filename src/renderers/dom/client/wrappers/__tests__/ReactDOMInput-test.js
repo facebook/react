@@ -18,6 +18,7 @@ describe('ReactDOMInput', function() {
   var EventConstants;
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactLink;
   var ReactTestUtils;
 
@@ -26,6 +27,7 @@ describe('ReactDOMInput', function() {
     EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
     spyOn(console, 'error');
@@ -578,6 +580,9 @@ describe('ReactDOMInput', function() {
   });
 
   it('sets type before value always', function() {
+    if (!ReactDOMFeatureFlags.useCreateElement) {
+      return;
+    }
     var log = [];
     var originalCreateElement = document.createElement;
     spyOn(document, 'createElement').andCallFake(function(type) {

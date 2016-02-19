@@ -17,12 +17,14 @@ describe('ReactDOMComponent', function() {
   var React;
 
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactDOMServer;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
   });
 
@@ -294,7 +296,11 @@ describe('ReactDOMComponent', function() {
       var container = document.createElement('div');
       ReactDOM.render(<svg theWord="theBird" />, container);
 
-      expect(container.firstChild.hasAttribute('theWord')).toBe(true);
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        // jsdom's svg parsing makes attributes lowercase, so only assert this
+        // in createElement mode...
+        expect(container.firstChild.hasAttribute('theWord')).toBe(true);
+      }
       ReactDOM.render(<svg />, container);
       expect(container.firstChild.hasAttribute('theWord')).toBe(false);
     });

@@ -233,7 +233,7 @@ var ReactDefaultPerf = {
             // Old node is already unmounted; can't get its instance
             id = ReactDOMComponentTree.getInstanceFromNode(args[1].node)._rootNodeID;
           } else if (fnName === 'replaceDelimitedText') {
-            id = getID(ReactDOMComponentTree.getInstanceFromNode(args[1]));
+            id = getID(ReactDOMComponentTree.getInstanceFromNode(args[0]));
           } else if (typeof id === 'object') {
             id = getID(ReactDOMComponentTree.getInstanceFromNode(args[0]));
           }
