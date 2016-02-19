@@ -18,6 +18,7 @@ var ReactPerf = require('ReactPerf');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var invariant = require('invariant');
 var validateDOMNesting = require('validateDOMNesting');
 
 /**
@@ -46,7 +47,7 @@ var ReactDOMTextComponent = function(text) {
   // Properties
   this._domID = null;
   this._mountIndex = 0;
-  this._openingComment = null;
+  this._closingComment = null;
   this._commentNodes = null;
 };
 
@@ -98,8 +99,8 @@ assign(ReactDOMTextComponent.prototype, {
         );
       }
       DOMLazyTree.queueChild(lazyTree, DOMLazyTree(closingComment));
-      this._openingComment = openingComment;
-      ReactDOMComponentTree.precacheNode(this, closingComment);
+      ReactDOMComponentTree.precacheNode(this, openingComment);
+      this._closingComment = closingComment;
       return lazyTree;
     } else {
       var escapedText = escapeTextContentForBrowser(this._stringText);
@@ -149,13 +150,29 @@ assign(ReactDOMTextComponent.prototype, {
     if (nativeNode) {
       return nativeNode;
     }
-    nativeNode = [this._openingComment, this._nativeNode];
+    if (!this._closingComment) {
+      var openingComment = ReactDOMComponentTree.getNodeFromInstance(this);
+      var node = openingComment.nextSibling;
+      while (true) {
+        invariant(
+          node != null,
+          'Missing closing comment for text component %s',
+          this._domID
+        );
+        if (node.nodeType === 8 && node.nodeValue === ' /react-text ') {
+          this._closingComment = node;
+          break;
+        }
+        node = node.nextSibling;
+      }
+    }
+    nativeNode = [this._nativeNode, this._closingComment];
     this._commentNodes = nativeNode;
     return nativeNode;
   },
 
   unmountComponent: function() {
-    this._openingComment = null;
+    this._closingComment = null;
     this._commentNodes = null;
     ReactDOMComponentTree.uncacheNode(this);
   },
