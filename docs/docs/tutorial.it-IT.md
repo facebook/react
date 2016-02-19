@@ -258,7 +258,7 @@ Ma c'è un problema! I nostri commenti visualizzati appaiono come segue nel brow
 
 Questo è il risultato della protezione di React da parte di un [attacco XSS](https://en.wikipedia.org/wiki/Cross-site_scripting). C'è una maniera di aggirare questo comportamento, ma il framework ti avvisa di non farlo:
 
-```javascript{4,10}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {

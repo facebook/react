@@ -233,7 +233,7 @@ Markdown はインラインでテキストをフォーマットする簡単な�
 
 次に、Markdown で書かれたコメントを変換して出力してみましょう。
 
-```javascript{2,10}
+```javascript{9}
 // tutorial6.js
 var Comment = React.createClass({
   render: function() {
@@ -255,17 +255,21 @@ var Comment = React.createClass({
 
 このような現象が起きるのは React が XSS 攻撃に対する防御を行っているからです。これを回避する方法はありますが、それを使うときにはフレームワークが警告をします。
 
-```javascript{5,11}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
-  render: function() {
+  rawMarkup: function() {
     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    return { __html: rawMarkup };
+  },
+
+  render: function() {
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        <span dangerouslySetInnerHTML={{"{{"}}__html: rawMarkup}} />
+        <span dangerouslySetInnerHTML={this.rawMarkup()} />
       </div>
     );
   }
@@ -381,8 +385,7 @@ var CommentBox = React.createClass({
 #### State の更新
 コンポーネントの作成と同時に、サーバから JSON データを GET で取得し、state を更新して最新のデータを反映させてみましょう。実際のアプリケーションでは動的なエンドポイントになるでしょうが、今回の例では話を簡単にするため、以下の静的な JSON ファイルを使います。
 
-```javascript
-// tutorial13.json
+```json
 [
   {"author": "Pete Hunt", "text": "This is one comment"},
   {"author": "Jordan Walke", "text": "This is *another* comment"}
