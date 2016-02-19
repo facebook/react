@@ -331,6 +331,29 @@ describe('ReactElement', function() {
     expect(inst2.props.prop).toBe(null);
   });
 
+  it('should normalize props with default values in cloning', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {prop: 'testKey'};
+      },
+      render: function() {
+        return <span />;
+      },
+    });
+
+    var instance = React.createElement(Component);
+    var clonedInstance = React.cloneElement(instance, {prop: undefined});
+    expect(clonedInstance.props.prop).toBe('testKey');
+    var clonedInstance2 = React.cloneElement(instance, {prop: null});
+    expect(clonedInstance2.props.prop).toBe(null);
+
+    var instance2 = React.createElement(Component, {prop: 'newTestKey'});
+    var cloneInstance3 = React.cloneElement(instance2, {prop: undefined});
+    expect(cloneInstance3.props.prop).toBe('testKey');
+    var cloneInstance4 = React.cloneElement(instance2, {});
+    expect(cloneInstance4.props.prop).toBe('newTestKey');
+  });
+
   it('throws when changing a prop (in dev) after element creation', function() {
     var Outer = React.createClass({
       render: function() {
