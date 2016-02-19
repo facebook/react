@@ -3,9 +3,9 @@ title: "New Versioning Scheme"
 author: sebmarkbage
 ---
 
-Today we're announcing that we're switching to major revisions for React. The next release will be: **15.0.0**
+Today we're announcing that we're switching to major revisions for React. The current version is 0.14.7. The next release will be: **15.0.0**
 
-This change shouldn't materially affect most of you. Moving to major versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won't have to wait as long to take advantage of improvements to React. Plus, if you're a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don't need to leave anyone behind.
+This change shouldn't materially affect most of you. Moving to major semver versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won't have to wait as long to take advantage of improvements to React. Plus, if you're a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don't need to leave anyone behind.
 
 The core of the React API has been stable for years. Our business as well as many of yours all depend heavily on the use of React as a core piece of our infrastructure. We're committed to the stability as well as the progress of React going forward.
 
@@ -19,7 +19,7 @@ Therefore it is important that we don't just upgrade our own codebases but that 
 
 <img src="/react/img/blog/versioning-poll.png" width="596">
 
-Introducing Minor Releases
+## Introducing Minor Releases
 
 Ideally everyone could just depend on the latest version of React all the time.
 
@@ -33,7 +33,7 @@ That means that if one component needs a new API, there is no need for any of th
 
 ## What Happened to 1.0.0?
 
-Part of React's growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. We're just communicating stability by moving the 0 from the beginning to the end.
+Part of React's growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. There are too many preconceived notions of what v1.0 is. We're still following semver. We're just communicating stability by moving the 0 from the beginning to the end.
 
 ## Breaking Changes
 
