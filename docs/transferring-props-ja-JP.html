@@ -422,16 +422,14 @@
 <p>以下のチュートリアルはベストプラクティスを提示しています。JSXや試験的なES7のシンタックスを使っています。</p>
 <h2><a class="anchor" name=""></a>手動での移動 <a class="hash-link" href="#">#</a></h2>
 <p>ほとんどの場合、プロパティを明確に子要素に渡すべきです。それは、内部のAPIのサブセットだけを外に出していることと、認識しているプロパティが動作することを保証します。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">FancyCheckbox</span> <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">console</span><span class="p">)}</span><span class="o">&gt;</span>
     <span class="nx">Hello</span> <span class="nx">world</span><span class="o">!</span>
@@ -449,19 +447,17 @@
 <p>全てのプロパティを渡すのはバグを生みやすく、面倒くさいときがあります。そのようなケースでは、未知のプロパティのセットを使うためにレストプロパティと共に<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">分割代入引数</a>を使うことができます。</p>
 
 <p>以下のように <code>...other</code> を使うことで、使いたいプロパティを一覧にすることができます。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">props</span><span class="p">;</span>
 </code></pre></div>
 <p>これは、自分で指定したものは 除き 、全てのpropsを渡すことを保証します。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
-    <span class="c1">// `other` は { onClick: console.log } を含みますが、 checked プロパティは含みません。</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="nx">other</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="o">/&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">props</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
+  <span class="c1">// `other` は { onClick: console.log } を含みますが、 checked プロパティは含みません。</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="nx">other</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="o">/&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">FancyCheckbox</span> <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">console</span><span class="p">)}</span><span class="o">&gt;</span>
     <span class="nx">Hello</span> <span class="nx">world</span><span class="o">!</span>
@@ -475,34 +471,30 @@
 </blockquote>
 
 <p>未知の <code>other</code> propsを移譲する際には、分割代入パターンを常に使ってください。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
-    <span class="c1">// アンチパターン: `checked` が内部のコンポーネントに渡されます。</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="o">/&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
+  <span class="c1">// アンチパターン: `checked` が内部のコンポーネントに渡されます。</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="o">/&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div><h2><a class="anchor" name="prop"></a>同じpropを使い、移譲する <a class="hash-link" href="#prop">#</a></h2>
 <p>コンポーネントがプロパティを使うだけでなく、子要素に渡したい場合は、明確に <code>checked={checked}</code> と記述することで再度渡すことができます。 <code>this.props</code> オブジェクトで全てを渡すほうが、リファクタリングやチェックをしやすいので好ましいです。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="nx">title</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">fancyTitle</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;X &#39;</span> <span class="o">+</span> <span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;O &#39;</span> <span class="o">+</span> <span class="nx">title</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="p">{...</span><span class="nx">other</span><span class="p">}</span>
-          <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="nx">checked</span><span class="p">}</span>
-          <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span>
-          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
-        <span class="o">/&gt;</span>
-        <span class="p">{</span><span class="nx">fancyTitle</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/label&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="nx">title</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">props</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">fancyTitle</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;X &#39;</span> <span class="o">+</span> <span class="nx">title</span> <span class="o">:</span> <span class="s1">&#39;O &#39;</span> <span class="o">+</span> <span class="nx">title</span><span class="p">;</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">input</span> <span class="p">{...</span><span class="nx">other</span><span class="p">}</span>
+        <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="nx">checked</span><span class="p">}</span>
+        <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span>
+        <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
+      <span class="o">/&gt;</span>
+      <span class="p">{</span><span class="nx">fancyTitle</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="err">/label&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div>
 <blockquote>
 <p>注意:
@@ -523,16 +515,14 @@
 </blockquote>
 <h2><a class="anchor" name="underscore"></a>Underscoreによる移譲 <a class="hash-link" href="#underscore">#</a></h2>
 <p>JSXを使わない際には、同じパターンを行うライブラリを使うことができます。Underscoreでは、 <code>_.omit</code> を使ってプロパティをフィルタしたり、 <code>_.extend</code> を使って新しいオブジェクトにプロパティをコピーしたりできます。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">checked</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">checked</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">other</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="s1">&#39;checked&#39;</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">other</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="nx">fancyClass</span> <span class="p">}))</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">checked</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">other</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="s1">&#39;checked&#39;</span><span class="p">);</span>
+  <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">other</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="nx">fancyClass</span> <span class="p">}))</span>
+  <span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div>
 
     <div class="docs-prevnext">

@@ -445,7 +445,7 @@
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
@@ -482,7 +482,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
@@ -500,7 +500,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">CommentBox</span><span class="p">,</span> <span class="kc">null</span><span class="p">),</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
@@ -513,9 +513,9 @@
 
 <p>你没有必要返回基本的 HTML。你可以返回一个你（或者其他人）创建的组件树。这就使 React <strong>组件化</strong>：一个可维护前端的关键原则。</p>
 
-<p><code>React.render()</code> 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。</p>
+<p><code>ReactDOM.render()</code> 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。</p>
 <h2><a class="anchor" name=""></a>组合组件 <a class="hash-link" href="#">#</a></h2>
-<p>让我们为 <code>CommentList</code> 和 <code>CommentForm</code> 建造骨架，它们将会，再一次的，是一些简单的 <code>&lt;div&gt;</code>。添加这两个组件到你的文件里，保持现存的 <code>CommentBox</code> 声明和 <code>React.render</code> 调用:</p>
+<p>让我们为 <code>CommentList</code> 和 <code>CommentForm</code> 建造骨架，它们将会，再一次的，是一些简单的 <code>&lt;div&gt;</code>。添加这两个组件到你的文件里，保持现存的 <code>CommentBox</code> 声明和 <code>ReactDOM.render</code> 调用:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -596,7 +596,7 @@
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>
 <p>然后，让我们转换评论文本为 Markdown 并输出它：</p>
@@ -649,7 +649,7 @@
   <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
 <span class="p">];</span>
 </code></pre></div>
-<p>我们需要以一种模块化的方式将这个数据传入到 <code>CommentList</code>。修改 <code>CommentBox</code> 和 <code>React.render()</code> 方法，以通过 props 传入数据到 <code>CommentList</code>：</p>
+<p>我们需要以一种模块化的方式将这个数据传入到 <code>CommentList</code>。修改 <code>CommentBox</code> 和 <code>ReactDOM.render()</code> 方法，以通过 props 传入数据到 <code>CommentList</code>：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial9.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -663,7 +663,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
 <span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
@@ -691,7 +691,7 @@
 <h3><a class="anchor" name=""></a>从服务器获取数据 <a class="hash-link" href="#">#</a></h3>
 <p>让我们用一些来自服务器的动态数据替换硬编码的数据。我们将移除数据的prop，用获取数据的URL来替换它：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial11.js</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
 <span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;/api/comments&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
@@ -791,7 +791,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
 <span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;/api/comments&quot;</span> <span class="nx">pollInterval</span><span class="o">=</span><span class="p">{</span><span class="mi">2000</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>

@@ -445,7 +445,7 @@
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
@@ -592,7 +592,7 @@
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>
 <p>次に、Markdown で書かれたコメントを変換して出力してみましょう。</p>
@@ -689,6 +689,8 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>このコンポーネントは自身を再びレンダリングすることになるので、これまでのコンポーネントとは異なります。レスポンスがサーバから返ってくると、送られてきた新しいコメントをコンポーネントがレンダリングすることになります。ですが、その時点までコンポーネントには何もデータがないはずです。</p>
+
+<p>確認: 上のコードは、このステップではまだ動きません。</p>
 <h3><a class="anchor" name="reactive-state"></a>Reactive state <a class="hash-link" href="#reactive-state">#</a></h3>
 <p>これまで、それぞれのコンポーネントは自身の props の値を用いて、一度だけレンダリングしていました。<code>props</code> はイミュータブルです。つまり、props は親から渡されますが、同時に props は親の「所有物」なのです。データが相互にやり取りされるのを実現するため、ここでミュータブルな <strong>state</strong>（状態）をコンポーネントに取り入れましょう。コンポーネントは <code>this.state</code> というプライベートな値を持ち、<code>this.setState()</code> を呼び出すことで state を更新することが出来ます。コンポーネントの state が更新されれば、そのコンポーネントは自身を再びレンダリングし直します。</p>
 
