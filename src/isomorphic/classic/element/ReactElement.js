@@ -249,25 +249,6 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
   return newElement;
 };
 
-ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
-  var newElement = ReactElement(
-    oldElement.type,
-    oldElement.key,
-    oldElement.ref,
-    oldElement._self,
-    oldElement._source,
-    oldElement._owner,
-    newProps
-  );
-
-  if (__DEV__) {
-    // If the key on the original is valid, then the clone is valid
-    newElement._store.validated = oldElement._store.validated;
-  }
-
-  return newElement;
-};
-
 ReactElement.cloneElement = function(element, config, children) {
   var propName;
 
