@@ -72,7 +72,7 @@ In this example, we are accepting the value provided by the user and updating th
 
 This would accept user input and truncate the value to the first 140 characters.
 
-A **Controlled** component maintains its own internal state; the component renders purely based on props.
+A **Controlled** component does not maintain its own internal state; the component renders purely based on props.
 
 ### Potential Issues With Checkboxes and Radio Buttons
 
