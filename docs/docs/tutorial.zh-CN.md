@@ -258,7 +258,7 @@ var Comment = React.createClass({
 
 那是 React 在保护你免受 [XSS 攻击](https://en.wikipedia.org/wiki/Cross-site_scripting)。有一个方法解决这个问题，但是框架会警告你别使用这种方法：
 
-```javascript{4,10}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
