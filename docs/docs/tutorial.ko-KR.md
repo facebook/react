@@ -262,7 +262,7 @@ var Comment = React.createClass({
 
 React는 이런 식으로 [XSS 공격](https://en.wikipedia.org/wiki/Cross-site_scripting)을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:
 
-```javascript{4,14}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
