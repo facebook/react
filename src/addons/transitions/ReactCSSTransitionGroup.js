@@ -55,6 +55,8 @@ var ReactCSSTransitionGroup = React.createClass({
     transitionAppearTimeout: createTransitionTimeoutPropValidator('Appear'),
     transitionEnterTimeout: createTransitionTimeoutPropValidator('Enter'),
     transitionLeaveTimeout: createTransitionTimeoutPropValidator('Leave'),
+
+    transistionIsSequential: React.PropTypes.bool,
   },
 
   getDefaultProps: function() {
@@ -62,6 +64,7 @@ var ReactCSSTransitionGroup = React.createClass({
       transitionAppear: false,
       transitionEnter: true,
       transitionLeave: true,
+      transistionIsSequential: false,
     };
   },
 
