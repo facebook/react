@@ -12,7 +12,7 @@
 'use strict';
 
 describe('CSSProperty', function() {
-  var CSSProperty;
+  let CSSProperty;
 
   beforeEach(function() {
     jest.resetModuleRegistry();

@@ -11,20 +11,20 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactFragment;
-var ReactPropTypeLocations;
-var ReactTestUtils;
+let PropTypes;
+let React;
+let ReactFragment;
+let ReactPropTypeLocations;
+let ReactTestUtils;
 
-var Component;
-var MyComponent;
-var requiredMessage =
+let Component;
+let MyComponent;
+const requiredMessage =
   'Required prop `testProp` was not specified in `testComponent`.';
 
 function typeCheckFail(declaration, value, message) {
-  var props = {testProp: value};
-  var error = declaration(
+  const props = {testProp: value};
+  const error = declaration(
     props,
     'testProp',
     'testComponent',
@@ -35,8 +35,8 @@ function typeCheckFail(declaration, value, message) {
 }
 
 function typeCheckPass(declaration, value) {
-  var props = {testProp: value};
-  var error = declaration(
+  const props = {testProp: value};
+  const error = declaration(
     props,
     'testProp',
     'testComponent',
@@ -176,7 +176,7 @@ describe('ReactPropTypes', function() {
 
     it('should warn with invalid complex types', function() {
       function Thing() {}
-      var name = Thing.name || '<<anonymous>>';
+      const name = Thing.name || '<<anonymous>>';
 
       typeCheckFail(
         PropTypes.arrayOf(PropTypes.instanceOf(Thing)),
@@ -249,7 +249,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not support multiple components or scalar values', () => {
-      var message = 'Invalid prop `testProp` supplied to `testComponent`, ' +
+      const message = 'Invalid prop `testProp` supplied to `testComponent`, ' +
         'expected a single ReactElement.';
       typeCheckFail(PropTypes.element, [<div />, <div />], message);
       typeCheckFail(PropTypes.element, 123, message);
@@ -258,14 +258,14 @@ describe('ReactPropTypes', function() {
     });
 
     it('should be able to define a single child as label', () => {
-      var instance = <Component label={<div />} />;
+      let instance = <Component label={<div />} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
       expect(console.error.argsForCall.length).toBe(0);
     });
 
     it('should warn when passing no label and isRequired is set', () => {
-      var instance = <Component />;
+      let instance = <Component />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
       expect(console.error.argsForCall.length).toBe(1);
@@ -286,9 +286,9 @@ describe('ReactPropTypes', function() {
     it('should warn for invalid instances', function() {
       function Person() {}
       function Cat() {}
-      var personName = Person.name || '<<anonymous>>';
-      var dateName = Date.name || '<<anonymous>>';
-      var regExpName = RegExp.name || '<<anonymous>>';
+      const personName = Person.name || '<<anonymous>>';
+      const dateName = Date.name || '<<anonymous>>';
+      const regExpName = RegExp.name || '<<anonymous>>';
 
       typeCheckFail(
         PropTypes.instanceOf(Person),
@@ -371,7 +371,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for invalid values', function() {
-      var failMessage = 'Invalid prop `testProp` supplied to ' +
+      const failMessage = 'Invalid prop `testProp` supplied to ' +
         '`testComponent`, expected a ReactNode.';
       typeCheckFail(PropTypes.node, true, failMessage);
       typeCheckFail(PropTypes.node, function() {}, failMessage);
@@ -396,7 +396,7 @@ describe('ReactPropTypes', function() {
       ]);
 
       // Object of renderable things
-      var frag = ReactFragment.create;
+      const frag = ReactFragment.create;
       typeCheckPass(PropTypes.node, frag({
         k0: 123,
         k1: 'Some string',
@@ -413,12 +413,12 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not warn for iterables', function() {
-      var iterable = {
+      const iterable = {
         '@@iterator': function() {
-          var i = 0;
+          let i = 0;
           return {
             next: function() {
-              var done = ++i > 2;
+              const done = ++i > 2;
               return {value: done ? undefined : <MyComponent />, done: done};
             },
           };
@@ -429,12 +429,12 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not warn for entry iterables', function() {
-      var iterable = {
+      const iterable = {
         '@@iterator': function() {
-          var i = 0;
+          let i = 0;
           return {
             next: function() {
-              var done = ++i > 2;
+              const done = ++i > 2;
               return {value: done ? undefined : ['#' + i, <MyComponent />], done: done};
             },
           };
@@ -513,7 +513,7 @@ describe('ReactPropTypes', function() {
 
     it('should warn with invalid complex types', function() {
       function Thing() {}
-      var name = Thing.name || '<<anonymous>>';
+      const name = Thing.name || '<<anonymous>>';
 
       typeCheckFail(
         PropTypes.objectOf(PropTypes.instanceOf(Thing)),
@@ -643,7 +643,7 @@ describe('ReactPropTypes', function() {
         'Invalid prop `testProp` supplied to `testComponent`.'
       );
 
-      var checker = PropTypes.oneOfType([
+      const checker = PropTypes.oneOfType([
         PropTypes.shape({a: PropTypes.number.isRequired}),
         PropTypes.shape({b: PropTypes.number.isRequired}),
       ]);
@@ -655,7 +655,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not warn if one of the types are valid', function() {
-      var checker = PropTypes.oneOfType([
+      let checker = PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.number,
       ]);
@@ -785,7 +785,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should have been called with the right params', function() {
-      var spy = jasmine.createSpy();
+      const spy = jasmine.createSpy();
       Component = React.createClass({
         propTypes: {num: spy},
 
@@ -794,7 +794,7 @@ describe('ReactPropTypes', function() {
         },
       });
 
-      var instance = <Component num={5} />;
+      let instance = <Component num={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy.argsForCall.length).toBe(2); // temp double validation
@@ -803,7 +803,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should have been called even if the prop is not present', function() {
-      var spy = jasmine.createSpy();
+      const spy = jasmine.createSpy();
       Component = React.createClass({
         propTypes: {num: spy},
 
@@ -812,14 +812,14 @@ describe('ReactPropTypes', function() {
         },
       });
 
-      var instance = <Component bla={5} />;
+      let instance = <Component bla={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy.argsForCall.length).toBe(2); // temp double validation
     });
 
     it('should have received the validator\'s return value', function() {
-      var spy = jasmine.createSpy().andCallFake(
+      const spy = jasmine.createSpy().andCallFake(
         function(props, propName, componentName) {
           if (props[propName] !== 5) {
             return new Error('num must be 5!');
@@ -834,7 +834,7 @@ describe('ReactPropTypes', function() {
         },
       });
 
-      var instance = <Component num={6} />;
+      let instance = <Component num={6} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toBe(
@@ -844,7 +844,7 @@ describe('ReactPropTypes', function() {
 
     it('should not warn if the validator returned null',
       function() {
-        var spy = jasmine.createSpy().andCallFake(
+        const spy = jasmine.createSpy().andCallFake(
           function(props, propName, componentName) {
             return null;
           }
@@ -857,7 +857,7 @@ describe('ReactPropTypes', function() {
           },
         });
 
-        var instance = <Component num={5} />;
+        let instance = <Component num={5} />;
         instance = ReactTestUtils.renderIntoDocument(instance);
         expect(console.error.argsForCall.length).toBe(0);
       }

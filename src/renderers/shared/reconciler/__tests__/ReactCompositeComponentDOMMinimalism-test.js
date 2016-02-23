@@ -12,15 +12,15 @@
 'use strict';
 
 // Requires
-var React;
-var ReactTestUtils;
-var reactComponentExpect;
+let React;
+let ReactTestUtils;
+let reactComponentExpect;
 
 // Test components
-var LowerLevelComposite;
-var MyCompositeComponent;
+let LowerLevelComposite;
+let MyCompositeComponent;
 
-var expectSingleChildlessDiv;
+let expectSingleChildlessDiv;
 
 /**
  * Integration test, testing the combination of JSX with our unit of
@@ -65,7 +65,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
   });
 
   it('should not render extra nodes for non-interpolated text', function() {
-    var instance = (
+    let instance = (
       <MyCompositeComponent>
         A string child
       </MyCompositeComponent>
@@ -75,7 +75,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
   });
 
   it('should not render extra nodes for non-interpolated text', function() {
-    var instance = (
+    let instance = (
       <MyCompositeComponent>
         {'Interpolated String Child'}
       </MyCompositeComponent>
@@ -85,7 +85,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
   });
 
   it('should not render extra nodes for non-interpolated text', function() {
-    var instance = (
+    let instance = (
       <MyCompositeComponent>
         <ul>
           This text causes no children in ul, just innerHTML

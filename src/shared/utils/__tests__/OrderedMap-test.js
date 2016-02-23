@@ -11,12 +11,12 @@
 
 'use strict';
 
-var OrderedMap;
+let OrderedMap;
 
 /**
  * Shared, reusable objects.
  */
-var hasEmptyStringKey = {
+const hasEmptyStringKey = {
   'thisKeyIsFine': {data: []},
   '': {thisShouldCauseAFailure: []},
   'thisKeyIsAlsoFine': {data: []},
@@ -25,7 +25,7 @@ var hasEmptyStringKey = {
 /**
  * Used as map/forEach callback.
  */
-var duplicate = function(itm, key, count) {
+const duplicate = function(itm, key, count) {
   return {
     uniqueID: itm.uniqueID,
     val: itm.val + key + count + this.justToTestScope,
@@ -34,101 +34,101 @@ var duplicate = function(itm, key, count) {
 
 // Should not be allowed - because then null/'null' become impossible to
 // distinguish. Every key MUST be a string period!
-var hasNullAndUndefStringKey = [
+const hasNullAndUndefStringKey = [
   {uniqueID: 'undefined', val: 'thisIsUndefined'},
   {uniqueID: 'null', val: 'thisIsNull'},
 ];
-var hasNullKey = [
+const hasNullKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
   {uniqueID: null, data: []},
 ];
 
-var hasObjectKey = [
+const hasObjectKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
   {uniqueID: {}, data: []},
 ];
 
-var hasArrayKey = [
+const hasArrayKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
   {uniqueID: [], data: []},
 ];
 
 // This should be allowed
-var hasNullStringKey = [
+const hasNullStringKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
   {uniqueID: 'null', data: []},
 ];
 
-var hasUndefinedKey = [
+const hasUndefinedKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
   {uniqueID: undefined, data: []},
 ];
 
-var hasUndefinedStringKey = [
+const hasUndefinedStringKey = [
   {uniqueID: 'thisKeyIsFine', data: []},
   {uniqueID: 'thisKeyIsAlsoFine', data: []},
   {uniqueID: 'undefined', data: []},
 ];
 
-var hasPositiveNumericKey = [
+const hasPositiveNumericKey = [
   {uniqueID: 'notANumber', data: []},
   {uniqueID: '5', data: []},
   {uniqueID: 'notAnotherNumber', data: []},
 ];
 
-var hasZeroStringKey = [
+const hasZeroStringKey = [
   {uniqueID: 'greg', data: 'grego'},
   {uniqueID: '0', data: '0o'},
   {uniqueID: 'tom', data: 'tomo'},
 ];
 
-var hasZeroNumberKey = [
+const hasZeroNumberKey = [
   {uniqueID: 'greg', data: 'grego'},
   {uniqueID: 0, data: '0o'},
   {uniqueID: 'tom', data: 'tomo'},
 ];
 
-var hasAllNumericStringKeys = [
+const hasAllNumericStringKeys = [
   {uniqueID: '0', name: 'Gregory'},
   {uniqueID: '2', name: 'James'},
   {uniqueID: '1', name: 'Tom'},
 ];
 
-var hasAllNumericKeys = [
+const hasAllNumericKeys = [
   {uniqueID: 0, name: 'Gregory'},
   {uniqueID: 2, name: 'James'},
   {uniqueID: 1, name: 'Tom'},
 ];
 
-var hasAllValidKeys = [
+const hasAllValidKeys = [
   {uniqueID: 'keyOne', value: 'valueOne'},
   {uniqueID: 'keyTwo', value: 'valueTwo'},
 ];
 
-var hasDuplicateKeys = [
+const hasDuplicateKeys = [
   {uniqueID: 'keyOne', value: 'valueOne'},
   {uniqueID: 'keyTwo', value: 'valueTwo'},
   {uniqueID: 'keyOne', value: 'valueThree'},
 ];
 
-var idEntities = [
+const idEntities = [
   {uniqueID: 'greg', name: 'Gregory'},
   {uniqueID: 'james', name: 'James'},
   {uniqueID: 'tom', name: 'Tom'},
 ];
 
-var hasEmptyKey = [
+const hasEmptyKey = [
   {uniqueID: 'greg', name: 'Gregory'},
   {uniqueID: '', name: 'James'},
   {uniqueID: 'tom', name: 'Tom'},
 ];
 
-var extractUniqueID = function(entity) {
+const extractUniqueID = function(entity) {
   return entity.uniqueID;
 };
 
@@ -169,7 +169,7 @@ describe('OrderedMap', function() {
 
   it('should not throw when a key is the string "undefined" or "null"',
     function() {
-      var om = OrderedMap.fromArray(hasNullAndUndefStringKey, extractUniqueID);
+      const om = OrderedMap.fromArray(hasNullAndUndefStringKey, extractUniqueID);
       expect(om.length).toBe(2);
       expect(om.indexOfKey('undefined')).toBe(0);
       expect(om.indexOfKey('null')).toBe(1);
@@ -187,7 +187,7 @@ describe('OrderedMap', function() {
    * Numeric keys are cast to strings.
    */
   it('should not throw when a key is the number zero', function() {
-    var om = OrderedMap.fromArray(hasZeroNumberKey, extractUniqueID);
+    const om = OrderedMap.fromArray(hasZeroNumberKey, extractUniqueID);
     expect(om.length).toBe(3);
     expect(om.indexOfKey('0')).toBe(1);
     expect(om.indexOfKey(0)).toBe(1);
@@ -234,7 +234,7 @@ describe('OrderedMap', function() {
   });
 
   it('should not throw when a key is the string "0"', function() {
-    var verifyOM = function(om) {
+    const verifyOM = function(om) {
       expect(om.length).toBe(3);
       expect(om.indexOfKey('greg')).toBe(0);
       expect(om.indexOfKey('0')).toBe(1);
@@ -257,7 +257,7 @@ describe('OrderedMap', function() {
   });
 
   it('should throw when getting invalid public key', function() {
-    var om = OrderedMap.fromArray(hasAllValidKeys, extractUniqueID);
+    const om = OrderedMap.fromArray(hasAllValidKeys, extractUniqueID);
     expect(function() {
       om.has(undefined);
     }).toThrow();
@@ -296,7 +296,7 @@ describe('OrderedMap', function() {
   it('should throw when fromArray is passed crazy args', function() {
     // Test passing another OrderedMap (when it expects a plain object.)
     // This is probably not what you meant to do! We should error.
-    var validOM = OrderedMap.fromArray(hasAllValidKeys, extractUniqueID);
+    const validOM = OrderedMap.fromArray(hasAllValidKeys, extractUniqueID);
     expect(function() {
       OrderedMap.fromArray({uniqueID: 'asdf'}, extractUniqueID);
     }).toThrow();
@@ -355,7 +355,7 @@ describe('OrderedMap', function() {
   });
 
   it('should throw when accessing key before/after of non-key', function() {
-    var om = OrderedMap.fromArray(
+    const om = OrderedMap.fromArray(
       [
         {uniqueID: 'first'},
         {uniqueID: 'two'},
@@ -377,7 +377,7 @@ describe('OrderedMap', function() {
 
   it('should throw passing invalid/not-present-keys to before/after',
     function() {
-      var om = OrderedMap.fromArray([
+      const om = OrderedMap.fromArray([
         {uniqueID: 'one', val: 'first'},
         {uniqueID: 'two', val: 'second'},
         {uniqueID: 'three', val: 'third'},
@@ -438,7 +438,7 @@ describe('OrderedMap', function() {
     });
 
   it('should correctly determine the nth key after before', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'},
       {uniqueID: 'three', val: 'third'},
@@ -472,7 +472,7 @@ describe('OrderedMap', function() {
   });
 
   it('should compute key indices correctly', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'},
     ], extractUniqueID);
@@ -494,7 +494,7 @@ describe('OrderedMap', function() {
   });
 
   it('should compute indices on array that extracted numeric ids', function() {
-    var som = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
+    const som = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
     expect(som.keyAtIndex(0)).toBe('greg');
     expect(som.keyAtIndex(1)).toBe('0');
     expect(som.keyAtIndex(2)).toBe('tom');
@@ -503,7 +503,7 @@ describe('OrderedMap', function() {
     expect(som.indexOfKey('tom')).toBe(2);
 
 
-    var verifyNumericKeys = function(nom) {
+    const verifyNumericKeys = function(nom) {
       expect(nom.keyAtIndex(0)).toBe('0');
       expect(nom.keyAtIndex(1)).toBe('2');
       expect(nom.keyAtIndex(2)).toBe('1');
@@ -511,23 +511,23 @@ describe('OrderedMap', function() {
       expect(nom.indexOfKey('2')).toBe(1); // Prove these are not ordered by
       expect(nom.indexOfKey('1')).toBe(2); // their keys
     };
-    var omStringNumberKeys =
+    const omStringNumberKeys =
       OrderedMap.fromArray(hasAllNumericStringKeys, extractUniqueID);
     verifyNumericKeys(omStringNumberKeys);
-    var omNumericKeys =
+    const omNumericKeys =
       OrderedMap.fromArray(hasAllNumericKeys, extractUniqueID);
     verifyNumericKeys(omNumericKeys);
   });
 
   it('should compute indices on mutually exclusive merge', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'},
     ], extractUniqueID);
-    var om2 = OrderedMap.fromArray([
+    const om2 = OrderedMap.fromArray([
       {uniqueID: 'three', val: 'third'},
     ], extractUniqueID);
-    var res = om.merge(om2);
+    const res = om.merge(om2);
 
     expect(res.length).toBe(3);
 
@@ -553,12 +553,12 @@ describe('OrderedMap', function() {
   });
 
   it('should compute indices on intersected merge', function() {
-    var oneTwo = OrderedMap.fromArray([
+    const oneTwo = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'secondOM1'},
     ], extractUniqueID);
 
-    var testOneTwoMergedWithTwoThree = function(res) {
+    const testOneTwoMergedWithTwoThree = function(res) {
       expect(res.length).toBe(3);
       expect(res.keyAtIndex(0)).toBe('one');
       expect(res.keyAtIndex(1)).toBe('two');
@@ -578,7 +578,7 @@ describe('OrderedMap', function() {
       expect(res.get('dog')).toBe(undefined);
     };
 
-    var result =
+    let result =
       oneTwo.merge(OrderedMap.fromArray([
         {uniqueID: 'two', val: 'secondOM2'},
         {uniqueID: 'three', val: 'third'},
@@ -596,7 +596,7 @@ describe('OrderedMap', function() {
     testOneTwoMergedWithTwoThree(result);
 
 
-    var testTwoThreeMergedWithOneTwo = function(res) {
+    const testTwoThreeMergedWithOneTwo = function(res) {
       expect(res.length).toBe(3);
       expect(res.keyAtIndex(0)).toBe('two');
       expect(res.keyAtIndex(1)).toBe('three');
@@ -624,27 +624,27 @@ describe('OrderedMap', function() {
   });
 
   it('should merge mutually exclusive keys to the end.', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'},
     ], extractUniqueID);
-    var om2 = OrderedMap.fromArray([
+    const om2 = OrderedMap.fromArray([
       {uniqueID: 'three', val: 'first'},
       {uniqueID: 'four', val: 'second'},
     ], extractUniqueID);
-    var res = om.merge(om2);
+    const res = om.merge(om2);
     expect(res.length).toBe(4);
 
   });
 
   it('should map correctly', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
       {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
-    var scope = {justToTestScope: 'justTestingScope'};
-    var verifyResult = function(omResult) {
+    const scope = {justToTestScope: 'justTestingScope'};
+    const verifyResult = function(omResult) {
       expect(omResult.length).toBe(3);
       expect(omResult.keyAtIndex(0)).toBe('x');
       expect(omResult.keyAtIndex(1)).toBe('y');
@@ -653,7 +653,7 @@ describe('OrderedMap', function() {
       expect(omResult.get('y').val).toBe('yyy1justTestingScope');
       expect(omResult.get('z').val).toBe('zzz2justTestingScope');
     };
-    var resultOM = om.map(function(itm, key, count) {
+    let resultOM = om.map(function(itm, key, count) {
       return {
         uniqueID: itm.uniqueID,
         val: itm.val + key + count + this.justToTestScope,
@@ -661,7 +661,7 @@ describe('OrderedMap', function() {
     }, scope);
     verifyResult(resultOM);
 
-    var resArray = [];
+    const resArray = [];
     om.forEach(function(itm, key, count) {
       resArray.push({
         uniqueID: itm.uniqueID,
@@ -673,14 +673,14 @@ describe('OrderedMap', function() {
   });
 
   it('should filter correctly', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
       {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
-    var scope = {justToTestScope: 'justTestingScope'};
+    const scope = {justToTestScope: 'justTestingScope'};
 
-    var filteringCallback = function(item, key, indexInOriginal) {
+    const filteringCallback = function(item, key, indexInOriginal) {
       expect(this).toBe(scope);
       expect(key === 'x' || key === 'y' || key === 'z').toBe(true);
       if (key === 'x') {
@@ -698,7 +698,7 @@ describe('OrderedMap', function() {
       }
     };
 
-    var verifyResult = function(omResult) {
+    const verifyResult = function(omResult) {
       expect(omResult.length).toBe(2);
       expect(omResult.keyAtIndex(0)).toBe('y');
       expect(omResult.keyAtIndex(1)).toBe('z');
@@ -709,17 +709,17 @@ describe('OrderedMap', function() {
       expect(omResult.get('y').val).toBe('yy');
     };
 
-    var resultOM = om.filter(filteringCallback, scope);
+    const resultOM = om.filter(filteringCallback, scope);
     verifyResult(resultOM);
   });
 
   it('should throw when providing invalid ranges to ranging', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
       {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
-    var scope = {justToTestScope: 'justTestingScope'};
+    const scope = {justToTestScope: 'justTestingScope'};
 
     expect(function() {
       om.mapRange(duplicate, 0, 3, scope);
@@ -849,13 +849,13 @@ describe('OrderedMap', function() {
   // TEST length zero map, or keyrange start===end
 
   it('should map range correctly', function() {
-    var om = OrderedMap.fromArray([
+    const om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
       {uniqueID: 'z', val: 'zz'},
     ], extractUniqueID);
-    var scope = {justToTestScope: 'justTestingScope'};
-    var verifyThreeItems = function(omResult) {
+    const scope = {justToTestScope: 'justTestingScope'};
+    const verifyThreeItems = function(omResult) {
       expect(omResult.length).toBe(3);
       expect(omResult.keyAtIndex(0)).toBe('x');
       expect(omResult.keyAtIndex(1)).toBe('y');
@@ -864,7 +864,7 @@ describe('OrderedMap', function() {
       expect(omResult.get('y').val).toBe('yyy1justTestingScope');
       expect(omResult.get('z').val).toBe('zzz2justTestingScope');
     };
-    var verifyFirstTwoItems = function(omResult) {
+    const verifyFirstTwoItems = function(omResult) {
       expect(omResult.length).toBe(2);
       expect(omResult.keyAtIndex(0)).toBe('x');
       expect(omResult.keyAtIndex(1)).toBe('y');
@@ -872,7 +872,7 @@ describe('OrderedMap', function() {
       expect(omResult.get('y').val).toBe('yyy1justTestingScope');
     };
 
-    var verifyLastTwoItems = function(omResult) {
+    const verifyLastTwoItems = function(omResult) {
       expect(omResult.length).toBe(2);
       expect(omResult.keyAtIndex(0)).toBe('y');
       expect(omResult.keyAtIndex(1)).toBe('z');
@@ -880,20 +880,20 @@ describe('OrderedMap', function() {
       expect(omResult.get('z').val).toBe('zzz2justTestingScope');
     };
 
-    var verifyMiddleItem = function(omResult) {
+    const verifyMiddleItem = function(omResult) {
       expect(omResult.length).toBe(1);
       expect(omResult.keyAtIndex(0)).toBe('y');
       expect(omResult.get('y').val).toBe('yyy1justTestingScope');
     };
 
-    var verifyEmpty = function(omResult) {
+    const verifyEmpty = function(omResult) {
       expect(omResult.length).toBe(0);
     };
 
-    var omResultThree = om.mapRange(duplicate, 0, 3, scope);
+    let omResultThree = om.mapRange(duplicate, 0, 3, scope);
     verifyThreeItems(omResultThree);
-    var resArray = [];
-    var pushToResArray = function(itm, key, count) {
+    let resArray = [];
+    const pushToResArray = function(itm, key, count) {
       resArray.push({
         uniqueID: itm.uniqueID,
         val: itm.val + key + count + this.justToTestScope,
@@ -904,38 +904,38 @@ describe('OrderedMap', function() {
     omResultThree = OrderedMap.fromArray(resArray, extractUniqueID);
     verifyThreeItems(omResultThree);
 
-    var omResultFirstTwo = om.mapRange(duplicate, 0, 2, scope);
+    let omResultFirstTwo = om.mapRange(duplicate, 0, 2, scope);
     verifyFirstTwoItems(omResultFirstTwo);
     resArray = [];
     om.forEachRange(pushToResArray, 0, 2, scope);
     omResultFirstTwo = OrderedMap.fromArray(resArray, extractUniqueID);
     verifyFirstTwoItems(omResultFirstTwo);
 
-    var omResultLastTwo = om.mapRange(duplicate, 1, 2, scope);
+    let omResultLastTwo = om.mapRange(duplicate, 1, 2, scope);
     verifyLastTwoItems(omResultLastTwo);
     resArray = [];
     om.forEachRange(pushToResArray, 1, 2, scope);
     omResultLastTwo = OrderedMap.fromArray(resArray, extractUniqueID);
     verifyLastTwoItems(omResultLastTwo);
 
-    var omResultMiddle = om.mapRange(duplicate, 1, 1, scope);
+    let omResultMiddle = om.mapRange(duplicate, 1, 1, scope);
     verifyMiddleItem(omResultMiddle);
     resArray = [];
     om.forEachRange(pushToResArray, 1, 1, scope);
     omResultMiddle = OrderedMap.fromArray(resArray, extractUniqueID);
     verifyMiddleItem(omResultMiddle);
 
-    var omResultNone = om.mapRange(duplicate, 1, 0, scope);
+    const omResultNone = om.mapRange(duplicate, 1, 0, scope);
     verifyEmpty(omResultNone);
   });
 
   it('should extract the original array correctly', function() {
-    var sourceArray = [
+    const sourceArray = [
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
       {uniqueID: 'z', val: 'zz'},
     ];
-    var om = OrderedMap.fromArray(sourceArray, extractUniqueID);
+    const om = OrderedMap.fromArray(sourceArray, extractUniqueID);
     expect(om.toArray()).toEqual(sourceArray);
   });
 });

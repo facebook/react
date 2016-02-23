@@ -11,10 +11,10 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
+const PooledClass = require('PooledClass');
 
-var assign = require('Object.assign');
-var getTextContentAccessor = require('getTextContentAccessor');
+const assign = require('Object.assign');
+const getTextContentAccessor = require('getTextContentAccessor');
 
 /**
  * This helper class stores information about text content of a target node,
@@ -63,12 +63,12 @@ assign(FallbackCompositionState.prototype, {
       return this._fallbackText;
     }
 
-    var start;
-    var startValue = this._startText;
-    var startLength = startValue.length;
-    var end;
-    var endValue = this.getText();
-    var endLength = endValue.length;
+    let start;
+    const startValue = this._startText;
+    const startLength = startValue.length;
+    let end;
+    const endValue = this.getText();
+    const endLength = endValue.length;
 
     for (start = 0; start < startLength; start++) {
       if (startValue[start] !== endValue[start]) {
@@ -76,14 +76,14 @@ assign(FallbackCompositionState.prototype, {
       }
     }
 
-    var minEnd = startLength - start;
+    const minEnd = startLength - start;
     for (end = 1; end <= minEnd; end++) {
       if (startValue[startLength - end] !== endValue[endLength - end]) {
         break;
       }
     }
 
-    var sliceTail = end > 1 ? 1 - end : undefined;
+    const sliceTail = end > 1 ? 1 - end : undefined;
     this._fallbackText = endValue.slice(start, sliceTail);
     return this._fallbackText;
   },

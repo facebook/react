@@ -11,11 +11,11 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
-var injected = false;
+let injected = false;
 
-var ReactComponentEnvironment = {
+const ReactComponentEnvironment = {
 
   /**
    * Optionally injectable environment dependent cleanup hook. (server vs.

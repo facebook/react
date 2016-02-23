@@ -11,9 +11,9 @@
 
 'use strict';
 
-var keyMirror = require('keyMirror');
+const keyMirror = require('keyMirror');
 
-var ReactPropTypeLocations = keyMirror({
+const ReactPropTypeLocations = keyMirror({
   prop: null,
   context: null,
   childContext: null,

@@ -11,15 +11,15 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
+const DOMProperty = require('DOMProperty');
+const ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
-var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-var Flags = ReactDOMComponentFlags;
+const ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
+const Flags = ReactDOMComponentFlags;
 
-var internalInstanceKey =
+const internalInstanceKey =
   '__reactInternalInstance$' + Math.random().toString(36).slice(2);
 
 /**
@@ -30,7 +30,7 @@ var internalInstanceKey =
  * for `_renderedChildren`.
  */
 function getRenderedNativeOrTextFromComponent(component) {
-  var rendered;
+  let rendered;
   while ((rendered = component._renderedComponent)) {
     component = rendered;
   }
@@ -42,13 +42,13 @@ function getRenderedNativeOrTextFromComponent(component) {
  * DOM node. The passed `inst` can be a composite.
  */
 function precacheNode(inst, node) {
-  var nativeInst = getRenderedNativeOrTextFromComponent(inst);
+  const nativeInst = getRenderedNativeOrTextFromComponent(inst);
   nativeInst._nativeNode = node;
   node[internalInstanceKey] = nativeInst;
 }
 
 function uncacheNode(inst) {
-  var node = inst._nativeNode;
+  const node = inst._nativeNode;
   if (node) {
     delete node[internalInstanceKey];
     inst._nativeNode = null;
@@ -73,14 +73,14 @@ function precacheChildNodes(inst, node) {
   if (inst._flags & Flags.hasCachedChildNodes) {
     return;
   }
-  var children = inst._renderedChildren;
-  var childNode = node.firstChild;
-  outer: for (var name in children) {
+  const children = inst._renderedChildren;
+  let childNode = node.firstChild;
+  outer: for (let name in children) {
     if (!children.hasOwnProperty(name)) {
       continue;
     }
-    var childInst = children[name];
-    var childID = getRenderedNativeOrTextFromComponent(childInst)._domID;
+    const childInst = children[name];
+    const childID = getRenderedNativeOrTextFromComponent(childInst)._domID;
     if (childID == null) {
       // We're currently unmounting this child in ReactMultiChild; skip it.
       continue;
@@ -113,7 +113,7 @@ function getClosestInstanceFromNode(node) {
   }
 
   // Walk up the tree until we find an ancestor whose instance we have cached.
-  var parents = [];
+  const parents = [];
   while (!node[internalInstanceKey]) {
     parents.push(node);
     if (node.parentNode) {
@@ -125,8 +125,8 @@ function getClosestInstanceFromNode(node) {
     }
   }
 
-  var closest;
-  var inst;
+  let closest;
+  let inst;
   for (; node && (inst = node[internalInstanceKey]); node = parents.pop()) {
     closest = inst;
     if (parents.length) {
@@ -142,7 +142,7 @@ function getClosestInstanceFromNode(node) {
  * instance, or null if the node was not rendered by this React.
  */
 function getInstanceFromNode(node) {
-  var inst = getClosestInstanceFromNode(node);
+  const inst = getClosestInstanceFromNode(node);
   if (inst != null && inst._nativeNode === node) {
     return inst;
   } else {
@@ -167,7 +167,7 @@ function getNodeFromInstance(inst) {
   }
 
   // Walk up the tree until we find an ancestor whose DOM node we have cached.
-  var parents = [];
+  const parents = [];
   while (!inst._nativeNode) {
     parents.push(inst);
     invariant(
@@ -186,7 +186,7 @@ function getNodeFromInstance(inst) {
   return inst._nativeNode;
 }
 
-var ReactDOMComponentTree = {
+const ReactDOMComponentTree = {
   getClosestInstanceFromNode: getClosestInstanceFromNode,
   getInstanceFromNode: getInstanceFromNode,
   getNodeFromInstance: getNodeFromInstance,

@@ -11,13 +11,13 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
-var DOMPropertyInjection = {
+const DOMPropertyInjection = {
   /**
    * Mapping from normalized, camelcased property names to a configuration that
    * specifies how the associated DOM property should be accessed or rendered.
@@ -58,12 +58,12 @@ var DOMPropertyInjection = {
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
-    var Injection = DOMPropertyInjection;
-    var Properties = domPropertyConfig.Properties || {};
-    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-    var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
+    const Injection = DOMPropertyInjection;
+    const Properties = domPropertyConfig.Properties || {};
+    const DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
+    const DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
+    const DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
+    const DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
     if (domPropertyConfig.isCustomAttribute) {
       DOMProperty._isCustomAttributeFunctions.push(
@@ -71,7 +71,7 @@ var DOMPropertyInjection = {
       );
     }
 
-    for (var propName in Properties) {
+    for (let propName in Properties) {
       invariant(
         !DOMProperty.properties.hasOwnProperty(propName),
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
@@ -81,10 +81,10 @@ var DOMPropertyInjection = {
         propName
       );
 
-      var lowerCased = propName.toLowerCase();
-      var propConfig = Properties[propName];
+      const lowerCased = propName.toLowerCase();
+      const propConfig = Properties[propName];
 
-      var propertyInfo = {
+      const propertyInfo = {
         attributeName: lowerCased,
         attributeNamespace: null,
         propertyName: propName,
@@ -142,7 +142,7 @@ var DOMPropertyInjection = {
   },
 };
 
-var ATTRIBUTE_NAME_START_CHAR = ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
+const ATTRIBUTE_NAME_START_CHAR = ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
 
 /**
  * DOMProperty exports lookup objects that can be used like functions:
@@ -217,8 +217,8 @@ var DOMProperty = {
    * @method
    */
   isCustomAttribute: function(attributeName) {
-    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
-      var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
+    for (let i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
+      const isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
       if (isCustomAttributeFn(attributeName)) {
         return true;
       }

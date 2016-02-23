@@ -11,8 +11,8 @@
 
 'use strict';
 
-var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
-var setTextContent = require('setTextContent');
+const createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
+const setTextContent = require('setTextContent');
 
 /**
  * In IE (8-11) and Edge, appending nodes with no children is dramatically
@@ -25,7 +25,7 @@ var setTextContent = require('setTextContent');
  *
  * See https://github.com/spicyj/innerhtml-vs-createelement-vs-clonenode.
  */
-var enableLazy = (
+const enableLazy = (
   typeof document !== 'undefined' &&
   typeof document.documentMode === 'number'
   ||
@@ -38,10 +38,10 @@ function insertTreeChildren(tree) {
   if (!enableLazy) {
     return;
   }
-  var node = tree.node;
-  var children = tree.children;
+  const node = tree.node;
+  const children = tree.children;
   if (children.length) {
-    for (var i = 0; i < children.length; i++) {
+    for (let i = 0; i < children.length; i++) {
       insertTreeBefore(node, children[i], null);
     }
   } else if (tree.html != null) {

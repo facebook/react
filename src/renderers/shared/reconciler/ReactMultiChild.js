@@ -11,15 +11,15 @@
 
 'use strict';
 
-var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
+const ReactComponentEnvironment = require('ReactComponentEnvironment');
+const ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactReconciler = require('ReactReconciler');
-var ReactChildReconciler = require('ReactChildReconciler');
+const ReactCurrentOwner = require('ReactCurrentOwner');
+const ReactReconciler = require('ReactReconciler');
+const ReactChildReconciler = require('ReactChildReconciler');
 
-var flattenChildren = require('flattenChildren');
-var invariant = require('invariant');
+const flattenChildren = require('flattenChildren');
+const invariant = require('invariant');
 
 /**
  * Make an update for markup to be rendered and inserted at a supplied index.
@@ -143,7 +143,7 @@ function processQueue(inst, updateQueue) {
  * @class ReactMultiChild
  * @internal
  */
-var ReactMultiChild = {
+const ReactMultiChild = {
 
   /**
    * Provides common functionality for components that must reconcile multiple
@@ -179,7 +179,7 @@ var ReactMultiChild = {
       transaction,
       context
     ) {
-      var nextChildren;
+      let nextChildren;
       if (__DEV__) {
         if (this._currentElement) {
           try {
@@ -210,16 +210,16 @@ var ReactMultiChild = {
      * @internal
      */
     mountChildren: function(nestedChildren, transaction, context) {
-      var children = this._reconcilerInstantiateChildren(
+      const children = this._reconcilerInstantiateChildren(
         nestedChildren, transaction, context
       );
       this._renderedChildren = children;
-      var mountImages = [];
-      var index = 0;
-      for (var name in children) {
+      const mountImages = [];
+      let index = 0;
+      for (let name in children) {
         if (children.hasOwnProperty(name)) {
-          var child = children[name];
-          var mountImage = ReactReconciler.mountComponent(
+          const child = children[name];
+          const mountImage = ReactReconciler.mountComponent(
             child,
             transaction,
             this,
@@ -240,16 +240,16 @@ var ReactMultiChild = {
      * @internal
      */
     updateTextContent: function(nextContent) {
-      var prevChildren = this._renderedChildren;
+      const prevChildren = this._renderedChildren;
       // Remove any rendered children.
       ReactChildReconciler.unmountChildren(prevChildren, false);
-      for (var name in prevChildren) {
+      for (let name in prevChildren) {
         if (prevChildren.hasOwnProperty(name)) {
           invariant(false, 'updateTextContent called on non-empty component.');
         }
       }
       // Set new text content.
-      var updates = [makeTextContent(nextContent)];
+      const updates = [makeTextContent(nextContent)];
       processQueue(this, updates);
     },
 
@@ -260,15 +260,15 @@ var ReactMultiChild = {
      * @internal
      */
     updateMarkup: function(nextMarkup) {
-      var prevChildren = this._renderedChildren;
+      const prevChildren = this._renderedChildren;
       // Remove any rendered children.
       ReactChildReconciler.unmountChildren(prevChildren, false);
-      for (var name in prevChildren) {
+      for (let name in prevChildren) {
         if (prevChildren.hasOwnProperty(name)) {
           invariant(false, 'updateTextContent called on non-empty component.');
         }
       }
-      var updates = [makeSetMarkup(nextMarkup)];
+      const updates = [makeSetMarkup(nextMarkup)];
       processQueue(this, updates);
     },
 
@@ -291,9 +291,9 @@ var ReactMultiChild = {
      * @protected
      */
     _updateChildren: function(nextNestedChildrenElements, transaction, context) {
-      var prevChildren = this._renderedChildren;
-      var removedNodes = {};
-      var nextChildren = this._reconcilerUpdateChildren(
+      const prevChildren = this._renderedChildren;
+      const removedNodes = {};
+      const nextChildren = this._reconcilerUpdateChildren(
         prevChildren,
         nextNestedChildrenElements,
         removedNodes,
@@ -303,19 +303,19 @@ var ReactMultiChild = {
       if (!nextChildren && !prevChildren) {
         return;
       }
-      var updates = null;
-      var name;
+      let updates = null;
+      let name;
       // `nextIndex` will increment for each child in `nextChildren`, but
       // `lastIndex` will be the last index visited in `prevChildren`.
-      var lastIndex = 0;
-      var nextIndex = 0;
-      var lastPlacedNode = null;
+      let lastIndex = 0;
+      let nextIndex = 0;
+      let lastPlacedNode = null;
       for (name in nextChildren) {
         if (!nextChildren.hasOwnProperty(name)) {
           continue;
         }
-        var prevChild = prevChildren && prevChildren[name];
-        var nextChild = nextChildren[name];
+        const prevChild = prevChildren && prevChildren[name];
+        const nextChild = nextChildren[name];
         if (prevChild === nextChild) {
           updates = enqueue(
             updates,
@@ -367,7 +367,7 @@ var ReactMultiChild = {
      * @internal
      */
     unmountChildren: function(safely) {
-      var renderedChildren = this._renderedChildren;
+      const renderedChildren = this._renderedChildren;
       ReactChildReconciler.unmountChildren(renderedChildren, safely);
       this._renderedChildren = null;
     },
@@ -427,7 +427,7 @@ var ReactMultiChild = {
       index,
       transaction,
       context) {
-      var mountImage = ReactReconciler.mountComponent(
+      const mountImage = ReactReconciler.mountComponent(
         child,
         transaction,
         this,
@@ -447,7 +447,7 @@ var ReactMultiChild = {
      * @private
      */
     _unmountChild: function(child, node) {
-      var update = this.removeChild(child, node);
+      const update = this.removeChild(child, node);
       child._mountIndex = null;
       return update;
     },

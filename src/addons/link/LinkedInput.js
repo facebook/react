@@ -11,12 +11,12 @@
 
 'use strict';
 
-var React = require('React');
-var LinkedValueUtils = require('LinkedValueUtils');
+const React = require('React');
+const LinkedValueUtils = require('LinkedValueUtils');
 
 class LinkedInput extends React.Component {
   render() {
-    var newProps = Object.assign({}, this.props);
+    const newProps = Object.assign({}, this.props);
     newProps.value = LinkedValueUtils.getValue(this.props);
     newProps.checked = LinkedValueUtils.getChecked(this.props);
     delete newProps.valueLink;

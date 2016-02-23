@@ -17,7 +17,7 @@
  * The current owner is the component who should own any components that are
  * currently being constructed.
  */
-var ReactCurrentOwner = {
+const ReactCurrentOwner = {
 
   /**
    * @internal

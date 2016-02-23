@@ -10,18 +10,18 @@
  */
 'use strict';
 
-var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactElement = require('ReactElement');
-var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
-var ReactServerRenderingTransaction =
+const ReactDOMContainerInfo = require('ReactDOMContainerInfo');
+const ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+const ReactElement = require('ReactElement');
+const ReactMarkupChecksum = require('ReactMarkupChecksum');
+const ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
+const ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
-var ReactUpdates = require('ReactUpdates');
+const ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
-var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
+const emptyObject = require('emptyObject');
+const instantiateReactComponent = require('instantiateReactComponent');
+const invariant = require('invariant');
 
 /**
  * @param {ReactElement} element
@@ -33,15 +33,15 @@ function renderToStringImpl(element, makeStaticMarkup) {
     'renderToString(): You must pass a valid ReactElement.'
   );
 
-  var transaction;
+  let transaction;
   try {
     ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
 
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
     return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(element);
-      var markup = componentInstance.mountComponent(
+      const componentInstance = instantiateReactComponent(element);
+      let markup = componentInstance.mountComponent(
         transaction,
         null,
         ReactDOMContainerInfo(),

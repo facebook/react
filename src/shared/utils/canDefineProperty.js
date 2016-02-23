@@ -11,7 +11,7 @@
 
 'use strict';
 
-var canDefineProperty = false;
+let canDefineProperty = false;
 if (__DEV__) {
   try {
     Object.defineProperty({}, 'x', {get: function() {}});

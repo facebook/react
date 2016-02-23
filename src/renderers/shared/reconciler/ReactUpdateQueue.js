@@ -11,21 +11,21 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactUpdates = require('ReactUpdates');
+const ReactCurrentOwner = require('ReactCurrentOwner');
+const ReactElement = require('ReactElement');
+const ReactInstanceMap = require('ReactInstanceMap');
+const ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
-var warning = require('warning');
+const assign = require('Object.assign');
+const invariant = require('invariant');
+const warning = require('warning');
 
 function enqueueUpdate(internalInstance) {
   ReactUpdates.enqueueUpdate(internalInstance);
 }
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
-  var internalInstance = ReactInstanceMap.get(publicInstance);
+  const internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
     if (__DEV__) {
       // Only warn when we have a callerName. Otherwise we should be silent.
@@ -63,7 +63,7 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
  * ReactUpdateQueue allows for state updates to be scheduled into a later
  * reconciliation step.
  */
-var ReactUpdateQueue = {
+const ReactUpdateQueue = {
 
   /**
    * Checks whether or not this composite component is mounted.
@@ -74,7 +74,7 @@ var ReactUpdateQueue = {
    */
   isMounted: function(publicInstance) {
     if (__DEV__) {
-      var owner = ReactCurrentOwner.current;
+      const owner = ReactCurrentOwner.current;
       if (owner !== null) {
         warning(
           owner._warnedAboutRefsInRender,
@@ -88,7 +88,7 @@ var ReactUpdateQueue = {
         owner._warnedAboutRefsInRender = true;
       }
     }
-    var internalInstance = ReactInstanceMap.get(publicInstance);
+    const internalInstance = ReactInstanceMap.get(publicInstance);
     if (internalInstance) {
       // During componentWillMount and render this will still be null but after
       // that will always render to something. At least for now. So we can use
@@ -116,7 +116,7 @@ var ReactUpdateQueue = {
       typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
         typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
     );
-    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
+    const internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     // Previously we would throw an error if we didn't have an internal
     // instance. Since we want to make it a no-op instead, we mirror the same
@@ -170,7 +170,7 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueForceUpdate: function(publicInstance) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
+    const internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'forceUpdate'
     );
@@ -196,7 +196,7 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueReplaceState: function(publicInstance, completeState) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
+    const internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'replaceState'
     );
@@ -222,7 +222,7 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueSetState: function(publicInstance, partialState) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
+    const internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'setState'
     );
@@ -231,7 +231,7 @@ var ReactUpdateQueue = {
       return;
     }
 
-    var queue =
+    const queue =
       internalInstance._pendingStateQueue ||
       (internalInstance._pendingStateQueue = []);
     queue.push(partialState);
@@ -247,7 +247,7 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueSetProps: function(publicInstance, partialProps) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
+    const internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'setProps'
     );
@@ -258,7 +258,7 @@ var ReactUpdateQueue = {
   },
 
   enqueueSetPropsInternal: function(internalInstance, partialProps) {
-    var topLevelWrapper = internalInstance._topLevelWrapper;
+    const topLevelWrapper = internalInstance._topLevelWrapper;
     invariant(
       topLevelWrapper,
       'setProps(...): You called `setProps` on a ' +
@@ -270,9 +270,9 @@ var ReactUpdateQueue = {
 
     // Merge with the pending element if it exists, otherwise with existing
     // element props.
-    var wrapElement = topLevelWrapper._pendingElement ||
+    const wrapElement = topLevelWrapper._pendingElement ||
                       topLevelWrapper._currentElement;
-    var element = wrapElement.props;
+    const element = wrapElement.props;
     var props = assign({}, element.props, partialProps);
     topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
       wrapElement,
@@ -290,7 +290,7 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueReplaceProps: function(publicInstance, props) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
+    const internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'replaceProps'
     );
@@ -301,7 +301,7 @@ var ReactUpdateQueue = {
   },
 
   enqueueReplacePropsInternal: function(internalInstance, props) {
-    var topLevelWrapper = internalInstance._topLevelWrapper;
+    const topLevelWrapper = internalInstance._topLevelWrapper;
     invariant(
       topLevelWrapper,
       'replaceProps(...): You called `replaceProps` on a ' +
@@ -313,9 +313,9 @@ var ReactUpdateQueue = {
 
     // Merge with the pending element if it exists, otherwise with existing
     // element props.
-    var wrapElement = topLevelWrapper._pendingElement ||
+    const wrapElement = topLevelWrapper._pendingElement ||
                       topLevelWrapper._currentElement;
-    var element = wrapElement.props;
+    const element = wrapElement.props;
     topLevelWrapper._pendingElement = ReactElement.cloneAndReplaceProps(
       wrapElement,
       ReactElement.cloneAndReplaceProps(element, props)

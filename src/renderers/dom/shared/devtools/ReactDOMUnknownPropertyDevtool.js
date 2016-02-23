@@ -11,19 +11,19 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var EventPluginRegistry = require('EventPluginRegistry');
+const DOMProperty = require('DOMProperty');
+const EventPluginRegistry = require('EventPluginRegistry');
 
-var warning = require('warning');
+const warning = require('warning');
 
 if (__DEV__) {
-  var reactProps = {
+  const reactProps = {
     children: true,
     dangerouslySetInnerHTML: true,
     key: true,
     ref: true,
   };
-  var warnedProperties = {};
+  const warnedProperties = {};
 
   var warnUnknownProperty = function(name) {
     if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
@@ -35,10 +35,10 @@ if (__DEV__) {
     }
 
     warnedProperties[name] = true;
-    var lowerCasedName = name.toLowerCase();
+    const lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = (
+    const standardName = (
       DOMProperty.isCustomAttribute(lowerCasedName) ?
         lowerCasedName :
       DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
@@ -55,7 +55,7 @@ if (__DEV__) {
       standardName
     );
 
-    var registrationName = (
+    const registrationName = (
       EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
         lowerCasedName
       ) ?
@@ -72,7 +72,7 @@ if (__DEV__) {
   };
 }
 
-var ReactDOMUnknownPropertyDevtool = {
+const ReactDOMUnknownPropertyDevtool = {
   onCreateMarkupForProperty(name, value) {
     warnUnknownProperty(name);
   },

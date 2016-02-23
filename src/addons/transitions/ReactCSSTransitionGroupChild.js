@@ -11,17 +11,17 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+const React = require('React');
+const ReactDOM = require('ReactDOM');
 
-var CSSCore = require('CSSCore');
-var ReactTransitionEvents = require('ReactTransitionEvents');
+const CSSCore = require('CSSCore');
+const ReactTransitionEvents = require('ReactTransitionEvents');
 
-var onlyChild = require('onlyChild');
+const onlyChild = require('onlyChild');
 
-var TICK = 17;
+const TICK = 17;
 
-var ReactCSSTransitionGroupChild = React.createClass({
+const ReactCSSTransitionGroupChild = React.createClass({
   displayName: 'ReactCSSTransitionGroupChild',
 
   propTypes: {
@@ -54,7 +54,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   transition: function(animationType, finishCallback, userSpecifiedDelay) {
-    var node = ReactDOM.findDOMNode(this);
+    const node = ReactDOM.findDOMNode(this);
 
     if (!node) {
       if (finishCallback) {
@@ -63,11 +63,11 @@ var ReactCSSTransitionGroupChild = React.createClass({
       return;
     }
 
-    var className = this.props.name[animationType] || this.props.name + '-' + animationType;
-    var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
-    var timeout = null;
+    const className = this.props.name[animationType] || this.props.name + '-' + animationType;
+    const activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
+    let timeout = null;
 
-    var endListener = function(e) {
+    const endListener = function(e) {
       if (e && e.target !== node) {
         return;
       }

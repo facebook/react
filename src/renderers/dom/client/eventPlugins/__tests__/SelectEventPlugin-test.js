@@ -11,14 +11,14 @@
 
 'use strict';
 
-var EventConstants;
-var React;
-var ReactDOM;
-var ReactDOMComponentTree;
-var ReactTestUtils;
-var SelectEventPlugin;
+let EventConstants;
+let React;
+let ReactDOM;
+let ReactDOMComponentTree;
+let ReactTestUtils;
+let SelectEventPlugin;
 
-var topLevelTypes;
+let topLevelTypes;
 
 describe('SelectEventPlugin', function() {
   function extract(node, topLevelEvent) {
@@ -42,36 +42,36 @@ describe('SelectEventPlugin', function() {
   });
 
   it('should skip extraction if no listeners are present', function() {
-    var WithoutSelect = React.createClass({
+    const WithoutSelect = React.createClass({
       render: function() {
         return <input type="text" />;
       },
     });
 
-    var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
-    var node = ReactDOM.findDOMNode(rendered);
+    const rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
+    const node = ReactDOM.findDOMNode(rendered);
     node.focus();
 
-    var mousedown = extract(node, topLevelTypes.topMouseDown);
+    const mousedown = extract(node, topLevelTypes.topMouseDown);
     expect(mousedown).toBe(null);
 
-    var mouseup = extract(node, topLevelTypes.topMouseUp);
+    const mouseup = extract(node, topLevelTypes.topMouseUp);
     expect(mouseup).toBe(null);
   });
 
   it('should extract if an `onSelect` listener is present', function() {
-    var WithSelect = React.createClass({
+    const WithSelect = React.createClass({
       render: function() {
         return <input type="text" onSelect={this.props.onSelect} />;
       },
     });
 
-    var cb = jest.genMockFn();
+    const cb = jest.genMockFn();
 
-    var rendered = ReactTestUtils.renderIntoDocument(
+    const rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />
     );
-    var node = ReactDOM.findDOMNode(rendered);
+    const node = ReactDOM.findDOMNode(rendered);
 
     node.selectionStart = 0;
     node.selectionEnd = 0;
@@ -80,10 +80,10 @@ describe('SelectEventPlugin', function() {
     var focus = extract(node, topLevelTypes.topFocus);
     expect(focus).toBe(null);
 
-    var mousedown = extract(node, topLevelTypes.topMouseDown);
+    const mousedown = extract(node, topLevelTypes.topMouseDown);
     expect(mousedown).toBe(null);
 
-    var mouseup = extract(node, topLevelTypes.topMouseUp);
+    const mouseup = extract(node, topLevelTypes.topMouseUp);
     expect(mouseup).not.toBe(null);
     expect(typeof mouseup).toBe('object');
     expect(mouseup.type).toBe('select');

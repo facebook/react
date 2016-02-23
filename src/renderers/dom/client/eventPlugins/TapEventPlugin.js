@@ -11,33 +11,33 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var TouchEventUtils = require('TouchEventUtils');
-var ViewportMetrics = require('ViewportMetrics');
+const EventConstants = require('EventConstants');
+const EventPluginUtils = require('EventPluginUtils');
+const EventPropagators = require('EventPropagators');
+const SyntheticUIEvent = require('SyntheticUIEvent');
+const TouchEventUtils = require('TouchEventUtils');
+const ViewportMetrics = require('ViewportMetrics');
 
-var keyOf = require('keyOf');
-var topLevelTypes = EventConstants.topLevelTypes;
+const keyOf = require('keyOf');
+const topLevelTypes = EventConstants.topLevelTypes;
 
-var isStartish = EventPluginUtils.isStartish;
-var isEndish = EventPluginUtils.isEndish;
+const isStartish = EventPluginUtils.isStartish;
+const isEndish = EventPluginUtils.isEndish;
 
 /**
  * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
  * in order to still be considered a 'tap' event.
  */
-var tapMoveThreshold = 10;
-var startCoords = {x: null, y: null};
+const tapMoveThreshold = 10;
+const startCoords = {x: null, y: null};
 
-var Axis = {
+const Axis = {
   x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
   y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'},
 };
 
 function getAxisCoordOfEvent(axis, nativeEvent) {
-  var singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
+  const singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
   if (singleTouch) {
     return singleTouch[axis.page];
   }
@@ -47,28 +47,28 @@ function getAxisCoordOfEvent(axis, nativeEvent) {
 }
 
 function getDistance(coords, nativeEvent) {
-  var pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
-  var pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
+  const pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
+  const pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
   return Math.pow(
     Math.pow(pageX - coords.x, 2) + Math.pow(pageY - coords.y, 2),
     0.5
   );
 }
 
-var touchEvents = [
+const touchEvents = [
   topLevelTypes.topTouchStart,
   topLevelTypes.topTouchCancel,
   topLevelTypes.topTouchEnd,
   topLevelTypes.topTouchMove,
 ];
 
-var dependencies = [
+const dependencies = [
   topLevelTypes.topMouseDown,
   topLevelTypes.topMouseMove,
   topLevelTypes.topMouseUp,
 ].concat(touchEvents);
 
-var eventTypes = {
+const eventTypes = {
   touchTap: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchTap: null}),
@@ -78,11 +78,11 @@ var eventTypes = {
   },
 };
 
-var usedTouch = false;
-var usedTouchTime = 0;
-var TOUCH_DELAY = 1000;
+let usedTouch = false;
+let usedTouchTime = 0;
+const TOUCH_DELAY = 1000;
 
-var TapEventPlugin = {
+const TapEventPlugin = {
 
   tapMoveThreshold: tapMoveThreshold,
 
@@ -108,8 +108,8 @@ var TapEventPlugin = {
         return null;
       }
     }
-    var event = null;
-    var distance = getDistance(startCoords, nativeEvent);
+    let event = null;
+    const distance = getDistance(startCoords, nativeEvent);
     if (isEndish(topLevelType) && distance < tapMoveThreshold) {
       event = SyntheticUIEvent.getPooled(
         eventTypes.touchTap,

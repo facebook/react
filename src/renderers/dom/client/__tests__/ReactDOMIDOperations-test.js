@@ -12,12 +12,12 @@
 'use strict';
 
 describe('ReactDOMIDOperations', function() {
-  var ReactDOMIDOperations = require('ReactDOMIDOperations');
-  var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
+  const ReactDOMIDOperations = require('ReactDOMIDOperations');
+  const ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
   it('should update innerHTML and preserve whitespace', function() {
-    var stubNode = document.createElement('div');
-    var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
+    const stubNode = document.createElement('div');
+    const html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
       {_nativeNode: stubNode},

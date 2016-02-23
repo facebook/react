@@ -11,9 +11,9 @@
 
 'use strict';
 
-var assign = require('Object.assign');
-var emptyFunction = require('emptyFunction');
-var joinClasses = require('joinClasses');
+const assign = require('Object.assign');
+const emptyFunction = require('emptyFunction');
+const joinClasses = require('joinClasses');
 
 /**
  * Creates a transfer strategy that will merge prop values using the supplied
@@ -32,7 +32,7 @@ function createTransferStrategy(mergeStrategy) {
   };
 }
 
-var transferStrategyMerge = createTransferStrategy(function(a, b) {
+const transferStrategyMerge = createTransferStrategy(function(a, b) {
   // `merge` overrides the first object's (`props[key]` above) keys using the
   // second object's (`value`) keys. An object's style's existing `propA` would
   // get overridden. Flip the order here.
@@ -44,7 +44,7 @@ var transferStrategyMerge = createTransferStrategy(function(a, b) {
  * NOTE: if you add any more exceptions to this list you should be sure to
  * update `cloneWithProps()` accordingly.
  */
-var TransferStrategies = {
+const TransferStrategies = {
   /**
    * Never transfer `children`.
    */
@@ -68,12 +68,12 @@ var TransferStrategies = {
  * @return {object}
  */
 function transferInto(props, newProps) {
-  for (var thisKey in newProps) {
+  for (let thisKey in newProps) {
     if (!newProps.hasOwnProperty(thisKey)) {
       continue;
     }
 
-    var transferStrategy = TransferStrategies[thisKey];
+    const transferStrategy = TransferStrategies[thisKey];
 
     if (transferStrategy && TransferStrategies.hasOwnProperty(thisKey)) {
       transferStrategy(props, thisKey, newProps[thisKey]);
@@ -90,7 +90,7 @@ function transferInto(props, newProps) {
  *
  * @class ReactPropTransferer
  */
-var ReactPropTransferer = {
+const ReactPropTransferer = {
 
   /**
    * Merge two props objects using TransferStrategies.

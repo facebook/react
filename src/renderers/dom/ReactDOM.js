@@ -13,24 +13,24 @@
 
 'use strict';
 
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDefaultInjection = require('ReactDefaultInjection');
-var ReactMount = require('ReactMount');
-var ReactPerf = require('ReactPerf');
-var ReactReconciler = require('ReactReconciler');
-var ReactUpdates = require('ReactUpdates');
-var ReactVersion = require('ReactVersion');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactDefaultInjection = require('ReactDefaultInjection');
+const ReactMount = require('ReactMount');
+const ReactPerf = require('ReactPerf');
+const ReactReconciler = require('ReactReconciler');
+const ReactUpdates = require('ReactUpdates');
+const ReactVersion = require('ReactVersion');
 
-var findDOMNode = require('findDOMNode');
-var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
-var warning = require('warning');
+const findDOMNode = require('findDOMNode');
+const getNativeComponentFromComposite = require('getNativeComponentFromComposite');
+const renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
+const warning = require('warning');
 
 ReactDefaultInjection.inject();
 
-var render = ReactPerf.measure('React', 'render', ReactMount.render);
+const render = ReactPerf.measure('React', 'render', ReactMount.render);
 
-var React = {
+const React = {
   findDOMNode: findDOMNode,
   render: render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
@@ -69,7 +69,7 @@ if (
 }
 
 if (__DEV__) {
-  var ExecutionEnvironment = require('ExecutionEnvironment');
+  const ExecutionEnvironment = require('ExecutionEnvironment');
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
     // First check if devtools is not installed
@@ -79,7 +79,7 @@ if (__DEV__) {
           navigator.userAgent.indexOf('Edge') === -1) ||
           navigator.userAgent.indexOf('Firefox') > -1) {
         // Firefox does not have the issue with devtools loaded over file://
-        var showFileUrlMessage = window.location.protocol.indexOf('http') === -1 &&
+        const showFileUrlMessage = window.location.protocol.indexOf('http') === -1 &&
           navigator.userAgent.indexOf('Firefox') === -1;
         console.debug(
           'Download the React DevTools ' +
@@ -90,7 +90,7 @@ if (__DEV__) {
       }
     }
 
-    var testFunc = function testFn() {};
+    const testFunc = function testFn() {};
     warning(
       (testFunc.name || testFunc.toString()).indexOf('testFn') !== -1,
       'It looks like you\'re using a minified copy of the development build ' +
@@ -101,7 +101,7 @@ if (__DEV__) {
 
     // If we're in IE8, check to see if we are in compatibility mode and provide
     // information on preventing compatibility mode
-    var ieCompatibilityMode =
+    const ieCompatibilityMode =
       document.documentMode && document.documentMode < 8;
 
     warning(
@@ -111,7 +111,7 @@ if (__DEV__) {
       '<meta http-equiv="X-UA-Compatible" content="IE=edge" />'
     );
 
-    var expectedFeatures = [
+    const expectedFeatures = [
       // shims
       Array.isArray,
       Array.prototype.every,
@@ -125,7 +125,7 @@ if (__DEV__) {
       String.prototype.trim,
     ];
 
-    for (var i = 0; i < expectedFeatures.length; i++) {
+    for (let i = 0; i < expectedFeatures.length; i++) {
       if (!expectedFeatures[i]) {
         warning(
           false,

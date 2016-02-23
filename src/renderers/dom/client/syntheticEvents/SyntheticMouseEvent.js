@@ -11,16 +11,16 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var ViewportMetrics = require('ViewportMetrics');
+const SyntheticUIEvent = require('SyntheticUIEvent');
+const ViewportMetrics = require('ViewportMetrics');
 
-var getEventModifierState = require('getEventModifierState');
+const getEventModifierState = require('getEventModifierState');
 
 /**
  * @interface MouseEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var MouseEventInterface = {
+const MouseEventInterface = {
   screenX: null,
   screenY: null,
   clientX: null,
@@ -34,7 +34,7 @@ var MouseEventInterface = {
     // Webkit, Firefox, IE9+
     // which:  1 2 3
     // button: 0 1 2 (standard)
-    var button = event.button;
+    const button = event.button;
     if ('which' in event) {
       return button;
     }

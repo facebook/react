@@ -11,54 +11,54 @@
 
 'use strict';
 
-var keyMirror = require('keyMirror');
+const keyMirror = require('keyMirror');
 
-var React;
-var ReactDOM;
-var ReactInstanceMap;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactInstanceMap;
+let ReactTestUtils;
 
-var clone = function(o) {
+const clone = function(o) {
   return JSON.parse(JSON.stringify(o));
 };
 
 
-var GET_INIT_STATE_RETURN_VAL = {
+const GET_INIT_STATE_RETURN_VAL = {
   hasWillMountCompleted: false,
   hasRenderCompleted: false,
   hasDidMountCompleted: false,
   hasWillUnmountCompleted: false,
 };
 
-var INIT_RENDER_STATE = {
+const INIT_RENDER_STATE = {
   hasWillMountCompleted: true,
   hasRenderCompleted: false,
   hasDidMountCompleted: false,
   hasWillUnmountCompleted: false,
 };
 
-var DID_MOUNT_STATE = {
+const DID_MOUNT_STATE = {
   hasWillMountCompleted: true,
   hasRenderCompleted: true,
   hasDidMountCompleted: false,
   hasWillUnmountCompleted: false,
 };
 
-var NEXT_RENDER_STATE = {
+const NEXT_RENDER_STATE = {
   hasWillMountCompleted: true,
   hasRenderCompleted: true,
   hasDidMountCompleted: true,
   hasWillUnmountCompleted: false,
 };
 
-var WILL_UNMOUNT_STATE = {
+const WILL_UNMOUNT_STATE = {
   hasWillMountCompleted: true,
   hasDidMountCompleted: true,
   hasRenderCompleted: true,
   hasWillUnmountCompleted: false,
 };
 
-var POST_WILL_UNMOUNT_STATE = {
+const POST_WILL_UNMOUNT_STATE = {
   hasWillMountCompleted: true,
   hasDidMountCompleted: true,
   hasRenderCompleted: true,
@@ -68,7 +68,7 @@ var POST_WILL_UNMOUNT_STATE = {
 /**
  * Every React component is in one of these life cycles.
  */
-var ComponentLifeCycle = keyMirror({
+const ComponentLifeCycle = keyMirror({
   /**
    * Mounted components have a DOM node representation and are capable of
    * receiving new props.
@@ -81,7 +81,7 @@ var ComponentLifeCycle = keyMirror({
 });
 
 function getLifeCycleState(instance) {
-  var internalInstance = ReactInstanceMap.get(instance);
+  const internalInstance = ReactInstanceMap.get(instance);
   // Once a component gets mounted, it has an internal instance, once it
   // gets unmounted, it loses that internal instance.
   return internalInstance ?
@@ -106,8 +106,8 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('should not reuse an instance when it has been unmounted', function() {
-    var container = document.createElement('div');
-    var StatefulComponent = React.createClass({
+    const container = document.createElement('div');
+    const StatefulComponent = React.createClass({
       getInitialState: function() {
         return {};
       },
@@ -117,10 +117,10 @@ describe('ReactComponentLifeCycle', function() {
         );
       },
     });
-    var element = <StatefulComponent />;
-    var firstInstance = ReactDOM.render(element, container);
+    const element = <StatefulComponent />;
+    const firstInstance = ReactDOM.render(element, container);
     ReactDOM.unmountComponentAtNode(container);
-    var secondInstance = ReactDOM.render(element, container);
+    const secondInstance = ReactDOM.render(element, container);
     expect(firstInstance).not.toBe(secondInstance);
   });
 
@@ -130,9 +130,9 @@ describe('ReactComponentLifeCycle', function() {
    */
   it('it should fire onDOMReady when already in onDOMReady', function() {
 
-    var _testJournal = [];
+    const _testJournal = [];
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       componentDidMount: function() {
         _testJournal.push('Child:onDOMReady');
       },
@@ -141,7 +141,7 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var SwitcherParent = React.createClass({
+    const SwitcherParent = React.createClass({
       getInitialState: function() {
         _testJournal.push('SwitcherParent:getInitialState');
         return {showHasOnDOMReadyComponent: false};
@@ -164,7 +164,7 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var instance = <SwitcherParent />;
+    let instance = <SwitcherParent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(_testJournal).toEqual([
       'SwitcherParent:getInitialState',
@@ -176,7 +176,7 @@ describe('ReactComponentLifeCycle', function() {
   // You could assign state here, but not access members of it, unless you
   // had provided a getInitialState method.
   it('throws when accessing state in componentWillMount', function() {
-    var StatefulComponent = React.createClass({
+    const StatefulComponent = React.createClass({
       componentWillMount: function() {
         void this.state.yada;
       },
@@ -186,14 +186,14 @@ describe('ReactComponentLifeCycle', function() {
         );
       },
     });
-    var instance = <StatefulComponent />;
+    let instance = <StatefulComponent />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
   it('should allow update state inside of componentWillMount', function() {
-    var StatefulComponent = React.createClass({
+    const StatefulComponent = React.createClass({
       componentWillMount: function() {
         this.setState({stateField: 'something'});
       },
@@ -203,7 +203,7 @@ describe('ReactComponentLifeCycle', function() {
         );
       },
     });
-    var instance = <StatefulComponent />;
+    let instance = <StatefulComponent />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).not.toThrow();
@@ -211,7 +211,7 @@ describe('ReactComponentLifeCycle', function() {
 
   it('should not allow update state inside of getInitialState', function() {
     spyOn(console, 'error');
-    var StatefulComponent = React.createClass({
+    const StatefulComponent = React.createClass({
       getInitialState: function() {
         this.setState({stateField: 'something'});
 
@@ -235,7 +235,7 @@ describe('ReactComponentLifeCycle', function() {
 
   it('should correctly determine if a component is mounted', function() {
     spyOn(console, 'error');
-    var Component = React.createClass({
+    const Component = React.createClass({
       componentWillMount: function() {
         expect(this.isMounted()).toBeFalsy();
       },
@@ -248,9 +248,9 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var element = <Component />;
+    const element = <Component />;
 
-    var instance = ReactTestUtils.renderIntoDocument(element);
+    const instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
 
     expect(console.error.argsForCall.length).toBe(1);
@@ -261,7 +261,7 @@ describe('ReactComponentLifeCycle', function() {
 
   it('should correctly determine if a null component is mounted', function() {
     spyOn(console, 'error');
-    var Component = React.createClass({
+    const Component = React.createClass({
       componentWillMount: function() {
         expect(this.isMounted()).toBeFalsy();
       },
@@ -274,9 +274,9 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var element = <Component />;
+    const element = <Component />;
 
-    var instance = ReactTestUtils.renderIntoDocument(element);
+    const instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
 
     expect(console.error.argsForCall.length).toBe(1);
@@ -286,14 +286,14 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('isMounted should return false when unmounted', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return <div/>;
       },
     });
 
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<Component />, container);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component />, container);
 
     expect(instance.isMounted()).toBe(true);
 
@@ -304,7 +304,7 @@ describe('ReactComponentLifeCycle', function() {
 
   it('warns if findDOMNode is used inside render', function() {
     spyOn(console, 'error');
-    var Component = React.createClass({
+    const Component = React.createClass({
       getInitialState: function() {
         return {isMounted: false};
       },
@@ -327,10 +327,10 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('should carry through each of the phases of setup', function() {
-    var LifeCycleComponent = React.createClass({
+    const LifeCycleComponent = React.createClass({
       getInitialState: function() {
         this._testJournal = {};
-        var initState = {
+        const initState = {
           hasWillMountCompleted: false,
           hasDidMountCompleted: false,
           hasRenderCompleted: false,
@@ -357,7 +357,7 @@ describe('ReactComponentLifeCycle', function() {
       },
 
       render: function() {
-        var isInitialRender = !this.state.hasRenderCompleted;
+        const isInitialRender = !this.state.hasRenderCompleted;
         if (isInitialRender) {
           this._testJournal.stateInInitialRender = clone(this.state);
           this._testJournal.lifeCycleInInitialRender = getLifeCycleState(this);
@@ -385,8 +385,8 @@ describe('ReactComponentLifeCycle', function() {
     // A component that is merely "constructed" (as in "constructor") but not
     // yet initialized, or rendered.
     //
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<LifeCycleComponent />, container);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<LifeCycleComponent />, container);
 
     // getInitialState
     expect(instance._testJournal.returnedFromGetInitialState).toEqual(
@@ -445,7 +445,7 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('should not throw when updating an auxiliary component', function() {
-    var Tooltip = React.createClass({
+    const Tooltip = React.createClass({
       render: function() {
         return <div>{this.props.children}</div>;
       },
@@ -462,7 +462,7 @@ describe('ReactComponentLifeCycle', function() {
         ReactDOM.render(this.props.tooltip, this.container);
       },
     });
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return (
           <Tooltip
@@ -474,7 +474,7 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <Component text="uno" tooltipText="one" />,
       container
@@ -492,7 +492,7 @@ describe('ReactComponentLifeCycle', function() {
     /**
      * calls setState in an componentDidMount.
      */
-    var SetStateInComponentDidMount = React.createClass({
+    const SetStateInComponentDidMount = React.createClass({
       getInitialState: function() {
         return {
           stateField: this.props.valueToUseInitially,
@@ -505,7 +505,7 @@ describe('ReactComponentLifeCycle', function() {
         return (<div></div>);
       },
     });
-    var instance =
+    let instance =
       <SetStateInComponentDidMount
         valueToUseInitially="hello"
         valueToUseInOnDOMReady="goodbye"
@@ -515,15 +515,15 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('should call nested lifecycle methods in the right order', function() {
-    var log;
-    var logger = function(msg) {
+    let log;
+    const logger = function(msg) {
       return function() {
         // return true for shouldComponentUpdate
         log.push(msg);
         return true;
       };
     };
-    var Outer = React.createClass({
+    const Outer = React.createClass({
       render: function() {
         return <div><Inner x={this.props.x} /></div>;
       },
@@ -535,7 +535,7 @@ describe('ReactComponentLifeCycle', function() {
       componentDidUpdate: logger('outer componentDidUpdate'),
       componentWillUnmount: logger('outer componentWillUnmount'),
     });
-    var Inner = React.createClass({
+    const Inner = React.createClass({
       render: function() {
         return <span>{this.props.x}</span>;
       },
@@ -549,7 +549,7 @@ describe('ReactComponentLifeCycle', function() {
     });
 
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     log = [];
     ReactDOM.render(<Outer x={17} />, container);
     expect(log).toEqual([

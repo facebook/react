@@ -13,9 +13,9 @@
 
 
 describe('LinkedStateMixin', function() {
-  var LinkedStateMixin;
-  var React;
-  var ReactTestUtils;
+  let LinkedStateMixin;
+  let React;
+  let ReactTestUtils;
 
   beforeEach(function() {
     LinkedStateMixin = require('LinkedStateMixin');
@@ -24,7 +24,7 @@ describe('LinkedStateMixin', function() {
   });
 
   it('should create a ReactLink for state', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [LinkedStateMixin],
 
       getInitialState: function() {
@@ -35,8 +35,8 @@ describe('LinkedStateMixin', function() {
         return <span>value is {this.state.value}</span>;
       },
     });
-    var component = ReactTestUtils.renderIntoDocument(<Component />);
-    var link = component.linkState('value');
+    const component = ReactTestUtils.renderIntoDocument(<Component />);
+    const link = component.linkState('value');
     expect(component.state.value).toBe('initial value');
     expect(link.value).toBe('initial value');
     link.requestChange('new value');

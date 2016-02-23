@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React;
-var ReactTestUtils;
-var reactComponentExpect;
+let React;
+let ReactTestUtils;
+let reactComponentExpect;
 
 describe('reactComponentExpect', function() {
 
@@ -24,7 +24,7 @@ describe('reactComponentExpect', function() {
   });
 
   it('should detect text components', function() {
-    var SomeComponent = React.createClass({
+    const SomeComponent = React.createClass({
       render: function() {
         return (
           <div>
@@ -35,7 +35,7 @@ describe('reactComponentExpect', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    const component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
 
     reactComponentExpect(component)
       .expectRenderedChild()

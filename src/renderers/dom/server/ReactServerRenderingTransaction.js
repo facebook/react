@@ -11,19 +11,19 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
-var Transaction = require('Transaction');
+const PooledClass = require('PooledClass');
+const Transaction = require('Transaction');
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
 /**
  * Executed within the scope of the `Transaction` instance. Consider these as
  * being member methods, but with an implied ordering while being isolated from
  * each other.
  */
-var TRANSACTION_WRAPPERS = [];
+const TRANSACTION_WRAPPERS = [];
 
-var noopCallbackQueue = {
+const noopCallbackQueue = {
   enqueue: function() {},
 };
 
@@ -37,7 +37,7 @@ function ReactServerRenderingTransaction(renderToStaticMarkup) {
   this.useCreateElement = false;
 }
 
-var Mixin = {
+const Mixin = {
   /**
    * @see Transaction
    * @abstract

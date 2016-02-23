@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ViewportMetrics = {
+const ViewportMetrics = {
 
   currentScrollLeft: 0,
 

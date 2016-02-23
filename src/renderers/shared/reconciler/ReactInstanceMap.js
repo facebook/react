@@ -19,7 +19,7 @@
  */
 
 // TODO: Replace this with ES6: var ReactInstanceMap = new Map();
-var ReactInstanceMap = {
+const ReactInstanceMap = {
 
   /**
    * This API should be called `delete` but we'd have to make sure to always

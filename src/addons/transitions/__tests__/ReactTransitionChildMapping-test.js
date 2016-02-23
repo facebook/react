@@ -11,8 +11,8 @@
 
 'use strict';
 
-var React;
-var ReactTransitionChildMapping;
+let React;
+let ReactTransitionChildMapping;
 
 describe('ReactTransitionChildMapping', function() {
   beforeEach(function() {
@@ -21,11 +21,11 @@ describe('ReactTransitionChildMapping', function() {
   });
 
   it('should support getChildMapping', function() {
-    var oneone = <div key="oneone" />;
-    var onetwo = <div key="onetwo" />;
-    var one = <div key="one">{oneone}{onetwo}</div>;
-    var two = <div key="two" />;
-    var component = <div>{one}{two}</div>;
+    const oneone = <div key="oneone" />;
+    const onetwo = <div key="onetwo" />;
+    const one = <div key="one">{oneone}{onetwo}</div>;
+    const two = <div key="two" />;
+    const component = <div>{one}{two}</div>;
     expect(
       ReactTransitionChildMapping.getChildMapping(component.props.children)
     ).toEqual({
@@ -35,11 +35,11 @@ describe('ReactTransitionChildMapping', function() {
   });
 
   it('should support mergeChildMappings for adding keys', function() {
-    var prev = {
+    const prev = {
       one: true,
       two: true,
     };
-    var next = {
+    const next = {
       one: true,
       two: true,
       three: true,
@@ -52,12 +52,12 @@ describe('ReactTransitionChildMapping', function() {
   });
 
   it('should support mergeChildMappings for removing keys', function() {
-    var prev = {
+    const prev = {
       one: true,
       two: true,
       three: true,
     };
-    var next = {
+    const next = {
       one: true,
       two: true,
     };
@@ -69,12 +69,12 @@ describe('ReactTransitionChildMapping', function() {
   });
 
   it('should support mergeChildMappings for adding and removing', function() {
-    var prev = {
+    const prev = {
       one: true,
       two: true,
       three: true,
     };
-    var next = {
+    const next = {
       one: true,
       two: true,
       four: true,
@@ -88,13 +88,13 @@ describe('ReactTransitionChildMapping', function() {
   });
 
   it('should reconcile overlapping insertions and deletions', function() {
-    var prev = {
+    const prev = {
       one: true,
       two: true,
       four: true,
       five: true,
     };
-    var next = {
+    const next = {
       one: true,
       two: true,
       three: true,
@@ -110,12 +110,12 @@ describe('ReactTransitionChildMapping', function() {
   });
 
   it('should support mergeChildMappings with undefined input', function() {
-    var prev = {
+    let prev = {
       one: true,
       two: true,
     };
 
-    var next = undefined;
+    let next = undefined;
 
     expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,

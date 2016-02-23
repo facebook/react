@@ -11,7 +11,7 @@
 
 'use strict';
 
-var adler32 = require('adler32');
+const adler32 = require('adler32');
 
 describe('adler32', function() {
   it('generates differing checksums', function() {
@@ -27,15 +27,15 @@ describe('adler32', function() {
   });
 
   it('doesn\'t barf on large inputs', function() {
-    var str = '';
-    for (var i = 0; i < 100000; i++) {
+    let str = '';
+    for (let i = 0; i < 100000; i++) {
       str += 'This will be repeated to be very large indeed. ';
     }
     expect(adler32(str)).toBe(692898118);
   });
 
   it('doesn\'t barf on international inputs', function() {
-    var str = 'Linux 是一個真棒操作系統!';
+    const str = 'Linux 是一個真棒操作系統!';
     expect(adler32(str)).toBe(-1183804097);
   });
 });

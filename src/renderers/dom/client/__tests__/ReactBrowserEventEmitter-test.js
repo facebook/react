@@ -11,43 +11,43 @@
 
 'use strict';
 
-var keyOf = require('keyOf');
+const keyOf = require('keyOf');
 
-var EventListener;
-var EventPluginHub;
-var EventPluginRegistry;
-var React;
-var ReactBrowserEventEmitter;
-var ReactDOMComponentTree;
-var ReactTestUtils;
-var TapEventPlugin;
+let EventListener;
+let EventPluginHub;
+let EventPluginRegistry;
+let React;
+let ReactBrowserEventEmitter;
+let ReactDOMComponentTree;
+let ReactTestUtils;
+let TapEventPlugin;
 
-var tapMoveThreshold;
-var idCallOrder;
-var recordID = function(id) {
+let tapMoveThreshold;
+let idCallOrder;
+const recordID = function(id) {
   idCallOrder.push(id);
 };
-var recordIDAndStopPropagation = function(id, event) {
+const recordIDAndStopPropagation = function(id, event) {
   recordID(id);
   event.stopPropagation();
 };
-var recordIDAndReturnFalse = function(id, event) {
+const recordIDAndReturnFalse = function(id, event) {
   recordID(id);
   return false;
 };
-var LISTENER = jest.genMockFn();
-var ON_CLICK_KEY = keyOf({onClick: null});
-var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
-var ON_CHANGE_KEY = keyOf({onChange: null});
-var ON_MOUSE_ENTER_KEY = keyOf({onMouseEnter: null});
+const LISTENER = jest.genMockFn();
+const ON_CLICK_KEY = keyOf({onClick: null});
+const ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
+const ON_CHANGE_KEY = keyOf({onChange: null});
+const ON_MOUSE_ENTER_KEY = keyOf({onMouseEnter: null});
 
-var GRANDPARENT;
-var PARENT;
-var CHILD;
+let GRANDPARENT;
+let PARENT;
+let CHILD;
 
 function registerSimpleTestHandler() {
   EventPluginHub.putListener(getInternal(CHILD), ON_CLICK_KEY, LISTENER);
-  var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+  const listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
   expect(listener).toEqual(LISTENER);
   return EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
 }
@@ -87,20 +87,20 @@ describe('ReactBrowserEventEmitter', function() {
 
   it('should store a listener correctly', function() {
     registerSimpleTestHandler();
-    var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+    const listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', function() {
     registerSimpleTestHandler();
-    var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+    const listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
     expect(listener).toEqual(LISTENER);
   });
 
   it('should clear all handlers when asked to', function() {
     registerSimpleTestHandler();
     EventPluginHub.deleteAllListeners(getInternal(CHILD));
-    var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+    const listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(undefined);
   });
 
@@ -284,8 +284,8 @@ describe('ReactBrowserEventEmitter', function() {
    */
 
   it('should invoke handlers that were removed while bubbling', function() {
-    var handleParentClick = jest.genMockFn();
-    var handleChildClick = function(event) {
+    const handleParentClick = jest.genMockFn();
+    const handleChildClick = function(event) {
       EventPluginHub.deleteAllListeners(getInternal(PARENT));
     };
     EventPluginHub.putListener(
@@ -303,8 +303,8 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should not invoke newly inserted handlers while bubbling', function() {
-    var handleParentClick = jest.genMockFn();
-    var handleChildClick = function(event) {
+    const handleParentClick = jest.genMockFn();
+    const handleChildClick = function(event) {
       EventPluginHub.putListener(
         getInternal(PARENT),
         ON_CLICK_KEY,
@@ -405,9 +405,9 @@ describe('ReactBrowserEventEmitter', function() {
 
     ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
 
-    var setEventListeners = [];
-    var listenCalls = EventListener.listen.argsForCall;
-    var captureCalls = EventListener.capture.argsForCall;
+    const setEventListeners = [];
+    const listenCalls = EventListener.listen.argsForCall;
+    const captureCalls = EventListener.capture.argsForCall;
     for (var i = 0; i < listenCalls.length; i++) {
       setEventListeners.push(listenCalls[i][1]);
     }
@@ -415,8 +415,8 @@ describe('ReactBrowserEventEmitter', function() {
       setEventListeners.push(captureCalls[i][1]);
     }
 
-    var module = EventPluginRegistry.registrationNameModules[ON_CHANGE_KEY];
-    var dependencies = module.eventTypes.change.dependencies;
+    const module = EventPluginRegistry.registrationNameModules[ON_CHANGE_KEY];
+    const dependencies = module.eventTypes.change.dependencies;
     expect(setEventListeners.length).toEqual(dependencies.length);
 
     for (i = 0; i < setEventListeners.length; i++) {

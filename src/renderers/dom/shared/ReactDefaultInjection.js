@@ -11,28 +11,28 @@
 
 'use strict';
 
-var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
-var ChangeEventPlugin = require('ChangeEventPlugin');
-var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
-var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
-var ReactComponentBrowserEnvironment =
+const BeforeInputEventPlugin = require('BeforeInputEventPlugin');
+const ChangeEventPlugin = require('ChangeEventPlugin');
+const DefaultEventPluginOrder = require('DefaultEventPluginOrder');
+const EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+const ExecutionEnvironment = require('ExecutionEnvironment');
+const HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
+const ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactDOMComponent = require('ReactDOMComponent');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
-var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
-var ReactDOMTextComponent = require('ReactDOMTextComponent');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactEventListener = require('ReactEventListener');
-var ReactInjection = require('ReactInjection');
-var ReactReconcileTransaction = require('ReactReconcileTransaction');
-var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
-var SelectEventPlugin = require('SelectEventPlugin');
-var SimpleEventPlugin = require('SimpleEventPlugin');
+const ReactDOMComponent = require('ReactDOMComponent');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
+const ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
+const ReactDOMTextComponent = require('ReactDOMTextComponent');
+const ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+const ReactEventListener = require('ReactEventListener');
+const ReactInjection = require('ReactInjection');
+const ReactReconcileTransaction = require('ReactReconcileTransaction');
+const SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
+const SelectEventPlugin = require('SelectEventPlugin');
+const SimpleEventPlugin = require('SimpleEventPlugin');
 
-var alreadyInjected = false;
+let alreadyInjected = false;
 
 function inject() {
   if (alreadyInjected) {
@@ -93,9 +93,9 @@ function inject() {
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
 
   if (__DEV__) {
-    var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
+    const url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
     if ((/[?&]react_perf\b/).test(url)) {
-      var ReactDefaultPerf = require('ReactDefaultPerf');
+      const ReactDefaultPerf = require('ReactDefaultPerf');
       ReactDefaultPerf.start();
     }
   }

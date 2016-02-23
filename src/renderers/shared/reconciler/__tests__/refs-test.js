@@ -11,17 +11,17 @@
 
 'use strict';
 
-var React = require('React');
-var ReactTestUtils = require('ReactTestUtils');
+const React = require('React');
+const ReactTestUtils = require('ReactTestUtils');
 
-var reactComponentExpect = require('reactComponentExpect');
+const reactComponentExpect = require('reactComponentExpect');
 
 
 /**
  * Counts clicks and has a renders an item for each click. Each item rendered
  * has a ref of the form "clickLogN".
  */
-var ClickCounter = React.createClass({
+const ClickCounter = React.createClass({
   getInitialState: function() {
     return {count: this.props.initialCount};
   },
@@ -32,8 +32,8 @@ var ClickCounter = React.createClass({
     this.setState({count: this.state.count + 1});
   },
   render: function() {
-    var children = [];
-    var i;
+    const children = [];
+    let i;
     for (i = 0; i < this.state.count; i++) {
       children.push(
         <div
@@ -56,7 +56,7 @@ var ClickCounter = React.createClass({
  * component that is injected down several layers. Ref systems are difficult to
  * build in such a way that ownership is maintained in an airtight manner.
  */
-var GeneralContainerComponent = React.createClass({
+const GeneralContainerComponent = React.createClass({
   render: function() {
     return <div>{this.props.children}</div>;
   },
@@ -66,7 +66,7 @@ var GeneralContainerComponent = React.createClass({
  * Notice how refs ownership is maintained even when injecting a component
  * into a different parent.
  */
-var TestRefsComponent = React.createClass({
+const TestRefsComponent = React.createClass({
   doReset: function() {
     this.refs.myCounter.triggerReset();
   },
@@ -87,15 +87,15 @@ var TestRefsComponent = React.createClass({
 /**
  * Render a TestRefsComponent and ensure that the main refs are wired up.
  */
-var renderTestRefsComponent = function() {
-  var testRefsComponent =
+const renderTestRefsComponent = function() {
+  const testRefsComponent =
       ReactTestUtils.renderIntoDocument(<TestRefsComponent />);
 
   reactComponentExpect(testRefsComponent)
       .toBeCompositeComponentWithType(TestRefsComponent);
 
-  var generalContainer = testRefsComponent.refs.myContainer;
-  var counter = testRefsComponent.refs.myCounter;
+  const generalContainer = testRefsComponent.refs.myContainer;
+  const counter = testRefsComponent.refs.myCounter;
 
   reactComponentExpect(generalContainer)
       .toBeCompositeComponentWithType(GeneralContainerComponent);
@@ -106,8 +106,8 @@ var renderTestRefsComponent = function() {
 };
 
 
-var expectClickLogsLengthToBe = function(instance, length) {
-  var clickLogs =
+const expectClickLogsLengthToBe = function(instance, length) {
+  const clickLogs =
     ReactTestUtils.scryRenderedDOMComponentsWithClass(instance, 'clickLogDiv');
   expect(clickLogs.length).toBe(length);
   expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
@@ -123,8 +123,8 @@ describe('reactiverefs', function() {
    * perspective of the injected ClickCounter component.
    */
   it('Should increase refs with an increase in divs', function() {
-    var testRefsComponent = renderTestRefsComponent();
-    var clickIncrementer =
+    const testRefsComponent = renderTestRefsComponent();
+    const clickIncrementer =
       ReactTestUtils.findRenderedDOMComponentWithClass(
         testRefsComponent,
         'clickIncrementer'
@@ -161,7 +161,7 @@ describe('ref swapping', function() {
     jest.resetModuleRegistry();
   });
 
-  var RefHopsAround = React.createClass({
+  const RefHopsAround = React.createClass({
     getInitialState: function() {
       return {count: 0};
     },
@@ -169,7 +169,7 @@ describe('ref swapping', function() {
       this.setState({count: this.state.count + 1});
     },
     render: function() {
-      var count = this.state.count;
+      const count = this.state.count;
       /**
        * What we have here, is three divs with refs (div1/2/3), but a single
        * moving cursor ref `hopRef` that "hops" around the three. We'll call the
@@ -196,13 +196,13 @@ describe('ref swapping', function() {
   });
 
   it('Allow refs to hop around children correctly', function() {
-    var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
+    const refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
-    var firstDiv =
+    const firstDiv =
       ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'first');
-    var secondDiv =
+    const secondDiv =
       ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'second');
-    var thirdDiv =
+    const thirdDiv =
       ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'third');
 
     expect(refHopsAround.refs.hopRef).toEqual(firstDiv);
@@ -231,13 +231,13 @@ describe('ref swapping', function() {
 
 
   it('always has a value for this.refs', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return <div />;
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(!!instance.refs).toBe(true);
   });
 });

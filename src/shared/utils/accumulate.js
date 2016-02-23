@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  * Accumulates items that must not be null or undefined.
@@ -30,8 +30,8 @@ function accumulate(current, next) {
   } else {
     // Both are not empty. Warning: Never call x.concat(y) when you are not
     // certain that x is an Array (x could be a string with concat method).
-    var currentIsArray = Array.isArray(current);
-    var nextIsArray = Array.isArray(next);
+    const currentIsArray = Array.isArray(current);
+    const nextIsArray = Array.isArray(next);
     if (currentIsArray) {
       return current.concat(next);
     } else {

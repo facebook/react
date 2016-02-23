@@ -13,9 +13,9 @@
 
 describe('sliceChildren', function() {
 
-  var React;
+  let React;
 
-  var sliceChildren;
+  let sliceChildren;
 
   beforeEach(function() {
     React = require('React');
@@ -24,12 +24,12 @@ describe('sliceChildren', function() {
   });
 
   it('should render the whole set if start zero is supplied', function() {
-    var fullSet = [
+    const fullSet = [
       <div key="A" />,
       <div key="B" />,
       <div key="C" />,
     ];
-    var children = sliceChildren(fullSet, 0);
+    const children = sliceChildren(fullSet, 0);
     expect(children).toEqual([
       <div key=".$A" />,
       <div key=".$B" />,
@@ -38,12 +38,12 @@ describe('sliceChildren', function() {
   });
 
   it('should render the remaining set if no end index is supplied', function() {
-    var fullSet = [
+    const fullSet = [
       <div key="A" />,
       <div key="B" />,
       <div key="C" />,
     ];
-    var children = sliceChildren(fullSet, 1);
+    const children = sliceChildren(fullSet, 1);
     expect(children).toEqual([
       <div key=".$B" />,
       <div key=".$C" />,
@@ -51,32 +51,32 @@ describe('sliceChildren', function() {
   });
 
   it('should exclude everything at or after the end index', function() {
-    var fullSet = [
+    const fullSet = [
       <div key="A" />,
       <div key="B" />,
       <div key="C" />,
       <div key="D" />,
     ];
-    var children = sliceChildren(fullSet, 1, 2);
+    const children = sliceChildren(fullSet, 1, 2);
     expect(children).toEqual([
       <div key=".$B" />,
     ]);
   });
 
   it('should allow static children to be sliced', function() {
-    var a = <a />;
-    var b = <b />;
-    var c = <i />;
+    const a = <a />;
+    const b = <b />;
+    const c = <i />;
 
-    var el = <div>{a}{b}{c}</div>;
-    var children = sliceChildren(el.props.children, 1, 2);
+    const el = <div>{a}{b}{c}</div>;
+    const children = sliceChildren(el.props.children, 1, 2);
     expect(children).toEqual([
       <b key=".1" />,
     ]);
   });
 
   it('should slice nested children', function() {
-    var fullSet = [
+    const fullSet = [
       <div key="A" />,
       [
         <div key="B" />,
@@ -84,7 +84,7 @@ describe('sliceChildren', function() {
       ],
       <div key="D" />,
     ];
-    var children = sliceChildren(fullSet, 1, 2);
+    const children = sliceChildren(fullSet, 1, 2);
     expect(children).toEqual([
       <div key=".1:$B" />,
     ]);

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var shallowEqual = require('shallowEqual');
+const shallowEqual = require('shallowEqual');
 
 /**
  * Does a shallow comparison for props and state.

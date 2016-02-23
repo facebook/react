@@ -11,17 +11,17 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
+const PooledClass = require('PooledClass');
 
-var assign = require('Object.assign');
-var emptyFunction = require('emptyFunction');
-var warning = require('warning');
+const assign = require('Object.assign');
+const emptyFunction = require('emptyFunction');
+const warning = require('warning');
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var EventInterface = {
+const EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
@@ -66,15 +66,15 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
 
-  var Interface = this.constructor.Interface;
-  for (var propName in Interface) {
+  const Interface = this.constructor.Interface;
+  for (let propName in Interface) {
     if (!Interface.hasOwnProperty(propName)) {
       continue;
     }
     if (__DEV__) {
       delete this[propName]; // this has a getter/setter for warnings
     }
-    var normalize = Interface[propName];
+    const normalize = Interface[propName];
     if (normalize) {
       this[propName] = normalize(nativeEvent);
     } else {
@@ -86,7 +86,7 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
     }
   }
 
-  var defaultPrevented = nativeEvent.defaultPrevented != null ?
+  const defaultPrevented = nativeEvent.defaultPrevented != null ?
     nativeEvent.defaultPrevented :
     nativeEvent.returnValue === false;
   if (defaultPrevented) {
@@ -101,7 +101,7 @@ assign(SyntheticEvent.prototype, {
 
   preventDefault: function() {
     this.defaultPrevented = true;
-    var event = this.nativeEvent;
+    const event = this.nativeEvent;
     if (!event) {
       return;
     }
@@ -115,7 +115,7 @@ assign(SyntheticEvent.prototype, {
   },
 
   stopPropagation: function() {
-    var event = this.nativeEvent;
+    const event = this.nativeEvent;
     if (!event) {
       return;
     }
@@ -148,8 +148,8 @@ assign(SyntheticEvent.prototype, {
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
   destructor: function() {
-    var Interface = this.constructor.Interface;
-    for (var propName in Interface) {
+    const Interface = this.constructor.Interface;
+    for (let propName in Interface) {
       if (__DEV__) {
         Object.defineProperty(this, propName, getPooledWarningPropertyDefinition(propName, Interface[propName]));
       } else {
@@ -157,7 +157,7 @@ assign(SyntheticEvent.prototype, {
       }
     }
     if (__DEV__) {
-      var noop = require('emptyFunction');
+      const noop = require('emptyFunction');
       Object.defineProperty(this, 'nativeEvent', getPooledWarningPropertyDefinition('nativeEvent', null));
       Object.defineProperty(this, 'preventDefault', getPooledWarningPropertyDefinition('preventDefault', noop));
       Object.defineProperty(this, 'stopPropagation', getPooledWarningPropertyDefinition('stopPropagation', noop));
@@ -179,9 +179,9 @@ SyntheticEvent.Interface = EventInterface;
  * @param {?object} Interface
  */
 SyntheticEvent.augmentClass = function(Class, Interface) {
-  var Super = this;
+  const Super = this;
 
-  var E = function() {};
+  const E = function() {};
   E.prototype = Super.prototype;
   var prototype = new E();
 
@@ -207,7 +207,7 @@ module.exports = SyntheticEvent;
   * @return {object} defineProperty object
   */
 function getPooledWarningPropertyDefinition(propName, getVal) {
-  var isFunction = typeof getVal === 'function';
+  const isFunction = typeof getVal === 'function';
   return {
     configurable: true,
     set: set,
@@ -215,20 +215,20 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   };
 
   function set(val) {
-    var action = isFunction ? 'setting the method' : 'setting the property';
+    const action = isFunction ? 'setting the method' : 'setting the property';
     warn(action, 'This is effectively a no-op');
     return val;
   }
 
   function get() {
-    var action = isFunction ? 'accessing the method' : 'accessing the property';
-    var result = isFunction ? 'This is a no-op function' : 'This is set to null';
+    const action = isFunction ? 'accessing the method' : 'accessing the property';
+    const result = isFunction ? 'This is a no-op function' : 'This is set to null';
     warn(action, result);
     return getVal;
   }
 
   function warn(action, result) {
-    var warningCondition = false;
+    const warningCondition = false;
     warning(
       warningCondition,
       'This synthetic event is reused for performance reasons. If you\'re seeing this,' +

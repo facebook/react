@@ -11,12 +11,12 @@
 
 'use strict';
 
-var React = require('React');
-var ReactStateSetters = require('ReactStateSetters');
-var ReactTestUtils = require('ReactTestUtils');
+const React = require('React');
+const ReactStateSetters = require('ReactStateSetters');
+const ReactTestUtils = require('ReactTestUtils');
 
-var TestComponent;
-var TestComponentWithMixin;
+let TestComponent;
+let TestComponentWithMixin;
 
 describe('ReactStateSetters', function() {
   beforeEach(function() {
@@ -46,11 +46,11 @@ describe('ReactStateSetters', function() {
   });
 
   it('createStateSetter should update state', function() {
-    var instance = <TestComponent />;
+    let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
-    var setter = ReactStateSetters.createStateSetter(
+    const setter = ReactStateSetters.createStateSetter(
       instance,
       function(a, b, c) {
         return {
@@ -69,11 +69,11 @@ describe('ReactStateSetters', function() {
   });
 
   it('createStateKeySetter should update state', function() {
-    var instance = <TestComponent />;
+    let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
-    var setter = ReactStateSetters.createStateKeySetter(instance, 'foo');
+    const setter = ReactStateSetters.createStateKeySetter(instance, 'foo');
 
     expect(instance.state).toEqual({foo: 'foo'});
 
@@ -85,26 +85,26 @@ describe('ReactStateSetters', function() {
   });
 
   it('createStateKeySetter is memoized', function() {
-    var instance = <TestComponent />;
+    let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
-    var foo1 = ReactStateSetters.createStateKeySetter(instance, 'foo');
-    var bar1 = ReactStateSetters.createStateKeySetter(instance, 'bar');
+    const foo1 = ReactStateSetters.createStateKeySetter(instance, 'foo');
+    const bar1 = ReactStateSetters.createStateKeySetter(instance, 'bar');
 
-    var foo2 = ReactStateSetters.createStateKeySetter(instance, 'foo');
-    var bar2 = ReactStateSetters.createStateKeySetter(instance, 'bar');
+    const foo2 = ReactStateSetters.createStateKeySetter(instance, 'foo');
+    const bar2 = ReactStateSetters.createStateKeySetter(instance, 'bar');
 
     expect(foo2).toBe(foo1);
     expect(bar2).toBe(bar1);
   });
 
   it('createStateSetter should update state from mixin', function() {
-    var instance = <TestComponentWithMixin />;
+    let instance = <TestComponentWithMixin />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
-    var setter = instance.createStateSetter(
+    const setter = instance.createStateSetter(
       function(a, b, c) {
         return {
           foo: a + b + c,
@@ -122,11 +122,11 @@ describe('ReactStateSetters', function() {
   });
 
   it('createStateKeySetter should update state with mixin', function() {
-    var instance = <TestComponentWithMixin />;
+    let instance = <TestComponentWithMixin />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
-    var setter = instance.createStateKeySetter('foo');
+    const setter = instance.createStateKeySetter('foo');
 
     expect(instance.state).toEqual({foo: 'foo'});
 
@@ -138,15 +138,15 @@ describe('ReactStateSetters', function() {
   });
 
   it('createStateKeySetter is memoized with mixin', function() {
-    var instance = <TestComponentWithMixin />;
+    let instance = <TestComponentWithMixin />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
-    var foo1 = instance.createStateKeySetter('foo');
-    var bar1 = instance.createStateKeySetter('bar');
+    const foo1 = instance.createStateKeySetter('foo');
+    const bar1 = instance.createStateKeySetter('bar');
 
-    var foo2 = instance.createStateKeySetter('foo');
-    var bar2 = instance.createStateKeySetter('bar');
+    const foo2 = instance.createStateKeySetter('foo');
+    const bar2 = instance.createStateKeySetter('bar');
 
     expect(foo2).toBe(foo1);
     expect(bar2).toBe(bar1);

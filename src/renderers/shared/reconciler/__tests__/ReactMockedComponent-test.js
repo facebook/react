@@ -11,11 +11,11 @@
 
 'use strict';
 
-var React;
-var ReactTestUtils;
+let React;
+let ReactTestUtils;
 
-var AutoMockedComponent;
-var MockedComponent;
+let AutoMockedComponent;
+let MockedComponent;
 
 describe('ReactMockedComponent', function() {
 
@@ -36,7 +36,7 @@ describe('ReactMockedComponent', function() {
   });
 
   it('should allow an implicitly mocked component to be updated', () => {
-    var Wrapper = React.createClass({
+    const Wrapper = React.createClass({
 
       getInitialState: function() {
         return {foo: 1};
@@ -52,9 +52,9 @@ describe('ReactMockedComponent', function() {
 
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    const instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
-    var found = ReactTestUtils.findRenderedComponentWithType(
+    const found = ReactTestUtils.findRenderedComponentWithType(
       instance,
       AutoMockedComponent
     );
@@ -64,7 +64,7 @@ describe('ReactMockedComponent', function() {
   });
 
   it('has custom methods on the implicitly mocked component', () => {
-    var instance = ReactTestUtils.renderIntoDocument(<AutoMockedComponent />);
+    const instance = ReactTestUtils.renderIntoDocument(<AutoMockedComponent />);
     expect(typeof instance.hasCustomMethod).toBe('function');
   });
 
@@ -73,7 +73,7 @@ describe('ReactMockedComponent', function() {
   });
 
   it('should allow an explicitly mocked component to be updated', () => {
-    var Wrapper = React.createClass({
+    const Wrapper = React.createClass({
 
       getInitialState: function() {
         return {foo: 1};
@@ -88,9 +88,9 @@ describe('ReactMockedComponent', function() {
       },
 
     });
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    const instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
-    var found = ReactTestUtils.findRenderedComponentWithType(
+    const found = ReactTestUtils.findRenderedComponentWithType(
       instance,
       MockedComponent
     );
@@ -100,7 +100,7 @@ describe('ReactMockedComponent', function() {
   });
 
   it('has custom methods on the explicitly mocked component', () => {
-    var instance = ReactTestUtils.renderIntoDocument(<MockedComponent />);
+    const instance = ReactTestUtils.renderIntoDocument(<MockedComponent />);
     expect(typeof instance.hasCustomMethod).toBe('function');
   });
 

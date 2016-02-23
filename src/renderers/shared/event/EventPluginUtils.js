@@ -11,11 +11,11 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var ReactErrorUtils = require('ReactErrorUtils');
+const EventConstants = require('EventConstants');
+const ReactErrorUtils = require('ReactErrorUtils');
 
-var invariant = require('invariant');
-var warning = require('warning');
+const invariant = require('invariant');
+const warning = require('warning');
 
 /**
  * Injected dependencies:
@@ -25,9 +25,9 @@ var warning = require('warning');
  * - `ComponentTree`: [required] Module that can convert between React instances
  *   and actual node references.
  */
-var ComponentTree;
-var TreeTraversal;
-var injection = {
+let ComponentTree;
+let TreeTraversal;
+const injection = {
   injectComponentTree: function(Injected) {
     ComponentTree = Injected;
     if (__DEV__) {
@@ -52,7 +52,7 @@ var injection = {
   },
 };
 
-var topLevelTypes = EventConstants.topLevelTypes;
+const topLevelTypes = EventConstants.topLevelTypes;
 
 function isEndish(topLevelType) {
   return topLevelType === topLevelTypes.topMouseUp ||
@@ -70,19 +70,19 @@ function isStartish(topLevelType) {
 }
 
 
-var validateEventDispatches;
+let validateEventDispatches;
 if (__DEV__) {
   validateEventDispatches = function(event) {
-    var dispatchListeners = event._dispatchListeners;
-    var dispatchInstances = event._dispatchInstances;
+    const dispatchListeners = event._dispatchListeners;
+    const dispatchInstances = event._dispatchInstances;
 
-    var listenersIsArr = Array.isArray(dispatchListeners);
-    var listenersLen = listenersIsArr ?
+    const listenersIsArr = Array.isArray(dispatchListeners);
+    const listenersLen = listenersIsArr ?
       dispatchListeners.length :
       dispatchListeners ? 1 : 0;
 
-    var instancesIsArr = Array.isArray(dispatchInstances);
-    var instancesLen = instancesIsArr ?
+    const instancesIsArr = Array.isArray(dispatchInstances);
+    const instancesLen = instancesIsArr ?
       dispatchInstances.length :
       dispatchInstances ? 1 : 0;
 
@@ -101,7 +101,7 @@ if (__DEV__) {
  * @param {*} inst Internal component instance
  */
 function executeDispatch(event, simulated, listener, inst) {
-  var type = event.type || 'unknown-event';
+  const type = event.type || 'unknown-event';
   event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
   if (simulated) {
     ReactErrorUtils.invokeGuardedCallbackWithCatch(
@@ -119,13 +119,13 @@ function executeDispatch(event, simulated, listener, inst) {
  * Standard/simple iteration through an event's collected dispatches.
  */
 function executeDispatchesInOrder(event, simulated) {
-  var dispatchListeners = event._dispatchListeners;
-  var dispatchInstances = event._dispatchInstances;
+  const dispatchListeners = event._dispatchListeners;
+  const dispatchInstances = event._dispatchInstances;
   if (__DEV__) {
     validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    for (var i = 0; i < dispatchListeners.length; i++) {
+    for (let i = 0; i < dispatchListeners.length; i++) {
       if (event.isPropagationStopped()) {
         break;
       }
@@ -152,13 +152,13 @@ function executeDispatchesInOrder(event, simulated) {
  * true, or null if no listener returned true.
  */
 function executeDispatchesInOrderStopAtTrueImpl(event) {
-  var dispatchListeners = event._dispatchListeners;
-  var dispatchInstances = event._dispatchInstances;
+  const dispatchListeners = event._dispatchListeners;
+  const dispatchInstances = event._dispatchInstances;
   if (__DEV__) {
     validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    for (var i = 0; i < dispatchListeners.length; i++) {
+    for (let i = 0; i < dispatchListeners.length; i++) {
       if (event.isPropagationStopped()) {
         break;
       }
@@ -179,7 +179,7 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
  * @see executeDispatchesInOrderStopAtTrueImpl
  */
 function executeDispatchesInOrderStopAtTrue(event) {
-  var ret = executeDispatchesInOrderStopAtTrueImpl(event);
+  const ret = executeDispatchesInOrderStopAtTrueImpl(event);
   event._dispatchInstances = null;
   event._dispatchListeners = null;
   return ret;
@@ -198,14 +198,14 @@ function executeDirectDispatch(event) {
   if (__DEV__) {
     validateEventDispatches(event);
   }
-  var dispatchListener = event._dispatchListeners;
-  var dispatchInstance = event._dispatchInstances;
+  const dispatchListener = event._dispatchListeners;
+  const dispatchInstance = event._dispatchInstances;
   invariant(
     !Array.isArray(dispatchListener),
     'executeDirectDispatch(...): Invalid `event`.'
   );
   event.currentTarget = EventPluginUtils.getNodeFromInstance(dispatchInstance);
-  var res = dispatchListener ? dispatchListener(event) : null;
+  const res = dispatchListener ? dispatchListener(event) : null;
   event.curentTarget = null;
   event._dispatchListeners = null;
   event._dispatchInstances = null;

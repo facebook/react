@@ -11,25 +11,25 @@
 
 'use strict';
 
-var ReactUpdates = require('ReactUpdates');
-var Transaction = require('Transaction');
+const ReactUpdates = require('ReactUpdates');
+const Transaction = require('Transaction');
 
-var assign = require('Object.assign');
-var emptyFunction = require('emptyFunction');
+const assign = require('Object.assign');
+const emptyFunction = require('emptyFunction');
 
-var RESET_BATCHED_UPDATES = {
+const RESET_BATCHED_UPDATES = {
   initialize: emptyFunction,
   close: function() {
     ReactDefaultBatchingStrategy.isBatchingUpdates = false;
   },
 };
 
-var FLUSH_BATCHED_UPDATES = {
+const FLUSH_BATCHED_UPDATES = {
   initialize: emptyFunction,
   close: ReactUpdates.flushBatchedUpdates.bind(ReactUpdates),
 };
 
-var TRANSACTION_WRAPPERS = [FLUSH_BATCHED_UPDATES, RESET_BATCHED_UPDATES];
+const TRANSACTION_WRAPPERS = [FLUSH_BATCHED_UPDATES, RESET_BATCHED_UPDATES];
 
 function ReactDefaultBatchingStrategyTransaction() {
   this.reinitializeTransaction();
@@ -45,7 +45,7 @@ assign(
   }
 );
 
-var transaction = new ReactDefaultBatchingStrategyTransaction();
+const transaction = new ReactDefaultBatchingStrategyTransaction();
 
 var ReactDefaultBatchingStrategy = {
   isBatchingUpdates: false,
@@ -55,7 +55,7 @@ var ReactDefaultBatchingStrategy = {
    * and friends are batched such that components aren't updated unnecessarily.
    */
   batchedUpdates: function(callback, a, b, c, d, e) {
-    var alreadyBatchingUpdates = ReactDefaultBatchingStrategy.isBatchingUpdates;
+    const alreadyBatchingUpdates = ReactDefaultBatchingStrategy.isBatchingUpdates;
 
     ReactDefaultBatchingStrategy.isBatchingUpdates = true;
 

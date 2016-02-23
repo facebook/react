@@ -18,19 +18,19 @@
 
 'use strict';
 
-var ReactElement = require('ReactElement');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+const ReactElement = require('ReactElement');
+const ReactPropTypeLocations = require('ReactPropTypeLocations');
+const ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+const ReactCurrentOwner = require('ReactCurrentOwner');
 
-var canDefineProperty = require('canDefineProperty');
-var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
-var warning = require('warning');
+const canDefineProperty = require('canDefineProperty');
+const getIteratorFn = require('getIteratorFn');
+const invariant = require('invariant');
+const warning = require('warning');
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    var name = ReactCurrentOwner.current.getName();
+    const name = ReactCurrentOwner.current.getName();
     if (name) {
       return ' Check the render method of `' + name + '`.';
     }
@@ -43,9 +43,9 @@ function getDeclarationErrorAddendum() {
  * object keys are not valid. This allows us to keep track of children between
  * updates.
  */
-var ownerHasKeyUseWarning = {};
+const ownerHasKeyUseWarning = {};
 
-var loggedTypeFailures = {};
+const loggedTypeFailures = {};
 
 /**
  * Warn if the element doesn't have an explicit key assigned to it.
@@ -63,7 +63,7 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var addenda = getAddendaForKeyUse('uniqueKey', element, parentType);
+  const addenda = getAddendaForKeyUse('uniqueKey', element, parentType);
   if (addenda === null) {
     // we already showed the warning
     return;
@@ -89,16 +89,16 @@ function validateExplicitKey(element, parentType) {
  * if the warning has already been shown before (and shouldn't be shown again).
  */
 function getAddendaForKeyUse(messageType, element, parentType) {
-  var addendum = getDeclarationErrorAddendum();
+  let addendum = getDeclarationErrorAddendum();
   if (!addendum) {
-    var parentName = typeof parentType === 'string' ?
+    const parentName = typeof parentType === 'string' ?
       parentType : parentType.displayName || parentType.name;
     if (parentName) {
       addendum = ` Check the top-level render call using <${parentName}>.`;
     }
   }
 
-  var memoizer = ownerHasKeyUseWarning[messageType] || (
+  const memoizer = ownerHasKeyUseWarning[messageType] || (
     ownerHasKeyUseWarning[messageType] = {}
   );
   if (memoizer[addendum]) {
@@ -106,7 +106,7 @@ function getAddendaForKeyUse(messageType, element, parentType) {
   }
   memoizer[addendum] = true;
 
-  var addenda = {
+  const addenda = {
     parentOrOwner: addendum,
     url: ' See https://fb.me/react-warning-keys for more information.',
     childOwner: null,
@@ -140,8 +140,8 @@ function validateChildKeys(node, parentType) {
     return;
   }
   if (Array.isArray(node)) {
-    for (var i = 0; i < node.length; i++) {
-      var child = node[i];
+    for (let i = 0; i < node.length; i++) {
+      const child = node[i];
       if (ReactElement.isValidElement(child)) {
         validateExplicitKey(child, parentType);
       }
@@ -152,12 +152,12 @@ function validateChildKeys(node, parentType) {
       node._store.validated = true;
     }
   } else if (node) {
-    var iteratorFn = getIteratorFn(node);
+    const iteratorFn = getIteratorFn(node);
     // Entry iterators provide implicit keys.
     if (iteratorFn) {
       if (iteratorFn !== node.entries) {
-        var iterator = iteratorFn.call(node);
-        var step;
+        const iterator = iteratorFn.call(node);
+        let step;
         while (!(step = iterator.next()).done) {
           if (ReactElement.isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
@@ -178,9 +178,9 @@ function validateChildKeys(node, parentType) {
  * @private
  */
 function checkPropTypes(componentName, propTypes, props, location) {
-  for (var propName in propTypes) {
+  for (let propName in propTypes) {
     if (propTypes.hasOwnProperty(propName)) {
-      var error;
+      let error;
       // Prop type validation may throw. In case they do, we don't want to
       // fail the render phase where it didn't fail before. So we log it.
       // After these have been cleaned up, we'll let them throw.
@@ -216,7 +216,7 @@ function checkPropTypes(componentName, propTypes, props, location) {
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var addendum = getDeclarationErrorAddendum();
+        const addendum = getDeclarationErrorAddendum();
         warning(false, 'Failed propType: %s%s', error.message, addendum);
       }
     }
@@ -230,11 +230,11 @@ function checkPropTypes(componentName, propTypes, props, location) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  var componentClass = element.type;
+  const componentClass = element.type;
   if (typeof componentClass !== 'function') {
     return;
   }
-  var name = componentClass.displayName || componentClass.name;
+  const name = componentClass.displayName || componentClass.name;
   if (componentClass.propTypes) {
     checkPropTypes(
       name,
@@ -252,10 +252,10 @@ function validatePropTypes(element) {
   }
 }
 
-var ReactElementValidator = {
+const ReactElementValidator = {
 
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function';
+    const validType = typeof type === 'string' || typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     warning(
@@ -266,7 +266,7 @@ var ReactElementValidator = {
       getDeclarationErrorAddendum()
     );
 
-    var element = ReactElement.createElement.apply(this, arguments);
+    const element = ReactElement.createElement.apply(this, arguments);
 
     // The result can be nullish if a mock or a custom function is used.
     // TODO: Drop this when these are no longer allowed as the type argument.
@@ -280,7 +280,7 @@ var ReactElementValidator = {
     // (Rendering will throw with a helpful message and as soon as the type is
     // fixed, the key warnings will appear.)
     if (validType) {
-      for (var i = 2; i < arguments.length; i++) {
+      for (let i = 2; i < arguments.length; i++) {
         validateChildKeys(arguments[i], type);
       }
     }
@@ -291,7 +291,7 @@ var ReactElementValidator = {
   },
 
   createFactory: function(type) {
-    var validatedFactory = ReactElementValidator.createElement.bind(
+    const validatedFactory = ReactElementValidator.createElement.bind(
       null,
       type
     );
@@ -326,8 +326,8 @@ var ReactElementValidator = {
   },
 
   cloneElement: function(element, props, children) {
-    var newElement = ReactElement.cloneElement.apply(this, arguments);
-    for (var i = 2; i < arguments.length; i++) {
+    const newElement = ReactElement.cloneElement.apply(this, arguments);
+    for (let i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], newElement.type);
     }
     validatePropTypes(newElement);

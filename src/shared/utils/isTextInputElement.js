@@ -14,7 +14,7 @@
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
-var supportedInputTypes = {
+const supportedInputTypes = {
   'color': true,
   'date': true,
   'datetime': true,
@@ -33,7 +33,7 @@ var supportedInputTypes = {
 };
 
 function isTextInputElement(elem) {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return nodeName && (
     (nodeName === 'input' && supportedInputTypes[elem.type]) ||
     nodeName === 'textarea'

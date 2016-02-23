@@ -11,13 +11,13 @@
 
 'use strict';
 
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
+const SyntheticMouseEvent = require('SyntheticMouseEvent');
 
 /**
  * @interface WheelEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var WheelEventInterface = {
+const WheelEventInterface = {
   deltaX: function(event) {
     return (
       'deltaX' in event ? event.deltaX :

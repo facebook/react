@@ -11,7 +11,7 @@
 
 'use strict';
 
-var keyOf = require('keyOf');
+const keyOf = require('keyOf');
 
 /**
  * Module that is injectable into `EventPluginHub`, that specifies a
@@ -22,7 +22,7 @@ var keyOf = require('keyOf');
  * `ResponderEventPlugin` must occur before `SimpleEventPlugin` so that
  * preventing default on events is convenient in `SimpleEventPlugin` handlers.
  */
-var DefaultEventPluginOrder = [
+const DefaultEventPluginOrder = [
   keyOf({ResponderEventPlugin: null}),
   keyOf({SimpleEventPlugin: null}),
   keyOf({TapEventPlugin: null}),

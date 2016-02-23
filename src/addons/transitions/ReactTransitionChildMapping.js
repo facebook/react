@@ -11,9 +11,9 @@
 
 'use strict';
 
-var flattenChildren = require('flattenChildren');
+const flattenChildren = require('flattenChildren');
 
-var ReactTransitionChildMapping = {
+const ReactTransitionChildMapping = {
   /**
    * Given `this.props.children`, return an object mapping key to child. Just
    * simple syntactic sugar around flattenChildren().
@@ -59,10 +59,10 @@ var ReactTransitionChildMapping = {
 
     // For each key of `next`, the list of keys to insert before that key in
     // the combined list
-    var nextKeysPending = {};
+    const nextKeysPending = {};
 
-    var pendingKeys = [];
-    for (var prevKey in prev) {
+    let pendingKeys = [];
+    for (let prevKey in prev) {
       if (next.hasOwnProperty(prevKey)) {
         if (pendingKeys.length) {
           nextKeysPending[prevKey] = pendingKeys;
@@ -73,12 +73,12 @@ var ReactTransitionChildMapping = {
       }
     }
 
-    var i;
-    var childMapping = {};
-    for (var nextKey in next) {
+    let i;
+    const childMapping = {};
+    for (let nextKey in next) {
       if (nextKeysPending.hasOwnProperty(nextKey)) {
         for (i = 0; i < nextKeysPending[nextKey].length; i++) {
-          var pendingNextKey = nextKeysPending[nextKey][i];
+          const pendingNextKey = nextKeysPending[nextKey][i];
           childMapping[nextKeysPending[nextKey][i]] = getValueForKey(
             pendingNextKey
           );

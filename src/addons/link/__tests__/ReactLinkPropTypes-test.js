@@ -11,18 +11,18 @@
 
 'use strict';
 
-var emptyFunction = require('emptyFunction');
-var LinkPropTypes = require('ReactLink').PropTypes;
-var React = require('React');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
+const emptyFunction = require('emptyFunction');
+const LinkPropTypes = require('ReactLink').PropTypes;
+const React = require('React');
+const ReactPropTypeLocations = require('ReactPropTypeLocations');
 
-var invalidMessage = 'Invalid prop `testProp` supplied to `testComponent`.';
-var requiredMessage =
+const invalidMessage = 'Invalid prop `testProp` supplied to `testComponent`.';
+const requiredMessage =
   'Required prop `testProp` was not specified in `testComponent`.';
 
 function typeCheckFail(declaration, value, message) {
-  var props = {testProp: value};
-  var error = declaration(
+  const props = {testProp: value};
+  const error = declaration(
     props,
     'testProp',
     'testComponent',
@@ -33,8 +33,8 @@ function typeCheckFail(declaration, value, message) {
 }
 
 function typeCheckPass(declaration, value) {
-  var props = {testProp: value};
-  var error = declaration(
+  const props = {testProp: value};
+  const error = declaration(
     props,
     'testProp',
     'testComponent',

@@ -11,16 +11,16 @@
 
 'use strict';
 
-var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactNativeComponent = require('ReactNativeComponent');
+const ReactCompositeComponent = require('ReactCompositeComponent');
+const ReactEmptyComponent = require('ReactEmptyComponent');
+const ReactNativeComponent = require('ReactNativeComponent');
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
-var warning = require('warning');
+const assign = require('Object.assign');
+const invariant = require('invariant');
+const warning = require('warning');
 
 // To avoid a cyclic dependency, we create the final class in this module
-var ReactCompositeComponentWrapper = function(element) {
+const ReactCompositeComponentWrapper = function(element) {
   this.construct(element);
 };
 assign(
@@ -33,7 +33,7 @@ assign(
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
-    var name = owner.getName();
+    const name = owner.getName();
     if (name) {
       return ' Check the render method of `' + name + '`.';
     }
@@ -65,12 +65,12 @@ function isInternalComponentType(type) {
  * @protected
  */
 function instantiateReactComponent(node) {
-  var instance;
+  let instance;
 
   if (node === null || node === false) {
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
-    var element = node;
+    const element = node;
     invariant(
       element && (typeof element.type === 'function' ||
                   typeof element.type === 'string'),

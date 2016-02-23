@@ -13,8 +13,8 @@ window.WebComponents = window.WebComponents || {};
 
 (function(scope) {
   var flags = scope.flags || {};
-  var file = "webcomponents.js";
-  var script = document.querySelector('script[src*="' + file + '"]');
+  const file = "webcomponents.js";
+  const script = document.querySelector('script[src*="' + file + '"]');
   var flags = {};
   if (!flags.noOpts) {
     location.search.slice(1).split("&").forEach(function(o) {
@@ -22,14 +22,14 @@ window.WebComponents = window.WebComponents || {};
       o[0] && (flags[o[0]] = o[1] || true);
     });
     if (script) {
-      for (var i = 0, a; a = script.attributes[i]; i++) {
+      for (let i = 0, a; a = script.attributes[i]; i++) {
         if (a.name !== "src") {
           flags[a.name] = a.value || true;
         }
       }
     }
     if (flags.log) {
-      var parts = flags.log.split(",");
+      const parts = flags.log.split(",");
       flags.log = {};
       parts.forEach(function(f) {
         flags.log[f] = true;
@@ -56,14 +56,14 @@ window.WebComponents = window.WebComponents || {};
 if (WebComponents.flags.shadow) {
   if (typeof WeakMap === "undefined") {
     (function() {
-      var defineProperty = Object.defineProperty;
-      var counter = Date.now() % 1e9;
-      var WeakMap = function() {
+      const defineProperty = Object.defineProperty;
+      let counter = Date.now() % 1e9;
+      const WeakMap = function() {
         this.name = "__st" + (Math.random() * 1e9 >>> 0) + (counter++ + "__");
       };
       WeakMap.prototype = {
         set: function(key, value) {
-          var entry = key[this.name];
+          const entry = key[this.name];
           if (entry && entry[0] === key) entry[1] = value; else defineProperty(key, this.name, {
             value: [ key, value ],
             writable: true
@@ -71,17 +71,17 @@ if (WebComponents.flags.shadow) {
           return this;
         },
         get: function(key) {
-          var entry;
+          let entry;
           return (entry = key[this.name]) && entry[0] === key ? entry[1] : undefined;
         },
         "delete": function(key) {
-          var entry = key[this.name];
+          const entry = key[this.name];
           if (!entry || entry[0] !== key) return false;
           entry[0] = entry[1] = undefined;
           return true;
         },
         has: function(key) {
-          var entry = key[this.name];
+          const entry = key[this.name];
           if (!entry) return false;
           return entry[0] === key;
         }
@@ -92,9 +92,9 @@ if (WebComponents.flags.shadow) {
   window.ShadowDOMPolyfill = {};
   (function(scope) {
     "use strict";
-    var constructorTable = new WeakMap();
-    var nativePrototypeTable = new WeakMap();
-    var wrappers = Object.create(null);
+    const constructorTable = new WeakMap();
+    const nativePrototypeTable = new WeakMap();
+    const wrappers = Object.create(null);
     function detectEval() {
       if (typeof chrome !== "undefined" && chrome.app && chrome.app.runtime) {
         return false;
@@ -103,31 +103,31 @@ if (WebComponents.flags.shadow) {
         return false;
       }
       try {
-        var f = new Function("return true;");
+        const f = new Function("return true;");
         return f();
       } catch (ex) {
         return false;
       }
     }
-    var hasEval = detectEval();
+    const hasEval = detectEval();
     function assert(b) {
       if (!b) throw new Error("Assertion failed");
     }
-    var defineProperty = Object.defineProperty;
-    var getOwnPropertyNames = Object.getOwnPropertyNames;
-    var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+    const defineProperty = Object.defineProperty;
+    const getOwnPropertyNames = Object.getOwnPropertyNames;
+    const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
     function mixin(to, from) {
-      var names = getOwnPropertyNames(from);
-      for (var i = 0; i < names.length; i++) {
-        var name = names[i];
+      const names = getOwnPropertyNames(from);
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i];
         defineProperty(to, name, getOwnPropertyDescriptor(from, name));
       }
       return to;
     }
     function mixinStatics(to, from) {
-      var names = getOwnPropertyNames(from);
-      for (var i = 0; i < names.length; i++) {
-        var name = names[i];
+      const names = getOwnPropertyNames(from);
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i];
         switch (name) {
          case "arguments":
          case "caller":
@@ -142,11 +142,11 @@ if (WebComponents.flags.shadow) {
       return to;
     }
     function oneOf(object, propertyNames) {
-      for (var i = 0; i < propertyNames.length; i++) {
+      for (let i = 0; i < propertyNames.length; i++) {
         if (propertyNames[i] in object) return propertyNames[i];
       }
     }
-    var nonEnumerableDataDescriptor = {
+    const nonEnumerableDataDescriptor = {
       value: undefined,
       configurable: true,
       enumerable: false,
@@ -158,11 +158,11 @@ if (WebComponents.flags.shadow) {
     }
     getOwnPropertyNames(window);
     function getWrapperConstructor(node) {
-      var nativePrototype = node.__proto__ || Object.getPrototypeOf(node);
-      var wrapperConstructor = constructorTable.get(nativePrototype);
+      const nativePrototype = node.__proto__ || Object.getPrototypeOf(node);
+      const wrapperConstructor = constructorTable.get(nativePrototype);
       if (wrapperConstructor) return wrapperConstructor;
-      var parentWrapperConstructor = getWrapperConstructor(nativePrototype);
-      var GeneratedWrapper = createWrapperConstructor(parentWrapperConstructor);
+      const parentWrapperConstructor = getWrapperConstructor(nativePrototype);
+      const GeneratedWrapper = createWrapperConstructor(parentWrapperConstructor);
       registerInternal(nativePrototype, GeneratedWrapper, node);
       return GeneratedWrapper;
     }
@@ -173,7 +173,7 @@ if (WebComponents.flags.shadow) {
       installProperty(instanceObject, wrapperPrototype, false);
     }
     var isFirefox = /Firefox/.test(navigator.userAgent);
-    var dummyDescriptor = {
+    const dummyDescriptor = {
       get: function() {},
       set: function(v) {},
       configurable: true,
@@ -208,26 +208,26 @@ if (WebComponents.flags.shadow) {
       }
     }
     var isBrokenSafari = function() {
-      var descr = Object.getOwnPropertyDescriptor(Node.prototype, "nodeType");
+      const descr = Object.getOwnPropertyDescriptor(Node.prototype, "nodeType");
       return descr && !descr.get && !descr.set;
     }();
     function installProperty(source, target, allowMethod, opt_blacklist) {
-      var names = getOwnPropertyNames(source);
-      for (var i = 0; i < names.length; i++) {
-        var name = names[i];
+      const names = getOwnPropertyNames(source);
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i];
         if (name === "polymerBlackList_") continue;
         if (name in target) continue;
         if (source.polymerBlackList_ && source.polymerBlackList_[name]) continue;
         if (isFirefox) {
           source.__lookupGetter__(name);
         }
-        var descriptor = getDescriptor(source, name);
-        var getter, setter;
+        const descriptor = getDescriptor(source, name);
+        let getter, setter;
         if (allowMethod && typeof descriptor.value === "function") {
           target[name] = getMethod(name);
           continue;
         }
-        var isEvent = isEventHandlerName(name);
+        const isEvent = isEventHandlerName(name);
         if (isEvent) getter = scope.getEventHandlerGetter(name); else getter = getGetter(name);
         if (descriptor.writable || descriptor.set || isBrokenSafari) {
           if (isEvent) setter = scope.getEventHandlerSetter(name); else setter = getSetter(name);
@@ -241,12 +241,12 @@ if (WebComponents.flags.shadow) {
       }
     }
     function register(nativeConstructor, wrapperConstructor, opt_instance) {
-      var nativePrototype = nativeConstructor.prototype;
+      const nativePrototype = nativeConstructor.prototype;
       registerInternal(nativePrototype, wrapperConstructor, opt_instance);
       mixinStatics(wrapperConstructor, nativeConstructor);
     }
     function registerInternal(nativePrototype, wrapperConstructor, opt_instance) {
-      var wrapperPrototype = wrapperConstructor.prototype;
+      const wrapperPrototype = wrapperConstructor.prototype;
       assert(constructorTable.get(nativePrototype) === undefined);
       constructorTable.set(nativePrototype, wrapperConstructor);
       nativePrototypeTable.set(wrapperPrototype, nativePrototype);
@@ -259,9 +259,9 @@ if (WebComponents.flags.shadow) {
       return constructorTable.get(nativeConstructor.prototype) === wrapperConstructor;
     }
     function registerObject(object) {
-      var nativePrototype = Object.getPrototypeOf(object);
-      var superWrapperConstructor = getWrapperConstructor(nativePrototype);
-      var GeneratedWrapper = createWrapperConstructor(superWrapperConstructor);
+      const nativePrototype = Object.getPrototypeOf(object);
+      const superWrapperConstructor = getWrapperConstructor(nativePrototype);
+      const GeneratedWrapper = createWrapperConstructor(superWrapperConstructor);
       registerInternal(nativePrototype, GeneratedWrapper, object);
       return GeneratedWrapper;
     }
@@ -269,7 +269,7 @@ if (WebComponents.flags.shadow) {
       function GeneratedWrapper(node) {
         superWrapperConstructor.call(this, node);
       }
-      var p = Object.create(superWrapperConstructor.prototype);
+      const p = Object.create(superWrapperConstructor.prototype);
       p.constructor = GeneratedWrapper;
       GeneratedWrapper.prototype = p;
       return GeneratedWrapper;
@@ -309,7 +309,7 @@ if (WebComponents.flags.shadow) {
       assert(wrapper === undefined || isWrapper(wrapper));
       node.__wrapper8e3dd93a60__ = wrapper;
     }
-    var getterDescriptor = {
+    const getterDescriptor = {
       get: undefined,
       configurable: true,
       enumerable: true
@@ -327,7 +327,7 @@ if (WebComponents.flags.shadow) {
       constructors.forEach(function(constructor) {
         names.forEach(function(name) {
           constructor.prototype[name] = function() {
-            var w = wrapIfNeeded(this);
+            const w = wrapIfNeeded(this);
             return w[name].apply(w, arguments);
           };
         });
@@ -363,16 +363,16 @@ if (WebComponents.flags.shadow) {
         addedCount: addedCount
       };
     }
-    var EDIT_LEAVE = 0;
-    var EDIT_UPDATE = 1;
-    var EDIT_ADD = 2;
-    var EDIT_DELETE = 3;
+    const EDIT_LEAVE = 0;
+    const EDIT_UPDATE = 1;
+    const EDIT_ADD = 2;
+    const EDIT_DELETE = 3;
     function ArraySplice() {}
     ArraySplice.prototype = {
       calcEditDistances: function(current, currentStart, currentEnd, old, oldStart, oldEnd) {
-        var rowCount = oldEnd - oldStart + 1;
-        var columnCount = currentEnd - currentStart + 1;
-        var distances = new Array(rowCount);
+        const rowCount = oldEnd - oldStart + 1;
+        const columnCount = currentEnd - currentStart + 1;
+        const distances = new Array(rowCount);
         for (var i = 0; i < rowCount; i++) {
           distances[i] = new Array(columnCount);
           distances[i][0] = i;
@@ -381,8 +381,8 @@ if (WebComponents.flags.shadow) {
         for (var i = 1; i < rowCount; i++) {
           for (var j = 1; j < columnCount; j++) {
             if (this.equals(current[currentStart + j - 1], old[oldStart + i - 1])) distances[i][j] = distances[i - 1][j - 1]; else {
-              var north = distances[i - 1][j] + 1;
-              var west = distances[i][j - 1] + 1;
+              const north = distances[i - 1][j] + 1;
+              const west = distances[i][j - 1] + 1;
               distances[i][j] = north < west ? north : west;
             }
           }
@@ -390,10 +390,10 @@ if (WebComponents.flags.shadow) {
         return distances;
       },
       spliceOperationsFromEditDistances: function(distances) {
-        var i = distances.length - 1;
-        var j = distances[0].length - 1;
-        var current = distances[i][j];
-        var edits = [];
+        let i = distances.length - 1;
+        let j = distances[0].length - 1;
+        let current = distances[i][j];
+        const edits = [];
         while (i > 0 || j > 0) {
           if (i == 0) {
             edits.push(EDIT_ADD);
@@ -405,10 +405,10 @@ if (WebComponents.flags.shadow) {
             i--;
             continue;
           }
-          var northWest = distances[i - 1][j - 1];
-          var west = distances[i - 1][j];
-          var north = distances[i][j - 1];
-          var min;
+          const northWest = distances[i - 1][j - 1];
+          const west = distances[i - 1][j];
+          const north = distances[i][j - 1];
+          let min;
           if (west < north) min = west < northWest ? west : northWest; else min = north < northWest ? north : northWest;
           if (min == northWest) {
             if (northWest == current) {
@@ -433,9 +433,9 @@ if (WebComponents.flags.shadow) {
         return edits;
       },
       calcSplices: function(current, currentStart, currentEnd, old, oldStart, oldEnd) {
-        var prefixCount = 0;
-        var suffixCount = 0;
-        var minLength = Math.min(currentEnd - currentStart, oldEnd - oldStart);
+        let prefixCount = 0;
+        let suffixCount = 0;
+        const minLength = Math.min(currentEnd - currentStart, oldEnd - oldStart);
         if (currentStart == 0 && oldStart == 0) prefixCount = this.sharedPrefix(current, old, minLength);
         if (currentEnd == current.length && oldEnd == old.length) suffixCount = this.sharedSuffix(current, old, minLength - prefixCount);
         currentStart += prefixCount;
@@ -448,12 +448,12 @@ if (WebComponents.flags.shadow) {
           while (oldStart < oldEnd) splice.removed.push(old[oldStart++]);
           return [ splice ];
         } else if (oldStart == oldEnd) return [ newSplice(currentStart, [], currentEnd - currentStart) ];
-        var ops = this.spliceOperationsFromEditDistances(this.calcEditDistances(current, currentStart, currentEnd, old, oldStart, oldEnd));
+        const ops = this.spliceOperationsFromEditDistances(this.calcEditDistances(current, currentStart, currentEnd, old, oldStart, oldEnd));
         var splice = undefined;
-        var splices = [];
-        var index = currentStart;
-        var oldIndex = oldStart;
-        for (var i = 0; i < ops.length; i++) {
+        const splices = [];
+        let index = currentStart;
+        let oldIndex = oldStart;
+        for (let i = 0; i < ops.length; i++) {
           switch (ops[i]) {
            case EDIT_LEAVE:
             if (splice) {
@@ -491,13 +491,13 @@ if (WebComponents.flags.shadow) {
         return splices;
       },
       sharedPrefix: function(current, old, searchLength) {
-        for (var i = 0; i < searchLength; i++) if (!this.equals(current[i], old[i])) return i;
+        for (let i = 0; i < searchLength; i++) if (!this.equals(current[i], old[i])) return i;
         return searchLength;
       },
       sharedSuffix: function(current, old, searchLength) {
-        var index1 = current.length;
-        var index2 = old.length;
-        var count = 0;
+        let index1 = current.length;
+        let index2 = old.length;
+        let count = 0;
         while (count < searchLength && this.equals(current[--index1], old[--index2])) count++;
         return count;
       },
@@ -512,22 +512,22 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(context) {
     "use strict";
-    var OriginalMutationObserver = window.MutationObserver;
-    var callbacks = [];
-    var pending = false;
-    var timerFunc;
+    const OriginalMutationObserver = window.MutationObserver;
+    let callbacks = [];
+    let pending = false;
+    let timerFunc;
     function handle() {
       pending = false;
-      var copies = callbacks.slice(0);
+      const copies = callbacks.slice(0);
       callbacks = [];
-      for (var i = 0; i < copies.length; i++) {
+      for (let i = 0; i < copies.length; i++) {
         (0, copies[i])();
       }
     }
     if (OriginalMutationObserver) {
-      var counter = 1;
-      var observer = new OriginalMutationObserver(handle);
-      var textNode = document.createTextNode(counter);
+      let counter = 1;
+      const observer = new OriginalMutationObserver(handle);
+      const textNode = document.createTextNode(counter);
       observer.observe(textNode, {
         characterData: true
       });
@@ -548,12 +548,12 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var setEndOfMicrotask = scope.setEndOfMicrotask;
-    var wrapIfNeeded = scope.wrapIfNeeded;
-    var wrappers = scope.wrappers;
-    var registrationsTable = new WeakMap();
-    var globalMutationObservers = [];
-    var isScheduled = false;
+    const setEndOfMicrotask = scope.setEndOfMicrotask;
+    const wrapIfNeeded = scope.wrapIfNeeded;
+    const wrappers = scope.wrappers;
+    const registrationsTable = new WeakMap();
+    let globalMutationObservers = [];
+    let isScheduled = false;
     function scheduleCallback(observer) {
       if (observer.scheduled_) return;
       observer.scheduled_ = true;
@@ -565,15 +565,15 @@ if (WebComponents.flags.shadow) {
     function notifyObservers() {
       isScheduled = false;
       while (globalMutationObservers.length) {
-        var notifyList = globalMutationObservers;
+        const notifyList = globalMutationObservers;
         globalMutationObservers = [];
         notifyList.sort(function(x, y) {
           return x.uid_ - y.uid_;
         });
-        for (var i = 0; i < notifyList.length; i++) {
-          var mo = notifyList[i];
+        for (let i = 0; i < notifyList.length; i++) {
+          const mo = notifyList[i];
           mo.scheduled_ = false;
-          var queue = mo.takeRecords();
+          const queue = mo.takeRecords();
           removeTransientObserversFor(mo);
           if (queue.length) {
             mo.callback_(queue, mo);
@@ -594,34 +594,34 @@ if (WebComponents.flags.shadow) {
     }
     function registerTransientObservers(ancestor, node) {
       for (;ancestor; ancestor = ancestor.parentNode) {
-        var registrations = registrationsTable.get(ancestor);
+        const registrations = registrationsTable.get(ancestor);
         if (!registrations) continue;
-        for (var i = 0; i < registrations.length; i++) {
-          var registration = registrations[i];
+        for (let i = 0; i < registrations.length; i++) {
+          const registration = registrations[i];
           if (registration.options.subtree) registration.addTransientObserver(node);
         }
       }
     }
     function removeTransientObserversFor(observer) {
-      for (var i = 0; i < observer.nodes_.length; i++) {
-        var node = observer.nodes_[i];
-        var registrations = registrationsTable.get(node);
+      for (let i = 0; i < observer.nodes_.length; i++) {
+        const node = observer.nodes_[i];
+        const registrations = registrationsTable.get(node);
         if (!registrations) return;
-        for (var j = 0; j < registrations.length; j++) {
-          var registration = registrations[j];
+        for (let j = 0; j < registrations.length; j++) {
+          const registration = registrations[j];
           if (registration.observer === observer) registration.removeTransientObservers();
         }
       }
     }
     function enqueueMutation(target, type, data) {
-      var interestedObservers = Object.create(null);
-      var associatedStrings = Object.create(null);
-      for (var node = target; node; node = node.parentNode) {
-        var registrations = registrationsTable.get(node);
+      const interestedObservers = Object.create(null);
+      const associatedStrings = Object.create(null);
+      for (let node = target; node; node = node.parentNode) {
+        const registrations = registrationsTable.get(node);
         if (!registrations) continue;
-        for (var j = 0; j < registrations.length; j++) {
-          var registration = registrations[j];
-          var options = registration.options;
+        for (let j = 0; j < registrations.length; j++) {
+          const registration = registrations[j];
+          const options = registration.options;
           if (node !== target && !options.subtree) continue;
           if (type === "attributes" && !options.attributes) continue;
           if (type === "attributes" && options.attributeFilter && (data.namespace !== null || options.attributeFilter.indexOf(data.name) === -1)) {
@@ -636,9 +636,9 @@ if (WebComponents.flags.shadow) {
           }
         }
       }
-      for (var uid in interestedObservers) {
+      for (let uid in interestedObservers) {
         var observer = interestedObservers[uid];
-        var record = new MutationRecord(type, target);
+        const record = new MutationRecord(type, target);
         if ("name" in data && "namespace" in data) {
           record.attributeName = data.name;
           record.attributeNamespace = data.namespace;
@@ -652,7 +652,7 @@ if (WebComponents.flags.shadow) {
         observer.records_.push(record);
       }
     }
-    var slice = Array.prototype.slice;
+    const slice = Array.prototype.slice;
     function MutationObserverOptions(options) {
       this.childList = !!options.childList;
       this.subtree = !!options.subtree;
@@ -677,7 +677,7 @@ if (WebComponents.flags.shadow) {
         this.attributeFilter = null;
       }
     }
-    var uidCounter = 0;
+    let uidCounter = 0;
     function MutationObserver(callback) {
       this.callback_ = callback;
       this.nodes_ = [];
@@ -689,11 +689,11 @@ if (WebComponents.flags.shadow) {
       constructor: MutationObserver,
       observe: function(target, options) {
         target = wrapIfNeeded(target);
-        var newOptions = new MutationObserverOptions(options);
-        var registration;
-        var registrations = registrationsTable.get(target);
+        const newOptions = new MutationObserverOptions(options);
+        let registration;
+        let registrations = registrationsTable.get(target);
         if (!registrations) registrationsTable.set(target, registrations = []);
-        for (var i = 0; i < registrations.length; i++) {
+        for (let i = 0; i < registrations.length; i++) {
           if (registrations[i].observer === this) {
             registration = registrations[i];
             registration.removeTransientObservers();
@@ -708,9 +708,9 @@ if (WebComponents.flags.shadow) {
       },
       disconnect: function() {
         this.nodes_.forEach(function(node) {
-          var registrations = registrationsTable.get(node);
-          for (var i = 0; i < registrations.length; i++) {
-            var registration = registrations[i];
+          const registrations = registrationsTable.get(node);
+          for (let i = 0; i < registrations.length; i++) {
+            const registration = registrations[i];
             if (registration.observer === this) {
               registrations.splice(i, 1);
               break;
@@ -720,7 +720,7 @@ if (WebComponents.flags.shadow) {
         this.records_ = [];
       },
       takeRecords: function() {
-        var copyOfRecords = this.records_;
+        const copyOfRecords = this.records_;
         this.records_ = [];
         return copyOfRecords;
       }
@@ -736,17 +736,17 @@ if (WebComponents.flags.shadow) {
         if (node === this.target) return;
         scheduleCallback(this.observer);
         this.transientObservedNodes.push(node);
-        var registrations = registrationsTable.get(node);
+        let registrations = registrationsTable.get(node);
         if (!registrations) registrationsTable.set(node, registrations = []);
         registrations.push(this);
       },
       removeTransientObservers: function() {
-        var transientObservedNodes = this.transientObservedNodes;
+        const transientObservedNodes = this.transientObservedNodes;
         this.transientObservedNodes = [];
-        for (var i = 0; i < transientObservedNodes.length; i++) {
-          var node = transientObservedNodes[i];
-          var registrations = registrationsTable.get(node);
-          for (var j = 0; j < registrations.length; j++) {
+        for (let i = 0; i < transientObservedNodes.length; i++) {
+          const node = transientObservedNodes[i];
+          const registrations = registrationsTable.get(node);
+          for (let j = 0; j < registrations.length; j++) {
             if (registrations[j] === this) {
               registrations.splice(j, 1);
               break;
@@ -783,10 +783,10 @@ if (WebComponents.flags.shadow) {
     function setTreeScope(node, treeScope) {
       if (node.treeScope_ !== treeScope) {
         node.treeScope_ = treeScope;
-        for (var sr = node.shadowRoot; sr; sr = sr.olderShadowRoot) {
+        for (let sr = node.shadowRoot; sr; sr = sr.olderShadowRoot) {
           sr.treeScope_.parent = treeScope;
         }
-        for (var child = node.firstChild; child; child = child.nextSibling) {
+        for (let child = node.firstChild; child; child = child.nextSibling) {
           setTreeScope(child, treeScope);
         }
       }
@@ -796,8 +796,8 @@ if (WebComponents.flags.shadow) {
         debugger;
       }
       if (node.treeScope_) return node.treeScope_;
-      var parent = node.parentNode;
-      var treeScope;
+      const parent = node.parentNode;
+      let treeScope;
       if (parent) treeScope = getTreeScope(parent); else treeScope = new TreeScope(node, null);
       return node.treeScope_ = treeScope;
     }
@@ -807,27 +807,27 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var forwardMethodsToWrapper = scope.forwardMethodsToWrapper;
-    var getTreeScope = scope.getTreeScope;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var wrappers = scope.wrappers;
-    var wrappedFuns = new WeakMap();
-    var listenersTable = new WeakMap();
-    var handledEventsTable = new WeakMap();
-    var currentlyDispatchingEvents = new WeakMap();
-    var targetTable = new WeakMap();
-    var currentTargetTable = new WeakMap();
-    var relatedTargetTable = new WeakMap();
-    var eventPhaseTable = new WeakMap();
-    var stopPropagationTable = new WeakMap();
-    var stopImmediatePropagationTable = new WeakMap();
-    var eventHandlersTable = new WeakMap();
-    var eventPathTable = new WeakMap();
+    const forwardMethodsToWrapper = scope.forwardMethodsToWrapper;
+    const getTreeScope = scope.getTreeScope;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const wrappers = scope.wrappers;
+    const wrappedFuns = new WeakMap();
+    const listenersTable = new WeakMap();
+    const handledEventsTable = new WeakMap();
+    const currentlyDispatchingEvents = new WeakMap();
+    const targetTable = new WeakMap();
+    const currentTargetTable = new WeakMap();
+    const relatedTargetTable = new WeakMap();
+    const eventPhaseTable = new WeakMap();
+    const stopPropagationTable = new WeakMap();
+    const stopImmediatePropagationTable = new WeakMap();
+    const eventHandlersTable = new WeakMap();
+    const eventPathTable = new WeakMap();
     function isShadowRoot(node) {
       return node instanceof wrappers.ShadowRoot;
     }
@@ -835,17 +835,17 @@ if (WebComponents.flags.shadow) {
       return getTreeScope(node).root;
     }
     function getEventPath(node, event) {
-      var path = [];
-      var current = node;
+      const path = [];
+      let current = node;
       path.push(current);
       while (current) {
-        var destinationInsertionPoints = getDestinationInsertionPoints(current);
+        const destinationInsertionPoints = getDestinationInsertionPoints(current);
         if (destinationInsertionPoints && destinationInsertionPoints.length > 0) {
-          for (var i = 0; i < destinationInsertionPoints.length; i++) {
-            var insertionPoint = destinationInsertionPoints[i];
+          for (let i = 0; i < destinationInsertionPoints.length; i++) {
+            const insertionPoint = destinationInsertionPoints[i];
             if (isShadowInsertionPoint(insertionPoint)) {
-              var shadowRoot = rootOfNode(insertionPoint);
-              var olderShadowRoot = shadowRoot.olderShadowRoot;
+              const shadowRoot = rootOfNode(insertionPoint);
+              const olderShadowRoot = shadowRoot.olderShadowRoot;
               if (olderShadowRoot) path.push(olderShadowRoot);
             }
             path.push(insertionPoint);
@@ -891,30 +891,30 @@ if (WebComponents.flags.shadow) {
     function eventRetargetting(path, currentTarget) {
       if (path.length === 0) return currentTarget;
       if (currentTarget instanceof wrappers.Window) currentTarget = currentTarget.document;
-      var currentTargetTree = getTreeScope(currentTarget);
-      var originalTarget = path[0];
-      var originalTargetTree = getTreeScope(originalTarget);
-      var relativeTargetTree = lowestCommonInclusiveAncestor(currentTargetTree, originalTargetTree);
-      for (var i = 0; i < path.length; i++) {
-        var node = path[i];
+      const currentTargetTree = getTreeScope(currentTarget);
+      const originalTarget = path[0];
+      const originalTargetTree = getTreeScope(originalTarget);
+      const relativeTargetTree = lowestCommonInclusiveAncestor(currentTargetTree, originalTargetTree);
+      for (let i = 0; i < path.length; i++) {
+        const node = path[i];
         if (getTreeScope(node) === relativeTargetTree) return node;
       }
       return path[path.length - 1];
     }
     function getTreeScopeAncestors(treeScope) {
-      var ancestors = [];
+      const ancestors = [];
       for (;treeScope; treeScope = treeScope.parent) {
         ancestors.push(treeScope);
       }
       return ancestors;
     }
     function lowestCommonInclusiveAncestor(tsA, tsB) {
-      var ancestorsA = getTreeScopeAncestors(tsA);
-      var ancestorsB = getTreeScopeAncestors(tsB);
-      var result = null;
+      const ancestorsA = getTreeScopeAncestors(tsA);
+      const ancestorsB = getTreeScopeAncestors(tsB);
+      let result = null;
       while (ancestorsA.length > 0 && ancestorsB.length > 0) {
-        var a = ancestorsA.pop();
-        var b = ancestorsB.pop();
+        const a = ancestorsA.pop();
+        const b = ancestorsB.pop();
         if (a === b) result = a; else break;
       }
       return result;
@@ -925,16 +925,16 @@ if (WebComponents.flags.shadow) {
     }
     function relatedTargetResolution(event, currentTarget, relatedTarget) {
       if (currentTarget instanceof wrappers.Window) currentTarget = currentTarget.document;
-      var currentTargetTree = getTreeScope(currentTarget);
-      var relatedTargetTree = getTreeScope(relatedTarget);
-      var relatedTargetEventPath = getEventPath(relatedTarget, event);
+      const currentTargetTree = getTreeScope(currentTarget);
+      const relatedTargetTree = getTreeScope(relatedTarget);
+      const relatedTargetEventPath = getEventPath(relatedTarget, event);
       var lowestCommonAncestorTree;
       var lowestCommonAncestorTree = lowestCommonInclusiveAncestor(currentTargetTree, relatedTargetTree);
       if (!lowestCommonAncestorTree) lowestCommonAncestorTree = relatedTargetTree.root;
-      for (var commonAncestorTree = lowestCommonAncestorTree; commonAncestorTree; commonAncestorTree = commonAncestorTree.parent) {
-        var adjustedRelatedTarget;
-        for (var i = 0; i < relatedTargetEventPath.length; i++) {
-          var node = relatedTargetEventPath[i];
+      for (let commonAncestorTree = lowestCommonAncestorTree; commonAncestorTree; commonAncestorTree = commonAncestorTree.parent) {
+        let adjustedRelatedTarget;
+        for (let i = 0; i < relatedTargetEventPath.length; i++) {
+          const node = relatedTargetEventPath[i];
           if (getTreeScope(node) === commonAncestorTree) return node;
         }
       }
@@ -943,17 +943,17 @@ if (WebComponents.flags.shadow) {
     function inSameTree(a, b) {
       return getTreeScope(a) === getTreeScope(b);
     }
-    var NONE = 0;
-    var CAPTURING_PHASE = 1;
-    var AT_TARGET = 2;
-    var BUBBLING_PHASE = 3;
-    var pendingError;
+    const NONE = 0;
+    const CAPTURING_PHASE = 1;
+    const AT_TARGET = 2;
+    const BUBBLING_PHASE = 3;
+    let pendingError;
     function dispatchOriginalEvent(originalEvent) {
       if (handledEventsTable.get(originalEvent)) return;
       handledEventsTable.set(originalEvent, true);
       dispatchEvent(wrap(originalEvent), wrap(originalEvent.target));
       if (pendingError) {
-        var err = pendingError;
+        const err = pendingError;
         pendingError = null;
         throw err;
       }
@@ -971,9 +971,9 @@ if (WebComponents.flags.shadow) {
       if (currentlyDispatchingEvents.get(event)) throw new Error("InvalidStateError");
       currentlyDispatchingEvents.set(event, true);
       scope.renderAllPending();
-      var eventPath;
-      var overrideTarget;
-      var win;
+      let eventPath;
+      let overrideTarget;
+      let win;
       if (isLoadLikeEvent(event) && !event.bubbles) {
         var doc = originalWrapperTarget;
         if (doc instanceof wrappers.Document && (win = doc.defaultView)) {
@@ -1005,23 +1005,23 @@ if (WebComponents.flags.shadow) {
       return event.defaultPrevented;
     }
     function dispatchCapturing(event, eventPath, win, overrideTarget) {
-      var phase = CAPTURING_PHASE;
+      const phase = CAPTURING_PHASE;
       if (win) {
         if (!invoke(win, event, phase, eventPath, overrideTarget)) return false;
       }
-      for (var i = eventPath.length - 1; i > 0; i--) {
+      for (let i = eventPath.length - 1; i > 0; i--) {
         if (!invoke(eventPath[i], event, phase, eventPath, overrideTarget)) return false;
       }
       return true;
     }
     function dispatchAtTarget(event, eventPath, win, overrideTarget) {
-      var phase = AT_TARGET;
-      var currentTarget = eventPath[0] || win;
+      const phase = AT_TARGET;
+      const currentTarget = eventPath[0] || win;
       return invoke(currentTarget, event, phase, eventPath, overrideTarget);
     }
     function dispatchBubbling(event, eventPath, win, overrideTarget) {
-      var phase = BUBBLING_PHASE;
-      for (var i = 1; i < eventPath.length; i++) {
+      const phase = BUBBLING_PHASE;
+      for (let i = 1; i < eventPath.length; i++) {
         if (!invoke(eventPath[i], event, phase, eventPath, overrideTarget)) return;
       }
       if (win && eventPath.length > 0) {
@@ -1029,9 +1029,9 @@ if (WebComponents.flags.shadow) {
       }
     }
     function invoke(currentTarget, event, phase, eventPath, overrideTarget) {
-      var listeners = listenersTable.get(currentTarget);
+      const listeners = listenersTable.get(currentTarget);
       if (!listeners) return true;
-      var target = overrideTarget || eventRetargetting(eventPath, currentTarget);
+      const target = overrideTarget || eventRetargetting(eventPath, currentTarget);
       if (target === currentTarget) {
         if (phase === CAPTURING_PHASE) return true;
         if (phase === BUBBLING_PHASE) phase = AT_TARGET;
@@ -1039,8 +1039,8 @@ if (WebComponents.flags.shadow) {
         return true;
       }
       if ("relatedTarget" in event) {
-        var originalEvent = unwrap(event);
-        var unwrappedRelatedTarget = originalEvent.relatedTarget;
+        const originalEvent = unwrap(event);
+        const unwrappedRelatedTarget = originalEvent.relatedTarget;
         if (unwrappedRelatedTarget) {
           if (unwrappedRelatedTarget instanceof Object && unwrappedRelatedTarget.addEventListener) {
             var relatedTarget = wrap(unwrappedRelatedTarget);
@@ -1053,13 +1053,13 @@ if (WebComponents.flags.shadow) {
         }
       }
       eventPhaseTable.set(event, phase);
-      var type = event.type;
-      var anyRemoved = false;
+      const type = event.type;
+      let anyRemoved = false;
       targetTable.set(event, target);
       currentTargetTable.set(event, currentTarget);
       listeners.depth++;
       for (var i = 0, len = listeners.length; i < len; i++) {
-        var listener = listeners[i];
+        const listener = listeners[i];
         if (listener.removed) {
           anyRemoved = true;
           continue;
@@ -1076,7 +1076,7 @@ if (WebComponents.flags.shadow) {
       }
       listeners.depth--;
       if (anyRemoved && listeners.depth === 0) {
-        var copy = listeners.slice();
+        const copy = listeners.slice();
         listeners.length = 0;
         for (var i = 0; i < copy.length; i++) {
           if (!copy[i].removed) listeners.push(copy[i]);
@@ -1100,14 +1100,14 @@ if (WebComponents.flags.shadow) {
         this.handler = null;
       }
     };
-    var OriginalEvent = window.Event;
+    const OriginalEvent = window.Event;
     OriginalEvent.prototype.polymerBlackList_ = {
       returnValue: true,
       keyLocation: true
     };
     function Event(type, options) {
       if (type instanceof OriginalEvent) {
-        var impl = type;
+        const impl = type;
         if (!OriginalBeforeUnloadEvent && impl.type === "beforeunload" && !(this instanceof BeforeUnloadEvent)) {
           return new BeforeUnloadEvent(impl);
         }
@@ -1127,7 +1127,7 @@ if (WebComponents.flags.shadow) {
         return eventPhaseTable.get(this);
       },
       get path() {
-        var eventPath = eventPathTable.get(this);
+        const eventPath = eventPathTable.get(this);
         if (!eventPath) return [];
         return eventPath.slice();
       },
@@ -1149,8 +1149,8 @@ if (WebComponents.flags.shadow) {
       });
     }
     function registerGenericEvent(name, SuperEvent, prototype) {
-      var OriginalEvent = window[name];
-      var GenericEvent = function(type, options) {
+      const OriginalEvent = window[name];
+      const GenericEvent = function(type, options) {
         if (type instanceof OriginalEvent) setWrapper(type, this); else return wrap(constructEvent(OriginalEvent, name, type, options));
       };
       GenericEvent.prototype = Object.create(SuperEvent.prototype);
@@ -1164,11 +1164,11 @@ if (WebComponents.flags.shadow) {
       }
       return GenericEvent;
     }
-    var UIEvent = registerGenericEvent("UIEvent", Event);
-    var CustomEvent = registerGenericEvent("CustomEvent", Event);
-    var relatedTargetProto = {
+    const UIEvent = registerGenericEvent("UIEvent", Event);
+    const CustomEvent = registerGenericEvent("CustomEvent", Event);
+    const relatedTargetProto = {
       get relatedTarget() {
-        var relatedTarget = relatedTargetTable.get(this);
+        const relatedTarget = relatedTargetTable.get(this);
         if (relatedTarget !== undefined) return relatedTarget;
         return wrap(unwrap(this).relatedTarget);
       }
@@ -1176,18 +1176,18 @@ if (WebComponents.flags.shadow) {
     function getInitFunction(name, relatedTargetIndex) {
       return function() {
         arguments[relatedTargetIndex] = unwrap(arguments[relatedTargetIndex]);
-        var impl = unwrap(this);
+        const impl = unwrap(this);
         impl[name].apply(impl, arguments);
       };
     }
-    var mouseEventProto = mixin({
+    const mouseEventProto = mixin({
       initMouseEvent: getInitFunction("initMouseEvent", 14)
     }, relatedTargetProto);
-    var focusEventProto = mixin({
+    const focusEventProto = mixin({
       initFocusEvent: getInitFunction("initFocusEvent", 5)
     }, relatedTargetProto);
-    var MouseEvent = registerGenericEvent("MouseEvent", UIEvent, mouseEventProto);
-    var FocusEvent = registerGenericEvent("FocusEvent", UIEvent, focusEventProto);
+    const MouseEvent = registerGenericEvent("MouseEvent", UIEvent, mouseEventProto);
+    const FocusEvent = registerGenericEvent("FocusEvent", UIEvent, focusEventProto);
     var defaultInitDicts = Object.create(null);
     var supportsEventConstructors = function() {
       try {
@@ -1199,11 +1199,11 @@ if (WebComponents.flags.shadow) {
     }();
     function constructEvent(OriginalEvent, name, type, options) {
       if (supportsEventConstructors) return new OriginalEvent(type, unwrapOptions(options));
-      var event = unwrap(document.createEvent(name));
-      var defaultDict = defaultInitDicts[name];
-      var args = [ type ];
+      const event = unwrap(document.createEvent(name));
+      const defaultDict = defaultInitDicts[name];
+      const args = [ type ];
       Object.keys(defaultDict).forEach(function(key) {
-        var v = options != null && key in options ? options[key] : defaultDict[key];
+        let v = options != null && key in options ? options[key] : defaultDict[key];
         if (key === "relatedTarget") v = unwrap(v);
         args.push(v);
       });
@@ -1211,9 +1211,9 @@ if (WebComponents.flags.shadow) {
       return event;
     }
     if (!supportsEventConstructors) {
-      var configureEventConstructor = function(name, initDict, superName) {
+      const configureEventConstructor = function(name, initDict, superName) {
         if (superName) {
-          var superDict = defaultInitDicts[superName];
+          const superDict = defaultInitDicts[superName];
           initDict = mixin(mixin({}, superDict), initDict);
         }
         defaultInitDicts[name] = initDict;
@@ -1278,13 +1278,13 @@ if (WebComponents.flags.shadow) {
       }
       return false;
     }
-    var OriginalEventTarget = window.EventTarget;
+    const OriginalEventTarget = window.EventTarget;
     function EventTarget(impl) {
       setWrapper(impl, this);
     }
-    var methodNames = [ "addEventListener", "removeEventListener", "dispatchEvent" ];
+    const methodNames = [ "addEventListener", "removeEventListener", "dispatchEvent" ];
     [ Node, Window ].forEach(function(constructor) {
-      var p = constructor.prototype;
+      const p = constructor.prototype;
       methodNames.forEach(function(name) {
         Object.defineProperty(p, name + "_", {
           value: p[name]
@@ -1298,27 +1298,27 @@ if (WebComponents.flags.shadow) {
     EventTarget.prototype = {
       addEventListener: function(type, fun, capture) {
         if (!isValidListener(fun) || isMutationEvent(type)) return;
-        var listener = new Listener(type, fun, capture);
-        var listeners = listenersTable.get(this);
+        const listener = new Listener(type, fun, capture);
+        let listeners = listenersTable.get(this);
         if (!listeners) {
           listeners = [];
           listeners.depth = 0;
           listenersTable.set(this, listeners);
         } else {
-          for (var i = 0; i < listeners.length; i++) {
+          for (let i = 0; i < listeners.length; i++) {
             if (listener.equals(listeners[i])) return;
           }
         }
         listeners.push(listener);
-        var target = getTargetToListenAt(this);
+        const target = getTargetToListenAt(this);
         target.addEventListener_(type, dispatchOriginalEvent, true);
       },
       removeEventListener: function(type, fun, capture) {
         capture = Boolean(capture);
-        var listeners = listenersTable.get(this);
+        const listeners = listenersTable.get(this);
         if (!listeners) return;
-        var count = 0, found = false;
-        for (var i = 0; i < listeners.length; i++) {
+        let count = 0, found = false;
+        for (let i = 0; i < listeners.length; i++) {
           if (listeners[i].type === type && listeners[i].capture === capture) {
             count++;
             if (listeners[i].handler === fun) {
@@ -1328,16 +1328,16 @@ if (WebComponents.flags.shadow) {
           }
         }
         if (found && count === 1) {
-          var target = getTargetToListenAt(this);
+          const target = getTargetToListenAt(this);
           target.removeEventListener_(type, dispatchOriginalEvent, true);
         }
       },
       dispatchEvent: function(event) {
-        var nativeEvent = unwrap(event);
-        var eventType = nativeEvent.type;
+        const nativeEvent = unwrap(event);
+        const eventType = nativeEvent.type;
         handledEventsTable.set(nativeEvent, false);
         scope.renderAllPending();
-        var tempListener;
+        let tempListener;
         if (!hasListenerInAncestors(this, eventType)) {
           tempListener = function() {};
           this.addEventListener(eventType, tempListener, true);
@@ -1350,16 +1350,16 @@ if (WebComponents.flags.shadow) {
       }
     };
     function hasListener(node, type) {
-      var listeners = listenersTable.get(node);
+      const listeners = listenersTable.get(node);
       if (listeners) {
-        for (var i = 0; i < listeners.length; i++) {
+        for (let i = 0; i < listeners.length; i++) {
           if (!listeners[i].removed && listeners[i].type === type) return true;
         }
       }
       return false;
     }
     function hasListenerInAncestors(target, type) {
-      for (var node = unwrap(target); node; node = node.parentNode) {
+      for (let node = unwrap(target); node; node = node.parentNode) {
         if (hasListener(wrap(node), type)) return true;
       }
       return false;
@@ -1368,35 +1368,35 @@ if (WebComponents.flags.shadow) {
     function wrapEventTargetMethods(constructors) {
       forwardMethodsToWrapper(constructors, methodNames);
     }
-    var originalElementFromPoint = document.elementFromPoint;
+    const originalElementFromPoint = document.elementFromPoint;
     function elementFromPoint(self, document, x, y) {
       scope.renderAllPending();
-      var element = wrap(originalElementFromPoint.call(unsafeUnwrap(document), x, y));
+      const element = wrap(originalElementFromPoint.call(unsafeUnwrap(document), x, y));
       if (!element) return null;
-      var path = getEventPath(element, null);
-      var idx = path.lastIndexOf(self);
+      let path = getEventPath(element, null);
+      const idx = path.lastIndexOf(self);
       if (idx == -1) return null; else path = path.slice(0, idx);
       return eventRetargetting(path, self);
     }
     function getEventHandlerGetter(name) {
       return function() {
-        var inlineEventHandlers = eventHandlersTable.get(this);
+        const inlineEventHandlers = eventHandlersTable.get(this);
         return inlineEventHandlers && inlineEventHandlers[name] && inlineEventHandlers[name].value || null;
       };
     }
     function getEventHandlerSetter(name) {
-      var eventType = name.slice(2);
+      const eventType = name.slice(2);
       return function(value) {
-        var inlineEventHandlers = eventHandlersTable.get(this);
+        let inlineEventHandlers = eventHandlersTable.get(this);
         if (!inlineEventHandlers) {
           inlineEventHandlers = Object.create(null);
           eventHandlersTable.set(this, inlineEventHandlers);
         }
-        var old = inlineEventHandlers[name];
+        const old = inlineEventHandlers[name];
         if (old) this.removeEventListener(eventType, old.wrapped, false);
         if (typeof value === "function") {
           var wrapped = function(e) {
-            var rv = value.call(this, e);
+            const rv = value.call(this, e);
             if (rv === false) e.preventDefault(); else if (name === "onbeforeunload" && typeof rv === "string") e.returnValue = rv;
           };
           this.addEventListener(eventType, wrapped, false);
@@ -1421,21 +1421,21 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var UIEvent = scope.wrappers.UIEvent;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var wrap = scope.wrap;
-    var OriginalTouchEvent = window.TouchEvent;
+    const UIEvent = scope.wrappers.UIEvent;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const wrap = scope.wrap;
+    const OriginalTouchEvent = window.TouchEvent;
     if (!OriginalTouchEvent) return;
-    var nativeEvent;
+    let nativeEvent;
     try {
       nativeEvent = document.createEvent("TouchEvent");
     } catch (ex) {
       return;
     }
-    var nonEnumDescriptor = {
+    const nonEnumDescriptor = {
       enumerable: false
     };
     function nonEnum(obj, prop) {
@@ -1449,7 +1449,7 @@ if (WebComponents.flags.shadow) {
         return wrap(unsafeUnwrap(this).target);
       }
     };
-    var descr = {
+    const descr = {
       configurable: true,
       enumerable: true,
       get: null
@@ -1470,7 +1470,7 @@ if (WebComponents.flags.shadow) {
       }
     };
     function wrapTouchList(nativeTouchList) {
-      var list = new TouchList();
+      const list = new TouchList();
       for (var i = 0; i < nativeTouchList.length; i++) {
         list[i] = new Touch(nativeTouchList[i]);
       }
@@ -1502,9 +1502,9 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var wrap = scope.wrap;
-    var nonEnumDescriptor = {
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const wrap = scope.wrap;
+    const nonEnumDescriptor = {
       enumerable: false
     };
     function nonEnum(obj, prop) {
@@ -1522,7 +1522,7 @@ if (WebComponents.flags.shadow) {
     nonEnum(NodeList.prototype, "item");
     function wrapNodeList(list) {
       if (list == null) return list;
-      var wrapperList = new NodeList();
+      const wrapperList = new NodeList();
       for (var i = 0, length = list.length; i < length; i++) {
         wrapperList[i] = wrap(list[i]);
       }
@@ -1545,34 +1545,34 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var EventTarget = scope.wrappers.EventTarget;
-    var NodeList = scope.wrappers.NodeList;
-    var TreeScope = scope.TreeScope;
-    var assert = scope.assert;
-    var defineWrapGetter = scope.defineWrapGetter;
-    var enqueueMutation = scope.enqueueMutation;
-    var getTreeScope = scope.getTreeScope;
-    var isWrapper = scope.isWrapper;
-    var mixin = scope.mixin;
-    var registerTransientObservers = scope.registerTransientObservers;
-    var registerWrapper = scope.registerWrapper;
-    var setTreeScope = scope.setTreeScope;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var unwrapIfNeeded = scope.unwrapIfNeeded;
-    var wrap = scope.wrap;
-    var wrapIfNeeded = scope.wrapIfNeeded;
+    const EventTarget = scope.wrappers.EventTarget;
+    const NodeList = scope.wrappers.NodeList;
+    const TreeScope = scope.TreeScope;
+    const assert = scope.assert;
+    const defineWrapGetter = scope.defineWrapGetter;
+    const enqueueMutation = scope.enqueueMutation;
+    const getTreeScope = scope.getTreeScope;
+    const isWrapper = scope.isWrapper;
+    const mixin = scope.mixin;
+    const registerTransientObservers = scope.registerTransientObservers;
+    const registerWrapper = scope.registerWrapper;
+    const setTreeScope = scope.setTreeScope;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const unwrapIfNeeded = scope.unwrapIfNeeded;
+    const wrap = scope.wrap;
+    const wrapIfNeeded = scope.wrapIfNeeded;
     var wrappers = scope.wrappers;
     function assertIsNodeWrapper(node) {
       assert(node instanceof Node);
     }
     function createOneElementNodeList(node) {
-      var nodes = new NodeList();
+      const nodes = new NodeList();
       nodes[0] = node;
       nodes.length = 1;
       return nodes;
     }
-    var surpressMutations = false;
+    let surpressMutations = false;
     function enqueueRemovalForInsertedNodes(node, parent, nodes) {
       enqueueMutation(parent, "childList", {
         removedNodes: nodes,
@@ -1603,7 +1603,7 @@ if (WebComponents.flags.shadow) {
         return nodes;
       }
       var nodes = createOneElementNodeList(node);
-      var oldParent = node.parentNode;
+      const oldParent = node.parentNode;
       if (oldParent) {
         oldParent.removeChild(node);
       }
@@ -1616,15 +1616,15 @@ if (WebComponents.flags.shadow) {
     }
     function collectNodesNative(node) {
       if (node instanceof DocumentFragment) return collectNodesForDocumentFragment(node);
-      var nodes = createOneElementNodeList(node);
-      var oldParent = node.parentNode;
+      const nodes = createOneElementNodeList(node);
+      const oldParent = node.parentNode;
       if (oldParent) enqueueRemovalForInsertedNodes(node, oldParent, nodes);
       return nodes;
     }
     function collectNodesForDocumentFragment(node) {
-      var nodes = new NodeList();
-      var i = 0;
-      for (var child = node.firstChild; child; child = child.nextSibling) {
+      const nodes = new NodeList();
+      let i = 0;
+      for (let child = node.firstChild; child; child = child.nextSibling) {
         nodes[i++] = child;
       }
       nodes.length = i;
@@ -1639,8 +1639,8 @@ if (WebComponents.flags.shadow) {
       node.nodeIsInserted_();
     }
     function nodesWereAdded(nodes, parent) {
-      var treeScope = getTreeScope(parent);
-      for (var i = 0; i < nodes.length; i++) {
+      const treeScope = getTreeScope(parent);
+      for (let i = 0; i < nodes.length; i++) {
         nodeWasAdded(nodes[i], treeScope);
       }
     }
@@ -1648,37 +1648,37 @@ if (WebComponents.flags.shadow) {
       setTreeScope(node, new TreeScope(node, null));
     }
     function nodesWereRemoved(nodes) {
-      for (var i = 0; i < nodes.length; i++) {
+      for (let i = 0; i < nodes.length; i++) {
         nodeWasRemoved(nodes[i]);
       }
     }
     function ensureSameOwnerDocument(parent, child) {
-      var ownerDoc = parent.nodeType === Node.DOCUMENT_NODE ? parent : parent.ownerDocument;
+      const ownerDoc = parent.nodeType === Node.DOCUMENT_NODE ? parent : parent.ownerDocument;
       if (ownerDoc !== child.ownerDocument) ownerDoc.adoptNode(child);
     }
     function adoptNodesIfNeeded(owner, nodes) {
       if (!nodes.length) return;
-      var ownerDoc = owner.ownerDocument;
+      const ownerDoc = owner.ownerDocument;
       if (ownerDoc === nodes[0].ownerDocument) return;
-      for (var i = 0; i < nodes.length; i++) {
+      for (let i = 0; i < nodes.length; i++) {
         scope.adoptNodeNoRemove(nodes[i], ownerDoc);
       }
     }
     function unwrapNodesForInsertion(owner, nodes) {
       adoptNodesIfNeeded(owner, nodes);
-      var length = nodes.length;
+      const length = nodes.length;
       if (length === 1) return unwrap(nodes[0]);
-      var df = unwrap(owner.ownerDocument.createDocumentFragment());
-      for (var i = 0; i < length; i++) {
+      const df = unwrap(owner.ownerDocument.createDocumentFragment());
+      for (let i = 0; i < length; i++) {
         df.appendChild(unwrap(nodes[i]));
       }
       return df;
     }
     function clearChildNodes(wrapper) {
       if (wrapper.firstChild_ !== undefined) {
-        var child = wrapper.firstChild_;
+        let child = wrapper.firstChild_;
         while (child) {
-          var tmp = child;
+          const tmp = child;
           child = child.nextSibling_;
           tmp.parentNode_ = tmp.previousSibling_ = tmp.nextSibling_ = undefined;
         }
@@ -1687,11 +1687,11 @@ if (WebComponents.flags.shadow) {
     }
     function removeAllChildNodes(wrapper) {
       if (wrapper.invalidateShadowRenderer()) {
-        var childWrapper = wrapper.firstChild;
+        let childWrapper = wrapper.firstChild;
         while (childWrapper) {
           assert(childWrapper.parentNode === wrapper);
           var nextSibling = childWrapper.nextSibling;
-          var childNode = unwrap(childWrapper);
+          const childNode = unwrap(childWrapper);
           var parentNode = childNode.parentNode;
           if (parentNode) originalRemoveChild.call(parentNode, childNode);
           childWrapper.previousSibling_ = childWrapper.nextSibling_ = childWrapper.parentNode_ = null;
@@ -1699,8 +1699,8 @@ if (WebComponents.flags.shadow) {
         }
         wrapper.firstChild_ = wrapper.lastChild_ = null;
       } else {
-        var node = unwrap(wrapper);
-        var child = node.firstChild;
+        const node = unwrap(wrapper);
+        let child = node.firstChild;
         var nextSibling;
         while (child) {
           nextSibling = child.nextSibling;
@@ -1710,26 +1710,26 @@ if (WebComponents.flags.shadow) {
       }
     }
     function invalidateParent(node) {
-      var p = node.parentNode;
+      const p = node.parentNode;
       return p && p.invalidateShadowRenderer();
     }
     function cleanupNodes(nodes) {
-      for (var i = 0, n; i < nodes.length; i++) {
+      for (let i = 0, n; i < nodes.length; i++) {
         n = nodes[i];
         n.parentNode.removeChild(n);
       }
     }
-    var originalImportNode = document.importNode;
-    var originalCloneNode = window.Node.prototype.cloneNode;
+    const originalImportNode = document.importNode;
+    const originalCloneNode = window.Node.prototype.cloneNode;
     function cloneNode(node, deep, opt_doc) {
-      var clone;
+      let clone;
       if (opt_doc) clone = wrap(originalImportNode.call(opt_doc, unsafeUnwrap(node), false)); else clone = wrap(originalCloneNode.call(unsafeUnwrap(node), false));
       if (deep) {
         for (var child = node.firstChild; child; child = child.nextSibling) {
           clone.appendChild(cloneNode(child, true, opt_doc));
         }
         if (node instanceof wrappers.HTMLTemplateElement) {
-          var cloneContent = clone.content;
+          const cloneContent = clone.content;
           for (var child = node.content.firstChild; child; child = child.nextSibling) {
             cloneContent.appendChild(cloneNode(child, true, opt_doc));
           }
@@ -1739,7 +1739,7 @@ if (WebComponents.flags.shadow) {
     }
     function contains(self, child) {
       if (!child || getTreeScope(self) !== getTreeScope(child)) return false;
-      for (var node = child; node; node = node.parentNode) {
+      for (let node = child; node; node = node.parentNode) {
         if (node === self) return true;
       }
       return false;
@@ -1755,14 +1755,14 @@ if (WebComponents.flags.shadow) {
       this.previousSibling_ = undefined;
       this.treeScope_ = undefined;
     }
-    var OriginalDocumentFragment = window.DocumentFragment;
-    var originalAppendChild = OriginalNode.prototype.appendChild;
-    var originalCompareDocumentPosition = OriginalNode.prototype.compareDocumentPosition;
-    var originalInsertBefore = OriginalNode.prototype.insertBefore;
+    const OriginalDocumentFragment = window.DocumentFragment;
+    const originalAppendChild = OriginalNode.prototype.appendChild;
+    const originalCompareDocumentPosition = OriginalNode.prototype.compareDocumentPosition;
+    const originalInsertBefore = OriginalNode.prototype.insertBefore;
     var originalRemoveChild = OriginalNode.prototype.removeChild;
-    var originalReplaceChild = OriginalNode.prototype.replaceChild;
-    var isIe = /Trident/.test(navigator.userAgent);
-    var removeChildOriginalHelper = isIe ? function(parent, child) {
+    const originalReplaceChild = OriginalNode.prototype.replaceChild;
+    const isIe = /Trident/.test(navigator.userAgent);
+    const removeChildOriginalHelper = isIe ? function(parent, child) {
       try {
         originalRemoveChild.call(parent, child);
       } catch (ex) {
@@ -1778,7 +1778,7 @@ if (WebComponents.flags.shadow) {
       },
       insertBefore: function(childWrapper, refWrapper) {
         assertIsNodeWrapper(childWrapper);
-        var refNode;
+        let refNode;
         if (refWrapper) {
           if (isWrapper(refWrapper)) {
             refNode = unwrap(refWrapper);
@@ -1791,9 +1791,9 @@ if (WebComponents.flags.shadow) {
           refNode = null;
         }
         refWrapper && assert(refWrapper.parentNode === this);
-        var nodes;
-        var previousNode = refWrapper ? refWrapper.previousSibling : this.lastChild;
-        var useNative = !this.invalidateShadowRenderer() && !invalidateParent(childWrapper);
+        let nodes;
+        const previousNode = refWrapper ? refWrapper.previousSibling : this.lastChild;
+        const useNative = !this.invalidateShadowRenderer() && !invalidateParent(childWrapper);
         if (useNative) nodes = collectNodesNative(childWrapper); else nodes = collectNodes(childWrapper, this, previousNode, refWrapper);
         if (useNative) {
           ensureSameOwnerDocument(this, childWrapper);
@@ -1823,9 +1823,9 @@ if (WebComponents.flags.shadow) {
       removeChild: function(childWrapper) {
         assertIsNodeWrapper(childWrapper);
         if (childWrapper.parentNode !== this) {
-          var found = false;
-          var childNodes = this.childNodes;
-          for (var ieChild = this.firstChild; ieChild; ieChild = ieChild.nextSibling) {
+          let found = false;
+          const childNodes = this.childNodes;
+          for (let ieChild = this.firstChild; ieChild; ieChild = ieChild.nextSibling) {
             if (ieChild === childWrapper) {
               found = true;
               break;
@@ -1835,12 +1835,12 @@ if (WebComponents.flags.shadow) {
             throw new Error("NotFoundError");
           }
         }
-        var childNode = unwrap(childWrapper);
-        var childWrapperNextSibling = childWrapper.nextSibling;
-        var childWrapperPreviousSibling = childWrapper.previousSibling;
+        const childNode = unwrap(childWrapper);
+        const childWrapperNextSibling = childWrapper.nextSibling;
+        const childWrapperPreviousSibling = childWrapper.previousSibling;
         if (this.invalidateShadowRenderer()) {
-          var thisFirstChild = this.firstChild;
-          var thisLastChild = this.lastChild;
+          const thisFirstChild = this.firstChild;
+          const thisLastChild = this.lastChild;
           var parentNode = childNode.parentNode;
           if (parentNode) removeChildOriginalHelper(parentNode, childNode);
           if (thisFirstChild === childWrapper) this.firstChild_ = childWrapperNextSibling;
@@ -1866,7 +1866,7 @@ if (WebComponents.flags.shadow) {
       },
       replaceChild: function(newChildWrapper, oldChildWrapper) {
         assertIsNodeWrapper(newChildWrapper);
-        var oldChildNode;
+        let oldChildNode;
         if (isWrapper(oldChildWrapper)) {
           oldChildNode = unwrap(oldChildWrapper);
         } else {
@@ -1876,10 +1876,10 @@ if (WebComponents.flags.shadow) {
         if (oldChildWrapper.parentNode !== this) {
           throw new Error("NotFoundError");
         }
-        var nextNode = oldChildWrapper.nextSibling;
-        var previousNode = oldChildWrapper.previousSibling;
-        var nodes;
-        var useNative = !this.invalidateShadowRenderer() && !invalidateParent(newChildWrapper);
+        let nextNode = oldChildWrapper.nextSibling;
+        const previousNode = oldChildWrapper.previousSibling;
+        let nodes;
+        const useNative = !this.invalidateShadowRenderer() && !invalidateParent(newChildWrapper);
         if (useNative) {
           nodes = collectNodesNative(newChildWrapper);
         } else {
@@ -1909,7 +1909,7 @@ if (WebComponents.flags.shadow) {
         return oldChildWrapper;
       },
       nodeIsInserted_: function() {
-        for (var child = this.firstChild; child; child = child.nextSibling) {
+        for (let child = this.firstChild; child; child = child.nextSibling) {
           child.nodeIsInserted_();
         }
       },
@@ -1932,15 +1932,15 @@ if (WebComponents.flags.shadow) {
         return this.previousSibling_ !== undefined ? this.previousSibling_ : wrap(unsafeUnwrap(this).previousSibling);
       },
       get parentElement() {
-        var p = this.parentNode;
+        let p = this.parentNode;
         while (p && p.nodeType !== Node.ELEMENT_NODE) {
           p = p.parentNode;
         }
         return p;
       },
       get textContent() {
-        var s = "";
-        for (var child = this.firstChild; child; child = child.nextSibling) {
+        let s = "";
+        for (let child = this.firstChild; child; child = child.nextSibling) {
           if (child.nodeType != Node.COMMENT_NODE) {
             s += child.textContent;
           }
@@ -1949,18 +1949,18 @@ if (WebComponents.flags.shadow) {
       },
       set textContent(textContent) {
         if (textContent == null) textContent = "";
-        var removedNodes = snapshotNodeList(this.childNodes);
+        const removedNodes = snapshotNodeList(this.childNodes);
         if (this.invalidateShadowRenderer()) {
           removeAllChildNodes(this);
           if (textContent !== "") {
-            var textNode = unsafeUnwrap(this).ownerDocument.createTextNode(textContent);
+            const textNode = unsafeUnwrap(this).ownerDocument.createTextNode(textContent);
             this.appendChild(textNode);
           }
         } else {
           clearChildNodes(this);
           unsafeUnwrap(this).textContent = textContent;
         }
-        var addedNodes = snapshotNodeList(this.childNodes);
+        const addedNodes = snapshotNodeList(this.childNodes);
         enqueueMutation(this, "childList", {
           addedNodes: addedNodes,
           removedNodes: removedNodes
@@ -1969,9 +1969,9 @@ if (WebComponents.flags.shadow) {
         nodesWereAdded(addedNodes, this);
       },
       get childNodes() {
-        var wrapperList = new NodeList();
-        var i = 0;
-        for (var child = this.firstChild; child; child = child.nextSibling) {
+        const wrapperList = new NodeList();
+        let i = 0;
+        for (let child = this.firstChild; child; child = child.nextSibling) {
           wrapperList[i++] = child;
         }
         wrapperList.length = i;
@@ -1987,11 +1987,11 @@ if (WebComponents.flags.shadow) {
         return originalCompareDocumentPosition.call(unsafeUnwrap(this), unwrapIfNeeded(otherNode));
       },
       normalize: function() {
-        var nodes = snapshotNodeList(this.childNodes);
-        var remNodes = [];
-        var s = "";
-        var modNode;
-        for (var i = 0, n; i < nodes.length; i++) {
+        const nodes = snapshotNodeList(this.childNodes);
+        let remNodes = [];
+        let s = "";
+        let modNode;
+        for (let i = 0, n; i < nodes.length; i++) {
           n = nodes[i];
           if (n.nodeType === Node.TEXT_NODE) {
             if (!modNode && !n.data.length) this.removeNode(n); else if (!modNode) modNode = n; else {
@@ -2032,25 +2032,25 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLCollection = scope.wrappers.HTMLCollection;
-    var NodeList = scope.wrappers.NodeList;
-    var getTreeScope = scope.getTreeScope;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var wrap = scope.wrap;
-    var originalDocumentQuerySelector = document.querySelector;
-    var originalElementQuerySelector = document.documentElement.querySelector;
-    var originalDocumentQuerySelectorAll = document.querySelectorAll;
-    var originalElementQuerySelectorAll = document.documentElement.querySelectorAll;
-    var originalDocumentGetElementsByTagName = document.getElementsByTagName;
-    var originalElementGetElementsByTagName = document.documentElement.getElementsByTagName;
-    var originalDocumentGetElementsByTagNameNS = document.getElementsByTagNameNS;
-    var originalElementGetElementsByTagNameNS = document.documentElement.getElementsByTagNameNS;
-    var OriginalElement = window.Element;
-    var OriginalDocument = window.HTMLDocument || window.Document;
+    const HTMLCollection = scope.wrappers.HTMLCollection;
+    const NodeList = scope.wrappers.NodeList;
+    const getTreeScope = scope.getTreeScope;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const wrap = scope.wrap;
+    const originalDocumentQuerySelector = document.querySelector;
+    const originalElementQuerySelector = document.documentElement.querySelector;
+    const originalDocumentQuerySelectorAll = document.querySelectorAll;
+    const originalElementQuerySelectorAll = document.documentElement.querySelectorAll;
+    const originalDocumentGetElementsByTagName = document.getElementsByTagName;
+    const originalElementGetElementsByTagName = document.documentElement.getElementsByTagName;
+    const originalDocumentGetElementsByTagNameNS = document.getElementsByTagNameNS;
+    const originalElementGetElementsByTagNameNS = document.documentElement.getElementsByTagNameNS;
+    const OriginalElement = window.Element;
+    const OriginalDocument = window.HTMLDocument || window.Document;
     function filterNodeList(list, index, result, deep) {
-      var wrappedItem = null;
-      var root = null;
-      for (var i = 0, length = list.length; i < length; i++) {
+      let wrappedItem = null;
+      let root = null;
+      for (let i = 0, length = list.length; i < length; i++) {
         wrappedItem = wrap(list[i]);
         if (!deep && (root = getTreeScope(wrappedItem).root)) {
           if (root instanceof scope.wrappers.ShadowRoot) {
@@ -2065,7 +2065,7 @@ if (WebComponents.flags.shadow) {
       return String(selector).replace(/\/deep\//g, " ");
     }
     function findOne(node, selector) {
-      var m, el = node.firstElementChild;
+      let m, el = node.firstElementChild;
       while (el) {
         if (el.matches(selector)) return el;
         m = findOne(el, selector);
@@ -2077,9 +2077,9 @@ if (WebComponents.flags.shadow) {
     function matchesSelector(el, selector) {
       return el.matches(selector);
     }
-    var XHTML_NS = "http://www.w3.org/1999/xhtml";
+    const XHTML_NS = "http://www.w3.org/1999/xhtml";
     function matchesTagName(el, localName, localNameLowerCase) {
-      var ln = el.localName;
+      const ln = el.localName;
       return ln === localName || ln === localNameLowerCase && el.namespaceURI === XHTML_NS;
     }
     function matchesEveryThing() {
@@ -2095,7 +2095,7 @@ if (WebComponents.flags.shadow) {
       return el.namespaceURI === ns && el.localName === localName;
     }
     function findElements(node, index, result, p, arg0, arg1) {
-      var el = node.firstElementChild;
+      let el = node.firstElementChild;
       while (el) {
         if (p(el, arg0, arg1)) result[index++] = el;
         index = findElements(el, index, result, p, arg0, arg1);
@@ -2104,9 +2104,9 @@ if (WebComponents.flags.shadow) {
       return index;
     }
     function querySelectorAllFiltered(p, index, result, selector, deep) {
-      var target = unsafeUnwrap(this);
-      var list;
-      var root = getTreeScope(this).root;
+      const target = unsafeUnwrap(this);
+      let list;
+      const root = getTreeScope(this).root;
       if (root instanceof scope.wrappers.ShadowRoot) {
         return findElements(this, index, result, p, selector, null);
       } else if (target instanceof OriginalElement) {
@@ -2118,14 +2118,14 @@ if (WebComponents.flags.shadow) {
       }
       return filterNodeList(list, index, result, deep);
     }
-    var SelectorsInterface = {
+    const SelectorsInterface = {
       querySelector: function(selector) {
-        var shimmed = shimSelector(selector);
-        var deep = shimmed !== selector;
+        const shimmed = shimSelector(selector);
+        const deep = shimmed !== selector;
         selector = shimmed;
-        var target = unsafeUnwrap(this);
-        var wrappedItem;
-        var root = getTreeScope(this).root;
+        const target = unsafeUnwrap(this);
+        let wrappedItem;
+        let root = getTreeScope(this).root;
         if (root instanceof scope.wrappers.ShadowRoot) {
           return findOne(this, selector);
         } else if (target instanceof OriginalElement) {
@@ -2145,18 +2145,18 @@ if (WebComponents.flags.shadow) {
         return wrappedItem;
       },
       querySelectorAll: function(selector) {
-        var shimmed = shimSelector(selector);
-        var deep = shimmed !== selector;
+        const shimmed = shimSelector(selector);
+        const deep = shimmed !== selector;
         selector = shimmed;
-        var result = new NodeList();
+        const result = new NodeList();
         result.length = querySelectorAllFiltered.call(this, matchesSelector, 0, result, selector, deep);
         return result;
       }
     };
     function getElementsByTagNameFiltered(p, index, result, localName, lowercase) {
-      var target = unsafeUnwrap(this);
-      var list;
-      var root = getTreeScope(this).root;
+      const target = unsafeUnwrap(this);
+      let list;
+      const root = getTreeScope(this).root;
       if (root instanceof scope.wrappers.ShadowRoot) {
         return findElements(this, index, result, p, localName, lowercase);
       } else if (target instanceof OriginalElement) {
@@ -2169,9 +2169,9 @@ if (WebComponents.flags.shadow) {
       return filterNodeList(list, index, result, false);
     }
     function getElementsByTagNameNSFiltered(p, index, result, ns, localName) {
-      var target = unsafeUnwrap(this);
-      var list;
-      var root = getTreeScope(this).root;
+      const target = unsafeUnwrap(this);
+      let list;
+      const root = getTreeScope(this).root;
       if (root instanceof scope.wrappers.ShadowRoot) {
         return findElements(this, index, result, p, ns, localName);
       } else if (target instanceof OriginalElement) {
@@ -2183,10 +2183,10 @@ if (WebComponents.flags.shadow) {
       }
       return filterNodeList(list, index, result, false);
     }
-    var GetElementsByInterface = {
+    const GetElementsByInterface = {
       getElementsByTagName: function(localName) {
-        var result = new HTMLCollection();
-        var match = localName === "*" ? matchesEveryThing : matchesTagName;
+        const result = new HTMLCollection();
+        const match = localName === "*" ? matchesEveryThing : matchesTagName;
         result.length = getElementsByTagNameFiltered.call(this, match, 0, result, localName, localName.toLowerCase());
         return result;
       },
@@ -2194,8 +2194,8 @@ if (WebComponents.flags.shadow) {
         return this.querySelectorAll("." + className);
       },
       getElementsByTagNameNS: function(ns, localName) {
-        var result = new HTMLCollection();
-        var match = null;
+        const result = new HTMLCollection();
+        let match = null;
         if (ns === "*") {
           match = localName === "*" ? matchesEveryThing : matchesLocalNameOnly;
         } else {
@@ -2210,7 +2210,7 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var NodeList = scope.wrappers.NodeList;
+    const NodeList = scope.wrappers.NodeList;
     function forwardElement(node) {
       while (node && node.nodeType !== Node.ELEMENT_NODE) {
         node = node.nextSibling;
@@ -2223,7 +2223,7 @@ if (WebComponents.flags.shadow) {
       }
       return node;
     }
-    var ParentNodeInterface = {
+    const ParentNodeInterface = {
       get firstElementChild() {
         return forwardElement(this.firstChild);
       },
@@ -2231,27 +2231,27 @@ if (WebComponents.flags.shadow) {
         return backwardsElement(this.lastChild);
       },
       get childElementCount() {
-        var count = 0;
-        for (var child = this.firstElementChild; child; child = child.nextElementSibling) {
+        let count = 0;
+        for (let child = this.firstElementChild; child; child = child.nextElementSibling) {
           count++;
         }
         return count;
       },
       get children() {
-        var wrapperList = new NodeList();
-        var i = 0;
-        for (var child = this.firstElementChild; child; child = child.nextElementSibling) {
+        const wrapperList = new NodeList();
+        let i = 0;
+        for (let child = this.firstElementChild; child; child = child.nextElementSibling) {
           wrapperList[i++] = child;
         }
         wrapperList.length = i;
         return wrapperList;
       },
       remove: function() {
-        var p = this.parentNode;
+        const p = this.parentNode;
         if (p) p.removeChild(this);
       }
     };
-    var ChildNodeInterface = {
+    const ChildNodeInterface = {
       get nextElementSibling() {
         return forwardElement(this.nextSibling);
       },
@@ -2264,13 +2264,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var ChildNodeInterface = scope.ChildNodeInterface;
-    var Node = scope.wrappers.Node;
-    var enqueueMutation = scope.enqueueMutation;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var OriginalCharacterData = window.CharacterData;
+    const ChildNodeInterface = scope.ChildNodeInterface;
+    const Node = scope.wrappers.Node;
+    const enqueueMutation = scope.enqueueMutation;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const OriginalCharacterData = window.CharacterData;
     function CharacterData(node) {
       Node.call(this, node);
     }
@@ -2286,7 +2286,7 @@ if (WebComponents.flags.shadow) {
         return unsafeUnwrap(this).data;
       },
       set data(value) {
-        var oldValue = unsafeUnwrap(this).data;
+        const oldValue = unsafeUnwrap(this).data;
         enqueueMutation(this, "characterData", {
           oldValue: oldValue
         });
@@ -2299,14 +2299,14 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var CharacterData = scope.wrappers.CharacterData;
-    var enqueueMutation = scope.enqueueMutation;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
+    const CharacterData = scope.wrappers.CharacterData;
+    const enqueueMutation = scope.enqueueMutation;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
     function toUInt32(x) {
       return x >>> 0;
     }
-    var OriginalText = window.Text;
+    const OriginalText = window.Text;
     function Text(node) {
       CharacterData.call(this, node);
     }
@@ -2314,12 +2314,12 @@ if (WebComponents.flags.shadow) {
     mixin(Text.prototype, {
       splitText: function(offset) {
         offset = toUInt32(offset);
-        var s = this.data;
+        const s = this.data;
         if (offset > s.length) throw new Error("IndexSizeError");
-        var head = s.slice(0, offset);
-        var tail = s.slice(offset);
+        const head = s.slice(0, offset);
+        const tail = s.slice(offset);
         this.data = head;
-        var newTextNode = this.ownerDocument.createTextNode(tail);
+        const newTextNode = this.ownerDocument.createTextNode(tail);
         if (this.parentNode) this.parentNode.insertBefore(newTextNode, this.nextSibling);
         return newTextNode;
       }
@@ -2329,8 +2329,8 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
     function invalidateClass(el) {
       scope.invalidateRendererBasedOnAttribute(el, "class");
     }
@@ -2358,7 +2358,7 @@ if (WebComponents.flags.shadow) {
         invalidateClass(this.ownerElement_);
       },
       toggle: function(token) {
-        var rv = unsafeUnwrap(this).toggle.apply(unsafeUnwrap(this), arguments);
+        const rv = unsafeUnwrap(this).toggle.apply(unsafeUnwrap(this), arguments);
         invalidateClass(this.ownerElement_);
         return rv;
       },
@@ -2370,29 +2370,29 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var ChildNodeInterface = scope.ChildNodeInterface;
-    var GetElementsByInterface = scope.GetElementsByInterface;
-    var Node = scope.wrappers.Node;
-    var DOMTokenList = scope.wrappers.DOMTokenList;
-    var ParentNodeInterface = scope.ParentNodeInterface;
-    var SelectorsInterface = scope.SelectorsInterface;
-    var addWrapNodeListMethod = scope.addWrapNodeListMethod;
-    var enqueueMutation = scope.enqueueMutation;
-    var mixin = scope.mixin;
-    var oneOf = scope.oneOf;
-    var registerWrapper = scope.registerWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
+    const ChildNodeInterface = scope.ChildNodeInterface;
+    const GetElementsByInterface = scope.GetElementsByInterface;
+    const Node = scope.wrappers.Node;
+    const DOMTokenList = scope.wrappers.DOMTokenList;
+    const ParentNodeInterface = scope.ParentNodeInterface;
+    const SelectorsInterface = scope.SelectorsInterface;
+    const addWrapNodeListMethod = scope.addWrapNodeListMethod;
+    const enqueueMutation = scope.enqueueMutation;
+    const mixin = scope.mixin;
+    const oneOf = scope.oneOf;
+    const registerWrapper = scope.registerWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
     var wrappers = scope.wrappers;
-    var OriginalElement = window.Element;
-    var matchesNames = [ "matches", "mozMatchesSelector", "msMatchesSelector", "webkitMatchesSelector" ].filter(function(name) {
+    const OriginalElement = window.Element;
+    const matchesNames = [ "matches", "mozMatchesSelector", "msMatchesSelector", "webkitMatchesSelector" ].filter(function(name) {
       return OriginalElement.prototype[name];
     });
-    var matchesName = matchesNames[0];
-    var originalMatches = OriginalElement.prototype[matchesName];
+    const matchesName = matchesNames[0];
+    const originalMatches = OriginalElement.prototype[matchesName];
     function invalidateRendererBasedOnAttribute(element, name) {
-      var p = element.parentNode;
+      const p = element.parentNode;
       if (!p || !p.shadowRoot) return;
-      var renderer = scope.getRendererForHost(p);
+      const renderer = scope.getRendererForHost(p);
       if (renderer.dependsOnAttribute(name)) renderer.invalidate();
     }
     function enqueAttributeChange(element, name, oldValue) {
@@ -2402,16 +2402,16 @@ if (WebComponents.flags.shadow) {
         oldValue: oldValue
       });
     }
-    var classListTable = new WeakMap();
+    const classListTable = new WeakMap();
     function Element(node) {
       Node.call(this, node);
     }
     Element.prototype = Object.create(Node.prototype);
     mixin(Element.prototype, {
       createShadowRoot: function() {
-        var newShadowRoot = new wrappers.ShadowRoot(this);
+        const newShadowRoot = new wrappers.ShadowRoot(this);
         unsafeUnwrap(this).polymerShadowRoot_ = newShadowRoot;
-        var renderer = scope.getRendererForHost(this);
+        const renderer = scope.getRendererForHost(this);
         renderer.invalidate();
         return newShadowRoot;
       },
@@ -2419,13 +2419,13 @@ if (WebComponents.flags.shadow) {
         return unsafeUnwrap(this).polymerShadowRoot_ || null;
       },
       setAttribute: function(name, value) {
-        var oldValue = unsafeUnwrap(this).getAttribute(name);
+        const oldValue = unsafeUnwrap(this).getAttribute(name);
         unsafeUnwrap(this).setAttribute(name, value);
         enqueAttributeChange(this, name, oldValue);
         invalidateRendererBasedOnAttribute(this, name);
       },
       removeAttribute: function(name) {
-        var oldValue = unsafeUnwrap(this).getAttribute(name);
+        const oldValue = unsafeUnwrap(this).getAttribute(name);
         unsafeUnwrap(this).removeAttribute(name);
         enqueAttributeChange(this, name, oldValue);
         invalidateRendererBasedOnAttribute(this, name);
@@ -2434,7 +2434,7 @@ if (WebComponents.flags.shadow) {
         return originalMatches.call(unsafeUnwrap(this), selector);
       },
       get classList() {
-        var list = classListTable.get(this);
+        let list = classListTable.get(this);
         if (!list) {
           classListTable.set(this, list = new DOMTokenList(unsafeUnwrap(this).classList, this));
         }
@@ -2474,20 +2474,20 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var Element = scope.wrappers.Element;
-    var defineGetter = scope.defineGetter;
-    var enqueueMutation = scope.enqueueMutation;
-    var mixin = scope.mixin;
-    var nodesWereAdded = scope.nodesWereAdded;
-    var nodesWereRemoved = scope.nodesWereRemoved;
-    var registerWrapper = scope.registerWrapper;
-    var snapshotNodeList = scope.snapshotNodeList;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
+    const Element = scope.wrappers.Element;
+    const defineGetter = scope.defineGetter;
+    const enqueueMutation = scope.enqueueMutation;
+    const mixin = scope.mixin;
+    const nodesWereAdded = scope.nodesWereAdded;
+    const nodesWereRemoved = scope.nodesWereRemoved;
+    const registerWrapper = scope.registerWrapper;
+    const snapshotNodeList = scope.snapshotNodeList;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
     var wrappers = scope.wrappers;
-    var escapeAttrRegExp = /[&\u00A0"]/g;
-    var escapeDataRegExp = /[&\u00A0<>]/g;
+    const escapeAttrRegExp = /[&\u00A0"]/g;
+    const escapeDataRegExp = /[&\u00A0<>]/g;
     function escapeReplace(c) {
       switch (c) {
        case "&":
@@ -2513,21 +2513,21 @@ if (WebComponents.flags.shadow) {
       return s.replace(escapeDataRegExp, escapeReplace);
     }
     function makeSet(arr) {
-      var set = {};
-      for (var i = 0; i < arr.length; i++) {
+      const set = {};
+      for (let i = 0; i < arr.length; i++) {
         set[arr[i]] = true;
       }
       return set;
     }
-    var voidElements = makeSet([ "area", "base", "br", "col", "command", "embed", "hr", "img", "input", "keygen", "link", "meta", "param", "source", "track", "wbr" ]);
-    var plaintextParents = makeSet([ "style", "script", "xmp", "iframe", "noembed", "noframes", "plaintext", "noscript" ]);
+    const voidElements = makeSet([ "area", "base", "br", "col", "command", "embed", "hr", "img", "input", "keygen", "link", "meta", "param", "source", "track", "wbr" ]);
+    const plaintextParents = makeSet([ "style", "script", "xmp", "iframe", "noembed", "noframes", "plaintext", "noscript" ]);
     function getOuterHTML(node, parentNode) {
       switch (node.nodeType) {
        case Node.ELEMENT_NODE:
-        var tagName = node.tagName.toLowerCase();
-        var s = "<" + tagName;
-        var attrs = node.attributes;
-        for (var i = 0, attr; attr = attrs[i]; i++) {
+        const tagName = node.tagName.toLowerCase();
+        let s = "<" + tagName;
+        const attrs = node.attributes;
+        for (let i = 0, attr; attr = attrs[i]; i++) {
           s += " " + attr.name + '="' + escapeAttr(attr.value) + '"';
         }
         s += ">";
@@ -2549,25 +2549,25 @@ if (WebComponents.flags.shadow) {
     }
     function getInnerHTML(node) {
       if (node instanceof wrappers.HTMLTemplateElement) node = node.content;
-      var s = "";
-      for (var child = node.firstChild; child; child = child.nextSibling) {
+      let s = "";
+      for (let child = node.firstChild; child; child = child.nextSibling) {
         s += getOuterHTML(child, node);
       }
       return s;
     }
     function setInnerHTML(node, value, opt_tagName) {
-      var tagName = opt_tagName || "div";
+      const tagName = opt_tagName || "div";
       node.textContent = "";
-      var tempElement = unwrap(node.ownerDocument.createElement(tagName));
+      const tempElement = unwrap(node.ownerDocument.createElement(tagName));
       tempElement.innerHTML = value;
-      var firstChild;
+      let firstChild;
       while (firstChild = tempElement.firstChild) {
         node.appendChild(wrap(firstChild));
       }
     }
-    var oldIe = /MSIE/.test(navigator.userAgent);
-    var OriginalHTMLElement = window.HTMLElement;
-    var OriginalHTMLTemplateElement = window.HTMLTemplateElement;
+    const oldIe = /MSIE/.test(navigator.userAgent);
+    const OriginalHTMLElement = window.HTMLElement;
+    const OriginalHTMLTemplateElement = window.HTMLTemplateElement;
     function HTMLElement(node) {
       Element.call(this, node);
     }
@@ -2581,7 +2581,7 @@ if (WebComponents.flags.shadow) {
           this.textContent = value;
           return;
         }
-        var removedNodes = snapshotNodeList(this.childNodes);
+        const removedNodes = snapshotNodeList(this.childNodes);
         if (this.invalidateShadowRenderer()) {
           if (this instanceof wrappers.HTMLTemplateElement) setInnerHTML(this.content, value); else setInnerHTML(this, value, this.tagName);
         } else if (!OriginalHTMLTemplateElement && this instanceof wrappers.HTMLTemplateElement) {
@@ -2589,7 +2589,7 @@ if (WebComponents.flags.shadow) {
         } else {
           unsafeUnwrap(this).innerHTML = value;
         }
-        var addedNodes = snapshotNodeList(this.childNodes);
+        const addedNodes = snapshotNodeList(this.childNodes);
         enqueueMutation(this, "childList", {
           addedNodes: addedNodes,
           removedNodes: removedNodes
@@ -2601,15 +2601,15 @@ if (WebComponents.flags.shadow) {
         return getOuterHTML(this, this.parentNode);
       },
       set outerHTML(value) {
-        var p = this.parentNode;
+        const p = this.parentNode;
         if (p) {
           p.invalidateShadowRenderer();
-          var df = frag(p, value);
+          const df = frag(p, value);
           p.replaceChild(df, this);
         }
       },
       insertAdjacentHTML: function(position, text) {
-        var contextElement, refNode;
+        let contextElement, refNode;
         switch (String(position).toLowerCase()) {
          case "beforebegin":
           contextElement = this.parentNode;
@@ -2634,7 +2634,7 @@ if (WebComponents.flags.shadow) {
          default:
           return;
         }
-        var df = frag(contextElement, text);
+        const df = frag(contextElement, text);
         contextElement.insertBefore(df, refNode);
       },
       get hidden() {
@@ -2649,10 +2649,10 @@ if (WebComponents.flags.shadow) {
       }
     });
     function frag(contextElement, html) {
-      var p = unwrap(contextElement.cloneNode(false));
+      const p = unwrap(contextElement.cloneNode(false));
       p.innerHTML = html;
-      var df = unwrap(document.createDocumentFragment());
-      var c;
+      const df = unwrap(document.createDocumentFragment());
+      let c;
       while (c = p.firstChild) {
         df.appendChild(c);
       }
@@ -2698,19 +2698,19 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var wrap = scope.wrap;
-    var OriginalHTMLCanvasElement = window.HTMLCanvasElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const wrap = scope.wrap;
+    const OriginalHTMLCanvasElement = window.HTMLCanvasElement;
     function HTMLCanvasElement(node) {
       HTMLElement.call(this, node);
     }
     HTMLCanvasElement.prototype = Object.create(HTMLElement.prototype);
     mixin(HTMLCanvasElement.prototype, {
       getContext: function() {
-        var context = unsafeUnwrap(this).getContext.apply(unsafeUnwrap(this), arguments);
+        const context = unsafeUnwrap(this).getContext.apply(unsafeUnwrap(this), arguments);
         return context && wrap(context);
       }
     });
@@ -2719,10 +2719,10 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var OriginalHTMLContentElement = window.HTMLContentElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const OriginalHTMLContentElement = window.HTMLContentElement;
     function HTMLContentElement(node) {
       HTMLElement.call(this, node);
     }
@@ -2745,12 +2745,12 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var wrapHTMLCollection = scope.wrapHTMLCollection;
-    var unwrap = scope.unwrap;
-    var OriginalHTMLFormElement = window.HTMLFormElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const wrapHTMLCollection = scope.wrapHTMLCollection;
+    const unwrap = scope.unwrap;
+    const OriginalHTMLFormElement = window.HTMLFormElement;
     function HTMLFormElement(node) {
       HTMLElement.call(this, node);
     }
@@ -2765,11 +2765,11 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var registerWrapper = scope.registerWrapper;
-    var unwrap = scope.unwrap;
-    var rewrap = scope.rewrap;
-    var OriginalHTMLImageElement = window.HTMLImageElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const registerWrapper = scope.registerWrapper;
+    const unwrap = scope.unwrap;
+    const rewrap = scope.rewrap;
+    const OriginalHTMLImageElement = window.HTMLImageElement;
     function HTMLImageElement(node) {
       HTMLElement.call(this, node);
     }
@@ -2779,7 +2779,7 @@ if (WebComponents.flags.shadow) {
       if (!(this instanceof Image)) {
         throw new TypeError("DOM object constructor cannot be called as a function.");
       }
-      var node = unwrap(document.createElement("img"));
+      const node = unwrap(document.createElement("img"));
       HTMLElement.call(this, node);
       rewrap(node, this);
       if (width !== undefined) node.width = width;
@@ -2791,11 +2791,11 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var NodeList = scope.wrappers.NodeList;
-    var registerWrapper = scope.registerWrapper;
-    var OriginalHTMLShadowElement = window.HTMLShadowElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const NodeList = scope.wrappers.NodeList;
+    const registerWrapper = scope.registerWrapper;
+    const OriginalHTMLShadowElement = window.HTMLShadowElement;
     function HTMLShadowElement(node) {
       HTMLElement.call(this, node);
     }
@@ -2806,17 +2806,17 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var contentTable = new WeakMap();
-    var templateContentsOwnerTable = new WeakMap();
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const contentTable = new WeakMap();
+    const templateContentsOwnerTable = new WeakMap();
     function getTemplateContentsOwner(doc) {
       if (!doc.defaultView) return doc;
-      var d = templateContentsOwnerTable.get(doc);
+      let d = templateContentsOwnerTable.get(doc);
       if (!d) {
         d = doc.implementation.createHTMLDocument("");
         while (d.lastChild) {
@@ -2827,19 +2827,19 @@ if (WebComponents.flags.shadow) {
       return d;
     }
     function extractContent(templateElement) {
-      var doc = getTemplateContentsOwner(templateElement.ownerDocument);
-      var df = unwrap(doc.createDocumentFragment());
-      var child;
+      const doc = getTemplateContentsOwner(templateElement.ownerDocument);
+      const df = unwrap(doc.createDocumentFragment());
+      let child;
       while (child = templateElement.firstChild) {
         df.appendChild(child);
       }
       return df;
     }
-    var OriginalHTMLTemplateElement = window.HTMLTemplateElement;
+    const OriginalHTMLTemplateElement = window.HTMLTemplateElement;
     function HTMLTemplateElement(node) {
       HTMLElement.call(this, node);
       if (!OriginalHTMLTemplateElement) {
-        var content = extractContent(node);
+        const content = extractContent(node);
         contentTable.set(this, wrap(content));
       }
     }
@@ -2856,9 +2856,9 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var registerWrapper = scope.registerWrapper;
-    var OriginalHTMLMediaElement = window.HTMLMediaElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const registerWrapper = scope.registerWrapper;
+    const OriginalHTMLMediaElement = window.HTMLMediaElement;
     if (!OriginalHTMLMediaElement) return;
     function HTMLMediaElement(node) {
       HTMLElement.call(this, node);
@@ -2869,11 +2869,11 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLMediaElement = scope.wrappers.HTMLMediaElement;
-    var registerWrapper = scope.registerWrapper;
-    var unwrap = scope.unwrap;
-    var rewrap = scope.rewrap;
-    var OriginalHTMLAudioElement = window.HTMLAudioElement;
+    const HTMLMediaElement = scope.wrappers.HTMLMediaElement;
+    const registerWrapper = scope.registerWrapper;
+    const unwrap = scope.unwrap;
+    const rewrap = scope.rewrap;
+    const OriginalHTMLAudioElement = window.HTMLAudioElement;
     if (!OriginalHTMLAudioElement) return;
     function HTMLAudioElement(node) {
       HTMLMediaElement.call(this, node);
@@ -2884,7 +2884,7 @@ if (WebComponents.flags.shadow) {
       if (!(this instanceof Audio)) {
         throw new TypeError("DOM object constructor cannot be called as a function.");
       }
-      var node = unwrap(document.createElement("audio"));
+      const node = unwrap(document.createElement("audio"));
       HTMLMediaElement.call(this, node);
       rewrap(node, this);
       node.setAttribute("preload", "auto");
@@ -2896,13 +2896,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var rewrap = scope.rewrap;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var OriginalHTMLOptionElement = window.HTMLOptionElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const rewrap = scope.rewrap;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const OriginalHTMLOptionElement = window.HTMLOptionElement;
     function trimText(s) {
       return s.replace(/\s+/g, " ").trim();
     }
@@ -2926,7 +2926,7 @@ if (WebComponents.flags.shadow) {
       if (!(this instanceof Option)) {
         throw new TypeError("DOM object constructor cannot be called as a function.");
       }
-      var node = unwrap(document.createElement("option"));
+      const node = unwrap(document.createElement("option"));
       HTMLElement.call(this, node);
       rewrap(node, this);
       if (text !== undefined) node.text = text;
@@ -2940,12 +2940,12 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var OriginalHTMLSelectElement = window.HTMLSelectElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const OriginalHTMLSelectElement = window.HTMLSelectElement;
     function HTMLSelectElement(node) {
       HTMLElement.call(this, node);
     }
@@ -2972,13 +2972,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var wrapHTMLCollection = scope.wrapHTMLCollection;
-    var OriginalHTMLTableElement = window.HTMLTableElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const wrapHTMLCollection = scope.wrapHTMLCollection;
+    const OriginalHTMLTableElement = window.HTMLTableElement;
     function HTMLTableElement(node) {
       HTMLElement.call(this, node);
     }
@@ -3020,13 +3020,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var wrapHTMLCollection = scope.wrapHTMLCollection;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var OriginalHTMLTableSectionElement = window.HTMLTableSectionElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const wrapHTMLCollection = scope.wrapHTMLCollection;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const OriginalHTMLTableSectionElement = window.HTMLTableSectionElement;
     function HTMLTableSectionElement(node) {
       HTMLElement.call(this, node);
     }
@@ -3045,13 +3045,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var wrapHTMLCollection = scope.wrapHTMLCollection;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var OriginalHTMLTableRowElement = window.HTMLTableRowElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const wrapHTMLCollection = scope.wrapHTMLCollection;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const OriginalHTMLTableRowElement = window.HTMLTableRowElement;
     function HTMLTableRowElement(node) {
       HTMLElement.call(this, node);
     }
@@ -3069,13 +3069,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLContentElement = scope.wrappers.HTMLContentElement;
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var HTMLShadowElement = scope.wrappers.HTMLShadowElement;
-    var HTMLTemplateElement = scope.wrappers.HTMLTemplateElement;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var OriginalHTMLUnknownElement = window.HTMLUnknownElement;
+    const HTMLContentElement = scope.wrappers.HTMLContentElement;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const HTMLShadowElement = scope.wrappers.HTMLShadowElement;
+    const HTMLTemplateElement = scope.wrappers.HTMLTemplateElement;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const OriginalHTMLUnknownElement = window.HTMLUnknownElement;
     function HTMLUnknownElement(node) {
       switch (node.localName) {
        case "content":
@@ -3095,15 +3095,15 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var Element = scope.wrappers.Element;
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var registerObject = scope.registerObject;
-    var SVG_NS = "http://www.w3.org/2000/svg";
-    var svgTitleElement = document.createElementNS(SVG_NS, "title");
-    var SVGTitleElement = registerObject(svgTitleElement);
-    var SVGElement = Object.getPrototypeOf(SVGTitleElement.prototype).constructor;
+    const Element = scope.wrappers.Element;
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const registerObject = scope.registerObject;
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const svgTitleElement = document.createElementNS(SVG_NS, "title");
+    const SVGTitleElement = registerObject(svgTitleElement);
+    const SVGElement = Object.getPrototypeOf(SVGTitleElement.prototype).constructor;
     if (!("classList" in svgTitleElement)) {
-      var descr = Object.getOwnPropertyDescriptor(Element.prototype, "classList");
+      const descr = Object.getOwnPropertyDescriptor(Element.prototype, "classList");
       Object.defineProperty(HTMLElement.prototype, "classList", descr);
       delete Element.prototype.classList;
     }
@@ -3111,16 +3111,16 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var OriginalSVGUseElement = window.SVGUseElement;
-    var SVG_NS = "http://www.w3.org/2000/svg";
-    var gWrapper = wrap(document.createElementNS(SVG_NS, "g"));
-    var useElement = document.createElementNS(SVG_NS, "use");
-    var SVGGElement = gWrapper.constructor;
-    var parentInterfacePrototype = Object.getPrototypeOf(SVGGElement.prototype);
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const OriginalSVGUseElement = window.SVGUseElement;
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const gWrapper = wrap(document.createElementNS(SVG_NS, "g"));
+    const useElement = document.createElementNS(SVG_NS, "use");
+    const SVGGElement = gWrapper.constructor;
+    const parentInterfacePrototype = Object.getPrototypeOf(SVGGElement.prototype);
     var parentInterface = parentInterfacePrototype.constructor;
     function SVGUseElement(impl) {
       parentInterface.call(this, impl);
@@ -3141,12 +3141,12 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var EventTarget = scope.wrappers.EventTarget;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var wrap = scope.wrap;
-    var OriginalSVGElementInstance = window.SVGElementInstance;
+    const EventTarget = scope.wrappers.EventTarget;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const wrap = scope.wrap;
+    const OriginalSVGElementInstance = window.SVGElementInstance;
     if (!OriginalSVGElementInstance) return;
     function SVGElementInstance(impl) {
       EventTarget.call(this, impl);
@@ -3183,14 +3183,14 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var unwrapIfNeeded = scope.unwrapIfNeeded;
-    var wrap = scope.wrap;
-    var OriginalCanvasRenderingContext2D = window.CanvasRenderingContext2D;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const unwrapIfNeeded = scope.unwrapIfNeeded;
+    const wrap = scope.wrap;
+    const OriginalCanvasRenderingContext2D = window.CanvasRenderingContext2D;
     function CanvasRenderingContext2D(impl) {
       setWrapper(impl, this);
     }
@@ -3212,13 +3212,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrapIfNeeded = scope.unwrapIfNeeded;
-    var wrap = scope.wrap;
-    var OriginalWebGLRenderingContext = window.WebGLRenderingContext;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrapIfNeeded = scope.unwrapIfNeeded;
+    const wrap = scope.wrap;
+    const OriginalWebGLRenderingContext = window.WebGLRenderingContext;
     if (!OriginalWebGLRenderingContext) return;
     function WebGLRenderingContext(impl) {
       setWrapper(impl, this);
@@ -3236,7 +3236,7 @@ if (WebComponents.flags.shadow) {
         unsafeUnwrap(this).texSubImage2D.apply(unsafeUnwrap(this), arguments);
       }
     });
-    var instanceProperties = /WebKit/.test(navigator.userAgent) ? {
+    const instanceProperties = /WebKit/.test(navigator.userAgent) ? {
       drawingBufferHeight: null,
       drawingBufferWidth: null
     } : {};
@@ -3245,13 +3245,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var registerWrapper = scope.registerWrapper;
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var unwrapIfNeeded = scope.unwrapIfNeeded;
-    var wrap = scope.wrap;
-    var OriginalRange = window.Range;
+    const registerWrapper = scope.registerWrapper;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const unwrapIfNeeded = scope.unwrapIfNeeded;
+    const wrap = scope.wrap;
+    const OriginalRange = window.Range;
     function Range(impl) {
       setWrapper(impl, this);
     }
@@ -3330,39 +3330,39 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var GetElementsByInterface = scope.GetElementsByInterface;
-    var ParentNodeInterface = scope.ParentNodeInterface;
-    var SelectorsInterface = scope.SelectorsInterface;
-    var mixin = scope.mixin;
-    var registerObject = scope.registerObject;
-    var DocumentFragment = registerObject(document.createDocumentFragment());
+    const GetElementsByInterface = scope.GetElementsByInterface;
+    const ParentNodeInterface = scope.ParentNodeInterface;
+    const SelectorsInterface = scope.SelectorsInterface;
+    const mixin = scope.mixin;
+    const registerObject = scope.registerObject;
+    const DocumentFragment = registerObject(document.createDocumentFragment());
     mixin(DocumentFragment.prototype, ParentNodeInterface);
     mixin(DocumentFragment.prototype, SelectorsInterface);
     mixin(DocumentFragment.prototype, GetElementsByInterface);
-    var Comment = registerObject(document.createComment(""));
+    const Comment = registerObject(document.createComment(""));
     scope.wrappers.Comment = Comment;
     scope.wrappers.DocumentFragment = DocumentFragment;
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var DocumentFragment = scope.wrappers.DocumentFragment;
-    var TreeScope = scope.TreeScope;
-    var elementFromPoint = scope.elementFromPoint;
-    var getInnerHTML = scope.getInnerHTML;
-    var getTreeScope = scope.getTreeScope;
-    var mixin = scope.mixin;
-    var rewrap = scope.rewrap;
-    var setInnerHTML = scope.setInnerHTML;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var shadowHostTable = new WeakMap();
-    var nextOlderShadowTreeTable = new WeakMap();
-    var spaceCharRe = /[ \t\n\r\f]/;
+    const DocumentFragment = scope.wrappers.DocumentFragment;
+    const TreeScope = scope.TreeScope;
+    const elementFromPoint = scope.elementFromPoint;
+    const getInnerHTML = scope.getInnerHTML;
+    const getTreeScope = scope.getTreeScope;
+    const mixin = scope.mixin;
+    const rewrap = scope.rewrap;
+    const setInnerHTML = scope.setInnerHTML;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const shadowHostTable = new WeakMap();
+    const nextOlderShadowTreeTable = new WeakMap();
+    const spaceCharRe = /[ \t\n\r\f]/;
     function ShadowRoot(hostWrapper) {
-      var node = unwrap(unsafeUnwrap(hostWrapper).ownerDocument.createDocumentFragment());
+      const node = unwrap(unsafeUnwrap(hostWrapper).ownerDocument.createDocumentFragment());
       DocumentFragment.call(this, node);
       rewrap(node, this);
-      var oldShadowRoot = hostWrapper.shadowRoot;
+      const oldShadowRoot = hostWrapper.shadowRoot;
       nextOlderShadowTreeTable.set(this, oldShadowRoot);
       this.treeScope_ = new TreeScope(this, getTreeScope(oldShadowRoot || hostWrapper));
       shadowHostTable.set(this, hostWrapper);
@@ -3398,19 +3398,19 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var Element = scope.wrappers.Element;
-    var HTMLContentElement = scope.wrappers.HTMLContentElement;
-    var HTMLShadowElement = scope.wrappers.HTMLShadowElement;
-    var Node = scope.wrappers.Node;
-    var ShadowRoot = scope.wrappers.ShadowRoot;
-    var assert = scope.assert;
-    var getTreeScope = scope.getTreeScope;
-    var mixin = scope.mixin;
-    var oneOf = scope.oneOf;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var ArraySplice = scope.ArraySplice;
+    const Element = scope.wrappers.Element;
+    const HTMLContentElement = scope.wrappers.HTMLContentElement;
+    const HTMLShadowElement = scope.wrappers.HTMLShadowElement;
+    const Node = scope.wrappers.Node;
+    const ShadowRoot = scope.wrappers.ShadowRoot;
+    const assert = scope.assert;
+    const getTreeScope = scope.getTreeScope;
+    const mixin = scope.mixin;
+    const oneOf = scope.oneOf;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const ArraySplice = scope.ArraySplice;
     function updateWrapperUpAndSideways(wrapper) {
       wrapper.previousSibling_ = wrapper.previousSibling;
       wrapper.nextSibling_ = wrapper.nextSibling;
@@ -3422,21 +3422,21 @@ if (WebComponents.flags.shadow) {
     }
     function updateAllChildNodes(parentNodeWrapper) {
       assert(parentNodeWrapper instanceof Node);
-      for (var childWrapper = parentNodeWrapper.firstChild; childWrapper; childWrapper = childWrapper.nextSibling) {
+      for (let childWrapper = parentNodeWrapper.firstChild; childWrapper; childWrapper = childWrapper.nextSibling) {
         updateWrapperUpAndSideways(childWrapper);
       }
       updateWrapperDown(parentNodeWrapper);
     }
     function insertBefore(parentNodeWrapper, newChildWrapper, refChildWrapper) {
-      var parentNode = unwrap(parentNodeWrapper);
-      var newChild = unwrap(newChildWrapper);
-      var refChild = refChildWrapper ? unwrap(refChildWrapper) : null;
+      const parentNode = unwrap(parentNodeWrapper);
+      const newChild = unwrap(newChildWrapper);
+      const refChild = refChildWrapper ? unwrap(refChildWrapper) : null;
       remove(newChildWrapper);
       updateWrapperUpAndSideways(newChildWrapper);
       if (!refChildWrapper) {
         parentNodeWrapper.lastChild_ = parentNodeWrapper.lastChild;
         if (parentNodeWrapper.lastChild === parentNodeWrapper.firstChild) parentNodeWrapper.firstChild_ = parentNodeWrapper.firstChild;
-        var lastChildWrapper = wrap(parentNode.lastChild);
+        const lastChildWrapper = wrap(parentNode.lastChild);
         if (lastChildWrapper) lastChildWrapper.nextSibling_ = lastChildWrapper.nextSibling;
       } else {
         if (parentNodeWrapper.firstChild === refChildWrapper) parentNodeWrapper.firstChild_ = refChildWrapper;
@@ -3445,10 +3445,10 @@ if (WebComponents.flags.shadow) {
       scope.originalInsertBefore.call(parentNode, newChild, refChild);
     }
     function remove(nodeWrapper) {
-      var node = unwrap(nodeWrapper);
-      var parentNode = node.parentNode;
+      const node = unwrap(nodeWrapper);
+      const parentNode = node.parentNode;
       if (!parentNode) return;
-      var parentNodeWrapper = wrap(parentNode);
+      const parentNodeWrapper = wrap(parentNode);
       updateWrapperUpAndSideways(nodeWrapper);
       if (nodeWrapper.previousSibling) nodeWrapper.previousSibling.nextSibling_ = nodeWrapper;
       if (nodeWrapper.nextSibling) nodeWrapper.nextSibling.previousSibling_ = nodeWrapper;
@@ -3456,31 +3456,31 @@ if (WebComponents.flags.shadow) {
       if (parentNodeWrapper.firstChild === nodeWrapper) parentNodeWrapper.firstChild_ = nodeWrapper;
       scope.originalRemoveChild.call(parentNode, node);
     }
-    var distributedNodesTable = new WeakMap();
-    var destinationInsertionPointsTable = new WeakMap();
-    var rendererForHostTable = new WeakMap();
+    const distributedNodesTable = new WeakMap();
+    const destinationInsertionPointsTable = new WeakMap();
+    const rendererForHostTable = new WeakMap();
     function resetDistributedNodes(insertionPoint) {
       distributedNodesTable.set(insertionPoint, []);
     }
     function getDistributedNodes(insertionPoint) {
-      var rv = distributedNodesTable.get(insertionPoint);
+      let rv = distributedNodesTable.get(insertionPoint);
       if (!rv) distributedNodesTable.set(insertionPoint, rv = []);
       return rv;
     }
     function getChildNodesSnapshot(node) {
-      var result = [], i = 0;
-      for (var child = node.firstChild; child; child = child.nextSibling) {
+      let result = [], i = 0;
+      for (let child = node.firstChild; child; child = child.nextSibling) {
         result[i++] = child;
       }
       return result;
     }
-    var request = oneOf(window, [ "requestAnimationFrame", "mozRequestAnimationFrame", "webkitRequestAnimationFrame", "setTimeout" ]);
-    var pendingDirtyRenderers = [];
-    var renderTimer;
+    const request = oneOf(window, [ "requestAnimationFrame", "mozRequestAnimationFrame", "webkitRequestAnimationFrame", "setTimeout" ]);
+    let pendingDirtyRenderers = [];
+    let renderTimer;
     function renderAllPending() {
-      for (var i = 0; i < pendingDirtyRenderers.length; i++) {
-        var renderer = pendingDirtyRenderers[i];
-        var parentRenderer = renderer.parentRenderer;
+      for (let i = 0; i < pendingDirtyRenderers.length; i++) {
+        const renderer = pendingDirtyRenderers[i];
+        const parentRenderer = renderer.parentRenderer;
         if (parentRenderer && parentRenderer.dirty) continue;
         renderer.render();
       }
@@ -3491,7 +3491,7 @@ if (WebComponents.flags.shadow) {
       renderAllPending();
     }
     function getRendererForHost(host) {
-      var renderer = rendererForHostTable.get(host);
+      let renderer = rendererForHostTable.get(host);
       if (!renderer) {
         renderer = new ShadowRenderer(host);
         rendererForHostTable.set(host, renderer);
@@ -3499,14 +3499,14 @@ if (WebComponents.flags.shadow) {
       return renderer;
     }
     function getShadowRootAncestor(node) {
-      var root = getTreeScope(node).root;
+      const root = getTreeScope(node).root;
       if (root instanceof ShadowRoot) return root;
       return null;
     }
     function getRendererForShadowRoot(shadowRoot) {
       return getRendererForHost(shadowRoot.host);
     }
-    var spliceDiff = new ArraySplice();
+    const spliceDiff = new ArraySplice();
     spliceDiff.equals = function(renderNode, rawNode) {
       return unwrap(renderNode.node) === rawNode;
     };
@@ -3517,35 +3517,35 @@ if (WebComponents.flags.shadow) {
     }
     RenderNode.prototype = {
       append: function(node) {
-        var rv = new RenderNode(node);
+        const rv = new RenderNode(node);
         this.childNodes.push(rv);
         return rv;
       },
       sync: function(opt_added) {
         if (this.skip) return;
-        var nodeWrapper = this.node;
-        var newChildren = this.childNodes;
-        var oldChildren = getChildNodesSnapshot(unwrap(nodeWrapper));
-        var added = opt_added || new WeakMap();
-        var splices = spliceDiff.calculateSplices(newChildren, oldChildren);
-        var newIndex = 0, oldIndex = 0;
-        var lastIndex = 0;
+        const nodeWrapper = this.node;
+        const newChildren = this.childNodes;
+        const oldChildren = getChildNodesSnapshot(unwrap(nodeWrapper));
+        const added = opt_added || new WeakMap();
+        const splices = spliceDiff.calculateSplices(newChildren, oldChildren);
+        let newIndex = 0, oldIndex = 0;
+        let lastIndex = 0;
         for (var i = 0; i < splices.length; i++) {
-          var splice = splices[i];
+          const splice = splices[i];
           for (;lastIndex < splice.index; lastIndex++) {
             oldIndex++;
             newChildren[newIndex++].sync(added);
           }
-          var removedCount = splice.removed.length;
+          const removedCount = splice.removed.length;
           for (var j = 0; j < removedCount; j++) {
-            var wrapper = wrap(oldChildren[oldIndex++]);
+            const wrapper = wrap(oldChildren[oldIndex++]);
             if (!added.get(wrapper)) remove(wrapper);
           }
-          var addedCount = splice.addedCount;
-          var refNode = oldChildren[oldIndex] && wrap(oldChildren[oldIndex]);
+          const addedCount = splice.addedCount;
+          const refNode = oldChildren[oldIndex] && wrap(oldChildren[oldIndex]);
           for (var j = 0; j < addedCount; j++) {
-            var newChildRenderNode = newChildren[newIndex++];
-            var newChildWrapper = newChildRenderNode.node;
+            const newChildRenderNode = newChildren[newIndex++];
+            const newChildWrapper = newChildRenderNode.node;
             insertBefore(nodeWrapper, newChildWrapper, refNode);
             added.set(newChildWrapper, true);
             newChildRenderNode.sync(added);
@@ -3567,11 +3567,11 @@ if (WebComponents.flags.shadow) {
       render: function(opt_renderNode) {
         if (!this.dirty) return;
         this.invalidateAttributes();
-        var host = this.host;
+        const host = this.host;
         this.distribution(host);
-        var renderNode = opt_renderNode || new RenderNode(host);
+        const renderNode = opt_renderNode || new RenderNode(host);
         this.buildRenderTree(renderNode, host);
-        var topMostRenderer = !opt_renderNode;
+        const topMostRenderer = !opt_renderNode;
         if (topMostRenderer) renderNode.sync();
         this.dirty = false;
       },
@@ -3581,7 +3581,7 @@ if (WebComponents.flags.shadow) {
       invalidate: function() {
         if (!this.dirty) {
           this.dirty = true;
-          var parentRenderer = this.parentRenderer;
+          const parentRenderer = this.parentRenderer;
           if (parentRenderer) parentRenderer.invalidate();
           pendingDirtyRenderers.push(this);
           if (renderTimer) return;
@@ -3597,7 +3597,7 @@ if (WebComponents.flags.shadow) {
         this.resetAllSubtrees(node);
       },
       resetAllSubtrees: function(node) {
-        for (var child = node.firstChild; child; child = child.nextSibling) {
+        for (let child = node.firstChild; child; child = child.nextSibling) {
           this.resetAll(child);
         }
         if (node.shadowRoot) this.resetAll(node.shadowRoot);
@@ -3605,38 +3605,38 @@ if (WebComponents.flags.shadow) {
       },
       distributionResolution: function(node) {
         if (isShadowHost(node)) {
-          var shadowHost = node;
-          var pool = poolPopulation(shadowHost);
-          var shadowTrees = getShadowTrees(shadowHost);
+          const shadowHost = node;
+          let pool = poolPopulation(shadowHost);
+          const shadowTrees = getShadowTrees(shadowHost);
           for (var i = 0; i < shadowTrees.length; i++) {
             this.poolDistribution(shadowTrees[i], pool);
           }
           for (var i = shadowTrees.length - 1; i >= 0; i--) {
-            var shadowTree = shadowTrees[i];
-            var shadow = getShadowInsertionPoint(shadowTree);
+            const shadowTree = shadowTrees[i];
+            const shadow = getShadowInsertionPoint(shadowTree);
             if (shadow) {
-              var olderShadowRoot = shadowTree.olderShadowRoot;
+              const olderShadowRoot = shadowTree.olderShadowRoot;
               if (olderShadowRoot) {
                 pool = poolPopulation(olderShadowRoot);
               }
-              for (var j = 0; j < pool.length; j++) {
+              for (let j = 0; j < pool.length; j++) {
                 destributeNodeInto(pool[j], shadow);
               }
             }
             this.distributionResolution(shadowTree);
           }
         }
-        for (var child = node.firstChild; child; child = child.nextSibling) {
+        for (let child = node.firstChild; child; child = child.nextSibling) {
           this.distributionResolution(child);
         }
       },
       poolDistribution: function(node, pool) {
         if (node instanceof HTMLShadowElement) return;
         if (node instanceof HTMLContentElement) {
-          var content = node;
+          const content = node;
           this.updateDependentAttributes(content.getAttribute("select"));
-          var anyDistributed = false;
-          for (var i = 0; i < pool.length; i++) {
+          let anyDistributed = false;
+          for (let i = 0; i < pool.length; i++) {
             var node = pool[i];
             if (!node) continue;
             if (matches(node, content)) {
@@ -3657,26 +3657,26 @@ if (WebComponents.flags.shadow) {
         }
       },
       buildRenderTree: function(renderNode, node) {
-        var children = this.compose(node);
-        for (var i = 0; i < children.length; i++) {
-          var child = children[i];
-          var childRenderNode = renderNode.append(child);
+        const children = this.compose(node);
+        for (let i = 0; i < children.length; i++) {
+          const child = children[i];
+          const childRenderNode = renderNode.append(child);
           this.buildRenderTree(childRenderNode, child);
         }
         if (isShadowHost(node)) {
-          var renderer = getRendererForHost(node);
+          const renderer = getRendererForHost(node);
           renderer.dirty = false;
         }
       },
       compose: function(node) {
-        var children = [];
-        var p = node.shadowRoot || node;
-        for (var child = p.firstChild; child; child = child.nextSibling) {
+        const children = [];
+        const p = node.shadowRoot || node;
+        for (let child = p.firstChild; child; child = child.nextSibling) {
           if (isInsertionPoint(child)) {
             this.associateNode(p);
-            var distributedNodes = getDistributedNodes(child);
-            for (var j = 0; j < distributedNodes.length; j++) {
-              var distributedNode = distributedNodes[j];
+            const distributedNodes = getDistributedNodes(child);
+            for (let j = 0; j < distributedNodes.length; j++) {
+              const distributedNode = distributedNodes[j];
               if (isFinalDestination(child, distributedNode)) children.push(distributedNode);
             }
           } else {
@@ -3690,7 +3690,7 @@ if (WebComponents.flags.shadow) {
       },
       updateDependentAttributes: function(selector) {
         if (!selector) return;
-        var attributes = this.attributes;
+        const attributes = this.attributes;
         if (/\.\w+/.test(selector)) attributes["class"] = true;
         if (/#\w+/.test(selector)) attributes["id"] = true;
         selector.replace(/\[\s*([^\s=\|~\]]+)/g, function(_, name) {
@@ -3705,8 +3705,8 @@ if (WebComponents.flags.shadow) {
       }
     };
     function poolPopulation(node) {
-      var pool = [];
-      for (var child = node.firstChild; child; child = child.nextSibling) {
+      const pool = [];
+      for (let child = node.firstChild; child; child = child.nextSibling) {
         if (isInsertionPoint(child)) {
           pool.push.apply(pool, getDistributedNodes(child));
         } else {
@@ -3718,15 +3718,15 @@ if (WebComponents.flags.shadow) {
     function getShadowInsertionPoint(node) {
       if (node instanceof HTMLShadowElement) return node;
       if (node instanceof HTMLContentElement) return null;
-      for (var child = node.firstChild; child; child = child.nextSibling) {
-        var res = getShadowInsertionPoint(child);
+      for (let child = node.firstChild; child; child = child.nextSibling) {
+        const res = getShadowInsertionPoint(child);
         if (res) return res;
       }
       return null;
     }
     function destributeNodeInto(child, insertionPoint) {
       getDistributedNodes(insertionPoint).push(child);
-      var points = destinationInsertionPointsTable.get(child);
+      const points = destinationInsertionPointsTable.get(child);
       if (!points) destinationInsertionPointsTable.set(child, [ insertionPoint ]); else points.push(insertionPoint);
     }
     function getDestinationInsertionPoints(node) {
@@ -3737,7 +3737,7 @@ if (WebComponents.flags.shadow) {
     }
     var selectorStartCharRe = /^(:not\()?[*.#[a-zA-Z_|]/;
     function matches(node, contentElement) {
-      var select = contentElement.getAttribute("select");
+      let select = contentElement.getAttribute("select");
       if (!select) return true;
       select = select.trim();
       if (!select) return true;
@@ -3750,7 +3750,7 @@ if (WebComponents.flags.shadow) {
       }
     }
     function isFinalDestination(insertionPoint, node) {
-      var points = getDestinationInsertionPoints(node);
+      const points = getDestinationInsertionPoints(node);
       return points && points[points.length - 1] === insertionPoint;
     }
     function isInsertionPoint(node) {
@@ -3760,8 +3760,8 @@ if (WebComponents.flags.shadow) {
       return shadowHost.shadowRoot;
     }
     function getShadowTrees(host) {
-      var trees = [];
-      for (var tree = host.shadowRoot; tree; tree = tree.olderShadowRoot) {
+      const trees = [];
+      for (let tree = host.shadowRoot; tree; tree = tree.olderShadowRoot) {
         trees.push(tree);
       }
       return trees;
@@ -3770,7 +3770,7 @@ if (WebComponents.flags.shadow) {
       new ShadowRenderer(host).render();
     }
     Node.prototype.invalidateShadowRenderer = function(force) {
-      var renderer = unsafeUnwrap(this).polymerShadowRenderer_;
+      const renderer = unsafeUnwrap(this).polymerShadowRenderer_;
       if (renderer) {
         renderer.invalidate();
         return true;
@@ -3787,8 +3787,8 @@ if (WebComponents.flags.shadow) {
     };
     HTMLContentElement.prototype.nodeIsInserted_ = HTMLShadowElement.prototype.nodeIsInserted_ = function() {
       this.invalidateShadowRenderer();
-      var shadowRoot = getShadowRootAncestor(this);
-      var renderer;
+      const shadowRoot = getShadowRootAncestor(this);
+      let renderer;
       if (shadowRoot) renderer = getRendererForShadowRoot(shadowRoot);
       unsafeUnwrap(this).polymerShadowRenderer_ = renderer;
       if (renderer) renderer.invalidate();
@@ -3804,17 +3804,17 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var HTMLElement = scope.wrappers.HTMLElement;
-    var assert = scope.assert;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var elementsWithFormProperty = [ "HTMLButtonElement", "HTMLFieldSetElement", "HTMLInputElement", "HTMLKeygenElement", "HTMLLabelElement", "HTMLLegendElement", "HTMLObjectElement", "HTMLOutputElement", "HTMLTextAreaElement" ];
+    const HTMLElement = scope.wrappers.HTMLElement;
+    const assert = scope.assert;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const elementsWithFormProperty = [ "HTMLButtonElement", "HTMLFieldSetElement", "HTMLInputElement", "HTMLKeygenElement", "HTMLLabelElement", "HTMLLegendElement", "HTMLObjectElement", "HTMLOutputElement", "HTMLTextAreaElement" ];
     function createWrapperConstructor(name) {
       if (!window[name]) return;
       assert(!scope.wrappers[name]);
-      var GeneratedWrapper = function(node) {
+      const GeneratedWrapper = function(node) {
         HTMLElement.call(this, node);
       };
       GeneratedWrapper.prototype = Object.create(HTMLElement.prototype);
@@ -3830,13 +3830,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var registerWrapper = scope.registerWrapper;
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var unwrapIfNeeded = scope.unwrapIfNeeded;
-    var wrap = scope.wrap;
-    var OriginalSelection = window.Selection;
+    const registerWrapper = scope.registerWrapper;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const unwrapIfNeeded = scope.unwrapIfNeeded;
+    const wrap = scope.wrap;
+    const OriginalSelection = window.Selection;
     function Selection(impl) {
       setWrapper(impl, this);
     }
@@ -3877,29 +3877,29 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var GetElementsByInterface = scope.GetElementsByInterface;
-    var Node = scope.wrappers.Node;
-    var ParentNodeInterface = scope.ParentNodeInterface;
-    var Selection = scope.wrappers.Selection;
-    var SelectorsInterface = scope.SelectorsInterface;
-    var ShadowRoot = scope.wrappers.ShadowRoot;
-    var TreeScope = scope.TreeScope;
-    var cloneNode = scope.cloneNode;
-    var defineWrapGetter = scope.defineWrapGetter;
-    var elementFromPoint = scope.elementFromPoint;
-    var forwardMethodsToWrapper = scope.forwardMethodsToWrapper;
-    var matchesNames = scope.matchesNames;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var renderAllPending = scope.renderAllPending;
-    var rewrap = scope.rewrap;
-    var setWrapper = scope.setWrapper;
-    var unsafeUnwrap = scope.unsafeUnwrap;
-    var unwrap = scope.unwrap;
-    var wrap = scope.wrap;
-    var wrapEventTargetMethods = scope.wrapEventTargetMethods;
-    var wrapNodeList = scope.wrapNodeList;
-    var implementationTable = new WeakMap();
+    const GetElementsByInterface = scope.GetElementsByInterface;
+    const Node = scope.wrappers.Node;
+    const ParentNodeInterface = scope.ParentNodeInterface;
+    const Selection = scope.wrappers.Selection;
+    const SelectorsInterface = scope.SelectorsInterface;
+    const ShadowRoot = scope.wrappers.ShadowRoot;
+    const TreeScope = scope.TreeScope;
+    const cloneNode = scope.cloneNode;
+    const defineWrapGetter = scope.defineWrapGetter;
+    const elementFromPoint = scope.elementFromPoint;
+    const forwardMethodsToWrapper = scope.forwardMethodsToWrapper;
+    const matchesNames = scope.matchesNames;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const renderAllPending = scope.renderAllPending;
+    const rewrap = scope.rewrap;
+    const setWrapper = scope.setWrapper;
+    const unsafeUnwrap = scope.unsafeUnwrap;
+    const unwrap = scope.unwrap;
+    const wrap = scope.wrap;
+    const wrapEventTargetMethods = scope.wrapEventTargetMethods;
+    const wrapNodeList = scope.wrapNodeList;
+    const implementationTable = new WeakMap();
     function Document(node) {
       Node.call(this, node);
       this.treeScope_ = new TreeScope(this, null);
@@ -3909,13 +3909,13 @@ if (WebComponents.flags.shadow) {
     defineWrapGetter(Document, "body");
     defineWrapGetter(Document, "head");
     function wrapMethod(name) {
-      var original = document[name];
+      const original = document[name];
       Document.prototype[name] = function() {
         return wrap(original.apply(unsafeUnwrap(this), arguments));
       };
     }
     [ "createComment", "createDocumentFragment", "createElement", "createElementNS", "createEvent", "createEventNS", "createRange", "createTextNode", "getElementById" ].forEach(wrapMethod);
-    var originalAdoptNode = document.adoptNode;
+    const originalAdoptNode = document.adoptNode;
     function adoptNodeNoRemove(node, doc) {
       originalAdoptNode.call(unsafeUnwrap(doc), unwrap(node));
       adoptSubtree(node, doc);
@@ -3923,15 +3923,15 @@ if (WebComponents.flags.shadow) {
     function adoptSubtree(node, doc) {
       if (node.shadowRoot) doc.adoptNode(node.shadowRoot);
       if (node instanceof ShadowRoot) adoptOlderShadowRoots(node, doc);
-      for (var child = node.firstChild; child; child = child.nextSibling) {
+      for (let child = node.firstChild; child; child = child.nextSibling) {
         adoptSubtree(child, doc);
       }
     }
     function adoptOlderShadowRoots(shadowRoot, doc) {
-      var oldShadowRoot = shadowRoot.olderShadowRoot;
+      const oldShadowRoot = shadowRoot.olderShadowRoot;
       if (oldShadowRoot) doc.adoptNode(oldShadowRoot);
     }
-    var originalGetSelection = document.getSelection;
+    const originalGetSelection = document.getSelection;
     mixin(Document.prototype, {
       adoptNode: function(node) {
         if (node.parentNode) node.parentNode.removeChild(node);
@@ -3953,9 +3953,9 @@ if (WebComponents.flags.shadow) {
       }
     });
     if (document.registerElement) {
-      var originalRegisterElement = document.registerElement;
+      const originalRegisterElement = document.registerElement;
       Document.prototype.registerElement = function(tagName, object) {
-        var prototype, extendsOption;
+        let prototype, extendsOption;
         if (object !== undefined) {
           prototype = object.prototype;
           extendsOption = object.extends;
@@ -3964,9 +3964,9 @@ if (WebComponents.flags.shadow) {
         if (scope.nativePrototypeTable.get(prototype)) {
           throw new Error("NotSupportedError");
         }
-        var proto = Object.getPrototypeOf(prototype);
-        var nativePrototype;
-        var prototypes = [];
+        let proto = Object.getPrototypeOf(prototype);
+        let nativePrototype;
+        const prototypes = [];
         while (proto) {
           nativePrototype = scope.nativePrototypeTable.get(proto);
           if (nativePrototype) break;
@@ -3976,12 +3976,12 @@ if (WebComponents.flags.shadow) {
         if (!nativePrototype) {
           throw new Error("NotSupportedError");
         }
-        var newPrototype = Object.create(nativePrototype);
-        for (var i = prototypes.length - 1; i >= 0; i--) {
+        let newPrototype = Object.create(nativePrototype);
+        for (let i = prototypes.length - 1; i >= 0; i--) {
           newPrototype = Object.create(newPrototype);
         }
         [ "createdCallback", "attachedCallback", "detachedCallback", "attributeChangedCallback" ].forEach(function(name) {
-          var f = prototype[name];
+          const f = prototype[name];
           if (!f) return;
           newPrototype[name] = function() {
             if (!(wrap(this) instanceof CustomElementConstructor)) {
@@ -3990,7 +3990,7 @@ if (WebComponents.flags.shadow) {
             f.apply(wrap(this), arguments);
           };
         });
-        var p = {
+        const p = {
           prototype: newPrototype
         };
         if (extendsOption) p.extends = extendsOption;
@@ -4008,7 +4008,7 @@ if (WebComponents.flags.shadow) {
         CustomElementConstructor.prototype.constructor = CustomElementConstructor;
         scope.constructorTable.set(newPrototype, CustomElementConstructor);
         scope.nativePrototypeTable.set(prototype, newPrototype);
-        var nativeConstructor = originalRegisterElement.call(unwrap(this), tagName, p);
+        const nativeConstructor = originalRegisterElement.call(unwrap(this), tagName, p);
         return CustomElementConstructor;
       };
       forwardMethodsToWrapper([ window.HTMLDocument || window.Document ], [ "registerElement" ]);
@@ -4020,7 +4020,7 @@ if (WebComponents.flags.shadow) {
     mixin(Document.prototype, SelectorsInterface);
     mixin(Document.prototype, {
       get implementation() {
-        var implementation = implementationTable.get(this);
+        let implementation = implementationTable.get(this);
         if (implementation) return implementation;
         implementation = new DOMImplementation(unwrap(this).implementation);
         implementationTable.set(this, implementation);
@@ -4037,13 +4037,13 @@ if (WebComponents.flags.shadow) {
       setWrapper(impl, this);
     }
     function wrapImplMethod(constructor, name) {
-      var original = document.implementation[name];
+      const original = document.implementation[name];
       constructor.prototype[name] = function() {
         return wrap(original.apply(unsafeUnwrap(this), arguments));
       };
     }
     function forwardImplMethod(constructor, name) {
-      var original = document.implementation[name];
+      const original = document.implementation[name];
       constructor.prototype[name] = function() {
         return original.apply(unsafeUnwrap(this), arguments);
       };
@@ -4060,18 +4060,18 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var EventTarget = scope.wrappers.EventTarget;
-    var Selection = scope.wrappers.Selection;
-    var mixin = scope.mixin;
-    var registerWrapper = scope.registerWrapper;
-    var renderAllPending = scope.renderAllPending;
-    var unwrap = scope.unwrap;
-    var unwrapIfNeeded = scope.unwrapIfNeeded;
-    var wrap = scope.wrap;
-    var OriginalWindow = window.Window;
-    var originalGetComputedStyle = window.getComputedStyle;
-    var originalGetDefaultComputedStyle = window.getDefaultComputedStyle;
-    var originalGetSelection = window.getSelection;
+    const EventTarget = scope.wrappers.EventTarget;
+    const Selection = scope.wrappers.Selection;
+    const mixin = scope.mixin;
+    const registerWrapper = scope.registerWrapper;
+    const renderAllPending = scope.renderAllPending;
+    const unwrap = scope.unwrap;
+    const unwrapIfNeeded = scope.unwrapIfNeeded;
+    const wrap = scope.wrap;
+    const OriginalWindow = window.Window;
+    const originalGetComputedStyle = window.getComputedStyle;
+    const originalGetDefaultComputedStyle = window.getDefaultComputedStyle;
+    const originalGetSelection = window.getSelection;
     function Window(impl) {
       EventTarget.call(this, impl);
     }
@@ -4092,7 +4092,7 @@ if (WebComponents.flags.shadow) {
     delete window.getSelection;
     [ "addEventListener", "removeEventListener", "dispatchEvent" ].forEach(function(name) {
       OriginalWindow.prototype[name] = function() {
-        var w = wrap(this || window);
+        const w = wrap(this || window);
         return w[name].apply(w, arguments);
       };
       delete window[name];
@@ -4121,9 +4121,9 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var unwrap = scope.unwrap;
-    var OriginalDataTransfer = window.DataTransfer || window.Clipboard;
-    var OriginalDataTransferSetDragImage = OriginalDataTransfer.prototype.setDragImage;
+    const unwrap = scope.unwrap;
+    const OriginalDataTransfer = window.DataTransfer || window.Clipboard;
+    const OriginalDataTransferSetDragImage = OriginalDataTransfer.prototype.setDragImage;
     if (OriginalDataTransferSetDragImage) {
       OriginalDataTransfer.prototype.setDragImage = function(image, x, y) {
         OriginalDataTransferSetDragImage.call(this, unwrap(image), x, y);
@@ -4132,13 +4132,13 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var registerWrapper = scope.registerWrapper;
-    var setWrapper = scope.setWrapper;
-    var unwrap = scope.unwrap;
-    var OriginalFormData = window.FormData;
+    const registerWrapper = scope.registerWrapper;
+    const setWrapper = scope.setWrapper;
+    const unwrap = scope.unwrap;
+    const OriginalFormData = window.FormData;
     if (!OriginalFormData) return;
     function FormData(formElement) {
-      var impl;
+      let impl;
       if (formElement instanceof OriginalFormData) {
         impl = formElement;
       } else {
@@ -4151,16 +4151,16 @@ if (WebComponents.flags.shadow) {
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var unwrapIfNeeded = scope.unwrapIfNeeded;
-    var originalSend = XMLHttpRequest.prototype.send;
+    const unwrapIfNeeded = scope.unwrapIfNeeded;
+    const originalSend = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.send = function(obj) {
       return originalSend.call(this, unwrapIfNeeded(obj));
     };
   })(window.ShadowDOMPolyfill);
   (function(scope) {
     "use strict";
-    var isWrapperFor = scope.isWrapperFor;
-    var elements = {
+    const isWrapperFor = scope.isWrapperFor;
+    const elements = {
       a: "HTMLAnchorElement",
       area: "HTMLAreaElement",
       audio: "HTMLAudioElement",
@@ -4231,11 +4231,11 @@ if (WebComponents.flags.shadow) {
       video: "HTMLVideoElement"
     };
     function overrideConstructor(tagName) {
-      var nativeConstructorName = elements[tagName];
-      var nativeConstructor = window[nativeConstructorName];
+      const nativeConstructorName = elements[tagName];
+      const nativeConstructor = window[nativeConstructorName];
       if (!nativeConstructor) return;
-      var element = document.createElement(tagName);
-      var wrapperConstructor = element.constructor;
+      const element = document.createElement(tagName);
+      const wrapperConstructor = element.constructor;
       window[nativeConstructorName] = wrapperConstructor;
     }
     Object.keys(elements).forEach(overrideConstructor);
@@ -4244,14 +4244,14 @@ if (WebComponents.flags.shadow) {
     });
   })(window.ShadowDOMPolyfill);
   (function(scope) {
-    var ShadowCSS = {
+    const ShadowCSS = {
       strictStyling: false,
       registry: {},
       shimStyling: function(root, name, extendsName) {
-        var scopeStyles = this.prepareRoot(root, name, extendsName);
-        var typeExtension = this.isTypeExtension(extendsName);
-        var scopeSelector = this.makeScopeSelector(name, typeExtension);
-        var cssText = stylesToCssText(scopeStyles, true);
+        const scopeStyles = this.prepareRoot(root, name, extendsName);
+        const typeExtension = this.isTypeExtension(extendsName);
+        const scopeSelector = this.makeScopeSelector(name, typeExtension);
+        let cssText = stylesToCssText(scopeStyles, true);
         cssText = this.scopeCssText(cssText, scopeSelector);
         if (root) {
           root.shimmedStyle = cssText;
@@ -4275,7 +4275,7 @@ if (WebComponents.flags.shadow) {
         return extendsName && extendsName.indexOf("-") < 0;
       },
       prepareRoot: function(root, name, extendsName) {
-        var def = this.registerRoot(root, name, extendsName);
+        const def = this.registerRoot(root, name, extendsName);
         this.replaceTextInStyles(def.rootStyles, this.insertDirectives);
         this.removeStyles(root, def.rootStyles);
         if (this.strictStyling) {
@@ -4284,20 +4284,20 @@ if (WebComponents.flags.shadow) {
         return def.scopeStyles;
       },
       removeStyles: function(root, styles) {
-        for (var i = 0, l = styles.length, s; i < l && (s = styles[i]); i++) {
+        for (let i = 0, l = styles.length, s; i < l && (s = styles[i]); i++) {
           s.parentNode.removeChild(s);
         }
       },
       registerRoot: function(root, name, extendsName) {
-        var def = this.registry[name] = {
+        const def = this.registry[name] = {
           root: root,
           name: name,
           extendsName: extendsName
         };
-        var styles = this.findStyles(root);
+        const styles = this.findStyles(root);
         def.rootStyles = styles;
         def.scopeStyles = def.rootStyles;
-        var extendee = this.registry[def.extendsName];
+        const extendee = this.registry[def.extendsName];
         if (extendee) {
           def.scopeStyles = extendee.scopeStyles.concat(def.scopeStyles);
         }
@@ -4307,7 +4307,7 @@ if (WebComponents.flags.shadow) {
         if (!root) {
           return [];
         }
-        var styles = root.querySelectorAll("style");
+        const styles = root.querySelectorAll("style");
         return Array.prototype.filter.call(styles, function(s) {
           return !s.hasAttribute(NO_SHIM_ATTRIBUTE);
         });
@@ -4339,12 +4339,12 @@ if (WebComponents.flags.shadow) {
           return p1.slice(0, -1);
         });
         return cssText.replace(cssContentRuleRe, function(match, p1, p2, p3) {
-          var rule = match.replace(p1, "").replace(p2, "");
+          const rule = match.replace(p1, "").replace(p2, "");
           return p3 + rule;
         });
       },
       scopeCssText: function(cssText, scopeSelector) {
-        var unscoped = this.extractUnscopedRulesFromCssText(cssText);
+        const unscoped = this.extractUnscopedRulesFromCssText(cssText);
         cssText = this.insertPolyfillHostInCssText(cssText);
         cssText = this.convertColonHost(cssText);
         cssText = this.convertColonHostContext(cssText);
@@ -4359,7 +4359,7 @@ if (WebComponents.flags.shadow) {
         return cssText.trim();
       },
       extractUnscopedRulesFromCssText: function(cssText) {
-        var r = "", m;
+        let r = "", m;
         while (m = cssCommentUnscopedRuleRe.exec(cssText)) {
           r += m[1].slice(0, -1) + "\n\n";
         }
@@ -4378,8 +4378,8 @@ if (WebComponents.flags.shadow) {
         return cssText.replace(regExp, function(m, p1, p2, p3) {
           p1 = polyfillHostNoCombinator;
           if (p2) {
-            var parts = p2.split(","), r = [];
-            for (var i = 0, l = parts.length, p; i < l && (p = parts[i]); i++) {
+            const parts = p2.split(","), r = [];
+            for (let i = 0, l = parts.length, p; i < l && (p = parts[i]); i++) {
               p = p.trim();
               r.push(partReplacer(p1, p, p3));
             }
@@ -4400,13 +4400,13 @@ if (WebComponents.flags.shadow) {
         return host + part.replace(polyfillHost, "") + suffix;
       },
       convertShadowDOMSelectors: function(cssText) {
-        for (var i = 0; i < shadowDOMSelectorsRe.length; i++) {
+        for (let i = 0; i < shadowDOMSelectorsRe.length; i++) {
           cssText = cssText.replace(shadowDOMSelectorsRe[i], " ");
         }
         return cssText;
       },
       scopeRules: function(cssRules, scopeSelector) {
-        var cssText = "";
+        let cssText = "";
         if (cssRules) {
           Array.prototype.forEach.call(cssRules, function(rule) {
             if (rule.selectorText && (rule.style && rule.style.cssText !== undefined)) {
@@ -4432,7 +4432,7 @@ if (WebComponents.flags.shadow) {
         return cssText;
       },
       ieSafeCssTextFromKeyFrameRule: function(rule) {
-        var cssText = "@keyframes " + rule.name + " {";
+        let cssText = "@keyframes " + rule.name + " {";
         Array.prototype.forEach.call(rule.cssRules, function(rule) {
           cssText += " " + rule.keyText + " {" + rule.style.cssText + "}";
         });
@@ -4440,7 +4440,7 @@ if (WebComponents.flags.shadow) {
         return cssText;
       },
       scopeSelector: function(selector, scopeSelector, strict) {
-        var r = [], parts = selector.split(",");
+        const r = [], parts = selector.split(",");
         parts.forEach(function(p) {
           p = p.trim();
           if (this.selectorNeedsScoping(p, scopeSelector)) {
@@ -4454,7 +4454,7 @@ if (WebComponents.flags.shadow) {
         if (Array.isArray(scopeSelector)) {
           return true;
         }
-        var re = this.makeScopeMatcher(scopeSelector);
+        const re = this.makeScopeMatcher(scopeSelector);
         return !selector.match(re);
       },
       makeScopeMatcher: function(scopeSelector) {
@@ -4465,8 +4465,8 @@ if (WebComponents.flags.shadow) {
         return Array.isArray(selectorScope) ? this.applySelectorScopeList(selector, selectorScope) : this.applySimpleSelectorScope(selector, selectorScope);
       },
       applySelectorScopeList: function(selector, scopeSelectorList) {
-        var r = [];
-        for (var i = 0, s; s = scopeSelectorList[i]; i++) {
+        const r = [];
+        for (let i = 0, s; s = scopeSelectorList[i]; i++) {
           r.push(this.applySimpleSelectorScope(selector, s));
         }
         return r.join(", ");
@@ -4481,11 +4481,11 @@ if (WebComponents.flags.shadow) {
       },
       applyStrictSelectorScope: function(selector, scopeSelector) {
         scopeSelector = scopeSelector.replace(/\[is=([^\]]*)\]/g, "$1");
-        var splits = [ " ", ">", "+", "~" ], scoped = selector, attrName = "[" + scopeSelector + "]";
+        let splits = [ " ", ">", "+", "~" ], scoped = selector, attrName = "[" + scopeSelector + "]";
         splits.forEach(function(sep) {
-          var parts = scoped.split(sep);
+          const parts = scoped.split(sep);
           scoped = parts.map(function(p) {
-            var t = p.trim().replace(polyfillHostRe, "");
+            const t = p.trim().replace(polyfillHostRe, "");
             if (t && splits.indexOf(t) < 0 && t.indexOf(attrName) < 0) {
               p = t.replace(/([^:]*)(:*)(.*)/, "$1" + attrName + "$2$3");
             }
@@ -4498,12 +4498,12 @@ if (WebComponents.flags.shadow) {
         return selector.replace(colonHostContextRe, polyfillHostContext).replace(colonHostRe, polyfillHost);
       },
       propertiesFromRule: function(rule) {
-        var cssText = rule.style.cssText;
+        let cssText = rule.style.cssText;
         if (rule.style.content && !rule.style.content.match(/['"]+|attr/)) {
           cssText = cssText.replace(/content:[^;]*;/g, "content: '" + rule.style.content + "';");
         }
         var style = rule.style;
-        for (var i in style) {
+        for (let i in style) {
           if (style[i] === "initial") {
             cssText += i + ": initial; ";
           }
@@ -4529,9 +4529,9 @@ if (WebComponents.flags.shadow) {
       }
     };
     var selectorRe = /([^{]*)({[\s\S]*?})/gim, cssCommentRe = /\/\*[^*]*\*+([^/*][^*]*\*+)*\//gim, cssCommentNextSelectorRe = /\/\*\s*@polyfill ([^*]*\*+([^/*][^*]*\*+)*\/)([^{]*?){/gim, cssContentNextSelectorRe = /polyfill-next-selector[^}]*content\:[\s]*?['"](.*?)['"][;\s]*}([^{]*?){/gim, cssCommentRuleRe = /\/\*\s@polyfill-rule([^*]*\*+([^/*][^*]*\*+)*)\//gim, cssContentRuleRe = /(polyfill-rule)[^}]*(content\:[\s]*['"](.*?)['"])[;\s]*[^}]*}/gim, cssCommentUnscopedRuleRe = /\/\*\s@polyfill-unscoped-rule([^*]*\*+([^/*][^*]*\*+)*)\//gim, cssContentUnscopedRuleRe = /(polyfill-unscoped-rule)[^}]*(content\:[\s]*['"](.*?)['"])[;\s]*[^}]*}/gim, cssPseudoRe = /::(x-[^\s{,(]*)/gim, cssPartRe = /::part\(([^)]*)\)/gim, polyfillHost = "-shadowcsshost", polyfillHostContext = "-shadowcsscontext", parenSuffix = ")(?:\\((" + "(?:\\([^)(]*\\)|[^)(]*)+?" + ")\\))?([^,{]*)";
-    var cssColonHostRe = new RegExp("(" + polyfillHost + parenSuffix, "gim"), cssColonHostContextRe = new RegExp("(" + polyfillHostContext + parenSuffix, "gim"), selectorReSuffix = "([>\\s~+[.,{:][\\s\\S]*)?$", colonHostRe = /\:host/gim, colonHostContextRe = /\:host-context/gim, polyfillHostNoCombinator = polyfillHost + "-no-combinator", polyfillHostRe = new RegExp(polyfillHost, "gim"), polyfillHostContextRe = new RegExp(polyfillHostContext, "gim"), shadowDOMSelectorsRe = [ /\^\^/g, /\^/g, /\/shadow\//g, /\/shadow-deep\//g, /::shadow/g, /\/deep\//g, /::content/g ];
+    const cssColonHostRe = new RegExp("(" + polyfillHost + parenSuffix, "gim"), cssColonHostContextRe = new RegExp("(" + polyfillHostContext + parenSuffix, "gim"), selectorReSuffix = "([>\\s~+[.,{:][\\s\\S]*)?$", colonHostRe = /\:host/gim, colonHostContextRe = /\:host-context/gim, polyfillHostNoCombinator = polyfillHost + "-no-combinator", polyfillHostRe = new RegExp(polyfillHost, "gim"), polyfillHostContextRe = new RegExp(polyfillHostContext, "gim"), shadowDOMSelectorsRe = [ /\^\^/g, /\^/g, /\/shadow\//g, /\/shadow-deep\//g, /::shadow/g, /\/deep\//g, /::content/g ];
     function stylesToCssText(styles, preserveComments) {
-      var cssText = "";
+      let cssText = "";
       Array.prototype.forEach.call(styles, function(s) {
         cssText += s.textContent + "\n\n";
       });
@@ -4541,14 +4541,14 @@ if (WebComponents.flags.shadow) {
       return cssText;
     }
     function cssTextToStyle(cssText) {
-      var style = document.createElement("style");
+      const style = document.createElement("style");
       style.textContent = cssText;
       return style;
     }
     function cssToRules(cssText) {
-      var style = cssTextToStyle(cssText);
+      const style = cssTextToStyle(cssText);
       document.head.appendChild(style);
-      var rules = [];
+      let rules = [];
       if (style.sheet) {
         try {
           rules = style.sheet.cssRules;
@@ -4559,13 +4559,13 @@ if (WebComponents.flags.shadow) {
       style.parentNode.removeChild(style);
       return rules;
     }
-    var frame = document.createElement("iframe");
+    const frame = document.createElement("iframe");
     frame.style.display = "none";
     function initFrame() {
       frame.initialized = true;
       document.body.appendChild(frame);
-      var doc = frame.contentDocument;
-      var base = doc.createElement("base");
+      const doc = frame.contentDocument;
+      const base = doc.createElement("base");
       base.href = document.baseURI;
       doc.head.appendChild(base);
     }
@@ -4582,9 +4582,9 @@ if (WebComponents.flags.shadow) {
       if (!callback) {
         return;
       }
-      var rules;
+      let rules;
       if (cssText.match("@import") && isChrome) {
-        var style = cssTextToStyle(cssText);
+        const style = cssTextToStyle(cssText);
         inFrame(function(doc) {
           doc.head.appendChild(style.impl);
           rules = Array.prototype.slice.call(style.sheet.cssRules, 0);
@@ -4607,14 +4607,14 @@ if (WebComponents.flags.shadow) {
       }
     }
     function addOwnSheet(cssText, name) {
-      var style = cssTextToStyle(cssText);
+      const style = cssTextToStyle(cssText);
       style.setAttribute(name, "");
       style.setAttribute(SHIMMED_ATTRIBUTE, "");
       document.head.appendChild(style);
     }
-    var SHIM_ATTRIBUTE = "shim-shadowdom";
+    const SHIM_ATTRIBUTE = "shim-shadowdom";
     var SHIMMED_ATTRIBUTE = "shim-shadowdom-css";
-    var NO_SHIM_ATTRIBUTE = "no-shim";
+    const NO_SHIM_ATTRIBUTE = "no-shim";
     var sheet;
     function getSheet() {
       if (!sheet) {
@@ -4630,19 +4630,19 @@ if (WebComponents.flags.shadow) {
       var head = doc.querySelector("head");
       head.insertBefore(getSheet(), head.childNodes[0]);
       document.addEventListener("DOMContentLoaded", function() {
-        var urlResolver = scope.urlResolver;
+        const urlResolver = scope.urlResolver;
         if (window.HTMLImports && !HTMLImports.useNative) {
-          var SHIM_SHEET_SELECTOR = "link[rel=stylesheet]" + "[" + SHIM_ATTRIBUTE + "]";
-          var SHIM_STYLE_SELECTOR = "style[" + SHIM_ATTRIBUTE + "]";
+          const SHIM_SHEET_SELECTOR = "link[rel=stylesheet]" + "[" + SHIM_ATTRIBUTE + "]";
+          const SHIM_STYLE_SELECTOR = "style[" + SHIM_ATTRIBUTE + "]";
           HTMLImports.importer.documentPreloadSelectors += "," + SHIM_SHEET_SELECTOR;
           HTMLImports.importer.importsPreloadSelectors += "," + SHIM_SHEET_SELECTOR;
           HTMLImports.parser.documentSelectors = [ HTMLImports.parser.documentSelectors, SHIM_SHEET_SELECTOR, SHIM_STYLE_SELECTOR ].join(",");
-          var originalParseGeneric = HTMLImports.parser.parseGeneric;
+          const originalParseGeneric = HTMLImports.parser.parseGeneric;
           HTMLImports.parser.parseGeneric = function(elt) {
             if (elt[SHIMMED_ATTRIBUTE]) {
               return;
             }
-            var style = elt.__importElement || elt;
+            let style = elt.__importElement || elt;
             if (!style.hasAttribute(SHIM_ATTRIBUTE)) {
               originalParseGeneric.call(this, elt);
               return;
@@ -4667,7 +4667,7 @@ if (WebComponents.flags.shadow) {
             this.markParsingComplete(elt);
             this.parseNext();
           };
-          var hasResource = HTMLImports.parser.hasResource;
+          const hasResource = HTMLImports.parser.hasResource;
           HTMLImports.parser.hasResource = function(node) {
             if (node.localName === "link" && node.rel === "stylesheet" && node.hasAttribute(SHIM_ATTRIBUTE)) {
               return node.__resource;
@@ -4694,18 +4694,18 @@ if (WebComponents.flags.shadow) {
 })(window.WebComponents);
 
 (function(global) {
-  var registrationsTable = new WeakMap();
-  var setImmediate;
+  const registrationsTable = new WeakMap();
+  let setImmediate;
   if (/Trident/.test(navigator.userAgent)) {
     setImmediate = setTimeout;
   } else if (window.setImmediate) {
     setImmediate = window.setImmediate;
   } else {
-    var setImmediateQueue = [];
-    var sentinel = String(Math.random());
+    let setImmediateQueue = [];
+    const sentinel = String(Math.random());
     window.addEventListener("message", function(e) {
       if (e.data === sentinel) {
-        var queue = setImmediateQueue;
+        const queue = setImmediateQueue;
         setImmediateQueue = [];
         queue.forEach(function(func) {
           func();
@@ -4717,8 +4717,8 @@ if (WebComponents.flags.shadow) {
       window.postMessage(sentinel, "*");
     };
   }
-  var isScheduled = false;
-  var scheduledObservers = [];
+  let isScheduled = false;
+  let scheduledObservers = [];
   function scheduleCallback(observer) {
     scheduledObservers.push(observer);
     if (!isScheduled) {
@@ -4731,14 +4731,14 @@ if (WebComponents.flags.shadow) {
   }
   function dispatchCallbacks() {
     isScheduled = false;
-    var observers = scheduledObservers;
+    const observers = scheduledObservers;
     scheduledObservers = [];
     observers.sort(function(o1, o2) {
       return o1.uid_ - o2.uid_;
     });
-    var anyNonEmpty = false;
+    let anyNonEmpty = false;
     observers.forEach(function(observer) {
-      var queue = observer.takeRecords();
+      const queue = observer.takeRecords();
       removeTransientObserversFor(observer);
       if (queue.length) {
         observer.callback_(queue, observer);
@@ -4749,7 +4749,7 @@ if (WebComponents.flags.shadow) {
   }
   function removeTransientObserversFor(observer) {
     observer.nodes_.forEach(function(node) {
-      var registrations = registrationsTable.get(node);
+      const registrations = registrationsTable.get(node);
       if (!registrations) return;
       registrations.forEach(function(registration) {
         if (registration.observer === observer) registration.removeTransientObservers();
@@ -4757,20 +4757,20 @@ if (WebComponents.flags.shadow) {
     });
   }
   function forEachAncestorAndObserverEnqueueRecord(target, callback) {
-    for (var node = target; node; node = node.parentNode) {
-      var registrations = registrationsTable.get(node);
+    for (let node = target; node; node = node.parentNode) {
+      const registrations = registrationsTable.get(node);
       if (registrations) {
-        for (var j = 0; j < registrations.length; j++) {
-          var registration = registrations[j];
-          var options = registration.options;
+        for (let j = 0; j < registrations.length; j++) {
+          const registration = registrations[j];
+          const options = registration.options;
           if (node !== target && !options.subtree) continue;
-          var record = callback(options);
+          const record = callback(options);
           if (record) registration.enqueue(record);
         }
       }
     }
   }
-  var uidCounter = 0;
+  let uidCounter = 0;
   function JsMutationObserver(callback) {
     this.callback_ = callback;
     this.nodes_ = [];
@@ -4783,10 +4783,10 @@ if (WebComponents.flags.shadow) {
       if (!options.childList && !options.attributes && !options.characterData || options.attributeOldValue && !options.attributes || options.attributeFilter && options.attributeFilter.length && !options.attributes || options.characterDataOldValue && !options.characterData) {
         throw new SyntaxError();
       }
-      var registrations = registrationsTable.get(target);
+      let registrations = registrationsTable.get(target);
       if (!registrations) registrationsTable.set(target, registrations = []);
-      var registration;
-      for (var i = 0; i < registrations.length; i++) {
+      let registration;
+      for (let i = 0; i < registrations.length; i++) {
         if (registrations[i].observer === this) {
           registration = registrations[i];
           registration.removeListeners();
@@ -4803,9 +4803,9 @@ if (WebComponents.flags.shadow) {
     },
     disconnect: function() {
       this.nodes_.forEach(function(node) {
-        var registrations = registrationsTable.get(node);
-        for (var i = 0; i < registrations.length; i++) {
-          var registration = registrations[i];
+        const registrations = registrationsTable.get(node);
+        for (let i = 0; i < registrations.length; i++) {
+          const registration = registrations[i];
           if (registration.observer === this) {
             registration.removeListeners();
             registrations.splice(i, 1);
@@ -4816,7 +4816,7 @@ if (WebComponents.flags.shadow) {
       this.records_ = [];
     },
     takeRecords: function() {
-      var copyOfRecords = this.records_;
+      const copyOfRecords = this.records_;
       this.records_ = [];
       return copyOfRecords;
     }
@@ -4833,7 +4833,7 @@ if (WebComponents.flags.shadow) {
     this.oldValue = null;
   }
   function copyMutationRecord(original) {
-    var record = new MutationRecord(original.type, original.target);
+    const record = new MutationRecord(original.type, original.target);
     record.addedNodes = original.addedNodes.slice();
     record.removedNodes = original.removedNodes.slice();
     record.previousSibling = original.previousSibling;
@@ -4843,7 +4843,7 @@ if (WebComponents.flags.shadow) {
     record.oldValue = original.oldValue;
     return record;
   }
-  var currentRecord, recordWithOldValue;
+  let currentRecord, recordWithOldValue;
   function getRecord(type, target) {
     return currentRecord = new MutationRecord(type, target);
   }
@@ -4872,11 +4872,11 @@ if (WebComponents.flags.shadow) {
   }
   Registration.prototype = {
     enqueue: function(record) {
-      var records = this.observer.records_;
-      var length = records.length;
+      const records = this.observer.records_;
+      const length = records.length;
       if (records.length > 0) {
-        var lastRecord = records[length - 1];
-        var recordToReplaceLast = selectRecord(lastRecord, record);
+        const lastRecord = records[length - 1];
+        const recordToReplaceLast = selectRecord(lastRecord, record);
         if (recordToReplaceLast) {
           records[length - 1] = recordToReplaceLast;
           return;
@@ -4890,7 +4890,7 @@ if (WebComponents.flags.shadow) {
       this.addListeners_(this.target);
     },
     addListeners_: function(node) {
-      var options = this.options;
+      const options = this.options;
       if (options.attributes) node.addEventListener("DOMAttrModified", this, true);
       if (options.characterData) node.addEventListener("DOMCharacterDataModified", this, true);
       if (options.childList) node.addEventListener("DOMNodeInserted", this, true);
@@ -4900,7 +4900,7 @@ if (WebComponents.flags.shadow) {
       this.removeListeners_(this.target);
     },
     removeListeners_: function(node) {
-      var options = this.options;
+      const options = this.options;
       if (options.attributes) node.removeEventListener("DOMAttrModified", this, true);
       if (options.characterData) node.removeEventListener("DOMCharacterDataModified", this, true);
       if (options.childList) node.removeEventListener("DOMNodeInserted", this, true);
@@ -4910,17 +4910,17 @@ if (WebComponents.flags.shadow) {
       if (node === this.target) return;
       this.addListeners_(node);
       this.transientObservedNodes.push(node);
-      var registrations = registrationsTable.get(node);
+      let registrations = registrationsTable.get(node);
       if (!registrations) registrationsTable.set(node, registrations = []);
       registrations.push(this);
     },
     removeTransientObservers: function() {
-      var transientObservedNodes = this.transientObservedNodes;
+      const transientObservedNodes = this.transientObservedNodes;
       this.transientObservedNodes = [];
       transientObservedNodes.forEach(function(node) {
         this.removeListeners_(node);
-        var registrations = registrationsTable.get(node);
-        for (var i = 0; i < registrations.length; i++) {
+        const registrations = registrationsTable.get(node);
+        for (let i = 0; i < registrations.length; i++) {
           if (registrations[i] === this) {
             registrations.splice(i, 1);
             break;
@@ -4932,8 +4932,8 @@ if (WebComponents.flags.shadow) {
       e.stopImmediatePropagation();
       switch (e.type) {
        case "DOMAttrModified":
-        var name = e.attrName;
-        var namespace = e.relatedNode.namespaceURI;
+        const name = e.attrName;
+        const namespace = e.relatedNode.namespaceURI;
         var target = e.target;
         var record = new getRecord("attributes", target);
         record.attributeName = name;
@@ -4965,8 +4965,8 @@ if (WebComponents.flags.shadow) {
 
        case "DOMNodeInserted":
         var target = e.relatedNode;
-        var changedNode = e.target;
-        var addedNodes, removedNodes;
+        const changedNode = e.target;
+        let addedNodes, removedNodes;
         if (e.type === "DOMNodeInserted") {
           addedNodes = [ changedNode ];
           removedNodes = [];
@@ -4974,8 +4974,8 @@ if (WebComponents.flags.shadow) {
           addedNodes = [];
           removedNodes = [ changedNode ];
         }
-        var previousSibling = changedNode.previousSibling;
-        var nextSibling = changedNode.nextSibling;
+        const previousSibling = changedNode.previousSibling;
+        const nextSibling = changedNode.nextSibling;
         var record = getRecord("childList", target);
         record.addedNodes = addedNodes;
         record.removedNodes = removedNodes;
@@ -4998,23 +4998,23 @@ window.HTMLImports = window.HTMLImports || {
 };
 
 (function(scope) {
-  var IMPORT_LINK_TYPE = "import";
-  var useNative = Boolean(IMPORT_LINK_TYPE in document.createElement("link"));
-  var hasShadowDOMPolyfill = Boolean(window.ShadowDOMPolyfill);
-  var wrap = function(node) {
+  const IMPORT_LINK_TYPE = "import";
+  const useNative = Boolean(IMPORT_LINK_TYPE in document.createElement("link"));
+  const hasShadowDOMPolyfill = Boolean(window.ShadowDOMPolyfill);
+  const wrap = function(node) {
     return hasShadowDOMPolyfill ? ShadowDOMPolyfill.wrapIfNeeded(node) : node;
   };
-  var rootDocument = wrap(document);
-  var currentScriptDescriptor = {
+  const rootDocument = wrap(document);
+  const currentScriptDescriptor = {
     get: function() {
-      var script = HTMLImports.currentScript || document.currentScript || (document.readyState !== "complete" ? document.scripts[document.scripts.length - 1] : null);
+      const script = HTMLImports.currentScript || document.currentScript || (document.readyState !== "complete" ? document.scripts[document.scripts.length - 1] : null);
       return wrap(script);
     },
     configurable: true
   };
   Object.defineProperty(document, "_currentScript", currentScriptDescriptor);
   Object.defineProperty(rootDocument, "_currentScript", currentScriptDescriptor);
-  var isIE = /Trident/.test(navigator.userAgent);
+  const isIE = /Trident/.test(navigator.userAgent);
   function whenReady(callback, doc) {
     doc = doc || rootDocument;
     whenDocumentReady(function() {
@@ -5028,7 +5028,7 @@ window.HTMLImports = window.HTMLImports || {
   }
   function whenDocumentReady(callback, doc) {
     if (!isDocumentReady(doc)) {
-      var checkReady = function() {
+      const checkReady = function() {
         if (doc.readyState === "complete" || doc.readyState === requiredReadyState) {
           doc.removeEventListener(READY_EVENT, checkReady);
           whenDocumentReady(callback, doc);
@@ -5043,8 +5043,8 @@ window.HTMLImports = window.HTMLImports || {
     event.target.__loaded = true;
   }
   function watchImportsLoad(callback, doc) {
-    var imports = doc.querySelectorAll("link[rel=import]");
-    var loaded = 0, l = imports.length;
+    const imports = doc.querySelectorAll("link[rel=import]");
+    let loaded = 0, l = imports.length;
     function checkDone(d) {
       if (loaded == l && callback) {
         callback();
@@ -5056,7 +5056,7 @@ window.HTMLImports = window.HTMLImports || {
       checkDone();
     }
     if (l) {
-      for (var i = 0, imp; i < l && (imp = imports[i]); i++) {
+      for (let i = 0, imp; i < l && (imp = imports[i]); i++) {
         if (isImportLoaded(imp)) {
           loadedImport.call(imp, {
             target: imp
@@ -5075,7 +5075,7 @@ window.HTMLImports = window.HTMLImports || {
   }
   if (useNative) {
     new MutationObserver(function(mxns) {
-      for (var i = 0, l = mxns.length, m; i < l && (m = mxns[i]); i++) {
+      for (let i = 0, l = mxns.length, m; i < l && (m = mxns[i]); i++) {
         if (m.addedNodes) {
           handleImports(m.addedNodes);
         }
@@ -5084,7 +5084,7 @@ window.HTMLImports = window.HTMLImports || {
       childList: true
     });
     function handleImports(nodes) {
-      for (var i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
+      for (let i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
         if (isImport(n)) {
           handleImport(n);
         }
@@ -5094,7 +5094,7 @@ window.HTMLImports = window.HTMLImports || {
       return element.localName === "link" && element.rel === "import";
     }
     function handleImport(element) {
-      var loaded = element.import;
+      const loaded = element.import;
       if (loaded) {
         markTargetLoaded({
           target: element
@@ -5106,8 +5106,8 @@ window.HTMLImports = window.HTMLImports || {
     }
     (function() {
       if (document.readyState === "loading") {
-        var imports = document.querySelectorAll("link[rel=import]");
-        for (var i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
+        const imports = document.querySelectorAll("link[rel=import]");
+        for (let i = 0, l = imports.length, imp; i < l && (imp = imports[i]); i++) {
           handleImport(imp);
         }
       }
@@ -5128,11 +5128,11 @@ window.HTMLImports = window.HTMLImports || {
 })(HTMLImports);
 
 (function(scope) {
-  var modules = [];
-  var addModule = function(module) {
+  const modules = [];
+  const addModule = function(module) {
     modules.push(module);
   };
-  var initializeModules = function() {
+  const initializeModules = function() {
     modules.forEach(function(module) {
       module(scope);
     });
@@ -5142,23 +5142,23 @@ window.HTMLImports = window.HTMLImports || {
 })(HTMLImports);
 
 HTMLImports.addModule(function(scope) {
-  var CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
-  var CSS_IMPORT_REGEXP = /(@import[\s]+(?!url\())([^;]*)(;)/g;
-  var path = {
+  const CSS_URL_REGEXP = /(url\()([^)]*)(\))/g;
+  const CSS_IMPORT_REGEXP = /(@import[\s]+(?!url\())([^;]*)(;)/g;
+  const path = {
     resolveUrlsInStyle: function(style) {
-      var doc = style.ownerDocument;
-      var resolver = doc.createElement("a");
+      const doc = style.ownerDocument;
+      const resolver = doc.createElement("a");
       style.textContent = this.resolveUrlsInCssText(style.textContent, resolver);
       return style;
     },
     resolveUrlsInCssText: function(cssText, urlObj) {
-      var r = this.replaceUrls(cssText, urlObj, CSS_URL_REGEXP);
+      let r = this.replaceUrls(cssText, urlObj, CSS_URL_REGEXP);
       r = this.replaceUrls(r, urlObj, CSS_IMPORT_REGEXP);
       return r;
     },
     replaceUrls: function(text, urlObj, regexp) {
       return text.replace(regexp, function(m, pre, url, post) {
-        var urlPath = url.replace(/["']/g, "");
+        let urlPath = url.replace(/["']/g, "");
         urlObj.href = urlPath;
         urlPath = urlObj.href;
         return pre + "'" + urlPath + "'" + post;
@@ -5175,14 +5175,14 @@ HTMLImports.addModule(function(scope) {
       return request.status >= 200 && request.status < 300 || request.status === 304 || request.status === 0;
     },
     load: function(url, next, nextContext) {
-      var request = new XMLHttpRequest();
+      const request = new XMLHttpRequest();
       if (scope.flags.debug || scope.flags.bust) {
         url += "?" + Math.random();
       }
       request.open("GET", url, xhr.async);
       request.addEventListener("readystatechange", function(e) {
         if (request.readyState === 4) {
-          var locationHeader = request.getResponseHeader("Location");
+          const locationHeader = request.getResponseHeader("Location");
           var redirectedUrl = null;
           if (locationHeader) {
             var redirectedUrl = locationHeader.substr(0, 1) === "/" ? location.origin + locationHeader : locationHeader;
@@ -5201,9 +5201,9 @@ HTMLImports.addModule(function(scope) {
 });
 
 HTMLImports.addModule(function(scope) {
-  var xhr = scope.xhr;
-  var flags = scope.flags;
-  var Loader = function(onLoad, onComplete) {
+  const xhr = scope.xhr;
+  const flags = scope.flags;
+  const Loader = function(onLoad, onComplete) {
     this.cache = {};
     this.onload = onLoad;
     this.oncomplete = onComplete;
@@ -5213,7 +5213,7 @@ HTMLImports.addModule(function(scope) {
   Loader.prototype = {
     addNodes: function(nodes) {
       this.inflight += nodes.length;
-      for (var i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
+      for (let i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
         this.require(n);
       }
       this.checkDone();
@@ -5224,7 +5224,7 @@ HTMLImports.addModule(function(scope) {
       this.checkDone();
     },
     require: function(elt) {
-      var url = elt.src || elt.href;
+      const url = elt.src || elt.href;
       elt.__nodeUrl = url;
       if (!this.dedupe(url, elt)) {
         this.fetch(url, elt);
@@ -5235,7 +5235,7 @@ HTMLImports.addModule(function(scope) {
         this.pending[url].push(elt);
         return true;
       }
-      var resource;
+      let resource;
       if (this.cache[url]) {
         this.onload(url, elt, this.cache[url]);
         this.tail();
@@ -5247,9 +5247,9 @@ HTMLImports.addModule(function(scope) {
     fetch: function(url, elt) {
       flags.load && console.log("fetch", url, elt);
       if (url.match(/^data:/)) {
-        var pieces = url.split(",");
-        var header = pieces[0];
-        var body = pieces[1];
+        const pieces = url.split(",");
+        const header = pieces[0];
+        let body = pieces[1];
         if (header.indexOf(";base64") > -1) {
           body = atob(body);
         } else {
@@ -5259,7 +5259,7 @@ HTMLImports.addModule(function(scope) {
           this.receive(url, elt, null, body);
         }.bind(this), 0);
       } else {
-        var receiveXhr = function(err, resource, redirectedUrl) {
+        const receiveXhr = function(err, resource, redirectedUrl) {
           this.receive(url, elt, err, resource, redirectedUrl);
         }.bind(this);
         xhr.load(url, receiveXhr);
@@ -5267,8 +5267,8 @@ HTMLImports.addModule(function(scope) {
     },
     receive: function(url, elt, err, resource, redirectedUrl) {
       this.cache[url] = resource;
-      var $p = this.pending[url];
-      for (var i = 0, l = $p.length, p; i < l && (p = $p[i]); i++) {
+      const $p = this.pending[url];
+      for (let i = 0, l = $p.length, p; i < l && (p = $p[i]); i++) {
         this.onload(url, p, resource, err, redirectedUrl);
         this.tail();
       }
@@ -5288,13 +5288,13 @@ HTMLImports.addModule(function(scope) {
 });
 
 HTMLImports.addModule(function(scope) {
-  var Observer = function(addCallback) {
+  const Observer = function(addCallback) {
     this.addCallback = addCallback;
     this.mo = new MutationObserver(this.handler.bind(this));
   };
   Observer.prototype = {
     handler: function(mutations) {
-      for (var i = 0, l = mutations.length, m; i < l && (m = mutations[i]); i++) {
+      for (let i = 0, l = mutations.length, m; i < l && (m = mutations[i]); i++) {
         if (m.type === "childList" && m.addedNodes.length) {
           this.addedNodes(m.addedNodes);
         }
@@ -5304,7 +5304,7 @@ HTMLImports.addModule(function(scope) {
       if (this.addCallback) {
         this.addCallback(nodes);
       }
-      for (var i = 0, l = nodes.length, n, loading; i < l && (n = nodes[i]); i++) {
+      for (let i = 0, l = nodes.length, n, loading; i < l && (n = nodes[i]); i++) {
         if (n.children && n.children.length) {
           this.addedNodes(n.children);
         }
@@ -5321,13 +5321,13 @@ HTMLImports.addModule(function(scope) {
 });
 
 HTMLImports.addModule(function(scope) {
-  var path = scope.path;
-  var rootDocument = scope.rootDocument;
-  var flags = scope.flags;
-  var isIE = scope.isIE;
-  var IMPORT_LINK_TYPE = scope.IMPORT_LINK_TYPE;
-  var IMPORT_SELECTOR = "link[rel=" + IMPORT_LINK_TYPE + "]";
-  var importParser = {
+  const path = scope.path;
+  const rootDocument = scope.rootDocument;
+  const flags = scope.flags;
+  const isIE = scope.isIE;
+  const IMPORT_LINK_TYPE = scope.IMPORT_LINK_TYPE;
+  const IMPORT_SELECTOR = "link[rel=" + IMPORT_LINK_TYPE + "]";
+  const importParser = {
     documentSelectors: IMPORT_SELECTOR,
     importsSelectors: [ IMPORT_SELECTOR, "link[rel=stylesheet]", "style", "script:not([type])", 'script[type="text/javascript"]' ].join(","),
     map: {
@@ -5337,7 +5337,7 @@ HTMLImports.addModule(function(scope) {
     },
     dynamicElements: [],
     parseNext: function() {
-      var next = this.nextToParse();
+      const next = this.nextToParse();
       if (next) {
         this.parse(next);
       }
@@ -5347,7 +5347,7 @@ HTMLImports.addModule(function(scope) {
         flags.parse && console.log("[%s] is already parsed", elt.localName);
         return;
       }
-      var fn = this[this.map[elt.localName]];
+      const fn = this[this.map[elt.localName]];
       if (fn) {
         this.markParsing(elt);
         fn.call(this, elt);
@@ -5374,7 +5374,7 @@ HTMLImports.addModule(function(scope) {
       flags.parse && console.log("completed", elt);
     },
     markDynamicParsingComplete: function(elt) {
-      var i = this.dynamicElements.indexOf(elt);
+      const i = this.dynamicElements.indexOf(elt);
       if (i >= 0) {
         this.dynamicElements.splice(i, 1);
       }
@@ -5397,7 +5397,7 @@ HTMLImports.addModule(function(scope) {
         }));
       }
       if (elt.__pending) {
-        var fn;
+        let fn;
         while (elt.__pending.length) {
           fn = elt.__pending.shift();
           if (fn) {
@@ -5418,7 +5418,7 @@ HTMLImports.addModule(function(scope) {
       }
     },
     parseStyle: function(elt) {
-      var src = elt;
+      const src = elt;
       elt = cloneStyle(elt);
       elt.__importElement = src;
       this.parseGeneric(elt);
@@ -5428,24 +5428,24 @@ HTMLImports.addModule(function(scope) {
       this.addElementToDocument(elt);
     },
     rootImportForElement: function(elt) {
-      var n = elt;
+      let n = elt;
       while (n.ownerDocument.__importLink) {
         n = n.ownerDocument.__importLink;
       }
       return n;
     },
     addElementToDocument: function(elt) {
-      var port = this.rootImportForElement(elt.__importElement || elt);
-      var l = port.__insertedElements = port.__insertedElements || 0;
-      var refNode = port.nextElementSibling;
-      for (var i = 0; i < l; i++) {
+      const port = this.rootImportForElement(elt.__importElement || elt);
+      const l = port.__insertedElements = port.__insertedElements || 0;
+      let refNode = port.nextElementSibling;
+      for (let i = 0; i < l; i++) {
         refNode = refNode && refNode.nextElementSibling;
       }
       port.parentNode.insertBefore(elt, refNode);
     },
     trackElement: function(elt, callback) {
-      var self = this;
-      var done = function(e) {
+      const self = this;
+      const done = function(e) {
         if (callback) {
           callback(e);
         }
@@ -5455,14 +5455,14 @@ HTMLImports.addModule(function(scope) {
       elt.addEventListener("load", done);
       elt.addEventListener("error", done);
       if (isIE && elt.localName === "style") {
-        var fakeLoad = false;
+        let fakeLoad = false;
         if (elt.textContent.indexOf("@import") == -1) {
           fakeLoad = true;
         } else if (elt.sheet) {
           fakeLoad = true;
-          var csr = elt.sheet.cssRules;
-          var len = csr ? csr.length : 0;
-          for (var i = 0, r; i < len && (r = csr[i]); i++) {
+          const csr = elt.sheet.cssRules;
+          const len = csr ? csr.length : 0;
+          for (let i = 0, r; i < len && (r = csr[i]); i++) {
             if (r.type === CSSRule.IMPORT_RULE) {
               fakeLoad = fakeLoad && Boolean(r.styleSheet);
             }
@@ -5476,7 +5476,7 @@ HTMLImports.addModule(function(scope) {
       }
     },
     parseScript: function(scriptElt) {
-      var script = document.createElement("script");
+      const script = document.createElement("script");
       script.__importElement = scriptElt;
       script.src = scriptElt.src ? scriptElt.src : generateScriptDataUrl(scriptElt);
       scope.currentScript = scriptElt;
@@ -5493,8 +5493,8 @@ HTMLImports.addModule(function(scope) {
     nextToParseInDoc: function(doc, link) {
       if (doc && this._mayParse.indexOf(doc) < 0) {
         this._mayParse.push(doc);
-        var nodes = doc.querySelectorAll(this.parseSelectorsForNode(doc));
-        for (var i = 0, l = nodes.length, p = 0, n; i < l && (n = nodes[i]); i++) {
+        const nodes = doc.querySelectorAll(this.parseSelectorsForNode(doc));
+        for (let i = 0, l = nodes.length, p = 0, n; i < l && (n = nodes[i]); i++) {
           if (!this.isParsed(n)) {
             if (this.hasResource(n)) {
               return nodeIsImport(n) ? this.nextToParseInDoc(n.import, n) : n;
@@ -5510,7 +5510,7 @@ HTMLImports.addModule(function(scope) {
       return this.dynamicElements[0];
     },
     parseSelectorsForNode: function(node) {
-      var doc = node.ownerDocument || node;
+      const doc = node.ownerDocument || node;
       return doc === rootDocument ? this.documentSelectors : this.importsSelectors;
     },
     isParsed: function(node) {
@@ -5530,22 +5530,22 @@ HTMLImports.addModule(function(scope) {
     return elt.localName === "link" && elt.rel === IMPORT_LINK_TYPE;
   }
   function generateScriptDataUrl(script) {
-    var scriptContent = generateScriptContent(script);
+    const scriptContent = generateScriptContent(script);
     return "data:text/javascript;charset=utf-8," + encodeURIComponent(scriptContent);
   }
   function generateScriptContent(script) {
     return script.textContent + generateSourceMapHint(script);
   }
   function generateSourceMapHint(script) {
-    var owner = script.ownerDocument;
+    const owner = script.ownerDocument;
     owner.__importedScripts = owner.__importedScripts || 0;
-    var moniker = script.ownerDocument.baseURI;
-    var num = owner.__importedScripts ? "-" + owner.__importedScripts : "";
+    const moniker = script.ownerDocument.baseURI;
+    const num = owner.__importedScripts ? "-" + owner.__importedScripts : "";
     owner.__importedScripts++;
     return "\n//# sourceURL=" + moniker + num + ".js\n";
   }
   function cloneStyle(style) {
-    var clone = style.ownerDocument.createElement("style");
+    const clone = style.ownerDocument.createElement("style");
     clone.textContent = style.textContent;
     path.resolveUrlsInStyle(clone);
     return clone;
@@ -5555,14 +5555,14 @@ HTMLImports.addModule(function(scope) {
 });
 
 HTMLImports.addModule(function(scope) {
-  var flags = scope.flags;
-  var IMPORT_LINK_TYPE = scope.IMPORT_LINK_TYPE;
-  var IMPORT_SELECTOR = scope.IMPORT_SELECTOR;
-  var rootDocument = scope.rootDocument;
-  var Loader = scope.Loader;
-  var Observer = scope.Observer;
-  var parser = scope.parser;
-  var importer = {
+  const flags = scope.flags;
+  const IMPORT_LINK_TYPE = scope.IMPORT_LINK_TYPE;
+  const IMPORT_SELECTOR = scope.IMPORT_SELECTOR;
+  const rootDocument = scope.rootDocument;
+  const Loader = scope.Loader;
+  const Observer = scope.Observer;
+  const parser = scope.parser;
+  const importer = {
     documents: {},
     documentPreloadSelectors: IMPORT_SELECTOR,
     importsPreloadSelectors: [ IMPORT_SELECTOR ].join(","),
@@ -5570,14 +5570,14 @@ HTMLImports.addModule(function(scope) {
       importLoader.addNode(node);
     },
     loadSubtree: function(parent) {
-      var nodes = this.marshalNodes(parent);
+      const nodes = this.marshalNodes(parent);
       importLoader.addNodes(nodes);
     },
     marshalNodes: function(parent) {
       return parent.querySelectorAll(this.loadSelectorsForNode(parent));
     },
     loadSelectorsForNode: function(node) {
-      var doc = node.ownerDocument || node;
+      const doc = node.ownerDocument || node;
       return doc === rootDocument ? this.documentPreloadSelectors : this.importsPreloadSelectors;
     },
     loaded: function(url, elt, resource, err, redirectedUrl) {
@@ -5585,7 +5585,7 @@ HTMLImports.addModule(function(scope) {
       elt.__resource = resource;
       elt.__error = err;
       if (isImportLink(elt)) {
-        var doc = this.documents[url];
+        let doc = this.documents[url];
         if (doc === undefined) {
           doc = err ? null : makeDocument(resource, redirectedUrl || url);
           if (doc) {
@@ -5607,7 +5607,7 @@ HTMLImports.addModule(function(scope) {
       parser.parseNext();
     }
   };
-  var importLoader = new Loader(importer.loaded.bind(importer), importer.loadedAll.bind(importer));
+  const importLoader = new Loader(importer.loaded.bind(importer), importer.loadedAll.bind(importer));
   importer.observer = new Observer();
   function isImportLink(elt) {
     return isLinkRel(elt, IMPORT_LINK_TYPE);
@@ -5616,14 +5616,14 @@ HTMLImports.addModule(function(scope) {
     return elt.localName === "link" && elt.getAttribute("rel") === rel;
   }
   function makeDocument(resource, url) {
-    var doc = document.implementation.createHTMLDocument(IMPORT_LINK_TYPE);
+    const doc = document.implementation.createHTMLDocument(IMPORT_LINK_TYPE);
     doc._URL = url;
-    var base = doc.createElement("base");
+    const base = doc.createElement("base");
     base.setAttribute("href", url);
     if (!doc.baseURI) {
       doc.baseURI = url;
     }
-    var meta = doc.createElement("meta");
+    const meta = doc.createElement("meta");
     meta.setAttribute("charset", "utf-8");
     doc.head.appendChild(meta);
     doc.head.appendChild(base);
@@ -5634,9 +5634,9 @@ HTMLImports.addModule(function(scope) {
     return doc;
   }
   if (!document.baseURI) {
-    var baseURIDescriptor = {
+    const baseURIDescriptor = {
       get: function() {
-        var base = document.querySelector("base");
+        const base = document.querySelector("base");
         return base ? base.href : window.location.href;
       },
       configurable: true
@@ -5649,12 +5649,12 @@ HTMLImports.addModule(function(scope) {
 });
 
 HTMLImports.addModule(function(scope) {
-  var parser = scope.parser;
-  var importer = scope.importer;
-  var dynamic = {
+  const parser = scope.parser;
+  const importer = scope.importer;
+  const dynamic = {
     added: function(nodes) {
-      var owner, parsed;
-      for (var i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
+      let owner, parsed;
+      for (let i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
         if (!owner) {
           owner = n.ownerDocument;
           parsed = parser.isParsed(owner);
@@ -5676,7 +5676,7 @@ HTMLImports.addModule(function(scope) {
     }
   };
   importer.observer.addCallback = dynamic.added.bind(dynamic);
-  var matches = HTMLElement.prototype.matches || HTMLElement.prototype.matchesSelector || HTMLElement.prototype.webkitMatchesSelector || HTMLElement.prototype.mozMatchesSelector || HTMLElement.prototype.msMatchesSelector;
+  const matches = HTMLElement.prototype.matches || HTMLElement.prototype.matchesSelector || HTMLElement.prototype.webkitMatchesSelector || HTMLElement.prototype.mozMatchesSelector || HTMLElement.prototype.msMatchesSelector;
 });
 
 (function(scope) {
@@ -5686,13 +5686,13 @@ HTMLImports.addModule(function(scope) {
   }
   if (typeof window.CustomEvent !== "function") {
     window.CustomEvent = function(inType, dictionary) {
-      var e = document.createEvent("HTMLEvents");
+      const e = document.createEvent("HTMLEvents");
       e.initEvent(inType, dictionary.bubbles === false ? false : true, dictionary.cancelable === false ? false : true, dictionary.detail);
       return e;
     };
   }
   initializeModules();
-  var rootDocument = scope.rootDocument;
+  const rootDocument = scope.rootDocument;
   function bootstrap() {
     HTMLImports.importer.bootDocument(rootDocument);
   }
@@ -5708,12 +5708,12 @@ window.CustomElements = window.CustomElements || {
 };
 
 (function(scope) {
-  var flags = scope.flags;
-  var modules = [];
-  var addModule = function(module) {
+  const flags = scope.flags;
+  const modules = [];
+  const addModule = function(module) {
     modules.push(module);
   };
-  var initializeModules = function() {
+  const initializeModules = function() {
     modules.forEach(function(module) {
       module(scope);
     });
@@ -5725,7 +5725,7 @@ window.CustomElements = window.CustomElements || {
 })(CustomElements);
 
 CustomElements.addModule(function(scope) {
-  var IMPORT_LINK_TYPE = window.HTMLImports ? HTMLImports.IMPORT_LINK_TYPE : "none";
+  const IMPORT_LINK_TYPE = window.HTMLImports ? HTMLImports.IMPORT_LINK_TYPE : "none";
   function forSubtree(node, cb) {
     findAllElements(node, function(e) {
       if (cb(e)) {
@@ -5736,7 +5736,7 @@ CustomElements.addModule(function(scope) {
     forRoots(node, cb);
   }
   function findAllElements(node, find, data) {
-    var e = node.firstElementChild;
+    let e = node.firstElementChild;
     if (!e) {
       e = node.firstChild;
       while (e && e.nodeType !== Node.ELEMENT_NODE) {
@@ -5752,13 +5752,13 @@ CustomElements.addModule(function(scope) {
     return null;
   }
   function forRoots(node, cb) {
-    var root = node.shadowRoot;
+    let root = node.shadowRoot;
     while (root) {
       forSubtree(root, cb);
       root = root.olderShadowRoot;
     }
   }
-  var processingDocuments;
+  let processingDocuments;
   function forDocumentTree(doc, cb) {
     processingDocuments = [];
     _forDocumentTree(doc, cb);
@@ -5770,8 +5770,8 @@ CustomElements.addModule(function(scope) {
       return;
     }
     processingDocuments.push(doc);
-    var imports = doc.querySelectorAll("link[rel=" + IMPORT_LINK_TYPE + "]");
-    for (var i = 0, l = imports.length, n; i < l && (n = imports[i]); i++) {
+    const imports = doc.querySelectorAll("link[rel=" + IMPORT_LINK_TYPE + "]");
+    for (let i = 0, l = imports.length, n; i < l && (n = imports[i]); i++) {
       if (n.import) {
         _forDocumentTree(n.import, cb);
       }
@@ -5783,9 +5783,9 @@ CustomElements.addModule(function(scope) {
 });
 
 CustomElements.addModule(function(scope) {
-  var flags = scope.flags;
-  var forSubtree = scope.forSubtree;
-  var forDocumentTree = scope.forDocumentTree;
+  const flags = scope.flags;
+  const forSubtree = scope.forSubtree;
+  const forDocumentTree = scope.forDocumentTree;
   function addedNode(node) {
     return added(node) || addedSubtree(node);
   }
@@ -5812,8 +5812,8 @@ CustomElements.addModule(function(scope) {
   }
   var hasPolyfillMutations = !window.MutationObserver || window.MutationObserver === window.JsMutationObserver;
   scope.hasPolyfillMutations = hasPolyfillMutations;
-  var isPendingMutations = false;
-  var pendingMutations = [];
+  let isPendingMutations = false;
+  let pendingMutations = [];
   function deferMutation(fn) {
     pendingMutations.push(fn);
     if (!isPendingMutations) {
@@ -5823,8 +5823,8 @@ CustomElements.addModule(function(scope) {
   }
   function takeMutations() {
     isPendingMutations = false;
-    var $p = pendingMutations;
-    for (var i = 0, l = $p.length, p; i < l && (p = $p[i]); i++) {
+    const $p = pendingMutations;
+    for (let i = 0, l = $p.length, p; i < l && (p = $p[i]); i++) {
       p();
     }
     pendingMutations = [];
@@ -5874,8 +5874,8 @@ CustomElements.addModule(function(scope) {
     }
   }
   function inDocument(element) {
-    var p = element;
-    var doc = wrap(document);
+    let p = element;
+    const doc = wrap(document);
     while (p) {
       if (p == doc) {
         return true;
@@ -5886,7 +5886,7 @@ CustomElements.addModule(function(scope) {
   function watchShadow(node) {
     if (node.shadowRoot && !node.shadowRoot.__watched) {
       flags.dom && console.log("watching shadow-root for: ", node.localName);
-      var root = node.shadowRoot;
+      let root = node.shadowRoot;
       while (root) {
         observe(root);
         root = root.olderShadowRoot;
@@ -5895,10 +5895,10 @@ CustomElements.addModule(function(scope) {
   }
   function handler(mutations) {
     if (flags.dom) {
-      var mx = mutations[0];
+      const mx = mutations[0];
       if (mx && mx.type === "childList" && mx.addedNodes) {
         if (mx.addedNodes) {
-          var d = mx.addedNodes[0];
+          let d = mx.addedNodes[0];
           while (d && d !== document && !d.host) {
             d = d.parentNode;
           }
@@ -5934,7 +5934,7 @@ CustomElements.addModule(function(scope) {
     while (node.parentNode) {
       node = node.parentNode;
     }
-    var observer = node.__observer;
+    const observer = node.__observer;
     if (observer) {
       handler(observer.takeRecords());
       takeMutations();
@@ -5945,7 +5945,7 @@ CustomElements.addModule(function(scope) {
     if (inRoot.__observer) {
       return;
     }
-    var observer = new MutationObserver(handler);
+    const observer = new MutationObserver(handler);
     observer.observe(inRoot, {
       childList: true,
       subtree: true
@@ -5962,9 +5962,9 @@ CustomElements.addModule(function(scope) {
   function upgradeDocumentTree(doc) {
     forDocumentTree(doc, upgradeDocument);
   }
-  var originalCreateShadowRoot = Element.prototype.createShadowRoot;
+  const originalCreateShadowRoot = Element.prototype.createShadowRoot;
   Element.prototype.createShadowRoot = function() {
-    var root = originalCreateShadowRoot.call(this);
+    const root = originalCreateShadowRoot.call(this);
     CustomElements.watchShadow(this);
     return root;
   };
@@ -5977,11 +5977,11 @@ CustomElements.addModule(function(scope) {
 });
 
 CustomElements.addModule(function(scope) {
-  var flags = scope.flags;
+  const flags = scope.flags;
   function upgrade(node) {
     if (!node.__upgraded__ && node.nodeType === Node.ELEMENT_NODE) {
-      var is = node.getAttribute("is");
-      var definition = scope.getRegisteredDefinition(is || node.localName);
+      const is = node.getAttribute("is");
+      const definition = scope.getRegisteredDefinition(is || node.localName);
       if (definition) {
         if (is && definition.tag == node.localName) {
           return upgradeWithDefinition(node, definition);
@@ -6013,11 +6013,11 @@ CustomElements.addModule(function(scope) {
     }
   }
   function customMixin(inTarget, inSrc, inNative) {
-    var used = {};
-    var p = inSrc;
+    const used = {};
+    let p = inSrc;
     while (p !== inNative && p !== HTMLElement.prototype) {
-      var keys = Object.getOwnPropertyNames(p);
-      for (var i = 0, k; k = keys[i]; i++) {
+      const keys = Object.getOwnPropertyNames(p);
+      for (let i = 0, k; k = keys[i]; i++) {
         if (!used[k]) {
           Object.defineProperty(inTarget, k, Object.getOwnPropertyDescriptor(p, k));
           used[k] = 1;
@@ -6037,13 +6037,13 @@ CustomElements.addModule(function(scope) {
 });
 
 CustomElements.addModule(function(scope) {
-  var upgradeDocumentTree = scope.upgradeDocumentTree;
-  var upgrade = scope.upgrade;
-  var upgradeWithDefinition = scope.upgradeWithDefinition;
-  var implementPrototype = scope.implementPrototype;
-  var useNative = scope.useNative;
+  const upgradeDocumentTree = scope.upgradeDocumentTree;
+  const upgrade = scope.upgrade;
+  const upgradeWithDefinition = scope.upgradeWithDefinition;
+  const implementPrototype = scope.implementPrototype;
+  const useNative = scope.useNative;
   function register(name, options) {
-    var definition = options || {};
+    const definition = options || {};
     if (!name) {
       throw new Error("document.registerElement: first argument `name` must not be empty");
     }
@@ -6082,7 +6082,7 @@ CustomElements.addModule(function(scope) {
     prototype.setAttribute = function(name, value) {
       changeAttribute.call(this, name, value, setAttribute);
     };
-    var removeAttribute = prototype.removeAttribute;
+    const removeAttribute = prototype.removeAttribute;
     prototype.removeAttribute = function(name) {
       changeAttribute.call(this, name, null, removeAttribute);
     };
@@ -6090,15 +6090,15 @@ CustomElements.addModule(function(scope) {
   }
   function changeAttribute(name, value, operation) {
     name = name.toLowerCase();
-    var oldValue = this.getAttribute(name);
+    const oldValue = this.getAttribute(name);
     operation.apply(this, arguments);
-    var newValue = this.getAttribute(name);
+    const newValue = this.getAttribute(name);
     if (this.attributeChangedCallback && newValue !== oldValue) {
       this.attributeChangedCallback(name, oldValue, newValue);
     }
   }
   function isReservedTag(name) {
-    for (var i = 0; i < reservedTagList.length; i++) {
+    for (let i = 0; i < reservedTagList.length; i++) {
       if (name === reservedTagList[i]) {
         return true;
       }
@@ -6106,15 +6106,15 @@ CustomElements.addModule(function(scope) {
   }
   var reservedTagList = [ "annotation-xml", "color-profile", "font-face", "font-face-src", "font-face-uri", "font-face-format", "font-face-name", "missing-glyph" ];
   function ancestry(extnds) {
-    var extendee = getRegisteredDefinition(extnds);
+    const extendee = getRegisteredDefinition(extnds);
     if (extendee) {
       return ancestry(extendee.extends).concat([ extendee ]);
     }
     return [];
   }
   function resolveTagName(definition) {
-    var baseTag = definition.extends;
-    for (var i = 0, a; a = definition.ancestry[i]; i++) {
+    let baseTag = definition.extends;
+    for (let i = 0, a; a = definition.ancestry[i]; i++) {
       baseTag = a.is && a.tag;
     }
     definition.tag = baseTag || definition.__name;
@@ -6124,15 +6124,15 @@ CustomElements.addModule(function(scope) {
   }
   function resolvePrototypeChain(definition) {
     if (!Object.__proto__) {
-      var nativePrototype = HTMLElement.prototype;
+      let nativePrototype = HTMLElement.prototype;
       if (definition.is) {
-        var inst = document.createElement(definition.tag);
-        var expectedPrototype = Object.getPrototypeOf(inst);
+        const inst = document.createElement(definition.tag);
+        const expectedPrototype = Object.getPrototypeOf(inst);
         if (expectedPrototype === definition.prototype) {
           nativePrototype = expectedPrototype;
         }
       }
-      var proto = definition.prototype, ancestor;
+      let proto = definition.prototype, ancestor;
       while (proto && proto !== nativePrototype) {
         ancestor = Object.getPrototypeOf(proto);
         proto.__proto__ = ancestor;
@@ -6158,7 +6158,7 @@ CustomElements.addModule(function(scope) {
       return instantiate(definition);
     };
   }
-  var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+  const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
   function createElementNS(namespace, tag, typeExtension) {
     if (namespace === HTML_NAMESPACE) {
       return createElement(tag, typeExtension);
@@ -6167,7 +6167,7 @@ CustomElements.addModule(function(scope) {
     }
   }
   function createElement(tag, typeExtension) {
-    var definition = getRegisteredDefinition(typeExtension || tag);
+    const definition = getRegisteredDefinition(typeExtension || tag);
     if (definition) {
       if (tag == definition.tag && typeExtension == definition.is) {
         return new definition.ctor();
@@ -6176,7 +6176,7 @@ CustomElements.addModule(function(scope) {
         return new definition.ctor();
       }
     }
-    var element;
+    let element;
     if (typeExtension) {
       element = createElement(tag);
       element.setAttribute("is", typeExtension);
@@ -6189,17 +6189,17 @@ CustomElements.addModule(function(scope) {
     return element;
   }
   function cloneNode(deep) {
-    var n = domCloneNode.call(this, deep);
+    const n = domCloneNode.call(this, deep);
     upgrade(n);
     return n;
   }
   var domCreateElement = document.createElement.bind(document);
   var domCreateElementNS = document.createElementNS.bind(document);
   var domCloneNode = Node.prototype.cloneNode;
-  var isInstance;
+  let isInstance;
   if (!Object.__proto__ && !useNative) {
     isInstance = function(obj, ctor) {
-      var p = obj;
+      let p = obj;
       while (p) {
         if (p === ctor.prototype) {
           return true;
@@ -6225,10 +6225,10 @@ CustomElements.addModule(function(scope) {
 });
 
 (function(scope) {
-  var useNative = scope.useNative;
-  var initializeModules = scope.initializeModules;
+  const useNative = scope.useNative;
+  const initializeModules = scope.initializeModules;
   if (useNative) {
-    var nop = function() {};
+    const nop = function() {};
     scope.watchShadow = nop;
     scope.upgrade = nop;
     scope.upgradeAll = nop;
@@ -6273,7 +6273,7 @@ CustomElements.addModule(function(scope) {
   if (typeof window.CustomEvent !== "function") {
     window.CustomEvent = function(inType, params) {
       params = params || {};
-      var e = document.createEvent("CustomEvent");
+      const e = document.createEvent("CustomEvent");
       e.initCustomEvent(inType, Boolean(params.bubbles), Boolean(params.cancelable), params.detail);
       return e;
     };
@@ -6284,7 +6284,7 @@ CustomElements.addModule(function(scope) {
   } else if (document.readyState === "interactive" && !window.attachEvent && (!window.HTMLImports || window.HTMLImports.ready)) {
     bootstrap();
   } else {
-    var loadEvent = window.HTMLImports && !HTMLImports.ready ? "HTMLImportsLoaded" : "DOMContentLoaded";
+    const loadEvent = window.HTMLImports && !HTMLImports.ready ? "HTMLImportsLoaded" : "DOMContentLoaded";
     window.addEventListener(loadEvent, bootstrap);
   }
 })(window.CustomElements);
@@ -6292,10 +6292,10 @@ CustomElements.addModule(function(scope) {
 (function(scope) {
   if (!Function.prototype.bind) {
     Function.prototype.bind = function(scope) {
-      var self = this;
-      var args = Array.prototype.slice.call(arguments, 1);
+      const self = this;
+      const args = Array.prototype.slice.call(arguments, 1);
       return function() {
-        var args2 = args.slice();
+        const args2 = args.slice();
         args2.push.apply(args2, arguments);
         return self.apply(scope, args2);
       };
@@ -6306,7 +6306,7 @@ CustomElements.addModule(function(scope) {
 (function(scope) {
   "use strict";
   if (!window.performance) {
-    var start = Date.now();
+    const start = Date.now();
     window.performance = {
       now: function() {
         return Date.now() - start;
@@ -6315,7 +6315,7 @@ CustomElements.addModule(function(scope) {
   }
   if (!window.requestAnimationFrame) {
     window.requestAnimationFrame = function() {
-      var nativeRaf = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+      const nativeRaf = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
       return nativeRaf ? function(callback) {
         return nativeRaf(function() {
           callback(performance.now());
@@ -6332,8 +6332,8 @@ CustomElements.addModule(function(scope) {
       };
     }();
   }
-  var elementDeclarations = [];
-  var polymerStub = function(name, dictionary) {
+  let elementDeclarations = [];
+  const polymerStub = function(name, dictionary) {
     if (typeof name !== "string" && arguments.length === 1) {
       Array.prototype.push.call(arguments, document._currentScript);
     }
@@ -6364,9 +6364,9 @@ CustomElements.addModule(function(scope) {
 })(window.WebComponents);
 
 (function(scope) {
-  var style = document.createElement("style");
+  const style = document.createElement("style");
   style.textContent = "" + "body {" + "transition: opacity ease-in 0.2s;" + " } \n" + "body[unresolved] {" + "opacity: 0; display: block; overflow: hidden; position: relative;" + " } \n";
-  var head = document.querySelector("head");
+  const head = document.querySelector("head");
   head.insertBefore(style, head.firstChild);
 })(window.WebComponents);
 

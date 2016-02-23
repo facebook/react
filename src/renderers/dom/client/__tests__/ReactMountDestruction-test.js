@@ -11,21 +11,21 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+const React = require('React');
+const ReactDOM = require('ReactDOM');
 
 describe('ReactMount', function() {
   it('should destroy a react root upon request', function() {
-    var mainContainerDiv = document.createElement('div');
+    const mainContainerDiv = document.createElement('div');
     document.body.appendChild(mainContainerDiv);
 
-    var instanceOne = <div className="firstReactDiv" />;
-    var firstRootDiv = document.createElement('div');
+    const instanceOne = <div className="firstReactDiv" />;
+    const firstRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(firstRootDiv);
     ReactDOM.render(instanceOne, firstRootDiv);
 
-    var instanceTwo = <div className="secondReactDiv" />;
-    var secondRootDiv = document.createElement('div');
+    const instanceTwo = <div className="secondReactDiv" />;
+    const secondRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(secondRootDiv);
     ReactDOM.render(instanceTwo, secondRootDiv);
 
@@ -41,16 +41,16 @@ describe('ReactMount', function() {
   });
 
   it('should warn when unmounting a non-container root node', function() {
-    var mainContainerDiv = document.createElement('div');
+    const mainContainerDiv = document.createElement('div');
 
-    var component =
+    const component =
       <div>
         <div />
       </div>;
     ReactDOM.render(component, mainContainerDiv);
 
     // Test that unmounting at a root node gives a helpful warning
-    var rootDiv = mainContainerDiv.firstChild;
+    const rootDiv = mainContainerDiv.firstChild;
     spyOn(console, 'error');
     ReactDOM.unmountComponentAtNode(rootDiv);
     expect(console.error.calls.length).toBe(1);
@@ -63,9 +63,9 @@ describe('ReactMount', function() {
   });
 
   it('should warn when unmounting a non-container, non-root node', function() {
-    var mainContainerDiv = document.createElement('div');
+    const mainContainerDiv = document.createElement('div');
 
-    var component =
+    const component =
       <div>
         <div>
           <div />
@@ -74,7 +74,7 @@ describe('ReactMount', function() {
     ReactDOM.render(component, mainContainerDiv);
 
     // Test that unmounting at a non-root node gives a different warning
-    var nonRootDiv = mainContainerDiv.firstChild.firstChild;
+    const nonRootDiv = mainContainerDiv.firstChild.firstChild;
     spyOn(console, 'error');
     ReactDOM.unmountComponentAtNode(nonRootDiv);
     expect(console.error.calls.length).toBe(1);

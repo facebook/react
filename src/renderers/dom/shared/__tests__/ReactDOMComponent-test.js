@@ -11,14 +11,14 @@
 
 'use strict';
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
 describe('ReactDOMComponent', function() {
-  var React;
+  let React;
 
-  var ReactDOM;
-  var ReactDOMFeatureFlags;
-  var ReactDOMServer;
+  let ReactDOM;
+  let ReactDOMFeatureFlags;
+  let ReactDOMServer;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -29,14 +29,14 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('updateDOM', function() {
-    var ReactTestUtils;
+    let ReactTestUtils;
 
     beforeEach(function() {
       ReactTestUtils = require('ReactTestUtils');
     });
 
     it('should handle className', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div style={{}} />, container);
 
       ReactDOM.render(<div className={'foo'} />, container);
@@ -48,19 +48,19 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should gracefully handle various style value types', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div style={{}} />, container);
-      var stubStyle = container.firstChild.style;
+      const stubStyle = container.firstChild.style;
 
       // set initial style
-      var setup = {display: 'block', left: '1px', top: 2, fontFamily: 'Arial'};
+      const setup = {display: 'block', left: '1px', top: 2, fontFamily: 'Arial'};
       ReactDOM.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
       expect(stubStyle.fontFamily).toEqual('Arial');
 
       // reset the style to their default state
-      var reset = {display: '', left: null, top: false, fontFamily: true};
+      const reset = {display: '', left: null, top: false, fontFamily: true};
       ReactDOM.render(<div style={reset} />, container);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.left).toEqual('');
@@ -73,11 +73,11 @@ describe('ReactDOMComponent', function() {
       // not actually used. Just to suppress the style mutation warning
       spyOn(console, 'error');
 
-      var styles = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
-      var container = document.createElement('div');
+      const styles = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
+      const container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
 
-      var stubStyle = container.firstChild.style;
+      const stubStyle = container.firstChild.style;
       stubStyle.display = styles.display;
       stubStyle.fontFamily = styles.fontFamily;
 
@@ -111,8 +111,8 @@ describe('ReactDOMComponent', function() {
     it('should warn when mutating style', function() {
       spyOn(console, 'error');
 
-      var style = {border: '1px solid black'};
-      var App = React.createClass({
+      let style = {border: '1px solid black'};
+      const App = React.createClass({
         getInitialState: function() {
           return {style: style};
         },
@@ -121,7 +121,7 @@ describe('ReactDOMComponent', function() {
         },
       });
 
-      var stub = ReactTestUtils.renderIntoDocument(<App />);
+      let stub = ReactTestUtils.renderIntoDocument(<App />);
       style.position = 'absolute';
       stub.setState({style: style});
       expect(console.error.argsForCall.length).toBe(1);
@@ -141,7 +141,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall.length).toBe(1);
 
       style = {background: 'red'};
-      var div = document.createElement('div');
+      const div = document.createElement('div');
       ReactDOM.render(<span style={style}></span>, div);
       style.background = 'blue';
       ReactDOM.render(<span style={style}></span>, div);
@@ -151,15 +151,15 @@ describe('ReactDOMComponent', function() {
     it('should warn about styles with numeric string values for non-unitless properties', function() {
       spyOn(console, 'error');
 
-      var div = document.createElement('div');
-      var One = React.createClass({
+      const div = document.createElement('div');
+      const One = React.createClass({
         render: function() {
           return this.props.inline ?
             <span style={{fontSize: '1'}} /> :
             <div style={{fontSize: '1'}} />;
         },
       });
-      var Two = React.createClass({
+      const Two = React.createClass({
         render: function() {
           return <div style={{fontSize: '1'}} />;
         },
@@ -193,8 +193,8 @@ describe('ReactDOMComponent', function() {
     it('should warn semi-nicely about NaN in style', function() {
       spyOn(console, 'error');
 
-      var style = {fontSize: NaN};
-      var div = document.createElement('div');
+      const style = {fontSize: NaN};
+      const div = document.createElement('div');
       ReactDOM.render(<span style={style}></span>, div);
       ReactDOM.render(<span style={style}></span>, div);
 
@@ -211,11 +211,11 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should update styles if initially null', function() {
-      var styles = null;
-      var container = document.createElement('div');
+      let styles = null;
+      const container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
 
-      var stubStyle = container.firstChild.style;
+      const stubStyle = container.firstChild.style;
 
       styles = {display: 'block'};
 
@@ -224,12 +224,12 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should update styles if updated to null multiple times', function() {
-      var styles = null;
-      var container = document.createElement('div');
+      let styles = null;
+      const container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
 
       styles = {display: 'block'};
-      var stubStyle = container.firstChild.style;
+      const stubStyle = container.firstChild.style;
 
       ReactDOM.render(<div style={styles} />, container);
       expect(stubStyle.display).toEqual('block');
@@ -245,7 +245,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should skip child object attribute on web components', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       // Test initial render to null
       ReactDOM.render(<my-component children={['foo']} />, container);
@@ -257,7 +257,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should remove attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<img height="17" />, container);
 
       expect(container.firstChild.hasAttribute('height')).toBe(true);
@@ -266,7 +266,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should remove known SVG camel case attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<svg viewBox="0 0 100 100" />, container);
 
       expect(container.firstChild.hasAttribute('viewBox')).toBe(true);
@@ -275,7 +275,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should remove known SVG hyphenated attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<svg clip-path="0 0 100 100" />, container);
 
       expect(container.firstChild.hasAttribute('clip-path')).toBe(true);
@@ -284,7 +284,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should remove arbitrary SVG hyphenated attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<svg the-word="the-bird" />, container);
 
       expect(container.firstChild.hasAttribute('the-word')).toBe(true);
@@ -293,7 +293,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should remove arbitrary SVG camel case attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<svg theWord="theBird" />, container);
 
       if (ReactDOMFeatureFlags.useCreateElement) {
@@ -307,7 +307,7 @@ describe('ReactDOMComponent', function() {
 
     it('should remove SVG attributes that should have been hyphenated', function() {
       spyOn(console, 'error');
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<svg clipPath="0 0 100 100" />, container);
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toContain('clipPath');
@@ -319,7 +319,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should remove namespaced SVG attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(
         <svg>
           <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
@@ -339,7 +339,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should remove properties', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div className="monkey" />, container);
 
       expect(container.firstChild.className).toEqual('monkey');
@@ -348,11 +348,11 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should clear a single style prop when changing `style`', function() {
-      var styles = {display: 'none', color: 'red'};
-      var container = document.createElement('div');
+      let styles = {display: 'none', color: 'red'};
+      const container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
 
-      var stubStyle = container.firstChild.style;
+      const stubStyle = container.firstChild.style;
 
       styles = {color: 'green'};
       ReactDOM.render(<div style={styles} />, container);
@@ -362,9 +362,9 @@ describe('ReactDOMComponent', function() {
 
     it('should reject attribute key injection attack on markup', function() {
       spyOn(console, 'error');
-      for (var i = 0; i < 3; i++) {
-        var container = document.createElement('div');
-        var element = React.createElement(
+      for (let i = 0; i < 3; i++) {
+        const container = document.createElement('div');
+        const element = React.createElement(
           'x-foo-component',
           {'blah" onclick="beevil" noise="hi': 'selected'},
           null
@@ -379,12 +379,12 @@ describe('ReactDOMComponent', function() {
 
     it('should reject attribute key injection attack on update', function() {
       spyOn(console, 'error');
-      for (var i = 0; i < 3; i++) {
-        var container = document.createElement('div');
-        var beforeUpdate = React.createElement('x-foo-component', {}, null);
+      for (let i = 0; i < 3; i++) {
+        const container = document.createElement('div');
+        const beforeUpdate = React.createElement('x-foo-component', {}, null);
         ReactDOM.render(beforeUpdate, container);
 
-        var afterUpdate = React.createElement(
+        const afterUpdate = React.createElement(
           'x-foo-component',
           {'blah" onclick="beevil" noise="hi': 'selected'},
           null
@@ -398,24 +398,24 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should update arbitrary attributes for tags containing dashes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var beforeUpdate = React.createElement('x-foo-component', {}, null);
+      const beforeUpdate = React.createElement('x-foo-component', {}, null);
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = <x-foo-component myattr="myval" />;
+      const afterUpdate = <x-foo-component myattr="myval" />;
       ReactDOM.render(afterUpdate, container);
 
       expect(container.childNodes[0].getAttribute('myattr')).toBe('myval');
     });
 
     it('should update known hyphenated attributes for SVG tags', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var beforeUpdate = <svg />;
+      const beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = <svg clip-path="url(#starlet)" />;
+      const afterUpdate = <svg clip-path="url(#starlet)" />;
       ReactDOM.render(afterUpdate, container);
 
       expect(container.childNodes[0].getAttribute('clip-path')).toBe(
@@ -424,12 +424,12 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should update camel case attributes for SVG tags', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var beforeUpdate = <svg />;
+      const beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = <svg viewBox="0 0 100 100" />;
+      const afterUpdate = <svg viewBox="0 0 100 100" />;
       ReactDOM.render(afterUpdate, container);
 
       expect(container.childNodes[0].getAttribute('viewBox')).toBe(
@@ -439,12 +439,12 @@ describe('ReactDOMComponent', function() {
 
     it('should warn camel casing hyphenated attributes for SVG tags', function() {
       spyOn(console, 'error');
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var beforeUpdate = <svg />;
+      const beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = <svg clipPath="url(#starlet)" />;
+      const afterUpdate = <svg clipPath="url(#starlet)" />;
       ReactDOM.render(afterUpdate, container);
 
       expect(container.childNodes[0].getAttribute('clip-path')).toBe(
@@ -456,40 +456,40 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should update arbitrary hyphenated attributes for SVG tags', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var beforeUpdate = <svg />;
+      const beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = <svg the-word="the-bird" />;
+      const afterUpdate = <svg the-word="the-bird" />;
       ReactDOM.render(afterUpdate, container);
 
       expect(container.childNodes[0].getAttribute('the-word')).toBe('the-bird');
     });
 
     it('should update arbitrary camel case attributes for SVG tags', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var beforeUpdate = <svg />;
+      const beforeUpdate = <svg />;
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = <svg theWord="theBird" />;
+      const afterUpdate = <svg theWord="theBird" />;
       ReactDOM.render(afterUpdate, container);
 
       expect(container.childNodes[0].getAttribute('theWord')).toBe('theBird');
     });
 
     it('should update namespaced SVG attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var beforeUpdate = (
+      const beforeUpdate = (
         <svg>
           <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
         </svg>
       );
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = (
+      const afterUpdate = (
         <svg>
           <image xlinkHref="http://i.imgur.com/JvqCM2p.png" />
         </svg>
@@ -503,11 +503,11 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should clear all the styles when removing `style`', function() {
-      var styles = {display: 'none', color: 'red'};
-      var container = document.createElement('div');
+      const styles = {display: 'none', color: 'red'};
+      const container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
 
-      var stubStyle = container.firstChild.style;
+      const stubStyle = container.firstChild.style;
 
       ReactDOM.render(<div />, container);
       expect(stubStyle.display).toEqual('');
@@ -515,18 +515,18 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should update styles when `style` changes from null to object', function() {
-      var container = document.createElement('div');
-      var styles = {color: 'red'};
+      const container = document.createElement('div');
+      const styles = {color: 'red'};
       ReactDOM.render(<div style={styles} />, container);
       ReactDOM.render(<div />, container);
       ReactDOM.render(<div style={styles} />, container);
 
-      var stubStyle = container.firstChild.style;
+      const stubStyle = container.firstChild.style;
       expect(stubStyle.color).toEqual('red');
     });
 
     it('should empty element when removing innerHTML', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />, container);
 
       expect(container.firstChild.innerHTML).toEqual(':)');
@@ -535,7 +535,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should transition from string content to innerHTML', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div>hello</div>, container);
 
       expect(container.firstChild.innerHTML).toEqual('hello');
@@ -547,7 +547,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should transition from innerHTML to string content', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />,
         container
@@ -559,7 +559,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should transition from innerHTML to children in nested el', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(
         <div><div dangerouslySetInnerHTML={{__html: 'bonjour'}} /></div>,
         container
@@ -571,7 +571,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should transition from children to innerHTML in nested el', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div><div><span>adieu</span></div></div>, container);
 
       expect(container.textContent).toEqual('adieu');
@@ -583,15 +583,15 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should not incur unnecessary DOM mutations for attributes', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div id="" />, container);
 
-      var node = container.firstChild;
-      var nodeSetAttribute = node.setAttribute;
+      const node = container.firstChild;
+      const nodeSetAttribute = node.setAttribute;
       node.setAttribute = jest.genMockFn();
       node.setAttribute.mockImpl(nodeSetAttribute);
 
-      var nodeRemoveAttribute = node.removeAttribute;
+      const nodeRemoveAttribute = node.removeAttribute;
       node.removeAttribute = jest.genMockFn();
       node.removeAttribute.mockImpl(nodeRemoveAttribute);
 
@@ -621,12 +621,12 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should not incur unnecessary DOM mutations for string properties', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div value="" />, container);
 
-      var node = container.firstChild;
-      var nodeValue = ''; // node.value always returns undefined
-      var nodeValueSetter = jest.genMockFn();
+      const node = container.firstChild;
+      let nodeValue = ''; // node.value always returns undefined
+      const nodeValueSetter = jest.genMockFn();
       Object.defineProperty(node, 'value', {
         get: function() {
           return nodeValue;
@@ -659,12 +659,12 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should not incur unnecessary DOM mutations for boolean properties', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div checked={true} />, container);
 
-      var node = container.firstChild;
-      var nodeValue = true;
-      var nodeValueSetter = jest.genMockFn();
+      const node = container.firstChild;
+      let nodeValue = true;
+      const nodeValueSetter = jest.genMockFn();
       Object.defineProperty(node, 'checked', {
         get: function() {
           return nodeValue;
@@ -688,16 +688,16 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should ignore attribute whitelist for elements with the "is: attribute', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova"/>, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
     });
 
     it('should not update when switching between null/undefined', function() {
-      var container = document.createElement('div');
-      var node = ReactDOM.render(<div />, container);
+      const container = document.createElement('div');
+      const node = ReactDOM.render(<div />, container);
 
-      var setter = jest.genMockFn();
+      const setter = jest.genMockFn();
       node.setAttribute = setter;
 
       ReactDOM.render(<div dir={null} />, container);
@@ -712,7 +712,7 @@ describe('ReactDOMComponent', function() {
       // This test might look like it's just testing ReactMultiChild but the
       // last bug in this was actually in DOMChildrenOperations so this test
       // needs to be in some DOM-specific test file.
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       // ABCD
       ReactDOM.render(
@@ -744,27 +744,27 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('createOpenTagMarkup', function() {
-    var genMarkup;
+    let genMarkup;
 
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
     beforeEach(function() {
-      var ReactDefaultInjection = require('ReactDefaultInjection');
+      const ReactDefaultInjection = require('ReactDefaultInjection');
       ReactDefaultInjection.inject();
 
-      var ReactDOMComponent = require('ReactDOMComponent');
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
+      const ReactDOMComponent = require('ReactDOMComponent');
+      const ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var NodeStub = function(initialProps) {
+      const NodeStub = function(initialProps) {
         this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
       assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
-        var transaction = new ReactReconcileTransaction();
+        const transaction = new ReactReconcileTransaction();
         return (new NodeStub(props))._createOpenTagMarkupAndPutListeners(
           transaction,
           props
@@ -773,7 +773,7 @@ describe('ReactDOMComponent', function() {
 
       this.addMatchers({
         toHaveAttribute: function(attr, value) {
-          var expected = '(?:^|\\s)' + attr + '=[\\\'"]';
+          let expected = '(?:^|\\s)' + attr + '=[\\\'"]';
           if (typeof value !== 'undefined') {
             expected += quoteRegexp(value) + '[\\\'"]';
           }
@@ -796,24 +796,24 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('createContentMarkup', function() {
-    var genMarkup;
+    let genMarkup;
 
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
     beforeEach(function() {
-      var ReactDOMComponent = require('ReactDOMComponent');
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
+      const ReactDOMComponent = require('ReactDOMComponent');
+      const ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var NodeStub = function(initialProps) {
+      const NodeStub = function(initialProps) {
         this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
       assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
-        var transaction = new ReactReconcileTransaction();
+        const transaction = new ReactReconcileTransaction();
         return (new NodeStub(props))._createContentMarkup(
           transaction,
           props,
@@ -823,14 +823,14 @@ describe('ReactDOMComponent', function() {
 
       this.addMatchers({
         toHaveInnerhtml: function(html) {
-          var expected = '^' + quoteRegexp(html) + '$';
+          const expected = '^' + quoteRegexp(html) + '$';
           return this.actual.match(new RegExp(expected));
         },
       });
     });
 
     it('should handle dangerouslySetInnerHTML', function() {
-      var innerHTML = {__html: 'testContent'};
+      const innerHTML = {__html: 'testContent'};
       expect(
         genMarkup({dangerouslySetInnerHTML: innerHTML})
       ).toHaveInnerhtml('testContent');
@@ -838,27 +838,27 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('mountComponent', function() {
-    var mountComponent;
+    let mountComponent;
 
     beforeEach(function() {
       mountComponent = function(props) {
-        var container = document.createElement('div');
+        const container = document.createElement('div');
         ReactDOM.render(<div {...props} />, container);
       };
     });
 
     it('should not duplicate uppercased selfclosing tags', function() {
-      var Container = React.createClass({
+      const Container = React.createClass({
         render: function() {
           return React.createElement('BR', null);
         },
       });
-      var returnedValue = ReactDOMServer.renderToString(<Container/>);
+      const returnedValue = ReactDOMServer.renderToString(<Container/>);
       expect(returnedValue).not.toContain('</BR>');
     });
 
     it('should warn against children for void elements', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       expect(function() {
         ReactDOM.render(<input>children</input>, container);
@@ -869,7 +869,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn against dangerouslySetInnerHTML for void elements', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       expect(function() {
         ReactDOM.render(
@@ -883,9 +883,9 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should treat menuitem as a void element but still create the closing tag', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var returnedValue = ReactDOMServer.renderToString(<menu><menuitem /></menu>);
+      const returnedValue = ReactDOMServer.renderToString(<menu><menuitem /></menu>);
 
       expect(returnedValue).toContain('</menuitem>');
 
@@ -958,12 +958,12 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should execute custom event plugin listening behavior', function() {
-      var SimpleEventPlugin = require('SimpleEventPlugin');
+      const SimpleEventPlugin = require('SimpleEventPlugin');
 
       SimpleEventPlugin.didPutListener = jest.genMockFn();
       SimpleEventPlugin.willDeleteListener = jest.genMockFn();
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(
         <div onClick={() => true} />,
         container
@@ -977,11 +977,11 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should handle null and missing properly with event hooks', function() {
-      var SimpleEventPlugin = require('SimpleEventPlugin');
+      const SimpleEventPlugin = require('SimpleEventPlugin');
 
       SimpleEventPlugin.didPutListener = jest.genMockFn();
       SimpleEventPlugin.willDeleteListener = jest.genMockFn();
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       ReactDOM.render(<div onClick={false} />, container);
       expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(0);
@@ -1013,13 +1013,13 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn for children on void elements', function() {
-      var X = React.createClass({
+      const X = React.createClass({
         render: function() {
           return <input>moo</input>;
         },
       });
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       expect(function() {
         ReactDOM.render(<X />, container);
       }).toThrow(
@@ -1030,7 +1030,7 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('updateComponent', function() {
-    var container;
+    let container;
 
     beforeEach(function() {
       container = document.createElement('div');
@@ -1097,7 +1097,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should report component containing invalid styles', function() {
-      var Animal = React.createClass({
+      const Animal = React.createClass({
         render: function() {
           return <div style={1}></div>;
         },
@@ -1132,18 +1132,18 @@ describe('ReactDOMComponent', function() {
 
   describe('unmountComponent', function() {
     it('should clean up listeners', function() {
-      var EventPluginHub = require('EventPluginHub');
-      var ReactDOMComponentTree = require('ReactDOMComponentTree');
+      const EventPluginHub = require('EventPluginHub');
+      const ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       document.body.appendChild(container);
 
-      var callback = function() {};
-      var instance = <div onClick={callback} />;
+      const callback = function() {};
+      let instance = <div onClick={callback} />;
       instance = ReactDOM.render(instance, container);
 
-      var rootNode = ReactDOM.findDOMNode(instance);
-      var inst = ReactDOMComponentTree.getInstanceFromNode(rootNode);
+      const rootNode = ReactDOM.findDOMNode(instance);
+      const inst = ReactDOMComponentTree.getInstanceFromNode(rootNode);
       expect(
         EventPluginHub.getListener(inst, 'onClick')
       ).toBe(callback);
@@ -1157,7 +1157,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('unmounts children before unsetting DOM node info', function() {
-      var Inner = React.createClass({
+      const Inner = React.createClass({
         render: function() {
           return <span />;
         },
@@ -1167,7 +1167,7 @@ describe('ReactDOMComponent', function() {
         },
       });
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div><Inner /></div>, container);
       ReactDOM.unmountComponentAtNode(container);
     });
@@ -1179,10 +1179,10 @@ describe('ReactDOMComponent', function() {
       // before React so it's pre-mocked before React would require it.
       jest.resetModuleRegistry()
         .mock('isEventSupported');
-      var isEventSupported = require('isEventSupported');
+      const isEventSupported = require('isEventSupported');
       isEventSupported.mockReturnValueOnce(false);
 
-      var ReactTestUtils = require('ReactTestUtils');
+      const ReactTestUtils = require('ReactTestUtils');
 
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(<div onScroll={function() {}} />);
@@ -1195,8 +1195,8 @@ describe('ReactDOMComponent', function() {
 
   describe('tag sanitization', function() {
     it('should throw when an invalid tag name is used', () => {
-      var ReactTestUtils = require('ReactTestUtils');
-      var hackzor = React.createElement('script tag');
+      const ReactTestUtils = require('ReactTestUtils');
+      const hackzor = React.createElement('script tag');
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
       ).toThrow(
@@ -1205,8 +1205,8 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should throw when an attack vector is used', () => {
-      var ReactTestUtils = require('ReactTestUtils');
-      var hackzor = React.createElement('div><img /><div');
+      const ReactTestUtils = require('ReactTestUtils');
+      const hackzor = React.createElement('div><img /><div');
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
       ).toThrow(
@@ -1216,7 +1216,7 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('nesting validation', function() {
-    var ReactTestUtils;
+    let ReactTestUtils;
 
     beforeEach(function() {
       ReactTestUtils = require('ReactTestUtils');
@@ -1235,7 +1235,7 @@ describe('ReactDOMComponent', function() {
 
     it('warns on invalid nesting at root', () => {
       spyOn(console, 'error');
-      var p = document.createElement('p');
+      const p = document.createElement('p');
       ReactDOM.render(<span><p /></span>, p);
 
       expect(console.error.calls.length).toBe(1);
@@ -1247,12 +1247,12 @@ describe('ReactDOMComponent', function() {
 
     it('warns nicely for table rows', () => {
       spyOn(console, 'error');
-      var Row = React.createClass({
+      const Row = React.createClass({
         render: function() {
           return <tr />;
         },
       });
-      var Foo = React.createClass({
+      const Foo = React.createClass({
         render: function() {
           return <table><Row /> </table>;
         },
@@ -1273,27 +1273,27 @@ describe('ReactDOMComponent', function() {
 
     it('gives useful context in warnings', () => {
       spyOn(console, 'error');
-      var Row = React.createClass({
+      const Row = React.createClass({
         render: () => <tr />,
       });
-      var FancyRow = React.createClass({
+      const FancyRow = React.createClass({
         render: () => <Row />,
       });
-      var Table = React.createClass({
+      const Table = React.createClass({
         render: function() {
           return <table>{this.props.children}</table>;
         },
       });
-      var FancyTable = React.createClass({
+      const FancyTable = React.createClass({
         render: function() {
           return <Table>{this.props.children}</Table>;
         },
       });
 
-      var Viz1 = React.createClass({
+      const Viz1 = React.createClass({
         render: () => <table><FancyRow /></table>,
       });
-      var App1 = React.createClass({
+      const App1 = React.createClass({
         render: () => <Viz1 />,
       });
       ReactTestUtils.renderIntoDocument(<App1 />);
@@ -1302,10 +1302,10 @@ describe('ReactDOMComponent', function() {
         'See Viz1 > table > FancyRow > Row > tr.'
       );
 
-      var Viz2 = React.createClass({
+      const Viz2 = React.createClass({
         render: () => <FancyTable><FancyRow /></FancyTable>,
       });
-      var App2 = React.createClass({
+      const App2 = React.createClass({
         render: () => <Viz2 />,
       });
       ReactTestUtils.renderIntoDocument(<App2 />);
@@ -1332,7 +1332,7 @@ describe('ReactDOMComponent', function() {
         'See FancyTable > Table > table > tr.'
       );
 
-      var Link = React.createClass({
+      const Link = React.createClass({
         render: function() {
           return <a>{this.props.children}</a>;
         },

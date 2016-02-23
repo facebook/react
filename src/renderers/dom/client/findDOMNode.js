@@ -11,13 +11,13 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInstanceMap = require('ReactInstanceMap');
+const ReactCurrentOwner = require('ReactCurrentOwner');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactInstanceMap = require('ReactInstanceMap');
 
-var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
-var invariant = require('invariant');
-var warning = require('warning');
+const getNativeComponentFromComposite = require('getNativeComponentFromComposite');
+const invariant = require('invariant');
+const warning = require('warning');
 
 /**
  * Returns the DOM node rendered by this element.
@@ -27,7 +27,7 @@ var warning = require('warning');
  */
 function findDOMNode(componentOrElement) {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
+    const owner = ReactCurrentOwner.current;
     if (owner !== null) {
       warning(
         owner._warnedAboutRefsInRender,
@@ -48,7 +48,7 @@ function findDOMNode(componentOrElement) {
     return componentOrElement;
   }
 
-  var inst = ReactInstanceMap.get(componentOrElement);
+  let inst = ReactInstanceMap.get(componentOrElement);
   if (inst) {
     inst = getNativeComponentFromComposite(inst);
     return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;

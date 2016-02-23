@@ -11,13 +11,13 @@
 
 'use strict';
 
-var ReactLink = require('ReactLink');
-var ReactStateSetters = require('ReactStateSetters');
+const ReactLink = require('ReactLink');
+const ReactStateSetters = require('ReactStateSetters');
 
 /**
  * A simple mixin around ReactLink.forState().
  */
-var LinkedStateMixin = {
+const LinkedStateMixin = {
   /**
    * Create a ReactLink that's linked to part of this component's state. The
    * ReactLink will have the current value of this.state[key] and will call

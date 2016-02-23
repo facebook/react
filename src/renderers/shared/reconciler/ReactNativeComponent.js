@@ -11,16 +11,16 @@
 
 'use strict';
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
+const assign = require('Object.assign');
+const invariant = require('invariant');
 
-var autoGenerateWrapperClass = null;
-var genericComponentClass = null;
+const autoGenerateWrapperClass = null;
+let genericComponentClass = null;
 // This registry keeps track of wrapper classes around native tags.
-var tagToComponentClass = {};
-var textComponentClass = null;
+const tagToComponentClass = {};
+let textComponentClass = null;
 
-var ReactNativeComponentInjection = {
+const ReactNativeComponentInjection = {
   // This accepts a class that receives the tag string. This is a catch all
   // that can render any kind of tag.
   injectGenericComponentClass: function(componentClass) {
@@ -48,8 +48,8 @@ function getComponentClassForElement(element) {
   if (typeof element.type === 'function') {
     return element.type;
   }
-  var tag = element.type;
-  var componentClass = tagToComponentClass[tag];
+  const tag = element.type;
+  let componentClass = tagToComponentClass[tag];
   if (componentClass == null) {
     tagToComponentClass[tag] = componentClass = autoGenerateWrapperClass(tag);
   }
@@ -87,7 +87,7 @@ function isTextComponent(component) {
   return component instanceof textComponentClass;
 }
 
-var ReactNativeComponent = {
+const ReactNativeComponent = {
   getComponentClassForElement: getComponentClassForElement,
   createInternalComponent: createInternalComponent,
   createInstanceForText: createInstanceForText,

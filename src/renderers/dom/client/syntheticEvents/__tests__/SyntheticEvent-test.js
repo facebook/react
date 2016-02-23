@@ -11,13 +11,13 @@
 
 'use strict';
 
-var SyntheticEvent;
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let SyntheticEvent;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('SyntheticEvent', function() {
-  var createEvent;
+  let createEvent;
 
   beforeEach(function() {
     SyntheticEvent = require('SyntheticEvent');
@@ -26,22 +26,22 @@ describe('SyntheticEvent', function() {
     ReactTestUtils = require('ReactTestUtils');
 
     createEvent = function(nativeEvent) {
-      var target = require('getEventTarget')(nativeEvent);
+      const target = require('getEventTarget')(nativeEvent);
       return SyntheticEvent.getPooled({}, '', nativeEvent, target);
     };
   });
 
   it('should normalize `target` from the nativeEvent', function() {
-    var target = document.createElement('div');
-    var syntheticEvent = createEvent({srcElement: target});
+    const target = document.createElement('div');
+    const syntheticEvent = createEvent({srcElement: target});
 
     expect(syntheticEvent.target).toBe(target);
     expect(syntheticEvent.type).toBe(undefined);
   });
 
   it('should be able to `preventDefault`', function() {
-    var nativeEvent = {};
-    var syntheticEvent = createEvent(nativeEvent);
+    const nativeEvent = {};
+    const syntheticEvent = createEvent(nativeEvent);
 
     expect(syntheticEvent.isDefaultPrevented()).toBe(false);
     syntheticEvent.preventDefault();
@@ -60,8 +60,8 @@ describe('SyntheticEvent', function() {
   });
 
   it('should be able to `stopPropagation`', function() {
-    var nativeEvent = {};
-    var syntheticEvent = createEvent(nativeEvent);
+    const nativeEvent = {};
+    const syntheticEvent = createEvent(nativeEvent);
 
     expect(syntheticEvent.isPropagationStopped()).toBe(false);
     syntheticEvent.stopPropagation();
@@ -71,7 +71,7 @@ describe('SyntheticEvent', function() {
   });
 
   it('should be able to `persist`', function() {
-    var syntheticEvent = createEvent({});
+    const syntheticEvent = createEvent({});
 
     expect(syntheticEvent.isPersistent()).toBe(false);
     syntheticEvent.persist();
@@ -80,8 +80,8 @@ describe('SyntheticEvent', function() {
 
   it('should be nullified if the synthetic event has called destructor and log warnings', function() {
     spyOn(console, 'error');
-    var target = document.createElement('div');
-    var syntheticEvent = createEvent({srcElement: target});
+    const target = document.createElement('div');
+    const syntheticEvent = createEvent({srcElement: target});
     syntheticEvent.destructor();
     expect(syntheticEvent.type).toBe(null);
     expect(syntheticEvent.nativeEvent).toBe(null);
@@ -97,8 +97,8 @@ describe('SyntheticEvent', function() {
 
   it('should warn when setting properties of a destructored synthetic event', function() {
     spyOn(console, 'error');
-    var target = document.createElement('div');
-    var syntheticEvent = createEvent({srcElement: target});
+    const target = document.createElement('div');
+    const syntheticEvent = createEvent({srcElement: target});
     syntheticEvent.destructor();
     expect(syntheticEvent.type = 'MouseEvent').toBe('MouseEvent');
     expect(console.error.calls.length).toBe(1);
@@ -112,7 +112,7 @@ describe('SyntheticEvent', function() {
 
   it('should warn if the synthetic event has been released when calling `preventDefault`', function() {
     spyOn(console, 'error');
-    var syntheticEvent = createEvent({});
+    const syntheticEvent = createEvent({});
     SyntheticEvent.release(syntheticEvent);
     syntheticEvent.preventDefault();
     expect(console.error.calls.length).toBe(1);
@@ -126,7 +126,7 @@ describe('SyntheticEvent', function() {
 
   it('should warn if the synthetic event has been released when calling `stopPropagation`', function() {
     spyOn(console, 'error');
-    var syntheticEvent = createEvent({});
+    const syntheticEvent = createEvent({});
     SyntheticEvent.release(syntheticEvent);
     syntheticEvent.stopPropagation();
     expect(console.error.calls.length).toBe(1);
@@ -140,12 +140,12 @@ describe('SyntheticEvent', function() {
 
   it('should properly log warnings when events simulated with rendered components', function() {
     spyOn(console, 'error');
-    var event;
-    var element = document.createElement('div');
+    let event;
+    const element = document.createElement('div');
     function assignEvent(e) {
       event = e;
     }
-    var instance = ReactDOM.render(<div onClick={assignEvent} />, element);
+    const instance = ReactDOM.render(<div onClick={assignEvent} />, element);
     ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance));
     expect(console.error.calls.length).toBe(0);
 

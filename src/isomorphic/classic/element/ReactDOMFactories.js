@@ -11,10 +11,10 @@
 
 'use strict';
 
-var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
+const ReactElement = require('ReactElement');
+const ReactElementValidator = require('ReactElementValidator');
 
-var mapObject = require('mapObject');
+const mapObject = require('mapObject');
 
 /**
  * Create a factory that creates HTML tag elements.
@@ -35,7 +35,7 @@ function createDOMFactory(tag) {
  *
  * @public
  */
-var ReactDOMFactories = mapObject({
+const ReactDOMFactories = mapObject({
   a: 'a',
   abbr: 'abbr',
   address: 'address',

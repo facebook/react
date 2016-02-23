@@ -11,7 +11,7 @@
 
 'use strict';
 
-var shallowCompare = require('shallowCompare');
+const shallowCompare = require('shallowCompare');
 
 /**
  * If your React component's render function is "pure", e.g. it will render the
@@ -37,7 +37,7 @@ var shallowCompare = require('shallowCompare');
  * differences. Only mixin to components which have simple props and state, or
  * use `forceUpdate()` when you know deep data structures have changed.
  */
-var ReactComponentWithPureRenderMixin = {
+const ReactComponentWithPureRenderMixin = {
   shouldComponentUpdate: function(nextProps, nextState) {
     return shallowCompare(this, nextProps, nextState);
   },

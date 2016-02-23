@@ -11,18 +11,18 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
-var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactClass = require('ReactClass');
-var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactNativeComponent = require('ReactNativeComponent');
-var ReactPerf = require('ReactPerf');
-var ReactUpdates = require('ReactUpdates');
+const DOMProperty = require('DOMProperty');
+const EventPluginHub = require('EventPluginHub');
+const EventPluginUtils = require('EventPluginUtils');
+const ReactComponentEnvironment = require('ReactComponentEnvironment');
+const ReactClass = require('ReactClass');
+const ReactEmptyComponent = require('ReactEmptyComponent');
+const ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+const ReactNativeComponent = require('ReactNativeComponent');
+const ReactPerf = require('ReactPerf');
+const ReactUpdates = require('ReactUpdates');
 
-var ReactInjection = {
+const ReactInjection = {
   Component: ReactComponentEnvironment.injection,
   Class: ReactClass.injection,
   DOMProperty: DOMProperty.injection,

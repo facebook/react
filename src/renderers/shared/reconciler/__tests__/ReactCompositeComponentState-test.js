@@ -11,10 +11,10 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
-var TestComponent;
+let TestComponent;
 
 describe('ReactCompositeComponent-state', function() {
 
@@ -127,11 +127,11 @@ describe('ReactCompositeComponent-state', function() {
   });
 
   it('should support setting state', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
 
-    var stateListener = jest.genMockFn();
-    var instance = ReactDOM.render(
+    const stateListener = jest.genMockFn();
+    const instance = ReactDOM.render(
       <TestComponent stateListener={stateListener} />,
       container,
       function peekAtInitialCallback() {
@@ -217,8 +217,8 @@ describe('ReactCompositeComponent-state', function() {
   });
 
   it('should batch unmounts', function() {
-    var outer;
-    var Inner = React.createClass({
+    let outer;
+    const Inner = React.createClass({
       render: function() {
         return <div />;
       },
@@ -228,7 +228,7 @@ describe('ReactCompositeComponent-state', function() {
         outer.setState({showInner: false});
       },
     });
-    var Outer = React.createClass({
+    const Outer = React.createClass({
       getInitialState: function() {
         return {showInner: true};
       },
@@ -237,7 +237,7 @@ describe('ReactCompositeComponent-state', function() {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     outer = ReactDOM.render(<Outer />, container);
     expect(() => {
       ReactDOM.unmountComponentAtNode(container);

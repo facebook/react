@@ -11,12 +11,12 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
+const ExecutionEnvironment = require('ExecutionEnvironment');
 
-var WHITESPACE_TEST = /^[ \r\n\t\f]/;
-var NONVISIBLE_TEST = /<(!--|link|noscript|meta|script|style)[ \r\n\t\f\/>]/;
+const WHITESPACE_TEST = /^[ \r\n\t\f]/;
+const NONVISIBLE_TEST = /<(!--|link|noscript|meta|script|style)[ \r\n\t\f\/>]/;
 
-var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
+const createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 
 /**
  * Set the innerHTML property of a node, ensuring that whitespace is preserved
@@ -26,7 +26,7 @@ var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunc
  * @param {string} html
  * @internal
  */
-var setInnerHTML = createMicrosoftUnsafeLocalFunction(
+let setInnerHTML = createMicrosoftUnsafeLocalFunction(
   function(node, html) {
     node.innerHTML = html;
   }
@@ -39,7 +39,7 @@ if (ExecutionEnvironment.canUseDOM) {
   // @see quirksmode.org/bugreports/archives/2004/11/innerhtml_and_t.html
 
   // Feature detection; only IE8 is known to behave improperly like this.
-  var testElement = document.createElement('div');
+  const testElement = document.createElement('div');
   testElement.innerHTML = ' ';
   if (testElement.innerHTML === '') {
     setInnerHTML = function(node, html) {
@@ -68,7 +68,7 @@ if (ExecutionEnvironment.canUseDOM) {
 
         // deleteData leaves an empty `TextNode` which offsets the index of all
         // children. Definitely want to avoid this.
-        var textNode = node.firstChild;
+        const textNode = node.firstChild;
         if (textNode.data.length === 1) {
           node.removeChild(textNode);
         } else {

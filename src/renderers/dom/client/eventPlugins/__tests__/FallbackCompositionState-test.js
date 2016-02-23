@@ -12,44 +12,44 @@
 'use strict';
 
 describe('FallbackCompositionState', function() {
-  var FallbackCompositionState;
+  let FallbackCompositionState;
 
-  var TEXT = 'Hello world';
+  const TEXT = 'Hello world';
 
   beforeEach(function() {
     FallbackCompositionState = require('FallbackCompositionState');
   });
 
   function getInput() {
-    var input = document.createElement('input');
+    const input = document.createElement('input');
     input.value = TEXT;
     return input;
   }
 
   function getTextarea() {
-    var textarea = document.createElement('textarea');
+    const textarea = document.createElement('textarea');
     textarea.value = TEXT;
     return textarea;
   }
 
   function getContentEditable() {
-    var editable = document.createElement('div');
-    var inner = document.createElement('span');
+    const editable = document.createElement('div');
+    const inner = document.createElement('span');
     inner.appendChild(document.createTextNode(TEXT));
     editable.appendChild(inner);
     return editable;
   }
 
   function assertExtractedData(modifiedValue, expectedData) {
-    var input = getInput();
-    var composition = FallbackCompositionState.getPooled(input);
+    const input = getInput();
+    const composition = FallbackCompositionState.getPooled(input);
     input.value = modifiedValue;
     expect(composition.getData()).toBe(expectedData);
     FallbackCompositionState.release(composition);
   }
 
   it('extracts value via `getText()`', function() {
-    var composition = FallbackCompositionState.getPooled(getInput());
+    let composition = FallbackCompositionState.getPooled(getInput());
     expect(composition.getText()).toBe(TEXT);
     FallbackCompositionState.release(composition);
 

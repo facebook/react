@@ -11,13 +11,13 @@
 
 'use strict';
 
-var React = require('React');
-var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
+const React = require('React');
+const ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
-var assign = require('Object.assign');
-var emptyFunction = require('emptyFunction');
+const assign = require('Object.assign');
+const emptyFunction = require('emptyFunction');
 
-var ReactTransitionGroup = React.createClass({
+const ReactTransitionGroup = React.createClass({
   displayName: 'ReactTransitionGroup',
 
   propTypes: {
@@ -45,8 +45,8 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentDidMount: function() {
-    var initialChildMapping = this.state.children;
-    for (var key in initialChildMapping) {
+    const initialChildMapping = this.state.children;
+    for (let key in initialChildMapping) {
       if (initialChildMapping[key]) {
         this.performAppear(key);
       }
@@ -54,10 +54,10 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentWillReceiveProps: function(nextProps) {
-    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+    const nextChildMapping = ReactTransitionChildMapping.getChildMapping(
       nextProps.children
     );
-    var prevChildMapping = this.state.children;
+    const prevChildMapping = this.state.children;
 
     this.setState({
       children: ReactTransitionChildMapping.mergeChildMappings(
@@ -66,10 +66,10 @@ var ReactTransitionGroup = React.createClass({
       ),
     });
 
-    var key;
+    let key;
 
     for (key in nextChildMapping) {
-      var hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
+      const hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
       if (nextChildMapping[key] && !hasPrev &&
           !this.currentlyTransitioningKeys[key]) {
         this.keysToEnter.push(key);
@@ -77,7 +77,7 @@ var ReactTransitionGroup = React.createClass({
     }
 
     for (key in prevChildMapping) {
-      var hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
+      const hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
       if (prevChildMapping[key] && !hasNext &&
           !this.currentlyTransitioningKeys[key]) {
         this.keysToLeave.push(key);
@@ -88,11 +88,11 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentDidUpdate: function() {
-    var keysToEnter = this.keysToEnter;
+    const keysToEnter = this.keysToEnter;
     this.keysToEnter = [];
     keysToEnter.forEach(this.performEnter);
 
-    var keysToLeave = this.keysToLeave;
+    const keysToLeave = this.keysToLeave;
     this.keysToLeave = [];
     keysToLeave.forEach(this.performLeave);
   },
@@ -100,7 +100,7 @@ var ReactTransitionGroup = React.createClass({
   performAppear: function(key) {
     this.currentlyTransitioningKeys[key] = true;
 
-    var component = this.refs[key];
+    const component = this.refs[key];
 
     if (component.componentWillAppear) {
       component.componentWillAppear(
@@ -112,14 +112,14 @@ var ReactTransitionGroup = React.createClass({
   },
 
   _handleDoneAppearing: function(key) {
-    var component = this.refs[key];
+    const component = this.refs[key];
     if (component.componentDidAppear) {
       component.componentDidAppear();
     }
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+    const currentChildMapping = ReactTransitionChildMapping.getChildMapping(
       this.props.children
     );
 
@@ -132,7 +132,7 @@ var ReactTransitionGroup = React.createClass({
   performEnter: function(key) {
     this.currentlyTransitioningKeys[key] = true;
 
-    var component = this.refs[key];
+    const component = this.refs[key];
 
     if (component.componentWillEnter) {
       component.componentWillEnter(
@@ -144,14 +144,14 @@ var ReactTransitionGroup = React.createClass({
   },
 
   _handleDoneEntering: function(key) {
-    var component = this.refs[key];
+    const component = this.refs[key];
     if (component.componentDidEnter) {
       component.componentDidEnter();
     }
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+    const currentChildMapping = ReactTransitionChildMapping.getChildMapping(
       this.props.children
     );
 
@@ -164,7 +164,7 @@ var ReactTransitionGroup = React.createClass({
   performLeave: function(key) {
     this.currentlyTransitioningKeys[key] = true;
 
-    var component = this.refs[key];
+    const component = this.refs[key];
     if (component.componentWillLeave) {
       component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
     } else {
@@ -176,7 +176,7 @@ var ReactTransitionGroup = React.createClass({
   },
 
   _handleDoneLeaving: function(key) {
-    var component = this.refs[key];
+    const component = this.refs[key];
 
     if (component.componentDidLeave) {
       component.componentDidLeave();
@@ -184,7 +184,7 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+    const currentChildMapping = ReactTransitionChildMapping.getChildMapping(
       this.props.children
     );
 
@@ -193,7 +193,7 @@ var ReactTransitionGroup = React.createClass({
       this.performEnter(key);
     } else {
       this.setState(function(state) {
-        var newChildren = assign({}, state.children);
+        const newChildren = assign({}, state.children);
         delete newChildren[key];
         return {children: newChildren};
       });
@@ -203,9 +203,9 @@ var ReactTransitionGroup = React.createClass({
   render: function() {
     // TODO: we could get rid of the need for the wrapper node
     // by cloning a single child
-    var childrenToRender = [];
-    for (var key in this.state.children) {
-      var child = this.state.children[key];
+    const childrenToRender = [];
+    for (let key in this.state.children) {
+      const child = this.state.children[key];
       if (child) {
         // You may need to apply reactive updates to a child as it is leaving.
         // The normal React way to do it won't work since the child will have

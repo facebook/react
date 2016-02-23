@@ -11,12 +11,12 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactDOMServer = require('ReactDOMServer');
+const React = require('React');
+const ReactDOM = require('ReactDOM');
+const ReactDOMServer = require('ReactDOMServer');
 
 describe('CSSPropertyOperations', function() {
-  var CSSPropertyOperations;
+  let CSSPropertyOperations;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -69,10 +69,10 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should not append `px` to styles that might need a number', function() {
-    var CSSProperty = require('CSSProperty');
-    var unitlessProperties = Object.keys(CSSProperty.isUnitlessNumber);
+    const CSSProperty = require('CSSProperty');
+    const unitlessProperties = Object.keys(CSSProperty.isUnitlessNumber);
     unitlessProperties.forEach(function(property) {
-      var styles = {};
+      const styles = {};
       styles[property] = 1;
       expect(CSSPropertyOperations.createMarkupForStyles(styles))
         .toMatch(/:1;$/);
@@ -87,23 +87,23 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should set style attribute when styles exist', function() {
-    var styles = {
+    const styles = {
       backgroundColor: '#000',
       display: 'none',
     };
-    var div = <div style={styles} />;
-    var root = document.createElement('div');
+    let div = <div style={styles} />;
+    const root = document.createElement('div');
     div = ReactDOM.render(div, root);
     expect(/style=".*"/.test(root.innerHTML)).toBe(true);
   });
 
   it('should not set style attribute when no styles exist', function() {
-    var styles = {
+    const styles = {
       backgroundColor: null,
       display: null,
     };
-    var div = <div style={styles} />;
-    var html = ReactDOMServer.renderToString(div);
+    const div = <div style={styles} />;
+    const html = ReactDOMServer.renderToString(div);
     expect(/style=/.test(html)).toBe(false);
   });
 
@@ -121,8 +121,8 @@ describe('CSSPropertyOperations', function() {
   it('should warn when updating hyphenated style names', function() {
     spyOn(console, 'error');
 
-    var root = document.createElement('div');
-    var styles = {
+    const root = document.createElement('div');
+    const styles = {
       '-ms-transform': 'translate3d(0, 0, 0)',
       '-webkit-transform': 'translate3d(0, 0, 0)',
     };

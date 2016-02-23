@@ -11,28 +11,28 @@
 
 'use strict';
 
-var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
-var ReactErrorUtils = require('ReactErrorUtils');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNodeTypes = require('ReactNodeTypes');
-var ReactPerf = require('ReactPerf');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactReconciler = require('ReactReconciler');
-var ReactUpdateQueue = require('ReactUpdateQueue');
+const ReactComponentEnvironment = require('ReactComponentEnvironment');
+const ReactCurrentOwner = require('ReactCurrentOwner');
+const ReactElement = require('ReactElement');
+const ReactErrorUtils = require('ReactErrorUtils');
+const ReactInstanceMap = require('ReactInstanceMap');
+const ReactNodeTypes = require('ReactNodeTypes');
+const ReactPerf = require('ReactPerf');
+const ReactPropTypeLocations = require('ReactPropTypeLocations');
+const ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+const ReactReconciler = require('ReactReconciler');
+const ReactUpdateQueue = require('ReactUpdateQueue');
 
-var assign = require('Object.assign');
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var warning = require('warning');
+const assign = require('Object.assign');
+const emptyObject = require('emptyObject');
+const invariant = require('invariant');
+const shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+const warning = require('warning');
 
 function getDeclarationErrorAddendum(component) {
-  var owner = component._currentElement._owner || null;
+  const owner = component._currentElement._owner || null;
   if (owner) {
-    var name = owner.getName();
+    const name = owner.getName();
     if (name) {
       return ' Check the render method of `' + name + '`.';
     }
@@ -43,8 +43,8 @@ function getDeclarationErrorAddendum(component) {
 function StatelessComponent(Component) {
 }
 StatelessComponent.prototype.render = function() {
-  var Component = ReactInstanceMap.get(this)._currentElement.type;
-  var element = Component(this.props, this.context, this.updater);
+  const Component = ReactInstanceMap.get(this)._currentElement.type;
+  const element = Component(this.props, this.context, this.updater);
   warnIfInvalidElement(Component, element);
   return element;
 };
@@ -93,12 +93,12 @@ function warnIfInvalidElement(Component, element) {
  *
  * @private
  */
-var nextMountID = 1;
+let nextMountID = 1;
 
 /**
  * @lends {ReactCompositeComponent.prototype}
  */
-var ReactCompositeComponentMixin = {
+const ReactCompositeComponentMixin = {
 
   /**
    * Base constructor for all composite component.
@@ -152,14 +152,14 @@ var ReactCompositeComponentMixin = {
     this._nativeParent = nativeParent;
     this._nativeContainerInfo = nativeContainerInfo;
 
-    var publicProps = this._processProps(this._currentElement.props);
-    var publicContext = this._processContext(context);
+    const publicProps = this._processProps(this._currentElement.props);
+    const publicContext = this._processContext(context);
 
-    var Component = this._currentElement.type;
+    const Component = this._currentElement.type;
 
     // Initialize the public class
-    var inst;
-    var renderedElement;
+    let inst;
+    let renderedElement;
 
     if (Component.prototype && Component.prototype.isReactComponent) {
       if (__DEV__) {
@@ -210,8 +210,8 @@ var ReactCompositeComponentMixin = {
         );
       }
 
-      var propsMutated = inst.props !== publicProps;
-      var componentName =
+      const propsMutated = inst.props !== publicProps;
+      const componentName =
         Component.displayName || Component.name || 'Component';
 
       warning(
@@ -289,7 +289,7 @@ var ReactCompositeComponentMixin = {
       );
     }
 
-    var initialState = inst.state;
+    let initialState = inst.state;
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
@@ -303,7 +303,7 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
-    var markup;
+    let markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
         renderedElement,
@@ -330,8 +330,8 @@ var ReactCompositeComponentMixin = {
     transaction,
     context
   ) {
-    var markup;
-    var checkpoint = transaction.checkpoint();
+    let markup;
+    let checkpoint = transaction.checkpoint();
     try {
       markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
     } catch (e) {
@@ -354,7 +354,7 @@ var ReactCompositeComponentMixin = {
   },
 
   performInitialMount: function(renderedElement, nativeParent, nativeContainerInfo, transaction, context) {
-    var inst = this._instance;
+    const inst = this._instance;
     if (inst.componentWillMount) {
       inst.componentWillMount();
       // When mounting, calls to `setState` by `componentWillMount` will set
@@ -374,7 +374,7 @@ var ReactCompositeComponentMixin = {
       renderedElement
     );
 
-    var markup = ReactReconciler.mountComponent(
+    const markup = ReactReconciler.mountComponent(
       this._renderedComponent,
       transaction,
       nativeParent,
@@ -399,11 +399,11 @@ var ReactCompositeComponentMixin = {
     if (!this._renderedComponent) {
       return;
     }
-    var inst = this._instance;
+    const inst = this._instance;
 
     if (inst.componentWillUnmount) {
       if (safely) {
-        var name = this.getName() + '.componentWillUnmount()';
+        const name = this.getName() + '.componentWillUnmount()';
         ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
       } else {
         inst.componentWillUnmount();
@@ -453,13 +453,13 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _maskContext: function(context) {
-    var Component = this._currentElement.type;
-    var contextTypes = Component.contextTypes;
+    const Component = this._currentElement.type;
+    const contextTypes = Component.contextTypes;
     if (!contextTypes) {
       return emptyObject;
     }
-    var maskedContext = {};
-    for (var contextName in contextTypes) {
+    const maskedContext = {};
+    for (let contextName in contextTypes) {
       maskedContext[contextName] = context[contextName];
     }
     return maskedContext;
@@ -474,9 +474,9 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processContext: function(context) {
-    var maskedContext = this._maskContext(context);
+    const maskedContext = this._maskContext(context);
     if (__DEV__) {
-      var Component = this._currentElement.type;
+      const Component = this._currentElement.type;
       if (Component.contextTypes) {
         this._checkPropTypes(
           Component.contextTypes,
@@ -494,9 +494,9 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processChildContext: function(currentContext) {
-    var Component = this._currentElement.type;
-    var inst = this._instance;
-    var childContext = inst.getChildContext && inst.getChildContext();
+    const Component = this._currentElement.type;
+    const inst = this._instance;
+    const childContext = inst.getChildContext && inst.getChildContext();
     if (childContext) {
       invariant(
         typeof Component.childContextTypes === 'object',
@@ -511,7 +511,7 @@ var ReactCompositeComponentMixin = {
           ReactPropTypeLocations.childContext
         );
       }
-      for (var name in childContext) {
+      for (let name in childContext) {
         invariant(
           name in Component.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -535,7 +535,7 @@ var ReactCompositeComponentMixin = {
    */
   _processProps: function(newProps) {
     if (__DEV__) {
-      var Component = this._currentElement.type;
+      const Component = this._currentElement.type;
       if (Component.propTypes) {
         this._checkPropTypes(
           Component.propTypes,
@@ -558,10 +558,10 @@ var ReactCompositeComponentMixin = {
   _checkPropTypes: function(propTypes, props, location) {
     // TODO: Stop validating prop types here and only use the element
     // validation.
-    var componentName = this.getName();
-    for (var propName in propTypes) {
+    const componentName = this.getName();
+    for (let propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
-        var error;
+        let error;
         try {
           // This is intentionally an invariant that gets caught. It's the same
           // behavior as without this statement except with a better message.
@@ -581,7 +581,7 @@ var ReactCompositeComponentMixin = {
           // We may want to extend this logic for similar errors in
           // top-level render calls, so I'm abstracting it away into
           // a function to minimize refactoring in the future
-          var addendum = getDeclarationErrorAddendum(this);
+          const addendum = getDeclarationErrorAddendum(this);
 
           if (location === ReactPropTypeLocations.prop) {
             // Preface gives us something to blacklist in warning module
@@ -605,8 +605,8 @@ var ReactCompositeComponentMixin = {
   },
 
   receiveComponent: function(nextElement, transaction, nextContext) {
-    var prevElement = this._currentElement;
-    var prevContext = this._context;
+    const prevElement = this._currentElement;
+    const prevContext = this._context;
 
     this._pendingElement = null;
 
@@ -669,10 +669,10 @@ var ReactCompositeComponentMixin = {
     prevUnmaskedContext,
     nextUnmaskedContext
   ) {
-    var inst = this._instance;
-    var willReceive = false;
-    var nextContext;
-    var nextProps;
+    const inst = this._instance;
+    let willReceive = false;
+    let nextContext;
+    let nextProps;
 
     // Determine if the context has changed or not
     if (this._context === nextUnmaskedContext) {
@@ -699,9 +699,9 @@ var ReactCompositeComponentMixin = {
       inst.componentWillReceiveProps(nextProps, nextContext);
     }
 
-    var nextState = this._processPendingState(nextProps, nextContext);
+    const nextState = this._processPendingState(nextProps, nextContext);
 
-    var shouldUpdate =
+    const shouldUpdate =
       this._pendingForceUpdate ||
       !inst.shouldComponentUpdate ||
       inst.shouldComponentUpdate(nextProps, nextState, nextContext);
@@ -738,9 +738,9 @@ var ReactCompositeComponentMixin = {
   },
 
   _processPendingState: function(props, context) {
-    var inst = this._instance;
-    var queue = this._pendingStateQueue;
-    var replace = this._pendingReplaceState;
+    const inst = this._instance;
+    const queue = this._pendingStateQueue;
+    const replace = this._pendingReplaceState;
     this._pendingReplaceState = false;
     this._pendingStateQueue = null;
 
@@ -752,9 +752,9 @@ var ReactCompositeComponentMixin = {
       return queue[0];
     }
 
-    var nextState = assign({}, replace ? queue[0] : inst.state);
-    for (var i = replace ? 1 : 0; i < queue.length; i++) {
-      var partial = queue[i];
+    const nextState = assign({}, replace ? queue[0] : inst.state);
+    for (let i = replace ? 1 : 0; i < queue.length; i++) {
+      const partial = queue[i];
       assign(
         nextState,
         typeof partial === 'function' ?
@@ -786,12 +786,12 @@ var ReactCompositeComponentMixin = {
     transaction,
     unmaskedContext
   ) {
-    var inst = this._instance;
+    const inst = this._instance;
 
-    var hasComponentDidUpdate = Boolean(inst.componentDidUpdate);
-    var prevProps;
-    var prevState;
-    var prevContext;
+    const hasComponentDidUpdate = Boolean(inst.componentDidUpdate);
+    let prevProps;
+    let prevState;
+    let prevContext;
     if (hasComponentDidUpdate) {
       prevProps = inst.props;
       prevState = inst.state;
@@ -825,9 +825,9 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   _updateRenderedComponent: function(transaction, context) {
-    var prevComponentInstance = this._renderedComponent;
-    var prevRenderedElement = prevComponentInstance._currentElement;
-    var nextRenderedElement = this._renderValidatedComponent();
+    const prevComponentInstance = this._renderedComponent;
+    const prevRenderedElement = prevComponentInstance._currentElement;
+    const nextRenderedElement = this._renderValidatedComponent();
     if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
       ReactReconciler.receiveComponent(
         prevComponentInstance,
@@ -836,14 +836,14 @@ var ReactCompositeComponentMixin = {
         this._processChildContext(context)
       );
     } else {
-      var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
+      const oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
       ReactReconciler.unmountComponent(prevComponentInstance, false);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );
-      var nextMarkup = ReactReconciler.mountComponent(
+      const nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
         transaction,
         this._nativeParent,
@@ -870,8 +870,8 @@ var ReactCompositeComponentMixin = {
    * @protected
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
-    var inst = this._instance;
-    var renderedComponent = inst.render();
+    const inst = this._instance;
+    let renderedComponent = inst.render();
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
       if (renderedComponent === undefined &&
@@ -889,7 +889,7 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _renderValidatedComponent: function() {
-    var renderedComponent;
+    let renderedComponent;
     ReactCurrentOwner.current = this;
     try {
       renderedComponent =
@@ -917,11 +917,11 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   attachRef: function(ref, component) {
-    var inst = this.getPublicInstance();
+    const inst = this.getPublicInstance();
     invariant(inst != null, 'Stateless function components cannot have refs.');
-    var publicComponentInstance = component.getPublicInstance();
+    const publicComponentInstance = component.getPublicInstance();
     if (__DEV__) {
-      var componentName = component && component.getName ?
+      const componentName = component && component.getName ?
         component.getName() : 'a component';
       warning(publicComponentInstance != null,
         'Stateless function components cannot be given refs ' +
@@ -932,7 +932,7 @@ var ReactCompositeComponentMixin = {
         this.getName()
       );
     }
-    var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+    const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
     refs[ref] = publicComponentInstance;
   },
 
@@ -944,7 +944,7 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   detachRef: function(ref) {
-    var refs = this.getPublicInstance().refs;
+    const refs = this.getPublicInstance().refs;
     delete refs[ref];
   },
 
@@ -955,8 +955,8 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   getName: function() {
-    var type = this._currentElement.type;
-    var constructor = this._instance && this._instance.constructor;
+    const type = this._currentElement.type;
+    const constructor = this._instance && this._instance.constructor;
     return (
       type.displayName || (constructor && constructor.displayName) ||
       type.name || (constructor && constructor.name) ||
@@ -973,7 +973,7 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   getPublicInstance: function() {
-    var inst = this._instance;
+    const inst = this._instance;
     if (inst instanceof StatelessComponent) {
       return null;
     }
@@ -995,7 +995,7 @@ ReactPerf.measureMethods(
   }
 );
 
-var ReactCompositeComponent = {
+const ReactCompositeComponent = {
 
   Mixin: ReactCompositeComponentMixin,
 

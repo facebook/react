@@ -11,16 +11,16 @@
 
 'use strict';
 
-var CSSCore = require('CSSCore');
+const CSSCore = require('CSSCore');
 
-var React;
-var ReactDOM;
-var ReactCSSTransitionGroup;
+let React;
+let ReactDOM;
+let ReactCSSTransitionGroup;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
 describe('ReactCSSTransitionGroup', function() {
-  var container;
+  let container;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -65,7 +65,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should clean-up silently after the timeout elapses', function() {
-    var a = ReactDOM.render(
+    const a = ReactDOM.render(
       <ReactCSSTransitionGroup
         transitionName="yolo"
         transitionEnter={false}
@@ -95,7 +95,7 @@ describe('ReactCSSTransitionGroup', function() {
 
     // For some reason jst is adding extra setTimeout()s and grunt test isn't,
     // so we need to do this disgusting hack.
-    for (var i = 0; i < setTimeout.mock.calls.length; i++) {
+    for (let i = 0; i < setTimeout.mock.calls.length; i++) {
       if (setTimeout.mock.calls[i][1] === 200) {
         setTimeout.mock.calls[i][0]();
         break;
@@ -111,7 +111,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should keep both sets of DOM nodes around', function() {
-    var a = ReactDOM.render(
+    const a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
@@ -130,7 +130,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should switch transitionLeave from false to true', function() {
-    var a = ReactDOM.render(
+    const a = ReactDOM.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
@@ -181,7 +181,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should transition from one to null', function() {
-    var a = ReactDOM.render(
+    const a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
@@ -201,7 +201,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should transition from false to one', function() {
-    var a = ReactDOM.render(
+    const a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {false}
       </ReactCSSTransitionGroup>,
@@ -219,12 +219,12 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should use transition-type specific names when they\'re provided', function() {
-    var customTransitionNames = {
+    const customTransitionNames = {
       enter: 'custom-entering',
       leave: 'custom-leaving',
     };
 
-    var a = ReactDOM.render(
+    const a = ReactDOM.render(
       <ReactCSSTransitionGroup
         transitionName={customTransitionNames}
         transitionEnterTimeout={1}
@@ -250,7 +250,7 @@ describe('ReactCSSTransitionGroup', function() {
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
 
-    var enteringNode = ReactDOM.findDOMNode(a).childNodes[1];
+    const enteringNode = ReactDOM.findDOMNode(a).childNodes[1];
     expect(CSSCore.hasClass(enteringNode, 'custom-entering')).toBe(true);
 
     // Remove an element
@@ -266,12 +266,12 @@ describe('ReactCSSTransitionGroup', function() {
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
 
-    var leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
+    const leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
     expect(CSSCore.hasClass(leavingNode, 'custom-leaving')).toBe(true);
   });
 
   it('should clear transition timeouts when unmounted', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return (
           <ReactCSSTransitionGroup

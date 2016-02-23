@@ -11,8 +11,8 @@
 
 'use strict';
 
-var assign = require('Object.assign');
-var warning = require('warning');
+const assign = require('Object.assign');
+const warning = require('warning');
 
 /**
  * This will log a single deprecation notice per function and forward the call
@@ -26,9 +26,9 @@ var warning = require('warning');
  * @return {function} The function that will warn once and then call fn
  */
 function deprecated(fnName, newModule, newPackage, ctx, fn) {
-  var warned = false;
+  let warned = false;
   if (__DEV__) {
-    var newFn = function() {
+    const newFn = function() {
       warning(
         warned,
         // Require examples in this string must be split to prevent React's

@@ -11,16 +11,16 @@
 
 'use strict';
 
-var ExecutionEnvironment;
-var React;
-var ReactDOM;
-var ReactMarkupChecksum;
-var ReactReconcileTransaction;
-var ReactTestUtils;
-var ReactServerRendering;
+let ExecutionEnvironment;
+let React;
+let ReactDOM;
+let ReactMarkupChecksum;
+let ReactReconcileTransaction;
+let ReactTestUtils;
+let ReactServerRendering;
 
-var ID_ATTRIBUTE_NAME;
-var ROOT_ATTRIBUTE_NAME;
+let ID_ATTRIBUTE_NAME;
+let ROOT_ATTRIBUTE_NAME;
 
 describe('ReactServerRendering', function() {
   beforeEach(function() {
@@ -35,14 +35,14 @@ describe('ReactServerRendering', function() {
     ExecutionEnvironment.canUseDOM = false;
     ReactServerRendering = require('ReactServerRendering');
 
-    var DOMProperty = require('DOMProperty');
+    const DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
   describe('renderToString', function() {
     it('should generate simple markup', function() {
-      var response = ReactServerRendering.renderToString(
+      const response = ReactServerRendering.renderToString(
         <span>hello world</span>
       );
       expect(response).toMatch(
@@ -53,7 +53,7 @@ describe('ReactServerRendering', function() {
     });
 
     it('should generate simple markup for self-closing tags', function() {
-      var response = ReactServerRendering.renderToString(
+      const response = ReactServerRendering.renderToString(
         <img />
       );
       expect(response).toMatch(
@@ -64,7 +64,7 @@ describe('ReactServerRendering', function() {
     });
 
     it('should generate simple markup for attribute with `>` symbol', function() {
-      var response = ReactServerRendering.renderToString(
+      const response = ReactServerRendering.renderToString(
         <img data-attr=">" />
       );
       expect(response).toMatch(
@@ -75,8 +75,8 @@ describe('ReactServerRendering', function() {
     });
 
     it('should not register event listeners', function() {
-      var EventPluginHub = require('EventPluginHub');
-      var cb = jest.genMockFn();
+      const EventPluginHub = require('EventPluginHub');
+      const cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -85,17 +85,17 @@ describe('ReactServerRendering', function() {
     });
 
     it('should render composite components', function() {
-      var Parent = React.createClass({
+      const Parent = React.createClass({
         render: function() {
           return <div><Child name="child" /></div>;
         },
       });
-      var Child = React.createClass({
+      const Child = React.createClass({
         render: function() {
           return <span>My name is {this.props.name}</span>;
         },
       });
-      var response = ReactServerRendering.renderToString(
+      const response = ReactServerRendering.renderToString(
         <Parent />
       );
       expect(response).toMatch(
@@ -112,8 +112,8 @@ describe('ReactServerRendering', function() {
 
     it('should only execute certain lifecycle methods', function() {
       function runTest() {
-        var lifecycle = [];
-        var TestComponent = React.createClass({
+        const lifecycle = [];
+        const TestComponent = React.createClass({
           componentWillMount: function() {
             lifecycle.push('componentWillMount');
           },
@@ -145,7 +145,7 @@ describe('ReactServerRendering', function() {
           },
         });
 
-        var response = ReactServerRendering.renderToString(
+        const response = ReactServerRendering.renderToString(
           <TestComponent />
         );
 
@@ -173,10 +173,10 @@ describe('ReactServerRendering', function() {
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
-      var mountCount = 0;
-      var numClicks = 0;
+      let mountCount = 0;
+      let numClicks = 0;
 
-      var TestComponent = React.createClass({
+      const TestComponent = React.createClass({
         componentDidMount: function() {
           mountCount++;
         },
@@ -190,10 +190,10 @@ describe('ReactServerRendering', function() {
         },
       });
 
-      var element = document.createElement('div');
+      const element = document.createElement('div');
       ReactDOM.render(<TestComponent />, element);
 
-      var lastMarkup = element.innerHTML;
+      let lastMarkup = element.innerHTML;
 
       // Exercise the update path. Markup should not change,
       // but some lifecycle methods should be run again.
@@ -232,7 +232,7 @@ describe('ReactServerRendering', function() {
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
       spyOn(console, 'error');
-      var instance = ReactDOM.render(<TestComponent name="y" />, element);
+      const instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expect(console.error.argsForCall.length).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -258,19 +258,19 @@ describe('ReactServerRendering', function() {
 
   describe('renderToStaticMarkup', function() {
     it('should not put checksum and React ID on components', function() {
-      var NestedComponent = React.createClass({
+      const NestedComponent = React.createClass({
         render: function() {
           return <div>inner text</div>;
         },
       });
 
-      var TestComponent = React.createClass({
+      const TestComponent = React.createClass({
         render: function() {
           return <span><NestedComponent /></span>;
         },
       });
 
-      var response = ReactServerRendering.renderToStaticMarkup(
+      const response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
       );
 
@@ -278,13 +278,13 @@ describe('ReactServerRendering', function() {
     });
 
     it('should not put checksum and React ID on text components', function() {
-      var TestComponent = React.createClass({
+      const TestComponent = React.createClass({
         render: function() {
           return <span>{'hello'} {'world'}</span>;
         },
       });
 
-      var response = ReactServerRendering.renderToStaticMarkup(
+      const response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
       );
 
@@ -292,8 +292,8 @@ describe('ReactServerRendering', function() {
     });
 
     it('should not register event listeners', function() {
-      var EventPluginHub = require('EventPluginHub');
-      var cb = jest.genMockFn();
+      const EventPluginHub = require('EventPluginHub');
+      const cb = jest.genMockFn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -303,8 +303,8 @@ describe('ReactServerRendering', function() {
 
     it('should only execute certain lifecycle methods', function() {
       function runTest() {
-        var lifecycle = [];
-        var TestComponent = React.createClass({
+        const lifecycle = [];
+        const TestComponent = React.createClass({
           componentWillMount: function() {
             lifecycle.push('componentWillMount');
           },
@@ -336,7 +336,7 @@ describe('ReactServerRendering', function() {
           },
         });
 
-        var response = ReactServerRendering.renderToStaticMarkup(
+        const response = ReactServerRendering.renderToStaticMarkup(
           <TestComponent />
         );
 
@@ -365,7 +365,7 @@ describe('ReactServerRendering', function() {
     });
 
     it('allows setState in componentWillMount without using DOM', function() {
-      var Component = React.createClass({
+      const Component = React.createClass({
         componentWillMount: function() {
           this.setState({text: 'hello, world'});
         },
@@ -378,7 +378,7 @@ describe('ReactServerRendering', function() {
         // We shouldn't ever be calling this on the server
         throw new Error('Browser reconcile transaction should not be used');
       };
-      var markup = ReactServerRendering.renderToString(
+      const markup = ReactServerRendering.renderToString(
         <Component />
       );
       expect(markup.indexOf('hello, world') >= 0).toBe(true);

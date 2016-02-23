@@ -11,14 +11,14 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTransitionGroup;
+let React;
+let ReactDOM;
+let ReactTransitionGroup;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
 describe('ReactTransitionGroup', function() {
-  var container;
+  let container;
 
   beforeEach(function() {
     React = require('React');
@@ -30,9 +30,9 @@ describe('ReactTransitionGroup', function() {
 
 
   it('should handle willEnter correctly', function() {
-    var log = [];
+    let log = [];
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount');
       },
@@ -65,20 +65,20 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       getInitialState: function() {
         return {count: 1};
       },
       render: function() {
-        var children = [];
-        for (var i = 0; i < this.state.count; i++) {
+        const children = [];
+        for (let i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       },
     });
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount', 'willAppear', 'didAppear']);
 
     log = [];
@@ -93,10 +93,10 @@ describe('ReactTransitionGroup', function() {
   });
 
   it('should handle enter/leave/enter/leave correctly', function() {
-    var log = [];
-    var willEnterCb;
+    const log = [];
+    let willEnterCb;
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount');
       },
@@ -122,24 +122,24 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       getInitialState: function() {
         return {count: 1};
       },
       render: function() {
-        var children = [];
-        for (var i = 0; i < this.state.count; i++) {
+        const children = [];
+        for (let i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       },
     });
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var k = 0; k < 5; k++) {
+    for (let k = 0; k < 5; k++) {
       instance.setState({count: 2});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 1});
@@ -153,10 +153,10 @@ describe('ReactTransitionGroup', function() {
   });
 
   it('should handle enter/leave/enter correctly', function() {
-    var log = [];
-    var willEnterCb;
+    const log = [];
+    let willEnterCb;
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount');
       },
@@ -182,24 +182,24 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       getInitialState: function() {
         return {count: 1};
       },
       render: function() {
-        var children = [];
-        for (var i = 0; i < this.state.count; i++) {
+        const children = [];
+        for (let i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       },
     });
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var k = 0; k < 5; k++) {
+    for (let k = 0; k < 5; k++) {
       instance.setState({count: 1});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 2});
@@ -211,9 +211,9 @@ describe('ReactTransitionGroup', function() {
   });
 
   it('should handle entering/leaving several elements at once', function() {
-    var log = [];
+    let log = [];
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount' + this.props.id);
       },
@@ -239,20 +239,20 @@ describe('ReactTransitionGroup', function() {
       },
     });
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       getInitialState: function() {
         return {count: 1};
       },
       render: function() {
-        var children = [];
-        for (var i = 0; i < this.state.count; i++) {
+        const children = [];
+        for (let i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} id={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       },
     });
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount0']);
     log = [];
 

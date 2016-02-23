@@ -11,14 +11,14 @@
 
 'use strict';
 
-var DOMChildrenOperations = require('DOMChildrenOperations');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactPerf = require('ReactPerf');
+const DOMChildrenOperations = require('DOMChildrenOperations');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactPerf = require('ReactPerf');
 
 /**
  * Operations used to process updates to DOM nodes.
  */
-var ReactDOMIDOperations = {
+const ReactDOMIDOperations = {
 
   /**
    * Updates a component's children by processing a series of updates.
@@ -27,7 +27,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   dangerouslyProcessChildrenUpdates: function(parentInst, updates) {
-    var node = ReactDOMComponentTree.getNodeFromInstance(parentInst);
+    const node = ReactDOMComponentTree.getNodeFromInstance(parentInst);
     DOMChildrenOperations.processUpdates(node, updates);
   },
 };

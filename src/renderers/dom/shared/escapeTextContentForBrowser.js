@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ESCAPE_LOOKUP = {
+const ESCAPE_LOOKUP = {
   '&': '&amp;',
   '>': '&gt;',
   '<': '&lt;',
@@ -19,7 +19,7 @@ var ESCAPE_LOOKUP = {
   '\'': '&#x27;',
 };
 
-var ESCAPE_REGEX = /[&><"']/g;
+const ESCAPE_REGEX = /[&><"']/g;
 
 function escaper(match) {
   return ESCAPE_LOOKUP[match];

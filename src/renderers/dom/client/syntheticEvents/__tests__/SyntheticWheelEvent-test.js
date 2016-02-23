@@ -11,23 +11,23 @@
 
 'use strict';
 
-var SyntheticWheelEvent;
+let SyntheticWheelEvent;
 
 describe('SyntheticWheelEvent', function() {
-  var createEvent;
+  let createEvent;
 
   beforeEach(function() {
     SyntheticWheelEvent = require('SyntheticWheelEvent');
 
     createEvent = function(nativeEvent) {
-      var target = require('getEventTarget')(nativeEvent);
+      const target = require('getEventTarget')(nativeEvent);
       return SyntheticWheelEvent.getPooled({}, '', nativeEvent, target);
     };
   });
 
   it('should normalize properties from the Event interface', function() {
-    var target = document.createElement('div');
-    var syntheticEvent = createEvent({srcElement: target});
+    const target = document.createElement('div');
+    const syntheticEvent = createEvent({srcElement: target});
 
     expect(syntheticEvent.target).toBe(target);
     expect(syntheticEvent.type).toBe(undefined);
@@ -38,18 +38,18 @@ describe('SyntheticWheelEvent', function() {
   });
 
   it('should normalize properties from the WheelEvent interface', function() {
-    var standardEvent = createEvent({deltaX: 10, deltaY: -50});
+    const standardEvent = createEvent({deltaX: 10, deltaY: -50});
     expect(standardEvent.deltaX).toBe(10);
     expect(standardEvent.deltaY).toBe(-50);
 
-    var webkitEvent = createEvent({wheelDeltaX: -10, wheelDeltaY: 50});
+    const webkitEvent = createEvent({wheelDeltaX: -10, wheelDeltaY: 50});
     expect(webkitEvent.deltaX).toBe(10);
     expect(webkitEvent.deltaY).toBe(-50);
   });
 
   it('should be able to `preventDefault` and `stopPropagation`', function() {
-    var nativeEvent = {};
-    var syntheticEvent = createEvent(nativeEvent);
+    const nativeEvent = {};
+    const syntheticEvent = createEvent(nativeEvent);
 
     expect(syntheticEvent.isDefaultPrevented()).toBe(false);
     syntheticEvent.preventDefault();
@@ -61,7 +61,7 @@ describe('SyntheticWheelEvent', function() {
   });
 
   it('should be able to `persist`', function() {
-    var syntheticEvent = createEvent({});
+    const syntheticEvent = createEvent({});
 
     expect(syntheticEvent.isPersistent()).toBe(false);
     syntheticEvent.persist();

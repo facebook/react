@@ -11,11 +11,11 @@
 
 'use strict';
 
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var focusNode = require('focusNode');
+const focusNode = require('focusNode');
 
-var AutoFocusUtils = {
+const AutoFocusUtils = {
   focusDOMComponent: function() {
     focusNode(ReactDOMComponentTree.getNodeFromInstance(this));
   },

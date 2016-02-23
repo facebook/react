@@ -34,7 +34,7 @@
  * consumption of ReactLink easier; see LinkedValueUtils and LinkedStateMixin.
  */
 
-var React = require('React');
+const React = require('React');
 
 /**
  * @param {*} value current value of the link
@@ -54,7 +54,7 @@ function ReactLink(value, requestChange) {
  * }
  */
 function createLinkTypeChecker(linkType) {
-  var shapes = {
+  const shapes = {
     value: linkType === undefined ?
       React.PropTypes.any.isRequired :
       linkType.isRequired,

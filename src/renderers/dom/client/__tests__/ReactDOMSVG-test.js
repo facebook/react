@@ -11,8 +11,8 @@
 
 'use strict';
 
-var React;
-var ReactDOMServer;
+let React;
+let ReactDOMServer;
 
 describe('ReactDOMSVG', function() {
 
@@ -22,14 +22,14 @@ describe('ReactDOMSVG', function() {
   });
 
   it('creates initial markup for known hyphenated attributes', function() {
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <svg clip-path="url(#starlet)" />
     );
     expect(markup).toContain('clip-path="url(#starlet)"');
   });
 
   it('creates initial markup for camel case attributes', function() {
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <svg viewBox="0 0 100 100" />
     );
     expect(markup).toContain('viewBox="0 0 100 100"');
@@ -37,7 +37,7 @@ describe('ReactDOMSVG', function() {
 
   it('deprecates camel casing of hyphenated attributes', function() {
     spyOn(console, 'error');
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <svg clipPath="url(#starlet)" />
     );
     expect(markup).toContain('clip-path="url(#starlet)"');
@@ -47,21 +47,21 @@ describe('ReactDOMSVG', function() {
   });
 
   it('creates initial markup for unknown hyphenated attributes', function() {
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <svg the-word="the-bird" />
     );
     expect(markup).toContain('the-word="the-bird"');
   });
 
   it('creates initial markup for unknown camel case attributes', function() {
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <svg theWord="theBird" />
     );
     expect(markup).toContain('theWord="theBird"');
   });
 
   it('creates initial namespaced markup', function() {
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <svg>
         <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
       </svg>

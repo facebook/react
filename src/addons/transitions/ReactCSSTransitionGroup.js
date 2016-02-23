@@ -11,16 +11,16 @@
 
 'use strict';
 
-var React = require('React');
+const React = require('React');
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
-var ReactTransitionGroup = require('ReactTransitionGroup');
-var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
+const ReactTransitionGroup = require('ReactTransitionGroup');
+const ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
 
 function createTransitionTimeoutPropValidator(transitionType) {
-  var timeoutPropName = 'transition' + transitionType + 'Timeout';
-  var enabledPropName = 'transition' + transitionType;
+  const timeoutPropName = 'transition' + transitionType + 'Timeout';
+  const enabledPropName = 'transition' + transitionType;
 
   return function(props) {
     // If the transition is enabled
@@ -43,7 +43,7 @@ function createTransitionTimeoutPropValidator(transitionType) {
   };
 }
 
-var ReactCSSTransitionGroup = React.createClass({
+const ReactCSSTransitionGroup = React.createClass({
   displayName: 'ReactCSSTransitionGroup',
 
   propTypes: {

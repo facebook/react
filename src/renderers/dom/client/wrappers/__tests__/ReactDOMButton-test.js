@@ -13,11 +13,11 @@
 
 
 describe('ReactDOMButton', function() {
-  var React;
-  var ReactDOM;
-  var ReactTestUtils;
+  let React;
+  let ReactDOM;
+  let ReactTestUtils;
 
-  var onClick = jest.genMockFn();
+  const onClick = jest.genMockFn();
 
   function expectClickThru(button) {
     onClick.mockClear();
@@ -53,8 +53,8 @@ describe('ReactDOMButton', function() {
   });
 
   it('should forward clicks when it becomes not disabled', function() {
-    var container = document.createElement('div');
-    var btn = ReactDOM.render(
+    const container = document.createElement('div');
+    let btn = ReactDOM.render(
       <button disabled={true} onClick={onClick} />,
       container
     );
@@ -66,8 +66,8 @@ describe('ReactDOMButton', function() {
   });
 
   it('should not forward clicks when it becomes disabled', function() {
-    var container = document.createElement('div');
-    var btn = ReactDOM.render(
+    const container = document.createElement('div');
+    let btn = ReactDOM.render(
       <button onClick={onClick} />,
       container
     );
@@ -79,8 +79,8 @@ describe('ReactDOMButton', function() {
   });
 
   it('should work correctly if the listener is changed', function() {
-    var container = document.createElement('div');
-    var btn = ReactDOM.render(
+    const container = document.createElement('div');
+    let btn = ReactDOM.render(
       <button disabled={true} onClick={function() {}} />,
       container
     );

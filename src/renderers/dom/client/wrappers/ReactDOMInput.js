@@ -11,22 +11,22 @@
 
 'use strict';
 
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var LinkedValueUtils = require('LinkedValueUtils');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
+const DOMPropertyOperations = require('DOMPropertyOperations');
+const LinkedValueUtils = require('LinkedValueUtils');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
-var warning = require('warning');
+const assign = require('Object.assign');
+const invariant = require('invariant');
+const warning = require('warning');
 
-var didWarnValueLink = false;
-var didWarnCheckedLink = false;
-var didWarnValueNull = false;
-var didWarnValueDefaultValue = false;
-var didWarnCheckedDefaultChecked = false;
-var didWarnControlledToUncontrolled = false;
-var didWarnUncontrolledToControlled = false;
+let didWarnValueLink = false;
+let didWarnCheckedLink = false;
+let didWarnValueNull = false;
+let didWarnValueDefaultValue = false;
+let didWarnCheckedDefaultChecked = false;
+let didWarnControlledToUncontrolled = false;
+let didWarnUncontrolledToControlled = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
@@ -66,10 +66,10 @@ function warnIfValueIsNull(props) {
  */
 var ReactDOMInput = {
   getNativeProps: function(inst, props) {
-    var value = LinkedValueUtils.getValue(props);
-    var checked = LinkedValueUtils.getChecked(props);
+    const value = LinkedValueUtils.getValue(props);
+    const checked = LinkedValueUtils.getChecked(props);
 
-    var nativeProps = assign({
+    const nativeProps = assign({
       // Make sure we set .type before any other properties (setting .value
       // before .type means .value is lost in IE11 and below)
       type: undefined,
@@ -153,15 +153,15 @@ var ReactDOMInput = {
   },
 
   updateWrapper: function(inst) {
-    var props = inst._currentElement.props;
+    const props = inst._currentElement.props;
 
     if (__DEV__) {
       warnIfValueIsNull(props);
 
-      var initialValue = inst._wrapperState.initialChecked || inst._wrapperState.initialValue;
-      var defaultValue = props.defaultChecked || props.defaultValue;
-      var controlled = props.checked !== undefined || props.value !== undefined;
-      var owner = inst._currentElement._owner;
+      const initialValue = inst._wrapperState.initialChecked || inst._wrapperState.initialValue;
+      const defaultValue = props.defaultChecked || props.defaultValue;
+      const controlled = props.checked !== undefined || props.value !== undefined;
+      const owner = inst._currentElement._owner;
 
       if (
         (initialValue || !inst._wrapperState.controlled) &&
@@ -220,19 +220,19 @@ var ReactDOMInput = {
 };
 
 function _handleChange(event) {
-  var props = this._currentElement.props;
+  const props = this._currentElement.props;
 
-  var returnValue = LinkedValueUtils.executeOnChange(props, event);
+  const returnValue = LinkedValueUtils.executeOnChange(props, event);
 
   // Here we use asap to wait until all updates have propagated, which
   // is important when using controlled components within layers:
   // https://github.com/facebook/react/issues/1698
   ReactUpdates.asap(forceUpdateIfMounted, this);
 
-  var name = props.name;
+  const name = props.name;
   if (props.type === 'radio' && name != null) {
-    var rootNode = ReactDOMComponentTree.getNodeFromInstance(this);
-    var queryRoot = rootNode;
+    const rootNode = ReactDOMComponentTree.getNodeFromInstance(this);
+    let queryRoot = rootNode;
 
     while (queryRoot.parentNode) {
       queryRoot = queryRoot.parentNode;
@@ -244,11 +244,11 @@ function _handleChange(event) {
     // and won't include inputs that use the HTML5 `form=` attribute. Since
     // the input might not even be in a form, let's just use the global
     // `querySelectorAll` to ensure we don't miss anything.
-    var group = queryRoot.querySelectorAll(
+    const group = queryRoot.querySelectorAll(
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
 
-    for (var i = 0; i < group.length; i++) {
-      var otherNode = group[i];
+    for (let i = 0; i < group.length; i++) {
+      const otherNode = group[i];
       if (otherNode === rootNode ||
           otherNode.form !== rootNode.form) {
         continue;
@@ -257,7 +257,7 @@ function _handleChange(event) {
       // and the same name are rendered into the same form (same as #1939).
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
-      var otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
+      const otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
       invariant(
         otherInstance,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +

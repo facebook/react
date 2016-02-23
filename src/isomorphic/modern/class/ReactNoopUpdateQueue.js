@@ -11,7 +11,7 @@
 
 'use strict';
 
-var warning = require('warning');
+const warning = require('warning');
 
 function warnTDZ(publicInstance, callerName) {
   if (__DEV__) {
@@ -30,7 +30,7 @@ function warnTDZ(publicInstance, callerName) {
 /**
  * This is the abstract API for an update queue.
  */
-var ReactNoopUpdateQueue = {
+const ReactNoopUpdateQueue = {
 
   /**
    * Checks whether or not this composite component is mounted.

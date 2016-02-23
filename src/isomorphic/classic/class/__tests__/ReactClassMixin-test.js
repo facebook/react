@@ -11,14 +11,14 @@
 
 'use strict';
 
-var React;
-var ReactTestUtils;
+let React;
+let ReactTestUtils;
 
-var TestComponent;
-var TestComponentWithPropTypes;
-var TestComponentWithReverseSpec;
-var mixinPropValidator;
-var componentPropValidator;
+let TestComponent;
+let TestComponentWithPropTypes;
+let TestComponentWithReverseSpec;
+let mixinPropValidator;
+let componentPropValidator;
 
 describe('ReactClass-mixin', function() {
 
@@ -28,7 +28,7 @@ describe('ReactClass-mixin', function() {
     mixinPropValidator = jest.genMockFn();
     componentPropValidator = jest.genMockFn();
 
-    var MixinA = {
+    const MixinA = {
       propTypes: {
         propA: function() {},
       },
@@ -37,7 +37,7 @@ describe('ReactClass-mixin', function() {
       },
     };
 
-    var MixinB = {
+    const MixinB = {
       mixins: [MixinA],
       propTypes: {
         propB: function() {},
@@ -47,14 +47,14 @@ describe('ReactClass-mixin', function() {
       },
     };
 
-    var MixinBWithReverseSpec = {
+    const MixinBWithReverseSpec = {
       componentDidMount: function() {
         this.props.listener('MixinBWithReverseSpec didMount');
       },
       mixins: [MixinA],
     };
 
-    var MixinC = {
+    const MixinC = {
       statics: {
         staticC: function() {},
       },
@@ -63,7 +63,7 @@ describe('ReactClass-mixin', function() {
       },
     };
 
-    var MixinD = {
+    const MixinD = {
       propTypes: {
         value: mixinPropValidator,
       },
@@ -107,11 +107,11 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should support merging propTypes and statics', function() {
-    var listener = jest.genMockFn();
-    var instance = <TestComponent listener={listener} />;
+    const listener = jest.genMockFn();
+    let instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    var instancePropTypes = instance.constructor.propTypes;
+    const instancePropTypes = instance.constructor.propTypes;
 
     expect('propA' in instancePropTypes).toBe(true);
     expect('propB' in instancePropTypes).toBe(true);
@@ -122,8 +122,8 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should support chaining delegate functions', function() {
-    var listener = jest.genMockFn();
-    var instance = <TestComponent listener={listener} />;
+    const listener = jest.genMockFn();
+    let instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(listener.mock.calls).toEqual([
@@ -135,8 +135,8 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should chain functions regardless of spec property order', function() {
-    var listener = jest.genMockFn();
-    var instance = <TestComponentWithReverseSpec listener={listener} />;
+    const listener = jest.genMockFn();
+    let instance = <TestComponentWithReverseSpec listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(listener.mock.calls).toEqual([
@@ -167,12 +167,12 @@ describe('ReactClass-mixin', function() {
 
 
   it('should support mixins with getInitialState()', function() {
-    var Mixin = {
+    const Mixin = {
       getInitialState: function() {
         return {mixin: true};
       },
     };
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [Mixin],
       getInitialState: function() {
         return {component: true};
@@ -181,19 +181,19 @@ describe('ReactClass-mixin', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.component).toBe(true);
     expect(instance.state.mixin).toBe(true);
   });
 
   it('should throw with conflicting getInitialState() methods', function() {
-    var Mixin = {
+    const Mixin = {
       getInitialState: function() {
         return {x: true};
       },
     };
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [Mixin],
       getInitialState: function() {
         return {x: true};
@@ -202,7 +202,7 @@ describe('ReactClass-mixin', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
@@ -214,12 +214,12 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should not mutate objects returned by getInitialState()', function() {
-    var Mixin = {
+    const Mixin = {
       getInitialState: function() {
         return Object.freeze({mixin: true});
       },
     };
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [Mixin],
       getInitialState: function() {
         return Object.freeze({component: true});
@@ -234,12 +234,12 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should support statics in mixins', function() {
-    var Mixin = {
+    const Mixin = {
       statics: {
         foo: 'bar',
       },
     };
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [Mixin],
 
       statics: {
@@ -250,7 +250,7 @@ describe('ReactClass-mixin', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.constructor.foo).toBe('bar');
     expect(Component.foo).toBe('bar');
@@ -260,7 +260,7 @@ describe('ReactClass-mixin', function() {
 
   it("should throw if mixins override each others' statics", function() {
     expect(function() {
-      var Mixin = {
+      const Mixin = {
         statics: {
           abc: 'foo',
         },
@@ -284,7 +284,7 @@ describe('ReactClass-mixin', function() {
 
   it('should throw if mixins override functions in statics', function() {
     expect(function() {
-      var Mixin = {
+      const Mixin = {
         statics: {
           abc: function() {
             console.log('foo');
@@ -327,7 +327,7 @@ describe('ReactClass-mixin', function() {
 
   it('should throw if the mixin is a React component class', function() {
     expect(function() {
-      var Component = React.createClass({
+      const Component = React.createClass({
         render: function() {
           return <span />;
         },
@@ -347,13 +347,13 @@ describe('ReactClass-mixin', function() {
   });
 
   it('should have bound the mixin methods to the component', function() {
-    var mixin = {
+    const mixin = {
       mixinFunc: function() {
         return this;
       },
     };
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [mixin],
       componentDidMount: function() {
         expect(this.mixinFunc()).toBe(this);
@@ -362,17 +362,17 @@ describe('ReactClass-mixin', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should include the mixin keys in even if their values are falsy', function() {
-    var mixin = {
+    const mixin = {
       keyWithNullValue: null,
       randomCounter: 0,
     };
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [mixin],
       componentDidMount: function() {
         expect(this.randomCounter).toBe(0);
@@ -382,15 +382,15 @@ describe('ReactClass-mixin', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should work with a null getInitialState return value and a mixin', () => {
-    var Component;
-    var instance;
+    let Component;
+    let instance;
 
-    var Mixin = {
+    const Mixin = {
       getInitialState: function() {
         return {foo: 'bar'};
       },
@@ -413,7 +413,7 @@ describe('ReactClass-mixin', function() {
     expect(instance.state).toEqual({foo: 'bar'});
 
     // Also the other way round should work
-    var Mixin2 = {
+    const Mixin2 = {
       getInitialState: function() {
         return null;
       },

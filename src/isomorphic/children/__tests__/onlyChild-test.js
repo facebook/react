@@ -13,10 +13,10 @@
 
 describe('onlyChild', function() {
 
-  var React;
-  var ReactFragment;
-  var onlyChild;
-  var WrapComponent;
+  let React;
+  let ReactFragment;
+  let onlyChild;
+  let WrapComponent;
 
   beforeEach(function() {
     React = require('React');
@@ -35,7 +35,7 @@ describe('onlyChild', function() {
 
   it('should fail when passed two children', function() {
     expect(function() {
-      var instance =
+      const instance =
         <WrapComponent>
           <div />
           <span />
@@ -46,7 +46,7 @@ describe('onlyChild', function() {
 
   it('should fail when passed nully values', function() {
     expect(function() {
-      var instance =
+      const instance =
         <WrapComponent>
           {null}
         </WrapComponent>;
@@ -54,7 +54,7 @@ describe('onlyChild', function() {
     }).toThrow();
 
     expect(function() {
-      var instance =
+      const instance =
         <WrapComponent>
           {undefined}
         </WrapComponent>;
@@ -64,7 +64,7 @@ describe('onlyChild', function() {
 
   it('should fail when key/value objects', function() {
     expect(function() {
-      var instance =
+      const instance =
         <WrapComponent>
           {ReactFragment.create({oneThing: <span />})}
         </WrapComponent>;
@@ -75,7 +75,7 @@ describe('onlyChild', function() {
 
   it('should not fail when passed interpolated single child', function() {
     expect(function() {
-      var instance =
+      const instance =
         <WrapComponent>
           {<span />}
         </WrapComponent>;
@@ -86,7 +86,7 @@ describe('onlyChild', function() {
 
   it('should return the only child', function() {
     expect(function() {
-      var instance =
+      const instance =
         <WrapComponent>
           <span />
         </WrapComponent>;

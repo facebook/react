@@ -11,16 +11,16 @@
 
 'use strict';
 
-var DOMChildrenOperations = require('DOMChildrenOperations');
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactPerf = require('ReactPerf');
+const DOMChildrenOperations = require('DOMChildrenOperations');
+const ReactDOMIDOperations = require('ReactDOMIDOperations');
+const ReactPerf = require('ReactPerf');
 
 /**
  * Abstracts away all functionality of the reconciler that requires knowledge of
  * the browser context. TODO: These callers should be refactored to avoid the
  * need for this injection.
  */
-var ReactComponentBrowserEnvironment = {
+const ReactComponentBrowserEnvironment = {
 
   processChildrenUpdates:
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates,

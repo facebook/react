@@ -11,13 +11,13 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventPluginRegistry = require('EventPluginRegistry');
-var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
-var ViewportMetrics = require('ViewportMetrics');
+const EventConstants = require('EventConstants');
+const EventPluginRegistry = require('EventPluginRegistry');
+const ReactEventEmitterMixin = require('ReactEventEmitterMixin');
+const ViewportMetrics = require('ViewportMetrics');
 
-var assign = require('Object.assign');
-var isEventSupported = require('isEventSupported');
+const assign = require('Object.assign');
+const isEventSupported = require('isEventSupported');
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -74,14 +74,14 @@ var isEventSupported = require('isEventSupported');
  *    React Core     .  General Purpose Event Plugin System
  */
 
-var alreadyListeningTo = {};
-var isMonitoringScrollValue = false;
-var reactTopListenersCounter = 0;
+const alreadyListeningTo = {};
+let isMonitoringScrollValue = false;
+let reactTopListenersCounter = 0;
 
 // For events like 'submit' which don't consistently bubble (which we trap at a
 // lower node than `document`), binding at `document` would cause duplicate
 // events so we don't include them here
-var topEventMapping = {
+const topEventMapping = {
   topAbort: 'abort',
   topBlur: 'blur',
   topCanPlay: 'canplay',
@@ -147,7 +147,7 @@ var topEventMapping = {
 /**
  * To ensure no conflicts with other potential React instances on the page
  */
-var topListenersIDKey = '_reactListenersID' + String(Math.random()).slice(2);
+const topListenersIDKey = '_reactListenersID' + String(Math.random()).slice(2);
 
 function getListeningForDocument(mountAt) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
@@ -169,7 +169,7 @@ function getListeningForDocument(mountAt) {
  *
  * @internal
  */
-var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
+const ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
 
   /**
    * Injectable event backend
@@ -231,14 +231,14 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
    * @param {object} contentDocumentHandle Document which owns the container
    */
   listenTo: function(registrationName, contentDocumentHandle) {
-    var mountAt = contentDocumentHandle;
-    var isListening = getListeningForDocument(mountAt);
-    var dependencies =
+    const mountAt = contentDocumentHandle;
+    const isListening = getListeningForDocument(mountAt);
+    const dependencies =
       EventPluginRegistry.registrationNameDependencies[registrationName];
 
-    var topLevelTypes = EventConstants.topLevelTypes;
-    for (var i = 0; i < dependencies.length; i++) {
-      var dependency = dependencies[i];
+    const topLevelTypes = EventConstants.topLevelTypes;
+    for (let i = 0; i < dependencies.length; i++) {
+      const dependency = dependencies[i];
       if (!(
             isListening.hasOwnProperty(dependency) &&
             isListening[dependency]
@@ -351,7 +351,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
    */
   ensureScrollValueMonitoring: function() {
     if (!isMonitoringScrollValue) {
-      var refresh = ViewportMetrics.refreshScrollValues;
+      const refresh = ViewportMetrics.refreshScrollValues;
       ReactBrowserEventEmitter.ReactEventListener.monitorScrollValue(refresh);
       isMonitoringScrollValue = true;
     }

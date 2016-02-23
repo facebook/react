@@ -11,11 +11,11 @@
 
 'use strict';
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
 // Don't try to save users less than 1.2ms (a number I made up)
-var DONT_CARE_THRESHOLD = 1.2;
-var DOM_OPERATION_TYPES = {
+const DONT_CARE_THRESHOLD = 1.2;
+const DOM_OPERATION_TYPES = {
   '_mountImageIntoNode': 'set innerHTML',
   INSERT_MARKUP: 'set innerHTML',
   MOVE_EXISTING: 'move',
@@ -36,16 +36,16 @@ function getTotalTime(measurements) {
   // TODO: measure dropped frames after reconcile?
   // TODO: log total time of each reconcile and the top-level component
   // class that triggered it.
-  var totalTime = 0;
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
+  let totalTime = 0;
+  for (let i = 0; i < measurements.length; i++) {
+    const measurement = measurements[i];
     totalTime += measurement.totalTime;
   }
   return totalTime;
 }
 
 function getDOMSummary(measurements) {
-  var items = [];
+  const items = [];
   measurements.forEach(function(measurement) {
     Object.keys(measurement.writes).forEach(function(id) {
       measurement.writes[id].forEach(function(write) {
@@ -61,18 +61,18 @@ function getDOMSummary(measurements) {
 }
 
 function getExclusiveSummary(measurements) {
-  var candidates = {};
-  var displayName;
+  const candidates = {};
+  let displayName;
 
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
-    var allIDs = assign(
+  for (let i = 0; i < measurements.length; i++) {
+    const measurement = measurements[i];
+    const allIDs = assign(
       {},
       measurement.exclusive,
       measurement.inclusive
     );
 
-    for (var id in allIDs) {
+    for (let id in allIDs) {
       displayName = measurement.displayNames[id].current;
 
       candidates[displayName] = candidates[displayName] || {
@@ -98,7 +98,7 @@ function getExclusiveSummary(measurements) {
   }
 
   // Now make a sorted array with the results.
-  var arr = [];
+  const arr = [];
   for (displayName in candidates) {
     if (candidates[displayName].exclusive >= DONT_CARE_THRESHOLD) {
       arr.push(candidates[displayName]);
@@ -113,28 +113,28 @@ function getExclusiveSummary(measurements) {
 }
 
 function getInclusiveSummary(measurements, onlyClean) {
-  var candidates = {};
-  var inclusiveKey;
+  const candidates = {};
+  let inclusiveKey;
 
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
-    var allIDs = assign(
+  for (let i = 0; i < measurements.length; i++) {
+    const measurement = measurements[i];
+    const allIDs = assign(
       {},
       measurement.exclusive,
       measurement.inclusive
     );
-    var cleanComponents;
+    let cleanComponents;
 
     if (onlyClean) {
       cleanComponents = getUnchangedComponents(measurement);
     }
 
-    for (var id in allIDs) {
+    for (let id in allIDs) {
       if (onlyClean && !cleanComponents[id]) {
         continue;
       }
 
-      var displayName = measurement.displayNames[id];
+      const displayName = measurement.displayNames[id];
 
       // Inclusive time is not useful for many components without knowing where
       // they are instantiated. So we aggregate inclusive time with both the
@@ -157,7 +157,7 @@ function getInclusiveSummary(measurements, onlyClean) {
   }
 
   // Now make a sorted array with the results.
-  var arr = [];
+  const arr = [];
   for (inclusiveKey in candidates) {
     if (candidates[inclusiveKey].time >= DONT_CARE_THRESHOLD) {
       arr.push(candidates[inclusiveKey]);
@@ -175,9 +175,9 @@ function getUnchangedComponents(measurement) {
   // For a given reconcile, look at which components did not actually
   // render anything to the DOM and return a mapping of their ID to
   // the amount of time it took to render the entire subtree.
-  var cleanComponents = {};
-  var writes = measurement.writes;
-  var dirtyComposites = {};
+  const cleanComponents = {};
+  const writes = measurement.writes;
+  const dirtyComposites = {};
   Object.keys(writes).forEach(function(id) {
     writes[id].forEach(function(write) {
       // Root mounting (innerHTML set) is recorded with an ID of ''
@@ -186,10 +186,10 @@ function getUnchangedComponents(measurement) {
       }
     });
   });
-  var allIDs = assign({}, measurement.exclusive, measurement.inclusive);
+  const allIDs = assign({}, measurement.exclusive, measurement.inclusive);
 
-  for (var id in allIDs) {
-    var isDirty = false;
+  for (let id in allIDs) {
+    let isDirty = false;
     // See if any of the DOM operations applied to this component's subtree.
     if (dirtyComposites[id]) {
       isDirty = true;
@@ -205,7 +205,7 @@ function getUnchangedComponents(measurement) {
   return cleanComponents;
 }
 
-var ReactDefaultPerfAnalysis = {
+const ReactDefaultPerfAnalysis = {
   getExclusiveSummary: getExclusiveSummary,
   getInclusiveSummary: getInclusiveSummary,
   getDOMSummary: getDOMSummary,

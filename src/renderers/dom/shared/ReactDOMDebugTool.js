@@ -11,14 +11,14 @@
 
 'use strict';
 
-var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
-var ReactDOMSVGDeprecatedAttributeDevtool =
+const ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
+const ReactDOMSVGDeprecatedAttributeDevtool =
   require('ReactDOMSVGDeprecatedAttributeDevtool');
 
-var warning = require('warning');
+const warning = require('warning');
 
-var eventHandlers = [];
-var handlerDoesThrowForEvent = {};
+const eventHandlers = [];
+const handlerDoesThrowForEvent = {};
 
 function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
   if (__DEV__) {
@@ -40,12 +40,12 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
   }
 }
 
-var ReactDOMDebugTool = {
+const ReactDOMDebugTool = {
   addDevtool(devtool) {
     eventHandlers.push(devtool);
   },
   removeDevtool(devtool) {
-    for (var i = 0; i < eventHandlers.length; i++) {
+    for (let i = 0; i < eventHandlers.length; i++) {
       if (eventHandlers[i] === devtool) {
         eventHandlers.splice(i, 1);
         i--;

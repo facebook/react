@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactServerBatchingStrategy = {
+const ReactServerBatchingStrategy = {
   isBatchingUpdates: false,
   batchedUpdates: function(callback) {
     // Don't do anything here. During the server rendering we don't want to

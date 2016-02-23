@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactClass-spec', function() {
 
@@ -33,7 +33,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should copy `displayName` onto the Constructor', function() {
-    var TestComponent = React.createClass({
+    const TestComponent = React.createClass({
       render: function() {
         return <div />;
       },
@@ -44,8 +44,8 @@ describe('ReactClass-spec', function() {
   });
 
   it('should copy prop types onto the Constructor', function() {
-    var propValidator = jest.genMockFn();
-    var TestComponent = React.createClass({
+    const propValidator = jest.genMockFn();
+    const TestComponent = React.createClass({
       propTypes: {
         value: propValidator,
       },
@@ -60,7 +60,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should warn on invalid prop types', function() {
-    var warn = console.error;
+    const warn = console.error;
     console.error = jest.genMockFn();
     try {
 
@@ -84,7 +84,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should warn on invalid context types', function() {
-    var warn = console.error;
+    const warn = console.error;
     console.error = jest.genMockFn();
     try {
       React.createClass({
@@ -107,7 +107,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should throw on invalid child context types', function() {
-    var warn = console.error;
+    const warn = console.error;
     console.error = jest.genMockFn();
     try {
       React.createClass({
@@ -239,7 +239,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should support statics', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       statics: {
         abc: 'def',
         def: 0,
@@ -254,7 +254,7 @@ describe('ReactClass-spec', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
@@ -269,7 +269,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should work with object getInitialState() return values', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       getInitialState: function() {
         return {
           occupation: 'clown',
@@ -279,13 +279,13 @@ describe('ReactClass-spec', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
   });
 
   it('renders based on context getInitialState', function() {
-    var Foo = React.createClass({
+    const Foo = React.createClass({
       contextTypes: {
         className: React.PropTypes.string,
       },
@@ -297,7 +297,7 @@ describe('ReactClass-spec', function() {
       },
     });
 
-    var Outer = React.createClass({
+    const Outer = React.createClass({
       childContextTypes: {
         className: React.PropTypes.string,
       },
@@ -309,14 +309,14 @@ describe('ReactClass-spec', function() {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Outer />, container);
     expect(container.firstChild.className).toBe('foo');
   });
 
   it('should throw with non-object getInitialState() return values', function() {
     [['an array'], 'a string', 1234].forEach(function(state) {
-      var Component = React.createClass({
+      const Component = React.createClass({
         getInitialState: function() {
           return state;
         },
@@ -324,7 +324,7 @@ describe('ReactClass-spec', function() {
           return <span />;
         },
       });
-      var instance = <Component />;
+      let instance = <Component />;
       expect(function() {
         instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrow(
@@ -334,7 +334,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should work with a null getInitialState() return value', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       getInitialState: function() {
         return null;
       },
@@ -348,7 +348,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should throw when using legacy factories', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       render() {
         return <div />;
       },

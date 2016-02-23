@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactFragment;
+let React;
+let ReactDOM;
+let ReactFragment;
 
 describe('ReactFragment', function() {
 
@@ -24,13 +24,13 @@ describe('ReactFragment', function() {
   });
 
   it('should throw if a plain object is used as a child', function() {
-    var children = {
+    const children = {
       x: <span />,
       y: <span />,
       z: <span />,
     };
-    var element = <div>{[children]}</div>;
-    var container = document.createElement('div');
+    const element = <div>{[children]}</div>;
+    const container = document.createElement('div');
     expect(() => ReactDOM.render(element, container)).toThrow(
       'Objects are not valid as a React child (found: object with keys ' +
       '{x, y, z}). If you meant to render a collection of children, use an ' +
@@ -42,7 +42,7 @@ describe('ReactFragment', function() {
   it('should throw if a plain object even if it is in an owner', function() {
     class Foo extends React.Component {
       render() {
-        var children = {
+        const children = {
           a: <span />,
           b: <span />,
           c: <span />,
@@ -50,7 +50,7 @@ describe('ReactFragment', function() {
         return <div>{[children]}</div>;
       }
     }
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     expect(() => ReactDOM.render(<Foo />, container)).toThrow(
       'Objects are not valid as a React child (found: object with keys ' +
       '{a, b, c}). If you meant to render a collection of children, use an ' +
@@ -60,8 +60,8 @@ describe('ReactFragment', function() {
   });
 
   it('should throw if a plain object looks like an old element', function() {
-    var oldEl = {_isReactElement: true, type: 'span', props: {}};
-    var container = document.createElement('div');
+    const oldEl = {_isReactElement: true, type: 'span', props: {}};
+    const container = document.createElement('div');
     expect(() => ReactDOM.render(<div>{oldEl}</div>, container)).toThrow(
       'Objects are not valid as a React child (found: object with keys ' +
       '{_isReactElement, type, props}). It looks like you\'re using an ' +

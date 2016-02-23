@@ -11,7 +11,7 @@
 
 'use strict';
 
-var MetaMatchers = require('MetaMatchers');
+const MetaMatchers = require('MetaMatchers');
 
 describe('ReactClassEquivalence', function() {
 
@@ -19,9 +19,9 @@ describe('ReactClassEquivalence', function() {
     this.addMatchers(MetaMatchers);
   });
 
-  var es6 = () => require('./ReactES6Class-test.js');
-  var coffee = () => require('./ReactCoffeeScriptClass-test.coffee');
-  var ts = () => require('./ReactTypeScriptClass-test.ts');
+  const es6 = () => require('./ReactES6Class-test.js');
+  const coffee = () => require('./ReactCoffeeScriptClass-test.coffee');
+  const ts = () => require('./ReactTypeScriptClass-test.ts');
 
   it('tests the same thing for es6 classes and CoffeeScript', function() {
     expect(coffee).toEqualSpecsIn(es6);

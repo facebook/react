@@ -11,16 +11,16 @@
 
 'use strict';
 
-var DOMLazyTree = require('DOMLazyTree');
-var ExecutionEnvironment = require('ExecutionEnvironment');
+const DOMLazyTree = require('DOMLazyTree');
+const ExecutionEnvironment = require('ExecutionEnvironment');
 
-var createNodesFromMarkup = require('createNodesFromMarkup');
-var emptyFunction = require('emptyFunction');
-var getMarkupWrap = require('getMarkupWrap');
-var invariant = require('invariant');
+const createNodesFromMarkup = require('createNodesFromMarkup');
+const emptyFunction = require('emptyFunction');
+const getMarkupWrap = require('getMarkupWrap');
+const invariant = require('invariant');
 
-var OPEN_TAG_NAME_EXP = /^(<[^ \/>]+)/;
-var RESULT_INDEX_ATTR = 'data-danger-index';
+const OPEN_TAG_NAME_EXP = /^(<[^ \/>]+)/;
+const RESULT_INDEX_ATTR = 'data-danger-index';
 
 /**
  * Extracts the `nodeName` from a string of markup.
@@ -37,7 +37,7 @@ function getNodeName(markup) {
   return markup.substring(1, markup.indexOf(' '));
 }
 
-var Danger = {
+const Danger = {
 
   /**
    * Renders markup into an array of nodes. The markup is expected to render
@@ -56,10 +56,10 @@ var Danger = {
       'before requiring React when unit testing or use ' +
       'ReactDOMServer.renderToString for server rendering.'
     );
-    var nodeName;
-    var markupByNodeName = {};
+    let nodeName;
+    const markupByNodeName = {};
     // Group markup by `nodeName` if a wrap is necessary, else by '*'.
-    for (var i = 0; i < markupList.length; i++) {
+    for (let i = 0; i < markupList.length; i++) {
       invariant(
         markupList[i],
         'dangerouslyRenderMarkup(...): Missing markup.'
@@ -69,21 +69,21 @@ var Danger = {
       markupByNodeName[nodeName] = markupByNodeName[nodeName] || [];
       markupByNodeName[nodeName][i] = markupList[i];
     }
-    var resultList = [];
-    var resultListAssignmentCount = 0;
+    const resultList = [];
+    let resultListAssignmentCount = 0;
     for (nodeName in markupByNodeName) {
       if (!markupByNodeName.hasOwnProperty(nodeName)) {
         continue;
       }
-      var markupListByNodeName = markupByNodeName[nodeName];
+      const markupListByNodeName = markupByNodeName[nodeName];
 
       // This for-in loop skips the holes of the sparse array. The order of
       // iteration should follow the order of assignment, which happens to match
       // numerical index order, but we don't rely on that.
-      var resultIndex;
+      let resultIndex;
       for (resultIndex in markupListByNodeName) {
         if (markupListByNodeName.hasOwnProperty(resultIndex)) {
-          var markup = markupListByNodeName[resultIndex];
+          const markup = markupListByNodeName[resultIndex];
 
           // Push the requested markup with an additional RESULT_INDEX_ATTR
           // attribute.  If the markup does not start with a < character, it
@@ -97,13 +97,13 @@ var Danger = {
       }
 
       // Render each group of markup with similar wrapping `nodeName`.
-      var renderNodes = createNodesFromMarkup(
+      const renderNodes = createNodesFromMarkup(
         markupListByNodeName.join(''),
         emptyFunction // Do nothing special with <script> tags.
       );
 
-      for (var j = 0; j < renderNodes.length; ++j) {
-        var renderNode = renderNodes[j];
+      for (let j = 0; j < renderNodes.length; ++j) {
+        const renderNode = renderNodes[j];
         if (renderNode.hasAttribute &&
             renderNode.hasAttribute(RESULT_INDEX_ATTR)) {
 
@@ -173,7 +173,7 @@ var Danger = {
     );
 
     if (typeof markup === 'string') {
-      var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
+      const newChild = createNodesFromMarkup(markup, emptyFunction)[0];
       oldChild.parentNode.replaceChild(newChild, oldChild);
     } else {
       DOMLazyTree.replaceChildWithTree(oldChild, markup);

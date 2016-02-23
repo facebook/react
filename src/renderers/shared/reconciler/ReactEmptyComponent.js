@@ -11,15 +11,15 @@
 
 'use strict';
 
-var emptyComponentFactory;
+let emptyComponentFactory;
 
-var ReactEmptyComponentInjection = {
+const ReactEmptyComponentInjection = {
   injectEmptyComponentFactory: function(factory) {
     emptyComponentFactory = factory;
   },
 };
 
-var ReactEmptyComponent = {
+const ReactEmptyComponent = {
   create: function(instantiate) {
     return emptyComponentFactory(instantiate);
   },

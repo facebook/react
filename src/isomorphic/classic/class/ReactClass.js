@@ -11,25 +11,25 @@
 
 'use strict';
 
-var ReactComponent = require('ReactComponent');
-var ReactElement = require('ReactElement');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
+const ReactComponent = require('ReactComponent');
+const ReactElement = require('ReactElement');
+const ReactPropTypeLocations = require('ReactPropTypeLocations');
+const ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+const ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
-var assign = require('Object.assign');
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var keyMirror = require('keyMirror');
-var keyOf = require('keyOf');
-var warning = require('warning');
+const assign = require('Object.assign');
+const emptyObject = require('emptyObject');
+const invariant = require('invariant');
+const keyMirror = require('keyMirror');
+const keyOf = require('keyOf');
+const warning = require('warning');
 
-var MIXINS_KEY = keyOf({mixins: null});
+const MIXINS_KEY = keyOf({mixins: null});
 
 /**
  * Policies that describe methods in `ReactClassInterface`.
  */
-var SpecPolicy = keyMirror({
+const SpecPolicy = keyMirror({
   /**
    * These methods may be defined only once by the class specification or mixin.
    */
@@ -52,7 +52,7 @@ var SpecPolicy = keyMirror({
 });
 
 
-var injectedMixins = [];
+const injectedMixins = [];
 
 /**
  * Composite components are higher-level components that compose other composite
@@ -76,7 +76,7 @@ var injectedMixins = [];
  * @interface ReactClassInterface
  * @internal
  */
-var ReactClassInterface = {
+const ReactClassInterface = {
 
   /**
    * An array of Mixin objects to include when defining your component.
@@ -312,13 +312,13 @@ var ReactClassInterface = {
  * being static, they must be defined outside of the "statics" key under
  * which all other static methods are defined.
  */
-var RESERVED_SPEC_KEYS = {
+const RESERVED_SPEC_KEYS = {
   displayName: function(Constructor, displayName) {
     Constructor.displayName = displayName;
   },
   mixins: function(Constructor, mixins) {
     if (mixins) {
-      for (var i = 0; i < mixins.length; i++) {
+      for (let i = 0; i < mixins.length; i++) {
         mixSpecIntoComponent(Constructor, mixins[i]);
       }
     }
@@ -386,7 +386,7 @@ var RESERVED_SPEC_KEYS = {
 };
 
 function validateTypeDef(Constructor, typeDef, location) {
-  for (var propName in typeDef) {
+  for (let propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       // use a warning instead of an invariant so components
       // don't show up in prod but only in __DEV__
@@ -403,7 +403,7 @@ function validateTypeDef(Constructor, typeDef, location) {
 }
 
 function validateMethodOverride(isAlreadyDefined, name) {
-  var specPolicy = ReactClassInterface.hasOwnProperty(name) ?
+  const specPolicy = ReactClassInterface.hasOwnProperty(name) ?
     ReactClassInterface[name] :
     null;
 
@@ -452,8 +452,8 @@ function mixSpecIntoComponent(Constructor, spec) {
     'use a component as a mixin. Instead, just use a regular object.'
   );
 
-  var proto = Constructor.prototype;
-  var autoBindPairs = proto.__reactAutoBindPairs;
+  const proto = Constructor.prototype;
+  const autoBindPairs = proto.__reactAutoBindPairs;
 
   // By handling mixins before any other properties, we ensure the same
   // chaining order is applied to methods with DEFINE_MANY policy, whether
@@ -462,7 +462,7 @@ function mixSpecIntoComponent(Constructor, spec) {
     RESERVED_SPEC_KEYS.mixins(Constructor, spec.mixins);
   }
 
-  for (var name in spec) {
+  for (let name in spec) {
     if (!spec.hasOwnProperty(name)) {
       continue;
     }
@@ -472,8 +472,8 @@ function mixSpecIntoComponent(Constructor, spec) {
       continue;
     }
 
-    var property = spec[name];
-    var isAlreadyDefined = proto.hasOwnProperty(name);
+    const property = spec[name];
+    const isAlreadyDefined = proto.hasOwnProperty(name);
     validateMethodOverride(isAlreadyDefined, name);
 
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
@@ -483,10 +483,10 @@ function mixSpecIntoComponent(Constructor, spec) {
       // The following member methods should not be automatically bound:
       // 1. Expected ReactClass methods (in the "interface").
       // 2. Overridden methods (that were mixed in).
-      var isReactClassMethod =
+      const isReactClassMethod =
         ReactClassInterface.hasOwnProperty(name);
-      var isFunction = typeof property === 'function';
-      var shouldAutoBind =
+      const isFunction = typeof property === 'function';
+      const shouldAutoBind =
         isFunction &&
         !isReactClassMethod &&
         !isAlreadyDefined &&
@@ -497,7 +497,7 @@ function mixSpecIntoComponent(Constructor, spec) {
         proto[name] = property;
       } else {
         if (isAlreadyDefined) {
-          var specPolicy = ReactClassInterface[name];
+          const specPolicy = ReactClassInterface[name];
 
           // These cases should already be caught by validateMethodOverride.
           invariant(
@@ -537,13 +537,13 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
   if (!statics) {
     return;
   }
-  for (var name in statics) {
-    var property = statics[name];
+  for (let name in statics) {
+    const property = statics[name];
     if (!statics.hasOwnProperty(name)) {
       continue;
     }
 
-    var isReserved = name in RESERVED_SPEC_KEYS;
+    const isReserved = name in RESERVED_SPEC_KEYS;
     invariant(
       !isReserved,
       'ReactClass: You are attempting to define a reserved ' +
@@ -553,7 +553,7 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
       name
     );
 
-    var isInherited = name in Constructor;
+    const isInherited = name in Constructor;
     invariant(
       !isInherited,
       'ReactClass: You are attempting to define ' +
@@ -578,7 +578,7 @@ function mergeIntoWithNoDuplicateKeys(one, two) {
     'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.'
   );
 
-  for (var key in two) {
+  for (let key in two) {
     if (two.hasOwnProperty(key)) {
       invariant(
         one[key] === undefined,
@@ -605,14 +605,14 @@ function mergeIntoWithNoDuplicateKeys(one, two) {
  */
 function createMergedResultFunction(one, two) {
   return function mergedResult() {
-    var a = one.apply(this, arguments);
-    var b = two.apply(this, arguments);
+    const a = one.apply(this, arguments);
+    const b = two.apply(this, arguments);
     if (a == null) {
       return b;
     } else if (b == null) {
       return a;
     }
-    var c = {};
+    const c = {};
     mergeIntoWithNoDuplicateKeys(c, a);
     mergeIntoWithNoDuplicateKeys(c, b);
     return c;
@@ -642,13 +642,13 @@ function createChainedFunction(one, two) {
  * @return {function} The bound method.
  */
 function bindAutoBindMethod(component, method) {
-  var boundMethod = method.bind(component);
+  const boundMethod = method.bind(component);
   if (__DEV__) {
     boundMethod.__reactBoundContext = component;
     boundMethod.__reactBoundMethod = method;
     boundMethod.__reactBoundArguments = null;
-    var componentName = component.constructor.displayName;
-    var _bind = boundMethod.bind;
+    const componentName = component.constructor.displayName;
+    const _bind = boundMethod.bind;
     boundMethod.bind = function(newThis, ...args) {
       // User is trying to bind() an autobound method; we effectively will
       // ignore the value of "this" that the user is trying to use, so
@@ -670,7 +670,7 @@ function bindAutoBindMethod(component, method) {
         );
         return boundMethod;
       }
-      var reboundMethod = _bind.apply(boundMethod, arguments);
+      const reboundMethod = _bind.apply(boundMethod, arguments);
       reboundMethod.__reactBoundContext = component;
       reboundMethod.__reactBoundMethod = method;
       reboundMethod.__reactBoundArguments = args;
@@ -686,10 +686,10 @@ function bindAutoBindMethod(component, method) {
  * @param {object} component Component whose method is going to be bound.
  */
 function bindAutoBindMethods(component) {
-  var pairs = component.__reactAutoBindPairs;
-  for (var i = 0; i < pairs.length; i += 2) {
-    var autoBindKey = pairs[i];
-    var method = pairs[i + 1];
+  const pairs = component.__reactAutoBindPairs;
+  for (let i = 0; i < pairs.length; i += 2) {
+    const autoBindKey = pairs[i];
+    const method = pairs[i + 1];
     component[autoBindKey] = bindAutoBindMethod(
       component,
       method
@@ -725,7 +725,7 @@ var ReactClassMixin = {
   },
 };
 
-var ReactClassComponent = function() {};
+const ReactClassComponent = function() {};
 assign(
   ReactClassComponent.prototype,
   ReactComponent.prototype,
@@ -737,7 +737,7 @@ assign(
  *
  * @class ReactClass
  */
-var ReactClass = {
+const ReactClass = {
 
   /**
    * Creates a composite component class given a class specification.
@@ -747,7 +747,7 @@ var ReactClass = {
    * @public
    */
   createClass: function(spec) {
-    var Constructor = function(props, context, updater) {
+    const Constructor = function(props, context, updater) {
       // This constructor gets overridden by mocks. The argument is used
       // by mocks to assert on what gets mounted.
 
@@ -774,7 +774,7 @@ var ReactClass = {
       // ReactClasses doesn't have constructors. Instead, they use the
       // getInitialState and componentWillMount methods for initialization.
 
-      var initialState = this.getInitialState ? this.getInitialState() : null;
+      let initialState = this.getInitialState ? this.getInitialState() : null;
       if (__DEV__) {
         // We allow auto-mocks to proceed as if they're returning null.
         if (initialState === undefined &&
@@ -843,7 +843,7 @@ var ReactClass = {
     }
 
     // Reduce time spent doing lookups by setting these on the prototype.
-    for (var methodName in ReactClassInterface) {
+    for (let methodName in ReactClassInterface) {
       if (!Constructor.prototype[methodName]) {
         Constructor.prototype[methodName] = null;
       }

@@ -11,6 +11,6 @@
 
 'use strict';
 
-var ReactMount = require('ReactMount');
+const ReactMount = require('ReactMount');
 
 module.exports = ReactMount.renderSubtreeIntoContainer;

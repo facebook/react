@@ -11,8 +11,8 @@
 
 'use strict';
 
-var traverseAllChildren = require('traverseAllChildren');
-var warning = require('warning');
+const traverseAllChildren = require('traverseAllChildren');
+const warning = require('warning');
 
 /**
  * @param {function} traverseContext Context passed through traversal.
@@ -21,8 +21,8 @@ var warning = require('warning');
  */
 function flattenSingleChildIntoContext(traverseContext, child, name) {
   // We found a component instance.
-  var result = traverseContext;
-  var keyUnique = (result[name] === undefined);
+  const result = traverseContext;
+  const keyUnique = (result[name] === undefined);
   if (__DEV__) {
     warning(
       keyUnique,
@@ -46,7 +46,7 @@ function flattenChildren(children) {
   if (children == null) {
     return children;
   }
-  var result = {};
+  const result = {};
   traverseAllChildren(children, flattenSingleChildIntoContext, result);
   return result;
 }

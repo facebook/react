@@ -11,15 +11,15 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMServer;
+let React;
+let ReactDOM;
+let ReactDOMServer;
 
-var getTestDocument;
+let getTestDocument;
 
-var testDocument;
+let testDocument;
 
-var UNMOUNT_INVARIANT_MESSAGE =
+const UNMOUNT_INVARIANT_MESSAGE =
   '<html> tried to unmount. ' +
   'Because of cross-browser quirks it is impossible to unmount some ' +
   'top-level components (eg <html>, <head>, and <body>) reliably and ' +
@@ -41,7 +41,7 @@ describe('rendering React components at document', function() {
   it('should be able to adopt server markup', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Root = React.createClass({
+    const Root = React.createClass({
       render: function() {
         return (
           <html>
@@ -56,9 +56,9 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = ReactDOMServer.renderToString(<Root hello="world" />);
+    const markup = ReactDOMServer.renderToString(<Root hello="world" />);
     testDocument = getTestDocument(markup);
-    var body = testDocument.body;
+    const body = testDocument.body;
 
     ReactDOM.render(<Root hello="world" />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -72,7 +72,7 @@ describe('rendering React components at document', function() {
   it('should not be able to unmount component from document node', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Root = React.createClass({
+    const Root = React.createClass({
       render: function() {
         return (
           <html>
@@ -87,7 +87,7 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = ReactDOMServer.renderToString(<Root />);
+    const markup = ReactDOMServer.renderToString(<Root />);
     testDocument = getTestDocument(markup);
     ReactDOM.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -102,7 +102,7 @@ describe('rendering React components at document', function() {
   it('should not be able to switch root constructors', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return (
           <html>
@@ -117,7 +117,7 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var Component2 = React.createClass({
+    const Component2 = React.createClass({
       render: function() {
         return (
           <html>
@@ -132,7 +132,7 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = ReactDOMServer.renderToString(<Component />);
+    const markup = ReactDOMServer.renderToString(<Component />);
     testDocument = getTestDocument(markup);
 
     ReactDOM.render(<Component />, testDocument);
@@ -150,7 +150,7 @@ describe('rendering React components at document', function() {
   it('should be able to mount into document', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return (
           <html>
@@ -165,7 +165,7 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <Component text="Hello world" />
     );
     testDocument = getTestDocument(markup);
@@ -178,7 +178,7 @@ describe('rendering React components at document', function() {
   it('should give helpful errors on state desync', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return (
           <html>
@@ -193,7 +193,7 @@ describe('rendering React components at document', function() {
       },
     });
 
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <Component text="Goodbye world" />
     );
     testDocument = getTestDocument(markup);
@@ -218,9 +218,9 @@ describe('rendering React components at document', function() {
   it('should throw on full document render w/ no markup', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var container = testDocument;
+    const container = testDocument;
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return (
           <html>
@@ -246,7 +246,7 @@ describe('rendering React components at document', function() {
   });
 
   it('supports findDOMNode on full-page components', function() {
-    var tree =
+    const tree =
       <html>
         <head>
           <title>Hello World</title>
@@ -256,9 +256,9 @@ describe('rendering React components at document', function() {
         </body>
       </html>;
 
-    var markup = ReactDOMServer.renderToString(tree);
+    const markup = ReactDOMServer.renderToString(tree);
     testDocument = getTestDocument(markup);
-    var component = ReactDOM.render(tree, testDocument);
+    const component = ReactDOM.render(tree, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
     expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
   });

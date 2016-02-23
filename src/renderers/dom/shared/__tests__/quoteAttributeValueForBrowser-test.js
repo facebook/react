@@ -13,7 +13,7 @@
 
 describe('quoteAttributeValueForBrowser', function() {
 
-  var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
+  const quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 
   it('should escape boolean to string', function() {
     expect(quoteAttributeValueForBrowser(true)).toBe('"true"');
@@ -21,7 +21,7 @@ describe('quoteAttributeValueForBrowser', function() {
   });
 
   it('should escape object to string', function() {
-    var escaped = quoteAttributeValueForBrowser({
+    const escaped = quoteAttributeValueForBrowser({
       toString: function() {
         return 'ponys';
       },
@@ -35,7 +35,7 @@ describe('quoteAttributeValueForBrowser', function() {
   });
 
   it('should escape string', function() {
-    var escaped = quoteAttributeValueForBrowser('<script type=\'\' src=""></script>');
+    let escaped = quoteAttributeValueForBrowser('<script type=\'\' src=""></script>');
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
     expect(escaped).not.toContain('\'');

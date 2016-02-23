@@ -11,16 +11,16 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
-var ReactPerf = require('ReactPerf');
+const DOMProperty = require('DOMProperty');
+const ReactDOMInstrumentation = require('ReactDOMInstrumentation');
+const ReactPerf = require('ReactPerf');
 
-var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
-var warning = require('warning');
+const quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
+const warning = require('warning');
 
-var VALID_ATTRIBUTE_NAME_REGEX = new RegExp('^[' + DOMProperty.ATTRIBUTE_NAME_START_CHAR + '][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
+const VALID_ATTRIBUTE_NAME_REGEX = new RegExp('^[' + DOMProperty.ATTRIBUTE_NAME_START_CHAR + '][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
+const illegalAttributeNameCache = {};
+const validatedAttributeNameCache = {};
 
 function isAttributeNameSafe(attributeName) {
   if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
@@ -53,7 +53,7 @@ function shouldIgnoreValue(propertyInfo, value) {
 /**
  * Operations for dealing with DOM properties.
  */
-var DOMPropertyOperations = {
+const DOMPropertyOperations = {
 
   /**
    * Creates markup for the ID property.
@@ -89,13 +89,13 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       ReactDOMInstrumentation.debugTool.onCreateMarkupForProperty(name, value);
     }
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+    const propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
       if (shouldIgnoreValue(propertyInfo, value)) {
         return '';
       }
-      var attributeName = propertyInfo.attributeName;
+      const attributeName = propertyInfo.attributeName;
       if (propertyInfo.hasBooleanValue ||
           (propertyInfo.hasOverloadedBooleanValue && value === true)) {
         return attributeName + '=""';
@@ -138,11 +138,11 @@ var DOMPropertyOperations = {
     if (!isAttributeNameSafe(name) || value == null) {
       return '';
     }
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+    const propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
       // Migration path for deprecated camelCase aliases for SVG attributes
-      var { attributeName } = propertyInfo;
+      const { attributeName } = propertyInfo;
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     } else {
       return name + '=' + quoteAttributeValueForBrowser(value);
@@ -160,16 +160,16 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       ReactDOMInstrumentation.debugTool.onSetValueForProperty(node, name, value);
     }
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+    const propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
+      const mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
         mutationMethod(node, value);
       } else if (shouldIgnoreValue(propertyInfo, value)) {
         this.deleteValueForProperty(node, name);
       } else if (propertyInfo.mustUseProperty) {
-        var propName = propertyInfo.propertyName;
+        const propName = propertyInfo.propertyName;
         // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
         // property type before comparing; only `value` does and is string.
         if (!propertyInfo.hasSideEffects ||
@@ -179,8 +179,8 @@ var DOMPropertyOperations = {
           node[propName] = value;
         }
       } else {
-        var attributeName = propertyInfo.attributeName;
-        var namespace = propertyInfo.attributeNamespace;
+        const attributeName = propertyInfo.attributeName;
+        const namespace = propertyInfo.attributeNamespace;
         // `setAttribute` with objects becomes only `[object]` in IE8/9,
         // ('' + value) makes it output the correct toString()-value.
         if (namespace) {
@@ -230,14 +230,14 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       ReactDOMInstrumentation.debugTool.onDeleteValueForProperty(node, name);
     }
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+    const propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
+      const mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
         mutationMethod(node, undefined);
       } else if (propertyInfo.mustUseProperty) {
-        var propName = propertyInfo.propertyName;
+        const propName = propertyInfo.propertyName;
         if (propertyInfo.hasBooleanValue) {
           // No HAS_SIDE_EFFECTS logic here, only `value` has it and is string.
           node[propName] = false;
@@ -256,7 +256,7 @@ var DOMPropertyOperations = {
   },
 
   deleteValueForSVGAttribute: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+    const propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
       DOMPropertyOperations.deleteValueForProperty(node, name);

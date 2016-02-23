@@ -11,19 +11,19 @@
 
 'use strict';
 
-var React = require('React');
-var ReactTestUtils = require('ReactTestUtils');
+const React = require('React');
+const ReactTestUtils = require('ReactTestUtils');
 
 describe('ChangeEventPlugin', function() {
   it('should fire change for checkbox input', function() {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called = 1;
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
+    const input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
     ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
   });

@@ -12,18 +12,18 @@
 'use strict';
 
 describe('ReactDefaultPerf', function() {
-  var React;
-  var ReactDOM;
-  var ReactDefaultPerf;
-  var ReactTestUtils;
-  var ReactDefaultPerfAnalysis;
+  let React;
+  let ReactDOM;
+  let ReactDefaultPerf;
+  let ReactTestUtils;
+  let ReactDefaultPerfAnalysis;
 
-  var App;
-  var Box;
-  var Div;
+  let App;
+  let Box;
+  let Div;
 
   beforeEach(function() {
-    var now = 0;
+    let now = 0;
     jest.setMock('fbjs/lib/performanceNow', function() {
       return now++;
     });
@@ -62,13 +62,13 @@ describe('ReactDefaultPerf', function() {
   }
 
   it('should count no-op update as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<App />, container);
-    var measurements = measure(() => {
+    const measurements = measure(() => {
       ReactDOM.render(<App />, container);
     });
 
-    var summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    const summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
     expect(summary.length).toBe(2);
 
     /*eslint-disable dot-notation */
@@ -85,16 +85,16 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should count no-op update in child as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<App />, container);
 
     // Here, we add a Box -- two of the <Box /> updates are wasted time (but the
     // addition of the third is not)
-    var measurements = measure(() => {
+    const measurements = measure(() => {
       ReactDOM.render(<App flipSecond={true} />, container);
     });
 
-    var summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    const summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
     expect(summary.length).toBe(1);
 
     /*eslint-disable dot-notation */
@@ -107,8 +107,8 @@ describe('ReactDefaultPerf', function() {
   });
 
   function expectNoWaste(fn) {
-    var measurements = measure(fn);
-    var summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    const measurements = measure(fn);
+    const summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
     expect(summary).toEqual([]);
   }
 
@@ -119,7 +119,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count unmount as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div>hello</Div>, container);
     expectNoWaste(() => {
       ReactDOM.unmountComponentAtNode(container);
@@ -127,7 +127,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count content update as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div>hello</Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div>hello world</Div>, container);
@@ -135,7 +135,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count child addition as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div><span /></Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div><span /><span /></Div>, container);
@@ -143,7 +143,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count child removal as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div><span /><span /></Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div><span /></Div>, container);
@@ -151,7 +151,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count property update as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div className="yellow">hey</Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div className="blue">hey</Div>, container);
@@ -159,7 +159,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count style update as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div style={{color: 'yellow'}}>hey</Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div style={{color: 'blue'}}>hey</Div>, container);
@@ -167,7 +167,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count property removal as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div className="yellow">hey</Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div>hey</Div>, container);
@@ -175,7 +175,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count raw HTML update as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <Div dangerouslySetInnerHTML={{__html: 'me'}} />,
       container
@@ -189,7 +189,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count child reordering as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div><div key="A" /><div key="B" /></Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div><div key="B" /><div key="A" /></Div>, container);
@@ -197,7 +197,7 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('should not count text update as waste', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div>{'hello'}{'world'}</Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div>{'hello'}{'friend'}</Div>, container);
@@ -205,24 +205,24 @@ describe('ReactDefaultPerf', function() {
   });
 
   it('putListener should not be instrumented', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
-    var measurements = measure(() => {
+    const measurements = measure(() => {
       ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
     });
 
-    var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
+    const summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     expect(summary).toEqual([]);
   });
 
   it('deleteListener should not be instrumented', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Div onClick={function() {}}>hey</Div>, container);
-    var measurements = measure(() => {
+    const measurements = measure(() => {
       ReactDOM.render(<Div>hey</Div>, container);
     });
 
-    var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
+    const summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     expect(summary).toEqual([]);
   });
 

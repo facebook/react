@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactDOMFeatureFlags = {
+const ReactDOMFeatureFlags = {
   useCreateElement: true,
 };
 

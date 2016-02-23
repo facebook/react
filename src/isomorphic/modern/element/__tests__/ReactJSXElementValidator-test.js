@@ -14,12 +14,12 @@
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
 
-var React;
-var ReactTestUtils;
+let React;
+let ReactTestUtils;
 
 describe('ReactJSXElementValidator', function() {
-  var Component;
-  var RequiredPropComponent;
+  let Component;
+  let RequiredPropComponent;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -85,12 +85,12 @@ describe('ReactJSXElementValidator', function() {
   it('warns for keys for iterables of elements in rest args', function() {
     spyOn(console, 'error');
 
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {value: done ? undefined : <Component />, done: done};
           },
         };
@@ -116,12 +116,12 @@ describe('ReactJSXElementValidator', function() {
   it('does not warns for iterable elements with keys', function() {
     spyOn(console, 'error');
 
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {
               value: done ? undefined : <Component key={'#' + i} />,
               done: done,
@@ -139,12 +139,12 @@ describe('ReactJSXElementValidator', function() {
   it('does not warn for numeric keys in entry iterable as a child', function() {
     spyOn(console, 'error');
 
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {value: done ? undefined : [i, <Component />], done: done};
           },
         };
@@ -203,11 +203,11 @@ describe('ReactJSXElementValidator', function() {
   });
 
   it('gives a helpful error when passing null, undefined, or boolean', () => {
-    var Undefined = undefined;
-    var Null = null;
-    var True = true;
-    var Num = 123;
-    var Div = 'div';
+    const Undefined = undefined;
+    const Null = null;
+    const True = true;
+    const Num = 123;
+    const Div = 'div';
     spyOn(console, 'error');
     void <Undefined />;
     void <Null />;

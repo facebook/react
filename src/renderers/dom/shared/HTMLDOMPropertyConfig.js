@@ -11,18 +11,18 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+const DOMProperty = require('DOMProperty');
 
-var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
-var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
-var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
-var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
-var HAS_POSITIVE_NUMERIC_VALUE =
+const MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
+const HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
+const HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
+const HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
+const HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
-var HAS_OVERLOADED_BOOLEAN_VALUE =
+const HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
 
-var HTMLDOMPropertyConfig = {
+const HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
     new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$')
   ),

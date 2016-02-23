@@ -11,12 +11,12 @@
 
 'use strict';
 
-var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
+const ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
-var canDefineProperty = require('canDefineProperty');
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var warning = require('warning');
+const canDefineProperty = require('canDefineProperty');
+const emptyObject = require('emptyObject');
+const invariant = require('invariant');
+const warning = require('warning');
 
 /**
  * Base class helpers for the updating state of a component.
@@ -105,7 +105,7 @@ ReactComponent.prototype.forceUpdate = function(callback) {
  * modern base class. Instead, we define a getter that warns if it's accessed.
  */
 if (__DEV__) {
-  var deprecatedAPIs = {
+  const deprecatedAPIs = {
     isMounted: [
       'isMounted',
       'Instead, make sure to clean up subscriptions and pending requests in ' +
@@ -117,7 +117,7 @@ if (__DEV__) {
       'https://github.com/facebook/react/issues/3236).',
     ],
   };
-  var defineDeprecationWarning = function(methodName, info) {
+  const defineDeprecationWarning = function(methodName, info) {
     if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
@@ -132,7 +132,7 @@ if (__DEV__) {
       });
     }
   };
-  for (var fnName in deprecatedAPIs) {
+  for (let fnName in deprecatedAPIs) {
     if (deprecatedAPIs.hasOwnProperty(fnName)) {
       defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     }
