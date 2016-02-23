@@ -48,6 +48,7 @@ var HTMLDOMPropertyConfig = {
     charSet: null,
     challenge: null,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    cite: null,
     classID: null,
     className: null,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
