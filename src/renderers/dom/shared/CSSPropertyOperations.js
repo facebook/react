@@ -147,7 +147,7 @@ const CSSPropertyOperations = {
    */
   createMarkupForStyles: function(styles, component) {
     let serialized = '';
-    for (let styleName in styles) {
+    for (const styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
@@ -197,7 +197,7 @@ const CSSPropertyOperations = {
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
           // component to placate it
-          for (let individualStyleName in expansion) {
+          for (const individualStyleName in expansion) {
             style[individualStyleName] = '';
           }
         } else {

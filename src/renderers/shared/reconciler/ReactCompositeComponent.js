@@ -459,7 +459,7 @@ const ReactCompositeComponentMixin = {
       return emptyObject;
     }
     const maskedContext = {};
-    for (let contextName in contextTypes) {
+    for (const contextName in contextTypes) {
       maskedContext[contextName] = context[contextName];
     }
     return maskedContext;
@@ -511,7 +511,7 @@ const ReactCompositeComponentMixin = {
           ReactPropTypeLocations.childContext
         );
       }
-      for (let name in childContext) {
+      for (const name in childContext) {
         invariant(
           name in Component.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -559,7 +559,7 @@ const ReactCompositeComponentMixin = {
     // TODO: Stop validating prop types here and only use the element
     // validation.
     const componentName = this.getName();
-    for (let propName in propTypes) {
+    for (const propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         let error;
         try {

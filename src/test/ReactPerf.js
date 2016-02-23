@@ -35,7 +35,7 @@ const ReactPerf = {
    */
   measureMethods: function(object, objectName, methodNames) {
     if (__DEV__) {
-      for (let key in methodNames) {
+      for (const key in methodNames) {
         if (!methodNames.hasOwnProperty(key)) {
           continue;
         }

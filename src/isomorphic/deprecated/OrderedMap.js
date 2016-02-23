@@ -237,7 +237,7 @@ const OrderedMapMethods = {
     let i = 0;
     assertValidRangeIndices(start, length, this.length);
     const end = start + length - 1;
-    for (let key in thisSet) {
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         if (i >= start) {
           if (i > end) {
@@ -295,7 +295,7 @@ const OrderedMapMethods = {
     const thisSet = this._normalizedObj;
     let i = 0;
     const end = start + length - 1;
-    for (let key in thisSet) {
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         if (i >= start) {
           if (i > end) {
@@ -423,7 +423,7 @@ const OrderedMapMethods = {
   toArray: function() {
     const result = [];
     const thisSet = this._normalizedObj;
-    for (let key in thisSet) {
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         result.push(thisSet[key]);
       }
@@ -465,7 +465,7 @@ const OrderedMapMethods = {
     var indexByKey = this._computedPositions.indexByKey;
     let index = 0;
     const thisSet = this._normalizedObj;
-    for (let key in thisSet) {
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         keyByIndex[index] = key;
         indexByKey[key] = index;

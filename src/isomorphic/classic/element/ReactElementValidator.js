@@ -178,7 +178,7 @@ function validateChildKeys(node, parentType) {
  * @private
  */
 function checkPropTypes(componentName, propTypes, props, location) {
-  for (let propName in propTypes) {
+  for (const propName in propTypes) {
     if (propTypes.hasOwnProperty(propName)) {
       let error;
       // Prop type validation may throw. In case they do, we don't want to

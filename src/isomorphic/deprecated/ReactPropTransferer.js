@@ -68,7 +68,7 @@ const TransferStrategies = {
  * @return {object}
  */
 function transferInto(props, newProps) {
-  for (let thisKey in newProps) {
+  for (const thisKey in newProps) {
     if (!newProps.hasOwnProperty(thisKey)) {
       continue;
     }

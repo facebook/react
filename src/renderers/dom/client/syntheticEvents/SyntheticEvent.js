@@ -57,7 +57,7 @@ const EventInterface = {
 function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
   if (__DEV__) {
     // these have a getter/setter for warnings
-    delete this.nativeEvent; 
+    delete this.nativeEvent;
     delete this.preventDefault;
     delete this.stopPropagation;
   }
@@ -67,7 +67,7 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
   this.nativeEvent = nativeEvent;
 
   const Interface = this.constructor.Interface;
-  for (let propName in Interface) {
+  for (const propName in Interface) {
     if (!Interface.hasOwnProperty(propName)) {
       continue;
     }
@@ -149,7 +149,7 @@ assign(SyntheticEvent.prototype, {
    */
   destructor: function() {
     const Interface = this.constructor.Interface;
-    for (let propName in Interface) {
+    for (const propName in Interface) {
       if (__DEV__) {
         Object.defineProperty(this, propName, getPooledWarningPropertyDefinition(propName, Interface[propName]));
       } else {

@@ -76,7 +76,7 @@ function friendlyStringify(obj) {
       return '[' + obj.map(friendlyStringify).join(', ') + ']';
     } else {
       const pairs = [];
-      for (let key in obj) {
+      for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
           const keyEscaped = /^[a-z$_][\w$_]*$/i.test(key) ?
             key :
@@ -276,7 +276,7 @@ function trapBubbledEventsLocal() {
 
       inst._wrapperState.listeners = [];
       // Create listener for each media event
-      for (let event in mediaEvents) {
+      for (const event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
           inst._wrapperState.listeners.push(
             ReactBrowserEventEmitter.trapBubbledEvent(
@@ -606,7 +606,7 @@ ReactDOMComponent.Mixin = {
   _createOpenTagMarkupAndPutListeners: function(transaction, props) {
     let ret = '<' + this._currentElement.type;
 
-    for (let propKey in props) {
+    for (const propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
         continue;
       }

@@ -46,7 +46,7 @@ const ReactTransitionGroup = React.createClass({
 
   componentDidMount: function() {
     const initialChildMapping = this.state.children;
-    for (let key in initialChildMapping) {
+    for (const key in initialChildMapping) {
       if (initialChildMapping[key]) {
         this.performAppear(key);
       }
@@ -204,7 +204,7 @@ const ReactTransitionGroup = React.createClass({
     // TODO: we could get rid of the need for the wrapper node
     // by cloning a single child
     const childrenToRender = [];
-    for (let key in this.state.children) {
+    for (const key in this.state.children) {
       const child = this.state.children[key];
       if (child) {
         // You may need to apply reactive updates to a child as it is leaving.

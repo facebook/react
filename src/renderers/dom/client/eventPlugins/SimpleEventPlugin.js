@@ -446,7 +446,7 @@ const topLevelEventsToDispatchConfig = {
   topWheel:           eventTypes.wheel,
 };
 
-for (let type in topLevelEventsToDispatchConfig) {
+for (const type in topLevelEventsToDispatchConfig) {
   topLevelEventsToDispatchConfig[type].dependencies = [type];
 }
 

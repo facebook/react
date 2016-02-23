@@ -87,7 +87,7 @@ assign(reactComponentExpectInternal.prototype, {
     this.toBeDOMComponent();
     const renderedChildren =
       this._instance._renderedChildren || {};
-    for (let name in renderedChildren) {
+    for (const name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
       }
@@ -184,7 +184,7 @@ assign(reactComponentExpectInternal.prototype, {
    */
   scalarStateEqual: function(stateNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
-    for (let stateName in stateNameToExpectedValue) {
+    for (const stateName in stateNameToExpectedValue) {
       if (!stateNameToExpectedValue.hasOwnProperty(stateName)) {
         continue;
       }
@@ -200,7 +200,7 @@ assign(reactComponentExpectInternal.prototype, {
    */
   scalarPropsEqual: function(propNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
-    for (let propName in propNameToExpectedValue) {
+    for (const propName in propNameToExpectedValue) {
       if (!propNameToExpectedValue.hasOwnProperty(propName)) {
         continue;
       }
@@ -216,7 +216,7 @@ assign(reactComponentExpectInternal.prototype, {
    */
   scalarContextEqual: function(contextNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
-    for (let contextName in contextNameToExpectedValue) {
+    for (const contextName in contextNameToExpectedValue) {
       if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
         continue;
       }

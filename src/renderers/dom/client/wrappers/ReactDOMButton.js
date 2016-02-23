@@ -37,7 +37,7 @@ const ReactDOMButton = {
 
     // Copy the props, except the mouse listeners
     const nativeProps = {};
-    for (let key in props) {
+    for (const key in props) {
       if (props.hasOwnProperty(key) && !mouseListenerNames[key]) {
         nativeProps[key] = props[key];
       }

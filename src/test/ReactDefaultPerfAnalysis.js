@@ -72,7 +72,7 @@ function getExclusiveSummary(measurements) {
       measurement.inclusive
     );
 
-    for (let id in allIDs) {
+    for (const id in allIDs) {
       displayName = measurement.displayNames[id].current;
 
       candidates[displayName] = candidates[displayName] || {
@@ -129,7 +129,7 @@ function getInclusiveSummary(measurements, onlyClean) {
       cleanComponents = getUnchangedComponents(measurement);
     }
 
-    for (let id in allIDs) {
+    for (const id in allIDs) {
       if (onlyClean && !cleanComponents[id]) {
         continue;
       }
@@ -188,7 +188,7 @@ function getUnchangedComponents(measurement) {
   });
   const allIDs = assign({}, measurement.exclusive, measurement.inclusive);
 
-  for (let id in allIDs) {
+  for (const id in allIDs) {
     let isDirty = false;
     // See if any of the DOM operations applied to this component's subtree.
     if (dirtyComposites[id]) {

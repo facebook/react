@@ -103,7 +103,7 @@ function getDeclarationErrorAddendum(owner) {
  */
 const LinkedValueUtils = {
   checkPropTypes: function(tagName, props, owner) {
-    for (let propName in propTypes) {
+    for (const propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error = propTypes[propName](
           props,

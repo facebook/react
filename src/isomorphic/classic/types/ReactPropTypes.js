@@ -249,7 +249,7 @@ function createObjectOfTypeChecker(typeChecker) {
         `\`${propType}\` supplied to \`${componentName}\`, expected an object.`
       );
     }
-    for (let key in propValue) {
+    for (const key in propValue) {
       if (propValue.hasOwnProperty(key)) {
         const error = typeChecker(
           propValue,
@@ -321,7 +321,7 @@ function createShapeTypeChecker(shapeTypes) {
         `supplied to \`${componentName}\`, expected \`object\`.`
       );
     }
-    for (let key in shapeTypes) {
+    for (const key in shapeTypes) {
       const checker = shapeTypes[key];
       if (!checker) {
         continue;

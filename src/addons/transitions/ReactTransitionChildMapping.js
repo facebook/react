@@ -62,7 +62,7 @@ const ReactTransitionChildMapping = {
     const nextKeysPending = {};
 
     let pendingKeys = [];
-    for (let prevKey in prev) {
+    for (const prevKey in prev) {
       if (next.hasOwnProperty(prevKey)) {
         if (pendingKeys.length) {
           nextKeysPending[prevKey] = pendingKeys;
@@ -75,7 +75,7 @@ const ReactTransitionChildMapping = {
 
     let i;
     const childMapping = {};
-    for (let nextKey in next) {
+    for (const nextKey in next) {
       if (nextKeysPending.hasOwnProperty(nextKey)) {
         for (i = 0; i < nextKeysPending[nextKey].length; i++) {
           const pendingNextKey = nextKeysPending[nextKey][i];

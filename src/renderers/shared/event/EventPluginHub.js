@@ -156,7 +156,7 @@ const EventPluginHub = {
    * @param {object} inst The instance, which is the source of events.
    */
   deleteAllListeners: function(inst) {
-    for (let registrationName in listenerBank) {
+    for (const registrationName in listenerBank) {
       if (!listenerBank[registrationName][inst._rootNodeID]) {
         continue;
       }

@@ -33,7 +33,7 @@ function recomputePluginOrdering() {
     // Wait until an `EventPluginOrder` is injected.
     return;
   }
-  for (let pluginName in namesToPlugins) {
+  for (const pluginName in namesToPlugins) {
     const PluginModule = namesToPlugins[pluginName];
     const pluginIndex = EventPluginOrder.indexOf(pluginName);
     invariant(
@@ -53,7 +53,7 @@ function recomputePluginOrdering() {
     );
     EventPluginRegistry.plugins[pluginIndex] = PluginModule;
     const publishedEvents = PluginModule.eventTypes;
-    for (let eventName in publishedEvents) {
+    for (const eventName in publishedEvents) {
       invariant(
         publishEventForPlugin(
           publishedEvents[eventName],
@@ -87,7 +87,7 @@ function publishEventForPlugin(dispatchConfig, PluginModule, eventName) {
 
   const phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames) {
-    for (let phaseName in phasedRegistrationNames) {
+    for (const phaseName in phasedRegistrationNames) {
       if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
         const phasedRegistrationName = phasedRegistrationNames[phaseName];
         publishRegistrationName(
@@ -202,7 +202,7 @@ var EventPluginRegistry = {
    */
   injectEventPluginsByName: function(injectedNamesToPlugins) {
     let isOrderingDirty = false;
-    for (let pluginName in injectedNamesToPlugins) {
+    for (const pluginName in injectedNamesToPlugins) {
       if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
         continue;
       }
@@ -238,7 +238,7 @@ var EventPluginRegistry = {
         dispatchConfig.registrationName
       ] || null;
     }
-    for (let phase in dispatchConfig.phasedRegistrationNames) {
+    for (const phase in dispatchConfig.phasedRegistrationNames) {
       if (!dispatchConfig.phasedRegistrationNames.hasOwnProperty(phase)) {
         continue;
       }
@@ -258,7 +258,7 @@ var EventPluginRegistry = {
    */
   _resetEventPlugins: function() {
     EventPluginOrder = null;
-    for (let pluginName in namesToPlugins) {
+    for (const pluginName in namesToPlugins) {
       if (namesToPlugins.hasOwnProperty(pluginName)) {
         delete namesToPlugins[pluginName];
       }
@@ -266,14 +266,14 @@ var EventPluginRegistry = {
     EventPluginRegistry.plugins.length = 0;
 
     const eventNameDispatchConfigs = EventPluginRegistry.eventNameDispatchConfigs;
-    for (let eventName in eventNameDispatchConfigs) {
+    for (const eventName in eventNameDispatchConfigs) {
       if (eventNameDispatchConfigs.hasOwnProperty(eventName)) {
         delete eventNameDispatchConfigs[eventName];
       }
     }
 
     const registrationNameModules = EventPluginRegistry.registrationNameModules;
-    for (let registrationName in registrationNameModules) {
+    for (const registrationName in registrationNameModules) {
       if (registrationNameModules.hasOwnProperty(registrationName)) {
         delete registrationNameModules[registrationName];
       }
@@ -282,7 +282,7 @@ var EventPluginRegistry = {
     if (__DEV__) {
       const possibleRegistrationNames =
         EventPluginRegistry.possibleRegistrationNames;
-      for (let lowerCasedName in possibleRegistrationNames) {
+      for (const lowerCasedName in possibleRegistrationNames) {
         if (possibleRegistrationNames.hasOwnProperty(lowerCasedName)) {
           delete possibleRegistrationNames[lowerCasedName];
         }

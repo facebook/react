@@ -216,7 +216,7 @@ const ReactMultiChild = {
       this._renderedChildren = children;
       const mountImages = [];
       let index = 0;
-      for (let name in children) {
+      for (const name in children) {
         if (children.hasOwnProperty(name)) {
           const child = children[name];
           const mountImage = ReactReconciler.mountComponent(
@@ -243,7 +243,7 @@ const ReactMultiChild = {
       const prevChildren = this._renderedChildren;
       // Remove any rendered children.
       ReactChildReconciler.unmountChildren(prevChildren, false);
-      for (let name in prevChildren) {
+      for (const name in prevChildren) {
         if (prevChildren.hasOwnProperty(name)) {
           invariant(false, 'updateTextContent called on non-empty component.');
         }
@@ -263,7 +263,7 @@ const ReactMultiChild = {
       const prevChildren = this._renderedChildren;
       // Remove any rendered children.
       ReactChildReconciler.unmountChildren(prevChildren, false);
-      for (let name in prevChildren) {
+      for (const name in prevChildren) {
         if (prevChildren.hasOwnProperty(name)) {
           invariant(false, 'updateTextContent called on non-empty component.');
         }

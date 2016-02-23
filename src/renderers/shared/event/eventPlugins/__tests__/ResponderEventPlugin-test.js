@@ -187,8 +187,8 @@ const oneEventLoopTestConfig = function(readableIDToID) {
     responderEnd:       {},
     responderRelease:   {},
   };
-  for (let eventName in ret) {
-    for (let readableNodeName in readableIDToID) {
+  for (const eventName in ret) {
+    for (const readableNodeName in readableIDToID) {
       if (ret[eventName].bubbled) {
         // Two phase
         ret[eventName].bubbled[readableNodeName] =
@@ -220,7 +220,7 @@ const registerTestHandlers = function(eventTestConfig, readableIDToID) {
   };
 
   const registerOneEventType = function(registrationName, eventTypeTestConfig) {
-    for (let readableID in eventTypeTestConfig) {
+    for (const readableID in eventTypeTestConfig) {
       const nodeConfig = eventTypeTestConfig[readableID];
       const id = readableIDToID[readableID];
       const handler = nodeConfig.order === NA ? neverFire.bind(null, readableID, registrationName) :
@@ -240,7 +240,7 @@ const registerTestHandlers = function(eventTestConfig, readableIDToID) {
       EventPluginHub.putListener(idToInstance[id], registrationName, handler);
     }
   };
-  for (let eventName in eventTestConfig) {
+  for (const eventName in eventTestConfig) {
     const oneEventTypeTestConfig = eventTestConfig[eventName];
     const hasTwoPhase = !!oneEventTypeTestConfig.bubbled;
     if (hasTwoPhase) {
@@ -268,12 +268,12 @@ const registerTestHandlers = function(eventTestConfig, readableIDToID) {
 const run = function(config, hierarchyConfig, nativeEventConfig) {
   let max = NA;
   const searchForMax = function(nodeConfig) {
-    for (let readableID in nodeConfig) {
+    for (const readableID in nodeConfig) {
       const order = nodeConfig[readableID].order;
       max = order > max ? order : max;
     }
   };
-  for (let eventName in config) {
+  for (const eventName in config) {
     const eventConfig = config[eventName];
     if (eventConfig.bubbled) {
       searchForMax(eventConfig.bubbled);

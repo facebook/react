@@ -75,7 +75,7 @@ function precacheChildNodes(inst, node) {
   }
   const children = inst._renderedChildren;
   let childNode = node.firstChild;
-  outer: for (let name in children) {
+  outer: for (const name in children) {
     if (!children.hasOwnProperty(name)) {
       continue;
     }

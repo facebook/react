@@ -126,7 +126,7 @@ const ReactChildReconciler = {
    * @internal
    */
   unmountChildren: function(renderedChildren, safely) {
-    for (let name in renderedChildren) {
+    for (const name in renderedChildren) {
       if (renderedChildren.hasOwnProperty(name)) {
         const renderedChild = renderedChildren[name];
         ReactReconciler.unmountComponent(renderedChild, safely);

@@ -34,7 +34,7 @@ function assign(target, sources) {
     // exceptions and side-effects. We don't support symbols so they won't
     // be transferred.
 
-    for (let key in from) {
+    for (const key in from) {
       if (hasOwnProperty.call(from, key)) {
         to[key] = from[key];
       }

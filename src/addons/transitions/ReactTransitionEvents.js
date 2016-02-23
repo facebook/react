@@ -55,9 +55,9 @@ function detectEvents() {
     delete EVENT_NAME_MAP.transitionend.transition;
   }
 
-  for (let baseEventName in EVENT_NAME_MAP) {
+  for (const baseEventName in EVENT_NAME_MAP) {
     const baseEvents = EVENT_NAME_MAP[baseEventName];
-    for (let styleName in baseEvents) {
+    for (const styleName in baseEvents) {
       if (styleName in style) {
         endEvents.push(baseEvents[styleName]);
         break;

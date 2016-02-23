@@ -71,7 +71,7 @@ const DOMPropertyInjection = {
       );
     }
 
-    for (let propName in Properties) {
+    for (const propName in Properties) {
       invariant(
         !DOMProperty.properties.hasOwnProperty(propName),
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +

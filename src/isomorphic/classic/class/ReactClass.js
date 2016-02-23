@@ -386,7 +386,7 @@ const RESERVED_SPEC_KEYS = {
 };
 
 function validateTypeDef(Constructor, typeDef, location) {
-  for (let propName in typeDef) {
+  for (const propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       // use a warning instead of an invariant so components
       // don't show up in prod but only in __DEV__
@@ -462,7 +462,7 @@ function mixSpecIntoComponent(Constructor, spec) {
     RESERVED_SPEC_KEYS.mixins(Constructor, spec.mixins);
   }
 
-  for (let name in spec) {
+  for (const name in spec) {
     if (!spec.hasOwnProperty(name)) {
       continue;
     }
@@ -537,7 +537,7 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
   if (!statics) {
     return;
   }
-  for (let name in statics) {
+  for (const name in statics) {
     const property = statics[name];
     if (!statics.hasOwnProperty(name)) {
       continue;
@@ -578,7 +578,7 @@ function mergeIntoWithNoDuplicateKeys(one, two) {
     'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.'
   );
 
-  for (let key in two) {
+  for (const key in two) {
     if (two.hasOwnProperty(key)) {
       invariant(
         one[key] === undefined,
@@ -843,7 +843,7 @@ const ReactClass = {
     }
 
     // Reduce time spent doing lookups by setting these on the prototype.
-    for (let methodName in ReactClassInterface) {
+    for (const methodName in ReactClassInterface) {
       if (!Constructor.prototype[methodName]) {
         Constructor.prototype[methodName] = null;
       }
