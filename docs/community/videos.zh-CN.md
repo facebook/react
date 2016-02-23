@@ -4,6 +4,7 @@ title: 视频
 permalink: videos-zh-CN.html
 prev: conferences-zh-CN.html
 next: complementary-tools-zh-CN.html
+redirect_from: docs/videos-zh-CN.html
 ---
 
 ### Rethinking best practices - JSConf.eu

@@ -1,22 +1,23 @@
 ---
-id: videos
-title: Videos
-permalink: videos.html
-prev: conferences.html
-next: complementary-tools.html
+id: videos-ko-KR
+title: 비디오들
+permalink: videos-ko-KR.html
+prev: conferences-ko-KR.html
+next: complementary-tools-ko-KR.html
+redirect_from: docs/videos-ko-KR.html
 ---
 
 ### Rethinking best practices - JSConf.eu
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
-"At Facebook and Instagram, we’re trying to push the limits of what’s possible on the web with React. My talk will start with a brief introduction to the framework, and then dive into three controversial topics: Throwing out the notion of templates and building views with JavaScript, “re-rendering” your entire application when your data changes, and a lightweight implementation of the DOM and events." -- [Pete Hunt](http://www.petehunt.net/)
+"페이스북과 인스타그램에서, 우리는 React 를 이용해 웹에서 벌어질 수 있는 한계를 뛰어넘으려 노력하고 있습니다. 저는 프레임워크에 대한 짤막한 소개로 시작해서, 논쟁이 벌어질 수 있는 다음의 세가지 주제로 넘어갈겁니다. 템플릿의 개념을 버리고 JavaScript 를 이용해 View 를 구축하기, 자료가 변할때 전체 어플리케이션을 다시 그리기(“re-rendering”), 그리고 DOM과 events의 경량화된 구현 입니다." -- [Pete Hunt](http://www.petehunt.net/)
 
 * * *
 
 ### Thinking in react - tagtree.tv
 
-A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking in React](/react/docs/thinking-in-react.html) while building a simple app
+[tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/react/docs/thinking-in-react-ko-KR.html)의 원리들을 전달합니다.
 <figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
 
 * * *
@@ -25,20 +26,21 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
 
-"In this talk I’ll be discussing why we built a virtual DOM, how it compares to other systems, and its relevance to the future of browser technologies." -- [Pete Hunt](http://www.petehunt.net/)
+"이번에는 왜 우리가 virtual DOM을 만들었는지, 이것이 다른 시스템들과는 어떻게 다른지, 그리고 브라우져 기술들의 미래와 어떻게 관련이 있는지에 대해서 이야기 해 볼 겁니다." -- [Pete Hunt](http://www.petehunt.net/)
 
 * * *
 
 ### Going big with React
 
-"On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale."
-<figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
+"이 발표에서, 이 모든 JS 프레임워크가 다음을 약속하는것처럼 보입니다: 깨끗한 구현들, 빠른 코드 디자인, 완전한 수행. 그런데 당신이 JavaScript 스트레스 테스트를 할때, 어떤 일이 발생합니까? 혹은 6MB의 코드를 던지면 무슨일이 발생합니까? 이번에는 높은 스트레스 환경에서 React가 어떻게 작동하는지, 그리고 이것이 우리 팀이 방대한 크기의 코드를 안전하게 구성하는데 어떻게 도움이 되어줄지를 조사해 볼겁니다."
+[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)
 
 * * *
 
 ### CodeWinds
 
-[Pete Hunt](http://www.petehunt.net/) talked with [Jeff Barczewski](http://jeff.barczewski.com/) about React in CodeWinds Episode 4.
+CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barczewski](http://jeff.barczewski.com/)가 React에 대해서 이야기 합니다.
+
 <figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
 
 <table width="100%"><tr><td>
@@ -65,13 +67,14 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 39:38 - Contributing and getting help<br />
 </td></tr></table>
 
-[Read the episode notes](http://codewinds.com/4)
+[방송 자료 읽어보기](http://codewinds.com/4)
 
 * * *
 
 ### JavaScript Jabber
 
-[Pete Hunt](http://www.petehunt.net/) and [Jordan Walke](https://github.com/jordwalke) talked about React in JavaScript Jabber 73.
+JavaScript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walke](https://github.com/jordwalke)가 React에 대해서 이야기했습니다.
+
 <figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
 
 <table width="100%"><tr><td>
@@ -93,7 +96,7 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 39:53 – Making it work
 </td></tr></table>
 
-[Read the full transcript](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/)
+[전체 기록 읽어보기](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/)
 
 * * *
 
@@ -101,14 +104,14 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
 
-By [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/jordwalke)
+By [Tom Occhino](http://tomocchino.com/), [Jordan Walke](https://github.com/jordwalke)
 
 * * *
 
 ### Backbone + React + Middleman Screencast
 <iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
-Backbone is a great way in interface a REST API with React. This screencast shows how to integrate the two using [Backbone-React-Component](https://github.com/magalhas/backbone-react-component). Middleman is the framework used in this example but could easily be replaced with other frameworks. A supported template of this can be found [here](https://github.com/jbhatab/middleman-backbone-react-template). -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
+Backbone은 React로 REST API를 제공하기 위한 아주 좋은 방법입니다. 이 화면중개는 [Backbone-React-Component](https://github.com/magalhas/backbone-react-component)을 이용해서 어떻게 이 두가지를 연동하는지 보여줍니다. Middleman은 이 예제에서 사용되는 프레임워크이지만, 쉽게 다른 프레임워크로 대체하실 수 있습니다. 지원되는 템플릿은 [이곳](https://github.com/jbhatab/middleman-backbone-react-template)에서 찾으실 수 있습니다. -- [열린 마음의 혁명들](http://www.openmindedinnovations.com/)
 
 * * *
 
@@ -130,9 +133,9 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 
 ### React, or how to make life simpler - FrontEnd Dev Conf '14
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
 
-**In Russian** by [Alexander Solovyov](http://solovyov.net/)
+**러시아어** by [Alexander Solovyov](http://solovyov.net/)
 
 * * *
 
@@ -152,22 +155,21 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
-Facebook engineers [Bill Fisher](https://twitter.com/fisherwebdev) and [Jing Chen](https://twitter.com/jingc) talk about Flux and React, and how using an application architecture with a unidirectional data flow cleans up a lot of their code.
+Facebook 개발자 [Bill Fisher](https://twitter.com/fisherwebdev)와 [Jing Chen](https://twitter.com/jingc)가 Flux 와 React 에 대해서 이야기합니다. 그리고 어떻게 단일 방향의 자료흐름을 사용하는 어플리케이션 구조가 방대한 코드를 정리하는지에 대해서 이야기합니다."
 
 * * *
 
 ### Server-Side Rendering of Isomorphic Apps at SoundCloud
 
-<iframe src="https://player.vimeo.com/video/108488724" width="650" height="365" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe src="https://player.vimeo.com/video/108488724" width="650" height="365" frameborder="0" allowfullscreen></iframe>
 
-Walk-through by [Andres Suarez](https://github.com/zertosh) on how [SoundCloud](https://developers.soundcloud.com/blog/) is using React and Flux for server-side rendering.
-
-[Slides and sample code](https://github.com/zertosh/ssr-demo-kit)
+Server-side rendering을 위해 [SoundCloud](https://developers.soundcloud.com/blog/)가 React 와 Flux를 사용하는지 by [Andres Suarez](https://github.com/zertosh)
+[발표 자료와 예제 코드](https://github.com/zertosh/ssr-demo-kit)
 
 * * *
 
 ### Introducing React Native (+Playlist) - React.js Conf 2015
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/v/KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
 
-[Tom Occhino](https://twitter.com/tomocchino) reviews the past and present of React in 2015, and teases where it's going next.
+2015년에 [Tom Occhino](https://twitter.com/tomocchino)님이 React의 과거와 현재를 리뷰하고 나아갈 방향을 제시했습니다.

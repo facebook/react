@@ -1,0 +1,12 @@
+- title: Community
+  items:
+  - id: support
+    title: Support
+  - id: conferences
+    title: Conferences
+  - id: videos
+    title: Videos
+  - id: complementary-tools
+    title: Complementary Tools
+  - id: examples
+    title: Examples

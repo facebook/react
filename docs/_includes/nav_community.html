@@ -1,0 +1,15 @@
+<div class="nav-docs">
+  <!-- Community Nav -->
+  {% for section in site.data.nav_community %}
+    <div class="nav-docs-section">
+      <h3>{{ section.title }}</h3>
+      <ul>
+        {% for item in section.items %}
+          <li>
+            <a href="/react/community/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</div>
