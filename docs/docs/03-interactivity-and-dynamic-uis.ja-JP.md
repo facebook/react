@@ -2,7 +2,7 @@
 id: interactivity-and-dynamic-uis
 title: 相互作用と動的なUI
 permalink: interactivity-and-dynamic-uis-ja-JP.html
-prev: jsx-gotchas-ja-JP.html
+prev: displaying-data-ja-JP.html
 next: multiple-components-ja-JP.html
 ---
 

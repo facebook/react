@@ -1,9 +1,10 @@
 ---
-id: jsx-gotchas-zh-CN
+id: jsx-html-differences-zh-CN
 title: JSX 陷阱
-permalink: jsx-gotchas-zh-CN.html
-prev: jsx-spread-zh-CN.html
-next: interactivity-and-dynamic-uis-zh-CN.html
+permalink: jsx-html-differences-zh-CN.html
+prev: jsx-overview-zh-CN.html
+next: jsx-conditional-statements.html
+redirect_from: docs/jsx-gotchas-zh-CN.html
 ---
 
 JSX 与 HTML 非常相似，但是有些关键区别要注意。

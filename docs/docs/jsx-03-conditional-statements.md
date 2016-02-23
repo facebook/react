@@ -1,10 +1,10 @@
 ---
-id: if-else-in-JSX
-title: If-Else in JSX
-layout: tips
-permalink: if-else-in-JSX.html
-prev: inline-styles.html
-next: self-closing-tag.html
+id: jsx-conditional-statements
+title: JSX — Conditional Statements
+permalink: jsx-conditional-statements.html
+prev: jsx-html-differences.html
+next: jsx-spread.html
+redirect_from: tips/if-else-in-JSX.html
 ---
 
 `if-else` statements don't work inside JSX. This is because JSX is just syntactic sugar for function calls and object construction. Take this basic example:

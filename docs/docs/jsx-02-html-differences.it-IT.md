@@ -1,9 +1,10 @@
 ---
-id: jsx-gotchas-it-IT
-title: JSX Gotchas
-permalink: jsx-gotchas-it-IT.html
-prev: jsx-spread-it-IT.html
-next: interactivity-and-dynamic-uis-it-IT.html
+id: jsx-html-differences-it-IT
+title: JSX — HTML Differences
+permalink: jsx-html-differences-it-IT.html
+prev: jsx-overview-it-IT.html
+next: jsx-conditional-statements.html
+redirect_from: docs/jsx-gotchas-it-IT.html
 ---
 
 JSX somiglia all'HTML ma ci sono delle differenze importanti da tenere in considerazione.

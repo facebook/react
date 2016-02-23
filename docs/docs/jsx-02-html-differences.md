@@ -1,9 +1,12 @@
 ---
-id: jsx-gotchas
-title: JSX Gotchas
-permalink: jsx-gotchas.html
-prev: jsx-spread.html
-next: interactivity-and-dynamic-uis.html
+id: jsx-html-differences
+title: JSX — HTML Differences
+permalink: jsx-html-differences.html
+prev: jsx-overview.html
+next: jsx-conditional-statements.html
+redirect_from:
+  - docs/jsx-gotchas.html
+  - tips/self-closing-tag.html
 ---
 
 JSX looks like HTML but there are some important differences you may run into.
@@ -72,3 +75,11 @@ However, arbitrary attributes are supported on custom elements (those with a hyp
 ```javascript
 <div aria-hidden={true} />
 ```
+
+## Self-Closing Tags
+
+In JSX, `<MyComponent />` alone is valid while `<MyComponent>` isn't. All tags must be closed, either with the self-closing format or with a corresponding closing tag (`</MyComponent>`).
+
+> Note:
+>
+> Every React component can be self-closing: `<div />`. `<div></div>` is also an equivalent.

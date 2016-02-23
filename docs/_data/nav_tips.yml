@@ -4,12 +4,6 @@
     title: Introduction
   - id: inline-styles
     title: Inline Styles
-  - id: if-else-in-JSX
-    title: If-Else in JSX
-  - id: self-closing-tag
-    title: Self-Closing Tag
-  - id: maximum-number-of-jsx-root-nodes
-    title: Maximum Number of JSX Root Nodes
   - id: style-props-value-px
     title: Shorthand for Specifying Pixel Values in style props
   - id: children-props-type
@@ -24,8 +18,6 @@
     title: DOM Event Listeners in a Component
   - id: initial-ajax
     title: Load Initial Data via AJAX
-  - id: false-in-jsx
-    title: False in JSX
   - id: communicate-between-components
     title: Communicate Between Components
   - id: expose-component-functions

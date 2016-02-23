@@ -1,9 +1,9 @@
 ---
-id: jsx-in-depth-it-IT
+id: jsx-overview-it-IT
 title: JSX in Profondità
-permalink: jsx-in-depth-it-IT.html
-prev: displaying-data-it-IT.html
-next: jsx-spread-it-IT.html
+permalink: jsx-overview-it-IT.html
+next: jsx-html-differences-it-IT.html
+redirect_from: docs/jsx-in-depth-it-IT.html
 ---
 
 [JSX](https://facebook.github.io/jsx/) è un'estensione della sintassi JavaScript che somiglia all'XML. Puoi usare una semplice trasformazione sintattica di JSX con React.
@@ -155,10 +155,6 @@ var App = (
 );
 ```
 
-> Nota:
->
-> Questa funzionalità è disponibile nella [v0.11](/react/blog/2014/07/17/react-v0.11.html#jsx) e successive.
-
 ## Espressioni JavaScript
 
 ### Expressioni come Attributi
@@ -222,7 +218,3 @@ var content = (
   </Nav>
 );
 ```
-
-> NOTA:
->
-> JSX è simile all'HTML, ma non esattamente identico. Consulta la guida [JSX gotchas](/react/docs/jsx-gotchas-it-IT.html) per le differenze fondamentali.

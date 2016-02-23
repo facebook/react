@@ -1,9 +1,9 @@
 ---
-id: jsx-in-depth
+id: jsx-overview-ja-JP
 title: JSXの深層
-permalink: jsx-in-depth-ja-JP.html
-prev: displaying-data-ja-JP.html
-next: jsx-spread-ja_JP.html
+permalink: jsx-overview-ja-JP.html
+next: jsx-html-differences-ja-JP.html
+redirect_from: docs/jsx-in-depth-ja-JP.html
 ---
 
 [JSX](https://facebook.github.io/jsx/)はXMLに似たJavaScriptのシンタックスの拡張です。Reactでは、単純なJSXのシンタックスの変換を使うことができます。
@@ -148,9 +148,6 @@ var App = (
 );
 ```
 
-> 注意:
-> この特徴は [v0.11](/react/blog/2014/07/17/react-v0.11.html#jsx) 以上で使用できます。
-
 ## JavaScriptの表現
 
 ### アトリビュートの表現
@@ -214,6 +211,3 @@ var content = (
   </Nav>
 );
 ```
-
-> 注意:
-> JSXはHTMLに似ていますが、全く同じではありません。いくつかのキーの違いについては[JSXの理解](/react/docs/jsx-gotchas.html) をご覧ください。

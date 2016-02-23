@@ -22,13 +22,6 @@
     title: Why React?
   - id: displaying-data
     title: Displaying Data
-    subitems:
-    - id: jsx-in-depth
-      title: JSX in Depth
-    - id: jsx-spread
-      title: JSX Spread Attributes
-    - id: jsx-gotchas
-      title: JSX Gotchas
   - id: interactivity-and-dynamic-uis
     title: Interactivity and Dynamic UIs
   - id: multiple-components
@@ -71,6 +64,22 @@
     title: Advanced Performance
   - id: context
     title: Context
+- title: JSX
+  items:
+  - id: jsx-overview
+    title: JSX Overview
+  - id: jsx-html-differences
+    title: HTML Differences
+  - id: jsx-conditional-statements
+    title: Conditional Statements
+  - id: jsx-spread
+    title: Spread Attributes
+  - id: jsx-spec
+    title: Specification
+    href: https://facebook.github.io/jsx/
+  - id: html-to-jsx
+    title: HTML to JSX Compiler
+    href: /react/html-jsx.html
 - title: Reference
   items:
   - id: top-level-api

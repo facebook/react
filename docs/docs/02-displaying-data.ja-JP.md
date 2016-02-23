@@ -3,7 +3,7 @@ id: displaying-data-ja-JP
 title: データを表示する
 permalink: displaying-data-ja-JP.html
 prev: why-react-ja-JP.html
-next: jsx-in-depth-ja-JP.html
+next: interactivity-and-dynamic-uis-ja-JP.html
 
 ---
 
@@ -92,7 +92,7 @@ JSXでは、以下のように変換されます。
 
 JSXはとても小さいです。さらに学ぶためには、[JSXの深層](/react/docs/jsx-in-depth-ja-JP.html)を参照ください。または、[ライブJSXコンパイラー](/react/jsx-compiler.html)で変換の動作を確認してください。
 
-JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては[JSXの理解](/react/docs/jsx-gotchas.html) をご覧ください。
+JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては[JSXの理解](/react/docs/jsx-html-differences.html) をご覧ください。
 
 JSXを初めて使う際に最も簡単なのは、ブラウザで `JSXTransformer` を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの[react-tools](https://www.npmjs.com/package/react-tools)パッケージを使うことでプリコンパイルできます。
 

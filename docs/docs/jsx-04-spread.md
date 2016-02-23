@@ -1,9 +1,8 @@
 ---
 id: jsx-spread
-title: JSX Spread Attributes
+title: JSX — Spread Attributes
 permalink: jsx-spread.html
-prev: jsx-in-depth.html
-next: jsx-gotchas.html
+prev: jsx-conditional-statements.html
 ---
 
 If you know all the properties that you want to place on a component ahead of time, it is easy to use JSX:
