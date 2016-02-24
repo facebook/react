@@ -33,8 +33,6 @@ html {
   background: $pageBg;
 }
 
-
-
 .left {
   float: left;
 }
@@ -229,7 +227,12 @@ h1, h2, h3, h4, h5, h6 {
 .nav-docs {
   color: $darkColor;
   font-size: 14px;
-  // position: fixed;
+  position: fixed;
+  width: inherit;
+  bottom: 0;
+  top: 50px;
+  padding: 20px 20px 0 0;
+  overflow-y: auto;
   float: left;
   width: 210px;
 
@@ -273,8 +276,8 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     &:last-child {
-      padding-bottom: 0;
       border-bottom: 0;
+      padding-bottom: 100px;
     }
   }
 
@@ -431,12 +434,29 @@ h1, h2, h3, h4, h5, h6 {
   float: right;
 }
 
+/**
+ * "Sticky" footer
+ */
+
+html, body, .container {
+  height: 100%;
+}
+
+.main {
+  min-height: 100%;
+  margin-bottom: -90px;
+  overflow: hidden;
+}
+
 footer {
   font-size: 13px;
   font-weight: 600;
-  margin-top: 36px;
-  margin-bottom: 18px;
+  padding-top: 36px;
+  padding-bottom: 18px;
   overflow: auto;
+  background: $pageBg;
+  position: relative;
+  height: 90px;
 }
 
 section.black content {
