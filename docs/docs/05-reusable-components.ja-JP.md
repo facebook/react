@@ -18,8 +18,8 @@ React.createClass({
     // propがJSのプリミティブ型であると宣言できます。
     // デフォルトで、以下は全てオプションです。
     optionalArray: React.PropTypes.array,
-    optionalBool: React.PropTypes.bool,
-    optionalFunc: React.PropTypes.func,
+    optionalBoolean: React.PropTypes.boolean,
+    optionalFunction: React.PropTypes.function,
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
@@ -58,7 +58,7 @@ React.createClass({
 
     // `isRequired` は上記のどの値にも繋げることができますが、
     // propが提供されなかったときには警告が出ることに注意してください。
-    requiredFunc: React.PropTypes.func.isRequired,
+    requiredFunc: React.PropTypes.function.isRequired,
 
     // どのようなデータ型の値でも大丈夫です
     requiredAny: React.PropTypes.any.isRequired,

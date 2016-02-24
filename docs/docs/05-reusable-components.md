@@ -18,8 +18,8 @@ React.createClass({
     // You can declare that a prop is a specific JS primitive. By default, these
     // are all optional.
     optionalArray: React.PropTypes.array,
-    optionalBool: React.PropTypes.bool,
-    optionalFunc: React.PropTypes.func,
+    optionalBoolean: React.PropTypes.boolean,
+    optionalFunction: React.PropTypes.function,
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
@@ -60,7 +60,7 @@ React.createClass({
 
     // You can chain any of the above with `isRequired` to make sure a warning
     // is shown if the prop isn't provided.
-    requiredFunc: React.PropTypes.func.isRequired,
+    requiredFunc: React.PropTypes.function.isRequired,
 
     // A value of any data type
     requiredAny: React.PropTypes.any.isRequired,

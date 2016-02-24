@@ -18,8 +18,8 @@ React.createClass({
     // 특정 JavaScript 프리미티브 타입에 대한 prop을 명시할 수 있습니다.
     // 기본적으로 이것들은 모두 선택적입니다.
     optionalArray: React.PropTypes.array,
-    optionalBool: React.PropTypes.bool,
-    optionalFunc: React.PropTypes.func,
+    optionalBoolean: React.PropTypes.boolean,
+    optionalFunction: React.PropTypes.function,
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
@@ -59,7 +59,7 @@ React.createClass({
 
     // 위에 언급된 것들을 `isRequired`로 연결해서 prop이 제공되지 않을 때 경고를
     // 띄우도록 할 수도 있습니다.
-    requiredFunc: React.PropTypes.func.isRequired,
+    requiredFunc: React.PropTypes.function.isRequired,
 
     // 어떤 데이터 타입도 가능
     requiredAny: React.PropTypes.any.isRequired,

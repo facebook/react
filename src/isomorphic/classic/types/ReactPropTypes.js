@@ -69,7 +69,9 @@ var ANONYMOUS = '<<anonymous>>';
 var ReactPropTypes = {
   array: createPrimitiveTypeChecker('array'),
   bool: createPrimitiveTypeChecker('boolean'),
+  boolean: createPrimitiveTypeChecker('boolean'),
   func: createPrimitiveTypeChecker('function'),
+  function: createPrimitiveTypeChecker('function'),
   number: createPrimitiveTypeChecker('number'),
   object: createPrimitiveTypeChecker('object'),
   string: createPrimitiveTypeChecker('string'),

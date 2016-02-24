@@ -22,7 +22,7 @@ var ReactTransitionGroup = React.createClass({
 
   propTypes: {
     component: React.PropTypes.any,
-    childFactory: React.PropTypes.func,
+    childFactory: React.PropTypes.function,
   },
 
   getDefaultProps: function() {

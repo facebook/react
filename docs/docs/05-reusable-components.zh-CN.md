@@ -18,8 +18,8 @@ React.createClass({
     // 可以声明 prop 为指定的 JS 基本类型。默认
     // 情况下，这些 prop 都是可传可不传的。
     optionalArray: React.PropTypes.array,
-    optionalBool: React.PropTypes.bool,
-    optionalFunc: React.PropTypes.func,
+    optionalBoolean: React.PropTypes.boolean,
+    optionalFunction: React.PropTypes.function,
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
@@ -60,7 +60,7 @@ React.createClass({
 
     // 你可以在任意东西后面加上 `isRequired`
     // 来确保 如果 prop 没有提供 就会显示一个警告。
-    requiredFunc: React.PropTypes.func.isRequired,
+    requiredFunc: React.PropTypes.function.isRequired,
 
     // 不可空的任意类型
     requiredAny: React.PropTypes.any.isRequired,
