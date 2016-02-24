@@ -17,6 +17,19 @@ var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 var warning = require('warning');
 
+var didWarnForAddedNewProperty = false;
+var isProxySupported = typeof Proxy === 'function';
+
+var shouldBeReleasedProperties = [
+  'dispatchConfig',
+  '_targetInst',
+  'nativeEvent',
+  'isDefaultPrevented',
+  'isPropagationStopped',
+  '_dispatchListeners',
+  '_dispatchInstances',
+];
+
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -57,7 +70,7 @@ var EventInterface = {
 function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
   if (__DEV__) {
     // these have a getter/setter for warnings
-    delete this.nativeEvent; 
+    delete this.nativeEvent;
     delete this.preventDefault;
     delete this.stopPropagation;
   }
@@ -95,6 +108,7 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
     this.isDefaultPrevented = emptyFunction.thatReturnsFalse;
   }
   this.isPropagationStopped = emptyFunction.thatReturnsFalse;
+  return this;
 }
 
 assign(SyntheticEvent.prototype, {
@@ -156,22 +170,52 @@ assign(SyntheticEvent.prototype, {
         this[propName] = null;
       }
     }
+    for (var i = 0; i < shouldBeReleasedProperties.length; i++) {
+      this[shouldBeReleasedProperties[i]] = null;
+    }
     if (__DEV__) {
       var noop = require('emptyFunction');
       Object.defineProperty(this, 'nativeEvent', getPooledWarningPropertyDefinition('nativeEvent', null));
       Object.defineProperty(this, 'preventDefault', getPooledWarningPropertyDefinition('preventDefault', noop));
       Object.defineProperty(this, 'stopPropagation', getPooledWarningPropertyDefinition('stopPropagation', noop));
-    } else {
-      this.nativeEvent = null;
     }
-    this.dispatchConfig = null;
-    this._targetInst = null;
   },
 
 });
 
 SyntheticEvent.Interface = EventInterface;
 
+if (__DEV__) {
+  if (isProxySupported) {
+    /*eslint-disable no-func-assign */
+    SyntheticEvent = new Proxy(SyntheticEvent, {
+      construct: function(target, args) {
+        return this.apply(target, {}, args);
+      },
+      apply: function(constructor, that, args) {
+        return new Proxy(constructor.apply(that, args), {
+          set: function(target, prop, value) {
+            if (prop !== 'isPersistent' &&
+                !target.constructor.Interface.hasOwnProperty(prop) &&
+                shouldBeReleasedProperties.indexOf(prop) === -1) {
+              warning(
+                didWarnForAddedNewProperty || target.isPersistent(),
+                'This synthetic event is reused for performance reasons. If you\'re ' +
+                'seeing this, you\'re adding a new property in the synthetic event object. ' +
+                'The property is never released. See ' +
+                'https://fb.me/react-event-pooling for more information.'
+              );
+              didWarnForAddedNewProperty = true;
+            }
+            target[prop] = value;
+            return true;
+          },
+        });
+      },
+    });
+    /*eslint-enable no-func-assign */
+  }
+}
 /**
  * Helper to reduce boilerplate when creating subclasses.
  *

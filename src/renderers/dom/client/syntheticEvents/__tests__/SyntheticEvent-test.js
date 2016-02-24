@@ -160,4 +160,23 @@ describe('SyntheticEvent', function() {
       'See https://fb.me/react-event-pooling for more information.'
     );
   });
+
+  it('should warn if Proxy is supported and the synthetic event is added a property', function() {
+    spyOn(console, 'error');
+    var syntheticEvent = createEvent({});
+    syntheticEvent.foo = 'bar';
+    SyntheticEvent.release(syntheticEvent);
+    expect(syntheticEvent.foo).toBe('bar');
+    if (typeof Proxy === 'function') {
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: This synthetic event is reused for performance reasons. If you\'re ' +
+        'seeing this, you\'re adding a new property in the synthetic event object. ' +
+        'The property is never released. See ' +
+        'https://fb.me/react-event-pooling for more information.'
+      );
+    } else {
+      expect(console.error.calls.length).toBe(0);
+    }
+  });
 });
