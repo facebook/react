@@ -947,6 +947,12 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('contentEditable');
     });
 
+    it('should respect suppressContentEditableWarning', function() {
+      spyOn(console, 'error');
+      mountComponent({contentEditable: true, children: '', suppressContentEditableWarning: true});
+      expect(console.error.argsForCall.length).toBe(0);
+    });
+
     it('should validate against invalid styles', function() {
       expect(function() {
         mountComponent({style: 'display: none'});
