@@ -928,7 +928,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Let&#39;s call the callback from the <code>CommentForm</code> when the user submits the form:</p>
+<p>Now that <code>CommentBox</code> has made the callback available to <code>CommentForm</code> via the <code>onCommentSubmit</code> prop, the <code>CommentForm</code> can call the callback when the user submits the form:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial19.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

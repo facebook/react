@@ -470,7 +470,7 @@
 </code></pre></div>
 <p>This would accept user input and truncate the value to the first 140 characters.</p>
 
-<p>A <strong>Controlled</strong> component maintains its own internal state; the component renders purely based on props.</p>
+<p>A <strong>Controlled</strong> component does not maintain its own internal state; the component renders purely based on props.</p>
 <h3><a class="anchor" name="potential-issues-with-checkboxes-and-radio-buttons"></a>Potential Issues With Checkboxes and Radio Buttons <a class="hash-link" href="#potential-issues-with-checkboxes-and-radio-buttons">#</a></h3>
 <p>Be aware that, in an attempt to normalize change handling for checkbox and radio inputs, React uses a <code>click</code> event in place of a <code>change</code> event. For the most part this behaves as expected, except when calling <code>preventDefault</code> in a <code>change</code> handler. <code>preventDefault</code> stops the browser from visually updating the input, even if <code>checked</code> gets toggled. This can be worked around either by removing the call to <code>preventDefault</code>, or putting the toggle of <code>checked</code> in a <code>setTimeout</code>.</p>
 <h2><a class="anchor" name="uncontrolled-components"></a>Uncontrolled Components <a class="hash-link" href="#uncontrolled-components">#</a></h2>
