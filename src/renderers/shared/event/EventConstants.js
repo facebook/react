@@ -80,6 +80,7 @@ var topLevelTypes = keyMirror({
   topTouchEnd: null,
   topTouchMove: null,
   topTouchStart: null,
+  topTransitionEnd: null,
   topVolumeChange: null,
   topWaiting: null,
   topWheel: null,

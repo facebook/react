@@ -365,6 +365,12 @@ var eventTypes = {
       captured: keyOf({onTouchStartCapture: true}),
     },
   },
+  transitionEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTransitionEnd: true}),
+      captured: keyOf({onTransitionEndCapture: true}),
+    },
+  },
   volumeChange: {
     phasedRegistrationNames: {
       bubbled: keyOf({onVolumeChange: true}),
@@ -441,6 +447,7 @@ var topLevelEventsToDispatchConfig = {
   topTouchEnd:        eventTypes.touchEnd,
   topTouchMove:       eventTypes.touchMove,
   topTouchStart:      eventTypes.touchStart,
+  topTransitionEnd:   eventTypes.transitionEnd,
   topVolumeChange:    eventTypes.volumeChange,
   topWaiting:         eventTypes.waiting,
   topWheel:           eventTypes.wheel,
@@ -495,6 +502,7 @@ var SimpleEventPlugin = {
       case topLevelTypes.topSubmit:
       case topLevelTypes.topSuspend:
       case topLevelTypes.topTimeUpdate:
+      case topLevelTypes.topTransitionEnd:
       case topLevelTypes.topVolumeChange:
       case topLevelTypes.topWaiting:
         // HTML Events

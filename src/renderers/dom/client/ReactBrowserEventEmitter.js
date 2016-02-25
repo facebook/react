@@ -139,6 +139,7 @@ var topEventMapping = {
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
+  topTransitionEnd: 'transitionend',
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
   topWheel: 'wheel',
