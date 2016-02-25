@@ -203,7 +203,7 @@ Another difference is that `propTypes` and `defaultProps` are defined as propert
 ```javascript
 export class Counter extends React.Component {
   constructor(props) {
-    super(props);
+    super(arguments);
     this.state = {count: props.initialCount};
   }
   tick() {

@@ -203,7 +203,7 @@ API近似于 `React.createClass` 除了 `getInitialState`。 你应该在构造�
 ```javascript
 export class Counter extends React.Component {
   constructor(props) {
-    super(props);
+    super(arguments);
     this.state = {count: props.initialCount};
   }
   tick() {
