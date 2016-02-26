@@ -382,11 +382,11 @@ var ReactMount = {
       'ReactDOM.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
-          ' Instead of passing an element string, make sure to instantiate ' +
-          'it by passing it to React.createElement.' :
+          ' Instead of passing a string like \'div\', pass ' +
+          'React.createElement(\'div\') or <div />.' :
         typeof nextElement === 'function' ?
-          ' Instead of passing a component class, make sure to instantiate ' +
-          'it by passing it to React.createElement.' :
+          ' Instead of passing a class like Foo, pass ' +
+          'React.createElement(Foo) or <Foo />.' :
         // Check if it quacks like an element
         nextElement != null && nextElement.props !== undefined ?
           ' This may be caused by unintentionally loading two independent ' +
