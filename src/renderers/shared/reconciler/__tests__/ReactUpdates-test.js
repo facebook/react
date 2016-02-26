@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,12 +12,14 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 var ReactUpdates;
 
 describe('ReactUpdates', function() {
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     ReactUpdates = require('ReactUpdates');
   });
@@ -95,12 +97,13 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component x={0} />);
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<Component x={0} />, container);
     expect(instance.props.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
-      instance.setProps({x: 1});
+      ReactDOM.render(<Component x={1} />, container);
       instance.setState({y: 2});
       expect(instance.props.x).toBe(0);
       expect(instance.state.y).toBe(0);
@@ -347,14 +350,14 @@ describe('ReactUpdates', function() {
 
       render: function() {
         numMiddleRenders++;
-        return <div>{this.props.children}</div>;
+        return React.Children.only(this.props.children);
       },
     });
 
     var Bottom = React.createClass({
       render: function() {
         numBottomRenders++;
-        return <span />;
+        return null;
       },
     });
 
@@ -408,7 +411,7 @@ describe('ReactUpdates', function() {
               ref="switcherDiv"
               style={{
                 display: this.state.tabKey === child.key ? '' : 'none',
-            }}>
+              }}>
               {child}
             </div>
           </Box>
@@ -432,10 +435,15 @@ describe('ReactUpdates', function() {
     root = ReactTestUtils.renderIntoDocument(root);
 
     function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
-      expect(willUpdates).toEqual(desiredWillUpdates);
-      expect(didUpdates).toEqual(desiredDidUpdates);
-      willUpdates.length = 0;
-      didUpdates.length = 0;
+      var i;
+      for (i = 0; i < desiredWillUpdates; i++) {
+        expect(willUpdates).toContain(desiredWillUpdates[i]);
+      }
+      for (i = 0; i < desiredDidUpdates; i++) {
+        expect(didUpdates).toContain(desiredDidUpdates[i]);
+      }
+      willUpdates = [];
+      didUpdates = [];
     }
 
     function triggerUpdate(c) {
@@ -463,7 +471,6 @@ describe('ReactUpdates', function() {
 
       expectUpdates(desiredWillUpdates, desiredDidUpdates);
     }
-
     testUpdates(
       [root.refs.switcher.refs.box, root.refs.switcher],
       // Owner-child relationships have inverse will and did
@@ -501,16 +508,16 @@ describe('ReactUpdates', function() {
 
     // Initial renders aren't batched together yet...
     ReactUpdates.batchedUpdates(function() {
-      React.render(<Component text="A1" />, containerA);
-      React.render(<Component text="B1" />, containerB);
+      ReactDOM.render(<Component text="A1" />, containerA);
+      ReactDOM.render(<Component text="B1" />, containerB);
     });
     expect(ReconcileTransaction.getPooled.calls.length).toBe(2);
 
     // ...but updates are! Here only one more transaction is used, which means
     // we only have to initialize and close the wrappers once.
     ReactUpdates.batchedUpdates(function() {
-      React.render(<Component text="A2" />, containerA);
-      React.render(<Component text="B2" />, containerB);
+      ReactDOM.render(<Component text="A2" />, containerA);
+      ReactDOM.render(<Component text="B2" />, containerB);
     });
     expect(ReconcileTransaction.getPooled.calls.length).toBe(3);
   });
@@ -530,7 +537,7 @@ describe('ReactUpdates', function() {
         return {x: 0};
       },
       componentDidUpdate: function() {
-        expect(React.findDOMNode(b).textContent).toBe('B1');
+        expect(ReactDOM.findDOMNode(b).textContent).toBe('B1');
         aUpdated = true;
       },
       render: function() {
@@ -601,6 +608,7 @@ describe('ReactUpdates', function() {
       });
     });
 
+    /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
         'Inner-render-0-0',
@@ -627,6 +635,7 @@ describe('ReactUpdates', function() {
           'Inner-callback-2',
       'Outer-callback-2',
     ]);
+    /* eslint-enable indent */
   });
 
   it('should flush updates in the correct order across roots', function() {
@@ -641,12 +650,12 @@ describe('ReactUpdates', function() {
       componentDidMount: function() {
         instances.push(this);
         if (this.props.depth < this.props.count) {
-          React.render(
+          ReactDOM.render(
             <MockComponent
               depth={this.props.depth + 1}
               count={this.props.count}
             />,
-            React.findDOMNode(this)
+            ReactDOM.findDOMNode(this)
           );
         }
       },
@@ -715,10 +724,10 @@ describe('ReactUpdates', function() {
 
     x = ReactTestUtils.renderIntoDocument(<X />);
     y = ReactTestUtils.renderIntoDocument(<Y />);
-    expect(React.findDOMNode(x).textContent).toBe('0');
+    expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();
-    expect(React.findDOMNode(x).textContent).toBe('1');
+    expect(ReactDOM.findDOMNode(x).textContent).toBe('1');
   });
 
   it('should queue updates from during mount', function() {
@@ -756,7 +765,7 @@ describe('ReactUpdates', function() {
     });
 
     expect(a.state.x).toBe(1);
-    expect(React.findDOMNode(a).textContent).toBe('A1');
+    expect(ReactDOM.findDOMNode(a).textContent).toBe('A1');
   });
 
   it('calls componentWillReceiveProps setState callback properly', function() {
@@ -779,8 +788,8 @@ describe('ReactUpdates', function() {
     });
 
     var container = document.createElement('div');
-    React.render(<A x={1} />, container);
-    React.render(<A x={2} />, container);
+    ReactDOM.render(<A x={1} />, container);
+    ReactDOM.render(<A x={2} />, container);
     expect(callbackCount).toBe(1);
   });
 
@@ -895,4 +904,37 @@ describe('ReactUpdates', function() {
     expect(renderCount).toBe(1);
   });
 
+  it('marks top-level updates', function() {
+    var ReactFeatureFlags = require('ReactFeatureFlags');
+
+    var Foo = React.createClass({
+      render: function() {
+        return <Bar />;
+      },
+    });
+
+    var Bar = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+
+    try {
+      ReactFeatureFlags.logTopLevelRenders = true;
+      spyOn(console, 'time');
+      spyOn(console, 'timeEnd');
+
+      ReactDOM.render(<Foo />, container);
+
+      expect(console.time.argsForCall.length).toBe(1);
+      expect(console.time.argsForCall[0][0]).toBe('React update: Foo');
+      expect(console.timeEnd.argsForCall.length).toBe(1);
+      expect(console.timeEnd.argsForCall[0][0]).toBe('React update: Foo');
+    } finally {
+      ReactFeatureFlags.logTopLevelRenders = false;
+    }
+  });
 });

@@ -2,7 +2,8 @@
 id: advanced-performance
 title: Advanced Performance
 permalink: advanced-performance.html
-prev: perf.html
+prev: shallow-compare.html
+next: context.html
 ---
 
 One of the first questions people ask when considering React for a project is whether their application will be as fast and responsive as an equivalent non-React version. The idea of re-rendering an entire subtree of components in response to every state change makes people wonder whether this process negatively impacts performance. React uses several clever techniques to minimize the number of costly DOM operations required to update the UI.
@@ -54,12 +55,12 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value</div>;
+    return <div>{this.props.value}</div>;
   }
 });
 ```
 
-We could easily implement `shouldComponentUpdate` as follow:
+We could easily implement `shouldComponentUpdate` as follows:
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
@@ -69,7 +70,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 
 So far so good, dealing with such simple props/state structures is easy. We could even generalize an implementation based on shallow equality and mix it into components. In fact, React already provides such implementation: [PureRenderMixin](/react/docs/pure-render-mixin.html).
 
-But what if your components' props or state are mutable data structures?. Say the prop the component receives, instead of being a string like `'bar'`, is a Javascript object that contains a string such as, `{ foo: 'bar' }`:
+But what if your components' props or state are mutable data structures? Say the prop the component receives, instead of being a string like `'bar'`, is a JavaScript object that contains a string such as, `{ foo: 'bar' }`:
 
 ```javascript
 React.createClass({
@@ -78,7 +79,7 @@ React.createClass({
   },
 
   render: function() {
-    return <div>this.props.value.foo</div>;
+    return <div>{this.props.value.foo}</div>;
   }
 });
 ```
@@ -133,13 +134,13 @@ Consequently, since we'll miss the change on the prop and short circuit the re-r
 
 ## Immutable-js to the rescue
 
-[Immutable-js](https://github.com/facebook/immutable-js) is a Javascript collections library  written by Lee Byron, which Facebook recently open-sourced. It provides *immutable persistent* collections via *structural sharing*. Lets see what these properties mean:
+[Immutable-js](https://github.com/facebook/immutable-js) is a JavaScript collections library written by Lee Byron, which Facebook recently open-sourced. It provides *immutable persistent* collections via *structural sharing*. Let's see what these properties mean:
 
 * *Immutable*: once created, a collection cannot be altered at another point in time.
 * *Persistent*: new collections can be created from a previous collection and a mutation such as set. The original collection is still valid after the new collection is created.
 * *Structural Sharing*: new collections are created using as much of the same structure as the original collection as possible, reducing copying to a minimum to achieve space efficiency and acceptable performance. If the new collection is equal to the original, the original is often returned.
 
-Immutability makes tracking changes cheap; a change will always result in a new object so we only need to check if the reference to the object has changed. For example, in this regular Javascript code:
+Immutability makes tracking changes cheap; a change will always result in a new object so we only need to check if the reference to the object has changed. For example, in this regular JavaScript code:
 
 ```javascript
 var x = { foo: "bar" };

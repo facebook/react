@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -18,15 +18,17 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 var reactComponentExpect;
 
 describe('ReactContextValidator', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
 
@@ -121,9 +123,9 @@ describe('ReactContextValidator', function() {
       },
     });
 
-    var instance = <Parent foo="abc" />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.replaceProps({foo: 'def'});
+    var container = document.createElement('div');
+    ReactDOM.render(<Parent foo="abc" />, container);
+    ReactDOM.render(<Parent foo="def" />, container);
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});

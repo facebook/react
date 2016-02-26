@@ -43,7 +43,7 @@
     title: Working With the Browser
     subitems:
     - id: more-about-refs
-      title: More About Refs
+      title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
   - id: addons
@@ -65,8 +65,12 @@
       title: PureRenderMixin
     - id: perf
       title: Performance Tools
+    - id: shallow-compare
+      title: Shallow Compare
   - id: advanced-performance
     title: Advanced Performance
+  - id: context
+    title: Context
 - title: Reference
   items:
   - id: top-level-api
@@ -85,6 +89,8 @@
     title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
+  - id: webcomponents
+    title: Web Components
   - id: glossary
     title: React (Virtual) DOM Terminology
 - title: Flux

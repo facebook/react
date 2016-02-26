@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -18,7 +18,7 @@ var Transaction;
 var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
 describe('Transaction', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     Transaction = require('Transaction');
   });
 

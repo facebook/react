@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,15 +11,15 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactClass-spec', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     spyOn(console, 'error');
   });
@@ -28,8 +28,7 @@ describe('ReactClass-spec', function() {
     expect(function() {
       React.createClass({});
     }).toThrow(
-      'Invariant Violation: createClass(...): Class specification must ' +
-      'implement a `render` method.'
+      'createClass(...): Class specification must implement a `render` method.'
     );
   });
 
@@ -45,7 +44,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should copy prop types onto the Constructor', function() {
-    var propValidator = mocks.getMockFunction();
+    var propValidator = jest.genMockFn();
     var TestComponent = React.createClass({
       propTypes: {
         value: propValidator,
@@ -62,7 +61,7 @@ describe('ReactClass-spec', function() {
 
   it('should warn on invalid prop types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
 
       React.createClass({
@@ -86,7 +85,7 @@ describe('ReactClass-spec', function() {
 
   it('should warn on invalid context types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
       React.createClass({
         displayName: 'Component',
@@ -109,7 +108,7 @@ describe('ReactClass-spec', function() {
 
   it('should throw on invalid child context types', function() {
     var warn = console.error;
-    console.error = mocks.getMockFunction();
+    console.error = jest.genMockFn();
     try {
       React.createClass({
         displayName: 'Component',
@@ -195,10 +194,10 @@ describe('ReactClass-spec', function() {
         },
       });
     }).toThrow(
-      'Invariant Violation: ReactClass: You are attempting to ' +
-      'define a reserved property, `getDefaultProps`, that shouldn\'t be on ' +
-      'the "statics" key. Define it as an instance property instead; it ' +
-      'will still be accessible on the constructor.'
+      'ReactClass: You are attempting to define a reserved property, ' +
+      '`getDefaultProps`, that shouldn\'t be on the "statics" key. Define ' +
+      'it as an instance property instead; it will still be accessible on ' +
+      'the constructor.'
     );
   });
 
@@ -311,7 +310,7 @@ describe('ReactClass-spec', function() {
     });
 
     var container = document.createElement('div');
-    React.render(<Outer />, container);
+    ReactDOM.render(<Outer />, container);
     expect(container.firstChild.className).toBe('foo');
   });
 
@@ -329,8 +328,7 @@ describe('ReactClass-spec', function() {
       expect(function() {
         instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrow(
-        'Invariant Violation: Component.getInitialState(): ' +
-        'must return an object or null'
+        'Component.getInitialState(): must return an object or null'
       );
     });
   });
@@ -361,25 +359,6 @@ describe('ReactClass-spec', function() {
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
       'factory or JSX instead. See: https://fb.me/react-legacyfactory'
-    );
-  });
-
-  it('warns when calling getDOMNode', function() {
-    var MyComponent = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-
-    var container = document.createElement('div');
-    var instance = React.render(<MyComponent />, container);
-
-    instance.getDOMNode();
-
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'MyComponent.getDOMNode(...) is deprecated. Please use ' +
-      'React.findDOMNode(instance) instead.'
     );
   });
 

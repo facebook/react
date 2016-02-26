@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 // -*- mode: js -*-
 // vim: set ft=javascript :
-"use strict";
+
+'use strict';
 
 var babel = require('babel');
 
-var constants = require('../vendor/constants')(babel);
+var devExpressionPlugin = require('fbjs/scripts/babel/dev-expression');
 
 var TRANSFORM_IGNORE_RE = /^WebComponents$/;
 
-require("commoner").version(
-  require("../package.json").version
+require('commoner').version(
+  require('../package.json').version
 ).resolve(function(id) {
   var context = this;
 
@@ -38,26 +39,9 @@ require("commoner").version(
     // This is where JSX, ES6, etc. desugaring happens.
     source = babel.transform(source, {
       blacklist: ['spec.functionName', 'validation.react'],
-      plugins: [constants],
-      filename: id
+      plugins: [devExpressionPlugin],
+      filename: id,
     }).code;
-  }
-
-  if (context.config.mocking) {
-    // Make sure there is exactly one newline at the end of the module.
-    source = source.replace(/\s+$/m, "\n");
-
-    return context.getProvidedP().then(function(idToPath) {
-      if (id !== "mock-modules" &&
-          id !== "mocks" &&
-          id !== "test/all" &&
-          idToPath.hasOwnProperty("mock-modules")) {
-        return source + '\nrequire("mock-modules").register(' +
-          JSON.stringify(id) + ', module);\n';
-      }
-
-      return source;
-    });
   }
 
   return source;

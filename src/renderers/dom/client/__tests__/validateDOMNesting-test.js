@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -47,7 +47,7 @@ function isTagStackValid(stack) {
 
 describe('ReactContextValidator', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     validateDOMNesting = require('validateDOMNesting');
   });
@@ -55,7 +55,8 @@ describe('ReactContextValidator', function() {
   it('allows any tag with no context', function() {
     // With renderToString (for example), we don't know where we're mounting the
     // tag so we must err on the side of leniency.
-    specialTags.concat(formattingTags, ['mysterytag']).forEach(function(tag) {
+    var allTags = [].concat(specialTags, formattingTags, ['mysterytag']);
+    allTags.forEach(function(tag) {
       expect(validateDOMNesting.isTagValidInContext(tag, null)).toBe(true);
     });
   });
@@ -66,6 +67,7 @@ describe('ReactContextValidator', function() {
     expect(isTagStackValid(['div', 'a', 'object', 'a'])).toBe(true);
     expect(isTagStackValid(['div', 'p', 'button', 'p'])).toBe(true);
     expect(isTagStackValid(['p', 'svg', 'foreignObject', 'p'])).toBe(true);
+    expect(isTagStackValid(['html', 'body', 'div'])).toBe(true);
 
     // Invalid, but not changed by browser parsing so we allow them
     expect(isTagStackValid(['div', 'ul', 'ul', 'li'])).toBe(true);
@@ -80,5 +82,6 @@ describe('ReactContextValidator', function() {
     expect(isTagStackValid(['p', 'p'])).toBe(false);
     expect(isTagStackValid(['table', 'tr'])).toBe(false);
     expect(isTagStackValid(['div', 'ul', 'li', 'div', 'li'])).toBe(false);
+    expect(isTagStackValid(['div', 'html'])).toBe(false);
   });
 });

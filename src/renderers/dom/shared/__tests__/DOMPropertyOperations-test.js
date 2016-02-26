@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -15,17 +15,13 @@ describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
 
-  var mocks;
-
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     var ReactDefaultInjection = require('ReactDefaultInjection');
     ReactDefaultInjection.inject();
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
-
-    mocks = require('mocks');
   });
 
   describe('createMarkupForProperty', function() {
@@ -52,26 +48,6 @@ describe('DOMPropertyOperations', function() {
         'id',
         'simple'
       )).toBe('id="simple"');
-    });
-
-    it('should warn about incorrect casing', function() {
-      spyOn(console, 'error');
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'tabindex',
-        '1'
-      )).toBe(null);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
-    });
-
-    it('should warn about class', function() {
-      spyOn(console, 'error');
-      expect(DOMPropertyOperations.createMarkupForProperty(
-        'class',
-        'muffins'
-      )).toBe(null);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('className');
     });
 
     it('should create markup for boolean properties', function() {
@@ -224,6 +200,15 @@ describe('DOMPropertyOperations', function() {
         .toEqual(['http://www.w3.org/1999/xlink', 'xlink:href', 'about:blank']);
     });
 
+    it('should set values as boolean properties', function() {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', 'disabled');
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', true);
+      expect(stubNode.getAttribute('disabled')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', false);
+      expect(stubNode.getAttribute('disabled')).toBe(null);
+    });
+
     it('should convert attribute values to string first', function() {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
@@ -261,7 +246,7 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should use mutation method where applicable', function() {
-      var foobarSetter = mocks.getMockFunction();
+      var foobarSetter = jest.genMockFn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: null},
@@ -297,6 +282,23 @@ describe('DOMPropertyOperations', function() {
       // className should be '', not 'null' or null (which becomes 'null' in
       // some browsers)
       expect(stubNode.className).toBe('');
+      expect(stubNode.getAttribute('class')).toBe(null);
+    });
+
+    it('should remove property properly for boolean properties', function() {
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'hidden',
+        true
+      );
+      expect(stubNode.hasAttribute('hidden')).toBe(true);
+
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'hidden',
+        false
+      );
+      expect(stubNode.hasAttribute('hidden')).toBe(false);
     });
 
     it('should remove property properly even with different name', function() {
@@ -306,6 +308,9 @@ describe('DOMPropertyOperations', function() {
         Properties: {foobar: DOMProperty.injection.MUST_USE_PROPERTY},
         DOMPropertyNames: {
           foobar: 'className',
+        },
+        DOMAttributeNames: {
+          foobar: 'class',
         },
       });
 
@@ -326,6 +331,53 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.className).toBe('');
     });
 
+  });
+
+  describe('deleteValueForProperty', function() {
+    var stubNode;
+
+    beforeEach(function() {
+      stubNode = document.createElement('div');
+    });
+
+    it('should remove attributes for normal properties', function() {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'title', 'foo');
+      expect(stubNode.getAttribute('title')).toBe('foo');
+      expect(stubNode.title).toBe('foo');
+
+      DOMPropertyOperations.deleteValueForProperty(stubNode, 'title');
+      expect(stubNode.getAttribute('title')).toBe(null);
+      // JSDOM does not behave correctly for attributes/properties
+      //expect(stubNode.title).toBe('');
+    });
+
+    it('should not remove attributes for special properties', function() {
+      stubNode = document.createElement('input');
+      stubNode.setAttribute('value', 'foo');
+
+      DOMPropertyOperations.deleteValueForProperty(stubNode, 'value');
+      // JSDOM does not behave correctly for attributes/properties
+      //expect(stubNode.getAttribute('value')).toBe('foo');
+      expect(stubNode.value).toBe('');
+    });
+
+    it('should not leave all options selected when deleting multiple', function() {
+      stubNode = document.createElement('select');
+      stubNode.multiple = true;
+      stubNode.appendChild(document.createElement('option'));
+      stubNode.appendChild(document.createElement('option'));
+      stubNode.options[0].selected = true;
+      stubNode.options[1].selected = true;
+
+      DOMPropertyOperations.deleteValueForProperty(stubNode, 'multiple');
+      expect(stubNode.getAttribute('multiple')).toBe(null);
+      expect(stubNode.multiple).toBe(false);
+
+      expect(
+        stubNode.options[0].selected &&
+        stubNode.options[1].selected
+      ).toBe(false);
+    });
   });
 
   describe('injectDOMPropertyConfig', function() {

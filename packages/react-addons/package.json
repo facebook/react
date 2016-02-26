@@ -1,0 +1,15 @@
+{
+  "name": "react-addons-template",
+  "version": "0.15.0-alpha.1",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "react",
+    "react-addon"
+  ],
+  "license": "BSD-3-Clause",
+  "dependencies": {},
+  "peerDependencies": {
+    "react": "^0.15.0-alpha.1"
+  }
+}

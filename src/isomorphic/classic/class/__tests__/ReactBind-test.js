@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,7 +11,6 @@
 /*global global:true*/
 'use strict';
 
-var mocks = require('mocks');
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
@@ -21,9 +20,9 @@ describe('autobinding', function() {
 
   it('Holds reference to instance', function() {
 
-    var mouseDidEnter = mocks.getMockFunction();
-    var mouseDidLeave = mocks.getMockFunction();
-    var mouseDidClick = mocks.getMockFunction();
+    var mouseDidEnter = jest.genMockFn();
+    var mouseDidLeave = jest.genMockFn();
+    var mouseDidClick = jest.genMockFn();
 
     var TestBindComponent = React.createClass({
       getInitialState: function() {
@@ -96,7 +95,7 @@ describe('autobinding', function() {
   });
 
   it('works with mixins', function() {
-    var mouseDidClick = mocks.getMockFunction();
+    var mouseDidClick = jest.genMockFn();
 
     var TestMixin = {
       onClick: mouseDidClick,

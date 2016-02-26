@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -37,7 +37,7 @@ var MAX_TOUCH_BANK = 20;
  * }
  */
 var touchHistory = {
-  touchBank: [ ],
+  touchBank: [],
   numberActiveTouches: 0,
   // If there is only one active touch, we remember its location. This prevents
   // us having to loop through all of the touches all the time in the most
@@ -105,10 +105,10 @@ var recordStartTouchData = function(touch) {
   if (__DEV__) {
     validateTouch(touch);
   }
-  if (!touchTrack) {
-    touchBank[touch.identifier] = initializeTouchData(touch);
-  } else {
+  if (touchTrack) {
     reinitializeTouchTrack(touchTrack, touch);
+  } else {
+    touchBank[touch.identifier] = initializeTouchData(touch);
   }
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 };

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, Facebook, Inc.
+ * Copyright 2014-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -18,6 +18,7 @@ describe('Pooled class', function() {
   beforeEach(function() {
     PooledClass = require('PooledClass');
     PoolableClass = function() {};
+    PoolableClass.prototype.destructor = function() {};
     PooledClass.addPoolingTo(PoolableClass);
   });
 
@@ -63,6 +64,7 @@ describe('Pooled class', function() {
     var PoolableClassWithMultiArguments = function(a, b) {
       log.push(a, b);
     };
+    PoolableClassWithMultiArguments.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithMultiArguments,
       PooledClass.twoArgumentPooler
@@ -76,6 +78,7 @@ describe('Pooled class', function() {
     var PoolableClassWithOneArgument = function(a) {
       log.push(a);
     };
+    PoolableClassWithOneArgument.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithOneArgument
     );
@@ -88,6 +91,7 @@ describe('Pooled class', function() {
     var PoolableClassWithOneArgument = function(a) {
       log.push(a);
     };
+    PoolableClassWithOneArgument.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithOneArgument
     );
@@ -100,15 +104,24 @@ describe('Pooled class', function() {
   it('should throw when the class releases an instance of a different type',
     function() {
       var RandomClass = function() {};
+      RandomClass.prototype.destructor = function() {};
       PooledClass.addPoolingTo(RandomClass);
       var randomInstance = RandomClass.getPooled();
       PoolableClass.getPooled();
       expect(function() {
         PoolableClass.release(randomInstance);
       }).toThrow(
-        'Invariant Violation: Trying to release an instance into a pool ' +
-        'of a different type.'
+        'Trying to release an instance into a pool of a different type.'
       );
     }
   );
+
+  it('should throw if no destructor is defined', function() {
+    var ImmortalClass = function() {};
+    PooledClass.addPoolingTo(ImmortalClass);
+    var inst = ImmortalClass.getPooled();
+    expect(function() {
+      ImmortalClass.release(inst);
+    }).toThrow();
+  });
 });

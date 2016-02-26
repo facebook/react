@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -84,10 +84,10 @@ var Mixin = {
    */
   reinitializeTransaction: function() {
     this.transactionWrappers = this.getTransactionWrappers();
-    if (!this.wrapperInitData) {
-      this.wrapperInitData = [];
-    } else {
+    if (this.wrapperInitData) {
       this.wrapperInitData.length = 0;
+    } else {
+      this.wrapperInitData = [];
     }
     this._isInTransaction = false;
   },
@@ -234,7 +234,7 @@ var Transaction = {
   Mixin: Mixin,
 
   /**
-   * Token to look for to determine if an error occured.
+   * Token to look for to determine if an error occurred.
    */
   OBSERVED_ERROR: {},
 

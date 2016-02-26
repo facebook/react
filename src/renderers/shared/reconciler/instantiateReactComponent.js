@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule instantiateReactComponent
- * @typechecks static-only
  */
 
 'use strict';
@@ -21,7 +20,9 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 // To avoid a cyclic dependency, we create the final class in this module
-var ReactCompositeComponentWrapper = function() { };
+var ReactCompositeComponentWrapper = function(element) {
+  this.construct(element);
+};
 assign(
   ReactCompositeComponentWrapper.prototype,
   ReactCompositeComponent.Mixin,
@@ -67,10 +68,8 @@ function instantiateReactComponent(node) {
   var instance;
 
   if (node === null || node === false) {
-    node = ReactEmptyComponent.emptyElement;
-  }
-
-  if (typeof node === 'object') {
+    instance = ReactEmptyComponent.create(instantiateReactComponent);
+  } else if (typeof node === 'object') {
     var element = node;
     invariant(
       element && (typeof element.type === 'function' ||
@@ -86,11 +85,11 @@ function instantiateReactComponent(node) {
       instance = ReactNativeComponent.createInternalComponent(element);
     } else if (isInternalComponentType(element.type)) {
       // This is temporarily available for custom components that are not string
-      // represenations. I.e. ART. Once those are updated to use the string
+      // representations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
       instance = new element.type(element);
     } else {
-      instance = new ReactCompositeComponentWrapper();
+      instance = new ReactCompositeComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
     instance = ReactNativeComponent.createInstanceForText(node);
@@ -104,16 +103,13 @@ function instantiateReactComponent(node) {
 
   if (__DEV__) {
     warning(
-      typeof instance.construct === 'function' &&
       typeof instance.mountComponent === 'function' &&
       typeof instance.receiveComponent === 'function' &&
+      typeof instance.getNativeNode === 'function' &&
       typeof instance.unmountComponent === 'function',
       'Only React Components can be mounted.'
     );
   }
-
-  // Sets up the instance. This can probably just move into the constructor now.
-  instance.construct(node);
 
   // These two fields are used by the DOM and ART diffing algorithms
   // respectively. Instead of using expandos on components, we should be

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,14 +12,13 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
-
-var mocks;
 
 describe('ReactComponent', function() {
   beforeEach(function() {
-    mocks = require('mocks');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -27,17 +26,15 @@ describe('ReactComponent', function() {
     var container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function() {
-      React.render(<div></div>, [container]);
+      ReactDOM.render(<div></div>, [container]);
     }).toThrow(
-      'Invariant Violation: _registerComponent(...): Target container ' +
-      'is not a DOM element.'
+      '_registerComponent(...): Target container is not a DOM element.'
     );
 
     expect(function() {
-      React.render(<div></div>, null);
+      ReactDOM.render(<div></div>, null);
     }).toThrow(
-      'Invariant Violation: _registerComponent(...): Target container ' +
-      'is not a DOM element.'
+      '_registerComponent(...): Target container is not a DOM element.'
     );
   });
 
@@ -49,7 +46,8 @@ describe('ReactComponent', function() {
   });
 
   it('should support refs on owned components', function() {
-    var innerObj = {}, outerObj = {};
+    var innerObj = {};
+    var outerObj = {};
 
     var Wrapper = React.createClass({
 
@@ -99,7 +97,8 @@ describe('ReactComponent', function() {
   });
 
   it('should support new-style refs', function() {
-    var innerObj = {}, outerObj = {};
+    var innerObj = {};
+    var outerObj = {};
 
     var Wrapper = React.createClass({
       getObject: function() {
@@ -162,7 +161,7 @@ describe('ReactComponent', function() {
       componentDidMount: function() {
         // Check .props.title to make sure we got the right elements back
         expect(this.wrapperRef.getTitle()).toBe('wrapper');
-        expect(React.findDOMNode(this.innerRef).title).toBe('inner');
+        expect(ReactDOM.findDOMNode(this.innerRef).title).toBe('inner');
         mounted = true;
       },
     });
@@ -218,12 +217,13 @@ describe('ReactComponent', function() {
     // mount, update, unmount
     var el = document.createElement('div');
     log.push('start mount');
-    React.render(<Outer />, el);
+    ReactDOM.render(<Outer />, el);
     log.push('start update');
-    React.render(<Outer />, el);
+    ReactDOM.render(<Outer />, el);
     log.push('start unmount');
-    React.unmountComponentAtNode(el);
+    ReactDOM.unmountComponentAtNode(el);
 
+    /* eslint-disable indent */
     expect(log).toEqual([
       'start mount',
         'inner 1 render',
@@ -251,37 +251,18 @@ describe('ReactComponent', function() {
         'ref 2 got null',
         'inner 2 componentWillUnmount',
     ]);
+    /* eslint-enable indent */
   });
 
   it('fires the callback after a component is rendered', function() {
-    var callback = mocks.getMockFunction();
+    var callback = jest.genMockFn();
     var container = document.createElement('div');
-    React.render(<div />, container, callback);
+    ReactDOM.render(<div />, container, callback);
     expect(callback.mock.calls.length).toBe(1);
-    React.render(<div className="foo" />, container, callback);
+    ReactDOM.render(<div className="foo" />, container, callback);
     expect(callback.mock.calls.length).toBe(2);
-    React.render(<span />, container, callback);
+    ReactDOM.render(<span />, container, callback);
     expect(callback.mock.calls.length).toBe(3);
-  });
-
-  it('warns when calling getDOMNode', function() {
-    spyOn(console, 'error');
-
-    var Potato = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-    var container = document.createElement('div');
-    var instance = React.render(<Potato />, container);
-
-    instance.getDOMNode();
-
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toContain(
-      'Potato.getDOMNode(...) is deprecated. Please use ' +
-      'React.findDOMNode(instance) instead.'
-    );
   });
 
   it('throws usefully when rendering badly-typed elements', function() {
@@ -289,23 +270,20 @@ describe('ReactComponent', function() {
 
     var X = undefined;
     expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: undefined.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: undefined.'
     );
 
     var Y = null;
     expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: null.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: null.'
     );
 
     var Z = {};
     expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrow(
-      'Invariant Violation: Element type is invalid: expected a string (for ' +
-      'built-in components) or a class/function (for composite components) ' +
-      'but got: object.'
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: object.'
     );
 
     // One warning for each element creation

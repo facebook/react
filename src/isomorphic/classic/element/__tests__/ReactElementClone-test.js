@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,15 +11,15 @@
 
 'use strict';
 
-require('mock-modules');
-
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactElementClone', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -39,7 +39,7 @@ describe('ReactElementClone', function() {
       },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should clone a composite component with new props', function() {
@@ -63,7 +63,7 @@ describe('ReactElementClone', function() {
       },
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should keep the original ref if it is not overridden', function() {
@@ -256,7 +256,7 @@ describe('ReactElementClone', function() {
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
       'expected `string`. Check the render method of `Parent`.'

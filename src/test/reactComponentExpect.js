@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -28,6 +28,7 @@ function reactComponentExpect(instance) {
   }
 
   expect(instance).not.toBeNull();
+  expect(instance).not.toBeUndefined();
 
   invariant(
     ReactTestUtils.isCompositeComponent(instance),
@@ -149,6 +150,11 @@ assign(reactComponentExpectInternal.prototype, {
     return this;
   },
 
+  toBeEmptyComponent: function() {
+    var element = this._instance._currentElement;
+    return element === null || element === false;
+  },
+
   toBePresent: function() {
     expect(this.instance()).toBeTruthy();
     return this;
@@ -218,7 +224,7 @@ assign(reactComponentExpectInternal.prototype, {
         .toEqual(contextNameToExpectedValue[contextName]);
     }
     return this;
-  }
+  },
 });
 
 module.exports = reactComponentExpect;

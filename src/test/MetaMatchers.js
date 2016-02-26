@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -20,7 +20,7 @@
 function getRunnerWithResults(describeFunction) {
   if (describeFunction._cachedRunner) {
     // Cached result of execution. This is a convenience way to test against
-    // the same authorative function multiple times.
+    // the same authoritative function multiple times.
     return describeFunction._cachedRunner;
   }
   // Patch the current global environment.
@@ -28,7 +28,9 @@ function getRunnerWithResults(describeFunction) {
   // Execute the tests synchronously.
   env.updateInterval = 0;
   var outerGetEnv = jasmine.getEnv;
-  jasmine.getEnv = function() { return env; };
+  jasmine.getEnv = function() {
+    return env;
+  };
   // TODO: Bring over matchers from the existing environment.
   var runner = env.currentRunner();
   try {
@@ -116,11 +118,11 @@ var MetaMatchers = {
     this.message = function() {
       return [
         errorMessage,
-        'The specs are equal. Expected them to be different.'
+        'The specs are equal. Expected them to be different.',
       ];
     };
     return !errorMessage;
-  }
+  },
 };
 
 module.exports = MetaMatchers;

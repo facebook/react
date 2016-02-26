@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,6 +13,7 @@
 
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
@@ -68,38 +69,41 @@ function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
   this.dirtyComponentsLength = null;
   this.callbackQueue = CallbackQueue.getPooled();
-  this.reconcileTransaction =
-    ReactUpdates.ReactReconcileTransaction.getPooled();
+  this.reconcileTransaction = ReactUpdates.ReactReconcileTransaction.getPooled(
+    /* useCreateElement */ true
+  );
 }
 
 assign(
   ReactUpdatesFlushTransaction.prototype,
-  Transaction.Mixin, {
-  getTransactionWrappers: function() {
-    return TRANSACTION_WRAPPERS;
-  },
+  Transaction.Mixin,
+  {
+    getTransactionWrappers: function() {
+      return TRANSACTION_WRAPPERS;
+    },
 
-  destructor: function() {
-    this.dirtyComponentsLength = null;
-    CallbackQueue.release(this.callbackQueue);
-    this.callbackQueue = null;
-    ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
-    this.reconcileTransaction = null;
-  },
+    destructor: function() {
+      this.dirtyComponentsLength = null;
+      CallbackQueue.release(this.callbackQueue);
+      this.callbackQueue = null;
+      ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
+      this.reconcileTransaction = null;
+    },
 
-  perform: function(method, scope, a) {
-    // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
-    // with this transaction's wrappers around it.
-    return Transaction.Mixin.perform.call(
-      this,
-      this.reconcileTransaction.perform,
-      this.reconcileTransaction,
-      method,
-      scope,
-      a
-    );
-  },
-});
+    perform: function(method, scope, a) {
+      // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
+      // with this transaction's wrappers around it.
+      return Transaction.Mixin.perform.call(
+        this,
+        this.reconcileTransaction.perform,
+        this.reconcileTransaction,
+        method,
+        scope,
+        a
+      );
+    },
+  }
+);
 
 PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
 
@@ -146,10 +150,28 @@ function runBatchedUpdates(transaction) {
     var callbacks = component._pendingCallbacks;
     component._pendingCallbacks = null;
 
+    var markerName;
+    if (ReactFeatureFlags.logTopLevelRenders) {
+      var namedComponent = component;
+      // Duck type TopLevelWrapper. This is probably always true.
+      if (
+        component._currentElement.props ===
+        component._renderedComponent._currentElement
+      ) {
+        namedComponent = component._renderedComponent;
+      }
+      markerName = 'React update: ' + namedComponent.getName();
+      console.time(markerName);
+    }
+
     ReactReconciler.performUpdateIfNecessary(
       component,
       transaction.reconcileTransaction
     );
+
+    if (markerName) {
+      console.timeEnd(markerName);
+    }
 
     if (callbacks) {
       for (var j = 0; j < callbacks.length; j++) {

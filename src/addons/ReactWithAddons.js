@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -25,10 +25,7 @@ var ReactComponentWithPureRenderMixin =
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');
-var ReactUpdates = require('ReactUpdates');
 
-var cloneWithProps = require('cloneWithProps');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var shallowCompare = require('shallowCompare');
 var update = require('update');
 
@@ -38,10 +35,7 @@ React.addons = {
   PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
 
-  batchedUpdates: ReactUpdates.batchedUpdates,
-  cloneWithProps: cloneWithProps,
   createFragment: ReactFragment.create,
-  renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   shallowCompare: shallowCompare,
   update: update,
 };

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,12 +12,14 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
+var ReactDOMServer = require('ReactDOMServer');
 
 describe('CSSPropertyOperations', function() {
   var CSSPropertyOperations;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     CSSPropertyOperations = require('CSSPropertyOperations');
   });
 
@@ -91,7 +93,7 @@ describe('CSSPropertyOperations', function() {
     };
     var div = <div style={styles} />;
     var root = document.createElement('div');
-    div = React.render(div, root);
+    div = ReactDOM.render(div, root);
     expect(/style=".*"/.test(root.innerHTML)).toBe(true);
   });
 
@@ -101,9 +103,8 @@ describe('CSSPropertyOperations', function() {
       display: null,
     };
     var div = <div style={styles} />;
-    var root = document.createElement('div');
-    React.render(div, root);
-    expect(/style=".*"/.test(root.innerHTML)).toBe(false);
+    var html = ReactDOMServer.renderToString(div);
+    expect(/style=/.test(html)).toBe(false);
   });
 
   it('should warn when using hyphenated style names', function() {
@@ -126,8 +127,8 @@ describe('CSSPropertyOperations', function() {
       '-webkit-transform': 'translate3d(0, 0, 0)',
     };
 
-    React.render(<div />, root);
-    React.render(<div style={styles} />, root);
+    ReactDOM.render(<div />, root);
+    ReactDOM.render(<div style={styles} />, root);
 
     expect(console.error.argsForCall.length).toBe(2);
     expect(console.error.argsForCall[0][0]).toContain('msTransform');
@@ -164,5 +165,18 @@ describe('CSSPropertyOperations', function() {
     expect(console.error.calls.length).toBe(2);
     expect(console.error.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
     expect(console.error.argsForCall[1][0]).toContain('Try "color: red" instead');
+  });
+
+  it('should warn about style containing a NaN value', function() {
+    spyOn(console, 'error');
+
+    CSSPropertyOperations.createMarkupForStyles({
+      fontSize: NaN,
+    });
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toEqual(
+      'Warning: `NaN` is an invalid value for the `fontSize` css style property'
+    );
   });
 });

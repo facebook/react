@@ -5,7 +5,7 @@
   font-family: monospace;
 }
 .CodeMirror-scroll {
-  /* Set scrolling behaviour here */
+  /* Set scrolling behavior here */
   overflow: auto;
 }
 
@@ -122,7 +122,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 }
 
 /* The fake, visible scrollbars. Used to force redraw during scrolling
-   before actuall scrolling happens, thus preventing shaking and
+   before actual scrolling happens, thus preventing shaking and
    flickering artifacts. */
 .CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler {
   position: absolute;

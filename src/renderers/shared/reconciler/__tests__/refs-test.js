@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -115,7 +115,7 @@ var expectClickLogsLengthToBe = function(instance, length) {
 
 describe('reactiverefs', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   /**
@@ -158,7 +158,7 @@ describe('reactiverefs', function() {
  */
 describe('ref swapping', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
   });
 
   var RefHopsAround = React.createClass({

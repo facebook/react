@@ -29,7 +29,7 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 * * *
 
-### Going big with React ###
+### Going big with React
 
 "On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale."
 <figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
@@ -108,7 +108,7 @@ By [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/j
 ### Backbone + React + Middleman Screencast
 <iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
-Backbone is a great way in interface a REST API with React. This screencast shows how to integate the two using [Backbone-React-Component](https://github.com/magalhas/backbone-react-component). Middleman is the framework used in this example but could easily be replaced with other frameworks. A supported template of this can be found [here](https://github.com/jbhatab/middleman-backbone-react-template). -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
+Backbone is a great way in interface a REST API with React. This screencast shows how to integrate the two using [Backbone-React-Component](https://github.com/magalhas/backbone-react-component). Middleman is the framework used in this example but could easily be replaced with other frameworks. A supported template of this can be found [here](https://github.com/jbhatab/middleman-backbone-react-template). -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
 
 * * *
 

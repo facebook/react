@@ -8,7 +8,6 @@ next: reusable-components-zh-CN.html
 
 目前为止，我们已经学了如何用单个组件来展示数据和处理用户输入。下一步让我们来体验 React 最激动人心的特性之一：可组合性（composability）。
 
-
 ## 动机：关注分离
 
 通过复用那些接口定义良好的组件来开发新的模块化组件，我们得到了与使用函数和类相似的好处。具体来说就是能够通过开发简单的组件把程序的*不同关注面分离*。如果为程序开发一套自定义的组件库，那么就能以最适合业务场景的方式来展示你的用户界面。
@@ -47,20 +46,17 @@ var ProfileLink = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <Avatar username="pwh" />,
   document.getElementById('example')
 );
 ```
 
-
 ## 从属关系
 
-上面例子中，`Avatar` 拥有 `ProfilePic` 和 `ProfileLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，
-如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的关键性原则。
+上面例子中，`Avatar` 拥有 `ProfilePic` 和 `ProfileLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。
 
 把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，`Avatar` 拥有 `div`、`ProfilePic` 和 `ProfileLink` 实例，`div` 是 `ProfilePic` 和 `ProfileLink` 实例的**父级**（但不是拥有者）。
-
 
 ## 子级
 
@@ -147,7 +143,8 @@ var MyComponent = React.createClass({
     );
   }
 });
-
+```
+```javascript
 // 正确 :)
 var ListItemWrapper = React.createClass({
   render: function() {
@@ -167,26 +164,7 @@ var MyComponent = React.createClass({
 });
 ```
 
-也可以传递 object 来做有 key 的子级。object 的 key 会被当作每个组件的 `key`。但是一定要牢记 JavaScript 并不总是保证属性的顺序会被保留。实际情况下浏览器一般会保留属性的顺序，**除了** 使用 32位无符号数字做为 key 的属性。数字型属性会按大小排序并且排在其它属性前面。一旦发生这种情况，React 渲染组件的顺序就是混乱。可能在 key 前面加一个字符串前缀来避免：
-
-```javascript
-  render: function() {
-    var items = {};
-
-    this.props.results.forEach(function(result) {
-      // 如果 result.id 看起来是一个数字（比如短哈希），那么
-      // 对象字面量的顺序就得不到保证。这种情况下，需要添加前缀
-      // 来确保 key 是字符串。
-      items['result-' + result.id] = <li>{result.text}</li>;
-    });
-
-    return (
-      <ol>
-        {items}
-      </ol>
-    );
-  }
-```
+也可以传递ReactFragment 对象 来做有 key 的子级。详见[Keyed Fragments](create-fragment.html)
 
 ## 数据流
 
@@ -200,5 +178,5 @@ React 里，数据通过上面介绍过的 `props` 从拥有者流向归属者�
 但是，有时候需要做细粒度的性能控制。这种情况下，可以重写 `shouldComponentUpdate()` 方法返回 false 来让 React 跳过对子树的处理。参考 [React reference docs](/react/docs/component-specs.html) 了解更多。
 
 > 注意：
-> 
+>
 > 如果在数据变化时让 `shouldComponentUpdate()` 返回 false，React 就不能保证用户界面同步。当使用它的时候一定确保你清楚到底做了什么，并且只在遇到明显性能问题的时候才使用它。不要低估 JavaScript 的速度，DOM 操作通常才是慢的原因。

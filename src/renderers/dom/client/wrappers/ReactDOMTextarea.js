@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,18 +11,36 @@
 
 'use strict';
 
+var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
+var didWarnValueLink = false;
+var didWarnValueNull = false;
+var didWarnValDefaultVal = false;
+
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
     ReactDOMTextarea.updateWrapper(this);
+  }
+}
+
+function warnIfValueIsNull(props) {
+  if (props != null && props.value === null && !didWarnValueNull) {
+    warning(
+      false,
+      '`value` prop on `textarea` should not be null. ' +
+      'Consider using the empty string to clear the component or `undefined` ' +
+      'for uncontrolled components.'
+    );
+
+    didWarnValueNull = true;
   }
 }
 
@@ -42,7 +60,7 @@ function forceUpdateIfMounted() {
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = {
-  getNativeProps: function(inst, props, context) {
+  getNativeProps: function(inst, props) {
     invariant(
       props.dangerouslySetInnerHTML == null,
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
@@ -61,11 +79,36 @@ var ReactDOMTextarea = {
   },
 
   mountWrapper: function(inst, props) {
-    LinkedValueUtils.checkPropTypes(
-      'textarea',
-      props,
-      inst._currentElement._owner
-    );
+    if (__DEV__) {
+      LinkedValueUtils.checkPropTypes(
+        'textarea',
+        props,
+        inst._currentElement._owner
+      );
+      if (props.valueLink !== undefined && !didWarnValueLink) {
+        warning(
+          false,
+          '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
+        );
+        didWarnValueLink = true;
+      }
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnValDefaultVal
+      ) {
+        warning(
+          false,
+          'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components'
+        );
+        didWarnValDefaultVal = true;
+      }
+      warnIfValueIsNull(props);
+    }
 
     var defaultValue = props.defaultValue;
     // TODO (yungsters): Remove support for children content in <textarea>.
@@ -96,25 +139,30 @@ var ReactDOMTextarea = {
       defaultValue = '';
     }
     var value = LinkedValueUtils.getValue(props);
-
     inst._wrapperState = {
       // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
       // The initial value can be a boolean or object so that's why it's
       // forced to be a string.
       initialValue: '' + (value != null ? value : defaultValue),
+      listeners: null,
       onChange: _handleChange.bind(inst),
     };
   },
 
   updateWrapper: function(inst) {
     var props = inst._currentElement.props;
+
+    if (__DEV__) {
+      warnIfValueIsNull(props);
+    }
+
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      ReactDOMIDOperations.updatePropertyByID(
-        inst._rootNodeID,
+      DOMPropertyOperations.setValueForProperty(
+        ReactDOMComponentTree.getNodeFromInstance(inst),
         'value',
         '' + value
       );

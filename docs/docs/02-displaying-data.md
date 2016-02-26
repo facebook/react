@@ -8,7 +8,6 @@ next: jsx-in-depth.html
 
 The most basic thing you can do with a UI is display some data. React makes it easy to display data and automatically keeps the interface up-to-date when the data changes.
 
-
 ## Getting Started
 
 Let's look at a really simple example. Create a `hello-react.html` file with the following code:
@@ -17,13 +16,15 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
 
       // ** Your code goes here! **
 
@@ -47,13 +48,12 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
 }, 500);
 ```
-
 
 ## Reactive Updates
 
@@ -63,7 +63,6 @@ The way we are able to figure this out is that React does not manipulate the DOM
 
 The inputs to this component are called `props` — short for "properties". They're passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, **never write to `this.props`**.
 
-
 ## Components are Just Like Functions
 
 React components are very simple. You can think of them as simple functions that take in `props` and `state` (discussed later) and render HTML. With this in mind, components are easy to reason about.
@@ -71,7 +70,6 @@ React components are very simple. You can think of them as simple functions that
 > Note:
 >
 > **One limitation**: React components can only render a single root node. If you want to return multiple nodes they *must* be wrapped in a single root.
-
 
 ## JSX Syntax
 
@@ -91,12 +89,11 @@ With JSX this becomes:
 
 We've found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so **JSX is not required to use React.**
 
-JSX is very small. To learn more about it, see [JSX in depth](/react/docs/jsx-in-depth.html). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
+JSX is very small. To learn more about it, see [JSX in depth](/react/docs/jsx-in-depth.html). Or see the transform in action in [the Babel REPL](https://babeljs.io/repl/).
 
 JSX is similar to HTML, but not exactly the same. See [JSX gotchas](/react/docs/jsx-gotchas.html) for some key differences.
 
-The easiest way to get started with JSX is to use the in-browser `JSXTransformer`. We strongly recommend that you don't use this in production. You can precompile your code using our command-line [react-tools](https://www.npmjs.com/package/react-tools) package.
-
+[Babel exposes a number of ways to get started using JSX](http://babeljs.io/docs/setup/), ranging from command line tools to Ruby on Rails integrations. Choose the tool that works best for you.
 
 ## React without JSX
 
@@ -106,7 +103,7 @@ JSX is completely optional; you don't have to use JSX with React. You can create
 var child1 = React.createElement('li', null, 'First Text Content');
 var child2 = React.createElement('li', null, 'Second Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 For convenience, you can create short-hand factory functions to create elements from custom components.
@@ -115,7 +112,7 @@ For convenience, you can create short-hand factory functions to create elements 
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 React already has built-in factories for common HTML tags:

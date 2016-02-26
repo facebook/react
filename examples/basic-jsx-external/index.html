@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <meta charset="utf-8">
     <title>Basic Example with External JSX</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
@@ -10,12 +10,17 @@
     <h1>Basic Example with External JSX</h1>
     <div id="container">
       <p>
-        If you can see this, React is not working right. This is probably because you&apos;re viewing
-        this on your file system instead of a web server. Try running
+        If you can see this, React is not working right. This is probably because you&apos;re viewing 
+        this on your file system instead of a web server.<br>
+        Try navigating to the React root 
+        <pre>
+          cd /path/to/react
+        </pre>
+        and running
         <pre>
           python -m SimpleHTTPServer
         </pre>
-        and going to <a href="http://localhost:8000/">http://localhost:8000/</a>.
+        and going to <a href="http://localhost:8000/examples/basic-jsx-external/">http://localhost:8000/examples/basic-jsx-external/</a>.
       </p>
     </div>
     <h4>Example Details</h4>
@@ -24,11 +29,9 @@
       Learn more about React at
       <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
-    <script src="../shared/thirdparty/es5-shim.min.js"></script>
-    <script src="../shared/thirdparty/es5-sham.min.js"></script>
-    <script src="../shared/thirdparty/console-polyfill.js"></script>
     <script src="../../build/react.js"></script>
-    <script src="../../build/JSXTransformer.js"></script>
-    <script type="text/jsx" src="example.js"></script>
+    <script src="../../build/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+    <script type="text/babel" src="example.js"></script>
   </body>
 </html>

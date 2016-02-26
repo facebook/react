@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactDOM;
 
 describe('ReactES6Class', function() {
 
@@ -26,6 +27,7 @@ describe('ReactES6Class', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     container = document.createElement('div');
     attachedListener = null;
     renderedName = null;
@@ -42,7 +44,7 @@ describe('ReactES6Class', function() {
   });
 
   function test(element, expectedTag, expectedClassName) {
-    var instance = React.render(element, container);
+    var instance = ReactDOM.render(element, container);
     expect(container.firstChild).not.toBeNull();
     expect(container.firstChild.tagName).toBe(expectedTag);
     expect(container.firstChild.className).toBe(expectedClassName);
@@ -57,20 +59,17 @@ describe('ReactES6Class', function() {
   it('throws if no render function is defined', function() {
     spyOn(console, 'error');
     class Foo extends React.Component { }
-    expect(() => React.render(<Foo />, container)).toThrow();
+    expect(() => ReactDOM.render(<Foo />, container)).toThrow();
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
-      'Warning: Foo(...): ' +
-      'No `render` method found on the returned component instance: you may ' +
-      'have forgotten to define `render` in your component or you may have ' +
-      'accidentally tried to render an element whose type is a function that ' +
-      'isn\'t a React component.'
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+      'instance: you may have forgotten to define `render`.'
     );
   });
 
   it('renders a simple stateless component with prop', function() {
-    class Foo {
+    class Foo extends React.Component {
       render() {
         return <Inner name={this.props.bar} />;
       }
@@ -165,8 +164,9 @@ describe('ReactES6Class', function() {
 
   it('should throw with non-object in the initial state property', function() {
     [['an array'], 'a string', 1234].forEach(function(state) {
-      class Foo {
+      class Foo extends React.Component {
         constructor() {
+          super();
           this.state = state;
         }
         render() {
@@ -174,8 +174,7 @@ describe('ReactES6Class', function() {
         }
       }
       expect(() => test(<Foo />, 'span', '')).toThrow(
-        'Invariant Violation: Foo.state: ' +
-        'must be set to an object or null'
+        'Foo.state: must be set to an object or null'
       );
     });
   });
@@ -264,8 +263,9 @@ describe('ReactES6Class', function() {
 
   it('will call all the normal life cycle methods', function() {
     var lifeCycles = [];
-    class Foo {
+    class Foo extends React.Component {
       constructor() {
+        super();
         this.state = {};
       }
       componentWillMount() {
@@ -308,14 +308,13 @@ describe('ReactES6Class', function() {
       'did-update', freeze({value: 'foo'}), {},
     ]);
     lifeCycles = []; // reset
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(lifeCycles).toEqual([
       'will-unmount',
     ]);
   });
 
-  it('warns when classic properties are defined on the instance, ' +
-     'but does not invoke them.', function() {
+  it('warns when classic properties are defined on the instance, but does not invoke them.', function() {
     spyOn(console, 'error');
     var getDefaultPropsWasCalled = false;
     var getInitialStateWasCalled = false;
@@ -341,16 +340,16 @@ describe('ReactES6Class', function() {
     expect(getInitialStateWasCalled).toBe(false);
     expect(getDefaultPropsWasCalled).toBe(false);
     expect(console.error.calls.length).toBe(4);
-    expect(console.error.calls[0].args[0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'getInitialState was defined on Foo, a plain JavaScript class.'
     );
-    expect(console.error.calls[1].args[0]).toContain(
+    expect(console.error.argsForCall[1][0]).toContain(
       'getDefaultProps was defined on Foo, a plain JavaScript class.'
     );
-    expect(console.error.calls[2].args[0]).toContain(
+    expect(console.error.argsForCall[2][0]).toContain(
       'propTypes was defined as an instance property on Foo.'
     );
-    expect(console.error.calls[3].args[0]).toContain(
+    expect(console.error.argsForCall[3][0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     );
   });
@@ -358,7 +357,7 @@ describe('ReactES6Class', function() {
   it('should warn when misspelling shouldComponentUpdate', function() {
     spyOn(console, 'error');
 
-    class NamedComponent {
+    class NamedComponent extends React.Component {
       componentShouldUpdate() {
         return false;
       }
@@ -369,7 +368,7 @@ describe('ReactES6Class', function() {
     test(<NamedComponent />, 'SPAN', 'foo');
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: ' +
       'NamedComponent has a method called componentShouldUpdate(). Did you ' +
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
@@ -380,7 +379,7 @@ describe('ReactES6Class', function() {
   it('should warn when misspelling componentWillReceiveProps', function() {
     spyOn(console, 'error');
 
-    class NamedComponent {
+    class NamedComponent extends React.Component {
       componentWillRecieveProps() {
         return false;
       }
@@ -391,7 +390,7 @@ describe('ReactES6Class', function() {
     test(<NamedComponent />, 'SPAN', 'foo');
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: ' +
       'NamedComponent has a method called componentWillRecieveProps(). Did ' +
       'you mean componentWillReceiveProps()?'
@@ -401,38 +400,27 @@ describe('ReactES6Class', function() {
   it('should throw AND warn when trying to access classic APIs', function() {
     spyOn(console, 'error');
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    expect(() => instance.getDOMNode()).toThrow();
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
     expect(() => instance.setProps({name: 'bar'})).toThrow();
     expect(() => instance.replaceProps({name: 'bar'})).toThrow();
-    expect(console.error.calls.length).toBe(5);
-    expect(console.error.calls[0].args[0]).toContain(
-      'getDOMNode(...) is deprecated in plain JavaScript React classes. ' +
-      'Use React.findDOMNode(component) instead.'
-    );
-    expect(console.error.calls[1].args[0]).toContain(
+    expect(console.error.calls.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     );
-    expect(console.error.calls[2].args[0]).toContain(
+    expect(console.error.argsForCall[1][0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
-    );
-    expect(console.error.calls[3].args[0]).toContain(
-      'setProps(...) is deprecated in plain JavaScript React classes'
-    );
-    expect(console.error.calls[4].args[0]).toContain(
-      'replaceProps(...) is deprecated in plain JavaScript React classes'
     );
   });
 
   it('supports this.context passed via getChildContext', function() {
-    class Bar {
+    class Bar extends React.Component {
       render() {
         return <div className={this.context.bar} />;
       }
     }
     Bar.contextTypes = {bar: React.PropTypes.string};
-    class Foo {
+    class Foo extends React.Component {
       getChildContext() {
         return {bar: 'bar-through-context'};
       }
@@ -445,7 +433,7 @@ describe('ReactES6Class', function() {
   });
 
   it('supports classic refs', function() {
-    class Foo {
+    class Foo extends React.Component {
       render() {
         return <Inner name="foo" ref="inner" />;
       }
@@ -456,7 +444,7 @@ describe('ReactES6Class', function() {
 
   it('supports drilling through to the DOM using findDOMNode', function() {
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    var node = React.findDOMNode(instance);
+    var node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
 

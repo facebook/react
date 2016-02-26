@@ -27,17 +27,15 @@ React.createElement(Component, Object.assign({}, this.props, { more: 'values' })
 대부분의 경우 명시적으로 프로퍼티를 아래로 전달해야 합니다. 이는 동작을 확신하는 내부 API의 일부만 공개하도록 합니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      <div className={fancyClass} onClick={this.props.onClick}>
-        {this.props.children}
-      </div>
-    );
-  }
-});
-React.render(
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    <div className={fancyClass} onClick={props.onClick}>
+      {props.children}
+    </div>
+  );
+}
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     세상아 안녕!
   </FancyCheckbox>,
@@ -50,31 +48,30 @@ React.render(
 ## JSX에서 `...`를 사용해 전달하기
 
 > 주의:
-> 
-> 아래의 예제에서는 실험적인 ES7 문법이 사용되었기 때문에 `--harmony ` 플래그가 필요합니다. 브라우저에서 JSX 변환기를 사용 중이라면, `<script type="text/jsx;harmony=true">`를 사용해 스크립트를 작성하세요. 자세히 알아보려면 아래의 [잔여 프로퍼티와 스프레드 프로퍼티 ...](/react/docs/transferring-props-ko-KR.html#rest-and-spread-properties-...)를 확인하세요.
+>
+> `...` 구문은 객체 잔여 스프레드 제안의 일부입니다. 이 제안은 표준화 과정에 있습니다. 더 자세한 내용은 밑의 [잔여 프로퍼티와 스프레드 프로퍼티 ...](/react/docs/transferring-props.html#rest-and-spread-properties-...) 부분을 참고하세요.
+
 
 때로는 모든 프로퍼티를 일일이 전달 하는것은 지루하고 덧없는 작업입니다. 이 경우 [구조 해체 할당(destructuring assignment)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)을 다른 프로퍼티를 함께 사용해 미상의 프로퍼티를 추출할 수 있습니다.
 
 소비할 프로퍼티들을 나열하고, 그 뒤에 `...other`를 넣습니다.
 
 ```javascript
-var { checked, ...other } = this.props;
+var { checked, ...other } = props;
 ```
 
 이는 지금 소비한 props를 *제외한* 나머지를 아래로 전달합니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    // `other`에는 { onClick: console.log }가 포함되지만 checked 프로퍼티는 제외됩니다
-    return (
-      <div {...other} className={fancyClass} />
-    );
-  }
-});
-React.render(
+function FancyCheckbox(props) {
+  var { checked, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  // `other`에는 { onClick: console.log }가 포함되지만 checked 프로퍼티는 제외됩니다
+  return (
+    <div {...other} className={fancyClass} />
+  );
+}
+ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     세상아 안녕!
   </FancyCheckbox>,
@@ -89,15 +86,13 @@ React.render(
 미상의 `other` props을 전달할 때는 항상 구조 해체 패턴을 사용하세요.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    // 반례: `checked` 또한 내부 컴포넌트로 전달될 것입니다
-    return (
-      <div {...this.props} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  // 반례: `checked` 또한 내부 컴포넌트로 전달될 것입니다
+  return (
+    <div {...props} className={fancyClass} />
+  );
+}
 ```
 
 ## 같은 Prop을 소비하고 전달하기
@@ -105,23 +100,21 @@ var FancyCheckbox = React.createClass({
 컴포넌트가 프로퍼티를 사용하지만 계속 넘기길 원한다면, `checked={checked}`처럼 명시적으로 다시 넘길 수 있습니다. 리팩토링과 린트(lint)하기가 더 쉬우므로 이 방식이 `this.props` 객체 전부를 넘기는 것보다 낫습니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, title, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    var fancyTitle = checked ? 'X ' + title : 'O ' + title;
-    return (
-      <label>
-        <input {...other}
-          checked={checked}
-          className={fancyClass}
-          type="checkbox"
-        />
-        {fancyTitle}
-      </label>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, title, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  var fancyTitle = checked ? 'X ' + title : 'O ' + title;
+  return (
+    <label>
+      <input {...other}
+        checked={checked}
+        className={fancyClass}
+        type="checkbox"
+      />
+      {fancyTitle}
+    </label>
+  );
+}
 ```
 
 > 주의:
@@ -133,7 +126,7 @@ var FancyCheckbox = React.createClass({
 
 잔여(Rest, `...`) 프로퍼티는 객체에서 소비되지 않은 나머지 프로퍼티를 추출해 새로운 객체로 만들 수 있게 해 줍니다. 구조 해체 패턴에서 열거된 다른 프로퍼티들은 모두 제외됩니다.
 
-이는 [ES7 제안](https://github.com/sebmarkbage/ecmascript-rest-spread)의 실험적인 구현체입니다.
+이 제안은 2 단계에 돌입해 이제 바벨에서 기본값으로 활성화되어있습니다. 바벨의 이전 버전은 `babel --optional es7.objectRestSpread`로 명시적으로 활성화 할 필요가 있을 수도 있습니다.
 
 ```javascript
 var { x, y, ...z } = { x: 1, y: 2, a: 3, b: 4 };
@@ -151,14 +144,12 @@ z; // { a: 3, b: 4 }
 JSX를 사용하지 않는다면 라이브러리를 사용해 같은 패턴을 쓸 수 있습니다. Underscore에서는 `_.omit`을 사용해 특정 프로퍼티를 제외하거나 `_.extend`를 사용해 새로운 객체로 프로퍼티를 복사할 수 있습니다.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var checked = this.props.checked;
-    var other = _.omit(this.props, 'checked');
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      React.DOM.div(_.extend({}, other, { className: fancyClass }))
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var checked = props.checked;
+  var other = _.omit(props, 'checked');
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    React.DOM.div(_.extend({}, other, { className: fancyClass }))
+  );
+}
 ```

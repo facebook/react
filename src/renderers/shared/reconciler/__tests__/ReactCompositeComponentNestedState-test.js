@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,15 +11,15 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -90,9 +90,9 @@ describe('ReactCompositeComponentNestedState-state', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
-    var logger = mocks.getMockFunction();
+    var logger = jest.genMockFn();
 
-    void React.render(
+    void ReactDOM.render(
       <ParentComponent logger={logger} />,
       container
     );

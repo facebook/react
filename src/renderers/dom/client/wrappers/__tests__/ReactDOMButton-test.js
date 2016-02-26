@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,23 +12,22 @@
 'use strict';
 
 
-var mocks = require('mocks');
-
 describe('ReactDOMButton', function() {
   var React;
+  var ReactDOM;
   var ReactTestUtils;
 
-  var onClick = mocks.getMockFunction();
+  var onClick = jest.genMockFn();
 
   function expectClickThru(button) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(React.findDOMNode(button));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(button));
     expect(onClick.mock.calls.length).toBe(1);
   }
 
   function expectNoClickThru(button) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(React.findDOMNode(button));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(button));
     expect(onClick.mock.calls.length).toBe(0);
   }
 
@@ -39,6 +38,7 @@ describe('ReactDOMButton', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -54,11 +54,11 @@ describe('ReactDOMButton', function() {
 
   it('should forward clicks when it becomes not disabled', function() {
     var container = document.createElement('div');
-    var btn = React.render(
+    var btn = ReactDOM.render(
       <button disabled={true} onClick={onClick} />,
       container
     );
-    btn = React.render(
+    btn = ReactDOM.render(
       <button onClick={onClick} />,
       container
     );
@@ -67,11 +67,11 @@ describe('ReactDOMButton', function() {
 
   it('should not forward clicks when it becomes disabled', function() {
     var container = document.createElement('div');
-    var btn = React.render(
+    var btn = ReactDOM.render(
       <button onClick={onClick} />,
       container
     );
-    btn = React.render(
+    btn = ReactDOM.render(
       <button disabled={true} onClick={onClick} />,
       container
     );
@@ -80,11 +80,11 @@ describe('ReactDOMButton', function() {
 
   it('should work correctly if the listener is changed', function() {
     var container = document.createElement('div');
-    var btn = React.render(
+    var btn = ReactDOM.render(
       <button disabled={true} onClick={function() {}} />,
       container
     );
-    btn = React.render(
+    btn = ReactDOM.render(
       <button disabled={false} onClick={onClick} />,
       container
     );

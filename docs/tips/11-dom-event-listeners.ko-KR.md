@@ -36,7 +36,7 @@ var Box = React.createClass({
   }
 });
 
-React.render(<Box />, mountNode);
+ReactDOM.render(<Box />, mountNode);
 ```
 
 컴포넌트가 마운트 되고 DOM 표현을 가지게 되면 `componentDidMount`가 호출됩니다. 일반적인 DOM 이벤트를 붙이는 곳으로 여기를 종종 사용합니다.

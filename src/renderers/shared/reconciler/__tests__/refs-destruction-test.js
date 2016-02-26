@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,15 +12,17 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 var TestComponent;
 
 describe('refs-destruction', function() {
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
 
     TestComponent = React.createClass({
@@ -40,21 +42,21 @@ describe('refs-destruction', function() {
 
   it('should remove refs when destroying the parent', function() {
     var container = document.createElement('div');
-    var testInstance = React.render(<TestComponent />, container);
+    var testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
       .toBe(true);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
-    React.unmountComponentAtNode(container);
+    ReactDOM.unmountComponentAtNode(container);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
   });
 
   it('should remove refs when destroying the child', function() {
     var container = document.createElement('div');
-    var testInstance = React.render(<TestComponent />, container);
+    var testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
       .toBe(true);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
-    React.render(<TestComponent destroy={true} />, container);
+    ReactDOM.render(<TestComponent destroy={true} />, container);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,7 +11,7 @@
 
 'use strict';
 
-require('mock-modules')
+jest
   .dontMock('EventPluginHub')
   .mock('isEventSupported');
 
@@ -20,7 +20,7 @@ describe('EventPluginHub', function() {
   var isEventSupported;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
+    jest.resetModuleRegistry();
     EventPluginHub = require('EventPluginHub');
     isEventSupported = require('isEventSupported');
     isEventSupported.mockReturnValueOnce(false);
@@ -30,8 +30,7 @@ describe('EventPluginHub', function() {
     expect(function() {
       EventPluginHub.putListener(1, 'onClick', 'not a function');
     }).toThrow(
-      'Invariant Violation: Expected onClick listener to be a function, ' +
-      'instead got type string'
+      'Expected onClick listener to be a function, instead got type string'
     );
   });
 });

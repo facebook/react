@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, Facebook, Inc.
+ * Copyright 2014-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -68,7 +68,7 @@ function createInternalComponent(element) {
     'There is no registered component for the tag %s',
     element.type
   );
-  return new genericComponentClass(element.type, element.props);
+  return new genericComponentClass(element);
 }
 
 /**

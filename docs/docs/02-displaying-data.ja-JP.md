@@ -17,13 +17,14 @@ UIについて、最も基本的なことは、いくつかのデータを表示
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
 
       // ** コードをここに書きます！ **
 
@@ -47,7 +48,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.render(
+  ReactDOM.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -57,15 +58,15 @@ setInterval(function() {
 
 ## リアクティブなアップデート
 
-`hello-react.html` をウェブブラウザで開き、テキストフィールドにあなたの名前を入力してください。ReactはUIのうち、時間の文字列しか変更しないことに注意してください。あなたがテキストフィールドに入力したものは残っています。あなたはそういったコードを書いていないのにも関わらずです。Reactはあなたのことを理解しており、正しいことを行います。
+`hello-react.html` をウェブブラウザで開き、テキストフィールドにあなたの名前を入力してください。ReactはUIのうち、時間の文字列しか変更しないことに注意してください。あなたがテキストフィールドに入力したものは残っています。あなたはそういったコードを書いていないのにも関わらずです。Reactはあなたのことを理解しており、正しいことを行います。
 
 このことについて私たちが理解できる方法は、Reactは必要になるまで、DOMの操作を行わないということです。 **Reactは、DOMの変化を表現し、あなたにもっとも効率的なDOMの変化を見積もるために早い、内部のモックのDOMを使っています。**
 
-このコンポーネントのインプットは `props` と呼ばれるものです。"properties" の省略形です。それらはJSXシンタックスの中でアトリビュートとして渡されます。それらはコンポーネントの中で不変と考えるべきで、 **`this.props` と書かないようにしてください**
+このコンポーネントのインプットは `props` と呼ばれるものです。"properties" の省略形です。それらはJSXシンタックスの中でアトリビュートとして渡されます。それらはコンポーネントの中で不変と考えるべきで、 **`this.props` には書き込まないようにしてください**
 
 ## コンポーネントは関数のようなものです。
 
-Reactのコンポーネントはとても単純です。それらは `props` や `state`　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの下では、コンポーネントは簡単に理解することができます。
+Reactのコンポーネントはとても単純です。それらは `props` や `state`　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの元、コンポーネントは簡単に理解することができます。
 
 > 注意:
 >
@@ -79,7 +80,7 @@ Reactのコンポーネントはとても単純です。それらは `props` や
 
 上記のことを簡単に行うために、私たちはReactのツリーノードを構築するためのとても単純で、 **オプショナルな** HTMLに似たシンタックスを加えました。
 
-**JSXはHTMLのシンタックスを使ってJavaScriptのオブジェクトを構築するのを可能にします。** 純粋にJavaScriptを使ってReactでリンクを構築するには、以下のように書きます。
+**JSXはHTMLのシンタックスを使ってJavaScriptのオブジェクトを構築するのを可能にします。** 純粋にJavaScriptを使ってReactでリンクを構築するには、以下のように書きます。
 
 `React.createElement('a', {href: 'https://facebook.github.io/react/'}, 'Hello!')`
 
@@ -93,7 +94,6 @@ JSXはとても小さいです。さらに学ぶためには、[JSXの深層](/r
 
 JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては[JSXの理解](/react/docs/jsx-gotchas.html) をご覧ください。
 
-The easiest way to get started with JSX is to use the in-browser `JSXTransformer`. We strongly recommend that you don't use this in production. You can precompile your code using our command-line [react-tools](https://www.npmjs.com/package/react-tools) package.
 JSXを初めて使う際に最も簡単なのは、ブラウザで `JSXTransformer` を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの[react-tools](https://www.npmjs.com/package/react-tools)パッケージを使うことでプリコンパイルできます。
 
 ## JSXを使わないReact
@@ -104,7 +104,7 @@ JSXは完全にオプションです。Reactと一緒にJSXを使う必要はあ
 var child1 = React.createElement('li', null, 'First Text Content');
 var child2 = React.createElement('li', null, 'Second Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 便利に書くために、カスタムコンポーネントで要素を作るために簡略した記法でファクトリー関数を作ることができます。
 
@@ -112,7 +112,7 @@ React.render(root, document.getElementById('example'));
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.getElementById('example'));
+ReactDOM.render(root, document.getElementById('example'));
 ```
 
 Reactはすでに、共通なHTMLのタグについてはビルトインの関数を持っています。

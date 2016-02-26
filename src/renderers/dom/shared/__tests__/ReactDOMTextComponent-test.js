@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,34 +12,97 @@
 'use strict';
 
 var React;
+var ReactDOM;
+var ReactDOMServer;
 
 describe('ReactDOMTextComponent', function() {
   beforeEach(function() {
     React = require('React');
-  });
-
-  it('should escape the rootID', function() {
-    var ThisThingShouldBeEscaped = '">>> LULZ <<<"';
-    var ThisThingWasBeEscaped = '&quot;&gt;&gt;&gt; LULZ &lt;&lt;&lt;&quot;';
-    var thing = <div><span key={ThisThingShouldBeEscaped}>LULZ</span></div>;
-    var html = React.renderToString(thing);
-    expect(html).not.toContain(ThisThingShouldBeEscaped);
-    expect(html).toContain(ThisThingWasBeEscaped);
+    ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
   });
 
   it('updates a mounted text component in place', function() {
     var el = document.createElement('div');
-    var inst = React.render(<div>{'foo'}{'bar'}</div>, el);
+    var inst = ReactDOM.render(<div><span />{'foo'}{'bar'}</div>, el);
 
-    var foo = React.findDOMNode(inst).children[0];
-    var bar = React.findDOMNode(inst).children[1];
-    expect(foo.tagName).toBe('SPAN');
-    expect(bar.tagName).toBe('SPAN');
+    var foo = ReactDOM.findDOMNode(inst).childNodes[2];
+    var bar = ReactDOM.findDOMNode(inst).childNodes[5];
+    expect(foo.data).toBe('foo');
+    expect(bar.data).toBe('bar');
 
-    inst = React.render(<div>{'baz'}{'qux'}</div>, el);
-    // After the update, the spans should have stayed in place (as opposed to
-    // getting unmounted and remounted)
-    expect(React.findDOMNode(inst).children[0]).toBe(foo);
-    expect(React.findDOMNode(inst).children[1]).toBe(bar);
+    inst = ReactDOM.render(<div><span />{'baz'}{'qux'}</div>, el);
+    // After the update, the text nodes should have stayed in place (as opposed
+    // to getting unmounted and remounted)
+    expect(ReactDOM.findDOMNode(inst).childNodes[2]).toBe(foo);
+    expect(ReactDOM.findDOMNode(inst).childNodes[5]).toBe(bar);
+    expect(foo.data).toBe('baz');
+    expect(bar.data).toBe('qux');
+  });
+
+  it('can be toggled in and out of the markup', function() {
+    var el = document.createElement('div');
+    var inst = ReactDOM.render(<div>{'foo'}<div />{'bar'}</div>, el);
+
+    var container = ReactDOM.findDOMNode(inst);
+    var childDiv = container.childNodes[3];
+    var childNodes;
+
+    inst = ReactDOM.render(<div>{null}<div />{null}</div>, el);
+    container = ReactDOM.findDOMNode(inst);
+    childNodes = container.childNodes;
+    expect(childNodes.length).toBe(1);
+    expect(childNodes[0]).toBe(childDiv);
+
+    inst = ReactDOM.render(<div>{'foo'}<div />{'bar'}</div>, el);
+    container = ReactDOM.findDOMNode(inst);
+    childNodes = container.childNodes;
+    expect(childNodes.length).toBe(7);
+    expect(childNodes[1].data).toBe('foo');
+    expect(childNodes[3]).toBe(childDiv);
+    expect(childNodes[5].data).toBe('bar');
+  });
+
+  it('can reconcile text merged by Node.normalize()', function() {
+    var el = document.createElement('div');
+    var inst = ReactDOM.render(<div>{'foo'}{'bar'}{'baz'}</div>, el);
+
+    var container = ReactDOM.findDOMNode(inst);
+    container.normalize();
+
+    inst = ReactDOM.render(<div>{'bar'}{'baz'}{'qux'}</div>, el);
+    container = ReactDOM.findDOMNode(inst);
+    expect(container.textContent).toBe('barbazqux');
+  });
+
+  it('can reconcile text from pre-rendered markup', function() {
+    var el = document.createElement('div');
+    var reactEl = <div>{'foo'}{'bar'}{'baz'}</div>;
+    el.innerHTML = ReactDOMServer.renderToString(reactEl);
+
+    ReactDOM.render(reactEl, el);
+    expect(el.textContent).toBe('foobarbaz');
+
+    reactEl = <div>{''}{''}{''}</div>;
+    el.innerHTML = ReactDOMServer.renderToString(reactEl);
+
+    ReactDOM.render(reactEl, el);
+    expect(el.textContent).toBe('');
+  });
+
+  it('can reconcile text arbitrarily split into multiple nodes', function() {
+    var el = document.createElement('div');
+    var inst = ReactDOM.render(<div><span />{'foobarbaz'}</div>, el);
+
+    var container = ReactDOM.findDOMNode(inst);
+    var childNodes = container.childNodes;
+    var textNode = childNodes[2];
+    textNode.textContent = 'foo';
+    container.insertBefore(document.createTextNode('bar'), childNodes[3]);
+    container.insertBefore(document.createTextNode('baz'), childNodes[3]);
+
+    inst = ReactDOM.render(<div><span />{'barbazqux'}</div>, el);
+    container = ReactDOM.findDOMNode(inst);
+    expect(container.textContent).toBe('barbazqux');
   });
 });

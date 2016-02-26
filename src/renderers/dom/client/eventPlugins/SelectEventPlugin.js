@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,6 +13,8 @@
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
+var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -22,6 +24,12 @@ var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
 
 var topLevelTypes = EventConstants.topLevelTypes;
+
+var skipSelectionChangeEvent = (
+  ExecutionEnvironment.canUseDOM &&
+  'documentMode' in document &&
+  document.documentMode <= 11
+);
 
 var eventTypes = {
   select: {
@@ -42,12 +50,12 @@ var eventTypes = {
 };
 
 var activeElement = null;
-var activeElementID = null;
+var activeElementInst = null;
 var lastSelection = null;
 var mouseDown = false;
 
 // Track whether a listener exists for this plugin. If none exist, we do
-// not extract events.
+// not extract events. See #3639.
 var hasListener = false;
 var ON_SELECT_KEY = keyOf({onSelect: null});
 
@@ -92,7 +100,7 @@ function getSelection(node) {
  * @param {object} nativeEvent
  * @return {?SyntheticEvent}
  */
-function constructSelectEvent(nativeEvent) {
+function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // Ensure we have the right element, and that the user is not dragging a
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
@@ -110,8 +118,9 @@ function constructSelectEvent(nativeEvent) {
 
     var syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
-      activeElementID,
-      nativeEvent
+      activeElementInst,
+      nativeEvent,
+      nativeEventTarget
     );
 
     syntheticEvent.type = 'select';
@@ -143,37 +152,32 @@ var SelectEventPlugin = {
 
   eventTypes: eventTypes,
 
-  /**
-   * @param {string} topLevelType Record from `EventConstants`.
-   * @param {DOMEventTarget} topLevelTarget The listening component root node.
-   * @param {string} topLevelTargetID ID of `topLevelTarget`.
-   * @param {object} nativeEvent Native browser event.
-   * @return {*} An accumulation of synthetic events.
-   * @see {EventPluginHub.extractEvents}
-   */
   extractEvents: function(
-      topLevelType,
-      topLevelTarget,
-      topLevelTargetID,
-      nativeEvent) {
-
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  ) {
     if (!hasListener) {
       return null;
     }
 
+    var targetNode = targetInst ?
+      ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
+
     switch (topLevelType) {
       // Track the input node that has focus.
       case topLevelTypes.topFocus:
-        if (isTextInputElement(topLevelTarget) ||
-            topLevelTarget.contentEditable === 'true') {
-          activeElement = topLevelTarget;
-          activeElementID = topLevelTargetID;
+        if (isTextInputElement(targetNode) ||
+            targetNode.contentEditable === 'true') {
+          activeElement = targetNode;
+          activeElementInst = targetInst;
           lastSelection = null;
         }
         break;
       case topLevelTypes.topBlur:
         activeElement = null;
-        activeElementID = null;
+        activeElementInst = null;
         lastSelection = null;
         break;
 
@@ -185,24 +189,31 @@ var SelectEventPlugin = {
       case topLevelTypes.topContextMenu:
       case topLevelTypes.topMouseUp:
         mouseDown = false;
-        return constructSelectEvent(nativeEvent);
+        return constructSelectEvent(nativeEvent, nativeEventTarget);
 
       // Chrome and IE fire non-standard event when selection is changed (and
-      // sometimes when it hasn't).
+      // sometimes when it hasn't). IE's event fires out of order with respect
+      // to key and input events on deletion, so we discard it.
+      //
       // Firefox doesn't support selectionchange, so check selection status
       // after each key entry. The selection changes after keydown and before
       // keyup, but we check on keydown as well in the case of holding down a
       // key, when multiple keydown events are fired but only one keyup is.
+      // This is also our approach for IE handling, for the reason above.
       case topLevelTypes.topSelectionChange:
+        if (skipSelectionChangeEvent) {
+          break;
+        }
+        // falls through
       case topLevelTypes.topKeyDown:
       case topLevelTypes.topKeyUp:
-        return constructSelectEvent(nativeEvent);
+        return constructSelectEvent(nativeEvent, nativeEventTarget);
     }
 
     return null;
   },
 
-  didPutListener: function(id, registrationName, listener) {
+  didPutListener: function(inst, registrationName, listener) {
     if (registrationName === ON_SELECT_KEY) {
       hasListener = true;
     }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -14,11 +14,14 @@
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
+var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactNodeTypes = require('ReactNodeTypes');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactReconciler = require('ReactReconciler');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
@@ -35,6 +38,26 @@ function getDeclarationErrorAddendum(component) {
     }
   }
   return '';
+}
+
+function StatelessComponent(Component) {
+}
+StatelessComponent.prototype.render = function() {
+  var Component = ReactInstanceMap.get(this)._currentElement.type;
+  var element = Component(this.props, this.context, this.updater);
+  warnIfInvalidElement(Component, element);
+  return element;
+};
+
+function warnIfInvalidElement(Component, element) {
+  if (__DEV__) {
+    warning(
+      element === null || element === false || ReactElement.isValidElement(element),
+      '%s(...): A valid React element (or null) must be returned. You may have ' +
+      'returned undefined, an array or some other invalid object.',
+      Component.displayName || Component.name || 'Component'
+    );
+  }
 }
 
 /**
@@ -88,6 +111,8 @@ var ReactCompositeComponentMixin = {
     this._currentElement = element;
     this._rootNodeID = null;
     this._instance = null;
+    this._nativeParent = null;
+    this._nativeContainerInfo = null;
 
     // See ReactUpdateQueue
     this._pendingElement = null;
@@ -95,8 +120,8 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    this._renderedNodeType = null;
     this._renderedComponent = null;
-
     this._context = null;
     this._mountOrder = 0;
     this._topLevelWrapper = null;
@@ -108,16 +133,24 @@ var ReactCompositeComponentMixin = {
   /**
    * Initializes the component, renders markup, and registers event listeners.
    *
-   * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {?object} nativeParent
+   * @param {?object} nativeContainerInfo
+   * @param {?object} context
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
    */
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context
+  ) {
     this._context = context;
     this._mountOrder = nextMountID++;
-    this._rootNodeID = rootID;
+    this._nativeParent = nativeParent;
+    this._nativeContainerInfo = nativeContainerInfo;
 
     var publicProps = this._processProps(this._currentElement.props);
     var publicContext = this._processContext(context);
@@ -125,18 +158,67 @@ var ReactCompositeComponentMixin = {
     var Component = this._currentElement.type;
 
     // Initialize the public class
-    var inst = new Component(publicProps, publicContext);
+    var inst;
+    var renderedElement;
+
+    if (Component.prototype && Component.prototype.isReactComponent) {
+      if (__DEV__) {
+        ReactCurrentOwner.current = this;
+        try {
+          inst = new Component(publicProps, publicContext, ReactUpdateQueue);
+        } finally {
+          ReactCurrentOwner.current = null;
+        }
+      } else {
+        inst = new Component(publicProps, publicContext, ReactUpdateQueue);
+      }
+    } else {
+      if (__DEV__) {
+        ReactCurrentOwner.current = this;
+        try {
+          inst = Component(publicProps, publicContext, ReactUpdateQueue);
+        } finally {
+          ReactCurrentOwner.current = null;
+        }
+      } else {
+        inst = Component(publicProps, publicContext, ReactUpdateQueue);
+      }
+      if (inst == null || inst.render == null) {
+        renderedElement = inst;
+        warnIfInvalidElement(Component, renderedElement);
+        invariant(
+          inst === null ||
+          inst === false ||
+          ReactElement.isValidElement(inst),
+          '%s(...): A valid React element (or null) must be returned. You may have ' +
+          'returned undefined, an array or some other invalid object.',
+          Component.displayName || Component.name || 'Component'
+        );
+        inst = new StatelessComponent(Component);
+      }
+    }
 
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
       // warning now to help debugging
+      if (inst.render == null) {
+        warning(
+          false,
+          '%s(...): No `render` method found on the returned component ' +
+          'instance: you may have forgotten to define `render`.',
+          Component.displayName || Component.name || 'Component'
+        );
+      }
+
+      var propsMutated = inst.props !== publicProps;
+      var componentName =
+        Component.displayName || Component.name || 'Component';
+
       warning(
-        inst.render != null,
-        '%s(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render` in your ' +
-        'component or you may have accidentally tried to render an element ' +
-        'whose type is a function that isn\'t a React component.',
-        Component.displayName || Component.name || 'Component'
+        inst.props === undefined || !propsMutated,
+        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'up the same props that your component\'s constructor was passed.',
+        componentName, componentName
       );
     }
 
@@ -145,6 +227,7 @@ var ReactCompositeComponentMixin = {
     inst.props = publicProps;
     inst.context = publicContext;
     inst.refs = emptyObject;
+    inst.updater = ReactUpdateQueue;
 
     this._instance = inst;
 
@@ -220,6 +303,58 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    var markup;
+    if (inst.unstable_handleError) {
+      markup = this.performInitialMountWithErrorHandling(
+        renderedElement,
+        nativeParent,
+        nativeContainerInfo,
+        transaction,
+        context
+      );
+    } else {
+      markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
+    }
+
+    if (inst.componentDidMount) {
+      transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
+    }
+
+    return markup;
+  },
+
+  performInitialMountWithErrorHandling: function(
+    renderedElement,
+    nativeParent,
+    nativeContainerInfo,
+    transaction,
+    context
+  ) {
+    var markup;
+    var checkpoint = transaction.checkpoint();
+    try {
+      markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
+    } catch (e) {
+      // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
+      transaction.rollback(checkpoint);
+      this._instance.unstable_handleError(e);
+      if (this._pendingStateQueue) {
+        this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+      }
+      checkpoint = transaction.checkpoint();
+
+      this._renderedComponent.unmountComponent(true);
+      transaction.rollback(checkpoint);
+
+      // Try again - we've informed the component about the error, so they can render an error message this time.
+      // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
+      markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
+    }
+    return markup;
+  },
+
+  performInitialMount: function(renderedElement, nativeParent, nativeContainerInfo, transaction, context) {
+    var inst = this._instance;
     if (inst.componentWillMount) {
       inst.componentWillMount();
       // When mounting, calls to `setState` by `componentWillMount` will set
@@ -229,23 +364,29 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    var renderedElement = this._renderValidatedComponent();
+    // If not a stateless component, we now render
+    if (renderedElement === undefined) {
+      renderedElement = this._renderValidatedComponent();
+    }
 
+    this._renderedNodeType = ReactNodeTypes.getType(renderedElement);
     this._renderedComponent = this._instantiateReactComponent(
       renderedElement
     );
 
     var markup = ReactReconciler.mountComponent(
       this._renderedComponent,
-      rootID,
       transaction,
+      nativeParent,
+      nativeContainerInfo,
       this._processChildContext(context)
     );
-    if (inst.componentDidMount) {
-      transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
-    }
 
     return markup;
+  },
+
+  getNativeNode: function() {
+    return ReactReconciler.getNativeNode(this._renderedComponent);
   },
 
   /**
@@ -254,15 +395,27 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
-  unmountComponent: function() {
+  unmountComponent: function(safely) {
+    if (!this._renderedComponent) {
+      return;
+    }
     var inst = this._instance;
 
     if (inst.componentWillUnmount) {
-      inst.componentWillUnmount();
+      if (safely) {
+        var name = this.getName() + '.componentWillUnmount()';
+        ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+      } else {
+        inst.componentWillUnmount();
+      }
     }
 
-    ReactReconciler.unmountComponent(this._renderedComponent);
-    this._renderedComponent = null;
+    if (this._renderedComponent) {
+      ReactReconciler.unmountComponent(this._renderedComponent, safely);
+      this._renderedNodeType = null;
+      this._renderedComponent = null;
+      this._instance = null;
+    }
 
     // Reset pending fields
     // Even if this component is scheduled for another update in ReactUpdates,
@@ -300,13 +453,12 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _maskContext: function(context) {
-    var maskedContext = null;
     var Component = this._currentElement.type;
     var contextTypes = Component.contextTypes;
     if (!contextTypes) {
       return emptyObject;
     }
-    maskedContext = {};
+    var maskedContext = {};
     for (var contextName in contextTypes) {
       maskedContext[contextName] = context[contextName];
     }
@@ -427,7 +579,7 @@ var ReactCompositeComponentMixin = {
         }
         if (error instanceof Error) {
           // We may want to extend this logic for similar errors in
-          // React.render calls, so I'm abstracting it away into
+          // top-level render calls, so I'm abstracting it away into
           // a function to minimize refactoring in the future
           var addendum = getDeclarationErrorAddendum(this);
 
@@ -518,27 +670,33 @@ var ReactCompositeComponentMixin = {
     nextUnmaskedContext
   ) {
     var inst = this._instance;
-
+    var willReceive = false;
     var nextContext;
     var nextProps;
 
+    // Determine if the context has changed or not
+    if (this._context === nextUnmaskedContext) {
+      nextContext = inst.context;
+    } else {
+      nextContext = this._processContext(nextUnmaskedContext);
+      willReceive = true;
+    }
+
     // Distinguish between a props update versus a simple state update
     if (prevParentElement === nextParentElement) {
-      nextContext = inst.context;
       // Skip checking prop types again -- we don't read inst.props to avoid
       // warning for DOM component props in this upgrade
       nextProps = nextParentElement.props;
     } else {
-      nextContext = this._processContext(nextUnmaskedContext);
       nextProps = this._processProps(nextParentElement.props);
+      willReceive = true;
+    }
 
-      // An update here will schedule an update but immediately set
-      // _pendingStateQueue which will ensure that any state updates gets
-      // immediately reconciled instead of waiting for the next batch.
-
-      if (inst.componentWillReceiveProps) {
-        inst.componentWillReceiveProps(nextProps, nextContext);
-      }
+    // An update here will schedule an update but immediately set
+    // _pendingStateQueue which will ensure that any state updates gets
+    // immediately reconciled instead of waiting for the next batch.
+    if (willReceive && inst.componentWillReceiveProps) {
+      inst.componentWillReceiveProps(nextProps, nextContext);
     }
 
     var nextState = this._processPendingState(nextProps, nextContext);
@@ -550,7 +708,7 @@ var ReactCompositeComponentMixin = {
 
     if (__DEV__) {
       warning(
-        typeof shouldUpdate !== 'undefined',
+        shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
         this.getName() || 'ReactCompositeComponent'
@@ -678,30 +836,32 @@ var ReactCompositeComponentMixin = {
         this._processChildContext(context)
       );
     } else {
-      // These two IDs are actually the same! But nothing should rely on that.
-      var thisID = this._rootNodeID;
-      var prevComponentID = prevComponentInstance._rootNodeID;
-      ReactReconciler.unmountComponent(prevComponentInstance);
+      var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
+      ReactReconciler.unmountComponent(prevComponentInstance, false);
 
+      this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
-        thisID,
         transaction,
+        this._nativeParent,
+        this._nativeContainerInfo,
         this._processChildContext(context)
       );
-      this._replaceNodeWithMarkupByID(prevComponentID, nextMarkup);
+      this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);
     }
   },
 
   /**
+   * Overridden in shallow rendering.
+   *
    * @protected
    */
-  _replaceNodeWithMarkupByID: function(prevComponentID, nextMarkup) {
-    ReactComponentEnvironment.replaceNodeWithMarkupByID(
-      prevComponentID,
+  _replaceNodeWithMarkup: function(oldNativeNode, nextMarkup) {
+    ReactComponentEnvironment.replaceNodeWithMarkup(
+      oldNativeNode,
       nextMarkup
     );
   },
@@ -714,7 +874,7 @@ var ReactCompositeComponentMixin = {
     var renderedComponent = inst.render();
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
-      if (typeof renderedComponent === 'undefined' &&
+      if (renderedComponent === undefined &&
           inst.render._isMockFunction) {
         // This is probably bad practice. Consider warning here and
         // deprecating this convenience.
@@ -741,7 +901,7 @@ var ReactCompositeComponentMixin = {
       // TODO: An `isValidNode` function would probably be more appropriate
       renderedComponent === null || renderedComponent === false ||
       ReactElement.isValidElement(renderedComponent),
-      '%s.render(): A valid ReactComponent must be returned. You may have ' +
+      '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'
     );
@@ -758,8 +918,22 @@ var ReactCompositeComponentMixin = {
    */
   attachRef: function(ref, component) {
     var inst = this.getPublicInstance();
+    invariant(inst != null, 'Stateless function components cannot have refs.');
+    var publicComponentInstance = component.getPublicInstance();
+    if (__DEV__) {
+      var componentName = component && component.getName ?
+        component.getName() : 'a component';
+      warning(publicComponentInstance != null,
+        'Stateless function components cannot be given refs ' +
+        '(See ref "%s" in %s created by %s). ' +
+        'Attempts to access this ref will fail.',
+        ref,
+        componentName,
+        this.getName()
+      );
+    }
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
-    refs[ref] = component.getPublicInstance();
+    refs[ref] = publicComponentInstance;
   },
 
   /**
@@ -792,14 +966,18 @@ var ReactCompositeComponentMixin = {
 
   /**
    * Get the publicly accessible representation of this component - i.e. what
-   * is exposed by refs and returned by React.render. Can be null for stateless
+   * is exposed by refs and returned by render. Can be null for stateless
    * components.
    *
    * @return {ReactComponent} the public component instance.
    * @internal
    */
   getPublicInstance: function() {
-    return this._instance;
+    var inst = this._instance;
+    if (inst instanceof StatelessComponent) {
+      return null;
+    }
+    return inst;
   },
 
   // Stub

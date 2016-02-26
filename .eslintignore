@@ -1,12 +1,5 @@
 # We can probably lint these later but not important at this point
 src/shared/vendor
-# This should be enabled but that folder has too much in it that doesn't belong
-src/test
-test/the-files-to-test.generated.js
-# This is synced with a different file internally, don't want to lint it yet
-vendor/fbtransform/syntax.js
-vendor/jasmine/
-vendor/jasmine-jsreporter/
 # But not in docs/_js/examples/*
 docs/_js/*.js
 docs/js/
@@ -18,8 +11,6 @@ docs/vendor/bundle/
 examples/
 # Ignore built files.
 build/
-# react-codemod
-packages/react-codemod/test/
-packages/react-codemod/scripts/
-packages/react-codemod/build/
-packages/react-codemod/node_modules/
+coverage/
+scripts/bench/bench-*.js
+vendor/*

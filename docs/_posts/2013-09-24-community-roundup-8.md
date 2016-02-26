@@ -34,7 +34,7 @@ While this is not going to work for all the attributes since they are camelCased
 
 ## Remarkable React
 
-[Stoyan Stefanov](http://www.phpied.com/) gave a talk at [BrazilJS](http://braziljs.com.br/) about React and wrote an article with the content of the presentation. He goes through the difficulties of writting _active apps_ using the DOM API and shows how React handles it.
+[Stoyan Stefanov](http://www.phpied.com/) gave a talk at [BrazilJS](http://braziljs.com.br/) about React and wrote an article with the content of the presentation. He goes through the difficulties of writing _active apps_ using the DOM API and shows how React handles it.
 
 > So how does exactly React deal with it internally? Two crazy ideas - virtual DOM and synthetic events.
 >

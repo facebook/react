@@ -39,14 +39,16 @@ next: thinking-in-react-ja-JP.html
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Hello React</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
-    <script type="text/jsx">
+    <script type="text/babel">
       // ここにコードが入ります
     </script>
   </body>
@@ -83,7 +85,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -104,7 +106,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -120,7 +122,7 @@ React.render(
 
 実際の HTML を返す必要はありません。 自分が（もしくは他の誰かが）組み立てたコンポーネントツリーを返せばいいのです。 これこそ React が **composable**な（組み立てられる）ものである理由であり、この大事なルールを守ればフロントエンドはメンテナンスしやすいものとなります。
 
-`React.render()` はまずルートコンポーネントのインスタンスを作り、フレームワークを立ち上げます。そして、第2引数で与えられた実際の DOM 要素にマークアップを挿入します。
+`ReactDOM.render()` はまずルートコンポーネントのインスタンスを作り、フレームワークを立ち上げます。そして、第2引数で与えられた実際の DOM 要素にマークアップを挿入します。
 
 ## コンポーネントの組み立て
 
@@ -214,24 +216,25 @@ var CommentList = React.createClass({
 
 Markdown はインラインでテキストをフォーマットする簡単な記法です。例えば、テキストをアスタリスクで挟むと強調されて表示されます。
 
-まず最初に、サードパーティ製の **Showdown** ライブラリをアプリケーションに追加します。 Showdown は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように Showdown を読み込ませます。
+まず最初に、サードパーティ製の **marked** ライブラリをアプリケーションに追加します。 marked は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように marked を読み込ませます。
 
-```html{7}
+```html{9}
 <!-- index.html -->
 <head>
+  <meta charset="UTF-8" />
   <title>Hello React</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/JSXTransformer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
 </head>
 ```
 
 次に、Markdown で書かれたコメントを変換して出力してみましょう。
 
-```javascript{2,10}
+```javascript{9}
 // tutorial6.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
     return (
@@ -239,40 +242,43 @@ var Comment = React.createClass({
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {converter.makeHtml(this.props.children.toString())}
+        {marked(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-このコードでは Showdown のライブラリを呼び出すことしかしていません。`this.props.children` は React によってラップされたテキストですが、これを Showdown が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に `toString()` を呼び出しているのです。
+このコードでは marked のライブラリを呼び出すことしかしていません。`this.props.children` は React によってラップされたテキストですが、これを marked が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に `toString()` を呼び出しているのです。
 
 しかし問題があります！ブラウザがレンダリングしたコメントは次のように表示されているはずです -- "`<p>`This is `<em>`another`</em>` comment`</p>`" このようなタグは実際に HTML としてレンダリングさせたいですね。
 
 このような現象が起きるのは React が XSS 攻撃に対する防御を行っているからです。これを回避する方法はありますが、それを使うときにはフレームワークが警告をします。
 
-```javascript{5,11}
+```javascript{3-6,14}
 // tutorial7.js
-var converter = new Showdown.converter();
 var Comment = React.createClass({
+  rawMarkup: function() {
+    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    return { __html: rawMarkup };
+  },
+
   render: function() {
-    var rawMarkup = converter.makeHtml(this.props.children.toString());
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        <span dangerouslySetInnerHTML={{"{{"}}__html: rawMarkup}} />
+        <span dangerouslySetInnerHTML={this.rawMarkup()} />
       </div>
     );
   }
 });
 ```
 
-これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは Showdown のためにこのバックドアを利用しています。
+これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは marked のためにこのバックドアを利用しています。
 
-**注意:** この機能を使うことで、Showdown は安全なものと信頼することになります。
+**注意:** この機能を使うことで、marked は安全なものと信頼することになります。
 
 ### データモデルとの連携
 
@@ -286,7 +292,7 @@ var data = [
 ];
 ```
 
-このデータはモジュールを使って `CommentList` に取り込む必要があります。`CommentBox` の `React.render()` の部分を手直しして、props を通してデータが `CommentList` へ渡るようにしましょう。
+このデータはモジュールを使って `CommentList` に取り込む必要があります。`CommentBox` の `ReactDOM.render()` の部分を手直しして、props を通してデータが `CommentList` へ渡るようにしましょう。
 
 ```javascript{7,15}
 // tutorial9.js
@@ -302,7 +308,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -338,13 +344,15 @@ var CommentList = React.createClass({
 
 ```javascript{3}
 // tutorial11.js
-React.render(
-  <CommentBox url="comments.json" />,
+ReactDOM.render(
+  <CommentBox url="api/comments" />,
   document.getElementById('content')
 );
 ```
 
 このコンポーネントは自身を再びレンダリングすることになるので、これまでのコンポーネントとは異なります。レスポンスがサーバから返ってくると、送られてきた新しいコメントをコンポーネントがレンダリングすることになります。ですが、その時点までコンポーネントには何もデータがないはずです。
+
+確認: 上のコードは、このステップではまだ動きません。
 
 ### Reactive state
 
@@ -377,8 +385,7 @@ var CommentBox = React.createClass({
 #### State の更新
 コンポーネントの作成と同時に、サーバから JSON データを GET で取得し、state を更新して最新のデータを反映させてみましょう。実際のアプリケーションでは動的なエンドポイントになるでしょうが、今回の例では話を簡単にするため、以下の静的な JSON ファイルを使います。
 
-```javascript
-// tutorial13.json
+```json
 [
   {"author": "Pete Hunt", "text": "This is one comment"},
   {"author": "Jordan Walke", "text": "This is *another* comment"}
@@ -456,7 +463,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );
@@ -491,14 +498,14 @@ var CommentForm = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     // TODO: サーバにリクエストを送信
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {
@@ -521,7 +528,7 @@ React がコンポーネントにイベントハンドラを登録する際は c
 
 ##### Refs
 
-先程のコードでは `ref` 属性値を使って子のコンポーネントに名前を付けており、`this.ref` でそのコンポーネントを参照しています。`React.findDOMNode(component)` にコンポーネントを指定して呼び出すことで、ブラウザの持つ実際の DOM 要素を取得することが出来ます。
+先程のコードでは `ref` 属性値を使って子のコンポーネントに名前を付けており、`this.ref` でそのコンポーネントを参照しています。`ReactDOM.findDOMNode(component)` にコンポーネントを指定して呼び出すことで、ブラウザの持つ実際の DOM 要素を取得することが出来ます。
 
 ##### Props としてのコールバック
 
@@ -574,14 +581,14 @@ var CommentBox = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
+    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    ReactDOM.findDOMNode(this.refs.author).value = '';
+    ReactDOM.findDOMNode(this.refs.text).value = '';
     return;
   },
   render: function() {
@@ -651,7 +658,7 @@ var CommentBox = React.createClass({
 
 アプリケーションに必要な機能は一通り実装できました。しかし、フォームからコメントを送信しても、サーバからのレスポンスが来るまで自分のコメントはリストに載らないため、アプリの動作は遅く感じます。ここでは、送信したコメントをリストに先読みさせて、アプリの体感速度をアップさせましょう。
 
-```javascript{17-19}
+```javascript{17-19,29}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -680,6 +687,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
+        this.setState({data: comments});
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
