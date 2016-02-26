@@ -11,14 +11,14 @@
 
 'use strict';
 
-var DOMLazyTree = require('DOMLazyTree');
-var Danger = require('Danger');
-var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
-var ReactPerf = require('ReactPerf');
+const DOMLazyTree = require('DOMLazyTree');
+const Danger = require('Danger');
+const ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
+const ReactPerf = require('ReactPerf');
 
-var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
-var setInnerHTML = require('setInnerHTML');
-var setTextContent = require('setTextContent');
+const createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
+const setInnerHTML = require('setInnerHTML');
+const setTextContent = require('setTextContent');
 
 function getNodeAfter(parentNode, node) {
   // Special case for text components, which return [open, close] comments
@@ -37,7 +37,7 @@ function getNodeAfter(parentNode, node) {
  * @param {number} index Index at which to insert the child.
  * @internal
  */
-var insertChildAt = createMicrosoftUnsafeLocalFunction(
+const insertChildAt = createMicrosoftUnsafeLocalFunction(
   function(parentNode, childNode, referenceNode) {
     // We rely exclusively on `insertBefore(node, null)` instead of also using
     // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
@@ -60,7 +60,7 @@ function moveChild(parentNode, childNode, referenceNode) {
 
 function removeChild(parentNode, childNode) {
   if (Array.isArray(childNode)) {
-    var closingComment = childNode[1];
+    const closingComment = childNode[1];
     childNode = childNode[0];
     removeDelimitedText(parentNode, childNode, closingComment);
     parentNode.removeChild(closingComment);
@@ -74,9 +74,9 @@ function moveDelimitedText(
   closingComment,
   referenceNode
 ) {
-  var node = openingComment;
+  let node = openingComment;
   while (true) {
-    var nextNode = node.nextSibling;
+    const nextNode = node.nextSibling;
     insertChildAt(parentNode, node, referenceNode);
     if (node === closingComment) {
       break;
@@ -87,7 +87,7 @@ function moveDelimitedText(
 
 function removeDelimitedText(parentNode, startNode, closingComment) {
   while (true) {
-    var node = startNode.nextSibling;
+    const node = startNode.nextSibling;
     if (node === closingComment) {
       // The closing comment is removed by ReactMultiChild.
       break;
@@ -98,8 +98,8 @@ function removeDelimitedText(parentNode, startNode, closingComment) {
 }
 
 function replaceDelimitedText(openingComment, closingComment, stringText) {
-  var parentNode = openingComment.parentNode;
-  var nodeAfterComment = openingComment.nextSibling;
+  const parentNode = openingComment.parentNode;
+  const nodeAfterComment = openingComment.nextSibling;
   if (nodeAfterComment === closingComment) {
     // There are no text nodes between the opening and closing comments; insert
     // a new one if stringText isn't empty.
@@ -125,7 +125,7 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
 /**
  * Operations for updating with DOM children.
  */
-var DOMChildrenOperations = {
+const DOMChildrenOperations = {
 
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
 
@@ -141,8 +141,8 @@ var DOMChildrenOperations = {
    * @internal
    */
   processUpdates: function(parentNode, updates) {
-    for (var k = 0; k < updates.length; k++) {
-      var update = updates[k];
+    for (let k = 0; k < updates.length; k++) {
+      const update = updates[k];
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
           insertLazyTreeChildAt(

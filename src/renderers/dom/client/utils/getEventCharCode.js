@@ -22,8 +22,8 @@
  * @return {number} Normalized `charCode` property.
  */
 function getEventCharCode(nativeEvent) {
-  var charCode;
-  var keyCode = nativeEvent.keyCode;
+  let charCode;
+  const keyCode = nativeEvent.keyCode;
 
   if ('charCode' in nativeEvent) {
     charCode = nativeEvent.charCode;

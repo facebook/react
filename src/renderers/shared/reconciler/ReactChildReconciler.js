@@ -11,16 +11,16 @@
 
 'use strict';
 
-var ReactReconciler = require('ReactReconciler');
+const ReactReconciler = require('ReactReconciler');
 
-var instantiateReactComponent = require('instantiateReactComponent');
-var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var traverseAllChildren = require('traverseAllChildren');
-var warning = require('warning');
+const instantiateReactComponent = require('instantiateReactComponent');
+const shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+const traverseAllChildren = require('traverseAllChildren');
+const warning = require('warning');
 
 function instantiateChild(childInstances, child, name) {
   // We found a component instance.
-  var keyUnique = (childInstances[name] === undefined);
+  const keyUnique = (childInstances[name] === undefined);
   if (__DEV__) {
     warning(
       keyUnique,
@@ -40,7 +40,7 @@ function instantiateChild(childInstances, child, name) {
  * children. Its output is suitable for passing it onto ReactMultiChild which
  * does diffed reordering and insertion.
  */
-var ReactChildReconciler = {
+const ReactChildReconciler = {
   /**
    * Generates a "mount image" for each of the supplied children. In the case
    * of `ReactDOMComponent`, a mount image is a string of markup.
@@ -53,7 +53,7 @@ var ReactChildReconciler = {
     if (nestedChildNodes == null) {
       return null;
     }
-    var childInstances = {};
+    const childInstances = {};
     traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
     return childInstances;
   },
@@ -82,15 +82,15 @@ var ReactChildReconciler = {
     if (!nextChildren && !prevChildren) {
       return;
     }
-    var name;
-    var prevChild;
+    let name;
+    let prevChild;
     for (name in nextChildren) {
       if (!nextChildren.hasOwnProperty(name)) {
         continue;
       }
       prevChild = prevChildren && prevChildren[name];
-      var prevElement = prevChild && prevChild._currentElement;
-      var nextElement = nextChildren[name];
+      const prevElement = prevChild && prevChild._currentElement;
+      const nextElement = nextChildren[name];
       if (prevChild != null &&
           shouldUpdateReactComponent(prevElement, nextElement)) {
         ReactReconciler.receiveComponent(
@@ -103,7 +103,7 @@ var ReactChildReconciler = {
           ReactReconciler.unmountComponent(prevChild, false);
         }
         // The child must be instantiated before it's mounted.
-        var nextChildInstance = instantiateReactComponent(nextElement);
+        const nextChildInstance = instantiateReactComponent(nextElement);
         nextChildren[name] = nextChildInstance;
       }
     }
@@ -126,9 +126,9 @@ var ReactChildReconciler = {
    * @internal
    */
   unmountChildren: function(renderedChildren, safely) {
-    for (var name in renderedChildren) {
+    for (const name in renderedChildren) {
       if (renderedChildren.hasOwnProperty(name)) {
-        var renderedChild = renderedChildren[name];
+        const renderedChild = renderedChildren[name];
         ReactReconciler.unmountComponent(renderedChild, safely);
       }
     }

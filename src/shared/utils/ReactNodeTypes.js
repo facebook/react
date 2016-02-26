@@ -11,11 +11,11 @@
 
 'use strict';
 
-var ReactElement = require('ReactElement');
+const ReactElement = require('ReactElement');
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
-var ReactNodeTypes = {
+const ReactNodeTypes = {
   NATIVE: 0,
   COMPOSITE: 1,
   EMPTY: 2,

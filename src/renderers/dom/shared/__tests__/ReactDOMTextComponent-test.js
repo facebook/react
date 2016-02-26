@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMServer;
+let React;
+let ReactDOM;
+let ReactDOMServer;
 
 describe('ReactDOMTextComponent', function() {
   beforeEach(function() {
@@ -23,11 +23,11 @@ describe('ReactDOMTextComponent', function() {
   });
 
   it('updates a mounted text component in place', function() {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(<div><span />{'foo'}{'bar'}</div>, el);
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(<div><span />{'foo'}{'bar'}</div>, el);
 
-    var foo = ReactDOM.findDOMNode(inst).childNodes[2];
-    var bar = ReactDOM.findDOMNode(inst).childNodes[5];
+    const foo = ReactDOM.findDOMNode(inst).childNodes[2];
+    const bar = ReactDOM.findDOMNode(inst).childNodes[5];
     expect(foo.data).toBe('foo');
     expect(bar.data).toBe('bar');
 
@@ -41,11 +41,11 @@ describe('ReactDOMTextComponent', function() {
   });
 
   it('can be toggled in and out of the markup', function() {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(<div>{'foo'}<div />{'bar'}</div>, el);
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(<div>{'foo'}<div />{'bar'}</div>, el);
 
-    var container = ReactDOM.findDOMNode(inst);
-    var childDiv = container.childNodes[3];
+    let container = ReactDOM.findDOMNode(inst);
+    const childDiv = container.childNodes[3];
     var childNodes;
 
     inst = ReactDOM.render(<div>{null}<div />{null}</div>, el);
@@ -64,10 +64,10 @@ describe('ReactDOMTextComponent', function() {
   });
 
   it('can reconcile text merged by Node.normalize()', function() {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(<div>{'foo'}{'bar'}{'baz'}</div>, el);
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(<div>{'foo'}{'bar'}{'baz'}</div>, el);
 
-    var container = ReactDOM.findDOMNode(inst);
+    let container = ReactDOM.findDOMNode(inst);
     container.normalize();
 
     inst = ReactDOM.render(<div>{'bar'}{'baz'}{'qux'}</div>, el);
@@ -76,8 +76,8 @@ describe('ReactDOMTextComponent', function() {
   });
 
   it('can reconcile text from pre-rendered markup', function() {
-    var el = document.createElement('div');
-    var reactEl = <div>{'foo'}{'bar'}{'baz'}</div>;
+    const el = document.createElement('div');
+    let reactEl = <div>{'foo'}{'bar'}{'baz'}</div>;
     el.innerHTML = ReactDOMServer.renderToString(reactEl);
 
     ReactDOM.render(reactEl, el);
@@ -91,12 +91,12 @@ describe('ReactDOMTextComponent', function() {
   });
 
   it('can reconcile text arbitrarily split into multiple nodes', function() {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(<div><span />{'foobarbaz'}</div>, el);
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(<div><span />{'foobarbaz'}</div>, el);
 
-    var container = ReactDOM.findDOMNode(inst);
-    var childNodes = container.childNodes;
-    var textNode = childNodes[2];
+    let container = ReactDOM.findDOMNode(inst);
+    const childNodes = container.childNodes;
+    const textNode = childNodes[2];
     textNode.textContent = 'foo';
     container.insertBefore(document.createTextNode('bar'), childNodes[3]);
     container.insertBefore(document.createTextNode('baz'), childNodes[3]);

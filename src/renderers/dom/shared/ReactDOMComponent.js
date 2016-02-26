@@ -13,55 +13,55 @@
 
 'use strict';
 
-var AutoFocusUtils = require('AutoFocusUtils');
-var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMLazyTree = require('DOMLazyTree');
-var DOMNamespaces = require('DOMNamespaces');
-var DOMProperty = require('DOMProperty');
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginRegistry = require('EventPluginRegistry');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactComponentBrowserEnvironment =
+const AutoFocusUtils = require('AutoFocusUtils');
+const CSSPropertyOperations = require('CSSPropertyOperations');
+const DOMLazyTree = require('DOMLazyTree');
+const DOMNamespaces = require('DOMNamespaces');
+const DOMProperty = require('DOMProperty');
+const DOMPropertyOperations = require('DOMPropertyOperations');
+const EventConstants = require('EventConstants');
+const EventPluginHub = require('EventPluginHub');
+const EventPluginRegistry = require('EventPluginRegistry');
+const ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+const ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactDOMButton = require('ReactDOMButton');
-var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMInput = require('ReactDOMInput');
-var ReactDOMOption = require('ReactDOMOption');
-var ReactDOMSelect = require('ReactDOMSelect');
-var ReactDOMTextarea = require('ReactDOMTextarea');
-var ReactMultiChild = require('ReactMultiChild');
-var ReactPerf = require('ReactPerf');
+const ReactDOMButton = require('ReactDOMButton');
+const ReactDOMComponentFlags = require('ReactDOMComponentFlags');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactDOMInput = require('ReactDOMInput');
+const ReactDOMOption = require('ReactDOMOption');
+const ReactDOMSelect = require('ReactDOMSelect');
+const ReactDOMTextarea = require('ReactDOMTextarea');
+const ReactMultiChild = require('ReactMultiChild');
+const ReactPerf = require('ReactPerf');
 
-var assign = require('Object.assign');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('invariant');
-var isEventSupported = require('isEventSupported');
-var keyOf = require('keyOf');
-var shallowEqual = require('shallowEqual');
-var validateDOMNesting = require('validateDOMNesting');
-var warning = require('warning');
+const assign = require('Object.assign');
+const escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+const invariant = require('invariant');
+const isEventSupported = require('isEventSupported');
+const keyOf = require('keyOf');
+const shallowEqual = require('shallowEqual');
+const validateDOMNesting = require('validateDOMNesting');
+const warning = require('warning');
 
-var Flags = ReactDOMComponentFlags;
-var deleteListener = EventPluginHub.deleteListener;
-var getNode = ReactDOMComponentTree.getNodeFromInstance;
-var listenTo = ReactBrowserEventEmitter.listenTo;
-var registrationNameModules = EventPluginRegistry.registrationNameModules;
+const Flags = ReactDOMComponentFlags;
+const deleteListener = EventPluginHub.deleteListener;
+const getNode = ReactDOMComponentTree.getNodeFromInstance;
+const listenTo = ReactBrowserEventEmitter.listenTo;
+const registrationNameModules = EventPluginRegistry.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
-var CONTENT_TYPES = {'string': true, 'number': true};
+const CONTENT_TYPES = {'string': true, 'number': true};
 
-var CHILDREN = keyOf({children: null});
-var STYLE = keyOf({style: null});
-var HTML = keyOf({__html: null});
+const CHILDREN = keyOf({children: null});
+const STYLE = keyOf({style: null});
+const HTML = keyOf({__html: null});
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
-    var owner = internalInstance._currentElement._owner || null;
+    const owner = internalInstance._currentElement._owner || null;
     if (owner) {
-      var name = owner.getName();
+      const name = owner.getName();
       if (name) {
         return ' This DOM node was rendered by `' + name + '`.';
       }
@@ -75,10 +75,10 @@ function friendlyStringify(obj) {
     if (Array.isArray(obj)) {
       return '[' + obj.map(friendlyStringify).join(', ') + ']';
     } else {
-      var pairs = [];
-      for (var key in obj) {
+      const pairs = [];
+      for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          var keyEscaped = /^[a-z$_][\w$_]*$/i.test(key) ?
+          const keyEscaped = /^[a-z$_][\w$_]*$/i.test(key) ?
             key :
             JSON.stringify(key);
           pairs.push(keyEscaped + ': ' + friendlyStringify(obj[key]));
@@ -96,7 +96,7 @@ function friendlyStringify(obj) {
   return String(obj);
 }
 
-var styleMutationWarning = {};
+const styleMutationWarning = {};
 
 function checkAndWarnForMutatedStyle(style1, style2, component) {
   if (style1 == null || style2 == null) {
@@ -106,14 +106,14 @@ function checkAndWarnForMutatedStyle(style1, style2, component) {
     return;
   }
 
-  var componentName = component._tag;
-  var owner = component._currentElement._owner;
-  var ownerName;
+  const componentName = component._tag;
+  const owner = component._currentElement._owner;
+  let ownerName;
   if (owner) {
     ownerName = owner.getName();
   }
 
-  var hash = ownerName + '|' + componentName;
+  const hash = ownerName + '|' + componentName;
 
   if (styleMutationWarning.hasOwnProperty(hash)) {
     return;
@@ -201,8 +201,8 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
       'This browser doesn\'t support the `onScroll` event'
     );
   }
-  var containerInfo = inst._nativeContainerInfo;
-  var doc = containerInfo._ownerDocument;
+  const containerInfo = inst._nativeContainerInfo;
+  const doc = containerInfo._ownerDocument;
   if (!doc) {
     // Server rendering.
     return;
@@ -216,7 +216,7 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
 }
 
 function putListener() {
-  var listenerToPut = this;
+  const listenerToPut = this;
   EventPluginHub.putListener(
     listenerToPut.inst,
     listenerToPut.registrationName,
@@ -226,7 +226,7 @@ function putListener() {
 
 // There are so many media events, it makes sense to just
 // maintain a list rather than create a `trapBubbledEvent` for each
-var mediaEvents = {
+const mediaEvents = {
   topAbort: 'abort',
   topCanPlay: 'canplay',
   topCanPlayThrough: 'canplaythrough',
@@ -253,11 +253,11 @@ var mediaEvents = {
 };
 
 function trapBubbledEventsLocal() {
-  var inst = this;
+  const inst = this;
   // If a component renders to null or if another component fatals and causes
   // the state of the tree to be corrupted, `node` here can be null.
   invariant(inst._rootNodeID, 'Must be mounted to trap events');
-  var node = getNode(inst);
+  const node = getNode(inst);
   invariant(
     node,
     'trapBubbledEvent(...): Requires node to be rendered.'
@@ -278,7 +278,7 @@ function trapBubbledEventsLocal() {
 
       inst._wrapperState.listeners = [];
       // Create listener for each media event
-      for (var event in mediaEvents) {
+      for (const event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
           inst._wrapperState.listeners.push(
             ReactBrowserEventEmitter.trapBubbledEvent(
@@ -340,7 +340,7 @@ function postUpdateSelectWrapper() {
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
 // those special-case tags.
 
-var omittedCloseTags = {
+const omittedCloseTags = {
   'area': true,
   'base': true,
   'br': true,
@@ -359,7 +359,7 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
-var newlineEatingTags = {
+const newlineEatingTags = {
   'listing': true,
   'pre': true,
   'textarea': true,
@@ -376,8 +376,8 @@ var voidElementTags = assign({
 // HTML, we want to make sure that it's a safe tag.
 // http://www.w3.org/TR/REC-xml/#NT-Name
 
-var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
-var validatedTagCache = {};
+const VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
+const validatedTagCache = {};
 var hasOwnProperty = {}.hasOwnProperty;
 
 function validateDangerousTag(tag) {
@@ -391,7 +391,7 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-var globalIdCounter = 1;
+let globalIdCounter = 1;
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -408,7 +408,7 @@ var globalIdCounter = 1;
  * @extends ReactMultiChild
  */
 function ReactDOMComponent(element) {
-  var tag = element.type;
+  const tag = element.type;
   validateDangerousTag(tag);
   this._currentElement = element;
   this._tag = tag.toLowerCase();
@@ -455,7 +455,7 @@ ReactDOMComponent.Mixin = {
     this._nativeParent = nativeParent;
     this._nativeContainerInfo = nativeContainerInfo;
 
-    var props = this._currentElement.props;
+    let props = this._currentElement.props;
 
     switch (this._tag) {
       case 'iframe':
@@ -496,8 +496,8 @@ ReactDOMComponent.Mixin = {
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var namespaceURI;
-    var parentTag;
+    let namespaceURI;
+    let parentTag;
     if (nativeParent != null) {
       namespaceURI = nativeParent._namespaceURI;
       parentTag = nativeParent._tag;
@@ -519,7 +519,7 @@ ReactDOMComponent.Mixin = {
     this._namespaceURI = namespaceURI;
 
     if (__DEV__) {
-      var parentInfo;
+      let parentInfo;
       if (nativeParent != null) {
         parentInfo = nativeParent._ancestorInfo;
       } else if (nativeContainerInfo._tag) {
@@ -534,15 +534,15 @@ ReactDOMComponent.Mixin = {
         validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);
     }
 
-    var mountImage;
+    let mountImage;
     if (transaction.useCreateElement) {
-      var ownerDocument = nativeContainerInfo._ownerDocument;
-      var el;
+      const ownerDocument = nativeContainerInfo._ownerDocument;
+      let el;
       if (namespaceURI === DOMNamespaces.html) {
         if (this._tag === 'script') {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
-          var div = ownerDocument.createElement('div');
+          const div = ownerDocument.createElement('div');
           var type = this._currentElement.type;
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
@@ -561,12 +561,12 @@ ReactDOMComponent.Mixin = {
         DOMPropertyOperations.setAttributeForRoot(el);
       }
       this._updateDOMProperties(null, props, transaction);
-      var lazyTree = DOMLazyTree(el);
+      const lazyTree = DOMLazyTree(el);
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
     } else {
-      var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
-      var tagContent = this._createContentMarkup(transaction, props, context);
+      const tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
+      const tagContent = this._createContentMarkup(transaction, props, context);
       if (!tagContent && omittedCloseTags[this._tag]) {
         mountImage = tagOpen + '/>';
       } else {
@@ -606,13 +606,13 @@ ReactDOMComponent.Mixin = {
    * @return {string} Markup of opening tag.
    */
   _createOpenTagMarkupAndPutListeners: function(transaction, props) {
-    var ret = '<' + this._currentElement.type;
+    let ret = '<' + this._currentElement.type;
 
-    for (var propKey in props) {
+    for (const propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
         continue;
       }
-      var propValue = props[propKey];
+      let propValue = props[propKey];
       if (propValue == null) {
         continue;
       }
@@ -631,7 +631,7 @@ ReactDOMComponent.Mixin = {
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
-        var markup = null;
+        let markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
           if (propKey !== CHILDREN) {
             markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
@@ -670,23 +670,23 @@ ReactDOMComponent.Mixin = {
    * @return {string} Content markup.
    */
   _createContentMarkup: function(transaction, props, context) {
-    var ret = '';
+    let ret = '';
 
     // Intentional use of != to avoid catching zero/false.
-    var innerHTML = props.dangerouslySetInnerHTML;
+    const innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
         ret = innerHTML.__html;
       }
     } else {
-      var contentToUse =
+      const contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
-      var childrenToUse = contentToUse != null ? null : props.children;
+      const childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
         ret = escapeTextContentForBrowser(contentToUse);
       } else if (childrenToUse != null) {
-        var mountImages = this.mountChildren(
+        const mountImages = this.mountChildren(
           childrenToUse,
           transaction,
           context
@@ -713,25 +713,25 @@ ReactDOMComponent.Mixin = {
 
   _createInitialChildren: function(transaction, props, context, lazyTree) {
     // Intentional use of != to avoid catching zero/false.
-    var innerHTML = props.dangerouslySetInnerHTML;
+    const innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
         DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
       }
     } else {
-      var contentToUse =
+      const contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
-      var childrenToUse = contentToUse != null ? null : props.children;
+      const childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
         DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
-        var mountImages = this.mountChildren(
+        const mountImages = this.mountChildren(
           childrenToUse,
           transaction,
           context
         );
-        for (var i = 0; i < mountImages.length; i++) {
+        for (let i = 0; i < mountImages.length; i++) {
           DOMLazyTree.queueChild(lazyTree, mountImages[i]);
         }
       }
@@ -747,7 +747,7 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    */
   receiveComponent: function(nextElement, transaction, context) {
-    var prevElement = this._currentElement;
+    const prevElement = this._currentElement;
     this._currentElement = nextElement;
     this.updateComponent(transaction, prevElement, nextElement, context);
   },
@@ -763,8 +763,8 @@ ReactDOMComponent.Mixin = {
    * @overridable
    */
   updateComponent: function(transaction, prevElement, nextElement, context) {
-    var lastProps = prevElement.props;
-    var nextProps = this._currentElement.props;
+    let lastProps = prevElement.props;
+    let nextProps = this._currentElement.props;
 
     switch (this._tag) {
       case 'button':
@@ -824,9 +824,9 @@ ReactDOMComponent.Mixin = {
    * @param {?DOMElement} node
    */
   _updateDOMProperties: function(lastProps, nextProps, transaction) {
-    var propKey;
-    var styleName;
-    var styleUpdates;
+    let propKey;
+    let styleName;
+    let styleUpdates;
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey) ||
@@ -834,7 +834,7 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (propKey === STYLE) {
-        var lastStyle = this._previousStyleCopy;
+        const lastStyle = this._previousStyleCopy;
         for (styleName in lastStyle) {
           if (lastStyle.hasOwnProperty(styleName)) {
             styleUpdates = styleUpdates || {};
@@ -861,8 +861,8 @@ ReactDOMComponent.Mixin = {
       }
     }
     for (propKey in nextProps) {
-      var nextProp = nextProps[propKey];
-      var lastProp =
+      let nextProp = nextProps[propKey];
+      const lastProp =
         propKey === STYLE ? this._previousStyleCopy :
         lastProps != null ? lastProps[propKey] : undefined;
       if (!nextProps.hasOwnProperty(propKey) ||
@@ -929,7 +929,7 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        var node = getNode(this);
+        const node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
         // brings us in line with the same behavior we have on initial render.
@@ -959,26 +959,26 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    */
   _updateDOMChildren: function(lastProps, nextProps, transaction, context) {
-    var lastContent =
+    const lastContent =
       CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
-    var nextContent =
+    const nextContent =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
 
-    var lastHtml =
+    const lastHtml =
       lastProps.dangerouslySetInnerHTML &&
       lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml =
+    const nextHtml =
       nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
     // Note the use of `!=` which checks for null or undefined.
-    var lastChildren = lastContent != null ? null : lastProps.children;
-    var nextChildren = nextContent != null ? null : nextProps.children;
+    const lastChildren = lastContent != null ? null : lastProps.children;
+    const nextChildren = nextContent != null ? null : nextProps.children;
 
     // If we're switching from children to content/html or vice versa, remove
     // the old content
-    var lastHasContentOrHtml = lastContent != null || lastHtml != null;
-    var nextHasContentOrHtml = nextContent != null || nextHtml != null;
+    const lastHasContentOrHtml = lastContent != null || lastHtml != null;
+    const nextHasContentOrHtml = nextContent != null || nextHtml != null;
     if (lastChildren != null && nextChildren == null) {
       this.updateChildren(null, transaction, context);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
@@ -1015,9 +1015,9 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'video':
       case 'audio':
-        var listeners = this._wrapperState.listeners;
+        const listeners = this._wrapperState.listeners;
         if (listeners) {
-          for (var i = 0; i < listeners.length; i++) {
+          for (let i = 0; i < listeners.length; i++) {
             listeners[i].remove();
           }
         }

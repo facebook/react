@@ -11,17 +11,17 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+const SyntheticUIEvent = require('SyntheticUIEvent');
 
-var getEventCharCode = require('getEventCharCode');
-var getEventKey = require('getEventKey');
-var getEventModifierState = require('getEventModifierState');
+const getEventCharCode = require('getEventCharCode');
+const getEventKey = require('getEventKey');
+const getEventModifierState = require('getEventModifierState');
 
 /**
  * @interface KeyboardEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var KeyboardEventInterface = {
+const KeyboardEventInterface = {
   key: getEventKey,
   location: null,
   ctrlKey: null,

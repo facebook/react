@@ -11,7 +11,7 @@
 
 'use strict';
 
-var MetaMatchers = require('MetaMatchers');
+const MetaMatchers = require('MetaMatchers');
 
 describe('meta-matchers', function() {
 

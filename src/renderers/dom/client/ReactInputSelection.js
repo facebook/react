@@ -11,11 +11,11 @@
 
 'use strict';
 
-var ReactDOMSelection = require('ReactDOMSelection');
+const ReactDOMSelection = require('ReactDOMSelection');
 
-var containsNode = require('containsNode');
-var focusNode = require('focusNode');
-var getActiveElement = require('getActiveElement');
+const containsNode = require('containsNode');
+const focusNode = require('focusNode');
+const getActiveElement = require('getActiveElement');
 
 function isInDocument(node) {
   return containsNode(document.documentElement, node);
@@ -27,10 +27,10 @@ function isInDocument(node) {
  * assume buttons have range selections allowed).
  * Input selection module for React.
  */
-var ReactInputSelection = {
+const ReactInputSelection = {
 
   hasSelectionCapabilities: function(elem) {
-    var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+    const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
     return nodeName && (
       (nodeName === 'input' && elem.type === 'text') ||
       nodeName === 'textarea' ||
@@ -39,7 +39,7 @@ var ReactInputSelection = {
   },
 
   getSelectionInformation: function() {
-    var focusedElem = getActiveElement();
+    const focusedElem = getActiveElement();
     return {
       focusedElem: focusedElem,
       selectionRange:
@@ -55,9 +55,9 @@ var ReactInputSelection = {
    * nodes and place them back in, resulting in focus being lost.
    */
   restoreSelection: function(priorSelectionInformation) {
-    var curFocusedElem = getActiveElement();
-    var priorFocusedElem = priorSelectionInformation.focusedElem;
-    var priorSelectionRange = priorSelectionInformation.selectionRange;
+    const curFocusedElem = getActiveElement();
+    const priorFocusedElem = priorSelectionInformation.focusedElem;
+    const priorSelectionRange = priorSelectionInformation.selectionRange;
     if (curFocusedElem !== priorFocusedElem &&
         isInDocument(priorFocusedElem)) {
       if (ReactInputSelection.hasSelectionCapabilities(priorFocusedElem)) {
@@ -77,7 +77,7 @@ var ReactInputSelection = {
    * -@return {start: selectionStart, end: selectionEnd}
    */
   getSelection: function(input) {
-    var selection;
+    let selection;
 
     if ('selectionStart' in input) {
       // Modern browser with input or textarea.
@@ -88,7 +88,7 @@ var ReactInputSelection = {
     } else if (document.selection &&
         (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
       // IE8 input.
-      var range = document.selection.createRange();
+      const range = document.selection.createRange();
       // There can only be one selection per document in IE, so it must
       // be in our element.
       if (range.parentElement() === input) {
@@ -112,8 +112,8 @@ var ReactInputSelection = {
    * -@offsets   Object of same form that is returned from get*
    */
   setSelection: function(input, offsets) {
-    var start = offsets.start;
-    var end = offsets.end;
+    const start = offsets.start;
+    let end = offsets.end;
     if (end === undefined) {
       end = start;
     }
@@ -123,7 +123,7 @@ var ReactInputSelection = {
       input.selectionEnd = Math.min(end, input.value.length);
     } else if (document.selection &&
         (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
-      var range = input.createTextRange();
+      const range = input.createTextRange();
       range.collapse(true);
       range.moveStart('character', start);
       range.moveEnd('character', end - start);

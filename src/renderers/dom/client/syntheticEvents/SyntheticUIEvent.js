@@ -11,27 +11,27 @@
 
 'use strict';
 
-var SyntheticEvent = require('SyntheticEvent');
+const SyntheticEvent = require('SyntheticEvent');
 
-var getEventTarget = require('getEventTarget');
+const getEventTarget = require('getEventTarget');
 
 /**
  * @interface UIEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var UIEventInterface = {
+const UIEventInterface = {
   view: function(event) {
     if (event.view) {
       return event.view;
     }
 
-    var target = getEventTarget(event);
+    const target = getEventTarget(event);
     if (target != null && target.window === target) {
       // target is a window object
       return target;
     }
 
-    var doc = target.ownerDocument;
+    const doc = target.ownerDocument;
     // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
     if (doc) {
       return doc.defaultView || doc.parentWindow;

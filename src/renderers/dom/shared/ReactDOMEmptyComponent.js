@@ -11,12 +11,12 @@
 
 'use strict';
 
-var DOMLazyTree = require('DOMLazyTree');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
+const DOMLazyTree = require('DOMLazyTree');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
-var ReactDOMEmptyComponent = function(instantiate) {
+const ReactDOMEmptyComponent = function(instantiate) {
   // ReactCompositeComponent uses this:
   this._currentElement = null;
   // ReactDOMComponentTree uses these:
@@ -32,15 +32,15 @@ assign(ReactDOMEmptyComponent.prototype, {
     nativeContainerInfo,
     context
   ) {
-    var domID = nativeContainerInfo._idCounter++;
+    const domID = nativeContainerInfo._idCounter++;
     this._domID = domID;
     this._nativeParent = nativeParent;
     this._nativeContainerInfo = nativeContainerInfo;
 
-    var nodeValue = ' react-empty: ' + this._domID + ' ';
+    const nodeValue = ' react-empty: ' + this._domID + ' ';
     if (transaction.useCreateElement) {
-      var ownerDocument = nativeContainerInfo._ownerDocument;
-      var node = ownerDocument.createComment(nodeValue);
+      const ownerDocument = nativeContainerInfo._ownerDocument;
+      const node = ownerDocument.createComment(nodeValue);
       ReactDOMComponentTree.precacheNode(this, node);
       return DOMLazyTree(node);
     } else {

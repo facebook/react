@@ -12,12 +12,12 @@
 'use strict';
 
 describe('DOMPropertyOperations', function() {
-  var DOMPropertyOperations;
-  var DOMProperty;
+  let DOMPropertyOperations;
+  let DOMProperty;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
-    var ReactDefaultInjection = require('ReactDefaultInjection');
+    const ReactDefaultInjection = require('ReactDefaultInjection');
     ReactDefaultInjection.inject();
 
     DOMPropertyOperations = require('DOMPropertyOperations');
@@ -171,7 +171,7 @@ describe('DOMPropertyOperations', function() {
   });
 
   describe('setValueForProperty', function() {
-    var stubNode;
+    let stubNode;
 
     beforeEach(function() {
       stubNode = document.createElement('div');
@@ -212,7 +212,7 @@ describe('DOMPropertyOperations', function() {
     it('should convert attribute values to string first', function() {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
-      var obj = {
+      const obj = {
         toString: function() {
           return '<html>';
         },
@@ -246,7 +246,7 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should use mutation method where applicable', function() {
-      var foobarSetter = jest.genMockFn();
+      const foobarSetter = jest.genMockFn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: null},
@@ -334,7 +334,7 @@ describe('DOMPropertyOperations', function() {
   });
 
   describe('deleteValueForProperty', function() {
-    var stubNode;
+    let stubNode;
 
     beforeEach(function() {
       stubNode = document.createElement('div');

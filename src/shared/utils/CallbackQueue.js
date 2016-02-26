@@ -11,10 +11,10 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
+const PooledClass = require('PooledClass');
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
+const assign = require('Object.assign');
+const invariant = require('invariant');
 
 /**
  * A specialized pseudo-event module to help keep track of components waiting to
@@ -55,8 +55,8 @@ assign(CallbackQueue.prototype, {
    * @internal
    */
   notifyAll: function() {
-    var callbacks = this._callbacks;
-    var contexts = this._contexts;
+    const callbacks = this._callbacks;
+    const contexts = this._contexts;
     if (callbacks) {
       invariant(
         callbacks.length === contexts.length,
@@ -64,7 +64,7 @@ assign(CallbackQueue.prototype, {
       );
       this._callbacks = null;
       this._contexts = null;
-      for (var i = 0; i < callbacks.length; i++) {
+      for (let i = 0; i < callbacks.length; i++) {
         callbacks[i].call(contexts[i]);
       }
       callbacks.length = 0;

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactStateSetters = {
+const ReactStateSetters = {
   /**
    * Returns a function that calls the provided function, and uses the result
    * of that to set the component's state.
@@ -24,7 +24,7 @@ var ReactStateSetters = {
    */
   createStateSetter: function(component, funcReturningState) {
     return function(a, b, c, d, e, f) {
-      var partialState = funcReturningState.call(component, a, b, c, d, e, f);
+      const partialState = funcReturningState.call(component, a, b, c, d, e, f);
       if (partialState) {
         component.setState(partialState);
       }
@@ -44,7 +44,7 @@ var ReactStateSetters = {
    */
   createStateKeySetter: function(component, key) {
     // Memoize the setters.
-    var cache = component.__keySetters || (component.__keySetters = {});
+    const cache = component.__keySetters || (component.__keySetters = {});
     return cache[key] || (cache[key] = createStateKeySetter(component, key));
   },
 };
@@ -53,7 +53,7 @@ function createStateKeySetter(component, key) {
   // Partial state is allocated outside of the function closure so it can be
   // reused with every call, avoiding memory allocation when this function
   // is called.
-  var partialState = {};
+  const partialState = {};
   return function stateKeySetter(value) {
     partialState[key] = value;
     component.setState(partialState);

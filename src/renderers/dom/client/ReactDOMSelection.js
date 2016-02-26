@@ -11,10 +11,10 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
+const ExecutionEnvironment = require('ExecutionEnvironment');
 
-var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
-var getTextContentAccessor = require('getTextContentAccessor');
+const getNodeForCharacterOffset = require('getNodeForCharacterOffset');
+const getTextContentAccessor = require('getTextContentAccessor');
 
 /**
  * While `isCollapsed` is available on the Selection object and `collapsed`
@@ -40,17 +40,17 @@ function isCollapsed(anchorNode, anchorOffset, focusNode, focusOffset) {
  * @return {object}
  */
 function getIEOffsets(node) {
-  var selection = document.selection;
-  var selectedRange = selection.createRange();
-  var selectedLength = selectedRange.text.length;
+  const selection = document.selection;
+  const selectedRange = selection.createRange();
+  const selectedLength = selectedRange.text.length;
 
   // Duplicate selection so we can move range without breaking user selection.
-  var fromStart = selectedRange.duplicate();
+  const fromStart = selectedRange.duplicate();
   fromStart.moveToElementText(node);
   fromStart.setEndPoint('EndToStart', selectedRange);
 
-  var startOffset = fromStart.text.length;
-  var endOffset = startOffset + selectedLength;
+  const startOffset = fromStart.text.length;
+  const endOffset = startOffset + selectedLength;
 
   return {
     start: startOffset,
@@ -63,18 +63,18 @@ function getIEOffsets(node) {
  * @return {?object}
  */
 function getModernOffsets(node) {
-  var selection = window.getSelection && window.getSelection();
+  const selection = window.getSelection && window.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
   }
 
-  var anchorNode = selection.anchorNode;
-  var anchorOffset = selection.anchorOffset;
-  var focusNode = selection.focusNode;
-  var focusOffset = selection.focusOffset;
+  const anchorNode = selection.anchorNode;
+  const anchorOffset = selection.anchorOffset;
+  const focusNode = selection.focusNode;
+  const focusOffset = selection.focusOffset;
 
-  var currentRange = selection.getRangeAt(0);
+  const currentRange = selection.getRangeAt(0);
 
   // In Firefox, range.startContainer and range.endContainer can be "anonymous
   // divs", e.g. the up/down buttons on an <input type="number">. Anonymous
@@ -95,34 +95,34 @@ function getModernOffsets(node) {
   // If the node and offset values are the same, the selection is collapsed.
   // `Selection.isCollapsed` is available natively, but IE sometimes gets
   // this value wrong.
-  var isSelectionCollapsed = isCollapsed(
+  const isSelectionCollapsed = isCollapsed(
     selection.anchorNode,
     selection.anchorOffset,
     selection.focusNode,
     selection.focusOffset
   );
 
-  var rangeLength = isSelectionCollapsed ? 0 : currentRange.toString().length;
+  const rangeLength = isSelectionCollapsed ? 0 : currentRange.toString().length;
 
-  var tempRange = currentRange.cloneRange();
+  const tempRange = currentRange.cloneRange();
   tempRange.selectNodeContents(node);
   tempRange.setEnd(currentRange.startContainer, currentRange.startOffset);
 
-  var isTempRangeCollapsed = isCollapsed(
+  const isTempRangeCollapsed = isCollapsed(
     tempRange.startContainer,
     tempRange.startOffset,
     tempRange.endContainer,
     tempRange.endOffset
   );
 
-  var start = isTempRangeCollapsed ? 0 : tempRange.toString().length;
-  var end = start + rangeLength;
+  const start = isTempRangeCollapsed ? 0 : tempRange.toString().length;
+  const end = start + rangeLength;
 
   // Detect whether the selection is backward.
-  var detectionRange = document.createRange();
+  const detectionRange = document.createRange();
   detectionRange.setStart(anchorNode, anchorOffset);
   detectionRange.setEnd(focusNode, focusOffset);
-  var isBackward = detectionRange.collapsed;
+  const isBackward = detectionRange.collapsed;
 
   return {
     start: isBackward ? end : start,
@@ -135,8 +135,8 @@ function getModernOffsets(node) {
  * @param {object} offsets
  */
 function setIEOffsets(node, offsets) {
-  var range = document.selection.createRange().duplicate();
-  var start, end;
+  const range = document.selection.createRange().duplicate();
+  let start, end;
 
   if (offsets.end === undefined) {
     start = offsets.start;
@@ -173,25 +173,25 @@ function setModernOffsets(node, offsets) {
     return;
   }
 
-  var selection = window.getSelection();
-  var length = node[getTextContentAccessor()].length;
-  var start = Math.min(offsets.start, length);
-  var end = offsets.end === undefined ?
+  const selection = window.getSelection();
+  const length = node[getTextContentAccessor()].length;
+  let start = Math.min(offsets.start, length);
+  let end = offsets.end === undefined ?
             start : Math.min(offsets.end, length);
 
   // IE 11 uses modern selection, but doesn't support the extend method.
   // Flip backward selections, so we can set with a single range.
   if (!selection.extend && start > end) {
-    var temp = end;
+    const temp = end;
     end = start;
     start = temp;
   }
 
-  var startMarker = getNodeForCharacterOffset(node, start);
-  var endMarker = getNodeForCharacterOffset(node, end);
+  const startMarker = getNodeForCharacterOffset(node, start);
+  const endMarker = getNodeForCharacterOffset(node, end);
 
   if (startMarker && endMarker) {
-    var range = document.createRange();
+    const range = document.createRange();
     range.setStart(startMarker.node, startMarker.offset);
     selection.removeAllRanges();
 
@@ -205,13 +205,13 @@ function setModernOffsets(node, offsets) {
   }
 }
 
-var useIEOffsets = (
+const useIEOffsets = (
   ExecutionEnvironment.canUseDOM &&
   'selection' in document &&
   !('getSelection' in window)
 );
 
-var ReactDOMSelection = {
+const ReactDOMSelection = {
   /**
    * @param {DOMElement} node
    */

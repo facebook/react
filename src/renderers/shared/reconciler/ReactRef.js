@@ -11,9 +11,9 @@
 
 'use strict';
 
-var ReactOwner = require('ReactOwner');
+const ReactOwner = require('ReactOwner');
 
-var ReactRef = {};
+const ReactRef = {};
 
 function attachRef(ref, component, owner) {
   if (typeof ref === 'function') {
@@ -37,7 +37,7 @@ ReactRef.attachRefs = function(instance, element) {
   if (element === null || element === false) {
     return;
   }
-  var ref = element.ref;
+  const ref = element.ref;
   if (ref != null) {
     attachRef(ref, instance, element._owner);
   }
@@ -56,8 +56,8 @@ ReactRef.shouldUpdateRefs = function(prevElement, nextElement) {
   // is made. It probably belongs where the key checking and
   // instantiateReactComponent is done.
 
-  var prevEmpty = prevElement === null || prevElement === false;
-  var nextEmpty = nextElement === null || nextElement === false;
+  const prevEmpty = prevElement === null || prevElement === false;
+  const nextEmpty = nextElement === null || nextElement === false;
 
   return (
     // This has a few false positives w/r/t empty components.
@@ -71,7 +71,7 @@ ReactRef.detachRefs = function(instance, element) {
   if (element === null || element === false) {
     return;
   }
-  var ref = element.ref;
+  const ref = element.ref;
   if (ref != null) {
     detachRef(ref, instance, element._owner);
   }

@@ -11,11 +11,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
-var TestComponent;
+let TestComponent;
 
 describe('refs-destruction', function() {
   beforeEach(function() {
@@ -41,8 +41,8 @@ describe('refs-destruction', function() {
   });
 
   it('should remove refs when destroying the parent', function() {
-    var container = document.createElement('div');
-    var testInstance = ReactDOM.render(<TestComponent />, container);
+    const container = document.createElement('div');
+    const testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
       .toBe(true);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
@@ -51,8 +51,8 @@ describe('refs-destruction', function() {
   });
 
   it('should remove refs when destroying the child', function() {
-    var container = document.createElement('div');
-    var testInstance = ReactDOM.render(<TestComponent />, container);
+    const container = document.createElement('div');
+    const testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
       .toBe(true);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);

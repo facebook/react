@@ -15,7 +15,7 @@
  * ReactPerf is a general AOP system designed to measure performance. This
  * module only has the hooks: see ReactDefaultPerf for the analysis tool.
  */
-var ReactPerf = {
+const ReactPerf = {
   /**
    * Boolean to enable/disable measurement. Set to false by default to prevent
    * accidental logging and perf loss.
@@ -35,7 +35,7 @@ var ReactPerf = {
    */
   measureMethods: function(object, objectName, methodNames) {
     if (__DEV__) {
-      for (var key in methodNames) {
+      for (const key in methodNames) {
         if (!methodNames.hasOwnProperty(key)) {
           continue;
         }
@@ -58,8 +58,8 @@ var ReactPerf = {
    */
   measure: function(objName, fnName, func) {
     if (__DEV__) {
-      var measuredFunc = null;
-      var wrapper = function() {
+      let measuredFunc = null;
+      const wrapper = function() {
         if (ReactPerf.enableMeasure) {
           if (!measuredFunc) {
             measuredFunc = ReactPerf.storedMeasure(objName, fnName, func);

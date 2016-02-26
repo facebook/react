@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', function() {
 
@@ -24,7 +24,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
   });
 
   it('should provide up to date values for props', function() {
-    var ParentComponent = React.createClass({
+    const ParentComponent = React.createClass({
       getInitialState: function() {
         return {color: 'blue'};
       },
@@ -48,7 +48,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
       },
     });
 
-    var ChildComponent = React.createClass({
+    const ChildComponent = React.createClass({
       getInitialState: function() {
         this.props.logger('getInitialState', this.props.color);
         return {hue: 'dark ' + this.props.color};
@@ -87,10 +87,10 @@ describe('ReactCompositeComponentNestedState-state', function() {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
 
-    var logger = jest.genMockFn();
+    const logger = jest.genMockFn();
 
     void ReactDOM.render(
       <ParentComponent logger={logger} />,

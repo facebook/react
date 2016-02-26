@@ -11,22 +11,22 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
-var SyntheticEvent = require('SyntheticEvent');
+const EventConstants = require('EventConstants');
+const EventPluginHub = require('EventPluginHub');
+const EventPropagators = require('EventPropagators');
+const ExecutionEnvironment = require('ExecutionEnvironment');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactUpdates = require('ReactUpdates');
+const SyntheticEvent = require('SyntheticEvent');
 
-var getEventTarget = require('getEventTarget');
-var isEventSupported = require('isEventSupported');
-var isTextInputElement = require('isTextInputElement');
-var keyOf = require('keyOf');
+const getEventTarget = require('getEventTarget');
+const isEventSupported = require('isEventSupported');
+const isTextInputElement = require('isTextInputElement');
+const keyOf = require('keyOf');
 
-var topLevelTypes = EventConstants.topLevelTypes;
+const topLevelTypes = EventConstants.topLevelTypes;
 
-var eventTypes = {
+const eventTypes = {
   change: {
     phasedRegistrationNames: {
       bubbled: keyOf({onChange: null}),
@@ -48,23 +48,23 @@ var eventTypes = {
 /**
  * For IE shims
  */
-var activeElement = null;
-var activeElementInst = null;
-var activeElementValue = null;
-var activeElementValueProp = null;
+let activeElement = null;
+let activeElementInst = null;
+let activeElementValue = null;
+let activeElementValueProp = null;
 
 /**
  * SECTION: handle `change` event
  */
 function shouldUseChangeEvent(elem) {
-  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' ||
     (nodeName === 'input' && elem.type === 'file')
   );
 }
 
-var doesChangeEventBubble = false;
+let doesChangeEventBubble = false;
 if (ExecutionEnvironment.canUseDOM) {
   // See `handleChange` comment below
   doesChangeEventBubble = isEventSupported('change') && (
@@ -73,7 +73,7 @@ if (ExecutionEnvironment.canUseDOM) {
 }
 
 function manualDispatchChangeEvent(nativeEvent) {
-  var event = SyntheticEvent.getPooled(
+  const event = SyntheticEvent.getPooled(
     eventTypes.change,
     activeElementInst,
     nativeEvent,
@@ -142,7 +142,7 @@ function handleEventsForChangeEventIE8(
 /**
  * SECTION: handle `input` event
  */
-var isInputEventSupported = false;
+let isInputEventSupported = false;
 if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events.
@@ -157,7 +157,7 @@ if (ExecutionEnvironment.canUseDOM) {
  * (For IE <=11) Replacement getter/setter for the `value` property that gets
  * set on the active element.
  */
-var newValueProp = {
+const newValueProp = {
   get: function() {
     return activeElementValueProp.get.call(this);
   },
@@ -224,7 +224,7 @@ function handlePropertyChange(nativeEvent) {
   if (nativeEvent.propertyName !== 'value') {
     return;
   }
-  var value = nativeEvent.srcElement.value;
+  const value = nativeEvent.srcElement.value;
   if (value === activeElementValue) {
     return;
   }
@@ -331,7 +331,7 @@ function getTargetInstForClickEvent(
  * - textarea
  * - select
  */
-var ChangeEventPlugin = {
+const ChangeEventPlugin = {
 
   eventTypes: eventTypes,
 
@@ -341,10 +341,10 @@ var ChangeEventPlugin = {
     nativeEvent,
     nativeEventTarget
   ) {
-    var targetNode = targetInst ?
+    const targetNode = targetInst ?
       ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
 
-    var getTargetInstFunc, handleEventFunc;
+    let getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {
       if (doesChangeEventBubble) {
         getTargetInstFunc = getTargetInstForChangeEvent;
@@ -363,9 +363,9 @@ var ChangeEventPlugin = {
     }
 
     if (getTargetInstFunc) {
-      var inst = getTargetInstFunc(topLevelType, targetInst);
+      const inst = getTargetInstFunc(topLevelType, targetInst);
       if (inst) {
-        var event = SyntheticEvent.getPooled(
+        const event = SyntheticEvent.getPooled(
           eventTypes.change,
           inst,
           nativeEvent,

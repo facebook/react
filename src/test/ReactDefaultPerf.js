@@ -11,13 +11,13 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
-var ReactMount = require('ReactMount');
-var ReactPerf = require('ReactPerf');
+const DOMProperty = require('DOMProperty');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
+const ReactMount = require('ReactMount');
+const ReactPerf = require('ReactPerf');
 
-var performanceNow = require('performanceNow');
+const performanceNow = require('performanceNow');
 
 function roundFloat(val) {
   return Math.floor(val * 100) / 100;
@@ -28,8 +28,8 @@ function addValue(obj, key, val) {
 }
 
 // Composite/text components don't have any built-in ID: we have to make our own
-var compositeIDMap;
-var compositeIDCounter = 17000;
+let compositeIDMap;
+let compositeIDCounter = 17000;
 function getIDOfComposite(inst) {
   if (!compositeIDMap) {
     compositeIDMap = new WeakMap();
@@ -37,7 +37,7 @@ function getIDOfComposite(inst) {
   if (compositeIDMap.has(inst)) {
     return compositeIDMap.get(inst);
   } else {
-    var id = compositeIDCounter++;
+    const id = compositeIDCounter++;
     compositeIDMap.set(inst, id);
     return id;
   }
@@ -51,7 +51,7 @@ function getID(inst) {
   }
 }
 
-var ReactDefaultPerf = {
+const ReactDefaultPerf = {
   _allMeasurements: [], // last item in the list is the current one
   _mountStack: [0],
   _compositeStack: [],
@@ -76,7 +76,7 @@ var ReactDefaultPerf = {
 
   printExclusive: function(measurements) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
-    var summary = ReactDefaultPerfAnalysis.getExclusiveSummary(measurements);
+    const summary = ReactDefaultPerfAnalysis.getExclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
         'Component class name': item.componentName,
@@ -94,7 +94,7 @@ var ReactDefaultPerf = {
 
   printInclusive: function(measurements) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
-    var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(measurements);
+    const summary = ReactDefaultPerfAnalysis.getInclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
         'Owner > component': item.componentName,
@@ -109,7 +109,7 @@ var ReactDefaultPerf = {
   },
 
   getMeasurementsSummaryMap: function(measurements) {
-    var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
+    const summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
       measurements,
       true
     );
@@ -133,9 +133,9 @@ var ReactDefaultPerf = {
 
   printDOM: function(measurements) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
-    var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
+    const summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     console.table(summary.map(function(item) {
-      var result = {};
+      const result = {};
       result[DOMProperty.ID_ATTRIBUTE_NAME] = item.id;
       result.type = item.type;
       result.args = JSON.stringify(item.args);
@@ -149,10 +149,10 @@ var ReactDefaultPerf = {
 
   _recordWrite: function(id, fnName, totalTime, args) {
     // TODO: totalTime isn't that useful since it doesn't count paints/reflows
-    var entry =
+    const entry =
       ReactDefaultPerf
         ._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1];
-    var writes = entry.writes;
+    const writes = entry.writes;
     writes[id] = writes[id] || [];
     writes[id].push({
       type: fnName,
@@ -163,11 +163,11 @@ var ReactDefaultPerf = {
 
   measure: function(moduleName, fnName, func) {
     return function(...args) {
-      var totalTime;
-      var rv;
-      var start;
+      let totalTime;
+      let rv;
+      let start;
 
-      var entry = ReactDefaultPerf._allMeasurements[
+      let entry = ReactDefaultPerf._allMeasurements[
         ReactDefaultPerf._allMeasurements.length - 1
       ];
 
@@ -207,7 +207,7 @@ var ReactDefaultPerf = {
         } else if (fnName === 'dangerouslyProcessChildrenUpdates') {
           // special format
           args[1].forEach(function(update) {
-            var writeArgs = {};
+            const writeArgs = {};
             if (update.fromIndex !== null) {
               writeArgs.fromIndex = update.fromIndex;
             }
@@ -226,7 +226,7 @@ var ReactDefaultPerf = {
           });
         } else {
           // basic format
-          var id = args[0];
+          let id = args[0];
           if (moduleName === 'EventPluginHub') {
             id = id._rootNodeID;
           } else if (fnName === 'replaceNodeWithMarkup') {
@@ -254,11 +254,11 @@ var ReactDefaultPerf = {
           return func.apply(this, args);
         }
 
-        var rootNodeID = getIDOfComposite(this);
-        var isRender = fnName === '_renderValidatedComponent';
-        var isMount = fnName === 'mountComponent';
+        const rootNodeID = getIDOfComposite(this);
+        const isRender = fnName === '_renderValidatedComponent';
+        const isMount = fnName === 'mountComponent';
 
-        var mountStack = ReactDefaultPerf._mountStack;
+        const mountStack = ReactDefaultPerf._mountStack;
 
         if (isRender) {
           addValue(entry.counts, rootNodeID, 1);
@@ -278,7 +278,7 @@ var ReactDefaultPerf = {
         if (isRender) {
           addValue(entry.render, rootNodeID, totalTime);
         } else if (isMount) {
-          var subMountTime = mountStack.pop();
+          const subMountTime = mountStack.pop();
           mountStack[mountStack.length - 1] += totalTime;
           addValue(entry.exclusive, rootNodeID, totalTime - subMountTime);
           addValue(entry.inclusive, rootNodeID, totalTime);

@@ -11,15 +11,15 @@
 
 'use strict';
 
-var EventListener = require('EventListener');
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var PooledClass = require('PooledClass');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
+const EventListener = require('EventListener');
+const ExecutionEnvironment = require('ExecutionEnvironment');
+const PooledClass = require('PooledClass');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
-var getEventTarget = require('getEventTarget');
-var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+const assign = require('Object.assign');
+const getEventTarget = require('getEventTarget');
+const getUnboundedScrollPosition = require('getUnboundedScrollPosition');
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -33,8 +33,8 @@ function findParent(inst) {
   while (inst._nativeParent) {
     inst = inst._nativeParent;
   }
-  var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
-  var container = rootNode.parentNode;
+  const rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
+  const container = rootNode.parentNode;
   return ReactDOMComponentTree.getClosestInstanceFromNode(container);
 }
 
@@ -57,8 +57,8 @@ PooledClass.addPoolingTo(
 );
 
 function handleTopLevelImpl(bookKeeping) {
-  var nativeEventTarget = getEventTarget(bookKeeping.nativeEvent);
-  var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
+  const nativeEventTarget = getEventTarget(bookKeeping.nativeEvent);
+  let targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
     nativeEventTarget
   );
 
@@ -66,13 +66,13 @@ function handleTopLevelImpl(bookKeeping) {
   // It's important that we build the array of ancestors before calling any
   // event handlers, because event handlers can modify the DOM, leading to
   // inconsistencies with ReactMount's node cache. See #1105.
-  var ancestor = targetInst;
+  let ancestor = targetInst;
   do {
     bookKeeping.ancestors.push(ancestor);
     ancestor = ancestor && findParent(ancestor);
   } while (ancestor);
 
-  for (var i = 0; i < bookKeeping.ancestors.length; i++) {
+  for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
     ReactEventListener._handleTopLevel(
       bookKeeping.topLevelType,
@@ -84,7 +84,7 @@ function handleTopLevelImpl(bookKeeping) {
 }
 
 function scrollValueMonitor(cb) {
-  var scrollPosition = getUnboundedScrollPosition(window);
+  const scrollPosition = getUnboundedScrollPosition(window);
   cb(scrollPosition);
 }
 
@@ -118,7 +118,7 @@ var ReactEventListener = {
    * @internal
    */
   trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {
-    var element = handle;
+    const element = handle;
     if (!element) {
       return null;
     }
@@ -140,7 +140,7 @@ var ReactEventListener = {
    * @internal
    */
   trapCapturedEvent: function(topLevelType, handlerBaseName, handle) {
-    var element = handle;
+    const element = handle;
     if (!element) {
       return null;
     }
@@ -152,7 +152,7 @@ var ReactEventListener = {
   },
 
   monitorScrollValue: function(refresh) {
-    var callback = scrollValueMonitor.bind(null, refresh);
+    const callback = scrollValueMonitor.bind(null, refresh);
     EventListener.listen(window, 'scroll', callback);
   },
 
@@ -161,7 +161,7 @@ var ReactEventListener = {
       return;
     }
 
-    var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
+    const bookKeeping = TopLevelCallbackBookKeeping.getPooled(
       topLevelType,
       nativeEvent
     );

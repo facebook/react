@@ -11,11 +11,11 @@
 
 'use strict';
 
-var CSSProperty = require('CSSProperty');
-var warning = require('warning');
+const CSSProperty = require('CSSProperty');
+const warning = require('warning');
 
-var isUnitlessNumber = CSSProperty.isUnitlessNumber;
-var styleWarnings = {};
+const isUnitlessNumber = CSSProperty.isUnitlessNumber;
+const styleWarnings = {};
 
 /**
  * Convert a value into the proper css writable value. The style name `name`
@@ -38,12 +38,12 @@ function dangerousStyleValue(name, value, component) {
   // which has lead to a greater discussion about how we're going to
   // trust URLs moving forward. See #2115901
 
-  var isEmpty = value == null || typeof value === 'boolean' || value === '';
+  const isEmpty = value == null || typeof value === 'boolean' || value === '';
   if (isEmpty) {
     return '';
   }
 
-  var isNonNumeric = isNaN(value);
+  const isNonNumeric = isNaN(value);
   if (isNonNumeric || value === 0 ||
       isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name]) {
     return '' + value; // cast to string
@@ -52,14 +52,14 @@ function dangerousStyleValue(name, value, component) {
   if (typeof value === 'string') {
     if (__DEV__) {
       if (component) {
-        var owner = component._currentElement._owner;
-        var ownerName = owner ? owner.getName() : null;
+        const owner = component._currentElement._owner;
+        const ownerName = owner ? owner.getName() : null;
         if (ownerName && !styleWarnings[ownerName]) {
           styleWarnings[ownerName] = {};
         }
-        var warned = false;
+        let warned = false;
         if (ownerName) {
-          var warnings = styleWarnings[ownerName];
+          const warnings = styleWarnings[ownerName];
           warned = warnings[name];
           if (!warned) {
             warnings[name] = true;

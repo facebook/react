@@ -11,14 +11,14 @@
 
 'use strict';
 
-var keyMirror = require('keyMirror');
+const keyMirror = require('keyMirror');
 
-var PropagationPhases = keyMirror({bubbled: null, captured: null});
+const PropagationPhases = keyMirror({bubbled: null, captured: null});
 
 /**
  * Types of raw signals from the browser caught at the top level.
  */
-var topLevelTypes = keyMirror({
+const topLevelTypes = keyMirror({
   topAbort: null,
   topBlur: null,
   topCanPlay: null,
@@ -85,7 +85,7 @@ var topLevelTypes = keyMirror({
   topWheel: null,
 });
 
-var EventConstants = {
+const EventConstants = {
   topLevelTypes: topLevelTypes,
   PropagationPhases: PropagationPhases,
 };

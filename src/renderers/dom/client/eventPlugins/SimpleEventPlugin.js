@@ -11,28 +11,28 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventListener = require('EventListener');
-var EventPropagators = require('EventPropagators');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-var SyntheticEvent = require('SyntheticEvent');
-var SyntheticFocusEvent = require('SyntheticFocusEvent');
-var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
-var SyntheticDragEvent = require('SyntheticDragEvent');
-var SyntheticTouchEvent = require('SyntheticTouchEvent');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var SyntheticWheelEvent = require('SyntheticWheelEvent');
+const EventConstants = require('EventConstants');
+const EventListener = require('EventListener');
+const EventPropagators = require('EventPropagators');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const SyntheticClipboardEvent = require('SyntheticClipboardEvent');
+const SyntheticEvent = require('SyntheticEvent');
+const SyntheticFocusEvent = require('SyntheticFocusEvent');
+const SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
+const SyntheticMouseEvent = require('SyntheticMouseEvent');
+const SyntheticDragEvent = require('SyntheticDragEvent');
+const SyntheticTouchEvent = require('SyntheticTouchEvent');
+const SyntheticUIEvent = require('SyntheticUIEvent');
+const SyntheticWheelEvent = require('SyntheticWheelEvent');
 
-var emptyFunction = require('emptyFunction');
-var getEventCharCode = require('getEventCharCode');
-var invariant = require('invariant');
-var keyOf = require('keyOf');
+const emptyFunction = require('emptyFunction');
+const getEventCharCode = require('getEventCharCode');
+const invariant = require('invariant');
+const keyOf = require('keyOf');
 
-var topLevelTypes = EventConstants.topLevelTypes;
+const topLevelTypes = EventConstants.topLevelTypes;
 
-var eventTypes = {
+const eventTypes = {
   abort: {
     phasedRegistrationNames: {
       bubbled: keyOf({onAbort: true}),
@@ -385,7 +385,7 @@ var eventTypes = {
   },
 };
 
-var topLevelEventsToDispatchConfig = {
+const topLevelEventsToDispatchConfig = {
   topAbort:           eventTypes.abort,
   topBlur:            eventTypes.blur,
   topCanPlay:         eventTypes.canPlay,
@@ -446,14 +446,14 @@ var topLevelEventsToDispatchConfig = {
   topWheel:           eventTypes.wheel,
 };
 
-for (var type in topLevelEventsToDispatchConfig) {
+for (const type in topLevelEventsToDispatchConfig) {
   topLevelEventsToDispatchConfig[type].dependencies = [type];
 }
 
-var ON_CLICK_KEY = keyOf({onClick: null});
-var onClickListeners = {};
+const ON_CLICK_KEY = keyOf({onClick: null});
+const onClickListeners = {};
 
-var SimpleEventPlugin = {
+const SimpleEventPlugin = {
 
   eventTypes: eventTypes,
 
@@ -463,11 +463,11 @@ var SimpleEventPlugin = {
     nativeEvent,
     nativeEventTarget
   ) {
-    var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
+    const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
     }
-    var EventConstructor;
+    let EventConstructor;
     switch (topLevelType) {
       case topLevelTypes.topAbort:
       case topLevelTypes.topCanPlay:
@@ -566,7 +566,7 @@ var SimpleEventPlugin = {
       'SimpleEventPlugin: Unhandled event type, `%s`.',
       topLevelType
     );
-    var event = EventConstructor.getPooled(
+    const event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,
       nativeEvent,
@@ -582,8 +582,8 @@ var SimpleEventPlugin = {
     // fire. The workaround for this bug involves attaching an empty click
     // listener on the target node.
     if (registrationName === ON_CLICK_KEY) {
-      var id = inst._rootNodeID;
-      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+      const id = inst._rootNodeID;
+      const node = ReactDOMComponentTree.getNodeFromInstance(inst);
       if (!onClickListeners[id]) {
         onClickListeners[id] = EventListener.listen(
           node,
@@ -596,7 +596,7 @@ var SimpleEventPlugin = {
 
   willDeleteListener: function(inst, registrationName) {
     if (registrationName === ON_CLICK_KEY) {
-      var id = inst._rootNodeID;
+      const id = inst._rootNodeID;
       onClickListeners[id].remove();
       delete onClickListeners[id];
     }

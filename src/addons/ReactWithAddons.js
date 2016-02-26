@@ -18,16 +18,16 @@
 
 'use strict';
 
-var LinkedStateMixin = require('LinkedStateMixin');
-var React = require('React');
-var ReactComponentWithPureRenderMixin =
+const LinkedStateMixin = require('LinkedStateMixin');
+const React = require('React');
+const ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
-var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
-var ReactFragment = require('ReactFragment');
-var ReactTransitionGroup = require('ReactTransitionGroup');
+const ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
+const ReactFragment = require('ReactFragment');
+const ReactTransitionGroup = require('ReactTransitionGroup');
 
-var shallowCompare = require('shallowCompare');
-var update = require('update');
+const shallowCompare = require('shallowCompare');
+const update = require('update');
 
 React.addons = {
   CSSTransitionGroup: ReactCSSTransitionGroup,

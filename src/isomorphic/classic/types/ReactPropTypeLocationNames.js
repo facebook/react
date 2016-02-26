@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactPropTypeLocationNames = {};
+let ReactPropTypeLocationNames = {};
 
 if (__DEV__) {
   ReactPropTypeLocationNames = {

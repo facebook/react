@@ -11,8 +11,8 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
 describe('ReactErrorBoundaries', function() {
 
@@ -48,8 +48,8 @@ describe('ReactErrorBoundaries', function() {
       }
     }
 
-    var EventPluginHub = require('EventPluginHub');
-    var container = document.createElement('div');
+    const EventPluginHub = require('EventPluginHub');
+    const container = document.createElement('div');
     EventPluginHub.putListener = jest.genMockFn();
     ReactDOM.render(<Boundary />, container);
     expect(EventPluginHub.putListener).not.toBeCalled();
@@ -89,7 +89,7 @@ describe('ReactErrorBoundaries', function() {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
         <BrokenUnmount />
@@ -118,8 +118,8 @@ describe('ReactErrorBoundaries', function() {
       }
     }
 
-    var EventPluginHub = require('EventPluginHub');
-    var container = document.createElement('div');
+    const EventPluginHub = require('EventPluginHub');
+    const container = document.createElement('div');
     EventPluginHub.putListener = jest.genMockFn();
     ReactDOM.render(<Boundary />, container);
     expect(EventPluginHub.putListener).toBeCalled();
@@ -152,7 +152,7 @@ describe('ReactErrorBoundaries', function() {
       return <div />;
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary><Broken /><Composite /></ErrorBoundary>,
       container
@@ -161,7 +161,7 @@ describe('ReactErrorBoundaries', function() {
   });
 
   it('catches errors from children', function() {
-    var log = [];
+    const log = [];
 
     class Box extends React.Component {
       constructor(props) {
@@ -174,7 +174,7 @@ describe('ReactErrorBoundaries', function() {
           return <div>Error: {this.state.errorMessage}</div>;
         }
         log.push('Box render');
-        var ref = function(x) {
+        const ref = function(x) {
           log.push('Inquisitive ref ' + x);
         };
         return (
@@ -221,7 +221,7 @@ describe('ReactErrorBoundaries', function() {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Box />, container);
     expect(container.textContent).toBe('Error: Please, do not render me.');
     ReactDOM.unmountComponentAtNode(container);

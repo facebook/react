@@ -11,13 +11,13 @@
 
 'use strict';
 
-var SyntheticEvent = require('SyntheticEvent');
+const SyntheticEvent = require('SyntheticEvent');
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
  */
-var CompositionEventInterface = {
+const CompositionEventInterface = {
   data: null,
 };
 

@@ -10,9 +10,9 @@
  */
 'use strict';
 
-var ReactElement = require('ReactElement');
+const ReactElement = require('ReactElement');
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  * Returns the first child in a collection of children and verifies that there

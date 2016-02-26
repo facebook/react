@@ -12,13 +12,13 @@
 'use strict';
 
 describe('ReactDOMComponentTree', function() {
-  var React;
-  var ReactDOM;
-  var ReactDOMComponentTree;
-  var ReactDOMServer;
+  let React;
+  let ReactDOM;
+  let ReactDOMComponentTree;
+  let ReactDOMServer;
 
   function renderMarkupIntoDocument(elt) {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     // Force server-rendering path:
     container.innerHTML = ReactDOMServer.renderToString(elt);
     return ReactDOM.render(elt, container);
@@ -35,9 +35,9 @@ describe('ReactDOMComponentTree', function() {
     // This is a little hard to test directly. But refs rely on it -- so we
     // check that we can find a ref at arbitrary points in the tree, even if
     // other nodes don't have a ref.
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
-        var toRef = this.props.toRef;
+        const toRef = this.props.toRef;
         return (
           <div ref={toRef === 'div' ? 'target' : null}>
             <h1 ref={toRef === 'h1' ? 'target' : null}>hello</h1>
@@ -51,7 +51,7 @@ describe('ReactDOMComponentTree', function() {
     });
 
     function renderAndGetRef(toRef) {
-      var inst = renderMarkupIntoDocument(<Component toRef={toRef} />);
+      const inst = renderMarkupIntoDocument(<Component toRef={toRef} />);
       return inst.refs.target.nodeName;
     }
 
@@ -62,7 +62,7 @@ describe('ReactDOMComponentTree', function() {
   });
 
   it('finds instances for nodes', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return (
           <div>
@@ -78,7 +78,7 @@ describe('ReactDOMComponentTree', function() {
     });
 
     function renderAndQuery(sel) {
-      var root = renderMarkupIntoDocument(<section><Component /></section>);
+      const root = renderMarkupIntoDocument(<section><Component /></section>);
       return sel ? root.querySelector(sel) : root;
     }
 
@@ -101,7 +101,7 @@ describe('ReactDOMComponentTree', function() {
 
     // This one's a text component!
     var root = renderAndQuery(null);
-    var inst = ReactDOMComponentTree.getInstanceFromNode(root.children[0].childNodes[2]);
+    const inst = ReactDOMComponentTree.getInstanceFromNode(root.children[0].childNodes[2]);
     expect(inst._stringText).toBe('goodbye.');
 
     expect(renderAndGetClosest('b')._currentElement.type).toBe('main');

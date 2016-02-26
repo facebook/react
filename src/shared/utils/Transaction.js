@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  * `Transaction` creates a black box that is able to wrap any method such that
@@ -74,7 +74,7 @@ var invariant = require('invariant');
  *
  * @class Transaction
  */
-var Mixin = {
+const Mixin = {
   /**
    * Sets up this instance so that it is prepared for collecting metrics. Does
    * so such that this setup method may be used on an instance that is already
@@ -127,8 +127,8 @@ var Mixin = {
       'Transaction.perform(...): Cannot initialize a transaction when there ' +
       'is already an outstanding transaction.'
     );
-    var errorThrown;
-    var ret;
+    let errorThrown;
+    let ret;
     try {
       this._isInTransaction = true;
       // Catching errors makes debugging more difficult, so we start with
@@ -161,9 +161,9 @@ var Mixin = {
   },
 
   initializeAll: function(startIndex) {
-    var transactionWrappers = this.transactionWrappers;
-    for (var i = startIndex; i < transactionWrappers.length; i++) {
-      var wrapper = transactionWrappers[i];
+    const transactionWrappers = this.transactionWrappers;
+    for (let i = startIndex; i < transactionWrappers.length; i++) {
+      const wrapper = transactionWrappers[i];
       try {
         // Catching errors makes debugging more difficult, so we start with the
         // OBSERVED_ERROR state before overwriting it with the real return value
@@ -198,11 +198,11 @@ var Mixin = {
       this.isInTransaction(),
       'Transaction.closeAll(): Cannot close transaction when none are open.'
     );
-    var transactionWrappers = this.transactionWrappers;
-    for (var i = startIndex; i < transactionWrappers.length; i++) {
-      var wrapper = transactionWrappers[i];
-      var initData = this.wrapperInitData[i];
-      var errorThrown;
+    const transactionWrappers = this.transactionWrappers;
+    for (let i = startIndex; i < transactionWrappers.length; i++) {
+      const wrapper = transactionWrappers[i];
+      const initData = this.wrapperInitData[i];
+      let errorThrown;
       try {
         // Catching errors makes debugging more difficult, so we start with
         // errorThrown set to true before setting it to false after calling

@@ -11,9 +11,9 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var setInnerHTML = require('setInnerHTML');
+const ExecutionEnvironment = require('ExecutionEnvironment');
+const escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+const setInnerHTML = require('setInnerHTML');
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
@@ -25,7 +25,7 @@ var setInnerHTML = require('setInnerHTML');
  * @param {string} text
  * @internal
  */
-var setTextContent = function(node, text) {
+let setTextContent = function(node, text) {
   node.textContent = text;
 };
 

@@ -12,9 +12,9 @@
 'use strict';
 
 describe('traverseAllChildren', function() {
-  var traverseAllChildren;
-  var React;
-  var ReactFragment;
+  let traverseAllChildren;
+  let React;
+  let ReactFragment;
   beforeEach(function() {
     jest.resetModuleRegistry();
     traverseAllChildren = require('traverseAllChildren');
@@ -27,16 +27,16 @@ describe('traverseAllChildren', function() {
   }
 
   it('should support identity for simple', function() {
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
-    var simpleKid = <span key="simple" />;
+    const simpleKid = <span key="simple" />;
 
     // Jasmine doesn't provide a way to test that the fn was invoked with scope.
-    var instance = <div>{simpleKid}</div>;
+    const instance = <div>{simpleKid}</div>;
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
@@ -47,14 +47,14 @@ describe('traverseAllChildren', function() {
   });
 
   it('should treat single arrayless child as being in array', function() {
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
-    var simpleKid = <span />;
-    var instance = <div>{simpleKid}</div>;
+    const simpleKid = <span />;
+    const instance = <div>{simpleKid}</div>;
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
@@ -66,14 +66,14 @@ describe('traverseAllChildren', function() {
 
   it('should treat single child in array as expected', function() {
     spyOn(console, 'error');
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
-    var simpleKid = <span />;
-    var instance = <div>{[simpleKid]}</div>;
+    const simpleKid = <span />;
+    const instance = <div>{[simpleKid]}</div>;
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
@@ -86,19 +86,19 @@ describe('traverseAllChildren', function() {
   });
 
   it('should be called for each child', function() {
-    var zero = <div key="keyZero" />;
-    var one = null;
-    var two = <div key="keyTwo" />;
-    var three = null;
-    var four = <div key="keyFour" />;
+    const zero = <div key="keyZero" />;
+    const one = null;
+    const two = <div key="keyTwo" />;
+    const three = null;
+    const four = <div key="keyFour" />;
 
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
-    var instance = (
+    const instance = (
       <div>
         {zero}
         {one}
@@ -129,17 +129,17 @@ describe('traverseAllChildren', function() {
   });
 
   it('should traverse children of different kinds', function() {
-    var div = <div key="divNode" />;
-    var span = <span key="spanNode" />;
-    var a = <a key="aNode" />;
+    const div = <div key="divNode" />;
+    const span = <span key="spanNode" />;
+    const a = <a key="aNode" />;
 
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
-    var instance = (
+    const instance = (
       <div>
         {div}
         {[frag({span})]}
@@ -188,12 +188,12 @@ describe('traverseAllChildren', function() {
   });
 
   it('should be called for each child in nested structure', function() {
-    var zero = <div key="keyZero" />;
-    var one = null;
-    var two = <div key="keyTwo" />;
-    var three = null;
-    var four = <div key="keyFour" />;
-    var five = <div key="keyFiveInner" />;
+    const zero = <div key="keyZero" />;
+    const one = null;
+    const two = <div key="keyTwo" />;
+    const three = null;
+    const four = <div key="keyFour" />;
+    const five = <div key="keyFiveInner" />;
     // five is placed into a JS object with a key that is joined to the
     // component key attribute.
     // Precedence is as follows:
@@ -201,13 +201,13 @@ describe('traverseAllChildren', function() {
     // 2. If grouped in an Array, the `key` prop, falling back to array index
 
 
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
-    var instance = (
+    const instance = (
       <div>{
         [
           frag({
@@ -248,15 +248,15 @@ describe('traverseAllChildren', function() {
   });
 
   it('should retain key across two mappings', function() {
-    var zeroForceKey = <div key="keyZero" />;
-    var oneForceKey = <div key="keyOne" />;
-    var traverseContext = [];
-    var traverseFn =
+    const zeroForceKey = <div key="keyZero" />;
+    const oneForceKey = <div key="keyOne" />;
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
-    var forcedKeys = (
+    const forcedKeys = (
       <div>
         {zeroForceKey}
         {oneForceKey}
@@ -279,9 +279,9 @@ describe('traverseAllChildren', function() {
 
   it('should be called for each child in an iterable without keys', function() {
     spyOn(console, 'error');
-    var threeDivIterable = {
+    const threeDivIterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
             if (i++ < 3) {
@@ -294,13 +294,13 @@ describe('traverseAllChildren', function() {
       },
     };
 
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(kid);
       });
 
-    var instance = (
+    const instance = (
       <div>
         {threeDivIterable}
       </div>
@@ -330,9 +330,9 @@ describe('traverseAllChildren', function() {
   });
 
   it('should be called for each child in an iterable with keys', function() {
-    var threeDivIterable = {
+    const threeDivIterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
             if (i++ < 3) {
@@ -345,13 +345,13 @@ describe('traverseAllChildren', function() {
       },
     };
 
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(kid);
       });
 
-    var instance = (
+    const instance = (
       <div>
         {threeDivIterable}
       </div>
@@ -380,9 +380,9 @@ describe('traverseAllChildren', function() {
   it('should use keys from entry iterables', function() {
     spyOn(console, 'error');
 
-    var threeDivEntryIterable = {
+    const threeDivEntryIterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
             if (i++ < 3) {
@@ -396,13 +396,13 @@ describe('traverseAllChildren', function() {
     };
     threeDivEntryIterable.entries = threeDivEntryIterable['@@iterator'];
 
-    var traverseContext = [];
-    var traverseFn =
+    const traverseContext = [];
+    const traverseFn =
       jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(kid);
       });
 
-    var instance = (
+    const instance = (
       <div>
         {threeDivEntryIterable}
       </div>
@@ -443,7 +443,7 @@ describe('traverseAllChildren', function() {
     /*eslint-enable no-extend-native */
 
     try {
-      var instance = (
+      const instance = (
         <div>
           {5}
           {12}
@@ -451,7 +451,7 @@ describe('traverseAllChildren', function() {
         </div>
       );
 
-      var traverseFn = jasmine.createSpy();
+      const traverseFn = jasmine.createSpy();
 
       traverseAllChildren(instance.props.children, traverseFn, null);
       expect(traverseFn.calls.length).toBe(3);
@@ -482,14 +482,14 @@ describe('traverseAllChildren', function() {
     Number.prototype.key = 'rocks';
     /*eslint-enable no-extend-native */
 
-    var instance = (
+    const instance = (
       <div>
         {'a'}
         {13}
       </div>
     );
 
-    var traverseFn = jasmine.createSpy();
+    const traverseFn = jasmine.createSpy();
 
     traverseAllChildren(instance.props.children, traverseFn, null);
     expect(traverseFn.calls.length).toBe(2);

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  * Return the lowest common ancestor of A and B, or null if they are in
@@ -21,12 +21,12 @@ function getLowestCommonAncestor(instA, instB) {
   invariant('_nativeNode' in instA, 'getNodeFromInstance: Invalid argument.');
   invariant('_nativeNode' in instB, 'getNodeFromInstance: Invalid argument.');
 
-  var depthA = 0;
-  for (var tempA = instA; tempA; tempA = tempA._nativeParent) {
+  let depthA = 0;
+  for (let tempA = instA; tempA; tempA = tempA._nativeParent) {
     depthA++;
   }
-  var depthB = 0;
-  for (var tempB = instB; tempB; tempB = tempB._nativeParent) {
+  let depthB = 0;
+  for (let tempB = instB; tempB; tempB = tempB._nativeParent) {
     depthB++;
   }
 
@@ -43,7 +43,7 @@ function getLowestCommonAncestor(instA, instB) {
   }
 
   // Walk in lockstep until we find a match.
-  var depth = depthA;
+  let depth = depthA;
   while (depth--) {
     if (instA === instB) {
       return instA;
@@ -83,12 +83,12 @@ function getParentInstance(inst) {
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
 function traverseTwoPhase(inst, fn, arg) {
-  var path = [];
+  const path = [];
   while (inst) {
     path.push(inst);
     inst = inst._nativeParent;
   }
-  var i;
+  let i;
   for (i = path.length; i-- > 0;) {
     fn(path[i], false, arg);
   }
@@ -105,18 +105,18 @@ function traverseTwoPhase(inst, fn, arg) {
  * "entered" or "left" that element.
  */
 function traverseEnterLeave(from, to, fn, argFrom, argTo) {
-  var common = from && to ? getLowestCommonAncestor(from, to) : null;
-  var pathFrom = [];
+  const common = from && to ? getLowestCommonAncestor(from, to) : null;
+  const pathFrom = [];
   while (from && from !== common) {
     pathFrom.push(from);
     from = from._nativeParent;
   }
-  var pathTo = [];
+  const pathTo = [];
   while (to && to !== common) {
     pathTo.push(to);
     to = to._nativeParent;
   }
-  var i;
+  let i;
   for (i = 0; i < pathFrom.length; i++) {
     fn(pathFrom[i], true, argFrom);
   }

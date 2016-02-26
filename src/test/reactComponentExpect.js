@@ -12,11 +12,11 @@
 
 'use strict';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactTestUtils = require('ReactTestUtils');
+const ReactInstanceMap = require('ReactInstanceMap');
+const ReactTestUtils = require('ReactTestUtils');
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
+const assign = require('Object.assign');
+const invariant = require('invariant');
 
 function reactComponentExpect(instance) {
   if (instance instanceof reactComponentExpectInternal) {
@@ -34,7 +34,7 @@ function reactComponentExpect(instance) {
     ReactTestUtils.isCompositeComponent(instance),
     'reactComponentExpect(...): instance must be a composite component'
   );
-  var internalInstance = ReactInstanceMap.get(instance);
+  const internalInstance = ReactInstanceMap.get(instance);
 
   expect(typeof internalInstance).toBe('object');
   expect(typeof internalInstance.constructor).toBe('function');
@@ -73,7 +73,7 @@ assign(reactComponentExpectInternal.prototype, {
    */
   expectRenderedChild: function() {
     this.toBeCompositeComponent();
-    var child = this._instance._renderedComponent;
+    const child = this._instance._renderedComponent;
     // TODO: Hide ReactEmptyComponent instances here?
     return new reactComponentExpectInternal(child);
   },
@@ -85,9 +85,9 @@ assign(reactComponentExpectInternal.prototype, {
     // Currently only dom components have arrays of children, but that will
     // change soon.
     this.toBeDOMComponent();
-    var renderedChildren =
+    const renderedChildren =
       this._instance._renderedChildren || {};
-    for (var name in renderedChildren) {
+    for (const name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
       }
@@ -102,7 +102,7 @@ assign(reactComponentExpectInternal.prototype, {
 
   toBeDOMComponentWithChildCount: function(count) {
     this.toBeDOMComponent();
-    var renderedChildren = this._instance._renderedChildren;
+    const renderedChildren = this._instance._renderedChildren;
     expect(renderedChildren).toBeTruthy();
     expect(Object.keys(renderedChildren).length).toBe(count);
     return this;
@@ -144,14 +144,14 @@ assign(reactComponentExpectInternal.prototype, {
   },
 
   toBeTextComponentWithValue: function(val) {
-    var elementType = typeof this._instance._currentElement;
+    const elementType = typeof this._instance._currentElement;
     expect(elementType === 'string' || elementType === 'number').toBe(true);
     expect(this._instance._stringText).toBe(val);
     return this;
   },
 
   toBeEmptyComponent: function() {
-    var element = this._instance._currentElement;
+    const element = this._instance._currentElement;
     return element === null || element === false;
   },
 
@@ -184,7 +184,7 @@ assign(reactComponentExpectInternal.prototype, {
    */
   scalarStateEqual: function(stateNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
-    for (var stateName in stateNameToExpectedValue) {
+    for (const stateName in stateNameToExpectedValue) {
       if (!stateNameToExpectedValue.hasOwnProperty(stateName)) {
         continue;
       }
@@ -200,7 +200,7 @@ assign(reactComponentExpectInternal.prototype, {
    */
   scalarPropsEqual: function(propNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
-    for (var propName in propNameToExpectedValue) {
+    for (const propName in propNameToExpectedValue) {
       if (!propNameToExpectedValue.hasOwnProperty(propName)) {
         continue;
       }
@@ -216,7 +216,7 @@ assign(reactComponentExpectInternal.prototype, {
    */
   scalarContextEqual: function(contextNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
-    for (var contextName in contextNameToExpectedValue) {
+    for (const contextName in contextNameToExpectedValue) {
       if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
         continue;
       }

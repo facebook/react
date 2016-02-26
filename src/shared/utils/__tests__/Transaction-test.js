@@ -11,11 +11,11 @@
 
 'use strict';
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
-var Transaction;
+let Transaction;
 
-var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
+const INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
 describe('Transaction', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -28,19 +28,19 @@ describe('Transaction', function() {
    * invoke the actual method when any of the initializers fail.
    */
   it('should invoke closers with/only-with init returns', function() {
-    var throwInInit = function() {
+    const throwInInit = function() {
       throw new Error('close[0] should receive Transaction.OBSERVED_ERROR');
     };
 
-    var performSideEffect;
-    var dontPerformThis = function() {
+    let performSideEffect;
+    const dontPerformThis = function() {
       performSideEffect = 'This should never be set to this';
     };
 
     /**
      * New test Transaction subclass.
      */
-    var TestTransaction = function() {
+    const TestTransaction = function() {
       this.reinitializeTransaction();
       this.firstCloseParam = INIT_ERRORED;   // WON'T be set to something else
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
@@ -72,7 +72,7 @@ describe('Transaction', function() {
       ];
     };
 
-    var transaction = new TestTransaction();
+    const transaction = new TestTransaction();
 
     expect(function() {
       transaction.perform(dontPerformThis);
@@ -87,11 +87,11 @@ describe('Transaction', function() {
 
   it('should invoke closers and wrapped method when inits success', function() {
 
-    var performSideEffect;
+    let performSideEffect;
     /**
      * New test Transaction subclass.
      */
-    var TestTransaction = function() {
+    const TestTransaction = function() {
       this.reinitializeTransaction();
       this.firstCloseParam = INIT_ERRORED;   // WILL be set to something else
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
@@ -127,7 +127,7 @@ describe('Transaction', function() {
       ];
     };
 
-    var transaction = new TestTransaction();
+    const transaction = new TestTransaction();
 
     transaction.perform(function() {
       performSideEffect = 'SIDE_EFFECT';
@@ -148,11 +148,11 @@ describe('Transaction', function() {
    */
   it('should throw when wrapped operation throws', function() {
 
-    var performSideEffect;
+    let performSideEffect;
     /**
      * New test Transaction subclass.
      */
-    var TestTransaction = function() {
+    const TestTransaction = function() {
       this.reinitializeTransaction();
       this.firstCloseParam = INIT_ERRORED;   // WILL be set to something else
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
@@ -197,10 +197,10 @@ describe('Transaction', function() {
       ];
     };
 
-    var transaction = new TestTransaction();
+    const transaction = new TestTransaction();
 
     expect(function() {
-      var isTypeError = false;
+      let isTypeError = false;
       try {
         transaction.perform(function() {
           throw new TypeError('Thrown in main wrapped operation');
@@ -219,11 +219,11 @@ describe('Transaction', function() {
   });
 
   it('should throw errors in transaction close', function() {
-    var TestTransaction = function() {
+    const TestTransaction = function() {
       this.reinitializeTransaction();
     };
     assign(TestTransaction.prototype, Transaction.Mixin);
-    var exceptionMsg = 'This exception should throw.';
+    const exceptionMsg = 'This exception should throw.';
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -234,7 +234,7 @@ describe('Transaction', function() {
       ];
     };
 
-    var transaction = new TestTransaction();
+    const transaction = new TestTransaction();
     expect(function() {
       transaction.perform(function() {});
     }).toThrow(exceptionMsg);
@@ -242,12 +242,12 @@ describe('Transaction', function() {
   });
 
   it('should allow nesting of transactions', function() {
-    var performSideEffect;
-    var nestedPerformSideEffect;
+    let performSideEffect;
+    let nestedPerformSideEffect;
     /**
      * New test Transaction subclass.
      */
-    var TestTransaction = function() {
+    const TestTransaction = function() {
       this.reinitializeTransaction();
       this.firstCloseParam = INIT_ERRORED; // WILL be set to something else
     };
@@ -276,7 +276,7 @@ describe('Transaction', function() {
       ];
     };
 
-    var NestedTransaction = function() {
+    const NestedTransaction = function() {
       this.reinitializeTransaction();
     };
     assign(NestedTransaction.prototype, Transaction.Mixin);
@@ -293,7 +293,7 @@ describe('Transaction', function() {
       ];
     };
 
-    var transaction = new TestTransaction();
+    const transaction = new TestTransaction();
 
     transaction.perform(function() {
       performSideEffect = 'SIDE_EFFECT';

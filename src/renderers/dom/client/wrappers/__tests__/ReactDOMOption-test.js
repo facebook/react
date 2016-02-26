@@ -13,9 +13,9 @@
 
 
 describe('ReactDOMOption', function() {
-  var React;
-  var ReactDOM;
-  var ReactTestUtils;
+  let React;
+  let ReactDOM;
+  let ReactTestUtils;
 
   beforeEach(function() {
     React = require('React');
@@ -24,18 +24,18 @@ describe('ReactDOMOption', function() {
   });
 
   it('should flatten children to a string', function() {
-    var stub = <option>{1} {'foo'}</option>;
+    let stub = <option>{1} {'foo'}</option>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
 
     expect(node.innerHTML).toBe('1 foo');
   });
 
   it('should ignore invalid children types', function() {
     spyOn(console, 'error');
-    var stub = <option>{1} <div /> {2}</option>;
+    let stub = <option>{1} <div /> {2}</option>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
 
     expect(node.innerHTML).toBe('1  2');
     expect(console.error.calls.length).toBe(1);
@@ -43,7 +43,7 @@ describe('ReactDOMOption', function() {
   });
 
   it('should warn when passing invalid children', function() {
-    var stub = <option>{1} <div /></option>;
+    let stub = <option>{1} <div /></option>;
     spyOn(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
 
@@ -54,21 +54,21 @@ describe('ReactDOMOption', function() {
   });
 
   it('should ignore null/undefined/false children without warning', function() {
-    var stub = <option>{1} {false}{true}{null}{undefined} {2}</option>;
+    let stub = <option>{1} {false}{true}{null}{undefined} {2}</option>;
     spyOn(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
 
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
 
     expect(console.error.calls.length).toBe(0);
     expect(node.innerHTML).toBe('1  2');
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', function() {
-    var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
+    let stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
     expect(node.innerHTML).toBe('foobar');
   });
 });

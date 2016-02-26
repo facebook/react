@@ -11,11 +11,11 @@
 
 'use strict';
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
 describe('EventPluginRegistry', function() {
-  var EventPluginRegistry;
-  var createPlugin;
+  let EventPluginRegistry;
+  let createPlugin;
 
   beforeEach(function() {
     EventPluginRegistry = require('EventPluginRegistry');
@@ -27,9 +27,9 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should be able to inject ordering before plugins', function() {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
-    var ThreePlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
+    const ThreePlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
@@ -47,9 +47,9 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should be able to inject plugins before and after ordering', function() {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
-    var ThreePlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
+    const ThreePlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
@@ -67,9 +67,9 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should be able to inject repeated plugins and out-of-order', function() {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
-    var ThreePlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
+    const ThreePlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
@@ -88,7 +88,7 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should throw if plugin does not implement `extractEvents`', function() {
-    var BadPlugin = {};
+    const BadPlugin = {};
 
     EventPluginRegistry.injectEventPluginOrder(['bad']);
 
@@ -103,8 +103,8 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should throw if plugin does not exist in ordering', function() {
-    var OnePlugin = createPlugin();
-    var RandomPlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const RandomPlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginOrder(['one']);
 
@@ -120,7 +120,7 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should throw if ordering is injected more than once', function() {
-    var pluginOrdering = [];
+    const pluginOrdering = [];
 
     EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
 
@@ -133,8 +133,8 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should throw if different plugins injected using same name', function() {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginsByName({same: OnePlugin});
 
@@ -147,13 +147,13 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should publish registration names of injected plugins', function() {
-    var OnePlugin = createPlugin({
+    const OnePlugin = createPlugin({
       eventTypes: {
         click: {registrationName: 'onClick'},
         focus: {registrationName: 'onFocus'},
       },
     });
-    var TwoPlugin = createPlugin({
+    const TwoPlugin = createPlugin({
       eventTypes: {
         magic: {
           phasedRegistrationNames: {
@@ -181,12 +181,12 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should throw if multiple registration names collide', function() {
-    var OnePlugin = createPlugin({
+    const OnePlugin = createPlugin({
       eventTypes: {
         photoCapture: {registrationName: 'onPhotoCapture'},
       },
     });
-    var TwoPlugin = createPlugin({
+    const TwoPlugin = createPlugin({
       eventTypes: {
         photo: {
           phasedRegistrationNames: {
@@ -211,7 +211,7 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should throw if an invalid event is published', function() {
-    var OnePlugin = createPlugin({
+    const OnePlugin = createPlugin({
       eventTypes: {
         badEvent: {/* missing configuration */},
       },
@@ -228,25 +228,25 @@ describe('EventPluginRegistry', function() {
   });
 
   it('should be able to get the plugin from synthetic events', function() {
-    var clickDispatchConfig = {
+    const clickDispatchConfig = {
       registrationName: 'onClick',
     };
-    var magicDispatchConfig = {
+    const magicDispatchConfig = {
       phasedRegistrationNames: {
         bubbled: 'onMagicBubble',
         captured: 'onMagicCapture',
       },
     };
 
-    var OnePlugin = createPlugin({
+    const OnePlugin = createPlugin({
       eventTypes: {
         click: clickDispatchConfig,
         magic: magicDispatchConfig,
       },
     });
 
-    var clickEvent = {dispatchConfig: clickDispatchConfig};
-    var magicEvent = {dispatchConfig: magicDispatchConfig};
+    const clickEvent = {dispatchConfig: clickDispatchConfig};
+    const magicEvent = {dispatchConfig: magicDispatchConfig};
 
     expect(EventPluginRegistry.getPluginModuleForEvent(clickEvent)).toBe(null);
     expect(EventPluginRegistry.getPluginModuleForEvent(magicEvent)).toBe(null);

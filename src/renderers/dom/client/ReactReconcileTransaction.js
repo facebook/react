@@ -11,19 +11,19 @@
 
 'use strict';
 
-var CallbackQueue = require('CallbackQueue');
-var PooledClass = require('PooledClass');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactInputSelection = require('ReactInputSelection');
-var Transaction = require('Transaction');
+const CallbackQueue = require('CallbackQueue');
+const PooledClass = require('PooledClass');
+const ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+const ReactInputSelection = require('ReactInputSelection');
+const Transaction = require('Transaction');
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
 /**
  * Ensures that, when possible, the selection range (currently selected text
  * input) is not disturbed by performing the transaction.
  */
-var SELECTION_RESTORATION = {
+const SELECTION_RESTORATION = {
   /**
    * @return {Selection} Selection information.
    */
@@ -39,13 +39,13 @@ var SELECTION_RESTORATION = {
  * high level DOM manipulations (like temporarily removing a text input from the
  * DOM).
  */
-var EVENT_SUPPRESSION = {
+const EVENT_SUPPRESSION = {
   /**
    * @return {boolean} The enabled status of `ReactBrowserEventEmitter` before
    * the reconciliation.
    */
   initialize: function() {
-    var currentlyEnabled = ReactBrowserEventEmitter.isEnabled();
+    const currentlyEnabled = ReactBrowserEventEmitter.isEnabled();
     ReactBrowserEventEmitter.setEnabled(false);
     return currentlyEnabled;
   },
@@ -64,7 +64,7 @@ var EVENT_SUPPRESSION = {
  * Provides a queue for collecting `componentDidMount` and
  * `componentDidUpdate` callbacks during the transaction.
  */
-var ON_DOM_READY_QUEUEING = {
+const ON_DOM_READY_QUEUEING = {
   /**
    * Initializes the internal `onDOMReady` queue.
    */
@@ -85,7 +85,7 @@ var ON_DOM_READY_QUEUEING = {
  * being member methods, but with an implied ordering while being isolated from
  * each other.
  */
-var TRANSACTION_WRAPPERS = [
+const TRANSACTION_WRAPPERS = [
   SELECTION_RESTORATION,
   EVENT_SUPPRESSION,
   ON_DOM_READY_QUEUEING,
@@ -117,7 +117,7 @@ function ReactReconcileTransaction(useCreateElement) {
   this.useCreateElement = useCreateElement;
 }
 
-var Mixin = {
+const Mixin = {
   /**
    * @see Transaction
    * @abstract

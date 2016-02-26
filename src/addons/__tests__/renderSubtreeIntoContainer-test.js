@@ -11,17 +11,17 @@
 
 'use strict';
 
-var React = require('React');
-var ReactTestUtils = require('ReactTestUtils');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
+const React = require('React');
+const ReactTestUtils = require('ReactTestUtils');
+const renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 
 describe('renderSubtreeIntoContainer', function() {
 
   it('should pass context when rendering subtree elsewhere', function() {
 
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string.isRequired,
       },
@@ -31,7 +31,7 @@ describe('renderSubtreeIntoContainer', function() {
       },
     });
 
-    var Parent = React.createClass({
+    const Parent = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
       },
@@ -58,9 +58,9 @@ describe('renderSubtreeIntoContainer', function() {
   });
 
   it('should throw if parentComponent is invalid', function() {
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string.isRequired,
       },
@@ -70,7 +70,7 @@ describe('renderSubtreeIntoContainer', function() {
       },
     });
 
-    var Parent = React.createClass({
+    const Parent = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
       },

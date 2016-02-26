@@ -11,23 +11,23 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
+const EventConstants = require('EventConstants');
+const EventPluginHub = require('EventPluginHub');
+const EventPluginUtils = require('EventPluginUtils');
 
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
-var warning = require('warning');
+const accumulateInto = require('accumulateInto');
+const forEachAccumulated = require('forEachAccumulated');
+const warning = require('warning');
 
-var PropagationPhases = EventConstants.PropagationPhases;
-var getListener = EventPluginHub.getListener;
+const PropagationPhases = EventConstants.PropagationPhases;
+const getListener = EventPluginHub.getListener;
 
 /**
  * Some event types have a notion of different registration names for different
  * "phases" of propagation. This finds listeners by a given phase.
  */
 function listenerAtPhase(inst, event, propagationPhase) {
-  var registrationName =
+  const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
 }
@@ -45,8 +45,8 @@ function accumulateDirectionalDispatches(inst, upwards, event) {
       'Dispatching inst must not be null'
     );
   }
-  var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
-  var listener = listenerAtPhase(inst, event, phase);
+  const phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
+  const listener = listenerAtPhase(inst, event, phase);
   if (listener) {
     event._dispatchListeners =
       accumulateInto(event._dispatchListeners, listener);
@@ -76,8 +76,8 @@ function accumulateTwoPhaseDispatchesSingle(event) {
  */
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    var targetInst = event._targetInst;
-    var parentInst =
+    const targetInst = event._targetInst;
+    const parentInst =
       targetInst ? EventPluginUtils.getParentInstance(targetInst) : null;
     EventPluginUtils.traverseTwoPhase(
       parentInst,
@@ -96,7 +96,7 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
 function accumulateDispatches(inst, ignoredDirection, event) {
   if (event && event.dispatchConfig.registrationName) {
     var registrationName = event.dispatchConfig.registrationName;
-    var listener = getListener(inst, registrationName);
+    const listener = getListener(inst, registrationName);
     if (listener) {
       event._dispatchListeners =
         accumulateInto(event._dispatchListeners, listener);
@@ -152,7 +152,7 @@ function accumulateDirectDispatches(events) {
  *
  * @constructor EventPropagators
  */
-var EventPropagators = {
+const EventPropagators = {
   accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
   accumulateTwoPhaseDispatchesSkipTarget: accumulateTwoPhaseDispatchesSkipTarget,
   accumulateDirectDispatches: accumulateDirectDispatches,

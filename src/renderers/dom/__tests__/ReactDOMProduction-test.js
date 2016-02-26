@@ -12,10 +12,10 @@
 'use strict';
 
 describe('ReactDOMProduction', function() {
-  var oldProcess;
+  let oldProcess;
 
-  var React;
-  var ReactDOM;
+  let React;
+  let ReactDOM;
 
   beforeEach(function() {
     __DEV__ = true;
@@ -33,7 +33,7 @@ describe('ReactDOMProduction', function() {
   });
 
   it('should use prod fbjs', function() {
-    var warning = require('warning');
+    const warning = require('warning');
 
     spyOn(console, 'error');
     warning(false, 'Do cows go moo?');
@@ -50,14 +50,14 @@ describe('ReactDOMProduction', function() {
   });
 
   it('should handle a simple flow', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return <span>{this.props.children}</span>;
       },
     });
 
-    var container = document.createElement('div');
-    var inst = ReactDOM.render(
+    const container = document.createElement('div');
+    const inst = ReactDOM.render(
       <div className="blue">
         <Component key={1}>A</Component>
         <Component key={2}>B</Component>

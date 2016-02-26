@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  * ReactOwners are capable of storing references to owned components.
@@ -43,7 +43,7 @@ var invariant = require('invariant');
  *
  * @class ReactOwner
  */
-var ReactOwner = {
+const ReactOwner = {
 
   /**
    * @param {?object} object

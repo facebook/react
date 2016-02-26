@@ -11,10 +11,10 @@
 
 'use strict';
 
-var validateDOMNesting;
+let validateDOMNesting;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#special
-var specialTags = [
+const specialTags = [
   'address', 'applet', 'area', 'article', 'aside', 'base', 'basefont',
   'bgsound', 'blockquote', 'body', 'br', 'button', 'caption', 'center', 'col',
   'colgroup', 'dd', 'details', 'dir', 'div', 'dl', 'dt', 'embed', 'fieldset',
@@ -28,14 +28,14 @@ var specialTags = [
 ];
 
 // https://html.spec.whatwg.org/multipage/syntax.html#formatting
-var formattingTags = [
+const formattingTags = [
   'a', 'b', 'big', 'code', 'em', 'font', 'i', 'nobr', 's', 'small', 'strike',
   'strong', 'tt', 'u',
 ];
 
 function isTagStackValid(stack) {
-  var ancestorInfo = null;
-  for (var i = 0; i < stack.length; i++) {
+  let ancestorInfo = null;
+  for (let i = 0; i < stack.length; i++) {
     if (!validateDOMNesting.isTagValidInContext(stack[i], ancestorInfo)) {
       return false;
     }
@@ -55,7 +55,7 @@ describe('ReactContextValidator', function() {
   it('allows any tag with no context', function() {
     // With renderToString (for example), we don't know where we're mounting the
     // tag so we must err on the side of leniency.
-    var allTags = [].concat(specialTags, formattingTags, ['mysterytag']);
+    const allTags = [].concat(specialTags, formattingTags, ['mysterytag']);
     allTags.forEach(function(tag) {
       expect(validateDOMNesting.isTagValidInContext(tag, null)).toBe(true);
     });

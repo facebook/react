@@ -11,7 +11,7 @@
 
 'use strict';
 
-var update = require('update');
+const update = require('update');
 
 describe('update', function() {
 
@@ -20,7 +20,7 @@ describe('update', function() {
       expect(update([1], {$push: [7]})).toEqual([1, 7]);
     });
     it('does not mutate the original object', function() {
-      var obj = [1];
+      const obj = [1];
       update(obj, {$push: [7]});
       expect(obj).toEqual([1]);
     });
@@ -42,7 +42,7 @@ describe('update', function() {
       expect(update([1], {$unshift: [7]})).toEqual([7, 1]);
     });
     it('does not mutate the original object', function() {
-      var obj = [1];
+      const obj = [1];
       update(obj, {$unshift: [7]});
       expect(obj).toEqual([1]);
     });
@@ -64,7 +64,7 @@ describe('update', function() {
       expect(update([1, 4, 3], {$splice: [[1, 1, 2]]})).toEqual([1, 2, 3]);
     });
     it('does not mutate the original object', function() {
-      var obj = [1, 4, 3];
+      const obj = [1, 4, 3];
       update(obj, {$splice: [[1, 1, 2]]});
       expect(obj).toEqual([1, 4, 3]);
     });
@@ -90,7 +90,7 @@ describe('update', function() {
       expect(update({a: 'b'}, {$merge: {c: 'd'}})).toEqual({a: 'b', c: 'd'});
     });
     it('does not mutate the original object', function() {
-      var obj = {a: 'b'};
+      const obj = {a: 'b'};
       update(obj, {$merge: {c: 'd'}});
       expect(obj).toEqual({a: 'b'});
     });
@@ -111,21 +111,21 @@ describe('update', function() {
       expect(update({a: 'b'}, {$set: {c: 'd'}})).toEqual({c: 'd'});
     });
     it('does not mutate the original object', function() {
-      var obj = {a: 'b'};
+      const obj = {a: 'b'};
       update(obj, {$set: {c: 'd'}});
       expect(obj).toEqual({a: 'b'});
     });
   });
 
   describe('$apply', function() {
-    var applier = function(node) {
+    const applier = function(node) {
       return {v: node.v * 2};
     };
     it('applies', function() {
       expect(update({v: 2}, {$apply: applier})).toEqual({v: 4});
     });
     it('does not mutate the original object', function() {
-      var obj = {v: 2};
+      const obj = {v: 2};
       update(obj, {$apply: applier});
       expect(obj).toEqual({v: 2});
     });

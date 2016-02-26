@@ -11,13 +11,13 @@
 
 'use strict';
 
-var getEventCharCode = require('getEventCharCode');
+const getEventCharCode = require('getEventCharCode');
 
 /**
  * Normalization of deprecated HTML5 `key` values
  * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
  */
-var normalizeKey = {
+const normalizeKey = {
   'Esc': 'Escape',
   'Spacebar': ' ',
   'Left': 'ArrowLeft',
@@ -37,7 +37,7 @@ var normalizeKey = {
  * Only special keys supported, all others depend on keyboard layout or browser
  * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
  */
-var translateToKey = {
+const translateToKey = {
   8: 'Backspace',
   9: 'Tab',
   12: 'Clear',
@@ -85,7 +85,7 @@ function getEventKey(nativeEvent) {
 
   // Browser does not implement `key`, polyfill as much of it as we can.
   if (nativeEvent.type === 'keypress') {
-    var charCode = getEventCharCode(nativeEvent);
+    const charCode = getEventCharCode(nativeEvent);
 
     // The enter-key is technically both printable and non-printable and can
     // thus be captured by `keypress`, no other non-printable key should.

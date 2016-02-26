@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
+const ReactChildren = require('ReactChildren');
 
 /**
  * Slice children that are typically specified as `props.children`. This version
@@ -27,7 +27,7 @@ function sliceChildren(children, start, end) {
     return children;
   }
 
-  var array = ReactChildren.toArray(children);
+  const array = ReactChildren.toArray(children);
   return array.slice(start, end);
 }
 

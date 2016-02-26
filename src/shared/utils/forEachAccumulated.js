@@ -18,7 +18,7 @@
  * handling the case when there is exactly one item (and we do not need to
  * allocate an array).
  */
-var forEachAccumulated = function(arr, cb, scope) {
+const forEachAccumulated = function(arr, cb, scope) {
   if (Array.isArray(arr)) {
     arr.forEach(cb, scope);
   } else if (arr) {

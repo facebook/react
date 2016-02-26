@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactRef = require('ReactRef');
+const ReactRef = require('ReactRef');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -21,7 +21,7 @@ function attachRefs() {
   ReactRef.attachRefs(this, this._currentElement);
 }
 
-var ReactReconciler = {
+const ReactReconciler = {
 
   /**
    * Initializes the component, renders markup, and registers event listeners.
@@ -41,7 +41,7 @@ var ReactReconciler = {
     nativeContainerInfo,
     context
   ) {
-    var markup = internalInstance.mountComponent(
+    const markup = internalInstance.mountComponent(
       transaction,
       nativeParent,
       nativeContainerInfo,
@@ -85,7 +85,7 @@ var ReactReconciler = {
   receiveComponent: function(
     internalInstance, nextElement, transaction, context
   ) {
-    var prevElement = internalInstance._currentElement;
+    const prevElement = internalInstance._currentElement;
 
     if (nextElement === prevElement &&
         context === internalInstance._context
@@ -103,7 +103,7 @@ var ReactReconciler = {
       return;
     }
 
-    var refsChanged = ReactRef.shouldUpdateRefs(
+    const refsChanged = ReactRef.shouldUpdateRefs(
       prevElement,
       nextElement
     );

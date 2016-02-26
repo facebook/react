@@ -11,18 +11,18 @@
 
 'use strict';
 
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var LinkedValueUtils = require('LinkedValueUtils');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
+const DOMPropertyOperations = require('DOMPropertyOperations');
+const LinkedValueUtils = require('LinkedValueUtils');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
-var warning = require('warning');
+const assign = require('Object.assign');
+const invariant = require('invariant');
+const warning = require('warning');
 
-var didWarnValueLink = false;
-var didWarnValueNull = false;
-var didWarnValDefaultVal = false;
+let didWarnValueLink = false;
+let didWarnValueNull = false;
+let didWarnValDefaultVal = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
@@ -68,7 +68,7 @@ var ReactDOMTextarea = {
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.
-    var nativeProps = assign({}, props, {
+    const nativeProps = assign({}, props, {
       defaultValue: undefined,
       value: undefined,
       children: inst._wrapperState.initialValue,
@@ -112,7 +112,7 @@ var ReactDOMTextarea = {
 
     var defaultValue = props.defaultValue;
     // TODO (yungsters): Remove support for children content in <textarea>.
-    var children = props.children;
+    let children = props.children;
     if (children != null) {
       if (__DEV__) {
         warning(
@@ -151,13 +151,13 @@ var ReactDOMTextarea = {
   },
 
   updateWrapper: function(inst) {
-    var props = inst._currentElement.props;
+    const props = inst._currentElement.props;
 
     if (__DEV__) {
       warnIfValueIsNull(props);
     }
 
-    var value = LinkedValueUtils.getValue(props);
+    const value = LinkedValueUtils.getValue(props);
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
@@ -171,8 +171,8 @@ var ReactDOMTextarea = {
 };
 
 function _handleChange(event) {
-  var props = this._currentElement.props;
-  var returnValue = LinkedValueUtils.executeOnChange(props, event);
+  const props = this._currentElement.props;
+  const returnValue = LinkedValueUtils.executeOnChange(props, event);
   ReactUpdates.asap(forceUpdateIfMounted, this);
   return returnValue;
 }

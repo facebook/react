@@ -11,27 +11,27 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInputSelection = require('ReactInputSelection');
-var SyntheticEvent = require('SyntheticEvent');
+const EventConstants = require('EventConstants');
+const EventPropagators = require('EventPropagators');
+const ExecutionEnvironment = require('ExecutionEnvironment');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactInputSelection = require('ReactInputSelection');
+const SyntheticEvent = require('SyntheticEvent');
 
-var getActiveElement = require('getActiveElement');
-var isTextInputElement = require('isTextInputElement');
-var keyOf = require('keyOf');
-var shallowEqual = require('shallowEqual');
+const getActiveElement = require('getActiveElement');
+const isTextInputElement = require('isTextInputElement');
+const keyOf = require('keyOf');
+const shallowEqual = require('shallowEqual');
 
-var topLevelTypes = EventConstants.topLevelTypes;
+const topLevelTypes = EventConstants.topLevelTypes;
 
-var skipSelectionChangeEvent = (
+const skipSelectionChangeEvent = (
   ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
   document.documentMode <= 11
 );
 
-var eventTypes = {
+const eventTypes = {
   select: {
     phasedRegistrationNames: {
       bubbled: keyOf({onSelect: null}),
@@ -49,15 +49,15 @@ var eventTypes = {
   },
 };
 
-var activeElement = null;
-var activeElementInst = null;
-var lastSelection = null;
-var mouseDown = false;
+let activeElement = null;
+let activeElementInst = null;
+let lastSelection = null;
+let mouseDown = false;
 
 // Track whether a listener exists for this plugin. If none exist, we do
 // not extract events. See #3639.
-var hasListener = false;
-var ON_SELECT_KEY = keyOf({onSelect: null});
+let hasListener = false;
+const ON_SELECT_KEY = keyOf({onSelect: null});
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -84,7 +84,7 @@ function getSelection(node) {
       focusOffset: selection.focusOffset,
     };
   } else if (document.selection) {
-    var range = document.selection.createRange();
+    const range = document.selection.createRange();
     return {
       parentElement: range.parentElement(),
       text: range.text,
@@ -112,11 +112,11 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   }
 
   // Only fire when selection has actually changed.
-  var currentSelection = getSelection(activeElement);
+  const currentSelection = getSelection(activeElement);
   if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
     lastSelection = currentSelection;
 
-    var syntheticEvent = SyntheticEvent.getPooled(
+    const syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
       activeElementInst,
       nativeEvent,
@@ -148,7 +148,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
  * - Fires for collapsed selection.
  * - Fires after user input.
  */
-var SelectEventPlugin = {
+const SelectEventPlugin = {
 
   eventTypes: eventTypes,
 
@@ -162,7 +162,7 @@ var SelectEventPlugin = {
       return null;
     }
 
-    var targetNode = targetInst ?
+    const targetNode = targetInst ?
       ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
 
     switch (topLevelType) {

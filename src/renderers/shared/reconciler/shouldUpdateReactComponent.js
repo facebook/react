@@ -23,14 +23,14 @@
  * @protected
  */
 function shouldUpdateReactComponent(prevElement, nextElement) {
-  var prevEmpty = prevElement === null || prevElement === false;
-  var nextEmpty = nextElement === null || nextElement === false;
+  const prevEmpty = prevElement === null || prevElement === false;
+  const nextEmpty = nextElement === null || nextElement === false;
   if (prevEmpty || nextEmpty) {
     return prevEmpty === nextEmpty;
   }
 
-  var prevType = typeof prevElement;
-  var nextType = typeof nextElement;
+  const prevType = typeof prevElement;
+  const nextType = typeof nextElement;
   if (prevType === 'string' || prevType === 'number') {
     return (nextType === 'string' || nextType === 'number');
   } else {

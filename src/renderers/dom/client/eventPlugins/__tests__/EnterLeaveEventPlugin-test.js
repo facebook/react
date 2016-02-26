@@ -11,13 +11,13 @@
 
 'use strict';
 
-var EnterLeaveEventPlugin;
-var EventConstants;
-var React;
-var ReactDOM;
-var ReactDOMComponentTree;
+let EnterLeaveEventPlugin;
+let EventConstants;
+let React;
+let ReactDOM;
+let ReactDOMComponentTree;
 
-var topLevelTypes;
+let topLevelTypes;
 
 describe('EnterLeaveEventPlugin', function() {
   beforeEach(function() {
@@ -33,20 +33,20 @@ describe('EnterLeaveEventPlugin', function() {
   });
 
   it('should set relatedTarget properly in iframe', function() {
-    var iframe = document.createElement('iframe');
+    const iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
 
-    var iframeDocument = iframe.contentDocument;
+    const iframeDocument = iframe.contentDocument;
 
     iframeDocument.write(
       '<!DOCTYPE html><html><head></head><body><div></div></body></html>'
     );
     iframeDocument.close();
 
-    var component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
+    const component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
     var div = ReactDOM.findDOMNode(component);
 
-    var extracted = EnterLeaveEventPlugin.extractEvents(
+    const extracted = EnterLeaveEventPlugin.extractEvents(
       topLevelTypes.topMouseOver,
       ReactDOMComponentTree.getInstanceFromNode(div),
       {target: div},
@@ -54,8 +54,8 @@ describe('EnterLeaveEventPlugin', function() {
     );
     expect(extracted.length).toBe(2);
 
-    var leave = extracted[0];
-    var enter = extracted[1];
+    const leave = extracted[0];
+    const enter = extracted[1];
 
     expect(leave.target).toBe(iframe.contentWindow);
     expect(leave.relatedTarget).toBe(div);

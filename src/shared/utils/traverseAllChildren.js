@@ -11,29 +11,29 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
+const ReactCurrentOwner = require('ReactCurrentOwner');
+const ReactElement = require('ReactElement');
 
-var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
-var warning = require('warning');
+const getIteratorFn = require('getIteratorFn');
+const invariant = require('invariant');
+const warning = require('warning');
 
-var SEPARATOR = '.';
-var SUBSEPARATOR = ':';
+const SEPARATOR = '.';
+const SUBSEPARATOR = ':';
 
 /**
  * TODO: Test that a single child and an array with one item have the same key
  * pattern.
  */
 
-var userProvidedKeyEscaperLookup = {
+const userProvidedKeyEscaperLookup = {
   '=': '=0',
   ':': '=2',
 };
 
-var userProvidedKeyEscapeRegex = /[=:]/g;
+const userProvidedKeyEscapeRegex = /[=:]/g;
 
-var didWarnAboutMaps = false;
+let didWarnAboutMaps = false;
 
 function userProvidedKeyEscaper(match) {
   return userProvidedKeyEscaperLookup[match];
@@ -95,7 +95,7 @@ function traverseAllChildrenImpl(
   callback,
   traverseContext
 ) {
-  var type = typeof children;
+  const type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
     // All of the above are perceived as null.
@@ -116,13 +116,13 @@ function traverseAllChildrenImpl(
     return 1;
   }
 
-  var child;
-  var nextName;
-  var subtreeCount = 0; // Count of children found in the current subtree.
-  var nextNamePrefix = nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
+  let child;
+  let nextName;
+  let subtreeCount = 0; // Count of children found in the current subtree.
+  const nextNamePrefix = nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
   if (Array.isArray(children)) {
-    for (var i = 0; i < children.length; i++) {
+    for (let i = 0; i < children.length; i++) {
       child = children[i];
       nextName = nextNamePrefix + getComponentKey(child, i);
       subtreeCount += traverseAllChildrenImpl(
@@ -133,12 +133,12 @@ function traverseAllChildrenImpl(
       );
     }
   } else {
-    var iteratorFn = getIteratorFn(children);
+    const iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
-      var iterator = iteratorFn.call(children);
-      var step;
+      const iterator = iteratorFn.call(children);
+      let step;
       if (iteratorFn !== children.entries) {
-        var ii = 0;
+        let ii = 0;
         while (!(step = iterator.next()).done) {
           child = step.value;
           nextName = nextNamePrefix + getComponentKey(child, ii++);
@@ -161,7 +161,7 @@ function traverseAllChildrenImpl(
         }
         // Iterator will provide entry [k,v] tuples rather than values.
         while (!(step = iterator.next()).done) {
-          var entry = step.value;
+          const entry = step.value;
           if (entry) {
             child = entry[1];
             nextName = (
@@ -179,7 +179,7 @@ function traverseAllChildrenImpl(
         }
       }
     } else if (type === 'object') {
-      var addendum = '';
+      let addendum = '';
       if (__DEV__) {
         addendum =
           ' If you meant to render a collection of children, use an array ' +
@@ -191,13 +191,13 @@ function traverseAllChildrenImpl(
             'version of React. Make sure to use only one copy of React.';
         }
         if (ReactCurrentOwner.current) {
-          var name = ReactCurrentOwner.current.getName();
+          const name = ReactCurrentOwner.current.getName();
           if (name) {
             addendum += ' Check the render method of `' + name + '`.';
           }
         }
       }
-      var childrenString = String(children);
+      const childrenString = String(children);
       invariant(
         false,
         'Objects are not valid as a React child (found: %s).%s',

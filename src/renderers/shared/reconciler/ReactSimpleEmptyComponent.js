@@ -11,11 +11,11 @@
 
 'use strict';
 
-var ReactReconciler = require('ReactReconciler');
+const ReactReconciler = require('ReactReconciler');
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
-var ReactSimpleEmptyComponent = function(placeholderElement, instantiate) {
+const ReactSimpleEmptyComponent = function(placeholderElement, instantiate) {
   this._currentElement = null;
   this._renderedComponent = instantiate(placeholderElement);
 };

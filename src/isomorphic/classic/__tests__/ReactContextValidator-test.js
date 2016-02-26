@@ -17,11 +17,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
-var reactComponentExpect;
+let reactComponentExpect;
 
 describe('ReactContextValidator', function() {
   beforeEach(function() {
@@ -39,7 +39,7 @@ describe('ReactContextValidator', function() {
   // ensure that this is not required for ES6 classes with Flow.
 
   it('should filter out context not in contextTypes', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string,
       },
@@ -49,7 +49,7 @@ describe('ReactContextValidator', function() {
       },
     });
 
-    var ComponentInFooBarContext = React.createClass({
+    const ComponentInFooBarContext = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string,
         bar: React.PropTypes.number,
@@ -67,17 +67,17 @@ describe('ReactContextValidator', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
+    const instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
     reactComponentExpect(instance).expectRenderedChild().scalarContextEqual({foo: 'abc'});
   });
 
   it('should filter context properly in callbacks', function() {
-    var actualComponentWillReceiveProps;
-    var actualShouldComponentUpdate;
-    var actualComponentWillUpdate;
-    var actualComponentDidUpdate;
+    let actualComponentWillReceiveProps;
+    let actualShouldComponentUpdate;
+    let actualComponentWillUpdate;
+    let actualComponentDidUpdate;
 
-    var Parent = React.createClass({
+    const Parent = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
         bar: React.PropTypes.string.isRequired,
@@ -95,7 +95,7 @@ describe('ReactContextValidator', function() {
       },
     });
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string,
       },
@@ -123,7 +123,7 @@ describe('ReactContextValidator', function() {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
@@ -133,7 +133,7 @@ describe('ReactContextValidator', function() {
   });
 
   it('should check context types', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string.isRequired,
       },
@@ -151,7 +151,7 @@ describe('ReactContextValidator', function() {
       'Required context `foo` was not specified in `Component`.'
     );
 
-    var ComponentInFooStringContext = React.createClass({
+    const ComponentInFooStringContext = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string,
       },
@@ -174,7 +174,7 @@ describe('ReactContextValidator', function() {
     // Previous call should not error
     expect(console.error.argsForCall.length).toBe(1);
 
-    var ComponentInFooNumberContext = React.createClass({
+    const ComponentInFooNumberContext = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.number,
       },
@@ -202,7 +202,7 @@ describe('ReactContextValidator', function() {
   });
 
   it('should check child context types', function() {
-    var Component = React.createClass({
+    const Component = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
         bar: React.PropTypes.number,

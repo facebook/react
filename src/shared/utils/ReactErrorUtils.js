@@ -11,7 +11,7 @@
 
 'use strict';
 
-var caughtError = null;
+let caughtError = null;
 
 /**
  * Call a function while guarding against errors that happens within it.
@@ -32,7 +32,7 @@ function invokeGuardedCallback(name, func, a, b) {
   }
 }
 
-var ReactErrorUtils = {
+const ReactErrorUtils = {
   invokeGuardedCallback: invokeGuardedCallback,
 
   /**
@@ -47,7 +47,7 @@ var ReactErrorUtils = {
    */
   rethrowCaughtError: function() {
     if (caughtError) {
-      var error = caughtError;
+      const error = caughtError;
       caughtError = null;
       throw error;
     }
@@ -63,12 +63,12 @@ if (__DEV__) {
       typeof window.dispatchEvent === 'function' &&
       typeof document !== 'undefined' &&
       typeof document.createEvent === 'function') {
-    var fakeNode = document.createElement('react');
+    const fakeNode = document.createElement('react');
     ReactErrorUtils.invokeGuardedCallback = function(name, func, a, b) {
-      var boundFunc = func.bind(null, a, b);
-      var evtType = `react-${name}`;
+      const boundFunc = func.bind(null, a, b);
+      const evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
-      var evt = document.createEvent('Event');
+      const evt = document.createEvent('Event');
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);

@@ -13,7 +13,7 @@
 
 describe('escapeTextContentForBrowser', function() {
 
-  var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+  const escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 
   it('should escape boolean to string', function() {
     expect(escapeTextContentForBrowser(true)).toBe('true');
@@ -21,7 +21,7 @@ describe('escapeTextContentForBrowser', function() {
   });
 
   it('should escape object to string', function() {
-    var escaped = escapeTextContentForBrowser({
+    const escaped = escapeTextContentForBrowser({
       toString: function() {
         return 'ponys';
       },
@@ -35,7 +35,7 @@ describe('escapeTextContentForBrowser', function() {
   });
 
   it('should escape string', function() {
-    var escaped = escapeTextContentForBrowser('<script type=\'\' src=""></script>');
+    let escaped = escapeTextContentForBrowser('<script type=\'\' src=""></script>');
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
     expect(escaped).not.toContain('\'');

@@ -11,26 +11,26 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginRegistry = require('EventPluginRegistry');
-var EventPropagators = require('EventPropagators');
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactElement = require('ReactElement');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactUpdates = require('ReactUpdates');
-var SyntheticEvent = require('SyntheticEvent');
+const EventConstants = require('EventConstants');
+const EventPluginHub = require('EventPluginHub');
+const EventPluginRegistry = require('EventPluginRegistry');
+const EventPropagators = require('EventPropagators');
+const React = require('React');
+const ReactDOM = require('ReactDOM');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactElement = require('ReactElement');
+const ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+const ReactCompositeComponent = require('ReactCompositeComponent');
+const ReactInstanceMap = require('ReactInstanceMap');
+const ReactUpdates = require('ReactUpdates');
+const SyntheticEvent = require('SyntheticEvent');
 
-var assign = require('Object.assign');
-var emptyObject = require('emptyObject');
-var findDOMNode = require('findDOMNode');
-var invariant = require('invariant');
+const assign = require('Object.assign');
+const emptyObject = require('emptyObject');
+const findDOMNode = require('findDOMNode');
+const invariant = require('invariant');
 
-var topLevelTypes = EventConstants.topLevelTypes;
+const topLevelTypes = EventConstants.topLevelTypes;
 
 function Event(suffix) {}
 
@@ -42,12 +42,12 @@ function findAllInRenderedTreeInternal(inst, test) {
   if (!inst || !inst.getPublicInstance) {
     return [];
   }
-  var publicInst = inst.getPublicInstance();
-  var ret = test(publicInst) ? [publicInst] : [];
-  var currentElement = inst._currentElement;
+  const publicInst = inst.getPublicInstance();
+  let ret = test(publicInst) ? [publicInst] : [];
+  const currentElement = inst._currentElement;
   if (ReactTestUtils.isDOMComponent(publicInst)) {
-    var renderedChildren = inst._renderedChildren;
-    var key;
+    const renderedChildren = inst._renderedChildren;
+    let key;
     for (key in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(key)) {
         continue;
@@ -77,7 +77,7 @@ function findAllInRenderedTreeInternal(inst, test) {
  */
 var ReactTestUtils = {
   renderIntoDocument: function(instance) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     // None of our tests actually require attaching the container to the
     // DOM, and doing so creates a mess that we rely on test isolation to
     // clean up, so we're going to stop honoring the name of this method
@@ -122,8 +122,8 @@ var ReactTestUtils = {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return false;
     }
-    var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance
+    const internalInstance = ReactInstanceMap.get(inst);
+    const constructor = internalInstance
       ._currentElement
       .type;
 
@@ -136,7 +136,7 @@ var ReactTestUtils = {
     }
     // We check the prototype of the type that will get mounted, not the
     // instance itself. This is a future proof way of duck typing.
-    var prototype = inst.type.prototype;
+    const prototype = inst.type.prototype;
     return (
       typeof prototype.render === 'function' &&
       typeof prototype.setState === 'function'
@@ -144,8 +144,8 @@ var ReactTestUtils = {
   },
 
   isCompositeComponentElementWithType: function(inst, type) {
-    var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance
+    const internalInstance = ReactInstanceMap.get(inst);
+    const constructor = internalInstance
       ._currentElement
       .type;
 
@@ -157,7 +157,7 @@ var ReactTestUtils = {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return null;
     }
-    var internalInstance = ReactInstanceMap.get(inst);
+    const internalInstance = ReactInstanceMap.get(inst);
     return internalInstance._renderedComponent.getPublicInstance();
   },
 
@@ -183,12 +183,12 @@ var ReactTestUtils = {
     }
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
-        var className = inst.className;
+        let className = inst.className;
         if (typeof className !== 'string') {
           // SVG, probably.
           className = inst.getAttribute('class') || '';
         }
-        var classList = className.split(/\s+/);
+        const classList = className.split(/\s+/);
         return classNames.every(function(name) {
           return classList.indexOf(name) !== -1;
         });
@@ -204,7 +204,7 @@ var ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithClass: function(root, className) {
-    var all =
+    const all =
       ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
     if (all.length !== 1) {
       throw new Error(
@@ -235,7 +235,7 @@ var ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithTag: function(root, tagName) {
-    var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
+    const all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
       throw new Error(
         'Did not find exactly one match (found: ' + all.length + ') ' +
@@ -266,7 +266,7 @@ var ReactTestUtils = {
    * @return {!ReactComponent} The one match.
    */
   findRenderedComponentWithType: function(root, componentType) {
-    var all = ReactTestUtils.scryRenderedComponentsWithType(
+    const all = ReactTestUtils.scryRenderedComponentsWithType(
       root,
       componentType
     );
@@ -366,7 +366,7 @@ ReactShallowRenderer.prototype.getMountedInstance = function() {
   return this._instance ? this._instance._instance : null;
 };
 
-var NoopInternalComponent = function(element) {
+const NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
 };
@@ -393,7 +393,7 @@ NoopInternalComponent.prototype = {
   },
 };
 
-var ShallowComponentWrapper = function(element) {
+const ShallowComponentWrapper = function(element) {
   this.construct(element);
 };
 assign(
@@ -435,7 +435,7 @@ ReactShallowRenderer.prototype.render = function(element, context) {
 };
 
 function _batchedRender(renderer, element, context) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
+  const transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   renderer._render(element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
 }
@@ -458,7 +458,7 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
   if (this._instance) {
     this._instance.receiveComponent(element, transaction, context);
   } else {
-    var instance = new ShallowComponentWrapper(element);
+    const instance = new ShallowComponentWrapper(element);
     instance.mountComponent(transaction, null, null, context);
     this._instance = instance;
   }
@@ -474,7 +474,7 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
  */
 function makeSimulator(eventType) {
   return function(domComponentOrNode, eventData) {
-    var node;
+    let node;
     invariant(
       !React.isValidElement(domComponentOrNode),
       'TestUtils.Simulate expects a component instance and not a ReactElement.' +
@@ -486,14 +486,14 @@ function makeSimulator(eventType) {
       node = domComponentOrNode;
     }
 
-    var dispatchConfig =
+    const dispatchConfig =
       EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
-    var fakeNativeEvent = new Event();
+    const fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
-    var event = new SyntheticEvent(
+    const event = new SyntheticEvent(
       dispatchConfig,
       ReactDOMComponentTree.getInstanceFromNode(node),
       fakeNativeEvent,
@@ -517,7 +517,7 @@ function makeSimulator(eventType) {
 function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
-  var eventType;
+  let eventType;
   for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
@@ -528,12 +528,12 @@ function buildSimulators() {
 }
 
 // Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
+const oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
 EventPluginHub.injection.injectEventPluginOrder = function() {
   oldInjectEventPluginOrder.apply(this, arguments);
   buildSimulators();
 };
-var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
+const oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
 EventPluginHub.injection.injectEventPluginsByName = function() {
   oldInjectEventPlugins.apply(this, arguments);
   buildSimulators();
@@ -559,7 +559,7 @@ buildSimulators();
 
 function makeNativeSimulator(eventType) {
   return function(domComponentOrNode, nativeEventData) {
-    var fakeNativeEvent = new Event(eventType);
+    const fakeNativeEvent = new Event(eventType);
     assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
@@ -580,7 +580,7 @@ function makeNativeSimulator(eventType) {
 
 Object.keys(topLevelTypes).forEach(function(eventType) {
   // Event type is stored as 'topClick' - we transform that to 'click'
-  var convenienceName = eventType.indexOf('top') === 0 ?
+  const convenienceName = eventType.indexOf('top') === 0 ?
     eventType.charAt(3).toLowerCase() + eventType.substr(4) : eventType;
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode

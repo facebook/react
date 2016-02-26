@@ -14,7 +14,7 @@
 describe('Danger', function() {
 
   describe('dangerouslyRenderMarkup', function() {
-    var Danger;
+    let Danger;
 
     beforeEach(function() {
       jest.resetModuleRegistry();
@@ -22,29 +22,29 @@ describe('Danger', function() {
     });
 
     it('should render markup', function() {
-      var markup = '<div data-reactid=".rX"></div>';
-      var output = Danger.dangerouslyRenderMarkup([markup])[0];
+      const markup = '<div data-reactid=".rX"></div>';
+      const output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
     });
 
     it('should render markup with props', function() {
-      var markup = '<div class="foo" data-reactid=".rX"></div>';
-      var output = Danger.dangerouslyRenderMarkup([markup])[0];
+      const markup = '<div class="foo" data-reactid=".rX"></div>';
+      const output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
       expect(output.className).toBe('foo');
     });
 
     it('should render wrapped markup', function() {
-      var markup = '<th data-reactid=".rX"></th>';
-      var output = Danger.dangerouslyRenderMarkup([markup])[0];
+      const markup = '<th data-reactid=".rX"></th>';
+      const output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('TH');
     });
 
     it('should render lists of markup with similar `nodeName`', function() {
-      var renderedMarkup = Danger.dangerouslyRenderMarkup(
+      const renderedMarkup = Danger.dangerouslyRenderMarkup(
         ['<p id="A">1</p>', '<p id="B">2</p>', '<p id="C">3</p>']
       );
 
@@ -60,7 +60,7 @@ describe('Danger', function() {
     });
 
     it('should render lists of markup with different `nodeName`', function() {
-      var renderedMarkup = Danger.dangerouslyRenderMarkup(
+      const renderedMarkup = Danger.dangerouslyRenderMarkup(
         ['<p id="A">1</p>', '<td id="B">2</td>', '<p id="C">3</p>']
       );
 
@@ -84,8 +84,8 @@ describe('Danger', function() {
 
       spyOn(console, 'error');
 
-      var renderedMarkup = Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
-      var args = console.error.argsForCall[0];
+      const renderedMarkup = Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
+      const args = console.error.argsForCall[0];
 
       expect(renderedMarkup.length).toBe(1);
       expect(renderedMarkup[0].nodeName).toBe('P');

@@ -11,14 +11,14 @@
 
 'use strict';
 
-var ReactDOM = require('ReactDOM');
-var ReactDOMServer = require('ReactDOMServer');
-var ReactIsomorphic = require('ReactIsomorphic');
+const ReactDOM = require('ReactDOM');
+const ReactDOMServer = require('ReactDOMServer');
+const ReactIsomorphic = require('ReactIsomorphic');
 
-var assign = require('Object.assign');
+const assign = require('Object.assign');
 
 // `version` will be added here by ReactIsomorphic.
-var React = {};
+const React = {};
 
 assign(React, ReactIsomorphic);
 

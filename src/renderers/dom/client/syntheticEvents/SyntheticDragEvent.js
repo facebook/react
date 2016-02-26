@@ -11,13 +11,13 @@
 
 'use strict';
 
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
+const SyntheticMouseEvent = require('SyntheticMouseEvent');
 
 /**
  * @interface DragEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var DragEventInterface = {
+const DragEventInterface = {
   dataTransfer: null,
 };
 

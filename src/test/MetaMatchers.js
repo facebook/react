@@ -24,15 +24,15 @@ function getRunnerWithResults(describeFunction) {
     return describeFunction._cachedRunner;
   }
   // Patch the current global environment.
-  var env = new jasmine.Env();
+  const env = new jasmine.Env();
   // Execute the tests synchronously.
   env.updateInterval = 0;
-  var outerGetEnv = jasmine.getEnv;
+  const outerGetEnv = jasmine.getEnv;
   jasmine.getEnv = function() {
     return env;
   };
   // TODO: Bring over matchers from the existing environment.
-  var runner = env.currentRunner();
+  const runner = env.currentRunner();
   try {
     env.describe('', describeFunction);
     env.execute();
@@ -56,7 +56,7 @@ function compareSpec(actual, expected) {
 }
 
 function includesDescription(specs, description, startIndex) {
-  for (var i = startIndex; i < specs.length; i++) {
+  for (let i = startIndex; i < specs.length; i++) {
     if (specs[i].description === description) {
       return true;
     }
@@ -66,10 +66,10 @@ function includesDescription(specs, description, startIndex) {
 
 function compareSpecs(actualSpecs, expectedSpecs) {
   for (var i = 0; i < actualSpecs.length && i < expectedSpecs.length; i++) {
-    var actual = actualSpecs[i];
-    var expected = expectedSpecs[i];
+    const actual = actualSpecs[i];
+    const expected = expectedSpecs[i];
     if (actual.description === expected.description) {
-      var errorMessage = compareSpec(actual, expected);
+      const errorMessage = compareSpec(actual, expected);
       if (errorMessage) {
         return errorMessage;
       }
@@ -103,9 +103,9 @@ function compareRunners(actual, expected) {
   );
 }
 
-var MetaMatchers = {
+const MetaMatchers = {
   toEqualSpecsIn: function(expectedDescribeFunction) {
-    var actualDescribeFunction = this.actual;
+    const actualDescribeFunction = this.actual;
     if (typeof actualDescribeFunction !== 'function') {
       throw Error('toEqualSpecsIn() should be used on a describe function');
     }
@@ -113,8 +113,8 @@ var MetaMatchers = {
       throw Error('toEqualSpecsIn() should be passed a describe function');
     }
     var actual = getRunnerWithResults(actualDescribeFunction);
-    var expected = getRunnerWithResults(expectedDescribeFunction);
-    var errorMessage = compareRunners(actual, expected);
+    const expected = getRunnerWithResults(expectedDescribeFunction);
+    const errorMessage = compareRunners(actual, expected);
     this.message = function() {
       return [
         errorMessage,

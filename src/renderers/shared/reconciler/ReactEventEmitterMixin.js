@@ -11,14 +11,14 @@
 
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
+const EventPluginHub = require('EventPluginHub');
 
 function runEventQueueInBatch(events) {
   EventPluginHub.enqueueEvents(events);
   EventPluginHub.processEventQueue(false);
 }
 
-var ReactEventEmitterMixin = {
+const ReactEventEmitterMixin = {
 
   /**
    * Streams a fired top-level event to `EventPluginHub` where plugins have the
@@ -29,7 +29,7 @@ var ReactEventEmitterMixin = {
       targetInst,
       nativeEvent,
       nativeEventTarget) {
-    var events = EventPluginHub.extractEvents(
+    const events = EventPluginHub.extractEvents(
       topLevelType,
       targetInst,
       nativeEvent,

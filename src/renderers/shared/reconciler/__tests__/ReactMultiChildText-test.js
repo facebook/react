@@ -11,22 +11,22 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactTestUtils = require('ReactTestUtils');
+const React = require('React');
+const ReactDOM = require('ReactDOM');
+const ReactTestUtils = require('ReactTestUtils');
 
 // Helpers
-var testAllPermutations = function(testCases) {
-  for (var i = 0; i < testCases.length; i += 2) {
-    var renderWithChildren = testCases[i];
-    var expectedResultAfterRender = testCases[i + 1];
+const testAllPermutations = function(testCases) {
+  for (let i = 0; i < testCases.length; i += 2) {
+    const renderWithChildren = testCases[i];
+    const expectedResultAfterRender = testCases[i + 1];
 
-    for (var j = 0; j < testCases.length; j += 2) {
-      var updateWithChildren = testCases[j];
-      var expectedResultAfterUpdate = testCases[j + 1];
+    for (let j = 0; j < testCases.length; j += 2) {
+      const updateWithChildren = testCases[j];
+      const expectedResultAfterUpdate = testCases[j + 1];
 
-      var container = document.createElement('div');
-      var d = ReactDOM.render(<div>{renderWithChildren}</div>, container);
+      const container = document.createElement('div');
+      let d = ReactDOM.render(<div>{renderWithChildren}</div>, container);
       expectChildren(d, expectedResultAfterRender);
 
       d = ReactDOM.render(<div>{updateWithChildren}</div>, container);
@@ -36,8 +36,8 @@ var testAllPermutations = function(testCases) {
 };
 
 var expectChildren = function(d, children) {
-  var outerNode = ReactDOM.findDOMNode(d);
-  var textNode;
+  const outerNode = ReactDOM.findDOMNode(d);
+  let textNode;
   if (typeof children === 'string') {
     textNode = outerNode.firstChild;
 
@@ -49,12 +49,12 @@ var expectChildren = function(d, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    var openingCommentNode;
-    var closingCommentNode;
-    var mountIndex = 0;
+    let openingCommentNode;
+    let closingCommentNode;
+    let mountIndex = 0;
 
-    for (var i = 0; i < children.length; i++) {
-      var child = children[i];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
 
       if (typeof child === 'string') {
         openingCommentNode = outerNode.childNodes[mountIndex];
@@ -80,7 +80,7 @@ var expectChildren = function(d, children) {
         expect(closingCommentNode.nodeType).toBe(8);
         expect(closingCommentNode.nodeValue).toBe(' /react-text ');
       } else {
-        var elementDOMNode = outerNode.childNodes[mountIndex];
+        const elementDOMNode = outerNode.childNodes[mountIndex];
         expect(elementDOMNode.tagName).toBe('DIV');
         mountIndex++;
       }
@@ -214,19 +214,19 @@ describe('ReactMultiChildText', function() {
   it('should reorder keyed text nodes', function() {
     spyOn(console, 'error');
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <div>{new Map([['a', 'alpha'], ['b', 'beta']])}</div>,
       container
     );
 
-    var childNodes = container.firstChild.childNodes;
-    var alpha1 = childNodes[0];
-    var alpha2 = childNodes[1];
-    var alpha3 = childNodes[2];
-    var beta1 = childNodes[3];
-    var beta2 = childNodes[4];
-    var beta3 = childNodes[5];
+    let childNodes = container.firstChild.childNodes;
+    const alpha1 = childNodes[0];
+    const alpha2 = childNodes[1];
+    const alpha3 = childNodes[2];
+    const beta1 = childNodes[3];
+    const beta2 = childNodes[4];
+    const beta3 = childNodes[5];
 
     ReactDOM.render(
       <div>{new Map([['b', 'beta'], ['a', 'alpha']])}</div>,

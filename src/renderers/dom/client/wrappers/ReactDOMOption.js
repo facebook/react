@@ -11,16 +11,16 @@
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
-var ReactDOMSelect = require('ReactDOMSelect');
+const ReactChildren = require('ReactChildren');
+const ReactDOMSelect = require('ReactDOMSelect');
 
-var assign = require('Object.assign');
-var warning = require('warning');
+const assign = require('Object.assign');
+const warning = require('warning');
 
 /**
  * Implements an <option> native component that warns when `selected` is set.
  */
-var ReactDOMOption = {
+const ReactDOMOption = {
   mountWrapper: function(inst, props, nativeParent) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
@@ -32,7 +32,7 @@ var ReactDOMOption = {
     }
 
     // Look up whether this option is 'selected'
-    var selectValue = null;
+    let selectValue = null;
     if (nativeParent != null && nativeParent._tag === 'select') {
       selectValue = ReactDOMSelect.getSelectValueContext(nativeParent);
     }
@@ -44,7 +44,7 @@ var ReactDOMOption = {
       selected = false;
       if (Array.isArray(selectValue)) {
         // multiple
-        for (var i = 0; i < selectValue.length; i++) {
+        for (let i = 0; i < selectValue.length; i++) {
           if ('' + selectValue[i] === '' + props.value) {
             selected = true;
             break;
@@ -59,7 +59,7 @@ var ReactDOMOption = {
   },
 
   getNativeProps: function(inst, props) {
-    var nativeProps = assign({selected: undefined, children: undefined}, props);
+    const nativeProps = assign({selected: undefined, children: undefined}, props);
 
     // Read state only from initial mount because <select> updates value
     // manually; we need the initial state only for server rendering
@@ -67,7 +67,7 @@ var ReactDOMOption = {
       nativeProps.selected = inst._wrapperState.selected;
     }
 
-    var content = '';
+    let content = '';
 
     // Flatten children and warn if they aren't strings or numbers;
     // invalid types are ignored.

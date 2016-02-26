@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  *
@@ -38,8 +38,8 @@ function accumulateInto(current, next) {
 
   // Both are not empty. Warning: Never call x.concat(y) when you are not
   // certain that x is an Array (x could be a string with concat method).
-  var currentIsArray = Array.isArray(current);
-  var nextIsArray = Array.isArray(next);
+  const currentIsArray = Array.isArray(current);
+  const nextIsArray = Array.isArray(next);
 
   if (currentIsArray && nextIsArray) {
     current.push.apply(current, next);

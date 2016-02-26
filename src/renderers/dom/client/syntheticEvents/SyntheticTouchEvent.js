@@ -11,15 +11,15 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+const SyntheticUIEvent = require('SyntheticUIEvent');
 
-var getEventModifierState = require('getEventModifierState');
+const getEventModifierState = require('getEventModifierState');
 
 /**
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
  */
-var TouchEventInterface = {
+const TouchEventInterface = {
   touches: null,
   targetTouches: null,
   changedTouches: null,

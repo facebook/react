@@ -11,13 +11,13 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+const SyntheticUIEvent = require('SyntheticUIEvent');
 
 /**
  * @interface FocusEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var FocusEventInterface = {
+const FocusEventInterface = {
   relatedTarget: null,
 };
 

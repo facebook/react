@@ -11,21 +11,21 @@
 
 'use strict';
 
-var CallbackQueue = require('CallbackQueue');
-var PooledClass = require('PooledClass');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactPerf = require('ReactPerf');
-var ReactReconciler = require('ReactReconciler');
-var Transaction = require('Transaction');
+const CallbackQueue = require('CallbackQueue');
+const PooledClass = require('PooledClass');
+const ReactFeatureFlags = require('ReactFeatureFlags');
+const ReactPerf = require('ReactPerf');
+const ReactReconciler = require('ReactReconciler');
+const Transaction = require('Transaction');
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
+const assign = require('Object.assign');
+const invariant = require('invariant');
 
-var dirtyComponents = [];
-var asapCallbackQueue = CallbackQueue.getPooled();
-var asapEnqueued = false;
+const dirtyComponents = [];
+let asapCallbackQueue = CallbackQueue.getPooled();
+let asapEnqueued = false;
 
-var batchingStrategy = null;
+let batchingStrategy = null;
 
 function ensureInjected() {
   invariant(
@@ -35,7 +35,7 @@ function ensureInjected() {
   );
 }
 
-var NESTED_UPDATES = {
+const NESTED_UPDATES = {
   initialize: function() {
     this.dirtyComponentsLength = dirtyComponents.length;
   },
@@ -54,7 +54,7 @@ var NESTED_UPDATES = {
   },
 };
 
-var UPDATE_QUEUEING = {
+const UPDATE_QUEUEING = {
   initialize: function() {
     this.callbackQueue.reset();
   },
@@ -63,7 +63,7 @@ var UPDATE_QUEUEING = {
   },
 };
 
-var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
+const TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
 
 function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
@@ -124,7 +124,7 @@ function mountOrderComparator(c1, c2) {
 }
 
 function runBatchedUpdates(transaction) {
-  var len = transaction.dirtyComponentsLength;
+  const len = transaction.dirtyComponentsLength;
   invariant(
     len === dirtyComponents.length,
     'Expected flush transaction\'s stored dirty-components length (%s) to ' +
@@ -138,21 +138,21 @@ function runBatchedUpdates(transaction) {
   // them before their children by sorting the array.
   dirtyComponents.sort(mountOrderComparator);
 
-  for (var i = 0; i < len; i++) {
+  for (let i = 0; i < len; i++) {
     // If a component is unmounted before pending changes apply, it will still
     // be here, but we assume that it has cleared its _pendingCallbacks and
     // that performUpdateIfNecessary is a noop.
-    var component = dirtyComponents[i];
+    const component = dirtyComponents[i];
 
     // If performUpdateIfNecessary happens to enqueue any new updates, we
     // shouldn't execute the callbacks until the next render happens, so
     // stash the callbacks first
-    var callbacks = component._pendingCallbacks;
+    const callbacks = component._pendingCallbacks;
     component._pendingCallbacks = null;
 
-    var markerName;
+    let markerName;
     if (ReactFeatureFlags.logTopLevelRenders) {
-      var namedComponent = component;
+      let namedComponent = component;
       // Duck type TopLevelWrapper. This is probably always true.
       if (
         component._currentElement.props ===
@@ -174,7 +174,7 @@ function runBatchedUpdates(transaction) {
     }
 
     if (callbacks) {
-      for (var j = 0; j < callbacks.length; j++) {
+      for (let j = 0; j < callbacks.length; j++) {
         transaction.callbackQueue.enqueue(
           callbacks[j],
           component.getPublicInstance()
@@ -191,14 +191,14 @@ var flushBatchedUpdates = function() {
   // updates enqueued by setState callbacks and asap calls.
   while (dirtyComponents.length || asapEnqueued) {
     if (dirtyComponents.length) {
-      var transaction = ReactUpdatesFlushTransaction.getPooled();
+      const transaction = ReactUpdatesFlushTransaction.getPooled();
       transaction.perform(runBatchedUpdates, null, transaction);
       ReactUpdatesFlushTransaction.release(transaction);
     }
 
     if (asapEnqueued) {
       asapEnqueued = false;
-      var queue = asapCallbackQueue;
+      const queue = asapCallbackQueue;
       asapCallbackQueue = CallbackQueue.getPooled();
       queue.notifyAll();
       CallbackQueue.release(queue);
@@ -246,7 +246,7 @@ function asap(callback, context) {
   asapEnqueued = true;
 }
 
-var ReactUpdatesInjection = {
+const ReactUpdatesInjection = {
   injectReconcileTransaction: function(ReconcileTransaction) {
     invariant(
       ReconcileTransaction,

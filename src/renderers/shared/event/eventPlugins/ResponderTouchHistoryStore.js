@@ -11,15 +11,15 @@
 
 'use strict';
 
-var EventPluginUtils = require('EventPluginUtils');
+const EventPluginUtils = require('EventPluginUtils');
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
-var isMoveish = EventPluginUtils.isMoveish;
-var isStartish = EventPluginUtils.isStartish;
-var isEndish = EventPluginUtils.isEndish;
+const isMoveish = EventPluginUtils.isMoveish;
+const isStartish = EventPluginUtils.isStartish;
+const isEndish = EventPluginUtils.isEndish;
 
-var MAX_TOUCH_BANK = 20;
+const MAX_TOUCH_BANK = 20;
 
 /**
  * Touch position/time tracking information by touchID. Typically, we'll only
@@ -36,7 +36,7 @@ var MAX_TOUCH_BANK = 20;
  *   currentTimeStamp: number
  * }
  */
-var touchHistory = {
+const touchHistory = {
   touchBank: [],
   numberActiveTouches: 0,
   // If there is only one active touch, we remember its location. This prevents
@@ -46,7 +46,7 @@ var touchHistory = {
   mostRecentTimeStamp: 0,
 };
 
-var timestampForTouch = function(touch) {
+const timestampForTouch = function(touch) {
   // The legacy internal implementation provides "timeStamp", which has been
   // renamed to "timestamp". Let both work for now while we iron it out
   // TODO (evv): rename timeStamp to timestamp in internal code
@@ -58,7 +58,7 @@ var timestampForTouch = function(touch) {
  * include a built in velocity computation that can be reused globally.
  * @param {Touch} touch Native touch object.
  */
-var initializeTouchData = function(touch) {
+const initializeTouchData = function(touch) {
   return {
     touchActive: true,
     startTimeStamp: timestampForTouch(touch),
@@ -73,7 +73,7 @@ var initializeTouchData = function(touch) {
   };
 };
 
-var reinitializeTouchTrack = function(touchTrack, touch) {
+const reinitializeTouchTrack = function(touchTrack, touch) {
   touchTrack.touchActive = true;
   touchTrack.startTimeStamp = timestampForTouch(touch);
   touchTrack.startPageX = touch.pageX;
@@ -86,8 +86,8 @@ var reinitializeTouchTrack = function(touchTrack, touch) {
   touchTrack.previousTimeStamp = timestampForTouch(touch);
 };
 
-var validateTouch = function(touch) {
-  var identifier = touch.identifier;
+const validateTouch = function(touch) {
+  const identifier = touch.identifier;
   invariant(identifier != null, 'Touch object is missing identifier');
   if (identifier > MAX_TOUCH_BANK) {
     console.warn(
@@ -98,10 +98,10 @@ var validateTouch = function(touch) {
   }
 };
 
-var recordStartTouchData = function(touch) {
-  var touchBank = touchHistory.touchBank;
-  var identifier = touch.identifier;
-  var touchTrack = touchBank[identifier];
+const recordStartTouchData = function(touch) {
+  const touchBank = touchHistory.touchBank;
+  const identifier = touch.identifier;
+  const touchTrack = touchBank[identifier];
   if (__DEV__) {
     validateTouch(touch);
   }
@@ -113,9 +113,9 @@ var recordStartTouchData = function(touch) {
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 };
 
-var recordMoveTouchData = function(touch) {
-  var touchBank = touchHistory.touchBank;
-  var touchTrack = touchBank[touch.identifier];
+const recordMoveTouchData = function(touch) {
+  const touchBank = touchHistory.touchBank;
+  const touchTrack = touchBank[touch.identifier];
   if (__DEV__) {
     validateTouch(touch);
     invariant(touchTrack, 'Touch data should have been recorded on start');
@@ -130,9 +130,9 @@ var recordMoveTouchData = function(touch) {
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 };
 
-var recordEndTouchData = function(touch) {
-  var touchBank = touchHistory.touchBank;
-  var touchTrack = touchBank[touch.identifier];
+const recordEndTouchData = function(touch) {
+  const touchBank = touchHistory.touchBank;
+  const touchTrack = touchBank[touch.identifier];
   if (__DEV__) {
     validateTouch(touch);
     invariant(touchTrack, 'Touch data should have been recorded on start');
@@ -147,9 +147,9 @@ var recordEndTouchData = function(touch) {
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 };
 
-var ResponderTouchHistoryStore = {
+const ResponderTouchHistoryStore = {
   recordTouchTrack: function(topLevelType, nativeEvent) {
-    var touchBank = touchHistory.touchBank;
+    const touchBank = touchHistory.touchBank;
     if (isMoveish(topLevelType)) {
       nativeEvent.changedTouches.forEach(recordMoveTouchData);
     } else if (isStartish(topLevelType)) {
@@ -162,16 +162,16 @@ var ResponderTouchHistoryStore = {
       nativeEvent.changedTouches.forEach(recordEndTouchData);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
-        for (var i = 0; i < touchBank.length; i++) {
-          var touchTrackToCheck = touchBank[i];
+        for (let i = 0; i < touchBank.length; i++) {
+          const touchTrackToCheck = touchBank[i];
           if (touchTrackToCheck != null && touchTrackToCheck.touchActive) {
             touchHistory.indexOfSingleActiveTouch = i;
             break;
           }
         }
         if (__DEV__) {
-          var activeTouchData = touchBank[touchHistory.indexOfSingleActiveTouch];
-          var foundActive = activeTouchData != null && !!activeTouchData.touchActive;
+          const activeTouchData = touchBank[touchHistory.indexOfSingleActiveTouch];
+          const foundActive = activeTouchData != null && !!activeTouchData.touchActive;
           invariant(foundActive, 'Cannot find single active touch');
         }
       }

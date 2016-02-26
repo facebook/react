@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactDOMComponentFlags = {
+const ReactDOMComponentFlags = {
   hasCachedChildNodes: 1 << 0,
 };
 

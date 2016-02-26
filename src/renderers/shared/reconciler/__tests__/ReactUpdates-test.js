@@ -11,10 +11,10 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var ReactUpdates;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let ReactUpdates;
 
 describe('ReactUpdates', function() {
   beforeEach(function() {
@@ -25,8 +25,8 @@ describe('ReactUpdates', function() {
   });
 
   it('should batch state when updating state twice', function() {
-    var updateCount = 0;
-    var Component = React.createClass({
+    let updateCount = 0;
+    const Component = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -38,7 +38,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
@@ -53,8 +53,8 @@ describe('ReactUpdates', function() {
   });
 
   it('should batch state when updating two different state keys', function() {
-    var updateCount = 0;
-    var Component = React.createClass({
+    let updateCount = 0;
+    const Component = React.createClass({
       getInitialState: function() {
         return {x: 0, y: 0};
       },
@@ -66,7 +66,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
@@ -84,8 +84,8 @@ describe('ReactUpdates', function() {
   });
 
   it('should batch state and props together', function() {
-    var updateCount = 0;
-    var Component = React.createClass({
+    let updateCount = 0;
+    const Component = React.createClass({
       getInitialState: function() {
         return {y: 0};
       },
@@ -97,8 +97,8 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<Component x={0} />, container);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component x={0} />, container);
     expect(instance.props.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
@@ -116,8 +116,8 @@ describe('ReactUpdates', function() {
   });
 
   it('should batch parent/child state updates together', function() {
-    var parentUpdateCount = 0;
-    var Parent = React.createClass({
+    let parentUpdateCount = 0;
+    const Parent = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -128,8 +128,8 @@ describe('ReactUpdates', function() {
         return <div><Child ref="child" x={this.state.x} /></div>;
       },
     });
-    var childUpdateCount = 0;
-    var Child = React.createClass({
+    let childUpdateCount = 0;
+    const Child = React.createClass({
       getInitialState: function() {
         return {y: 0};
       },
@@ -141,8 +141,8 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Parent />);
-    var child = instance.refs.child;
+    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    const child = instance.refs.child;
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
 
@@ -162,8 +162,8 @@ describe('ReactUpdates', function() {
   });
 
   it('should batch child/parent state updates together', function() {
-    var parentUpdateCount = 0;
-    var Parent = React.createClass({
+    let parentUpdateCount = 0;
+    const Parent = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -174,8 +174,8 @@ describe('ReactUpdates', function() {
         return <div><Child ref="child" x={this.state.x} /></div>;
       },
     });
-    var childUpdateCount = 0;
-    var Child = React.createClass({
+    let childUpdateCount = 0;
+    const Child = React.createClass({
       getInitialState: function() {
         return {y: 0};
       },
@@ -187,8 +187,8 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Parent />);
-    var child = instance.refs.child;
+    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    const child = instance.refs.child;
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
 
@@ -210,8 +210,8 @@ describe('ReactUpdates', function() {
   });
 
   it('should support chained state updates', function() {
-    var updateCount = 0;
-    var Component = React.createClass({
+    let updateCount = 0;
+    const Component = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -223,10 +223,10 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
 
-    var innerCallbackRun = false;
+    let innerCallbackRun = false;
     ReactUpdates.batchedUpdates(function() {
       instance.setState({x: 1}, function() {
         instance.setState({x: 2}, function() {
@@ -248,9 +248,9 @@ describe('ReactUpdates', function() {
   });
 
   it('should batch forceUpdate together', function() {
-    var shouldUpdateCount = 0;
-    var updateCount = 0;
-    var Component = React.createClass({
+    let shouldUpdateCount = 0;
+    let updateCount = 0;
+    const Component = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -265,10 +265,10 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
 
-    var callbacksRun = 0;
+    let callbacksRun = 0;
     ReactUpdates.batchedUpdates(function() {
       instance.setState({x: 1}, function() {
         callbacksRun++;
@@ -288,10 +288,10 @@ describe('ReactUpdates', function() {
   });
 
   it('should update children even if parent blocks updates', function() {
-    var parentRenderCount = 0;
-    var childRenderCount = 0;
+    let parentRenderCount = 0;
+    let childRenderCount = 0;
 
-    var Parent = React.createClass({
+    const Parent = React.createClass({
       shouldComponentUpdate: function() {
         return false;
       },
@@ -302,7 +302,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       render: function() {
         childRenderCount++;
         return <div />;
@@ -312,7 +312,7 @@ describe('ReactUpdates', function() {
     expect(parentRenderCount).toBe(0);
     expect(childRenderCount).toBe(0);
 
-    var instance = <Parent />;
+    let instance = <Parent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(parentRenderCount).toBe(1);
@@ -334,16 +334,16 @@ describe('ReactUpdates', function() {
   });
 
   it('should not reconcile children passed via props', function() {
-    var numMiddleRenders = 0;
-    var numBottomRenders = 0;
+    let numMiddleRenders = 0;
+    let numBottomRenders = 0;
 
-    var Top = React.createClass({
+    const Top = React.createClass({
       render: function() {
         return <Middle><Bottom /></Middle>;
       },
     });
 
-    var Middle = React.createClass({
+    const Middle = React.createClass({
       componentDidMount: function() {
         this.forceUpdate();
       },
@@ -354,7 +354,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var Bottom = React.createClass({
+    const Bottom = React.createClass({
       render: function() {
         numBottomRenders++;
         return null;
@@ -367,10 +367,10 @@ describe('ReactUpdates', function() {
   });
 
   it('should flow updates correctly', function() {
-    var willUpdates = [];
-    var didUpdates = [];
+    let willUpdates = [];
+    let didUpdates = [];
 
-    var UpdateLoggingMixin = {
+    const UpdateLoggingMixin = {
       componentWillUpdate: function() {
         willUpdates.push(this.constructor.displayName);
       },
@@ -379,7 +379,7 @@ describe('ReactUpdates', function() {
       },
     };
 
-    var Box = React.createClass({
+    const Box = React.createClass({
       mixins: [UpdateLoggingMixin],
 
       render: function() {
@@ -387,7 +387,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       mixins: [UpdateLoggingMixin],
 
       render: function() {
@@ -395,7 +395,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var Switcher = React.createClass({
+    const Switcher = React.createClass({
       mixins: [UpdateLoggingMixin],
 
       getInitialState: function() {
@@ -403,7 +403,7 @@ describe('ReactUpdates', function() {
       },
 
       render: function() {
-        var child = this.props.children;
+        const child = this.props.children;
 
         return (
           <Box ref="box">
@@ -419,7 +419,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var App = React.createClass({
+    const App = React.createClass({
       mixins: [UpdateLoggingMixin],
 
       render: function() {
@@ -431,11 +431,11 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var root = <App />;
+    let root = <App />;
     root = ReactTestUtils.renderIntoDocument(root);
 
     function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
-      var i;
+      let i;
       for (i = 0; i < desiredWillUpdates; i++) {
         expect(willUpdates).toContain(desiredWillUpdates[i]);
       }
@@ -451,7 +451,7 @@ describe('ReactUpdates', function() {
     }
 
     function testUpdates(components, desiredWillUpdates, desiredDidUpdates) {
-      var i;
+      let i;
 
       ReactUpdates.batchedUpdates(function() {
         for (i = 0; i < components.length; i++) {
@@ -494,17 +494,17 @@ describe('ReactUpdates', function() {
   });
 
   it('should share reconcile transaction across different roots', function() {
-    var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
+    const ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
     spyOn(ReconcileTransaction, 'getPooled').andCallThrough();
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {
         return <div>{this.props.text}</div>;
       },
     });
 
-    var containerA = document.createElement('div');
-    var containerB = document.createElement('div');
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
 
     // Initial renders aren't batched together yet...
     ReactUpdates.batchedUpdates(function() {
@@ -527,12 +527,12 @@ describe('ReactUpdates', function() {
     // componentDidUpdate handlers is called, B's DOM should already have been
     // updated.
 
-    var a;
-    var b;
+    let a;
+    let b;
 
-    var aUpdated = false;
+    let aUpdated = false;
 
-    var A = React.createClass({
+    const A = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -545,7 +545,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var B = React.createClass({
+    const B = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -566,8 +566,8 @@ describe('ReactUpdates', function() {
   });
 
   it('should flush updates in the correct order', function() {
-    var updates = [];
-    var Outer = React.createClass({
+    const updates = [];
+    const Outer = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -576,7 +576,7 @@ describe('ReactUpdates', function() {
         return <div><Inner x={this.state.x} ref="inner" /></div>;
       },
       componentDidUpdate: function() {
-        var x = this.state.x;
+        const x = this.state.x;
         updates.push('Outer-didUpdate-' + x);
         updates.push('Inner-setState-' + x);
         this.refs.inner.setState({x: x}, function() {
@@ -584,7 +584,7 @@ describe('ReactUpdates', function() {
         });
       },
     });
-    var Inner = React.createClass({
+    const Inner = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -597,7 +597,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Outer />);
+    const instance = ReactTestUtils.renderIntoDocument(<Outer />);
 
     updates.push('Outer-setState-1');
     instance.setState({x: 1}, function() {
@@ -639,10 +639,10 @@ describe('ReactUpdates', function() {
   });
 
   it('should flush updates in the correct order across roots', function() {
-    var instances = [];
-    var updates = [];
+    const instances = [];
+    const updates = [];
 
-    var MockComponent = React.createClass({
+    const MockComponent = React.createClass({
       render: function() {
         updates.push(this.props.depth);
         return <div />;
@@ -678,7 +678,7 @@ describe('ReactUpdates', function() {
   it('should queue nested updates', function() {
     // See https://github.com/facebook/react/issues/1147
 
-    var X = React.createClass({
+    const X = React.createClass({
       getInitialState: function() {
         return {s: 0};
       },
@@ -700,7 +700,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var Y = React.createClass({
+    const Y = React.createClass({
       render: function() {
         return (
           <div>
@@ -710,7 +710,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var Z = React.createClass({
+    const Z = React.createClass({
       render: function() {
         return <div />;
       },
@@ -719,8 +719,8 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var x;
-    var y;
+    let x;
+    let y;
 
     x = ReactTestUtils.renderIntoDocument(<X />);
     y = ReactTestUtils.renderIntoDocument(<Y />);
@@ -732,9 +732,9 @@ describe('ReactUpdates', function() {
 
   it('should queue updates from during mount', function() {
     // See https://github.com/facebook/react/issues/1353
-    var a;
+    let a;
 
-    var A = React.createClass({
+    const A = React.createClass({
       getInitialState: function() {
         return {x: 0};
       },
@@ -746,7 +746,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var B = React.createClass({
+    const B = React.createClass({
       componentWillMount: function() {
         a.setState({x: 1});
       },
@@ -769,13 +769,13 @@ describe('ReactUpdates', function() {
   });
 
   it('calls componentWillReceiveProps setState callback properly', function() {
-    var callbackCount = 0;
-    var A = React.createClass({
+    let callbackCount = 0;
+    const A = React.createClass({
       getInitialState: function() {
         return {x: this.props.x};
       },
       componentWillReceiveProps: function(nextProps) {
-        var newX = nextProps.x;
+        const newX = nextProps.x;
         this.setState({x: newX}, function() {
           // State should have updated by the time this callback gets called
           expect(this.state.x).toBe(newX);
@@ -787,15 +787,15 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<A x={1} />, container);
     ReactDOM.render(<A x={2} />, container);
     expect(callbackCount).toBe(1);
   });
 
   it('calls asap callbacks properly', function() {
-    var callbackCount = 0;
-    var A = React.createClass({
+    let callbackCount = 0;
+    const A = React.createClass({
       render: function() {
         return <div />;
       },
@@ -812,14 +812,14 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    const component = ReactTestUtils.renderIntoDocument(<A />);
     component.forceUpdate();
     expect(callbackCount).toBe(2);
   });
 
   it('calls asap callbacks with queued updates', function() {
-    var log = [];
-    var A = React.createClass({
+    const log = [];
+    const A = React.createClass({
       getInitialState: () => ({updates: 0}),
       render: function() {
         log.push('render-' + this.state.updates);
@@ -845,7 +845,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    const component = ReactTestUtils.renderIntoDocument(<A />);
     component.setState({updates: 1});
     expect(log).toEqual([
       'render-0',
@@ -867,10 +867,10 @@ describe('ReactUpdates', function() {
 
   it('does not call render after a component as been deleted', function() {
 
-    var renderCount = 0;
-    var componentB = null;
+    let renderCount = 0;
+    let componentB = null;
 
-    var B = React.createClass({
+    const B = React.createClass({
       getInitialState: function() {
         return {updates: 0};
       },
@@ -883,7 +883,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var A = React.createClass({
+    const A = React.createClass({
       getInitialState: function() {
         return {showB: true};
       },
@@ -892,7 +892,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    const component = ReactTestUtils.renderIntoDocument(<A />);
 
     ReactUpdates.batchedUpdates(function() {
       // B will have scheduled an update but the batching should ensure that its
@@ -905,21 +905,21 @@ describe('ReactUpdates', function() {
   });
 
   it('marks top-level updates', function() {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
+    const ReactFeatureFlags = require('ReactFeatureFlags');
 
-    var Foo = React.createClass({
+    const Foo = React.createClass({
       render: function() {
         return <Bar />;
       },
     });
 
-    var Bar = React.createClass({
+    const Bar = React.createClass({
       render: function() {
         return <div />;
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Foo />, container);
 
     try {

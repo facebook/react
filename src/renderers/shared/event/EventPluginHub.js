@@ -11,24 +11,24 @@
 
 'use strict';
 
-var EventPluginRegistry = require('EventPluginRegistry');
-var EventPluginUtils = require('EventPluginUtils');
-var ReactErrorUtils = require('ReactErrorUtils');
+const EventPluginRegistry = require('EventPluginRegistry');
+const EventPluginUtils = require('EventPluginUtils');
+const ReactErrorUtils = require('ReactErrorUtils');
 
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
-var invariant = require('invariant');
+const accumulateInto = require('accumulateInto');
+const forEachAccumulated = require('forEachAccumulated');
+const invariant = require('invariant');
 
 /**
  * Internal store for event listeners
  */
-var listenerBank = {};
+let listenerBank = {};
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
  */
-var eventQueue = null;
+let eventQueue = null;
 
 /**
  * Dispatches an event and releases it back into the pool, unless persistent.
@@ -37,7 +37,7 @@ var eventQueue = null;
  * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
-var executeDispatchesAndRelease = function(event, simulated) {
+const executeDispatchesAndRelease = function(event, simulated) {
   if (event) {
     EventPluginUtils.executeDispatchesInOrder(event, simulated);
 
@@ -46,10 +46,10 @@ var executeDispatchesAndRelease = function(event, simulated) {
     }
   }
 };
-var executeDispatchesAndReleaseSimulated = function(e) {
+const executeDispatchesAndReleaseSimulated = function(e) {
   return executeDispatchesAndRelease(e, true);
 };
-var executeDispatchesAndReleaseTopLevel = function(e) {
+const executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
 };
 
@@ -75,7 +75,7 @@ var executeDispatchesAndReleaseTopLevel = function(e) {
  *
  * @public
  */
-var EventPluginHub = {
+const EventPluginHub = {
 
   /**
    * Methods for injecting dependencies.
@@ -109,11 +109,11 @@ var EventPluginHub = {
       registrationName, typeof listener
     );
 
-    var bankForRegistrationName =
+    const bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
     bankForRegistrationName[inst._rootNodeID] = listener;
 
-    var PluginModule =
+    const PluginModule =
       EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.didPutListener) {
       PluginModule.didPutListener(inst, registrationName, listener);
@@ -126,7 +126,7 @@ var EventPluginHub = {
    * @return {?function} The stored callback.
    */
   getListener: function(inst, registrationName) {
-    var bankForRegistrationName = listenerBank[registrationName];
+    const bankForRegistrationName = listenerBank[registrationName];
     return bankForRegistrationName && bankForRegistrationName[inst._rootNodeID];
   },
 
@@ -137,13 +137,13 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
   deleteListener: function(inst, registrationName) {
-    var PluginModule =
+    const PluginModule =
       EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.willDeleteListener) {
       PluginModule.willDeleteListener(inst, registrationName);
     }
 
-    var bankForRegistrationName = listenerBank[registrationName];
+    const bankForRegistrationName = listenerBank[registrationName];
     // TODO: This should never be null -- when is it?
     if (bankForRegistrationName) {
       delete bankForRegistrationName[inst._rootNodeID];
@@ -156,12 +156,12 @@ var EventPluginHub = {
    * @param {object} inst The instance, which is the source of events.
    */
   deleteAllListeners: function(inst) {
-    for (var registrationName in listenerBank) {
+    for (const registrationName in listenerBank) {
       if (!listenerBank[registrationName][inst._rootNodeID]) {
         continue;
       }
 
-      var PluginModule =
+      const PluginModule =
         EventPluginRegistry.registrationNameModules[registrationName];
       if (PluginModule && PluginModule.willDeleteListener) {
         PluginModule.willDeleteListener(inst, registrationName);
@@ -183,13 +183,13 @@ var EventPluginHub = {
       targetInst,
       nativeEvent,
       nativeEventTarget) {
-    var events;
-    var plugins = EventPluginRegistry.plugins;
-    for (var i = 0; i < plugins.length; i++) {
+    let events;
+    const plugins = EventPluginRegistry.plugins;
+    for (let i = 0; i < plugins.length; i++) {
       // Not every plugin in the ordering may be loaded at runtime.
-      var possiblePlugin = plugins[i];
+      const possiblePlugin = plugins[i];
       if (possiblePlugin) {
-        var extractedEvents = possiblePlugin.extractEvents(
+        const extractedEvents = possiblePlugin.extractEvents(
           topLevelType,
           targetInst,
           nativeEvent,
@@ -224,7 +224,7 @@ var EventPluginHub = {
   processEventQueue: function(simulated) {
     // Set `eventQueue` to null before processing it so that we can tell if more
     // events get enqueued while processing.
-    var processingEventQueue = eventQueue;
+    const processingEventQueue = eventQueue;
     eventQueue = null;
     if (simulated) {
       forEachAccumulated(

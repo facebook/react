@@ -11,15 +11,15 @@
 
 'use strict';
 
-var DOMChildrenOperations = require('DOMChildrenOperations');
-var DOMLazyTree = require('DOMLazyTree');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactPerf = require('ReactPerf');
+const DOMChildrenOperations = require('DOMChildrenOperations');
+const DOMLazyTree = require('DOMLazyTree');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactPerf = require('ReactPerf');
 
-var assign = require('Object.assign');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('invariant');
-var validateDOMNesting = require('validateDOMNesting');
+const assign = require('Object.assign');
+const escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+const invariant = require('invariant');
+const validateDOMNesting = require('validateDOMNesting');
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -36,7 +36,7 @@ var validateDOMNesting = require('validateDOMNesting');
  * @extends ReactComponent
  * @internal
  */
-var ReactDOMTextComponent = function(text) {
+const ReactDOMTextComponent = function(text) {
   // TODO: This is really a ReactText (ReactNode), not a ReactElement
   this._currentElement = text;
   this._stringText = '' + text;
@@ -68,7 +68,7 @@ assign(ReactDOMTextComponent.prototype, {
     context
   ) {
     if (__DEV__) {
-      var parentInfo;
+      let parentInfo;
       if (nativeParent != null) {
         parentInfo = nativeParent._ancestorInfo;
       } else if (nativeContainerInfo != null) {
@@ -81,16 +81,16 @@ assign(ReactDOMTextComponent.prototype, {
       }
     }
 
-    var domID = nativeContainerInfo._idCounter++;
-    var openingValue = ' react-text: ' + domID + ' ';
-    var closingValue = ' /react-text ';
+    const domID = nativeContainerInfo._idCounter++;
+    const openingValue = ' react-text: ' + domID + ' ';
+    const closingValue = ' /react-text ';
     this._domID = domID;
     this._nativeParent = nativeParent;
     if (transaction.useCreateElement) {
-      var ownerDocument = nativeContainerInfo._ownerDocument;
-      var openingComment = ownerDocument.createComment(openingValue);
-      var closingComment = ownerDocument.createComment(closingValue);
-      var lazyTree = DOMLazyTree(ownerDocument.createDocumentFragment());
+      const ownerDocument = nativeContainerInfo._ownerDocument;
+      const openingComment = ownerDocument.createComment(openingValue);
+      const closingComment = ownerDocument.createComment(closingValue);
+      const lazyTree = DOMLazyTree(ownerDocument.createDocumentFragment());
       DOMLazyTree.queueChild(lazyTree, DOMLazyTree(openingComment));
       if (this._stringText) {
         DOMLazyTree.queueChild(
@@ -103,7 +103,7 @@ assign(ReactDOMTextComponent.prototype, {
       this._closingComment = closingComment;
       return lazyTree;
     } else {
-      var escapedText = escapeTextContentForBrowser(this._stringText);
+      const escapedText = escapeTextContentForBrowser(this._stringText);
 
       if (transaction.renderToStaticMarkup) {
         // Normally we'd wrap this between comment nodes for the reasons stated
@@ -129,13 +129,13 @@ assign(ReactDOMTextComponent.prototype, {
   receiveComponent: function(nextText, transaction) {
     if (nextText !== this._currentElement) {
       this._currentElement = nextText;
-      var nextStringText = '' + nextText;
+      const nextStringText = '' + nextText;
       if (nextStringText !== this._stringText) {
         // TODO: Save this as pending props and use performUpdateIfNecessary
         // and/or updateComponent to do the actual update for consistency with
         // other component types?
         this._stringText = nextStringText;
-        var commentNodes = this.getNativeNode();
+        const commentNodes = this.getNativeNode();
         DOMChildrenOperations.replaceDelimitedText(
           commentNodes[0],
           commentNodes[1],
@@ -146,13 +146,13 @@ assign(ReactDOMTextComponent.prototype, {
   },
 
   getNativeNode: function() {
-    var nativeNode = this._commentNodes;
+    let nativeNode = this._commentNodes;
     if (nativeNode) {
       return nativeNode;
     }
     if (!this._closingComment) {
-      var openingComment = ReactDOMComponentTree.getNodeFromInstance(this);
-      var node = openingComment.nextSibling;
+      const openingComment = ReactDOMComponentTree.getNodeFromInstance(this);
+      let node = openingComment.nextSibling;
       while (true) {
         invariant(
           node != null,

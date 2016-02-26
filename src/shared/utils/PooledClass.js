@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
 /**
  * Static poolers. Several custom versions for each potential number of
@@ -20,10 +20,10 @@ var invariant = require('invariant');
  * the Class itself, not an instance. If any others are needed, simply add them
  * here, or in their own files.
  */
-var oneArgumentPooler = function(copyFieldsFrom) {
-  var Klass = this;
+const oneArgumentPooler = function(copyFieldsFrom) {
+  const Klass = this;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    const instance = Klass.instancePool.pop();
     Klass.call(instance, copyFieldsFrom);
     return instance;
   } else {
@@ -31,10 +31,10 @@ var oneArgumentPooler = function(copyFieldsFrom) {
   }
 };
 
-var twoArgumentPooler = function(a1, a2) {
-  var Klass = this;
+const twoArgumentPooler = function(a1, a2) {
+  const Klass = this;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    const instance = Klass.instancePool.pop();
     Klass.call(instance, a1, a2);
     return instance;
   } else {
@@ -42,10 +42,10 @@ var twoArgumentPooler = function(a1, a2) {
   }
 };
 
-var threeArgumentPooler = function(a1, a2, a3) {
-  var Klass = this;
+const threeArgumentPooler = function(a1, a2, a3) {
+  const Klass = this;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    const instance = Klass.instancePool.pop();
     Klass.call(instance, a1, a2, a3);
     return instance;
   } else {
@@ -53,10 +53,10 @@ var threeArgumentPooler = function(a1, a2, a3) {
   }
 };
 
-var fourArgumentPooler = function(a1, a2, a3, a4) {
-  var Klass = this;
+const fourArgumentPooler = function(a1, a2, a3, a4) {
+  const Klass = this;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    const instance = Klass.instancePool.pop();
     Klass.call(instance, a1, a2, a3, a4);
     return instance;
   } else {
@@ -64,10 +64,10 @@ var fourArgumentPooler = function(a1, a2, a3, a4) {
   }
 };
 
-var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
-  var Klass = this;
+const fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
+  const Klass = this;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    const instance = Klass.instancePool.pop();
     Klass.call(instance, a1, a2, a3, a4, a5);
     return instance;
   } else {
@@ -75,8 +75,8 @@ var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
   }
 };
 
-var standardReleaser = function(instance) {
-  var Klass = this;
+const standardReleaser = function(instance) {
+  const Klass = this;
   invariant(
     instance instanceof Klass,
     'Trying to release an instance into a pool of a different type.'
@@ -87,8 +87,8 @@ var standardReleaser = function(instance) {
   }
 };
 
-var DEFAULT_POOL_SIZE = 10;
-var DEFAULT_POOLER = oneArgumentPooler;
+const DEFAULT_POOL_SIZE = 10;
+const DEFAULT_POOLER = oneArgumentPooler;
 
 /**
  * Augments `CopyConstructor` to be a poolable class, augmenting only the class
@@ -99,8 +99,8 @@ var DEFAULT_POOLER = oneArgumentPooler;
  * @param {Function} CopyConstructor Constructor that can be used to reset.
  * @param {Function} pooler Customizable pooler.
  */
-var addPoolingTo = function(CopyConstructor, pooler) {
-  var NewKlass = CopyConstructor;
+const addPoolingTo = function(CopyConstructor, pooler) {
+  const NewKlass = CopyConstructor;
   NewKlass.instancePool = [];
   NewKlass.getPooled = pooler || DEFAULT_POOLER;
   if (!NewKlass.poolSize) {
@@ -110,7 +110,7 @@ var addPoolingTo = function(CopyConstructor, pooler) {
   return NewKlass;
 };
 
-var PooledClass = {
+const PooledClass = {
   addPoolingTo: addPoolingTo,
   oneArgumentPooler: oneArgumentPooler,
   twoArgumentPooler: twoArgumentPooler,

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var MOD = 65521;
+const MOD = 65521;
 
 // adler32 is not cryptographically strong, and is only used to sanity check that
 // markup generated on the server matches the markup generated on the client.
@@ -19,13 +19,13 @@ var MOD = 65521;
 // for our use case, at the expense of conforming to the adler32 specification
 // for non-ascii inputs.
 function adler32(data) {
-  var a = 1;
-  var b = 0;
-  var i = 0;
-  var l = data.length;
-  var m = l & ~0x3;
+  let a = 1;
+  let b = 0;
+  let i = 0;
+  const l = data.length;
+  const m = l & ~0x3;
   while (i < m) {
-    var n = Math.min(i + 4096, m);
+    const n = Math.min(i + 4096, m);
     for (; i < n; i += 4) {
       b += (
         (a += data.charCodeAt(i)) +

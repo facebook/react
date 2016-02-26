@@ -11,11 +11,11 @@
 
 'use strict';
 
-var adler32 = require('adler32');
+const adler32 = require('adler32');
 
-var TAG_END = /\/?>/;
+const TAG_END = /\/?>/;
 
-var ReactMarkupChecksum = {
+const ReactMarkupChecksum = {
   CHECKSUM_ATTR_NAME: 'data-react-checksum',
 
   /**
@@ -23,7 +23,7 @@ var ReactMarkupChecksum = {
    * @return {string} Markup string with checksum attribute attached
    */
   addChecksumToMarkup: function(markup) {
-    var checksum = adler32(markup);
+    const checksum = adler32(markup);
 
     // Add checksum (handle both parent tags and self-closing tags)
     return markup.replace(
@@ -38,11 +38,11 @@ var ReactMarkupChecksum = {
    * @returns {boolean} whether or not the markup is the same
    */
   canReuseMarkup: function(markup, element) {
-    var existingChecksum = element.getAttribute(
+    let existingChecksum = element.getAttribute(
       ReactMarkupChecksum.CHECKSUM_ATTR_NAME
     );
     existingChecksum = existingChecksum && parseInt(existingChecksum, 10);
-    var markupChecksum = adler32(markup);
+    const markupChecksum = adler32(markup);
     return markupChecksum === existingChecksum;
   },
 };

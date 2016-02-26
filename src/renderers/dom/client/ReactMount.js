@@ -11,36 +11,36 @@
 
 'use strict';
 
-var DOMLazyTree = require('DOMLazyTree');
-var DOMProperty = require('DOMProperty');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactElement = require('ReactElement');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactPerf = require('ReactPerf');
-var ReactReconciler = require('ReactReconciler');
-var ReactUpdateQueue = require('ReactUpdateQueue');
-var ReactUpdates = require('ReactUpdates');
+const DOMLazyTree = require('DOMLazyTree');
+const DOMProperty = require('DOMProperty');
+const ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+const ReactCurrentOwner = require('ReactCurrentOwner');
+const ReactDOMComponentTree = require('ReactDOMComponentTree');
+const ReactDOMContainerInfo = require('ReactDOMContainerInfo');
+const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+const ReactElement = require('ReactElement');
+const ReactFeatureFlags = require('ReactFeatureFlags');
+const ReactMarkupChecksum = require('ReactMarkupChecksum');
+const ReactPerf = require('ReactPerf');
+const ReactReconciler = require('ReactReconciler');
+const ReactUpdateQueue = require('ReactUpdateQueue');
+const ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
-var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
-var setInnerHTML = require('setInnerHTML');
-var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var warning = require('warning');
+const emptyObject = require('emptyObject');
+const instantiateReactComponent = require('instantiateReactComponent');
+const invariant = require('invariant');
+const setInnerHTML = require('setInnerHTML');
+const shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+const warning = require('warning');
 
-var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
+const ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
+const ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
 
-var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
-var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
+const ELEMENT_NODE_TYPE = 1;
+const DOC_NODE_TYPE = 9;
+const DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
-var instancesByReactRootID = {};
+const instancesByReactRootID = {};
 
 /**
  * Finds the index of the first character
@@ -49,8 +49,8 @@ var instancesByReactRootID = {};
  * @return {number} the index of the character where the strings diverge
  */
 function firstDifferenceIndex(string1, string2) {
-  var minLen = Math.min(string1.length, string2.length);
-  for (var i = 0; i < minLen; i++) {
+  const minLen = Math.min(string1.length, string2.length);
+  for (let i = 0; i < minLen; i++) {
     if (string1.charAt(i) !== string2.charAt(i)) {
       return i;
     }
@@ -97,10 +97,10 @@ function mountComponentIntoNode(
   shouldReuseMarkup,
   context
 ) {
-  var markerName;
+  let markerName;
   if (ReactFeatureFlags.logTopLevelRenders) {
-    var wrappedElement = wrapperInstance._currentElement.props;
-    var type = wrappedElement.type;
+    const wrappedElement = wrapperInstance._currentElement.props;
+    const type = wrappedElement.type;
     markerName = 'React mount: ' + (
       typeof type === 'string' ? type :
       type.displayName || type.name
@@ -108,7 +108,7 @@ function mountComponentIntoNode(
     console.time(markerName);
   }
 
-  var markup = ReactReconciler.mountComponent(
+  const markup = ReactReconciler.mountComponent(
     wrapperInstance,
     transaction,
     null,
@@ -143,7 +143,7 @@ function batchedMountComponentIntoNode(
   shouldReuseMarkup,
   context
 ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
+  const transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
     /* useCreateElement */
     !shouldReuseMarkup && ReactDOMFeatureFlags.useCreateElement
   );
@@ -192,16 +192,16 @@ function unmountComponentFromNode(instance, container, safely) {
  * @internal
  */
 function hasNonRootReactChild(container) {
-  var rootEl = getReactRootElementInContainer(container);
+  const rootEl = getReactRootElementInContainer(container);
   if (rootEl) {
-    var inst = ReactDOMComponentTree.getInstanceFromNode(rootEl);
+    const inst = ReactDOMComponentTree.getInstanceFromNode(rootEl);
     return !!(inst && inst._nativeParent);
   }
 }
 
 function getNativeRootInstanceInContainer(container) {
-  var rootEl = getReactRootElementInContainer(container);
-  var prevNativeInstance =
+  const rootEl = getReactRootElementInContainer(container);
+  const prevNativeInstance =
     rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl);
   return (
     prevNativeInstance && !prevNativeInstance._nativeParent ?
@@ -210,7 +210,7 @@ function getNativeRootInstanceInContainer(container) {
 }
 
 function getTopLevelWrapperInContainer(container) {
-  var root = getNativeRootInstanceInContainer(container);
+  const root = getNativeRootInstanceInContainer(container);
   return root ? root._nativeContainerInfo._topLevelWrapper : null;
 }
 
@@ -219,8 +219,8 @@ function getTopLevelWrapperInContainer(container) {
  * composites instead of having to worry about different types of components
  * here.
  */
-var topLevelRootCounter = 1;
-var TopLevelWrapper = function() {
+let topLevelRootCounter = 1;
+const TopLevelWrapper = function() {
   this.rootID = topLevelRootCounter++;
 };
 TopLevelWrapper.prototype.isReactComponent = {};
@@ -330,7 +330,7 @@ var ReactMount = {
     );
 
     ReactBrowserEventEmitter.ensureScrollValueMonitoring();
-    var componentInstance = instantiateReactComponent(nextElement);
+    const componentInstance = instantiateReactComponent(nextElement);
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -344,7 +344,7 @@ var ReactMount = {
       context
     );
 
-    var wrapperID = componentInstance._instance.rootID;
+    const wrapperID = componentInstance._instance.rootID;
     instancesByReactRootID[wrapperID] = componentInstance;
 
     return componentInstance;
@@ -405,7 +405,7 @@ var ReactMount = {
       'for your app.'
     );
 
-    var nextWrappedElement = ReactElement(
+    const nextWrappedElement = ReactElement(
       TopLevelWrapper,
       null,
       null,
@@ -415,14 +415,14 @@ var ReactMount = {
       nextElement
     );
 
-    var prevComponent = getTopLevelWrapperInContainer(container);
+    const prevComponent = getTopLevelWrapperInContainer(container);
 
     if (prevComponent) {
-      var prevWrappedElement = prevComponent._currentElement;
-      var prevElement = prevWrappedElement.props;
+      const prevWrappedElement = prevComponent._currentElement;
+      const prevElement = prevWrappedElement.props;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
-        var publicInst = prevComponent._renderedComponent.getPublicInstance();
-        var updatedCallback = callback && function() {
+        const publicInst = prevComponent._renderedComponent.getPublicInstance();
+        const updatedCallback = callback && function() {
           callback.call(publicInst);
         };
         ReactMount._updateRootComponent(
@@ -437,10 +437,10 @@ var ReactMount = {
       }
     }
 
-    var reactRootElement = getReactRootElementInContainer(container);
-    var containerHasReactMarkup =
+    const reactRootElement = getReactRootElementInContainer(container);
+    const containerHasReactMarkup =
       reactRootElement && !!internalGetID(reactRootElement);
-    var containerHasNonRootReactChild = hasNonRootReactChild(container);
+    const containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
       warning(
@@ -452,7 +452,7 @@ var ReactMount = {
       );
 
       if (!containerHasReactMarkup || reactRootElement.nextSibling) {
-        var rootElementSibling = reactRootElement;
+        let rootElementSibling = reactRootElement;
         while (rootElementSibling) {
           if (internalGetID(rootElementSibling)) {
             warning(
@@ -468,11 +468,11 @@ var ReactMount = {
       }
     }
 
-    var shouldReuseMarkup =
+    const shouldReuseMarkup =
       containerHasReactMarkup &&
       !prevComponent &&
       !containerHasNonRootReactChild;
-    var component = ReactMount._renderNewRootComponent(
+    const component = ReactMount._renderNewRootComponent(
       nextWrappedElement,
       container,
       shouldReuseMarkup,
@@ -536,14 +536,14 @@ var ReactMount = {
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
 
-    var prevComponent = getTopLevelWrapperInContainer(container);
+    const prevComponent = getTopLevelWrapperInContainer(container);
     if (!prevComponent) {
       // Check if the node being unmounted was rendered by React, but isn't a
       // root node.
-      var containerHasNonRootReactChild = hasNonRootReactChild(container);
+      const containerHasNonRootReactChild = hasNonRootReactChild(container);
 
       // Check if the container itself is a React root node.
-      var isContainerReactRoot =
+      const isContainerReactRoot =
         container.nodeType === 1 && container.hasAttribute(ROOT_ATTR_NAME);
 
       if (__DEV__) {
@@ -590,29 +590,29 @@ var ReactMount = {
     );
 
     if (shouldReuseMarkup) {
-      var rootElement = getReactRootElementInContainer(container);
+      const rootElement = getReactRootElementInContainer(container);
       if (ReactMarkupChecksum.canReuseMarkup(markup, rootElement)) {
         ReactDOMComponentTree.precacheNode(instance, rootElement);
         return;
       } else {
-        var checksum = rootElement.getAttribute(
+        const checksum = rootElement.getAttribute(
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME
         );
         rootElement.removeAttribute(ReactMarkupChecksum.CHECKSUM_ATTR_NAME);
 
-        var rootMarkup = rootElement.outerHTML;
+        const rootMarkup = rootElement.outerHTML;
         rootElement.setAttribute(
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME,
           checksum
         );
 
-        var normalizedMarkup = markup;
+        let normalizedMarkup = markup;
         if (__DEV__) {
           // because rootMarkup is retrieved from the DOM, various normalizations
           // will have occurred which will not be present in `markup`. Here,
           // insert markup into a <div> or <iframe> depending on the container
           // type to perform the same normalizations before comparing.
-          var normalizer;
+          let normalizer;
           if (container.nodeType === ELEMENT_NODE_TYPE) {
             normalizer = document.createElement('div');
             normalizer.innerHTML = markup;
@@ -626,8 +626,8 @@ var ReactMount = {
           }
         }
 
-        var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
-        var difference = ' (client) ' +
+        const diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
+        const difference = ' (client) ' +
           normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
           '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 

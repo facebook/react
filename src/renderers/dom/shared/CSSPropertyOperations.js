@@ -11,24 +11,24 @@
 
 'use strict';
 
-var CSSProperty = require('CSSProperty');
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactPerf = require('ReactPerf');
+const CSSProperty = require('CSSProperty');
+const ExecutionEnvironment = require('ExecutionEnvironment');
+const ReactPerf = require('ReactPerf');
 
-var camelizeStyleName = require('camelizeStyleName');
-var dangerousStyleValue = require('dangerousStyleValue');
-var hyphenateStyleName = require('hyphenateStyleName');
-var memoizeStringOnly = require('memoizeStringOnly');
-var warning = require('warning');
+const camelizeStyleName = require('camelizeStyleName');
+const dangerousStyleValue = require('dangerousStyleValue');
+const hyphenateStyleName = require('hyphenateStyleName');
+const memoizeStringOnly = require('memoizeStringOnly');
+const warning = require('warning');
 
-var processStyleName = memoizeStringOnly(function(styleName) {
+const processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
-var hasShorthandPropertyBug = false;
-var styleFloatAccessor = 'cssFloat';
+let hasShorthandPropertyBug = false;
+let styleFloatAccessor = 'cssFloat';
 if (ExecutionEnvironment.canUseDOM) {
-  var tempStyle = document.createElement('div').style;
+  const tempStyle = document.createElement('div').style;
   try {
     // IE8 throws "Invalid argument." if resetting shorthand style properties.
     tempStyle.font = '';
@@ -43,16 +43,16 @@ if (ExecutionEnvironment.canUseDOM) {
 
 if (__DEV__) {
   // 'msTransform' is correct, but the other prefixes should be capitalized
-  var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
+  const badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
 
   // style values shouldn't contain a semicolon
-  var badStyleValueWithSemicolonPattern = /;\s*$/;
+  const badStyleValueWithSemicolonPattern = /;\s*$/;
 
-  var warnedStyleNames = {};
-  var warnedStyleValues = {};
-  var warnedForNaNValue = false;
+  const warnedStyleNames = {};
+  const warnedStyleValues = {};
+  let warnedForNaNValue = false;
 
-  var warnHyphenatedStyleName = function(name) {
+  const warnHyphenatedStyleName = function(name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -66,7 +66,7 @@ if (__DEV__) {
     );
   };
 
-  var warnBadVendoredStyleName = function(name) {
+  const warnBadVendoredStyleName = function(name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -80,7 +80,7 @@ if (__DEV__) {
     );
   };
 
-  var warnStyleValueWithSemicolon = function(name, value) {
+  const warnStyleValueWithSemicolon = function(name, value) {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -95,7 +95,7 @@ if (__DEV__) {
     );
   };
 
-  var warnStyleValueIsNaN = function(name, value) {
+  const warnStyleValueIsNaN = function(name, value) {
     if (warnedForNaNValue) {
       return;
     }
@@ -130,7 +130,7 @@ if (__DEV__) {
 /**
  * Operations for dealing with CSS properties.
  */
-var CSSPropertyOperations = {
+const CSSPropertyOperations = {
 
   /**
    * Serializes a mapping of style properties for use as inline styles:
@@ -146,12 +146,12 @@ var CSSPropertyOperations = {
    * @return {?string}
    */
   createMarkupForStyles: function(styles, component) {
-    var serialized = '';
-    for (var styleName in styles) {
+    let serialized = '';
+    for (const styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
-      var styleValue = styles[styleName];
+      const styleValue = styles[styleName];
       if (__DEV__) {
         warnValidStyle(styleName, styleValue);
       }
@@ -172,15 +172,15 @@ var CSSPropertyOperations = {
    * @param {object} styles
    */
   setValueForStyles: function(node, styles, component) {
-    var style = node.style;
-    for (var styleName in styles) {
+    const style = node.style;
+    for (let styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
       if (__DEV__) {
         warnValidStyle(styleName, styles[styleName]);
       }
-      var styleValue = dangerousStyleValue(
+      const styleValue = dangerousStyleValue(
         styleName,
         styles[styleName],
         component
@@ -191,13 +191,13 @@ var CSSPropertyOperations = {
       if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion =
+        const expansion =
           hasShorthandPropertyBug &&
           CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
           // component to placate it
-          for (var individualStyleName in expansion) {
+          for (const individualStyleName in expansion) {
             style[individualStyleName] = '';
           }
         } else {

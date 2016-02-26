@@ -11,13 +11,13 @@
 
 'use strict';
 
-var ReactDefaultInjection = require('ReactDefaultInjection');
-var ReactServerRendering = require('ReactServerRendering');
-var ReactVersion = require('ReactVersion');
+const ReactDefaultInjection = require('ReactDefaultInjection');
+const ReactServerRendering = require('ReactServerRendering');
+const ReactVersion = require('ReactVersion');
 
 ReactDefaultInjection.inject();
 
-var ReactDOMServer = {
+const ReactDOMServer = {
   renderToString: ReactServerRendering.renderToString,
   renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
   version: ReactVersion,

@@ -11,14 +11,14 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var TogglingComponent;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let TogglingComponent;
 
-var reactComponentExpect;
+let reactComponentExpect;
 
-var log;
+let log;
 
 describe('ReactEmptyComponent', function() {
   beforeEach(function() {
@@ -44,26 +44,26 @@ describe('ReactEmptyComponent', function() {
         log(ReactDOM.findDOMNode(this));
       },
       render: function() {
-        var Component = this.state.component;
+        const Component = this.state.component;
         return Component ? <Component /> : null;
       },
     });
   });
 
   it('should render null and false as a noscript tag under the hood', () => {
-    var Component1 = React.createClass({
+    const Component1 = React.createClass({
       render: function() {
         return null;
       },
     });
-    var Component2 = React.createClass({
+    const Component2 = React.createClass({
       render: function() {
         return false;
       },
     });
 
-    var instance1 = ReactTestUtils.renderIntoDocument(<Component1 />);
-    var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
+    const instance1 = ReactTestUtils.renderIntoDocument(<Component1 />);
+    const instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
     reactComponentExpect(instance1)
       .expectRenderedChild()
       .toBeEmptyComponent();
@@ -73,7 +73,7 @@ describe('ReactEmptyComponent', function() {
   });
 
   it('should still throw when rendering to undefined', () => {
-    var Component = React.createClass({
+    const Component = React.createClass({
       render: function() {},
     });
     expect(function() {
@@ -85,12 +85,12 @@ describe('ReactEmptyComponent', function() {
   });
 
   it('should be able to switch between rendering null and a normal tag', () => {
-    var instance1 =
+    const instance1 =
       <TogglingComponent
         firstComponent={null}
         secondComponent={'div'}
       />;
-    var instance2 =
+    const instance2 =
       <TogglingComponent
         firstComponent={'div'}
         secondComponent={null}
@@ -107,7 +107,7 @@ describe('ReactEmptyComponent', function() {
   });
 
   it('should be able to switch in a list of children', () => {
-    var instance1 =
+    const instance1 =
       <TogglingComponent
         firstComponent={null}
         secondComponent={'div'}
@@ -132,12 +132,12 @@ describe('ReactEmptyComponent', function() {
 
   it('should distinguish between a script placeholder and an actual script tag',
     () => {
-      var instance1 =
+      const instance1 =
         <TogglingComponent
           firstComponent={null}
           secondComponent={'script'}
         />;
-      var instance2 =
+      const instance2 =
         <TogglingComponent
           firstComponent={'script'}
           secondComponent={null}
@@ -161,24 +161,24 @@ describe('ReactEmptyComponent', function() {
   it('should have findDOMNode return null when multiple layers of composite ' +
     'components render to the same null placeholder',
     () => {
-      var GrandChild = React.createClass({
+      const GrandChild = React.createClass({
         render: function() {
           return null;
         },
       });
 
-      var Child = React.createClass({
+      const Child = React.createClass({
         render: function() {
           return <GrandChild />;
         },
       });
 
-      var instance1 =
+      const instance1 =
         <TogglingComponent
           firstComponent={'div'}
           secondComponent={Child}
         />;
-      var instance2 =
+      const instance2 =
         <TogglingComponent
           firstComponent={Child}
           secondComponent={'div'}
@@ -200,8 +200,8 @@ describe('ReactEmptyComponent', function() {
   );
 
   it('works when switching components', function() {
-    var assertions = 0;
-    var Inner = React.createClass({
+    let assertions = 0;
+    const Inner = React.createClass({
       render: function() {
         return <span />;
       },
@@ -218,14 +218,14 @@ describe('ReactEmptyComponent', function() {
         assertions++;
       },
     });
-    var Wrapper = React.createClass({
+    const Wrapper = React.createClass({
       render: function() {
         return this.props.showInner ? <Inner /> : null;
       },
     });
 
-    var el = document.createElement('div');
-    var component;
+    const el = document.createElement('div');
+    let component;
 
     // Render the <Inner /> component...
     component = ReactDOM.render(<Wrapper showInner={true} />, el);
@@ -244,7 +244,7 @@ describe('ReactEmptyComponent', function() {
 
   it('throws when rendering null at the top level', function() {
     // TODO: This should actually work since `null` is a valid ReactNode
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     expect(function() {
       ReactDOM.render(null, div);
     }).toThrow(
@@ -253,7 +253,7 @@ describe('ReactEmptyComponent', function() {
   });
 
   it('does not break when updating during mount', function() {
-    var Child = React.createClass({
+    const Child = React.createClass({
       componentDidMount() {
         if (this.props.onMount) {
           this.props.onMount();
@@ -268,7 +268,7 @@ describe('ReactEmptyComponent', function() {
       },
     });
 
-    var Parent = React.createClass({
+    const Parent = React.createClass({
       update() {
         this.forceUpdate();
       },
@@ -289,21 +289,21 @@ describe('ReactEmptyComponent', function() {
   });
 
   it('preserves the dom node during updates', function() {
-    var Empty = React.createClass({
+    const Empty = React.createClass({
       render: function() {
         return null;
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     ReactDOM.render(<Empty />, container);
-    var noscript1 = container.firstChild;
+    const noscript1 = container.firstChild;
     expect(noscript1.nodeName).toBe('#comment');
 
     // This update shouldn't create a DOM node
     ReactDOM.render(<Empty />, container);
-    var noscript2 = container.firstChild;
+    const noscript2 = container.firstChild;
     expect(noscript2.nodeName).toBe('#comment');
 
     expect(noscript1).toBe(noscript2);

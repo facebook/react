@@ -11,13 +11,13 @@
 
 'use strict';
 
-var ReactPropTypes = require('ReactPropTypes');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
+const ReactPropTypes = require('ReactPropTypes');
+const ReactPropTypeLocations = require('ReactPropTypeLocations');
 
-var invariant = require('invariant');
-var warning = require('warning');
+const invariant = require('invariant');
+const warning = require('warning');
 
-var hasReadOnlyValue = {
+const hasReadOnlyValue = {
   'button': true,
   'checkbox': true,
   'image': true,
@@ -53,7 +53,7 @@ function _assertCheckedLink(inputProps) {
   );
 }
 
-var propTypes = {
+const propTypes = {
   value: function(props, propName, componentName) {
     if (!props[propName] ||
         hasReadOnlyValue[props.type] ||
@@ -86,10 +86,10 @@ var propTypes = {
   onChange: ReactPropTypes.func,
 };
 
-var loggedTypeFailures = {};
+const loggedTypeFailures = {};
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
-    var name = owner.getName();
+    const name = owner.getName();
     if (name) {
       return ' Check the render method of `' + name + '`.';
     }
@@ -101,9 +101,9 @@ function getDeclarationErrorAddendum(owner) {
  * Provide a linked `value` attribute for controlled forms. You should not use
  * this outside of the ReactDOM controlled form components.
  */
-var LinkedValueUtils = {
+const LinkedValueUtils = {
   checkPropTypes: function(tagName, props, owner) {
-    for (var propName in propTypes) {
+    for (const propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error = propTypes[propName](
           props,
@@ -117,7 +117,7 @@ var LinkedValueUtils = {
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var addendum = getDeclarationErrorAddendum(owner);
+        const addendum = getDeclarationErrorAddendum(owner);
         warning(false, 'Failed form propType: %s%s', error.message, addendum);
       }
     }

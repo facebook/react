@@ -11,10 +11,10 @@
 
 'use strict';
 
-var ReactNodeTypes = require('ReactNodeTypes');
+const ReactNodeTypes = require('ReactNodeTypes');
 
 function getNativeComponentFromComposite(inst) {
-  var type;
+  let type;
 
   while ((type = inst._renderedNodeType) === ReactNodeTypes.COMPOSITE) {
     inst = inst._renderedComponent;

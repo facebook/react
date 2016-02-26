@@ -11,7 +11,7 @@
 
 'use strict';
 
-var keyMirror = require('keyMirror');
+const keyMirror = require('keyMirror');
 
 /**
  * When a component's children are updated, a series of update configuration
@@ -21,7 +21,7 @@ var keyMirror = require('keyMirror');
  *
  * @internal
  */
-var ReactMultiChildUpdateTypes = keyMirror({
+const ReactMultiChildUpdateTypes = keyMirror({
   INSERT_MARKUP: null,
   MOVE_EXISTING: null,
   REMOVE_NODE: null,

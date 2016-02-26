@@ -11,21 +11,21 @@
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
-var ReactClass = require('ReactClass');
-var ReactDOMFactories = require('ReactDOMFactories');
-var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
-var ReactPropTypes = require('ReactPropTypes');
-var ReactVersion = require('ReactVersion');
+const ReactChildren = require('ReactChildren');
+const ReactComponent = require('ReactComponent');
+const ReactClass = require('ReactClass');
+const ReactDOMFactories = require('ReactDOMFactories');
+const ReactElement = require('ReactElement');
+const ReactElementValidator = require('ReactElementValidator');
+const ReactPropTypes = require('ReactPropTypes');
+const ReactVersion = require('ReactVersion');
 
-var assign = require('Object.assign');
-var onlyChild = require('onlyChild');
+const assign = require('Object.assign');
+const onlyChild = require('onlyChild');
 
-var createElement = ReactElement.createElement;
-var createFactory = ReactElement.createFactory;
-var cloneElement = ReactElement.cloneElement;
+let createElement = ReactElement.createElement;
+let createFactory = ReactElement.createFactory;
+let cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
   createElement = ReactElementValidator.createElement;
@@ -33,7 +33,7 @@ if (__DEV__) {
   cloneElement = ReactElementValidator.cloneElement;
 }
 
-var React = {
+const React = {
 
   // Modern
 

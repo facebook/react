@@ -11,15 +11,15 @@
 
 'use strict';
 
-var invariant = require('invariant');
+const invariant = require('invariant');
 
-var SEPARATOR = '.';
-var SEPARATOR_LENGTH = SEPARATOR.length;
+const SEPARATOR = '.';
+const SEPARATOR_LENGTH = SEPARATOR.length;
 
 /**
  * Maximum depth of traversals before we consider the possibility of a bad ID.
  */
-var MAX_TREE_DEPTH = 10000;
+const MAX_TREE_DEPTH = 10000;
 
 /**
  * Creates a DOM ID prefix to use when mounting React components.
@@ -111,8 +111,8 @@ function getNextDescendantID(ancestorID, destinationID) {
   }
   // Skip over the ancestor and the immediate separator. Traverse until we hit
   // another separator or we reach the end of `destinationID`.
-  var start = ancestorID.length + SEPARATOR_LENGTH;
-  var i;
+  const start = ancestorID.length + SEPARATOR_LENGTH;
+  let i;
   for (i = start; i < destinationID.length; i++) {
     if (isBoundary(destinationID, i)) {
       break;
@@ -133,20 +133,20 @@ function getNextDescendantID(ancestorID, destinationID) {
  * @private
  */
 function getFirstCommonAncestorID(oneID, twoID) {
-  var minLength = Math.min(oneID.length, twoID.length);
+  const minLength = Math.min(oneID.length, twoID.length);
   if (minLength === 0) {
     return '';
   }
-  var lastCommonMarkerIndex = 0;
+  let lastCommonMarkerIndex = 0;
   // Use `<=` to traverse until the "EOL" of the shorter string.
-  for (var i = 0; i <= minLength; i++) {
+  for (let i = 0; i <= minLength; i++) {
     if (isBoundary(oneID, i) && isBoundary(twoID, i)) {
       lastCommonMarkerIndex = i;
     } else if (oneID.charAt(i) !== twoID.charAt(i)) {
       break;
     }
   }
-  var longestCommonID = oneID.substr(0, lastCommonMarkerIndex);
+  const longestCommonID = oneID.substr(0, lastCommonMarkerIndex);
   invariant(
     isValidID(longestCommonID),
     'getFirstCommonAncestorID(%s, %s): Expected a valid React DOM ID: %s',
@@ -178,7 +178,7 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
     'traverseParentPath(...): Cannot traverse from and to the same ID, `%s`.',
     start
   );
-  var traverseUp = isAncestorIDOf(stop, start);
+  const traverseUp = isAncestorIDOf(stop, start);
   invariant(
     traverseUp || isAncestorIDOf(start, stop),
     'traverseParentPath(%s, %s, ...): Cannot traverse from two IDs that do ' +
@@ -187,10 +187,10 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
     stop
   );
   // Traverse from `start` to `stop` one depth at a time.
-  var depth = 0;
-  var traverse = traverseUp ? getParentID : getNextDescendantID;
-  for (var id = start; /* until break */; id = traverse(id, stop)) {
-    var ret;
+  let depth = 0;
+  const traverse = traverseUp ? getParentID : getNextDescendantID;
+  for (let id = start; /* until break */; id = traverse(id, stop)) {
+    let ret;
     if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
       ret = cb(id, traverseUp, arg);
     }
@@ -214,7 +214,7 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
  *
  * @internal
  */
-var ReactInstanceHandles = {
+const ReactInstanceHandles = {
 
   /**
    * Constructs a React root ID
@@ -247,7 +247,7 @@ var ReactInstanceHandles = {
    */
   getReactRootIDFromNodeID: function(id) {
     if (id && id.charAt(0) === SEPARATOR && id.length > 1) {
-      var index = id.indexOf(SEPARATOR, 1);
+      const index = id.indexOf(SEPARATOR, 1);
       return index > -1 ? id.substr(0, index) : id;
     }
     return null;
@@ -268,7 +268,7 @@ var ReactInstanceHandles = {
    * @internal
    */
   traverseEnterLeave: function(leaveID, enterID, cb, upArg, downArg) {
-    var ancestorID = getFirstCommonAncestorID(leaveID, enterID);
+    const ancestorID = getFirstCommonAncestorID(leaveID, enterID);
     if (ancestorID !== leaveID) {
       traverseParentPath(leaveID, ancestorID, cb, upArg, false, true);
     }

@@ -11,18 +11,18 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+const DOMProperty = require('DOMProperty');
 
-var warning = require('warning');
+const warning = require('warning');
 
 if (__DEV__) {
-  var reactProps = {
+  const reactProps = {
     children: true,
     dangerouslySetInnerHTML: true,
     key: true,
     ref: true,
   };
-  var warnedSVGAttributes = {};
+  const warnedSVGAttributes = {};
 
   var warnDeprecatedSVGAttribute = function(name) {
     if (!DOMProperty.properties.hasOwnProperty(name)) {
@@ -34,7 +34,7 @@ if (__DEV__) {
       return;
     }
 
-    var { attributeName, attributeNamespace } = DOMProperty.properties[name];
+    const { attributeName, attributeNamespace } = DOMProperty.properties[name];
     if (attributeNamespace || name === attributeName) {
       return;
     }
@@ -49,7 +49,7 @@ if (__DEV__) {
   };
 }
 
-var ReactDOMSVGDeprecatedAttributeDevtool = {
+const ReactDOMSVGDeprecatedAttributeDevtool = {
   onCreateMarkupForSVGAttribute(name, value) {
     warnDeprecatedSVGAttribute(name);
   },

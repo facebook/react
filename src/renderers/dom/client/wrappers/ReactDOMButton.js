@@ -11,7 +11,7 @@
 
 'use strict';
 
-var mouseListenerNames = {
+const mouseListenerNames = {
   onClick: true,
   onDoubleClick: true,
   onMouseDown: true,
@@ -29,15 +29,15 @@ var mouseListenerNames = {
  * Implements a <button> native component that does not receive mouse events
  * when `disabled` is set.
  */
-var ReactDOMButton = {
+const ReactDOMButton = {
   getNativeProps: function(inst, props) {
     if (!props.disabled) {
       return props;
     }
 
     // Copy the props, except the mouse listeners
-    var nativeProps = {};
-    for (var key in props) {
+    const nativeProps = {};
+    for (const key in props) {
       if (props.hasOwnProperty(key) && !mouseListenerNames[key]) {
         nativeProps[key] = props[key];
       }

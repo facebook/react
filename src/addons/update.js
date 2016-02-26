@@ -13,10 +13,10 @@
 
 'use strict';
 
-var assign = require('Object.assign');
-var keyOf = require('keyOf');
-var invariant = require('invariant');
-var hasOwnProperty = {}.hasOwnProperty;
+const assign = require('Object.assign');
+const keyOf = require('keyOf');
+const invariant = require('invariant');
+const hasOwnProperty = {}.hasOwnProperty;
 
 function shallowCopy(x) {
   if (Array.isArray(x)) {
@@ -28,14 +28,14 @@ function shallowCopy(x) {
   }
 }
 
-var COMMAND_PUSH = keyOf({$push: null});
-var COMMAND_UNSHIFT = keyOf({$unshift: null});
-var COMMAND_SPLICE = keyOf({$splice: null});
-var COMMAND_SET = keyOf({$set: null});
-var COMMAND_MERGE = keyOf({$merge: null});
-var COMMAND_APPLY = keyOf({$apply: null});
+const COMMAND_PUSH = keyOf({$push: null});
+const COMMAND_UNSHIFT = keyOf({$unshift: null});
+const COMMAND_SPLICE = keyOf({$splice: null});
+const COMMAND_SET = keyOf({$set: null});
+const COMMAND_MERGE = keyOf({$merge: null});
+const COMMAND_APPLY = keyOf({$apply: null});
 
-var ALL_COMMANDS_LIST = [
+const ALL_COMMANDS_LIST = [
   COMMAND_PUSH,
   COMMAND_UNSHIFT,
   COMMAND_SPLICE,
@@ -44,7 +44,7 @@ var ALL_COMMANDS_LIST = [
   COMMAND_APPLY,
 ];
 
-var ALL_COMMANDS_SET = {};
+const ALL_COMMANDS_SET = {};
 
 ALL_COMMANDS_LIST.forEach(function(command) {
   ALL_COMMANDS_SET[command] = true;
@@ -57,7 +57,7 @@ function invariantArrayCase(value, spec, command) {
     command,
     value
   );
-  var specValue = spec[command];
+  const specValue = spec[command];
   invariant(
     Array.isArray(specValue),
     'update(): expected spec of %s to be an array; got %s. ' +
@@ -86,10 +86,10 @@ function update(value, spec) {
     return spec[COMMAND_SET];
   }
 
-  var nextValue = shallowCopy(value);
+  let nextValue = shallowCopy(value);
 
   if (hasOwnProperty.call(spec, COMMAND_MERGE)) {
-    var mergeObj = spec[COMMAND_MERGE];
+    const mergeObj = spec[COMMAND_MERGE];
     invariant(
       mergeObj && typeof mergeObj === 'object',
       'update(): %s expects a spec of type \'object\'; got %s',
@@ -155,7 +155,7 @@ function update(value, spec) {
     nextValue = spec[COMMAND_APPLY](nextValue);
   }
 
-  for (var k in spec) {
+  for (const k in spec) {
     if (!(ALL_COMMANDS_SET.hasOwnProperty(k) && ALL_COMMANDS_SET[k])) {
       nextValue[k] = update(value[k], spec[k]);
     }

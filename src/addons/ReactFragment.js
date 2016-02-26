@@ -11,12 +11,12 @@
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
-var ReactElement = require('ReactElement');
+const ReactChildren = require('ReactChildren');
+const ReactElement = require('ReactElement');
 
-var emptyFunction = require('emptyFunction');
-var invariant = require('invariant');
-var warning = require('warning');
+const emptyFunction = require('emptyFunction');
+const invariant = require('invariant');
+const warning = require('warning');
 
 /**
  * We used to allow keyed objects to serve as a collection of ReactElements,
@@ -26,11 +26,11 @@ var warning = require('warning');
  * create a keyed fragment. The resulting data structure is an array.
  */
 
-var numericPropertyRegex = /^\d+$/;
+const numericPropertyRegex = /^\d+$/;
 
-var warnedAboutNumeric = false;
+let warnedAboutNumeric = false;
 
-var ReactFragment = {
+const ReactFragment = {
   // Wrap a keyed object in an opaque proxy that warns you if you access any
   // of its properties.
   create: function(object) {
@@ -57,9 +57,9 @@ var ReactFragment = {
       'elements are not valid children of React components.'
     );
 
-    var result = [];
+    const result = [];
 
-    for (var key in object) {
+    for (const key in object) {
       if (__DEV__) {
         if (!warnedAboutNumeric && numericPropertyRegex.test(key)) {
           warning(

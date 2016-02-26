@@ -11,10 +11,10 @@
 
 'use strict';
 
-var assign = require('Object.assign');
-var invariant = require('invariant');
+const assign = require('Object.assign');
+const invariant = require('invariant');
 
-var PREFIX = 'key:';
+const PREFIX = 'key:';
 
 /**
  * Utility to extract a backing object from an initialization `Array`, allowing
@@ -28,12 +28,12 @@ var PREFIX = 'key:';
  * @throws Exception if the initialization array has duplicate extracted keys.
  */
 function extractObjectFromArray(arr, keyExtractor) {
-  var normalizedObj = {};
-  for (var i = 0; i < arr.length; i++) {
-    var item = arr[i];
-    var key = keyExtractor(item);
+  const normalizedObj = {};
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    const key = keyExtractor(item);
     assertValidPublicKey(key);
-    var normalizedKey = PREFIX + key;
+    const normalizedKey = PREFIX + key;
     invariant(
       !(normalizedKey in normalizedObj),
       'OrderedMap: IDs returned by the key extraction function must be unique.'
@@ -126,9 +126,9 @@ function _fromNormalizedObjects(a, b) {
     'OrderedMap: Corrupted instance of OrderedMap detected.'
   );
 
-  var newSet = {};
-  var length = 0;
-  var key;
+  const newSet = {};
+  let length = 0;
+  let key;
   for (key in a) {
     if (a.hasOwnProperty(key)) {
       newSet[key] = a[key];
@@ -158,7 +158,7 @@ function _fromNormalizedObjects(a, b) {
  * TODO: Create faster implementation of merging/mapping from original Array,
  * without having to first create an object - simply for the sake of merging.
  */
-var OrderedMapMethods = {
+const OrderedMapMethods = {
 
   /**
    * Returns whether or not a given key is present in the map.
@@ -169,7 +169,7 @@ var OrderedMapMethods = {
    */
   has: function(key) {
     assertValidPublicKey(key);
-    var normalizedKey = PREFIX + key;
+    const normalizedKey = PREFIX + key;
     return normalizedKey in this._normalizedObj;
   },
 
@@ -183,7 +183,7 @@ var OrderedMapMethods = {
    */
   get: function(key) {
     assertValidPublicKey(key);
-    var normalizedKey = PREFIX + key;
+    const normalizedKey = PREFIX + key;
     return this.has(key) ? this._normalizedObj[normalizedKey] : undefined;
   },
 
@@ -232,18 +232,18 @@ var OrderedMapMethods = {
    * @return {OrderedMap} OrderedMap resulting from mapping the range.
    */
   mapRange: function(cb, start, length, context) {
-    var thisSet = this._normalizedObj;
-    var newSet = {};
-    var i = 0;
+    const thisSet = this._normalizedObj;
+    const newSet = {};
+    let i = 0;
     assertValidRangeIndices(start, length, this.length);
-    var end = start + length - 1;
-    for (var key in thisSet) {
+    const end = start + length - 1;
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         if (i >= start) {
           if (i > end) {
             break;
           }
-          var item = thisSet[key];
+          const item = thisSet[key];
           newSet[key] = cb.call(context, item, key.substr(PREFIX.length), i);
         }
         i++;
@@ -274,11 +274,11 @@ var OrderedMapMethods = {
    * @return {OrderedMap} OrderedMap resulting from filtering the range.
    */
   filterRange: function(cb, start, length, context) {
-    var newSet = {};
-    var newSetLength = 0;
+    const newSet = {};
+    let newSetLength = 0;
     this.forEachRange(function(item, key, originalIndex) {
       if (cb.call(context, item, key, originalIndex)) {
-        var normalizedKey = PREFIX + key;
+        const normalizedKey = PREFIX + key;
         newSet[normalizedKey] = item;
         newSetLength++;
       }
@@ -292,16 +292,16 @@ var OrderedMapMethods = {
 
   forEachRange: function(cb, start, length, context) {
     assertValidRangeIndices(start, length, this.length);
-    var thisSet = this._normalizedObj;
-    var i = 0;
-    var end = start + length - 1;
-    for (var key in thisSet) {
+    const thisSet = this._normalizedObj;
+    let i = 0;
+    const end = start + length - 1;
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         if (i >= start) {
           if (i > end) {
             break;
           }
-          var item = thisSet[key];
+          const item = thisSet[key];
           cb.call(context, item, key.substr(PREFIX.length), i);
         }
         i++;
@@ -316,8 +316,8 @@ var OrderedMapMethods = {
    * zero in terms of two keys and that is confusing.
    */
   mapKeyRange: function(cb, startKey, endKey, context) {
-    var startIndex = this.indexOfKey(startKey);
-    var endIndex = this.indexOfKey(endKey);
+    const startIndex = this.indexOfKey(startKey);
+    const endIndex = this.indexOfKey(endKey);
     invariant(
       startIndex !== undefined && endIndex !== undefined,
       'mapKeyRange must be given keys that are present.'
@@ -330,8 +330,8 @@ var OrderedMapMethods = {
   },
 
   forEachKeyRange: function(cb, startKey, endKey, context) {
-    var startIndex = this.indexOfKey(startKey);
-    var endIndex = this.indexOfKey(endKey);
+    const startIndex = this.indexOfKey(startKey);
+    const endIndex = this.indexOfKey(endKey);
     invariant(
       startIndex !== undefined && endIndex !== undefined,
       'forEachKeyRange must be given keys that are present.'
@@ -350,8 +350,8 @@ var OrderedMapMethods = {
    * not in map.
    */
   keyAtIndex: function(pos) {
-    var computedPositions = this._getOrComputePositions();
-    var keyAtPos = computedPositions.keyByIndex[pos];
+    const computedPositions = this._getOrComputePositions();
+    const keyAtPos = computedPositions.keyByIndex[pos];
     return keyAtPos ? keyAtPos.substr(PREFIX.length) : undefined;
   },
 
@@ -383,7 +383,7 @@ var OrderedMapMethods = {
    * @throws Error if `key` is not in this `OrderedMap`.
    */
   nthKeyAfter: function(key, n) {
-    var curIndex = this.indexOfKey(key);
+    const curIndex = this.indexOfKey(key);
     invariant(
       curIndex !== undefined,
       'OrderedMap.nthKeyAfter: The key `%s` does not exist in this instance.',
@@ -410,9 +410,9 @@ var OrderedMapMethods = {
    */
   indexOfKey: function(key) {
     assertValidPublicKey(key);
-    var normalizedKey = PREFIX + key;
-    var computedPositions = this._getOrComputePositions();
-    var computedPosition = computedPositions.indexByKey[normalizedKey];
+    const normalizedKey = PREFIX + key;
+    const computedPositions = this._getOrComputePositions();
+    const computedPosition = computedPositions.indexByKey[normalizedKey];
     // Just writing it this way to make it clear this is intentional.
     return computedPosition === undefined ? undefined : computedPosition;
   },
@@ -421,9 +421,9 @@ var OrderedMapMethods = {
    * @return {Array} An ordered array of this object's values.
    */
   toArray: function() {
-    var result = [];
-    var thisSet = this._normalizedObj;
-    for (var key in thisSet) {
+    const result = [];
+    const thisSet = this._normalizedObj;
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         result.push(thisSet[key]);
       }
@@ -444,7 +444,7 @@ var OrderedMapMethods = {
   _getOrComputePositions: function() {
     // TODO: Entertain computing this at construction time in some less
     // performance critical paths.
-    var computedPositions = this._computedPositions;
+    const computedPositions = this._computedPositions;
     if (!computedPositions) {
       this._computePositions();
     }
@@ -463,9 +463,9 @@ var OrderedMapMethods = {
     };
     var keyByIndex = this._computedPositions.keyByIndex;
     var indexByKey = this._computedPositions.indexByKey;
-    var index = 0;
-    var thisSet = this._normalizedObj;
-    for (var key in thisSet) {
+    let index = 0;
+    const thisSet = this._normalizedObj;
+    for (const key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
         keyByIndex[index] = key;
         indexByKey[key] = index;
@@ -477,7 +477,7 @@ var OrderedMapMethods = {
 
 assign(OrderedMapImpl.prototype, OrderedMapMethods);
 
-var OrderedMap = {
+const OrderedMap = {
   from: function(orderedMap) {
     invariant(
       orderedMap instanceof OrderedMapImpl,

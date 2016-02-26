@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactTestUtils = require('ReactTestUtils');
+const React = require('React');
+const ReactDOM = require('ReactDOM');
+const ReactTestUtils = require('ReactTestUtils');
 
 describe('findDOMNode', function() {
   it('findDOMNode should return null if passed null', function() {
@@ -21,15 +21,15 @@ describe('findDOMNode', function() {
   });
 
   it('findDOMNode should find dom element', function() {
-    var MyNode = React.createClass({
+    const MyNode = React.createClass({
       render: function() {
         return <div><span>Noise</span></div>;
       },
     });
 
-    var myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
-    var myDiv = ReactDOM.findDOMNode(myNode);
-    var mySameDiv = ReactDOM.findDOMNode(myDiv);
+    const myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
+    const myDiv = ReactDOM.findDOMNode(myNode);
+    const mySameDiv = ReactDOM.findDOMNode(myDiv);
     expect(myDiv.tagName).toBe('DIV');
     expect(mySameDiv).toBe(myDiv);
   });
@@ -43,14 +43,14 @@ describe('findDOMNode', function() {
   });
 
   it('findDOMNode should reject unmounted objects with render func', function() {
-    var Foo = React.createClass({
+    const Foo = React.createClass({
       render: function() {
         return <div />;
       },
     });
 
-    var container = document.createElement('div');
-    var inst = ReactDOM.render(<Foo />, container);
+    const container = document.createElement('div');
+    const inst = ReactDOM.render(<Foo />, container);
     ReactDOM.unmountComponentAtNode(container);
 
     expect(() => ReactDOM.findDOMNode(inst)).toThrow(

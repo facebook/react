@@ -16,8 +16,8 @@ jest
   .mock('isEventSupported');
 
 describe('EventPluginHub', function() {
-  var EventPluginHub;
-  var isEventSupported;
+  let EventPluginHub;
+  let isEventSupported;
 
   beforeEach(function() {
     jest.resetModuleRegistry();

@@ -11,12 +11,12 @@
 
 'use strict';
 
-var NS = {
+const NS = {
   xlink: 'http://www.w3.org/1999/xlink',
   xml: 'http://www.w3.org/XML/1998/namespace',
 };
 
-var SVGDOMPropertyConfig = {
+const SVGDOMPropertyConfig = {
   Properties: {
     clipPath: null,
     fillOpacity: null,

@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React;
-var ReactComponentWithPureRenderMixin;
-var ReactTestUtils;
+let React;
+let ReactComponentWithPureRenderMixin;
+let ReactTestUtils;
 
 describe('ReactComponentWithPureRenderMixin', function() {
 
@@ -25,7 +25,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
   });
 
   it('provides a default shouldComponentUpdate implementation', function() {
-    var renderCalls = 0;
+    let renderCalls = 0;
     class PlasticWrap extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -44,7 +44,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
       }
     }
 
-    var Apple = React.createClass({
+    const Apple = React.createClass({
       mixins: [ReactComponentWithPureRenderMixin],
 
       getInitialState: function() {
@@ -73,7 +73,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<PlasticWrap />);
+    const instance = ReactTestUtils.renderIntoDocument(<PlasticWrap />);
     expect(renderCalls).toBe(1);
 
     // Do not re-render based on props
@@ -105,10 +105,10 @@ describe('ReactComponentWithPureRenderMixin', function() {
       };
     }
 
-    var renderCalls = 0;
-    var initialSettings = getInitialState();
+    let renderCalls = 0;
+    const initialSettings = getInitialState();
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       mixins: [ReactComponentWithPureRenderMixin],
 
       getInitialState: function() {
@@ -121,11 +121,11 @@ describe('ReactComponentWithPureRenderMixin', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(renderCalls).toBe(1);
 
     // Do not re-render if state is equal
-    var settings = {
+    const settings = {
       foo: initialSettings.foo,
       bar: initialSettings.bar,
     };

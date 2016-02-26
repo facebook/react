@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+const React = require('React');
 
 /**
  * Creates a render method that makes it easier to create, render, and inspect a
@@ -53,10 +53,10 @@ var React = require('React');
  * @return {function}
  */
 function createHierarchyRenderer(...renderMethods) {
-  var instances;
-  var Components = renderMethods.reduceRight(
+  let instances;
+  const Components = renderMethods.reduceRight(
     function(ComponentsAccumulator, renderMethod, depth) {
-      var Component = React.createClass({
+      const Component = React.createClass({
         displayName: renderMethod.name,
         render: function() {
           instances[depth].push(this);

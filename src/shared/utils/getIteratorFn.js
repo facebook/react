@@ -12,8 +12,8 @@
 'use strict';
 
 /* global Symbol */
-var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 /**
  * Returns the iterator method function contained on the iterable object.
@@ -30,7 +30,7 @@ var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
  * @return {?function}
  */
 function getIteratorFn(maybeIterable) {
-  var iteratorFn = maybeIterable && (
+  const iteratorFn = maybeIterable && (
     (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
     maybeIterable[FAUX_ITERATOR_SYMBOL]
   );

@@ -11,12 +11,12 @@
 
 'use strict';
 
-var validateDOMNesting = require('validateDOMNesting');
+const validateDOMNesting = require('validateDOMNesting');
 
-var DOC_NODE_TYPE = 9;
+const DOC_NODE_TYPE = 9;
 
 function ReactDOMContainerInfo(topLevelWrapper, node) {
-  var info = {
+  const info = {
     _topLevelWrapper: topLevelWrapper,
     _idCounter: 1,
     _ownerDocument: node ?
