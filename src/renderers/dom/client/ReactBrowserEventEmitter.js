@@ -353,7 +353,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
    *
    * @see http://www.quirksmode.org/dom/events/scroll.html
    */
-  ensureScrollValueMonitoring: function(){
+  ensureScrollValueMonitoring: function() {
     if (hasEventPageXY === undefined) {
       hasEventPageXY =
         document.createEvent && 'pageX' in document.createEvent('MouseEvent');
