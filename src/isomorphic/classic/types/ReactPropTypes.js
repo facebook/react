@@ -85,6 +85,23 @@ var ReactPropTypes = {
   shape: createShapeTypeChecker,
 };
 
+/**
+ * inlined Object.is polyfill to avoid requiring consumers ship their own
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+ */
+/*eslint-disable no-self-compare*/
+function is(x, y) {
+  // SameValue algorithm
+  if (x === y) { // Steps 1-5, 7-10
+    // Steps 6.b-6.e: +0 != -0
+    return x !== 0 || 1 / x === 1 / y;
+  } else {
+    // Step 6.a: NaN == NaN
+    return x !== x && y !== y;
+  }
+}
+/*eslint-enable no-self-compare*/
+
 function createChainableTypeChecker(validate) {
   function checkType(
     isRequired,
@@ -218,7 +235,7 @@ function createEnumTypeChecker(expectedValues) {
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
     for (var i = 0; i < expectedValues.length; i++) {
-      if (propValue === expectedValues[i]) {
+      if (is(propValue, expectedValues[i])) {
         return null;
       }
     }
