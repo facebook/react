@@ -6,7 +6,7 @@ process.env.NODE_ENV = 'test';
 
 var path = require('path');
 
-var babel = require('babel');
+var babel = require('babel-core');
 var coffee = require('coffee-script');
 
 var tsPreprocessor = require('./ts-preprocessor');
@@ -14,29 +14,22 @@ var tsPreprocessor = require('./ts-preprocessor');
 // This assumes the module map has been built. This might not be safe.
 // We should consider consuming this from a built fbjs module from npm.
 var moduleMap = require('fbjs/module-map');
-var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
-var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
+var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
-var pathToBabel = path.join(require.resolve('babel'), '..', 'package.json');
+var pathToBabel = path.join(require.resolve('babel-core'), '..', 'package.json');
 var pathToModuleMap = require.resolve('fbjs/module-map');
-var pathToBabelPluginDev = require.resolve('fbjs-scripts/babel/dev-expression');
-var pathToBabelPluginModules = require.resolve('fbjs-scripts/babel/rewrite-modules');
+var pathToBabelPluginDev = require.resolve('fbjs-scripts/babel-6/dev-expression');
+var pathToBabelPluginModules = require.resolve('fbjs-scripts/babel-6/rewrite-modules');
+var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
 
 // TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
-  nonStandard: true,
-  blacklist: [
-    'spec.functionName',
-    'validation.react',
+  plugins: [
+    [babelPluginModules, { map: moduleMap }],
   ],
-  optional: [
-    'es7.trailingFunctionCommas',
-  ],
-  plugins: [babelPluginDEV, babelPluginModules],
   retainLines: true,
-  _moduleMap: moduleMap,
 };
 
 module.exports = {
@@ -62,6 +55,7 @@ module.exports = {
   getCacheKey: createCacheKeyFunction([
     __filename,
     pathToBabel,
+    pathToBabelrc,
     pathToModuleMap,
     pathToBabelPluginDev,
     pathToBabelPluginModules,
