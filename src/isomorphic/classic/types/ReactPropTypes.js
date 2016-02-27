@@ -218,6 +218,15 @@ function createEnumTypeChecker(expectedValues) {
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
     for (var i = 0; i < expectedValues.length; i++) {
+      for (var reactPropKey in ReactPropTypes) {
+        if (expectedValues[i] === ReactPropTypes[reactPropKey]) {
+          return new Error(
+            `\'oneOf\' does not expect React prop types in the supplied ` +
+            `array. Maybe you're looking for \`oneOfType\`?`
+          );
+        }
+      }
+
       if (propValue === expectedValues[i]) {
         return null;
       }
