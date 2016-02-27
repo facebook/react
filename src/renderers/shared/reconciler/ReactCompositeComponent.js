@@ -287,6 +287,28 @@ var ReactCompositeComponentMixin = {
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         (this.getName() || 'A component')
       );
+
+      // TODO: would love to also perf render too but it breaks things
+      var perfMethods = [
+        'componentDidMount',
+        'componentDidUpdate',
+        'componentWillMount',
+        'componentWillReceiveProps',
+        'componentWillUnmount',
+        'componentWillUpdate',
+        'getInitialState',
+        'shouldComponentUpdate',
+      ];
+
+      perfMethods.forEach(function(method) {
+        if (this._instance[method] && typeof this._instance[method] === 'function') {
+          this._instance[method] = ReactPerf.measure(
+            'ReactCompositeComponent',
+            method,
+            this._instance[method]
+          );
+        }
+      }, this);
     }
 
     var initialState = inst.state;

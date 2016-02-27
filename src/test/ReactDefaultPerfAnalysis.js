@@ -204,12 +204,32 @@ function getUnchangedComponents(measurement) {
   }
   return cleanComponents;
 }
+/**
+ * Given all measurements taken by ReactDefaultPerf, return the final
+ * measurements for the measured lifecycle methods
+ *
+ * @param  {array} measurements array of measurement objects
+ * @return {array} array with entries: id + measurements
+ */
+function getLifecycleSummary(measurements) {
+  var components = [];
+  var ids = Object.keys(measurements[measurements.length - 1].components);
+
+  ids.forEach(function(id) {
+    components.push({
+      id: id,
+      measures: measurements[measurements.length - 1].components[id],
+    });
+  });
+  return components;
+}
 
 var ReactDefaultPerfAnalysis = {
   getExclusiveSummary: getExclusiveSummary,
   getInclusiveSummary: getInclusiveSummary,
   getDOMSummary: getDOMSummary,
   getTotalTime: getTotalTime,
+  getLifecycleSummary: getLifecycleSummary,
 };
 
 module.exports = ReactDefaultPerfAnalysis;
