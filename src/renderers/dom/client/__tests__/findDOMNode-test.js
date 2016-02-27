@@ -20,6 +20,20 @@ describe('findDOMNode', function() {
     expect(ReactDOM.findDOMNode(null)).toBe(null);
   });
 
+  it('findDOMNode should return null before component did mounted', function() {
+    var MyNode = React.createClass({
+      componentWillMount: function() {
+        expect(ReactDOM.findDOMNode(this)).toBeNull();
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<MyNode />);
+  });
+
   it('findDOMNode should find dom element', function() {
     var MyNode = React.createClass({
       render: function() {
