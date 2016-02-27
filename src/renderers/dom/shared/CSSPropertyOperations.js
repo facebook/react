@@ -185,7 +185,7 @@ var CSSPropertyOperations = {
         styles[styleName],
         component
       );
-      if (styleName === 'float') {
+      if (styleName === 'float' || styleName === 'cssFloat') {
         styleName = styleFloatAccessor;
       }
       if (styleValue) {
