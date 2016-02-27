@@ -44,6 +44,12 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
 
   if (__DEV__) {
     warning(
+      !internalInstance._processingChildContext,
+      '%s(...): Cannot update during processing child context.',
+      callerName
+    );
+
+    warning(
       ReactCurrentOwner.current == null,
       '%s(...): Cannot update during an existing state transition (such as ' +
       'within `render` or another component\'s constructor). Render methods ' +
