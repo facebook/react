@@ -39,7 +39,11 @@ var babelOpts = {
   ],
   plugins: [babelPluginDEV, babelPluginModules],
   ignore: ['third_party'],
-  _moduleMap: require('fbjs/module-map'),
+  _moduleMap: Object.assign(
+    {},
+    require('fbjs/module-map'),
+    {'react-current-owner': 'react-current-owner'}
+  ),
 };
 
 gulp.task('react:clean', function() {

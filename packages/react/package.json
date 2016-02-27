@@ -23,6 +23,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
+    "react-current-owner": "1.0.0",
     "envify": "^3.0.0",
     "fbjs": "^0.6.1"
   },

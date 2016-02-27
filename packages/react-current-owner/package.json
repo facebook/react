@@ -1,7 +1,7 @@
 {
-  "name": "react-dom",
-  "version": "0.15.0-alpha.1",
-  "description": "React package for working with the DOM.",
+  "name": "react-current-owner",
+  "version": "1.0.0",
+  "description": "React package for sharing the current owner",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -12,9 +12,7 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
-  "dependencies": {},
   "peerDependencies": {
-    "react-current-owner": "1.0.0",
-    "react": "^0.15.0-alpha.1"
+    "react": "*"
   }
 }
