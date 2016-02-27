@@ -139,6 +139,18 @@ describe('ReactElement', function() {
     expect(element.props.foo).toBe(1);
   });
 
+  it('warns if the config object inherits from any type other than Object', function() {
+    spyOn(console, 'error');
+    React.createElement('div', {foo: 1});
+    expect(console.error).not.toHaveBeenCalled();
+    React.createElement('div', Object.create({foo: 1}));
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'React.createElement(...): Expected props argument to be a plain object. ' +
+      'Properties defined in its prototype chain will be ignored.'
+    );
+  });
+
   it('extracts key and ref from the config', function() {
     var element = React.createFactory(ComponentClass)({
       key: '12',
