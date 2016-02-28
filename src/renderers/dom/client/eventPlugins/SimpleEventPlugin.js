@@ -15,6 +15,7 @@ var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
 var EventPropagators = require('EventPropagators');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var SyntheticAnimationEvent = require('SyntheticAnimationEvent');
 var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
 var SyntheticEvent = require('SyntheticEvent');
 var SyntheticFocusEvent = require('SyntheticFocusEvent');
@@ -22,6 +23,7 @@ var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 var SyntheticDragEvent = require('SyntheticDragEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
+var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
@@ -37,6 +39,24 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onAbort: true}),
       captured: keyOf({onAbortCapture: true}),
+    },
+  },
+  animationEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onAnimationEnd: true}),
+      captured: keyOf({onAnimationEndCapture: true}),
+    },
+  },
+  animationIteration: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onAnimationIteration: true}),
+      captured: keyOf({onAnimationIterationCapture: true}),
+    },
+  },
+  animationStart: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onAnimationStart: true}),
+      captured: keyOf({onAnimationStartCapture: true}),
     },
   },
   blur: {
@@ -365,6 +385,12 @@ var eventTypes = {
       captured: keyOf({onTouchStartCapture: true}),
     },
   },
+  transitionEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTransitionEnd: true}),
+      captured: keyOf({onTransitionEndCapture: true}),
+    },
+  },
   volumeChange: {
     phasedRegistrationNames: {
       bubbled: keyOf({onVolumeChange: true}),
@@ -387,6 +413,9 @@ var eventTypes = {
 
 var topLevelEventsToDispatchConfig = {
   topAbort:           eventTypes.abort,
+  topAnimationEnd:    eventTypes.animationEnd,
+  topAnimationIteration: eventTypes.animationIteration,
+  topAnimationStart:  eventTypes.animationStart,
   topBlur:            eventTypes.blur,
   topCanPlay:         eventTypes.canPlay,
   topCanPlayThrough:  eventTypes.canPlayThrough,
@@ -441,6 +470,7 @@ var topLevelEventsToDispatchConfig = {
   topTouchEnd:        eventTypes.touchEnd,
   topTouchMove:       eventTypes.touchMove,
   topTouchStart:      eventTypes.touchStart,
+  topTransitionEnd:   eventTypes.transitionEnd,
   topVolumeChange:    eventTypes.volumeChange,
   topWaiting:         eventTypes.waiting,
   topWheel:           eventTypes.wheel,
@@ -548,6 +578,14 @@ var SimpleEventPlugin = {
       case topLevelTypes.topTouchMove:
       case topLevelTypes.topTouchStart:
         EventConstructor = SyntheticTouchEvent;
+        break;
+      case topLevelTypes.topAnimationEnd:
+      case topLevelTypes.topAnimationIteration:
+      case topLevelTypes.topAnimationStart:
+        EventConstructor = SyntheticAnimationEvent;
+        break;
+      case topLevelTypes.topTransitionEnd:
+        EventConstructor = SyntheticTransitionEvent;
         break;
       case topLevelTypes.topScroll:
         EventConstructor = SyntheticUIEvent;
