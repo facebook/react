@@ -360,7 +360,7 @@ describe('ReactServerRendering', function() {
           'not a component'
         )
       ).toThrow(
-        'renderToString(): You must pass a valid ReactElement.'
+        'renderToStaticMarkup(): You must pass a valid ReactElement.'
       );
     });
 
