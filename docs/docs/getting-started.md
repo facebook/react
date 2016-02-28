@@ -27,6 +27,16 @@ ReactDOM.render(
 );
 ```
 
+Configure [babel](https://babeljs.io/) with a `.babelrc` file:
+
+```json
+{ "presets": ["react"] }
+```
+
+> Note:
+>
+> If you are using ES2015, you will want to also use the `babel-preset-es2015` package.
+
 To install React DOM and build your bundle with browserify:
 
 ```sh
@@ -40,10 +50,6 @@ To install React DOM and build your bundle with webpack:
 $ npm install --save react react-dom babel-preset-react
 $ webpack
 ```
-
-> Note:
->
-> If you are using ES2015, you will want to also use the `babel-preset-es2015` package.
 
 **Note:** by default, React will be in development mode, which is slower, and not advised for production. To use React in production mode, set the environment variable `NODE_ENV` to `production` (using envify or webpack's DefinePlugin). For example:
 
