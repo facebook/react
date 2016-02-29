@@ -576,7 +576,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should warn for invalid strings', function() {
+    it('should warn for invalid values', function() {
       typeCheckFail(
         PropTypes.oneOf(['red', 'blue']),
         true,
@@ -606,6 +606,7 @@ describe('ReactPropTypes', function() {
     it('should not warn for valid values', function() {
       typeCheckPass(PropTypes.oneOf(['red', 'blue']), 'red');
       typeCheckPass(PropTypes.oneOf(['red', 'blue']), 'blue');
+      typeCheckPass(PropTypes.oneOf(['red', 'blue', NaN]), NaN);
     });
 
     it('should be implicitly optional and not warn without values', function() {
