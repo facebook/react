@@ -20,6 +20,11 @@ defaults:
     type: page
   values:
     layout: docs
+- scope:
+    path: community
+    type: page
+  values:
+    layout: community
 exclude:
 - Gemfile
 - Gemfile.lock

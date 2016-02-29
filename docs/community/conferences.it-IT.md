@@ -2,8 +2,9 @@
 id: conferences-it-IT
 title: Conferenze
 permalink: conferences-it-IT.html
-prev: thinking-in-react-it-IT.html
+prev: support.html
 next: videos-it-IT.html
+redirect_from: docs/conferences-it-IT.html
 ---
 
 ### React.js Conf 2015

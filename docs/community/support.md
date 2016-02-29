@@ -1,7 +1,10 @@
 ---
+sectionid: community
 title: Need help?
-layout: single
+layout: community
 id: support
+next: conferences.html
+redirect_from: support.html
 ---
 
 **React** is worked on full-time by Facebook's product infrastructure and Instagram's user interface engineering teams. They're often around and available for questions.

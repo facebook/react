@@ -4,6 +4,7 @@ title: Video
 permalink: videos-it-IT.html
 prev: conferences-it-IT.html
 next: complementary-tools-it-IT.html
+redirect_from: docs/videos-it-IT.html
 ---
 
 ### Riconsiderare le best practice - JSConf.eu

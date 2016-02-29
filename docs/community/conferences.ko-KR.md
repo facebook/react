@@ -2,8 +2,9 @@
 id: conferences-ko-KR
 title: 컨퍼런스들
 permalink: conferences-ko-KR.html
-prev: thinking-in-react-ko-KR.html
+prev: support.html
 next: videos-ko-KR.html
+redirect_from: docs/conferences-ko-KR.html
 ---
 
 ### React.js Conf 2015

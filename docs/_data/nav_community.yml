@@ -1,0 +1,29 @@
+- title: Community
+  items:
+  - id: support
+    title: Support
+  - id: conferences
+    title: Conferences
+  - id: videos
+    title: Videos
+  - id: complementary-tools
+    title: Complementary Tools
+  - id: examples
+    title: Examples
+- title: More from Facebook
+  items:
+  - id: flux
+    title: Flux – React App Architecture
+    href: https://facebook.github.io/flux/
+  - id: relay
+    title: Relay — React + GraphQL
+    href: https://facebook.github.io/relay/
+  - id: immutable
+    title: ImmutableJS – Immutable Data
+    href: http://facebook.github.io/immutable-js/
+  - id: flow
+    title: Flow — Static Type Checker
+    href: http://flowtype.org/
+  - id: jest
+    title: Jest – Unit Testing
+    href: http://facebook.github.io/jest/

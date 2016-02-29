@@ -6,16 +6,6 @@
     title: Tutorial
   - id: thinking-in-react
     title: Thinking in React
-- title: Community Resources
-  items:
-  - id: conferences
-    title: Conferences
-  - id: videos
-    title: Videos
-  - id: complementary-tools
-    title: Complementary Tools
-  - id: examples
-    title: Examples
 - title: Guides
   items:
   - id: why-react
