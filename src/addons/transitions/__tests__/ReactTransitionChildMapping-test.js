@@ -109,6 +109,51 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
+  it('should preserve order when overlapping insertions and deletions are iterated on', function() {
+    var prev = {
+      one: true,
+      two: true,
+      four: true,
+      five: true,
+    };
+    var next = {
+      one: true,
+      two: true,
+      three: true,
+      five: true,
+    };
+    var childMappingsKeys = Object.keys(ReactTransitionChildMapping.mergeChildMappings(prev, next));
+    expect(childMappingsKeys).toEqual([
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+    ]);
+  });
+
+  it('should preserve order when non-overlapping insertions are iterated on', function() {
+    var prev = {
+      one: true,
+      two: true,
+      three: true,
+    };
+    var next = {
+      four: true,
+      five: true,
+      six: true,
+    };
+    var childMappingsKeys = Object.keys(ReactTransitionChildMapping.mergeChildMappings(prev, next));
+    expect(childMappingsKeys).toEqual([
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+    ]);
+  });
+
   it('should support mergeChildMappings with undefined input', function() {
     var prev = {
       one: true,

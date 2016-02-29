@@ -75,6 +75,11 @@ var ReactTransitionChildMapping = {
 
     var i;
     var childMapping = {};
+
+    for (i = 0; i < pendingKeys.length; i++) {
+      childMapping[pendingKeys[i]] = getValueForKey(pendingKeys[i]);
+    }
+
     for (var nextKey in next) {
       if (nextKeysPending.hasOwnProperty(nextKey)) {
         for (i = 0; i < nextKeysPending[nextKey].length; i++) {
@@ -87,10 +92,6 @@ var ReactTransitionChildMapping = {
       childMapping[nextKey] = getValueForKey(nextKey);
     }
 
-    // Finally, add the keys which didn't appear before any key in `next`
-    for (i = 0; i < pendingKeys.length; i++) {
-      childMapping[pendingKeys[i]] = getValueForKey(pendingKeys[i]);
-    }
 
     return childMapping;
   },
