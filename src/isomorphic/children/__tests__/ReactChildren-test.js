@@ -23,7 +23,7 @@ describe('ReactChildren', function() {
   });
 
   it('should support identity for simple', function() {
-    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
+    var callback = jasmine.createSpy().and.callFake(function(kid, index) {
       return kid;
     });
 
@@ -35,14 +35,14 @@ describe('ReactChildren', function() {
     var instance = <div>{simpleKid}</div>;
     ReactChildren.forEach(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
-    callback.reset();
+    callback.calls.reset();
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
     expect(mappedChildren[0]).toEqual(<span key=".$simple" />);
   });
 
   it('should treat single arrayless child as being in array', function() {
-    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
+    var callback = jasmine.createSpy().and.callFake(function(kid, index) {
       return kid;
     });
 
@@ -50,14 +50,14 @@ describe('ReactChildren', function() {
     var instance = <div>{simpleKid}</div>;
     ReactChildren.forEach(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
-    callback.reset();
+    callback.calls.reset();
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
     expect(mappedChildren[0]).toEqual(<span key=".0" />);
   });
 
   it('should treat single child in array as expected', function() {
-    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
+    var callback = jasmine.createSpy().and.callFake(function(kid, index) {
       return kid;
     });
 
@@ -65,7 +65,7 @@ describe('ReactChildren', function() {
     var instance = <div>{[simpleKid]}</div>;
     ReactChildren.forEach(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
-    callback.reset();
+    callback.calls.reset();
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
     expect(mappedChildren[0]).toEqual(<span key=".$simple" />);
@@ -124,7 +124,7 @@ describe('ReactChildren', function() {
       <span />, // Map from null to something.
       <div key="keyFour" />,
     ];
-    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
+    var callback = jasmine.createSpy().and.callFake(function(kid, index) {
       return mapped[index];
     });
 
@@ -144,11 +144,11 @@ describe('ReactChildren', function() {
     expect(callback).toHaveBeenCalledWith(two, 2);
     expect(callback).toHaveBeenCalledWith(three, 3);
     expect(callback).toHaveBeenCalledWith(four, 4);
-    callback.reset();
+    callback.calls.reset();
 
     var mappedChildren =
       ReactChildren.map(instance.props.children, callback);
-    expect(callback.calls.length).toBe(5);
+    expect(callback.calls.count()).toBe(5);
     expect(ReactChildren.count(mappedChildren)).toBe(4);
     // Keys default to indices.
     expect([
@@ -190,7 +190,7 @@ describe('ReactChildren', function() {
     var fourMapped = <div key="keyFour" />;
     var fiveMapped = <div />;
 
-    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
+    var callback = jasmine.createSpy().and.callFake(function(kid, index) {
       return index === 0 ? zeroMapped :
         index === 1 ? twoMapped :
         index === 2 ? fourMapped : fiveMapped;
@@ -216,15 +216,15 @@ describe('ReactChildren', function() {
     ]);
 
     ReactChildren.forEach(instance.props.children, callback);
-    expect(callback.calls.length).toBe(4);
+    expect(callback.calls.count()).toBe(4);
     expect(callback).toHaveBeenCalledWith(frag[0], 0);
     expect(callback).toHaveBeenCalledWith(frag[1], 1);
     expect(callback).toHaveBeenCalledWith(frag[2], 2);
     expect(callback).toHaveBeenCalledWith(frag[3], 3);
-    callback.reset();
+    callback.calls.reset();
 
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
-    expect(callback.calls.length).toBe(4);
+    expect(callback.calls.count()).toBe(4);
     expect(callback).toHaveBeenCalledWith(frag[0], 0);
     expect(callback).toHaveBeenCalledWith(frag[1], 1);
     expect(callback).toHaveBeenCalledWith(frag[2], 2);

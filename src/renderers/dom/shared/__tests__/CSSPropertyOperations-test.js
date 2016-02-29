@@ -114,8 +114,8 @@ describe('CSSPropertyOperations', function() {
       'background-color': 'crimson',
     })).toBe('background-color:crimson;');
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('backgroundColor');
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain('backgroundColor');
   });
 
   it('should warn when updating hyphenated style names', function() {
@@ -130,9 +130,9 @@ describe('CSSPropertyOperations', function() {
     ReactDOM.render(<div />, root);
     ReactDOM.render(<div style={styles} />, root);
 
-    expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toContain('msTransform');
-    expect(console.error.argsForCall[1][0]).toContain('WebkitTransform');
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toContain('msTransform');
+    expect(console.error.calls.argsFor(1)[0]).toContain('WebkitTransform');
   });
 
   it('warns when miscapitalizing vendored style names', function() {
@@ -145,11 +145,11 @@ describe('CSSPropertyOperations', function() {
     });
 
     // msTransform is correct already and shouldn't warn
-    expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toContain('oTransform');
-    expect(console.error.argsForCall[0][0]).toContain('OTransform');
-    expect(console.error.argsForCall[1][0]).toContain('webkitTransform');
-    expect(console.error.argsForCall[1][0]).toContain('WebkitTransform');
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toContain('oTransform');
+    expect(console.error.calls.argsFor(0)[0]).toContain('OTransform');
+    expect(console.error.calls.argsFor(1)[0]).toContain('webkitTransform');
+    expect(console.error.calls.argsFor(1)[0]).toContain('WebkitTransform');
   });
 
   it('should warn about style having a trailing semicolon', function() {
@@ -162,9 +162,9 @@ describe('CSSPropertyOperations', function() {
       color: 'red;   ',
     });
 
-    expect(console.error.calls.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
-    expect(console.error.argsForCall[1][0]).toContain('Try "color: red" instead');
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toContain('Try "backgroundColor: blue" instead');
+    expect(console.error.calls.argsFor(1)[0]).toContain('Try "color: red" instead');
   });
 
   it('should warn about style containing a NaN value', function() {
@@ -174,8 +174,8 @@ describe('CSSPropertyOperations', function() {
       fontSize: NaN,
     });
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toEqual(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toEqual(
       'Warning: `NaN` is an invalid value for the `fontSize` css style property'
     );
   });

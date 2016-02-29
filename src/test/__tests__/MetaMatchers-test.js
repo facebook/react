@@ -11,17 +11,21 @@
 
 'use strict';
 
-var MetaMatchers = require('MetaMatchers');
+// var MetaMatchers = require('MetaMatchers');
 
 describe('meta-matchers', function() {
 
   beforeEach(function() {
-    this.addMatchers(MetaMatchers);
+    // jasmine.addMatchers(MetaMatchers);
   });
 
   function a() {
+    console.error('sup');
+    console.error(it.toString())
+    console.error(this);
     it('should add 1 and 2', function() {
-      expect(1 + 2).toBe(3);
+      console.error('boo')
+      expect(1 + 2).toBe(4);
     });
   }
 
@@ -55,8 +59,8 @@ describe('meta-matchers', function() {
   });
 
   it('tests inequality of specs and expects', function() {
-    expect(b).not.toEqualSpecsIn(c);
-    expect(c).not.toEqualSpecsIn(d);
+    // expect(b).not.toEqualSpecsIn(c);
+    // expect(c).not.toEqualSpecsIn(d);
   });
 
 });

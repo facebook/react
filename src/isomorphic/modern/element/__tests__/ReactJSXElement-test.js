@@ -100,21 +100,21 @@ describe('ReactJSXElement', function() {
     var a = 1;
     var element = <Component children="text">{a}</Component>;
     expect(element.props.children).toBe(a);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('does not override children if no JSX children are provided', function() {
     spyOn(console, 'error');
     var element = <Component children="text" />;
     expect(element.props.children).toBe('text');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('overrides children if null is provided as a JSX child', function() {
     spyOn(console, 'error');
     var element = <Component children="text">{null}</Component>;
     expect(element.props.children).toBe(null);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('merges JSX children onto the children prop in an array', function() {
@@ -124,7 +124,7 @@ describe('ReactJSXElement', function() {
     var c = 3;
     var element = <Component>{a}{b}{c}</Component>;
     expect(element.props.children).toEqual([1, 2, 3]);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('allows static methods to be called using the type property', function() {
@@ -141,7 +141,7 @@ describe('ReactJSXElement', function() {
 
     var element = <StaticMethodComponent />;
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('identifies valid elements', function() {

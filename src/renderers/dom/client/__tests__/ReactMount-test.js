@@ -44,7 +44,7 @@ describe('ReactMount', function() {
       var nodeArray = document.getElementsByTagName('div');
       expect(function() {
         ReactDOM.unmountComponentAtNode(nodeArray);
-      }).toThrow(
+      }).toThrowError(
         'unmountComponentAtNode(...): Target container is not a DOM element.'
       );
     });
@@ -53,7 +53,7 @@ describe('ReactMount', function() {
   it('throws when given a string', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument('div');
-    }).toThrow(
+    }).toThrowError(
       'ReactDOM.render(): Invalid component element. Instead of passing a ' +
       'string like \'div\', pass React.createElement(\'div\') or <div />.'
     );
@@ -67,7 +67,7 @@ describe('ReactMount', function() {
     });
     expect(function() {
       ReactTestUtils.renderIntoDocument(Component);
-    }).toThrow(
+    }).toThrowError(
       'ReactDOM.render(): Invalid component element. Instead of passing a ' +
       'class like Foo, pass React.createElement(Foo) or <Foo />.'
     );
@@ -133,12 +133,12 @@ describe('ReactMount', function() {
 
     spyOn(console, 'error');
     ReactMount.render(<div />, container);
-    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
 
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
     ReactMount.render(<div />, container);
-    expect(console.error.calls.length).toBe(2);
+    expect(console.error.calls.count()).toBe(2);
   });
 
   it('should not warn if mounting into non-empty node', function() {
@@ -147,7 +147,7 @@ describe('ReactMount', function() {
 
     spyOn(console, 'error');
     ReactMount.render(<div />, container);
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should warn when mounting into document.body', function() {
@@ -157,8 +157,8 @@ describe('ReactMount', function() {
 
     ReactMount.render(<div />, iFrame.contentDocument.body);
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Rendering components directly into document.body is discouraged'
     );
   });
@@ -174,8 +174,8 @@ describe('ReactMount', function() {
       <div>This markup contains an nbsp entity: &nbsp; client text</div>,
       div
     );
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       ' (client) nbsp entity: &nbsp; client text</div>\n' +
       ' (server) nbsp entity: &nbsp; server text</div>'
     );
@@ -217,8 +217,8 @@ describe('ReactMount', function() {
     spyOn(console, 'error');
     var rootNode = container.firstChild;
     ReactDOM.render(<span />, rootNode);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: render(...): Replacing React-rendered children with a new ' +
       'root component. If you intended to update the children of this node, ' +
       'you should instead have the existing children update their state and ' +
@@ -300,10 +300,10 @@ describe('ReactMount', function() {
 
       ReactTestUtils.renderIntoDocument(<Foo />);
 
-      expect(console.time.argsForCall.length).toBe(1);
-      expect(console.time.argsForCall[0][0]).toBe('React mount: Foo');
-      expect(console.timeEnd.argsForCall.length).toBe(1);
-      expect(console.timeEnd.argsForCall[0][0]).toBe('React mount: Foo');
+      expect(console.time.calls.count()).toBe(1);
+      expect(console.time.calls.argsFor(0)[0]).toBe('React mount: Foo');
+      expect(console.timeEnd.calls.count()).toBe(1);
+      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React mount: Foo');
     } finally {
       ReactFeatureFlags.logTopLevelRenders = false;
     }

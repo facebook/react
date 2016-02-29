@@ -732,12 +732,12 @@ describe('OrderedMap', function() {
     }).not.toThrow();
     expect(function() {
       om.mapKeyRange(duplicate, 'x', 3, scope);
-    }).toThrow(
+    }).toThrowError(
       'mapKeyRange must be given keys that are present.'
     );
     expect(function() {
       om.forEachKeyRange(duplicate, 'x', 3, scope);
-    }).toThrow(
+    }).toThrowError(
       'forEachKeyRange must be given keys that are present.'
     );
 

@@ -27,7 +27,7 @@ describe('ReactClass-spec', function() {
   it('should throw when `render` is not specified', function() {
     expect(function() {
       React.createClass({});
-    }).toThrow(
+    }).toThrowError(
       'createClass(...): Class specification must implement a `render` method.'
     );
   });
@@ -138,8 +138,8 @@ describe('ReactClass-spec', function() {
         return <div />;
       },
     });
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: A component has a method called componentShouldUpdate(). Did you ' +
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
@@ -154,8 +154,8 @@ describe('ReactClass-spec', function() {
         return <div />;
       },
     });
-    expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[1][0]).toBe(
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: NamedComponent has a method called componentShouldUpdate(). Did you ' +
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
@@ -171,8 +171,8 @@ describe('ReactClass-spec', function() {
         return <div />;
       },
     });
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
       'mean componentWillReceiveProps()?'
     );
@@ -193,7 +193,7 @@ describe('ReactClass-spec', function() {
           return <span />;
         },
       });
-    }).toThrow(
+    }).toThrowError(
       'ReactClass: You are attempting to define a reserved property, ' +
       '`getDefaultProps`, that shouldn\'t be on the "statics" key. Define ' +
       'it as an instance property instead; it will still be accessible on ' +
@@ -219,20 +219,20 @@ describe('ReactClass-spec', function() {
         return <div />;
       },
     });
-    expect(console.error.argsForCall.length).toBe(4);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(4);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'createClass(...): `mixins` is now a static property and should ' +
       'be defined inside "statics".'
     );
-    expect(console.error.argsForCall[1][0]).toBe(
+    expect(console.error.calls.argsFor(1)[0]).toBe(
       'createClass(...): `propTypes` is now a static property and should ' +
       'be defined inside "statics".'
     );
-    expect(console.error.argsForCall[2][0]).toBe(
+    expect(console.error.calls.argsFor(2)[0]).toBe(
       'createClass(...): `contextTypes` is now a static property and ' +
       'should be defined inside "statics".'
     );
-    expect(console.error.argsForCall[3][0]).toBe(
+    expect(console.error.calls.argsFor(3)[0]).toBe(
       'createClass(...): `childContextTypes` is now a static property and ' +
       'should be defined inside "statics".'
     );
@@ -327,7 +327,7 @@ describe('ReactClass-spec', function() {
       var instance = <Component />;
       expect(function() {
         instance = ReactTestUtils.renderIntoDocument(instance);
-      }).toThrow(
+      }).toThrowError(
         'Component.getInitialState(): must return an object or null'
       );
     });
@@ -355,8 +355,8 @@ describe('ReactClass-spec', function() {
     });
 
     expect(() => Component()).toThrow();
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
       'factory or JSX instead. See: https://fb.me/react-legacyfactory'
     );

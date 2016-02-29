@@ -27,13 +27,13 @@ describe('ReactComponent', function() {
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function() {
       ReactDOM.render(<div></div>, [container]);
-    }).toThrow(
+    }).toThrowError(
       '_registerComponent(...): Target container is not a DOM element.'
     );
 
     expect(function() {
       ReactDOM.render(<div></div>, null);
-    }).toThrow(
+    }).toThrowError(
       '_registerComponent(...): Target container is not a DOM element.'
     );
   });
@@ -269,25 +269,25 @@ describe('ReactComponent', function() {
     spyOn(console, 'error');
 
     var X = undefined;
-    expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrow(
+    expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
       'or a class/function (for composite components) but got: undefined.'
     );
 
     var Y = null;
-    expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrow(
+    expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
       'or a class/function (for composite components) but got: null.'
     );
 
     var Z = {};
-    expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrow(
+    expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
       'or a class/function (for composite components) but got: object.'
     );
 
     // One warning for each element creation
-    expect(console.error.calls.length).toBe(3);
+    expect(console.error.calls.count()).toBe(3);
   });
 
 });

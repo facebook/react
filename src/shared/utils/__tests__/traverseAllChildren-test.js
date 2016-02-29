@@ -29,7 +29,7 @@ describe('traverseAllChildren', function() {
   it('should support identity for simple', function() {
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -49,7 +49,7 @@ describe('traverseAllChildren', function() {
   it('should treat single arrayless child as being in array', function() {
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -68,7 +68,7 @@ describe('traverseAllChildren', function() {
     spyOn(console, 'error');
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -81,8 +81,8 @@ describe('traverseAllChildren', function() {
       '.0'
     );
     expect(traverseContext.length).toEqual(1);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child', function() {
@@ -94,7 +94,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -135,7 +135,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -155,7 +155,7 @@ describe('traverseAllChildren', function() {
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
 
-    expect(traverseFn.calls.length).toBe(9);
+    expect(traverseFn.calls.count()).toBe(9);
     expect(traverseContext.length).toEqual(9);
 
     expect(traverseFn).toHaveBeenCalledWith(
@@ -203,7 +203,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -220,7 +220,7 @@ describe('traverseAllChildren', function() {
     );
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
-    expect(traverseFn.calls.length).toBe(4);
+    expect(traverseFn.calls.count()).toBe(4);
     expect(traverseContext.length).toEqual(4);
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
@@ -252,7 +252,7 @@ describe('traverseAllChildren', function() {
     var oneForceKey = <div key="keyOne" />;
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -296,7 +296,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(kid);
       });
 
@@ -307,7 +307,7 @@ describe('traverseAllChildren', function() {
     );
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
-    expect(traverseFn.calls.length).toBe(3);
+    expect(traverseFn.calls.count()).toBe(3);
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
@@ -325,8 +325,8 @@ describe('traverseAllChildren', function() {
       '.2'
     );
 
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
   });
 
   it('should be called for each child in an iterable with keys', function() {
@@ -347,7 +347,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(kid);
       });
 
@@ -358,7 +358,7 @@ describe('traverseAllChildren', function() {
     );
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
-    expect(traverseFn.calls.length).toBe(3);
+    expect(traverseFn.calls.count()).toBe(3);
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
@@ -398,7 +398,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+      jasmine.createSpy().and.callFake(function(context, kid, key, index) {
         context.push(kid);
       });
 
@@ -409,7 +409,7 @@ describe('traverseAllChildren', function() {
     );
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);
-    expect(traverseFn.calls.length).toBe(3);
+    expect(traverseFn.calls.count()).toBe(3);
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
@@ -427,8 +427,8 @@ describe('traverseAllChildren', function() {
       '.$#3:0'
     );
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Warning: Using Maps as children is not yet fully supported. It is an ' +
       'experimental feature that might be removed. Convert it to a sequence ' +
       '/ iterable of keyed ReactElements instead.'
@@ -454,7 +454,7 @@ describe('traverseAllChildren', function() {
       var traverseFn = jasmine.createSpy();
 
       traverseAllChildren(instance.props.children, traverseFn, null);
-      expect(traverseFn.calls.length).toBe(3);
+      expect(traverseFn.calls.count()).toBe(3);
 
       expect(traverseFn).toHaveBeenCalledWith(
         null,
@@ -492,7 +492,7 @@ describe('traverseAllChildren', function() {
     var traverseFn = jasmine.createSpy();
 
     traverseAllChildren(instance.props.children, traverseFn, null);
-    expect(traverseFn.calls.length).toBe(2);
+    expect(traverseFn.calls.count()).toBe(2);
 
     expect(traverseFn).toHaveBeenCalledWith(
       null,
@@ -512,7 +512,7 @@ describe('traverseAllChildren', function() {
   it('should throw on object', function() {
     expect(function() {
       traverseAllChildren({a: 1, b: 2}, function() {}, null);
-    }).toThrow(
+    }).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
       '{a, b}). If you meant to render a collection of children, use an ' +
       'array instead or wrap the object using createFragment(object) from ' +
@@ -525,7 +525,7 @@ describe('traverseAllChildren', function() {
     // serialization (timezones) so let's test a regex instead:
     expect(function() {
       traverseAllChildren(/abc/, function() {}, null);
-    }).toThrow(
+    }).toThrowError(
       'Objects are not valid as a React child (found: /abc/). If you meant ' +
       'to render a collection of children, use an array instead or wrap the ' +
       'object using createFragment(object) from the React add-ons.'

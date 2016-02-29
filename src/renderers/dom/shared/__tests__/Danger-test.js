@@ -78,19 +78,19 @@ describe('Danger', function() {
     it('should throw when rendering invalid markup', function() {
       expect(function() {
         Danger.dangerouslyRenderMarkup(['']);
-      }).toThrow(
+      }).toThrowError(
         'dangerouslyRenderMarkup(...): Missing markup.'
       );
 
       spyOn(console, 'error');
 
       var renderedMarkup = Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
-      var args = console.error.argsForCall[0];
+      var args = console.error.calls.argsFor(0);
 
       expect(renderedMarkup.length).toBe(1);
       expect(renderedMarkup[0].nodeName).toBe('P');
 
-      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.calls.count()).toBe(1);
 
       expect(args.length).toBe(2);
       expect(args[0]).toBe('Danger: Discarding unexpected node:');

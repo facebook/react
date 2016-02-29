@@ -16,7 +16,7 @@ var MetaMatchers = require('MetaMatchers');
 describe('ReactClassEquivalence', function() {
 
   beforeEach(function() {
-    this.addMatchers(MetaMatchers);
+    jasmine.addMatchers(MetaMatchers);
   });
 
   var es6 = () => require('./ReactES6Class-test.js');
