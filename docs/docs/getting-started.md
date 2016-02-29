@@ -7,7 +7,7 @@ redirect_from: "docs/index.html"
 
 ## JSFiddle
 
-The easiest way to start hacking on React is using the following JSFiddle Hello World examples:
+The easiest way to start hacking on React is using the following JSFiddle Hello&nbsp;World&nbsp;examples:
 
  * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
  * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)

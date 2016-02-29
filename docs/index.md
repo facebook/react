@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: home
 title: A JavaScript library for building user interfaces
 id: home
 ---
@@ -88,6 +88,6 @@ id: home
 <section class="home-bottom-section">
   <div class="buttons-unit">
     <a href="docs/getting-started.html" class="button">Get Started</a>
-    <a href="downloads.html" class="button">Download React v{{site.react_version}}</a>
+    <a href="downloads.html" class="button">Download v{{site.react_version}}</a>
   </div>
 </section>
