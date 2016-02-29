@@ -48,6 +48,11 @@
       title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
+    subitems:
+    - id: language-tooling
+      title: Language Tooling
+    - id: package-management
+      title: Package Management
   - id: addons
     title: Add-Ons
     subitems:
