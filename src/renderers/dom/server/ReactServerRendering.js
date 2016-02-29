@@ -28,11 +28,6 @@ var invariant = require('invariant');
  * @return {string} the HTML markup
  */
 function renderToStringImpl(element, makeStaticMarkup) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.'
-  );
-
   var transaction;
   try {
     ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
@@ -61,10 +56,18 @@ function renderToStringImpl(element, makeStaticMarkup) {
 }
 
 function renderToString(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToString(): You must pass a valid ReactElement.'
+  );
   return renderToStringImpl(element, false);
 }
 
 function renderToStaticMarkup(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToStaticMarkup(): You must pass a valid ReactElement.'
+  );
   return renderToStringImpl(element, true);
 }
 
