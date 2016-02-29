@@ -260,6 +260,22 @@ h1, h2, h3, h4, h5, h6 {
     &.active {
       color: $primary;
     }
+
+    &.external {
+      &:after {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        padding-left: 5px;
+        @include retina-image('../img/external', 10px 10px);
+        background-position: 100% 0;
+        background-repeat: no-repeat;
+        font-size: 10px;
+        line-height: 1em;
+        opacity: 0.5;
+      }
+    }
   }
 
   .nav-docs-section {
