@@ -310,6 +310,94 @@ describe('ReactClass-mixin', function() {
     );
   });
 
+  it('should warn if the mixin is undefined', function() {
+    spyOn(console, 'error');
+
+    React.createClass({
+      mixins: [undefined],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got undefined.'
+    );
+  });
+
+  it('should warn if the mixin is null', function() {
+    spyOn(console, 'error');
+
+    React.createClass({
+      mixins: [null],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got null.'
+    );
+  });
+
+  it('should warn if an undefined mixin is included in another mixin', function() {
+    spyOn(console, 'error');
+
+    var mixinA = {
+      mixins: [undefined],
+    };
+
+    React.createClass({
+      mixins: [mixinA],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got undefined.'
+    );
+  });
+
+  it('should warn if a null mixin is included in another mixin', function() {
+    spyOn(console, 'error');
+
+    var mixinA = {
+      mixins: [null],
+    };
+
+    React.createClass({
+      mixins: [mixinA],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got null.'
+    );
+  });
+
   it('should throw if the mixin is a React component', function() {
     expect(function() {
       React.createClass({
