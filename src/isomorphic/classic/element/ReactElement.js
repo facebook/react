@@ -16,6 +16,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var assign = require('Object.assign');
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
+var getComponentName = require('getComponentName');
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -184,7 +185,7 @@ ReactElement.createElement = function(type, config, children) {
                   'in `undefined` being returned. If you need to access the same ' +
                   'value within the child component, you should pass it as a different ' +
                   'prop. (https://fb.me/react-special-props)',
-                'displayName' in type ? type.displayName: 'Element'
+                getComponentName(type) || 'Element'
               );
             }
             return undefined;
