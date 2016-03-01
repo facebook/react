@@ -119,6 +119,7 @@ var ReactCompositeComponentMixin = {
     this._pendingStateQueue = null;
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
+    this._processingChildContext = false;
 
     this._renderedNodeType = null;
     this._renderedComponent = null;
@@ -496,7 +497,9 @@ var ReactCompositeComponentMixin = {
   _processChildContext: function(currentContext) {
     var Component = this._currentElement.type;
     var inst = this._instance;
+    this._processingChildContext = true;
     var childContext = inst.getChildContext && inst.getChildContext();
+    this._processingChildContext = false;
     if (childContext) {
       invariant(
         typeof Component.childContextTypes === 'object',

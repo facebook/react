@@ -469,6 +469,32 @@ describe('ReactCompositeComponent', function() {
     expect(innerUnmounted).toBe(true);
   });
 
+  it('should warn when setState() called within getChildContext()', function() {
+    var Component = React.createClass({
+      childContextTypes: {
+        bogus: ReactPropTypes.bool.isRequired,
+      },
+
+      getChildContext: function() {
+        this.setState({a: 1});
+        return {bogus: false};
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).toThrow('Maximum call stack size exceeded');
+
+    expect(console.error.argsForCall.length).toBeGreaterThan(0);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: setState(...): Cannot update during processing child context.'
+    );
+  });
+
   it('should warn when shouldComponentUpdate() returns undefined', function() {
     var Component = React.createClass({
       getInitialState: function() {
