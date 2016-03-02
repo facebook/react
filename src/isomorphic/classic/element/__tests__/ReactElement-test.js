@@ -11,9 +11,6 @@
 
 'use strict';
 
-// NOTE: We're explicitly not using JSX in this file. This is intended to test
-// classic JS without JSX.
-
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -33,6 +30,8 @@ describe('ReactElement', function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    // NOTE: We're explicitly not using JSX here. This is intended to test
+    // classic JS without JSX.
     ComponentClass = React.createClass({
       render: function() {
         return React.createElement('div');
@@ -222,6 +221,8 @@ describe('ReactElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('allows static methods to be called using the type property', function() {
     spyOn(console, 'error');
 
@@ -244,6 +245,8 @@ describe('ReactElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('identifies valid elements', function() {
     var Component = React.createClass({
       render: function() {
@@ -283,12 +286,16 @@ describe('ReactElement', function() {
     expect(typeof Component.specialType.isRequired).toBe('function');
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('is indistinguishable from a plain object', function() {
     var element = React.createElement('div', {className: 'foo'});
     var object = {};
     expect(element.constructor).toBe(object.constructor);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('should use default prop value when removing a prop', function() {
     var Component = React.createClass({
       getDefaultProps: function() {
@@ -310,6 +317,8 @@ describe('ReactElement', function() {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('should normalize props with default values', function() {
     var Component = React.createClass({
       getDefaultProps: function() {
@@ -404,6 +413,8 @@ describe('ReactElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('identifies elements, but not JSON, if Symbols are supported', function() {
     // Rudimentary polyfill
     // Once all jest engines support Symbols natively we can swap this to test
