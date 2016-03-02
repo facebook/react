@@ -77,7 +77,7 @@ function writeTempConfig(callback) {
 function run(done, configPath) {
   grunt.log.writeln('running jest (this may take a while)');
 
-  var args = ['--harmony', path.join('node_modules', 'jest-cli', 'bin', 'jest')];
+  var args = ['--harmony', path.join('node_modules', 'jest-cli', 'bin', 'jest'), '--runInBand'];
   if (configPath) {
     args.push('--config', configPath);
   }
