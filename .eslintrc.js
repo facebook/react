@@ -30,7 +30,6 @@ module.exports = {
     'indent': [ERROR, 2, {SwitchCase: 1}],
     'jsx-quotes': [ERROR, 'prefer-double'],
     'no-bitwise': OFF,
-    'no-dupe-class-members': ERROR,
     'no-multi-spaces': ERROR,
     'no-restricted-syntax': [ERROR, 'WithStatement'],
     'no-shadow': ERROR,
@@ -39,6 +38,7 @@ module.exports = {
     'quotes': [ERROR, 'single', 'avoid-escape'],
     'space-after-keywords': ERROR,
     'space-before-blocks': ERROR,
+    'space-before-function-paren': [ERROR, {anonymous: 'never', named: 'never'}],
     'space-before-keywords': ERROR,
     'strict': [ERROR, 'global'],
 
@@ -57,7 +57,7 @@ module.exports = {
     'react/no-did-update-set-state': OFF,
     // We define multiple components in test files
     'react/no-multi-comp': OFF,
-    'react/no-unknown-property': ERROR,
+    'react/no-unknown-property': OFF,
     // This isn't useful in our test code
     'react/prop-types': OFF,
     'react/react-in-jsx-scope': ERROR,
