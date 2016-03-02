@@ -244,16 +244,100 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('');
     });
 
-    it('should skip child object attribute on web components', function() {
+    it('should skip reserved props on web components', function() {
       var container = document.createElement('div');
 
-      // Test initial render to null
-      ReactDOM.render(<my-component children={['foo']} />, container);
+      ReactDOM.render(
+        <my-component
+          children={['foo']}
+          suppressContentEditableWarning={true}
+        />,
+        container
+      );
       expect(container.firstChild.hasAttribute('children')).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressContentEditableWarning')
+      ).toBe(false);
 
-      // Test updates to null
-      ReactDOM.render(<my-component children={['foo']} />, container);
+      ReactDOM.render(
+        <my-component
+          children={['bar']}
+          suppressContentEditableWarning={false}
+        />,
+        container
+      );
       expect(container.firstChild.hasAttribute('children')).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressContentEditableWarning')
+      ).toBe(false);
+    });
+
+    it('should skip dangerouslySetInnerHTML on web components', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(
+        <my-component dangerouslySetInnerHTML={{__html: 'hi'}} />,
+        container
+      );
+      expect(
+        container.firstChild.hasAttribute('dangerouslySetInnerHTML')
+      ).toBe(false);
+
+      ReactDOM.render(
+        <my-component dangerouslySetInnerHTML={{__html: 'bye'}} />,
+        container
+      );
+      expect(
+        container.firstChild.hasAttribute('dangerouslySetInnerHTML')
+      ).toBe(false);
+    });
+
+    it('should skip reserved props on SVG components', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(
+        <svg
+          children={['foo']}
+          suppressContentEditableWarning={true}
+        />,
+        container
+      );
+      expect(container.firstChild.hasAttribute('children')).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressContentEditableWarning')
+      ).toBe(false);
+
+      ReactDOM.render(
+        <svg
+          children={['bar']}
+          suppressContentEditableWarning={false}
+        />,
+        container
+      );
+      expect(container.firstChild.hasAttribute('children')).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressContentEditableWarning')
+      ).toBe(false);
+    });
+
+    it('should skip dangerouslySetInnerHTML on SVG components', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(
+        <svg dangerouslySetInnerHTML={{__html: 'hi'}} />,
+        container
+      );
+      expect(
+        container.firstChild.hasAttribute('dangerouslySetInnerHTML')
+      ).toBe(false);
+
+      ReactDOM.render(
+        <svg dangerouslySetInnerHTML={{__html: 'bye'}} />,
+        container
+      );
+      expect(
+        container.firstChild.hasAttribute('dangerouslySetInnerHTML')
+      ).toBe(false);
     });
 
     it('should remove attributes', function() {
