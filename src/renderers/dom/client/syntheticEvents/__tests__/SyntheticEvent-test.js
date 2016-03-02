@@ -88,9 +88,9 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.target).toBe(null);
     expect(console.error.calls.length).toBe(3); // once for each property accessed
     expect(console.error.argsForCall[0][0]).toBe( // assert the first warning for accessing `type`
-      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this,' +
-      'you\'re accessing the property `type` on a released/nullified synthetic event. This is set to null.' +
-      'If you must keep the original synthetic event around, use event.persist().' +
+      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+      'you\'re accessing the property `type` on a released/nullified synthetic event. This is set to null. ' +
+      'If you must keep the original synthetic event around, use event.persist(). ' +
       'See https://fb.me/react-event-pooling for more information.'
     );
   });
@@ -103,10 +103,10 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.type = 'MouseEvent').toBe('MouseEvent');
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this,' +
-      'you\'re setting the property `type` on a released/nullified synthetic event. This is effectively a no-op.' +
-      'If you must keep the original synthetic event around, use event.persist().' +
-      'See https://fb.me/react-event-pooling for more information.'
+      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+      'you\'re setting the property `type` on a released/nullified synthetic event. This is ' +
+      'effectively a no-op. If you must keep the original synthetic event around, use ' +
+      'event.persist(). See https://fb.me/react-event-pooling for more information.'
     );
   });
 
@@ -117,10 +117,10 @@ describe('SyntheticEvent', function() {
     syntheticEvent.preventDefault();
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this,' +
-      'you\'re accessing the method `preventDefault` on a released/nullified synthetic event. This is a no-op function.' +
-      'If you must keep the original synthetic event around, use event.persist().' +
-      'See https://fb.me/react-event-pooling for more information.'
+      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+      'you\'re accessing the method `preventDefault` on a released/nullified synthetic event. ' +
+      'This is a no-op function. If you must keep the original synthetic event around, ' +
+      'use event.persist(). See https://fb.me/react-event-pooling for more information.'
     );
   });
 
@@ -131,10 +131,10 @@ describe('SyntheticEvent', function() {
     syntheticEvent.stopPropagation();
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this,' +
-      'you\'re accessing the method `stopPropagation` on a released/nullified synthetic event. This is a no-op function.' +
-      'If you must keep the original synthetic event around, use event.persist().' +
-      'See https://fb.me/react-event-pooling for more information.'
+      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+      'you\'re accessing the method `stopPropagation` on a released/nullified synthetic event. ' +
+      'This is a no-op function. If you must keep the original synthetic event around, ' +
+      'use event.persist(). See https://fb.me/react-event-pooling for more information.'
     );
   });
 
@@ -154,9 +154,9 @@ describe('SyntheticEvent', function() {
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this,' +
-      'you\'re accessing the property `nativeEvent` on a released/nullified synthetic event. This is set to null.' +
-      'If you must keep the original synthetic event around, use event.persist().' +
+      'Warning: This synthetic event is reused for performance reasons. If you\'re seeing this, ' +
+      'you\'re accessing the property `nativeEvent` on a released/nullified synthetic event. ' +
+      'This is set to null. If you must keep the original synthetic event around, use event.persist(). ' +
       'See https://fb.me/react-event-pooling for more information.'
     );
   });
@@ -172,8 +172,7 @@ describe('SyntheticEvent', function() {
       expect(console.error.argsForCall[0][0]).toBe(
         'Warning: This synthetic event is reused for performance reasons. If you\'re ' +
         'seeing this, you\'re adding a new property in the synthetic event object. ' +
-        'The property is never released. See ' +
-        'https://fb.me/react-event-pooling for more information.'
+        'The property is never released. See https://fb.me/react-event-pooling for more information.'
       );
     } else {
       expect(console.error.calls.length).toBe(0);

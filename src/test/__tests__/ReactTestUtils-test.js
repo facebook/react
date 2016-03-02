@@ -201,7 +201,14 @@ describe('ReactTestUtils', function() {
         this.setState({ clicked: true });
       },
       render: function() {
-        return <div ref={() => {}} onClick={this.handleUserClick} className={this.state.clicked ? 'clicked' : ''}></div>;
+        return (
+          <div
+            ref={() => {}}
+            onClick={this.handleUserClick}
+            className={this.state.clicked ? 'clicked' : ''}
+          >
+          </div>
+        );
       },
     });
 
