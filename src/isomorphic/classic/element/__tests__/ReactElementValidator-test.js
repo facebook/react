@@ -385,6 +385,30 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.length).toBe(2);
   });
 
+  it('should check for suggested props by case', function() {
+    spyOn(console, 'error');
+
+    var Component = React.createClass({
+      propTypes: {
+        onAction: React.PropTypes.func.isRequired,
+      },
+      render: function() {
+        return React.createElement('span', null, this.props.prop);
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(
+      React.createElement(Component, {onaction: function() {}})
+    );
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Failed propType: ' +
+      'Required prop `onAction` was not specified in `Component`. ' +
+      'Did you mistype `onaction`?'
+    );
+  });
+
   it('should warn if a PropType creator is used as a PropType', function() {
     spyOn(console, 'error');
 
