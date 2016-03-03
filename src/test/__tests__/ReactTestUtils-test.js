@@ -206,8 +206,7 @@ describe('ReactTestUtils', function() {
             ref={() => {}}
             onClick={this.handleUserClick}
             className={this.state.clicked ? 'clicked' : ''}
-          >
-          </div>
+          />
         );
       },
     });
