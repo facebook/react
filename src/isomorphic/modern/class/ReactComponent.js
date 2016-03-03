@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
+var ReactInstanceMap = require('ReactInstanceMap');
 
 var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('emptyObject');
@@ -71,6 +72,18 @@ ReactComponent.prototype.setState = function(partialState, callback) {
       'setState(...): You passed an undefined or null state object; ' +
       'instead, use forceUpdate().'
     );
+    var instance = ReactInstanceMap.get(this);
+    if (instance && instance._serverSideRendered &&
+      instance._serverSideRendered.isAfterComponentWillMount) {
+      warning(
+        warnedAboutSetStateIfSSR,
+        'setState(...): method calls executed after componentWillMount ' +
+        '(e.g. setTimeout() callbacks)  are ignored if component was ' +
+        'rendered on server.'
+      );
+      warnedAboutSetStateIfSSR = true;
+      return;
+    }
   }
   this.updater.enqueueSetState(this, partialState);
   if (callback) {
@@ -93,6 +106,18 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponent.prototype.forceUpdate = function(callback) {
+  if (__DEV__) {
+    var instance = ReactInstanceMap.get(this);
+    if (instance && instance._serverSideRendered) {
+      warning(
+        warnedAboutSetStateIfSSR,
+        'forceUpdate(...): all method calls are ignored if component was ' +
+        'rendered on server.'
+      );
+      warnedAboutSetStateIfSSR = true;
+      return;
+    }
+  }
   this.updater.enqueueForceUpdate(this);
   if (callback) {
     this.updater.enqueueCallback(this, callback);
@@ -103,8 +128,11 @@ ReactComponent.prototype.forceUpdate = function(callback) {
  * Deprecated APIs. These APIs used to exist on classic React classes but since
  * we would like to deprecate them, we're not going to move them over to this
  * modern base class. Instead, we define a getter that warns if it's accessed.
+ * warnedAboutSetStateIfSSR is not a part of deprecated APIs
  */
 if (__DEV__) {
+  var warnedAboutSetStateIfSSR = false;
+
   var deprecatedAPIs = {
     isMounted: [
       'isMounted',

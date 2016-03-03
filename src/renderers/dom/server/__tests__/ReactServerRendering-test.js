@@ -254,6 +254,70 @@ describe('ReactServerRendering', function() {
         'renderToString(): You must pass a valid ReactElement.'
       );
     });
+
+    it('should warn once and ignore setState calls executed ' +
+        'after componentWillMount', function() {
+      spyOn(console, 'error');
+
+      var Component = React.createClass({
+        componentWillMount: function() {
+          setTimeout(() => {
+            this.setState({hello: 'from the'});
+            this.setState({other: 'side'});
+          });
+        },
+        render: function() {
+          return <div></div>;
+        },
+      });
+
+      ReactReconcileTransaction.prototype.perform = function() {
+        // We shouldn't ever be calling this on the server
+        throw new Error('Browser reconcile transaction should not be used');
+      };
+      ReactServerRendering.renderToString(
+        <Component />
+      );
+
+      jest.runAllTimers();
+      expect(setTimeout.mock.calls.length).toBe(1);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain(
+        'setState(...): method calls executed after componentWillMount ' +
+        '(e.g. setTimeout() callbacks)  are ignored if component was ' +
+        'rendered on server.'
+      );
+    });
+
+    it('should warn once and ignore all forceUpdate calls', function() {
+      spyOn(console, 'error');
+
+      var Component = React.createClass({
+        componentWillMount: function() {
+          this.forceUpdate();
+          setTimeout(() => {
+            this.forceUpdate();
+          });
+        },
+        render: function() {
+          return <div></div>;
+        },
+      });
+
+      ReactReconcileTransaction.prototype.perform = function() {
+        // We shouldn't ever be calling this on the server
+        throw new Error('Browser reconcile transaction should not be used');
+      };
+      ReactServerRendering.renderToString(
+        <Component />
+      );
+
+      jest.runAllTimers();
+      expect(setTimeout.mock.calls.length).toBe(1);
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('forceUpdate(...): ' +
+        'all method calls are ignored if component was rendered on server.');
+    });
   });
 
   describe('renderToStaticMarkup', function() {
@@ -365,6 +429,8 @@ describe('ReactServerRendering', function() {
     });
 
     it('allows setState in componentWillMount without using DOM', function() {
+      spyOn(console, 'error');
+
       var Component = React.createClass({
         componentWillMount: function() {
           this.setState({text: 'hello, world'});
@@ -381,6 +447,8 @@ describe('ReactServerRendering', function() {
       var markup = ReactServerRendering.renderToString(
         <Component />
       );
+
+      expect(console.error.calls.length).toBe(0);
       expect(markup.indexOf('hello, world') >= 0).toBe(true);
     });
   });

@@ -364,6 +364,12 @@ var ReactCompositeComponentMixin = {
       }
     }
 
+    if (__DEV__) {
+      if (this._serverSideRendered) {
+        this._serverSideRendered.isAfterComponentWillMount = true;
+      }
+    }
+
     // If not a stateless component, we now render
     if (renderedElement === undefined) {
       renderedElement = this._renderValidatedComponent();

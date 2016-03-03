@@ -120,6 +120,7 @@ function instantiateReactComponent(node) {
   if (__DEV__) {
     instance._isOwnerNecessary = false;
     instance._warnedAboutRefsInRender = false;
+    instance._serverSideRendered = null;
   }
 
   // Internal instances should fully constructed at this point, so they should

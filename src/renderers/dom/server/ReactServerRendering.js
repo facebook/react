@@ -36,6 +36,9 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element);
+      if (__DEV__) {
+        componentInstance._serverSideRendered = {isAfterComponentWillMount: false};
+      }
       var markup = componentInstance.mountComponent(
         transaction,
         null,
