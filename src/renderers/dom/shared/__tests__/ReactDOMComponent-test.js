@@ -190,7 +190,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.length).toBe(2);
     });
 
-    it('should warn semi-nicely about NaN in style', function() {
+    it('should warn nicely about NaN in style', function() {
       spyOn(console, 'error');
 
       var style = {fontSize: NaN};
@@ -198,15 +198,9 @@ describe('ReactDOMComponent', function() {
       ReactDOM.render(<span style={style}></span>, div);
       ReactDOM.render(<span style={style}></span>, div);
 
-      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toEqual(
         'Warning: `NaN` is an invalid value for the `fontSize` css style property',
-      );
-      expect(console.error.argsForCall[1][0]).toEqual(
-        'Warning: `span` was passed a style object that has previously been ' +
-        'mutated. Mutating `style` is deprecated. Consider cloning it ' +
-        'beforehand. Check the `render` using <span>. Previous style: ' +
-        '{fontSize: NaN}. Mutated style: {fontSize: NaN}.'
       );
     });
 
