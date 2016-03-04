@@ -190,7 +190,7 @@ if (__DEV__) {
     /*eslint-disable no-func-assign */
     SyntheticEvent = new Proxy(SyntheticEvent, {
       construct: function(target, args) {
-        return this.apply(target, {}, args);
+        return this.apply(target, Object.create(target.prototype), args);
       },
       apply: function(constructor, that, args) {
         return new Proxy(constructor.apply(that, args), {
