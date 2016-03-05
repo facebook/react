@@ -630,7 +630,7 @@ var ReactCompositeComponentMixin = {
     if (this._pendingElement != null) {
       ReactReconciler.receiveComponent(
         this,
-        this._pendingElement || this._currentElement,
+        this._pendingElement,
         transaction,
         this._context
       );
