@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
 var warning = require('warning');
 
 var eventHandlers = [];
@@ -48,6 +49,15 @@ var ReactDebugTool = {
       }
     }
   },
+  onBeginProcessingChildContext() {
+    emitEvent('onBeginProcessingChildContext');
+  },
+  onEndProcessingChildContext() {
+    emitEvent('onEndProcessingChildContext');
+  },
+  onSetState() {
+    emitEvent('onSetState');
+  },
   onMountRootComponent(internalInstance) {
     emitEvent('onMountRootComponent', internalInstance);
   },
@@ -61,5 +71,7 @@ var ReactDebugTool = {
     emitEvent('onUnmountComponent', internalInstance);
   },
 };
+
+ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
 
 module.exports = ReactDebugTool;
