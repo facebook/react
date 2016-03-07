@@ -102,12 +102,12 @@
           </li>
         
           <li>
-            <a href="/react/docs/complementary-tools.html">Complementary Tools</a>
+            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/examples.html">Examples</a>
+            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
             
           </li>
         
@@ -307,12 +307,12 @@
       <ul>
         
           <li>
-            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html" class="external">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html" class="external">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -422,6 +422,19 @@
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">className</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">foo</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
   <span class="p">}</span>
 <span class="p">});</span>
+</code></pre></div>
+<p>Example using ES6 class syntax:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">PureRenderMixin</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-pure-render-mixin&#39;</span><span class="p">;</span>
+<span class="kr">class</span> <span class="nx">FooComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">shouldComponentUpdate</span> <span class="o">=</span> <span class="nx">PureRenderMixin</span><span class="p">.</span><span class="nx">shouldComponentUpdate</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">className</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">foo</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>Under the hood, the mixin implements <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a>, in which it compares the current props and state with the next ones and returns <code>false</code> if the equalities pass.</p>
 

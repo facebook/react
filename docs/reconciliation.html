@@ -102,12 +102,12 @@
           </li>
         
           <li>
-            <a href="/react/docs/complementary-tools.html">Complementary Tools</a>
+            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/examples.html">Examples</a>
+            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
             
           </li>
         
@@ -307,12 +307,12 @@
       <ul>
         
           <li>
-            <a href="https://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            <a href="https://facebook.github.io/flux/docs/overview.html" class="external">Flux Overview</a>
             
           </li>
         
           <li>
-            <a href="https://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            <a href="https://facebook.github.io/flux/docs/todo-list.html" class="external">Flux TodoMVC Tutorial</a>
             
           </li>
         
@@ -456,7 +456,7 @@ renderB: <span class="nt">&lt;div</span> <span class="na">style=</span><span cla
 </code></pre></div>
 <p>After the attributes have been updated, we recurse on all the children.</p>
 <h3><a class="anchor" name="custom-components"></a>Custom Components <a class="hash-link" href="#custom-components">#</a></h3>
-<p>We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and calls <code>component[Will/Did]ReceiveProps()</code> on the previous one.</p>
+<p>We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and calls <code>componentWillReceiveProps()</code> and <code>componentWillUpdate()</code> on the previous one.</p>
 
 <p>The previous component is now operational. Its <code>render()</code> method is called and the diff algorithm restarts with the new result and the previous result.</p>
 <h2><a class="anchor" name="list-wise-diff"></a>List-wise diff <a class="hash-link" href="#list-wise-diff">#</a></h2><h3><a class="anchor" name="problematic-case"></a>Problematic Case <a class="hash-link" href="#problematic-case">#</a></h3>
