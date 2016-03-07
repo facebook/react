@@ -4,6 +4,7 @@
   "version": "0.15.0-alpha.1",
   "devDependencies": {
     "async": "^1.5.0",
+    "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^5.0.0",
     "babel-plugin-check-es2015-constants": "^6.5.0",

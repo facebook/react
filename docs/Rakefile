@@ -1,10 +1,18 @@
 require('rubygems')
 require('json')
 require('yaml')
+require('open-uri')
+
+desc "download babel-browser"
+task :fetch_remotes do
+  IO.copy_stream(
+    open('https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js'),
+    'js/babel-browser.min.js'
+  )
+end
 
 desc "generate js from jsx"
 task :js do
-  system "cp ../node_modules/babel/node_modules/babel-core/browser.min.js ./js/babel-browser.min.js"
   system "../node_modules/.bin/babel _js --out-dir=js"
 end
 
@@ -54,7 +62,7 @@ task :update_acknowledgements do
 end
 
 desc "build into ../../react-gh-pages"
-task :release => [:update_version, :default] do
+task :release => [:update_version, :js, :fetch_remotes] do
   system "jekyll build -d ../../react-gh-pages"
 end
 
