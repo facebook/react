@@ -11,6 +11,7 @@
 
 'use strict';
 
+var DisabledInputUtils = require('DisabledInputUtils');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -80,7 +81,7 @@ var ReactDOMInput = {
       onChange: inst._wrapperState.onChange,
     });
 
-    return nativeProps;
+    return DisabledInputUtils.getNativeProps(inst, nativeProps);
   },
 
   mountWrapper: function(inst, props) {
