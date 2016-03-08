@@ -177,7 +177,7 @@ var MediaQuery = React.createClass({
   },
   componentDidMount: function(){
     var checkMediaQuery = function(){
-      var type = window.matchMedia("min-width: 1025px").matches ? 'desktop' : 'mobile';
+      var type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
       if (type !== this.state.type){
         this.setState({type:type}); 
       }
