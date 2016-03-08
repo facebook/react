@@ -68,13 +68,8 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-r
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;LinkedValueMixin&lt;/code&gt; and &lt;code&gt;valueLink&lt;/code&gt; are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: &lt;a href=&quot;https://www.npmjs.com/package/react-linked-input&quot;&gt;react-linked-input&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-enhancements&quot;&gt;&lt;/a&gt;Notable enhancements &lt;a class=&quot;hash-link&quot; href=&quot;#notable-enhancements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added &lt;code&gt;React.Children.toArray&lt;/code&gt; which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your &lt;code&gt;render&lt;/code&gt; methods, especially if you want to reorder or slice &lt;code&gt;this.props.children&lt;/code&gt; before passing it down. In addition, &lt;code&gt;React.Children.map&lt;/code&gt; now returns plain arrays too.&lt;/li&gt;
-&lt;/ul&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-helpful-warnings&quot;&gt;&lt;/a&gt;New helpful warnings &lt;a class=&quot;hash-link&quot; href=&quot;#new-helpful-warnings&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.&lt;/li&gt;
 &lt;li&gt;If you use a minified copy of the &lt;em&gt;development&lt;/em&gt; build, React DOM kindly encourages you to use the faster production build instead.&lt;/li&gt;
 &lt;li&gt;React DOM: When specifying a unit-less CSS value as a string, a future version will not add &lt;code&gt;px&lt;/code&gt; automatically. This version now warns in this case (ex: writing &lt;code&gt;style=&lt;/code&gt;. (Unitless &lt;em&gt;number&lt;/em&gt; values like &lt;code&gt;width: 300&lt;/code&gt; are unchanged.)&lt;/li&gt;
 &lt;li&gt;Synthetic Events will now warn when setting and accessing properties (which will not get cleared appropriately), as well as warn on access after an event has been returned to the pool.&lt;/li&gt;

@@ -175,13 +175,8 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <ul>
 <li><code>LinkedValueMixin</code> and <code>valueLink</code> are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: <a href="https://www.npmjs.com/package/react-linked-input">react-linked-input</a>.</li>
 </ul>
-<h3><a class="anchor" name="notable-enhancements"></a>Notable enhancements <a class="hash-link" href="#notable-enhancements">#</a></h3>
-<ul>
-<li>Added <code>React.Children.toArray</code> which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your <code>render</code> methods, especially if you want to reorder or slice <code>this.props.children</code> before passing it down. In addition, <code>React.Children.map</code> now returns plain arrays too.</li>
-</ul>
 <h3><a class="anchor" name="new-helpful-warnings"></a>New helpful warnings <a class="hash-link" href="#new-helpful-warnings">#</a></h3>
 <ul>
-<li>React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.</li>
 <li>If you use a minified copy of the <em>development</em> build, React DOM kindly encourages you to use the faster production build instead.</li>
 <li>React DOM: When specifying a unit-less CSS value as a string, a future version will not add <code>px</code> automatically. This version now warns in this case (ex: writing <code>style=</code>. (Unitless <em>number</em> values like <code>width: 300</code> are unchanged.)</li>
 <li>Synthetic Events will now warn when setting and accessing properties (which will not get cleared appropriately), as well as warn on access after an event has been returned to the pool.</li>
