@@ -7,6 +7,98 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v15.0 Release Candidate</title>
+				<description>&lt;p&gt;Sorry for the small delay in releasing this. As we said, we&amp;#39;ve been busy binge-watching House of Cards. That scene in the last episode where Francis and Claire Underwood &lt;abbr title=&quot;You didn&#39;t think we would actually spoil anything did you?&quot;&gt;████████████████████████████████████&lt;/abbr&gt;. WOW!&lt;/p&gt;
+
+&lt;p&gt;But now we&amp;#39;re ready, so without further ado, we&amp;#39;re shipping a release candidate for React v15 now. As a reminder, &lt;a href=&quot;/react/blog/2016/02/19/new-versioning-scheme.html&quot;&gt;we&amp;#39;re switching to major versions&lt;/a&gt; to indicate that we have been using React in production for a long time. This 15.0 release follows our previous 0.14 version and we&amp;#39;ll continue to follow semver like we&amp;#39;ve been doing since 2013. It&amp;#39;s also worth noting that &lt;a href=&quot;/react/blog/2016/01/12/discontinuing-ie8-support.html&quot;&gt;we no longer actively support Internet Explorer 8&lt;/a&gt;. We believe React will work in its current form there but we will not be prioritizing any efforts to fix new issues that only affect IE8.&lt;/p&gt;
+
+&lt;p&gt;Please try it out before we publish the final release. Let us know if you run into any problems by filing issues on our &lt;a href=&quot;https://github.com/facebook/react&quot;&gt;GitHub repo&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrade-guide&quot;&gt;&lt;/a&gt;Upgrade Guide &lt;a class=&quot;hash-link&quot; href=&quot;#upgrade-guide&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Like always, we have a few breaking changes in this release. We know changes can be painful (the Facebook codebase has over 15,000 React components), so we always try to make changes gradually in order to minimize the pain.&lt;/p&gt;
+
+&lt;p&gt;If your code is free of warnings when running under React 0.14, upgrading should be easy. The bulk of changes in this release are actually behind the scenes, impacting the way that React interacts with the DOM. The other substantial change is that React now supports the full range of SVG elements and attributes. Beyond that we have a large number of incremental improvements and additional warnings aimed to aid developers. We&amp;#39;ve also laid some groundwork in the core to bring you some new capabilities in future releases.&lt;/p&gt;
+
+&lt;p&gt;See the changelog below for more details.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;npm install --save react@15.0.0-rc.1 react-dom@15.0.0-rc.1&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
+
+&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we provide pre-built browser builds for your convenience, which are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.1.js&quot;&gt;https://fb.me/react-15.0.0-rc.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.1.min.js&quot;&gt;https://fb.me/react-15.0.0-rc.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.1.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.1.min.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.1.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.1.min.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;major-changes&quot;&gt;&lt;/a&gt;Major changes &lt;a class=&quot;hash-link&quot; href=&quot;#major-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;document.createelement-is-in-and-data-reactid-is-out&quot;&gt;&lt;/a&gt;&lt;code&gt;document.createElement&lt;/code&gt; is in and &lt;code&gt;data-reactid&lt;/code&gt; is out &lt;a class=&quot;hash-link&quot; href=&quot;#document.createelement-is-in-and-data-reactid-is-out&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;There were a number of large changes to our interactions with the DOM. One of the most noticeable changes is that we no longer set the &lt;code&gt;data-reactid&lt;/code&gt; attribute for each DOM node. While this will make it much more difficult to know if a website is using React, the advantage is that the DOM is much more lightweight. This change was made possible by us switching to use &lt;code&gt;document.createElement&lt;/code&gt; on initial render. Previously we would generate a large string of HTML and then set &lt;code&gt;node.innerHTML&lt;/code&gt;. At the time, this was decided to be faster than using &lt;code&gt;document.createElement&lt;/code&gt; for the majority of cases and browsers that we supported. Browsers have continued to improve and so overwhelmingly this is no longer true. By using &lt;code&gt;createElement&lt;/code&gt; we can make other parts of React faster. The ids were used to map back from events to the original React component, meaning we had to do a bunch of work on every event, even though we cached this data heavily. As we&amp;#39;ve all experienced, caching and in particularly invalidating caches, can be error prone and we saw many hard to reproduce issues over the years as a result. Now we can build up a direct mapping at render time since we already have a handle on the node.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;no-more-extra-ltspangts&quot;&gt;&lt;/a&gt;No more extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s &lt;a class=&quot;hash-link&quot; href=&quot;#no-more-extra-ltspangts&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;Another big change with our DOM interaction is how we render text blocks. Previously you may have noticed that React rendered a lot of extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. Eg, in our most basic example on the home page we render &lt;code&gt;&amp;lt;div&amp;gt;Hello {this.props.name}&amp;lt;/div&amp;gt;&lt;/code&gt;, resulting in markup that contained 2 &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. Now we&amp;#39;ll render plain text nodes interspersed with comment nodes that are used for demarcation. This gives us the same ability to update individual pieces of text, without creating extra nested nodes. Very few people have depended on the actual markup generated here so it&amp;#39;s likely you are not impacted. However if you were targeting these &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s in your CSS, you will need to adjust accordingly. You can always render them explicitly in your components.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-null-now-uses-comment-nodes&quot;&gt;&lt;/a&gt;Rendering &lt;code&gt;null&lt;/code&gt; now uses comment nodes &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-null-now-uses-comment-nodes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;We&amp;#39;ve also made use of these comment nodes to change what &lt;code&gt;null&lt;/code&gt; renders to. Rendering to &lt;code&gt;null&lt;/code&gt; was a feature we added in React v0.11 and was implemented by rendering &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements. By rendering to comment nodes now, there&amp;#39;s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of &lt;code&gt;:nth-child&lt;/code&gt; selectors. This, along with the other changes mentioned above, have always been considered implementation details of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;improved-svg-support&quot;&gt;&lt;/a&gt;Improved SVG support &lt;a class=&quot;hash-link&quot; href=&quot;#improved-svg-support&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;p&gt;All SVG tags and attributes are now fully supported. (Uncommon SVG tags are not present on the &lt;code&gt;React.DOM&lt;/code&gt; element helper, but JSX and &lt;code&gt;React.createElement&lt;/code&gt; work on all tag names.) All SVG attributes match their original capitalization and hyphenation as defined in the specification (ex: &lt;code&gt;gradientTransform&lt;/code&gt; must be camel-cased but &lt;code&gt;clip-path&lt;/code&gt; should be hyphenated).&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;It&amp;#39;s worth calling out the DOM structure changes above again, in particular the change from &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. In the course of updating the Facebook codebase, we found a very small amount of code that was depending on the markup that React generated. Some of these cases were integration tests like WebDriver which were doing very specific XPath queries to target nodes. Others were simply tests using &lt;code&gt;ReactDOM.renderToStaticMarkup&lt;/code&gt; and comparing markup. Again, there were a very small number of changes that had to be made, but we don&amp;#39;t want anybody to be blindsided. We encourage everybody to run their test suites when upgrading and consider alternative approaches when possible. One approach that will work for some cases is to explicitly use &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s in your &lt;code&gt;render&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;These deprecations were introduced in v0.14 with a warning and the APIs are now removed.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Deprecated APIs removed from &lt;code&gt;React&lt;/code&gt;, specifically &lt;code&gt;findDOMNode&lt;/code&gt;, &lt;code&gt;render&lt;/code&gt;, &lt;code&gt;renderToString&lt;/code&gt;, &lt;code&gt;renderToStaticMarkup&lt;/code&gt;, and &lt;code&gt;unmountComponentAtNode&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Deprecated APIs removed from &lt;code&gt;React.addons&lt;/code&gt;, specifically &lt;code&gt;batchedUpdates&lt;/code&gt; and &lt;code&gt;cloneWithProps&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Deprecated APIs removed from component instances, specifically &lt;code&gt;setProps&lt;/code&gt;, &lt;code&gt;replaceProps&lt;/code&gt;, and &lt;code&gt;getDOMNode&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-deprecations-introduced-with-a-warning&quot;&gt;&lt;/a&gt;New deprecations, introduced with a warning &lt;a class=&quot;hash-link&quot; href=&quot;#new-deprecations-introduced-with-a-warning&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Each of these changes will continue to work as before with a new warning until the release of React 16 so you can upgrade your code gradually.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LinkedValueMixin&lt;/code&gt; and &lt;code&gt;valueLink&lt;/code&gt; are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: &lt;a href=&quot;https://www.npmjs.com/package/react-linked-input&quot;&gt;react-linked-input&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-enhancements&quot;&gt;&lt;/a&gt;Notable enhancements &lt;a class=&quot;hash-link&quot; href=&quot;#notable-enhancements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added &lt;code&gt;React.Children.toArray&lt;/code&gt; which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your &lt;code&gt;render&lt;/code&gt; methods, especially if you want to reorder or slice &lt;code&gt;this.props.children&lt;/code&gt; before passing it down. In addition, &lt;code&gt;React.Children.map&lt;/code&gt; now returns plain arrays too.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-helpful-warnings&quot;&gt;&lt;/a&gt;New helpful warnings &lt;a class=&quot;hash-link&quot; href=&quot;#new-helpful-warnings&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.&lt;/li&gt;
+&lt;li&gt;If you use a minified copy of the &lt;em&gt;development&lt;/em&gt; build, React DOM kindly encourages you to use the faster production build instead.&lt;/li&gt;
+&lt;li&gt;React DOM: When specifying a unit-less CSS value as a string, a future version will not add &lt;code&gt;px&lt;/code&gt; automatically. This version now warns in this case (ex: writing &lt;code&gt;style=&lt;/code&gt;. (Unitless &lt;em&gt;number&lt;/em&gt; values like &lt;code&gt;width: 300&lt;/code&gt; are unchanged.)&lt;/li&gt;
+&lt;li&gt;Synthetic Events will now warn when setting and accessing properties (which will not get cleared appropriately), as well as warn on access after an event has been returned to the pool.&lt;/li&gt;
+&lt;li&gt;Elements will now warn when attempting to read &lt;code&gt;ref&lt;/code&gt; and &lt;code&gt;key&lt;/code&gt; from the props.&lt;/li&gt;
+&lt;li&gt;React DOM now attempts to warn for mistyped event handlers on DOM elements (ex: &lt;code&gt;onclick&lt;/code&gt; which should be &lt;code&gt;onClick&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-bug-fixes&quot;&gt;&lt;/a&gt;Notable bug fixes &lt;a class=&quot;hash-link&quot; href=&quot;#notable-bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed multiple small memory leaks&lt;/li&gt;
+&lt;li&gt;Click events are handled by React DOM more reliably in mobile browsers, particularly in Mobile Safari.&lt;/li&gt;
+&lt;li&gt;Input events are handled more reliably in IE 10 and IE 11; spurious events no longer fire when using a placeholder.&lt;/li&gt;
+&lt;li&gt;React DOM now supports the &lt;code&gt;cite&lt;/code&gt; and &lt;code&gt;profile&lt;/code&gt; HTML attributes.&lt;/li&gt;
+&lt;li&gt;React DOM now supports the &lt;code&gt;onAnimationStart&lt;/code&gt;, &lt;code&gt;onAnimationEnd&lt;/code&gt;, &lt;code&gt;onAnimationIteration&lt;/code&gt;, &lt;code&gt;onTransitionEnd&lt;/code&gt;, and &lt;code&gt;onInvalid&lt;/code&gt; events. Support for &lt;code&gt;onLoad&lt;/code&gt; has been added to &lt;code&gt;object&lt;/code&gt; elements.&lt;/li&gt;
+&lt;li&gt;Add-Ons: ReactTransitionGroup now correctly handles multiple nodes being removed simultaneously.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Object.is&lt;/code&gt; is used in a number of places to compare values, which leads to fewer false positives, especially involving &lt;code&gt;NaN&lt;/code&gt;. In particular, this affects the &lt;code&gt;shallowCompare&lt;/code&gt; add-on.&lt;/li&gt;
+&lt;li&gt;React DOM now defaults to using DOM attributes instead of properties, which fixes a few edge case bugs. Additionally the nullification of values (ex: &lt;code&gt;href={null}&lt;/code&gt;) now results in the forceful removal, no longer trying to set to the default value used by browsers in the absence of a value.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2016-03-07T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/03/07/react-v15-rc1.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/07/react-v15-rc1.html</guid>
+			</item>
+		
+			<item>
 				<title>New Versioning Scheme</title>
 				<description>&lt;p&gt;Today we&amp;#39;re announcing that we&amp;#39;re switching to major revisions for React. The current version is 0.14.7. The next release will be: &lt;strong&gt;15.0.0&lt;/strong&gt;&lt;/p&gt;
 
@@ -714,53 +806,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.2.m
 				<pubDate>2015-11-02T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/11/02/react-v0.14.2.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/11/02/react-v0.14.2.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.14.1</title>
-				<description>&lt;p&gt;After a couple weeks of having more people use v0.14, we&amp;#39;re ready to ship a patch release addressing a few issues. Thanks to everybody who has reported issues and written patches!&lt;/p&gt;
-
-&lt;p&gt;The release is now available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.1.js&quot;&gt;https://fb.me/react-0.14.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.1.min.js&quot;&gt;https://fb.me/react-0.14.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.1.js&quot;&gt;https://fb.me/react-with-addons-0.14.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.1.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.1.js&quot;&gt;https://fb.me/react-dom-0.14.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.1.min.js&quot;&gt;https://fb.me/react-dom-0.14.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed bug where events wouldn&amp;#39;t fire in old browsers when using React in development mode&lt;/li&gt;
-&lt;li&gt;Fixed bug preventing use of &lt;code&gt;dangerouslySetInnerHTML&lt;/code&gt; with Closure Compiler Advanced mode&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;srcLang&lt;/code&gt;, &lt;code&gt;default&lt;/code&gt;, and &lt;code&gt;kind&lt;/code&gt; attributes for &lt;code&gt;&amp;lt;track&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;color&lt;/code&gt; attribute&lt;/li&gt;
-&lt;li&gt;Ensured legacy &lt;code&gt;.props&lt;/code&gt; access on DOM nodes is updated on re-renders&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-testutils-add-on&quot;&gt;&lt;/a&gt;React TestUtils Add-on &lt;a class=&quot;hash-link&quot; href=&quot;#react-testutils-add-on&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed &lt;code&gt;scryRenderedDOMComponentsWithClass&lt;/code&gt; so it works with SVG&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-csstransitiongroup-add-on&quot;&gt;&lt;/a&gt;React CSSTransitionGroup Add-on &lt;a class=&quot;hash-link&quot; href=&quot;#react-csstransitiongroup-add-on&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fix bug preventing &lt;code&gt;0&lt;/code&gt; to be used as a timeout value&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-on-bower&quot;&gt;&lt;/a&gt;React on Bower &lt;a class=&quot;hash-link&quot; href=&quot;#react-on-bower&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added &lt;code&gt;react-dom.js&lt;/code&gt; to &lt;code&gt;main&lt;/code&gt; to improve compatibility with tooling&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2015-10-28T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/10/28/react-v0.14.1.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/10/28/react-v0.14.1.html</guid>
 			</item>
 		
 	</channel>
