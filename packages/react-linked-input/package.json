@@ -20,6 +20,6 @@
   "author": "",
   "license": "BSD-3-Clause",
   "peerDependencies": {
-    "react": "^0.14.7"
+    "react": "^15.0.0-rc.1"
   }
 }

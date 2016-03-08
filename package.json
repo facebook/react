@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "0.15.0-alpha.1",
+  "version": "15.0.0-rc.1",
   "devDependencies": {
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
