@@ -16,6 +16,7 @@
  */
 var isUnitlessNumber = {
   animationIterationCount: true,
+  borderImageOutset: true,
   boxFlex: true,
   boxFlexGroup: true,
   boxOrdinalGroup: true,
