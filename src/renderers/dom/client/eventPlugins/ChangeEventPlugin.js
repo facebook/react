@@ -19,6 +19,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
+var inputValueTracking = require('inputValueTracking');
 var getEventTarget = require('getEventTarget');
 var isEventSupported = require('isEventSupported');
 var isTextInputElement = require('isTextInputElement');
@@ -26,14 +27,6 @@ var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
-function isCheckable(elem) {
-  var type = elem.type;
-  var nodeName = elem.nodeName;
-  return (
-    (nodeName && nodeName.toLowerCase() === 'input') &&
-    (type === 'checkbox' || type === 'radio')
-  );
-}
 
 var eventTypes = {
   change: {
@@ -54,52 +47,24 @@ var eventTypes = {
   },
 };
 
-var LAST_VALUE_KEY = '__reactLastInputValue';
-var lastInputValue = {
-  get: function(elem) {
-    if (elem) {
-      return elem[LAST_VALUE_KEY];
-    }
-  },
-
-  set: function(elem, value) {
-    if (elem) {
-      // cast to a string for comparisons
-      elem[LAST_VALUE_KEY] = '' + value;
-    }
-  },
-};
-
-function getInstIfValueChanged(targetInst, target) {
-  var value = getInputValue(target);
-  var lastValue = lastInputValue.get(target);
-
-  if (!target.hasOwnProperty(LAST_VALUE_KEY) || value !== lastValue) {
-    lastInputValue.set(target, value);
-    return targetInst;
-  }
+function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
+  var event = SyntheticEvent.getPooled(
+    eventTypes.change,
+    inst,
+    nativeEvent,
+    target
+  );
+  event.type = 'change';
+  EventPropagators.accumulateTwoPhaseDispatches(event);
+  return event;
 }
-
-function getInputValue(elem) {
-  var value;
-
-  if (elem) {
-    if (isCheckable(elem)) {
-      value = '' + elem.checked;
-    } else {
-      value = elem.value;
-    }
-  }
-  return value;
-}
-
 /**
  * For IE shims
  */
 var activeElement = null;
 var activeElementInst = null;
-var activeElementValue = null;
-var activeElementValueProp = null;
+
+
 
 /**
  * SECTION: handle `change` event
@@ -120,14 +85,12 @@ if (ExecutionEnvironment.canUseDOM) {
   );
 }
 
-function manualDispatchChangeEvent(nativeEvent, targetInst) {
-  var event = SyntheticEvent.getPooled(
-    eventTypes.change,
-    targetInst,
+function manualDispatchChangeEvent(nativeEvent) {
+  var event = createAndAccumulateChangeEvent(
+    activeElementInst,
     nativeEvent,
     getEventTarget(nativeEvent)
   );
-  EventPropagators.accumulateTwoPhaseDispatches(event);
 
   // If change and propertychange bubbled, we'd just bind to it like all the
   // other events and have it go through ReactBrowserEventEmitter. Since it
@@ -163,10 +126,15 @@ function stopWatchingForChangeEventIE8() {
   activeElementInst = null;
 }
 
+function getInstIfValueChanged(targetInst) {
+  if (inputValueTracking.updateValueIfChanged(targetInst)) {
+    return targetInst;
+  }
+}
+
 function getTargetInstForChangeEvent(
   topLevelType,
-  targetInst,
-  target
+  targetInst
 ) {
   if (topLevelType === topLevelTypes.topChange) {
     return targetInst;
@@ -201,37 +169,6 @@ if (ExecutionEnvironment.canUseDOM) {
   );
 }
 
-/**
- * (For IE <=9) Replacement getter/setter for the `value` property that gets
- * set on the active element.
- */
-var newValueProp = {
-  get: function() {
-    return activeElementValueProp.get.call(this);
-  },
-  set: function(val) {
-    // Cast to a string so we can do equality checks.
-    activeElementValue = '' + val;
-    activeElementValueProp.set.call(this, val);
-  },
-};
-
-function clearActiveElement() {
-  activeElement = null;
-  activeElementInst = null;
-  activeElementValue = null;
-  activeElementValueProp = null;
-}
-
-function updateActiveElement(target, targetInst) {
-  activeElement = target;
-  activeElementInst = targetInst;
-  activeElementValue = target.value;
-  activeElementValueProp = Object.getOwnPropertyDescriptor(
-    target.constructor.prototype,
-    'value'
-  );
-}
 
 /**
  * (For IE <=9) Starts tracking propertychange events on the passed-in element
@@ -239,11 +176,8 @@ function updateActiveElement(target, targetInst) {
  * value changes in JS.
  */
 function startWatchingForValueChange(target, targetInst) {
-  updateActiveElement(target, targetInst);
-
-  // Not guarded in a canDefineProperty check: IE8 supports defineProperty only
-  // on DOM elements
-  Object.defineProperty(activeElement, 'value', newValueProp);
+  activeElement = target;
+  activeElementInst = targetInst;
   activeElement.attachEvent('onpropertychange', handlePropertyChange);
 }
 
@@ -255,11 +189,9 @@ function stopWatchingForValueChange() {
   if (!activeElement) {
     return;
   }
-
-  // delete restores the original property definition
-  delete activeElement.value;
   activeElement.detachEvent('onpropertychange', handlePropertyChange);
-  clearActiveElement();
+  activeElement = null;
+  activeElementInst = null;
 }
 
 /**
@@ -270,13 +202,9 @@ function handlePropertyChange(nativeEvent) {
   if (nativeEvent.propertyName !== 'value') {
     return;
   }
-  var value = nativeEvent.srcElement.value;
-  if (value === activeElementValue) {
-    return;
+  if (getInstIfValueChanged(activeElementInst)) {
+    manualDispatchChangeEvent(nativeEvent);
   }
-  activeElementValue = value;
-
-  manualDispatchChangeEvent(nativeEvent);
 }
 
 function handleEventsForInputEventPolyfill(
@@ -323,10 +251,7 @@ function getTargetInstForInputEventPolyfill(
     // keystroke if user does a key repeat (it'll be a little delayed: right
     // before the second keystroke). Other input methods (e.g., paste) seem to
     // fire selectionchange normally.
-    if (activeElement && activeElement.value !== activeElementValue) {
-      activeElementValue = activeElement.value;
-      return activeElementInst;
-    }
+    return getInstIfValueChanged(activeElementInst);
   }
 }
 
@@ -338,29 +263,31 @@ function shouldUseClickEvent(elem) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
-  return isCheckable(elem);
+  var nodeName = elem.nodeName;
+  return (
+    (nodeName && nodeName.toLowerCase() === 'input') &&
+    (elem.type === 'checkbox' || elem.type === 'radio')
+  );
 }
 
 function getTargetInstForClickEvent(
   topLevelType,
-  targetInst,
-  target
+  targetInst
 ) {
   if (topLevelType === topLevelTypes.topClick) {
-    return getInstIfValueChanged(targetInst, target);
+    return getInstIfValueChanged(targetInst);
   }
 }
 
 function getTargetInstForInputOrChangeEvent(
   topLevelType,
-  targetInst,
-  target
+  targetInst
 ) {
   if (
     topLevelType === topLevelTypes.topInput ||
     topLevelType === topLevelTypes.topChange
   ) {
-    return getInstIfValueChanged(targetInst, target);
+    return getInstIfValueChanged(targetInst);
   }
 }
 
@@ -379,41 +306,6 @@ var ChangeEventPlugin = {
   eventTypes: eventTypes,
 
   _isInputEventSupported: isInputEventSupported,
-
-  willDeleteListener(inst) {
-    var targetNode;
-
-    // An uglier internal check to avoid a try/catch
-    // if the instance is unmounted the node will already be removed
-    if (inst._nativeNode !== null) {
-      targetNode = ReactDOMComponentTree.getNodeFromInstance(inst);
-    }
-
-    if (targetNode) {
-      delete targetNode.value;
-    }
-  },
-
-  didPutListener: function(inst, registrationName) {
-    var targetNode = ReactDOMComponentTree.getNodeFromInstance(inst);
-    var valueField = isCheckable(targetNode) ? 'checked' : 'value';
-    var descriptor = Object.getOwnPropertyDescriptor(
-      targetNode.constructor.prototype,
-      valueField
-    );
-
-    Object.defineProperty(targetNode, valueField, {
-      enumerable: descriptor.enumerable,
-      configurable: true,
-      get: function() {
-        return descriptor.get.call(this);
-      },
-      set: function(val) {
-        lastInputValue.set(this, val);
-        descriptor.set.call(this, val);
-      },
-    });
-  },
 
   extractEvents: function(
     topLevelType,
@@ -443,16 +335,13 @@ var ChangeEventPlugin = {
     }
 
     if (getTargetInstFunc) {
-      var inst = getTargetInstFunc(topLevelType, targetInst, targetNode);
+      var inst = getTargetInstFunc(topLevelType, targetInst);
       if (inst) {
-        var event = SyntheticEvent.getPooled(
-          eventTypes.change,
+        var event = createAndAccumulateChangeEvent(
           inst,
           nativeEvent,
           nativeEventTarget
         );
-        event.type = 'change';
-        EventPropagators.accumulateTwoPhaseDispatches(event);
         return event;
       }
     }
@@ -467,8 +356,5 @@ var ChangeEventPlugin = {
   },
 
 };
-
-// exposed for testing ONLY
-ChangeEventPlugin.__lastInputValue = lastInputValue;
 
 module.exports = ChangeEventPlugin;
