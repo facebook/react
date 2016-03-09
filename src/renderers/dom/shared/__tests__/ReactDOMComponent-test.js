@@ -449,39 +449,6 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('clip-path');
     });
 
-    it('should only warn once about deprecated SVG attributes', function() {
-      spyOn(console, 'error');
-      var container = document.createElement('div');
-      ReactDOM.render(
-        <svg clipPath="0 0 100 100">
-          <rect strokeWidth={1} />
-          <rect strokeWidth={10} />
-        </svg>,
-        container
-      );
-      expect(console.error.argsForCall.length).toBe(2);
-      expect(console.error.argsForCall[0][0]).toContain('clipPath');
-      expect(console.error.argsForCall[0][0]).toContain('clip-path');
-      expect(console.error.argsForCall[1][0]).toContain('strokeWidth');
-      expect(console.error.argsForCall[1][0]).toContain('stroke-width');
-
-      ReactDOM.render(
-        <svg clipPath="0 0 100 100">
-          <rect strokeWidth={1} strokeOpacity={0.5} />
-          <rect strokeWidth={10} />
-          <rect strokeWidth={100} />
-        </svg>,
-        container
-      );
-      expect(console.error.argsForCall.length).toBe(3);
-      expect(console.error.argsForCall[0][0]).toContain('clipPath');
-      expect(console.error.argsForCall[0][0]).toContain('clip-path');
-      expect(console.error.argsForCall[1][0]).toContain('strokeWidth');
-      expect(console.error.argsForCall[1][0]).toContain('stroke-width');
-      expect(console.error.argsForCall[2][0]).toContain('strokeOpacity');
-      expect(console.error.argsForCall[2][0]).toContain('stroke-opacity');
-    });
-
     it('should update arbitrary hyphenated attributes for SVG tags', function() {
       var container = document.createElement('div');
 

@@ -25,22 +25,19 @@ if (__DEV__) {
   var warnedSVGAttributes = {};
 
   var warnDeprecatedSVGAttribute = function(name) {
-    if (reactProps.hasOwnProperty(name) && reactProps[name]) {
-      return;
-    }
-
     if (!DOMProperty.properties.hasOwnProperty(name)) {
       return;
     }
+
+    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
+        warnedSVGAttributes.hasOwnProperty(name) && warnedSVGAttributes[name]) {
+      return;
+    }
+
     var { attributeName, attributeNamespace } = DOMProperty.properties[name];
     if (attributeNamespace || name === attributeName) {
       return;
     }
-
-    if (warnedSVGAttributes.hasOwnProperty(name) && warnedSVGAttributes[name]) {
-      return;
-    }
-    warnedSVGAttributes[name] = true;
 
     warning(
       false,
