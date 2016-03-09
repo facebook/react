@@ -184,7 +184,7 @@ ReactElement.createElement = function(type, config, children) {
                   'in `undefined` being returned. If you need to access the same ' +
                   'value within the child component, you should pass it as a different ' +
                   'prop. (https://fb.me/react-special-props)',
-                'displayName' in type ? type.displayName: 'Element'
+                typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
               );
             }
             return undefined;
@@ -203,7 +203,7 @@ ReactElement.createElement = function(type, config, children) {
                   'in `undefined` being returned. If you need to access the same ' +
                   'value within the child component, you should pass it as a different ' +
                   'prop. (https://fb.me/react-special-props)',
-                'displayName' in type ? type.displayName: 'Element'
+                typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
               );
             }
             return undefined;
