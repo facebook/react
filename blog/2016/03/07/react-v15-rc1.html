@@ -173,12 +173,12 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <p>Each of these changes will continue to work as before with a new warning until the release of React 16 so you can upgrade your code gradually.</p>
 
 <ul>
-<li><code>LinkedValueMixin</code> and <code>valueLink</code> are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: <a href="https://www.npmjs.com/package/react-linked-input">react-linked-input</a>.</li>
+<li><code>LinkedStateMixin</code> and <code>valueLink</code> are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: <a href="https://www.npmjs.com/package/react-linked-input">react-linked-input</a>.</li>
 </ul>
 <h3><a class="anchor" name="new-helpful-warnings"></a>New helpful warnings <a class="hash-link" href="#new-helpful-warnings">#</a></h3>
 <ul>
 <li>If you use a minified copy of the <em>development</em> build, React DOM kindly encourages you to use the faster production build instead.</li>
-<li>React DOM: When specifying a unit-less CSS value as a string, a future version will not add <code>px</code> automatically. This version now warns in this case (ex: writing <code>style=</code>. (Unitless <em>number</em> values like <code>width: 300</code> are unchanged.)</li>
+<li>React DOM: When specifying a unit-less CSS value as a string, a future version will not add <code>px</code> automatically. This version now warns in this case (ex: writing <code>style={{width: &#39;300&#39;}}</code>. (Unitless <em>number</em> values like <code>width: 300</code> are unchanged.)</li>
 <li>Synthetic Events will now warn when setting and accessing properties (which will not get cleared appropriately), as well as warn on access after an event has been returned to the pool.</li>
 <li>Elements will now warn when attempting to read <code>ref</code> and <code>key</code> from the props.</li>
 <li>React DOM now attempts to warn for mistyped event handlers on DOM elements (ex: <code>onclick</code> which should be <code>onClick</code>)</li>
