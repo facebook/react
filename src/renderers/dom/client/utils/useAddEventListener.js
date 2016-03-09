@@ -7,9 +7,16 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule useAddEventListener
+ * @typechecks
  */
 
 'use strict';
+
+// feature detect ASAP and *once*
+// 'addEventListener' ability
+// so that no patched IE8 will ever
+// sufffer dual logic or runtime checks
+var hasEventListener = 'addEventListener' in document;
 
 /**
  * Checks if a target has 'addEventListener' but not 'attachEvent'.
@@ -23,11 +30,8 @@
  * @internal
  */
 function useAddEventListener(target) {
-         // verify the most common case first
-  return 'addEventListener' in target &&
-         // be sure there's no 'attachEvent'
-         // if there is one, be sure it's not an old version of opera
-         !('attachEvent' in target && typeof opera === 'undefined');
+  // avoid conflicts with runtime patched environments
+  return hasEventListener && target.addEventListener;
 }
 
 module.exports = useAddEventListener;
