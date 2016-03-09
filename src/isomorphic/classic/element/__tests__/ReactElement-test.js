@@ -57,35 +57,105 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('should warn when `key` is being accessed', function() {
+  /**
+   * Check the warning about accessing props.key for correct component name.
+   *
+   * @param {object} testOpts Options for the test.
+   *   testOpts.Component {ReactClass|function} ReactComponent class or
+   *   stateless function.
+   *
+   *   testOpts.expectedName {string} The name that the component is expected to
+   *   be identified by in the warning message.
+   *
+   * @return {void}
+   */
+  function testKeyAccess(testOpts) {
+    /**
+     * Generate the expected warning message for accessing props.key.
+     *
+     * @param {object} opts Options.
+     *   opts.name {string} Component name.
+     *
+     * @return {string}
+     */
+    function getWarning(opts) {
+      return `
+        ${opts.name}: ${'`key`'} is not a prop. Trying to access it will result
+        in ${'`undefined`'} being returned. If you need to access the same
+        value within the child component, you should pass it as a different
+        prop. (https://fb.me/react-special-props)
+      `.replace(/\n */g, ' ').trim();
+    }
+
     spyOn(console, 'error');
+    var {Component, expectedName} = testOpts;
     var container = document.createElement('div');
-    var Child = React.createClass({
-      render: function() {
-        return <div> {this.props.key} </div>;
-      },
-    });
-    var Parent = React.createClass({
-      render: function() {
-        return (
-          <div>
-            <Child key="0" />
-            <Child key="1" />
-            <Child key="2" />
-          </div>
-        );
-      },
-    });
+
+    function render(props) {
+      return <div> {props.key} </div>;
+    }
+
     expect(console.error.calls.length).toBe(0);
-    ReactDOM.render(<Parent />, container);
+    ReactDOM.render(<Component key="0" render={render} />, container);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Child: `key` is not a prop. Trying to access it will result ' +
-      'in `undefined` being returned. If you need to access the same ' +
-      'value within the child component, you should pass it as a different ' +
-      'prop. (https://fb.me/react-special-props)'
-    );
-  });
+    expect(console.error.argsForCall[0][0]).toContain(getWarning({
+      name: expectedName,
+    }));
+  }
+
+  it(
+    'should warn and identify Component class by `.displayName` when `props.key` is being accessed',
+
+    function() {
+      var Something = React.createClass({
+        render: function() {
+          return this.props.render(this.props);
+        },
+      });
+
+      // Test that warning message about accessing props.key identifies
+      // Component as expectedName.
+      return testKeyAccess({
+        Component: Something,
+        expectedName: Something.displayName,
+      });
+    }
+  );
+
+  it(
+    'should warn and identify stateless function by `.name` when `props.key` is being accessed',
+
+    function() {
+      function Something(props) {
+        return props.render(props);
+      }
+
+      // Test that warning message about accessing props.key identifies
+      // Component as expectedName.
+      return testKeyAccess({
+        Component: Something,
+        expectedName: Something.name,
+      });
+    }
+  );
+
+  it(
+    'should warn and identify stateless function by `.displayName` when `props.key` is being accessed',
+
+    function() {
+      function Something(props) {
+        return props.render(props);
+      }
+      Something.displayName = Something.name + 'with displayName';
+
+      // Test that warning message about accessing props.key identifies
+      // Component as expectedName.
+      return testKeyAccess({
+        Component: Something,
+        expectedName: Something.displayName,
+      });
+    }
+  );
 
   it('should warn when `ref` is being accessed', function() {
     spyOn(console, 'error');
