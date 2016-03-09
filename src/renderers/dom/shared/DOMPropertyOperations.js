@@ -127,31 +127,6 @@ var DOMPropertyOperations = {
   },
 
   /**
-   * Creates markup for an SVG property.
-   *
-   * @param {string} name
-   * @param {*} value
-   * @return {string} Markup string, or empty string if the property was invalid.
-   */
-  createMarkupForSVGAttribute: function(name, value) {
-    if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onCreateMarkupForSVGAttribute(name, value);
-    }
-    if (!isAttributeNameSafe(name) || value == null) {
-      return '';
-    }
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
-    if (propertyInfo) {
-      // Migration path for deprecated camelCase aliases for SVG attributes
-      var { attributeName } = propertyInfo;
-      return attributeName + '=' + quoteAttributeValueForBrowser(value);
-    } else {
-      return name + '=' + quoteAttributeValueForBrowser(value);
-    }
-  },
-
-  /**
    * Sets the value for a property on a node.
    *
    * @param {DOMElement} node
@@ -210,18 +185,6 @@ var DOMPropertyOperations = {
     }
   },
 
-  setValueForSVGAttribute: function(node, name, value) {
-    if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onSetValueForSVGAttribute(node, name, value);
-    }
-    if (DOMProperty.properties.hasOwnProperty(name)) {
-      // Migration path for deprecated camelCase aliases for SVG attributes
-      DOMPropertyOperations.setValueForProperty(node, name, value);
-    } else {
-      DOMPropertyOperations.setValueForAttribute(node, name, value);
-    }
-  },
-
   /**
    * Deletes the value for a property on a node.
    *
@@ -253,16 +216,6 @@ var DOMPropertyOperations = {
         node.removeAttribute(propertyInfo.attributeName);
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
-      node.removeAttribute(name);
-    }
-  },
-
-  deleteValueForSVGAttribute: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
-    if (propertyInfo) {
-      DOMPropertyOperations.deleteValueForProperty(node, name);
-    } else {
       node.removeAttribute(name);
     }
   },
