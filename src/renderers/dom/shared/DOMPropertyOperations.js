@@ -179,6 +179,11 @@ var DOMPropertyOperations = {
           // Contrary to `setAttribute`, object properties are properly
           // `toString`ed by IE8/9.
           node[propName] = value;
+        } else if (node.nodeName && node.nodeName.toLowerCase() === 'option' &&
+            !node.hasAttribute('value')) {
+          // set empty "value" attribute to OPTION element
+          // if it is provided, but not yet set
+          node[propName] = value;
         }
       } else {
         var attributeName = propertyInfo.attributeName;
