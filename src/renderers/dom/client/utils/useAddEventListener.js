@@ -16,7 +16,7 @@
 // 'addEventListener' ability
 // so that no patched IE8 will ever
 // sufffer dual logic or runtime checks
-var hasEventListener = 'addEventListener' in document;
+var hasEventListener = 'addEventListener' in global;
 
 /**
  * Checks if a target has 'addEventListener' but not 'attachEvent'.
