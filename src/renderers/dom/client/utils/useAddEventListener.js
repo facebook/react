@@ -31,7 +31,7 @@ var hasEventListener = 'addEventListener' in document;
  */
 function useAddEventListener(target) {
   // avoid conflicts with runtime patched environments
-  return hasEventListener && target.addEventListener;
+  return hasEventListener && !!target.addEventListener;
 }
 
 module.exports = useAddEventListener;
