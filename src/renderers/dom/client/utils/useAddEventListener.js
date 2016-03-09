@@ -12,7 +12,7 @@
 'use strict';
 
 /**
- * Checks if a target has addEventListener but not 'attachEvent'.
+ * Checks if a target has 'addEventListener' but not 'attachEvent'.
  *
  * NOTE: This fixes problems with other libraries that tries to normalize IE8.
  *
@@ -23,8 +23,11 @@
  * @internal
  */
 function useAddEventListener(target) {
-  return typeof opera === 'undefined' ?
-    !('attachEvent' in target) : ('addEventListener' in target);
+          // verify the most common case first
+  return  'addEventListener' in target &&
+          // be sure there's no 'attachEvent'
+          // if there is one, be sure it's not an old version of opera
+          !('attachEvent' in target && typeof opera === 'undefined');
 }
 
 module.exports = useAddEventListener;
