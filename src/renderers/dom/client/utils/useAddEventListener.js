@@ -23,11 +23,11 @@
  * @internal
  */
 function useAddEventListener(target) {
-          // verify the most common case first
-  return  'addEventListener' in target &&
-          // be sure there's no 'attachEvent'
-          // if there is one, be sure it's not an old version of opera
-          !('attachEvent' in target && typeof opera === 'undefined');
+         // verify the most common case first
+  return 'addEventListener' in target &&
+         // be sure there's no 'attachEvent'
+         // if there is one, be sure it's not an old version of opera
+         !('attachEvent' in target && typeof opera === 'undefined');
 }
 
 module.exports = useAddEventListener;
