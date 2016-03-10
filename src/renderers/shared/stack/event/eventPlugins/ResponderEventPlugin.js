@@ -361,18 +361,8 @@ function setResponderAndExtractTransfer(
     return null;
   }
   var extracted;
-  var grantEvent = ResponderSyntheticEvent.getPooled(
-    eventTypes.responderGrant,
-    wantsResponderInst,
-    nativeEvent,
-    nativeEventTarget
-  );
-  grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
-  EventPropagators.accumulateDirectDispatches(grantEvent);
-  var blockHostResponder = executeDirectDispatch(grantEvent) === true;
   if (responderInst) {
-
     var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
       eventTypes.responderTerminationRequest,
       responderInst,
@@ -387,18 +377,7 @@ function setResponderAndExtractTransfer(
       terminationRequestEvent.constructor.release(terminationRequestEvent);
     }
 
-    if (shouldSwitch) {
-      var terminateEvent = ResponderSyntheticEvent.getPooled(
-        eventTypes.responderTerminate,
-        responderInst,
-        nativeEvent,
-        nativeEventTarget
-      );
-      terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(terminateEvent);
-      extracted = accumulate(extracted, [grantEvent, terminateEvent]);
-      changeResponder(wantsResponderInst, blockHostResponder);
-    } else {
+    if (!shouldSwitch) {
       var rejectEvent = ResponderSyntheticEvent.getPooled(
         eventTypes.responderReject,
         wantsResponderInst,
@@ -407,12 +386,37 @@ function setResponderAndExtractTransfer(
       );
       rejectEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(rejectEvent);
-      extracted = accumulate(extracted, rejectEvent);
+      return accumulate(extracted, rejectEvent);
     }
-  } else {
-    extracted = accumulate(extracted, grantEvent);
-    changeResponder(wantsResponderInst, blockHostResponder);
+
+    var terminateEvent = ResponderSyntheticEvent.getPooled(
+      eventTypes.responderTerminate,
+      responderInst,
+      nativeEvent,
+      nativeEventTarget
+    );
+    terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
+    EventPropagators.accumulateDirectDispatches(terminateEvent);
+    extracted = accumulate(extracted, terminateEvent);
+
+    // Always dispatch 'terminateEvent' before 'grantEvent'.
+    if (hasDispatches(terminateEvent)) {
+      executeDirectDispatch(terminateEvent);
+    }
   }
+
+  var grantEvent = ResponderSyntheticEvent.getPooled(
+    eventTypes.responderGrant,
+    wantsResponderInst,
+    nativeEvent,
+    nativeEventTarget
+  );
+  grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
+  EventPropagators.accumulateDirectDispatches(grantEvent);
+  extracted = accumulate(extracted, grantEvent);
+
+  var blockHostResponder = executeDirectDispatch(grantEvent) === true;
+  changeResponder(wantsResponderInst, blockHostResponder);
   return extracted;
 }
 
