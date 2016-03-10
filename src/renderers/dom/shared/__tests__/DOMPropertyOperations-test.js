@@ -221,6 +221,14 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.getAttribute('role')).toBe('<html>');
     });
 
+    it('should not remove empty attributes for special properties', function() {
+      stubNode = document.createElement('input');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
+      // JSDOM does not behave correctly for attributes/properties
+      //expect(stubNode.getAttribute('value')).toBe('');
+      expect(stubNode.value).toBe('');
+    });
+
     it('should remove for falsey boolean properties', function() {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
