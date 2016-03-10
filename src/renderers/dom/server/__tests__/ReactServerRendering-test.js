@@ -74,6 +74,16 @@ describe('ReactServerRendering', function() {
       );
     });
 
+    it('should generate comment markup for component returns null', function() {
+      var NullComponent = React.createClass({
+        render: function() {
+          return null;
+        },
+      });
+      var response = ReactServerRendering.renderToString(<NullComponent />);
+      expect(response).toBe('<!-- react-empty: 1 -->');
+    });
+
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
       var cb = jest.genMockFn();
