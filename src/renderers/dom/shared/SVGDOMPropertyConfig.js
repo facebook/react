@@ -18,7 +18,21 @@ var NS = {
 
 // We use attributes for everything SVG so let's avoid some duplication and run
 // code instead.
-
+// The following are all specified in the HTML config already so we exclude here.
+// - class (as className)
+// - color
+// - height
+// - id
+// - lang
+// - max
+// - media
+// - method
+// - min
+// - name
+// - style
+// - target
+// - type
+// - width
 var ATTRS = {
   accentHeight: 'accent-height',
   accumulate: 0,
@@ -42,12 +56,10 @@ var ATTRS = {
   by: 0,
   calcMode: 'calcMode',
   capHeight: 'cap-height',
-  class: 0,
   clip: 0,
   clipPath: 'clip-path',
   clipRule: 'clip-rule',
   clipPathUnits: 'clipPathUnits',
-  color: 0,
   colorInterpolation: 'color-interpolation',
   colorInterpolationFilters: 'color-interpolation-filters',
   colorProfile: 'color-profile',
@@ -102,10 +114,8 @@ var ATTRS = {
   gradientTransform: 'gradientTransform',
   gradientUnits: 'gradientUnits',
   hanging: 0,
-  height: 0,
   horizAdvX: 'horiz-adv-x',
   horizOriginX: 'horiz-origin-x',
-  id: 0,
   ideographic: 0,
   imageRendering: 'image-rendering',
   in: 0,
@@ -122,7 +132,6 @@ var ATTRS = {
   keyPoints: 'keyPoints',
   keySplines: 'keySplines',
   keyTimes: 'keyTimes',
-  lang: 0,
   lengthAdjust: 'lengthAdjust',
   letterSpacing: 'letter-spacing',
   lightingColor: 'lighting-color',
@@ -138,12 +147,7 @@ var ATTRS = {
   maskContentUnits: 'maskContentUnits',
   maskUnits: 'maskUnits',
   mathematical: 0,
-  max: 0,
-  media: 0,
-  method: 0,
-  min: 0,
   mode: 0,
-  name: 0,
   numOctaves: 'numOctaves',
   offset: 0,
   opacity: 0,
@@ -210,11 +214,9 @@ var ATTRS = {
   strokeMiterlimit: 'stroke-miterlimit',
   strokeOpacity: 'stroke-opacity',
   strokeWidth: 'stroke-width',
-  style: 0,
   surfaceScale: 'surfaceScale',
   systemLanguage: 'systemLanguage',
   tableValues: 'tableValues',
-  target: 0,
   targetX: 'targetX',
   targetY: 'targetY',
   textAnchor: 'text-anchor',
@@ -223,7 +225,6 @@ var ATTRS = {
   textLength: 'textLength',
   to: 0,
   transform: 0,
-  type: 0,
   u1: 0,
   u2: 0,
   underlinePosition: 'underline-position',
@@ -244,7 +245,6 @@ var ATTRS = {
   viewBox: 'viewBox',
   viewTarget: 'viewTarget',
   visibility: 0,
-  width: 0,
   widths: 0,
   wordSpacing: 'word-spacing',
   writingMode: 'writing-mode',
