@@ -18,8 +18,7 @@ $columnWidth: 280px;
 $columnGutter: 40px;
 $twoColumnWidth: 2 * $columnWidth + $columnGutter;
 $navHeight: 50px;
-
-
+$navActiveBorder: 3px;
 
 // basic reset
 * {
@@ -99,6 +98,11 @@ h1, h2, h3, h4, h5, h6 {
 
 // Main Nav
 
+.nav-docs-button {
+  display: none;
+  padding: 10px 20px;
+}
+
 .nav-main {
   @include clearfix;
   background: $darkestColor;
@@ -143,7 +147,7 @@ h1, h2, h3, h4, h5, h6 {
 
       &.active {
         color: $lightTextColor;
-        border-bottom: 3px solid $primary;
+        border-bottom: $navActiveBorder solid $primary;
         background: #333;
       }
     }
@@ -155,6 +159,7 @@ h1, h2, h3, h4, h5, h6 {
     line-height: $navHeight;
     height: $navHeight;
     display: inline-block;
+    float: left;
   }
 
   .nav-logo {
@@ -806,15 +811,6 @@ p a code {
   text-decoration: none !important;
 }
 
-@media screen and (max-width: 960px) {
-  .nav-main {
-    position: static;
-  }
-  .container {
-    padding-top: 0;
-  }
-}
-
 .post {
   margin-bottom: 30px;
 }
@@ -855,4 +851,62 @@ div[data-twttr-id] iframe {
 
 .three-column > ul:first-child {
   margin-left: 20px;
+}
+
+@media screen and (max-width: $contentWidth) {
+  .container,
+  .wrap,
+  .inner-content {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .nav-main {
+    height: $navHeight + $navActiveBorder;
+    overflow-x: scroll;
+
+    .nav-site-wrapper {
+      white-space: nowrap;
+
+      .nav-site-external {
+        float: none;
+      }
+    }
+
+    .right-gradient {
+      position: fixed;
+      top: 0;
+      right: 0;
+      overflow: hidden;
+      width: 150px;
+      height: $navHeight;
+      padding: 0;
+      display: block;
+      pointer-events: none;
+      background: -moz-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: -webkit-gradient(linear, left top, right top, color-stop(0%, rgba(0, 0, 0, 0)), color-stop(100%, rgba(0, 0, 0, 0.9)));
+      background: -webkit-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: -o-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: -ms-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
+    }
+  }
+
+  .nav-docs {
+    display: none;
+  }
+
+  .nav-docs-button {
+    display: inherit;
+  }
+
+  footer div {
+    text-align: center;
+    margin-bottom: 5px;
+
+    &.left,
+    &.right {
+      float: none;
+    }
+  }
 }
