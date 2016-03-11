@@ -53,9 +53,10 @@ function insertTreeChildren(tree) {
 
 var insertTreeBefore = createMicrosoftUnsafeLocalFunction(
   function(parentNode, tree, referenceNode) {
-    // Document Fragments in IE11, Edge (and possibly others) won't update
-    // correctly if they are already inserted. So we have to break out of our
-    // lazy approach and append children to the fragment before inserting it.
+    // DocumentFragments aren't actually part of the DOM after insertion so
+    // appending children won't update the DOM. We need to ensure the fragment
+    // is properly populated first, breaking out of our lazy approach for just
+    // this level.
     if (tree.node.nodeType === 11) {
       insertTreeChildren(tree);
       parentNode.insertBefore(tree.node, referenceNode);
