@@ -17,14 +17,12 @@ describe('ReactDOMComponent', function() {
   var React;
 
   var ReactDOM;
-  var ReactDOMFeatureFlags;
   var ReactDOMServer;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
   });
 
