@@ -28,7 +28,7 @@ var ReactMarkupChecksum = {
     var checksum = adler32(markup);
 
     // Add checksum (handle both parent tags, comments and self-closing tags)
-    if (markup.test(COMMENT_START)) {
+    if (COMMENT_START.test(markup)) {
       return markup;
     } else {
       return markup.replace(
