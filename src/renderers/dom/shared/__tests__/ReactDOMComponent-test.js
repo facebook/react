@@ -200,7 +200,7 @@ describe('ReactDOMComponent', function() {
 
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toEqual(
-        'Warning: `NaN` is an invalid value for the `fontSize` css style property',
+        'Warning: `NaN` is an invalid value for the `fontSize` css style property.',
       );
     });
 
