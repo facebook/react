@@ -34,48 +34,53 @@
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
   <script src="/react/js/live_editor.js"></script>
+  <script src="/react/js/fixed-nav.js"></script>
 </head>
 <body>
 
   <div class="container">
 
-    <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' %} class="active"{% endif %}>Docs</a></li>
-          <li><a href="/react/support.html"{% if page.id == 'support' %} class="active"{% endif %}>Support</a></li>
-          <li><a href="/react/downloads.html"{% if page.id == 'downloads' %} class="active"{% endif %}>Download</a></li>
-          <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>Blog</a></li>
-        </ul>
+    <div class="main">
 
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
-    </div>
+      <div class="nav-main">
+        <div class="wrap">
+          <a class="nav-home" href="/react/index.html">
+            <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+            React
+          </a>
+          <ul class="nav-site nav-site-internal">
+            <li><a href="/react/docs/getting-started.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' %} class="active"{% endif %}>Docs</a></li>
+            <li><a href="/react/support.html"{% if page.id == 'support' %} class="active"{% endif %}>Support</a></li>
+            <li><a href="/react/downloads.html"{% if page.id == 'downloads' %} class="active"{% endif %}>Download</a></li>
+            <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>Blog</a></li>
+          </ul>
 
-    {% if page.id == 'home' %}
-    <div class="hero">
-      <div class="wrap">
-        <div class="text"><strong>React</strong></div>
-        <div class="minitext">
-          A JavaScript library for building user interfaces
-        </div>
-
-        <div class="buttons-unit">
-          <a href="/react/docs/getting-started.html" class="button">Get Started</a>
-          <a href="/react/downloads.html" class="button">Download React v{{site.react_version}}</a>
+          <ul class="nav-site nav-site-external">
+            <li><a href="https://github.com/facebook/react">GitHub</a></li>
+            <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+          </ul>
         </div>
       </div>
-    </div>
-    {% endif %}
 
-    {{ content }}
+      {% if page.id == 'home' %}
+      <div class="hero">
+        <div class="wrap">
+          <div class="text"><strong>React</strong></div>
+          <div class="minitext">
+            A JavaScript library for building user interfaces
+          </div>
+
+          <div class="buttons-unit">
+            <a href="/react/docs/getting-started.html" class="button">Get Started</a>
+            <a href="/react/downloads.html" class="button">Download React v{{site.react_version}}</a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {{ content }}
+
+    </div>
 
     <footer class="wrap">
       <div class="left">
