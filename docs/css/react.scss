@@ -13,11 +13,12 @@
 
 $skinnyContentWidth: 650px;
 $contentWidth: 920px;
+$maxContentWidth: 1080px;
 $contentPadding: 20px;
 $columnWidth: 280px;
 $columnGutter: 40px;
 $twoColumnWidth: 2 * $columnWidth + $columnGutter;
-$navHeight: 50px;
+$navHeight: 60px;
 
 
 
@@ -32,8 +33,6 @@ $navHeight: 50px;
 html {
   background: $pageBg;
 }
-
-
 
 .left {
   float: left;
@@ -50,7 +49,8 @@ html {
 }
 
 .wrap {
-  width: $contentWidth + (2 * $contentPadding);
+  min-width: $contentWidth + (2 * $contentPadding);
+  max-width: $maxContentWidth + (2 * $contentPadding);
   margin-left: auto;
   margin-right: auto;
   padding-left: 20px;
@@ -67,8 +67,8 @@ html {
 
 hr {
   height: 0;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #eee;
+  border-top: 1px solid #ddd;
+  border-bottom: 0;
 }
 
 ul,
@@ -77,7 +77,7 @@ li {
 }
 
 li + li {
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 // Make header navigation linkable and on the screen. Used in documentation and
@@ -102,11 +102,11 @@ h1, h2, h3, h4, h5, h6 {
 .nav-main {
   @include clearfix;
   background: $darkestColor;
-  color: $lightTextColor;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
   position: fixed;
   top: 0;
   height: $navHeight;
-  box-shadow: 0 0 5px rgba(0, 0, 0, .5);
   width: 100%;
   z-index: 100;
 
@@ -122,6 +122,9 @@ h1, h2, h3, h4, h5, h6 {
   .nav-site-external {
     float: right;
     margin: 0;
+    li:last-child a {
+      padding-right: 0;
+    }
   }
 
   .nav-site {
@@ -130,11 +133,11 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     a {
-      box-sizing: content-box;
-      padding: 0 10px;
+      padding: 0 15px;
       line-height: $navHeight;
       display: inline-block;
       height: $navHeight;
+      font-size: 15px;
       color: #ddd;
 
       &:hover {
@@ -143,22 +146,23 @@ h1, h2, h3, h4, h5, h6 {
 
       &.active {
         color: $lightTextColor;
-        border-bottom: 3px solid $primary;
-        background: #333;
+        border-bottom: 3px solid $blueColor;
+        background: $darkColor;
       }
     }
   }
 
   .nav-home {
     color: #00d8ff;
-    font-size: 24px;
+    font-size: 18px;
     line-height: $navHeight;
+    font-weight: 600;
     height: $navHeight;
     display: inline-block;
   }
 
   .nav-logo {
-    vertical-align: middle;
+    vertical-align: -9px;
     display: inline-block;
   }
 
@@ -175,27 +179,32 @@ h1, h2, h3, h4, h5, h6 {
 // Hero!
 
 .hero {
-  height: 300px;
+  padding: 80px 0;
   // background: $darkColor url(../img/header.png) no-repeat center;
-  background: $darkColor;
-  padding-top: 50px;
+  background: #1f1f1f;
   color: $lightColor;
-  font-weight: 300;
 
-  .text {
-    font-size: 64px;
+  .hero-text {
+    font-size: 40px;
     text-align: center;
-  }
-
-  .minitext {
-    font-size: 16px;
-    text-align: center;
-    text-transform: uppercase;
+    font-weight: 100;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    -webkit-font-smoothing: antialiased;
+    strong {
+      font-size: 60px;
+    }
   }
 
   strong {
     color: $blueColor;
     font-weight: 400;
+  }
+
+  .buttons-unit {
+    .button {
+      color: #1f1f1f;
+    }
   }
 }
 
@@ -208,9 +217,9 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .button {
-    font-size: 24px;
+    font-size: 18px;
     background: $primary;
-    color: $lightTextColor;
+    color: #fff;
 
     &:active {
       background: darken($primary, 5%);
@@ -222,6 +231,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .buttons-unit.downloads {
   margin: 30px 0;
+  text-align: left;
+  a {
+    margin-left: 0;
+  }
 }
 
 // Docs Nav
@@ -238,15 +251,19 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0;
   }
   ul ul {
-    margin: 6px 0 0 20px;
+    margin: 9px 0 0 20px;
   }
   li {
     line-height: 16px;
-    margin: 0 0 6px;
+    margin: 0 0 9px;
   }
   h3 {
     text-transform: uppercase;
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: 200;
+    letter-spacing: 0.1em;
+    color: $lightMetaColor;
+    margin-bottom: 5px;
   }
   a {
     color: $mediumestColor;
@@ -258,7 +275,18 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     &.active {
-      color: $primary;
+      position: relative;
+      font-weight: 600;
+      color: $darkColor;
+      &:before {
+        content: '';
+        position: absolute;
+        width: 3px;
+        left: -12px;
+        top: -5px;
+        bottom: -5px;
+        background-color: $blueColor;
+      }
     }
 
     &.external {
@@ -279,18 +307,14 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .nav-docs-section {
-    border-bottom: 1px solid #ccc;
-    border-top: 1px solid #eee;
-    padding: 12px 0;
+    padding: 5px 0;
 
     &:first-child {
        padding-top: 0;
-       border-top: 0;
     }
 
     &:last-child {
       padding-bottom: 0;
-      border-bottom: 0;
     }
   }
 
@@ -306,12 +330,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .home-section {
   margin: 50px 0;
-}
-
-.home-divider {
-  border-top-color: #bbb;
-  margin: 0 auto;
-  width: 400px;
 }
 
 .skinny-row {
@@ -330,21 +348,22 @@ h1, h2, h3, h4, h5, h6 {
 .marketing-row {
   @include clearfix;
   margin: 50px 0;
+  margin-left: -60px;
 }
 
 .marketing-col {
   float: left;
-  margin-left: 40px;
-  width: $columnWidth;
+  padding-left: 60px;
+  width: 33.33%;
 
   h3 {
     color: $darkColor;
     font-size: 24px;
-    font-weight: normal;
-    text-transform: uppercase;
+    font-weight: 600;
   }
   p {
     font-size: 16px;
+    line-height: 1.4;
   }
 }
 
@@ -355,14 +374,14 @@ h1, h2, h3, h4, h5, h6 {
 #examples h3, .home-presentation h3 {
   color: $darkColor;
   font-size: 24px;
-  font-weight: normal;
-  margin-bottom: 5px;
+  font-weight: 600;
 }
 
 #examples {
   p {
     margin: 0 0 25px 0;
-    max-width: $twoColumnWidth;
+    max-width: 64.86%;
+    line-height: 1.5;
   }
 
   .example {
@@ -468,6 +487,15 @@ section.black content {
 
   padding-top: 20px;
 
+  .meta {
+    color: $metaColor;
+    margin-top: 10px;
+    margin-bottom: 40px;
+    &+hr {
+      display: none;
+    }
+  }
+
   blockquote {
     padding: 5px 15px;
     margin: 20px 0;
@@ -489,6 +517,7 @@ section.black content {
 
 .documentationContent {
   @include clearfix;
+  padding-top: 40px;
 
   .subHeader {
     font-size: 24px;
@@ -496,33 +525,34 @@ section.black content {
 
 
   // H2s form documentation topic dividers. Extra space helps.
-  h2 {
-    margin-top: 30px;
+
+  .inner-content {
+
+    // Make a notice box out of blockquotes in the documentation:
+    blockquote {
+        padding: 15px 30px 15px 15px;
+        margin: 20px 0;
+        background-color: rgba(204, 122, 111, 0.09999999999999998);
+        border-left: 5px solid rgba(191, 87, 73, 0.19999999999999996);
+      h4 {
+        margin-top: 0;
+      }
+      p {
+        margin-bottom: 0;
+        margin-top: 10px;
+      }
+      // Treat first child as the title - promote to H4.
+      p:first-child {
+        font-weight: bold;
+        font-size: 17.5px;
+        line-height: 20px;
+        margin-top: 0;
+        text-rendering: optimizelegibility;
+      }
+    }
+
   }
 
-  padding-top: 20px;
-
-  // Make a notice box out of blockquotes in the documentation:
-  blockquote {
-      padding: 15px 30px 15px 15px;
-      margin: 20px 0;
-      background-color: rgba(204, 122, 111, 0.09999999999999998);
-      border-left: 5px solid rgba(191, 87, 73, 0.19999999999999996);
-    h4 {
-      margin-top: 0;
-    }
-    p {
-      margin-bottom: 0;
-    }
-    // Treat first child as the title - promote to H4.
-    p:first-child {
-      font-weight: bold;
-      font-size: 17.5px;
-      line-height: 20px;
-      margin-top: 0;
-      text-rendering: optimizelegibility;
-    }
-  }
 }
 
 .docs-prevnext {
@@ -533,32 +563,23 @@ section.black content {
 /* Button */
 
 .button {
-  @include background(linear-gradient($buttonGreyTop, $buttonGreyBottom));
-  // border: 1px solid $darkestColor;
-  border-radius: 4px;
-  padding: 8px 16px;
+  padding: 16px 20px;
   font-size: 18px;
   font-weight: 400;
   margin: 0 12px;
-  // word-spacing: -2px;
-  // letter-spacing: 1px;
   display: inline-block;
   color: $lightTextColor;
-  text-decoration: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .3);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
   text-decoration: none;
 
   &:hover {
     text-decoration: none;
   }
-
-  &:active {
-    box-shadow: none;
-  }
 }
 
 .hero {
+  .buttons-unit {
+    margin-top: 40px;
+  }
   .button {
     box-shadow: 1px 3px 3px rgba(0, 0, 0, .3);
   }
@@ -600,39 +621,105 @@ p {
 .highlight {
   padding: 10px;
   margin-bottom: 20px;
+  max-width: 800px;
 }
 
 figure {
   text-align: center;
 }
 
-.inner-content {
-  float: right;
-  width: $skinnyContentWidth;
+.content {
+  @include clearfix;
 }
+
+.content.wrap:not(.nosidebar) {
+  padding-left: 290px;
+}
+
+.nav-docs {
+  margin-left: -270px;
+}
+
+.inner-content {
+  @include clearfix;
+  a {
+    border-bottom: 1px solid currentColor;
+    &:hover {
+      text-decoration: none;
+      background-color: $blueColor;
+      border-bottom-color: transparent;
+      color: #fff;
+    }
+    &:focus {
+      text-decoration: none;
+    }
+  }
+  h1 a {
+    border-bottom-width: 0;
+    font-size: 40px;
+    &:hover {
+      background-color: transparent;
+      text-decoration: underline;
+      color: $linkColor;
+    }
+  }
+  h2 {
+    margin-top: 30px;
+    font-size: 24px;
+  }
+
+  h3 {
+    font-size: 19px;
+    color: $metaColor;
+  }
+
+  li, p {
+    font-weight: 300;
+    color: #454545;
+    font-size: 19px;
+    line-height: 1.5;
+    max-width: 41em;
+  }
+
+  ol, ul, p {
+    margin-top: 25px;
+    margin-bottom: 25px;
+  }
+
+  h3,
+  h2 {
+    &+ol,
+    &+ul,
+    &+p {
+      margin-top: 10px;
+    }
+  }
+
+  strong {
+    font-weight: 600;
+  }
+}
+
 
 .nosidebar .inner-content {
   float: none;
   margin: 0 auto;
 }
 
-h1 {
-  // Contains .edit-page-link
-  @include clearfix;
-}
-
 .edit-page-link {
-  float: right;
+  text-align: right;
   font-size: 16px;
   font-weight: normal;
   line-height: 20px;
-  margin-top: 17px;
+  padding: 20px 0;
 }
 
 /* Blog */
 
 .post-list-item + .post-list-item {
   margin-top: 60px;
+  border-top: 1px solid #ddd;
+  padding-top: 30px;
 }
 
 /* CodeMirror */

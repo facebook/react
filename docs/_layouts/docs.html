@@ -9,11 +9,14 @@ sectionid: docs
   <div class="inner-content">
     <h1>
       {{ page.title }}
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/{{ page.path }}" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader">{{ page.description }}</div>
 
     {{ content }}
+
+    <div class="edit-page-link">
+      <a href="https://github.com/facebook/react/tree/master/docs/{{ page.path }}" target="_blank">Edit this page</a>
+    </div>
 
     <div class="docs-prevnext">
       {% if page.prev %}
@@ -23,5 +26,6 @@ sectionid: docs
         <a class="docs-next" href="/react/docs/{{ page.next }}">Next &rarr;</a>
       {% endif %}
     </div>
+
   </div>
 </section>

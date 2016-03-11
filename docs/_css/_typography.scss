@@ -8,6 +8,7 @@ html {
   font-family: proxima-nova, $helvetica;
   color: $textColor;
   line-height: 1.28;
+  font-weight: 300;
 }
 
 p {
@@ -18,7 +19,8 @@ p {
   font-size: 21px;
   font-weight: 200;
   line-height: 30px;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
+  color: $lightMetaColor;
 }
 
 em {
@@ -56,7 +58,12 @@ h3 {
 }
 
 h1 {
-  font-size: 39px;
+  font-size: 55px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: $darkColor;
+  margin-top: 20px;
 }
 
 h2 {
