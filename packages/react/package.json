@@ -22,7 +22,7 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {
+  "optionalDependencies": {
     "envify": "^3.0.0",
     "fbjs": "^0.8.0-alpha.2"
   },
