@@ -46,6 +46,15 @@ $ webpack
 >
 > 如果你正在使用 ES2015, 你将要使用 `babel-preset-es2015` 包.
 
+**注意:** 默认情况下，React 将会在开发模式，很缓慢，不建议用于生产。要在生产模式下使用 React，设置环境变量 `NODE_ENV` 为 `production` （使用 envify 或者 webpack's DefinePlugin）。例如：
+
+```js
+new webpack.DefinePlugin({
+  "process.env": {
+    NODE_ENV: JSON.stringify("production")
+  }
+});
+```
 
 ## 不用 npm 的快速开始
 
@@ -81,7 +90,7 @@ $ webpack
 </html>
 ```
 
-在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 [JSX 语法](/react/docs/jsx-in-depth.html) 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 `<script type="text/babel">` 标签，并引入 Babel 来完成在浏览器里的代码转换。
+在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 [JSX 语法](/react/docs/jsx-in-depth.html) 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 `<script type="text/babel">` 标签，并引入 Babel 来完成在浏览器里的代码转换。在浏览器里打开这个html，你应该可以看到成功的消息！
 
 ### 分离文件
 
@@ -129,6 +138,7 @@ ReactDOM.render(
   document.getElementById('example')
 );
 ```
+
 
 对照下面更新你的 HTML 代码
 

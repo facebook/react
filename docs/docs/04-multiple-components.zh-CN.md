@@ -14,49 +14,49 @@ next: reusable-components-zh-CN.html
 
 ## 组合实例
 
-一起来使用 Facebook Graph API 开发显示个人图片和用户名的简单 Avatar 组件吧。
+让我们用 Facebook Graph API 来开发一个显示 Facebook 页面图片和用户名的简单 Avatar 组件吧。
 
 ```javascript
 var Avatar = React.createClass({
   render: function() {
     return (
       <div>
-        <ProfilePic username={this.props.username} />
-        <ProfileLink username={this.props.username} />
+        <PagePic pagename={this.props.pagename} />
+        <PageLink pagename={this.props.pagename} />
       </div>
     );
   }
 });
 
-var ProfilePic = React.createClass({
+var PagePic = React.createClass({
   render: function() {
     return (
-      <img src={'https://graph.facebook.com/' + this.props.username + '/picture'} />
+      <img src={'https://graph.facebook.com/' + this.props.pagename + '/picture'} />
     );
   }
 });
 
-var ProfileLink = React.createClass({
+var PageLink = React.createClass({
   render: function() {
     return (
-      <a href={'https://www.facebook.com/' + this.props.username}>
-        {this.props.username}
+      <a href={'https://www.facebook.com/' + this.props.pagename}>
+        {this.props.pagename}
       </a>
     );
   }
 });
 
 ReactDOM.render(
-  <Avatar username="pwh" />,
+  <Avatar pagename="Engineering" />,
   document.getElementById('example')
 );
 ```
 
 ## 从属关系
 
-上面例子中，`Avatar` 拥有 `ProfilePic` 和 `ProfileLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。
+上面例子中，`Avatar` 拥有 `PagePic` 和 `PageLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。
 
-把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，`Avatar` 拥有 `div`、`ProfilePic` 和 `ProfileLink` 实例，`div` 是 `ProfilePic` 和 `ProfileLink` 实例的**父级**（但不是拥有者）。
+把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，`Avatar` 拥有 `div`、`PagePic` 和 `PageLink` 实例，`div` 是 `PagePic` 和 `PageLink` 实例的**父级**（但不是拥有者）。
 
 ## 子级
 

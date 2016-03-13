@@ -139,6 +139,7 @@ DOMEventTarget relatedTarget
 
 焦点事件在所有的React DOM上工作,不仅仅是表单元素.
 
+
 ### 表单事件
 
 事件名称：
@@ -246,7 +247,8 @@ number deltaY
 number deltaZ
 ```
 
-### Media Events
+
+### 媒体事件
 
 事件名称:
 
@@ -254,10 +256,45 @@ number deltaZ
 onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
 ```
 
-### Image Events
+
+### 图片事件
 
 事件名称:
 
 ```
 onLoad onError
+```
+
+
+### 动画事件
+
+事件名称:
+
+```
+onAnimationStart onAnimationEnd onAnimationIteration
+```
+
+属性：
+
+```javascript
+string animationName
+string pseudoElement
+float elapsedTime
+```
+
+
+### Transition Events
+
+事件名称:
+
+```
+onTransitionEnd
+```
+
+属性：
+
+```javascript
+string propertyName
+string pseudoElement
+float elapsedTime
 ```
