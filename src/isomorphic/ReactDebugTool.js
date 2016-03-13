@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
+var ReactMiscapitalizedPropNameWarningDevTool = require('ReactMiscapitalizedPropNameWarningDevTool');
 var warning = require('warning');
 
 var eventHandlers = [];
@@ -70,8 +71,15 @@ var ReactDebugTool = {
   onUnmountComponent(internalInstance) {
     emitEvent('onUnmountComponent', internalInstance);
   },
+  onCreateChainableTypeChecker(componentName, props, propName) {
+    emitEvent('onCreateChainableTypeChecker',
+              componentName,
+              props,
+              propName);
+  },
 };
 
 ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
+ReactDebugTool.addDevtool(ReactMiscapitalizedPropNameWarningDevTool);
 
 module.exports = ReactDebugTool;
