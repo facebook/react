@@ -96,7 +96,7 @@ function FancyCheckbox(props) {
 
 ## 使用和传递同一个 Prop
 
-如果组件需要使用一个属性又要往下传递，可以直接使用 `checked={checked}` 再传一次。这样做比传整个 `this.props` 对象要好，因为更利于重构和语法检查。
+如果组件需要使用一个属性又要往下传递，可以直接使用 `checked={checked}` 再传一次。这样做比传整个 `props` 对象要好，因为更利于重构和语法检查。
 
 ```javascript
 function FancyCheckbox(props) {
