@@ -239,6 +239,7 @@ var ATTRS = {
   vIdeographic: 'v-ideographic',
   vMathematical: 'v-mathematical',
   values: 0,
+  vectorEffect: 'vector-effect',
   version: 0,
   vertAdvY: 'vert-adv-y',
   vertOriginX: 'vert-origin-x',
