@@ -94,6 +94,7 @@ var ATTRS = {
   filterUnits: 'filterUnits',
   floodColor: 'flood-color',
   floodOpacity: 'flood-opacity',
+  focusable: 0,
   fontFamily: 'font-family',
   fontSize: 'font-size',
   fontSizeAdjust: 'font-size-adjust',
