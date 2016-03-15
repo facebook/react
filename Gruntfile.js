@@ -137,7 +137,12 @@ module.exports = function(grunt) {
   ]);
 
   // Automate the release!
-  grunt.registerMultiTask('release', require('./grunt/tasks/release'));
+  var releaseTasks = require('./grunt/tasks/release');
+  grunt.registerTask('release:setup', releaseTasks.setup);
+  grunt.registerTask('release:bower', releaseTasks.bower);
+  grunt.registerTask('release:docs', releaseTasks.docs);
+  grunt.registerTask('release:msg', releaseTasks.msg);
+  grunt.registerTask('release:starter', releaseTasks.starter);
 
   grunt.registerTask('release', [
     'release:setup',

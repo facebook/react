@@ -53,8 +53,17 @@ function insertTreeChildren(tree) {
 
 var insertTreeBefore = createMicrosoftUnsafeLocalFunction(
   function(parentNode, tree, referenceNode) {
-    parentNode.insertBefore(tree.node, referenceNode);
-    insertTreeChildren(tree);
+    // DocumentFragments aren't actually part of the DOM after insertion so
+    // appending children won't update the DOM. We need to ensure the fragment
+    // is properly populated first, breaking out of our lazy approach for just
+    // this level.
+    if (tree.node.nodeType === 11) {
+      insertTreeChildren(tree);
+      parentNode.insertBefore(tree.node, referenceNode);
+    } else {
+      parentNode.insertBefore(tree.node, referenceNode);
+      insertTreeChildren(tree);
+    }
   }
 );
 
