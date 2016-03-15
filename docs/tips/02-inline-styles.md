@@ -3,7 +3,7 @@ id: inline-styles
 title: Inline Styles
 layout: tips
 permalink: inline-styles.html
-next: if-else-in-JSX.html
+next: style-props-value-px.html
 prev: introduction.html
 ---
 

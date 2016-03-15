@@ -1,9 +1,12 @@
 ---
-id: jsx-in-depth-ko-KR
+id: jsx-overview-ko-KR
 title: JSX 깊이보기
-permalink: jsx-in-depth-ko-KR.html
-prev: displaying-data-ko-KR.html
-next: jsx-spread-ko-KR.html
+permalink: jsx-overview-ko-KR.html
+next: jsx-html-differences-ko-KR.html
+redirect_from:
+  - tips/maximum-number-of-jsx-root-nodes-ko-KR.html
+  - tips/false-in-jsx-ko-KR.html
+  - docs/jsx-in-depth-ko-KR.html
 ---
 
 [JSX](https://facebook.github.io/jsx/)는 XML과 비슷한 JavaScript문법 확장입니다. React에서 변환되는 간단한 JSX 구문을 사용하실 수 있습니다.
@@ -36,6 +39,59 @@ var MyComponent = React.createClass({/*...*/});
 var myElement = <MyComponent someProperty={true} />;
 ReactDOM.render(myElement, document.getElementById('example'));
 ```
+
+## JSX 문법
+
+우리는 컴포넌트를 사용하는 것이 "템플릿"과 "디스플레이 로직(display logic)"을 이용하는 것보다 관심을 분리(separate concerns)하는 데에 올바른 방법이라고 강하게 믿고 있습니다. 우리는 마크업과 그것을 만들어내는 코드는 친밀하게 함께 결합되어있다고 생각합니다. 또한, 디스플레이 로직은 종종 매우 복잡하고, 그것을 템플릿 언어를 이용해 표현하는 것은 점점 사용하기 어렵게 됩니다.
+
+우리는 이 문제를 해결하는 최고의 해결책은, UI를 만드는 진짜 프로그래밍 언어의 표현력을 모두 사용할 수 있는 JavaScript 코드로부터 HTML과 컴포넌트 트리들을 생성하는 것임을 발견했습니다.
+
+이것을 더 쉽게 하기 위해서, 우리는 매우 간단하고, **선택적인** HTML과 비슷한 문법을 추가하여 이 React 트리 노드들을 만들 수 있게 했습니다.
+
+**JSX는 당신으로 하여금 HTML 문법을 이용해 JavaScript 객체를 만들게 해줍니다.** React를 이용해 순수한 JavaScript 문법으로 링크를 만드려고 한다면, 코드는 다음과 같습니다:
+
+`React.createElement('a', {href: 'https://facebook.github.io/react/'}, '안녕하세요!')`
+
+JSX를 이용하면:
+
+`<a href="https://facebook.github.io/react/">안녕하세요!</a>`
+
+우리는 이것이 React 앱들을 만들기 쉽게 하고, 디자이너들이 이 문법을 더 선호하는 것을 발견했습니다, 하지만 모든 사람은 그들만의 선호하는 워크플로우가 있기 마련이므로, **JSX는 React를 사용하기 위해 필수적이지는 않습니다.**
+
+JSX는 매우 작은 언어입니다. 그것을 배우고 싶다면, [JSX 깊게 살펴보기](/react/docs/jsx-in-depth-ko-KR.html)를 살펴 보시기 바랍니다. 또는, [바벨 REPL](https://babeljs.io/repl/)를 통해 문법이 변환되는 것을 살펴 보시기 바랍니다.
+
+JSX는 HTML과 비슷하지만, 완전히 똑같지는 않습니다. [JSX의 실수하기 쉬운 부분들](/react/docs/jsx-html-differences-ko-KR.html)에 중요한 차이점들에 대해 설명되어 있습니다.
+
+[바벨에서 JSX를 시작하는 여러 방법을 제공합니다](http://babeljs.io/docs/setup/). 여기에는 커맨드 라인 툴부터 루비 온 레일스 연동까지 다양한 방법이 있습니다. 가장 편한 툴을 사용하세요.
+
+## JSX 없이 React 사용하기
+
+JSX는 완전히 선택적입니다. 당신은 React와 JSX를 함께 사용하지 않아도 상관없습니다. 그냥 JavaScript에서 React 엘리먼트를 `React.createElement`로 만들 수 있습니다. 여기에 태그 이름이나 컴포넌트, 속성 객체, 자식 엘리먼트들을 전달하면 됩니다.
+
+```javascript
+var child1 = React.createElement('li', null, 'First Text Content');
+var child2 = React.createElement('li', null, 'Second Text Content');
+var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
+ReactDOM.render(root, document.getElementById('example'));
+```
+
+편의를 위하여, 당신은 팩토리 함수 헬퍼들을 이용해 커스텀 컴포넌트로부터 엘리먼트들을 만들 수 있습니다.
+
+```javascript
+var Factory = React.createFactory(ComponentClass);
+...
+var root = Factory({ custom: 'prop' });
+ReactDOM.render(root, document.getElementById('example'));
+```
+
+React는 이미 일반적인 HTML 태그에 대한 빌트인 팩토리를 가지고 있습니다.
+
+```javascript
+var root = React.DOM.ul({ className: 'my-list' },
+             React.DOM.li(null, '텍스트')
+           );
+```
+
 
 React JSX는 대소문자를 로컬 컴포넌트 클래스와 HTML 태그를 구별하는 컨벤션으로 사용합니다.
 
@@ -92,6 +148,31 @@ JSX를 사용 하시려면, [시작하기](/react/docs/getting-started-ko-KR.htm
 > JSX 표현식은 언제나 ReactElement로 변환됩니다. 실제 구현의 세부사항은 많이
 > 다를 수 있습니다. 최적화 모드는 ReactElement를 `React.createElement`에서 검증
 > 코드를 우회하는 객체 리터럴로 ReactElement를 인라인으로 만들 수 있습니다.
+
+## JSX에서 False
+
+`false` 렌더링이 여러 상황에서 어떻게 다뤄지는지 봅시다.
+
+`id="false"`로 렌더링
+
+```js
+ReactDOM.render(<div id={false} />, mountNode);
+```
+
+문자열 `"false"`를 입력값으로
+
+```js
+ReactDOM.render(<input value={false} />, mountNode);
+```
+
+자식 없음
+
+```js
+ReactDOM.render(<div>{false}</div>, mountNode);
+```
+
+`div` 자식으로 쓰인 문자열 `"false"`를 렌더링하지 않은 것은 더 일반적인 사용 사례를 허용하기 위함입니다. `<div>{x > 1 && '하나 이상의 아이템을 가졌습니다.'}</div>`
+
 
 ## 네임스페이스를 사용한 컴포넌트
 
@@ -151,10 +232,6 @@ var App = (
   )
 );
 ```
-
-> 주의:
->
-> 이 기능은 [v0.11](/react/blog/2014/07/17/react-v0.11.html#jsx) 이상에만 있습니다.
 
 ## JavaScript 표현식
 
@@ -218,7 +295,8 @@ var content = (
   </Nav>
 );
 ```
+## 루트 노드의 최대 갯수
 
-> 주의:
->
-> JSX 는 HTML과 비슷하지만 완전히 같지는 않습니다. 중요한 차이점을 보시려면 [JSX gotchas](/react/docs/jsx-gotchas-ko-KR.html)를 보세요.
+현재 컴포넌트의 `render`는 한 노드만 리턴할 수 있습니다. 만약 `div` 배열을 리턴하려면, `div`, `span`과 같은 다른 컴포넌트로 한 번 더 싸주어야 합니다.
+
+JSX는 일반 JS로 컴파일 함을 잊지말아야 합니다. 두개의 함수를 리턴하는 것은 문법적으로 맞지 않습니다. 이와 마찬가지로, 한 삼항 연산자 안에 한개 이상의 자식 컴포넌트를 넣으면 안됩니다.

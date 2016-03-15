@@ -1,10 +1,12 @@
 ---
-id: jsx-gotchas
+id: jsx-html-differences-ja-JP
 title: JSXの理解
-permalink: jsx-gotchas-ja-JP.html
-prev: jsx-spread-ja-JP.html
-next: interactivity-and-dynamic-uis-ja-JP.html
-
+permalink: jsx-html-differences-ja-JP.html
+prev: jsx-overview-ja-JP.html
+next: jsx-conditional-statements.html
+redirect_from:
+  - docs/jsx-gotchas-ja-JP.html
+  - tips/self-closing-tag-ja-JP.html
 ---
 
 JSXはHTMLに似ていますが、重要な違いがいくつかあります。
@@ -66,3 +68,11 @@ HTMLの仕様書に存在しない要素をネイティブなHTML要素に渡し
 ```javascript
 <div aria-hidden={true} />
 ```
+
+## 自己終了タグ
+
+JSXでは、 `<MyComponent />` 単体は正しいですが、 `<MyComponent>` は正しくありません。 全てのタグは、自己終了の形式または対応する終了タグ( `</MyComponent>` )で閉じるべきです。
+
+> 注意:
+>
+> 全てのReactコンポーネントは `<div />` のように自己終了タグになり得ます。 `<div></div>` もまた同様です。

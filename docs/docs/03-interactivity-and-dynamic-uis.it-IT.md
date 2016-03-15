@@ -2,7 +2,7 @@
 id: interactivity-and-dynamic-uis-it-IT
 title: Interattività e UI Dinamiche
 permalink: interactivity-and-dynamic-uis-it-IT.html
-prev: jsx-gotchas-it-IT.html
+prev: displaying-data-it-IT.html
 next: multiple-components-it-IT.html
 ---
 

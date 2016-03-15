@@ -2,8 +2,7 @@
 id: jsx-spread-it-IT
 title: Attributi Spread JSX
 permalink: jsx-spread-it-IT.html
-prev: jsx-in-depth-it-IT.html
-next: jsx-gotchas-it-IT.html
+prev: jsx-conditional-statements.html
 ---
 
 Se sai in anticipo che tutte le proprietà che desideri assegnare ad un componente, usare JSX è facile:

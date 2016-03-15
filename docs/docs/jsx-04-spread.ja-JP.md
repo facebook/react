@@ -1,9 +1,8 @@
 ---
-id: jsx-spread
+id: jsx-spread-ja-JP
 title: JSXの拡張属性
 permalink: jsx-spread-ja-JP.html
-prev: jsx-in-depth-ja-JP.html
-next: jsx-gotchas-ja-JP.html
+prev: jsx-conditional-statements.html
 ---
 
 以下のように、コンポーネントにどのようなプロパティを配置したいか前もって全て分かっている場合は、JSXを使うことは簡単です。

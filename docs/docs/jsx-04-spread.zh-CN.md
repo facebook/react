@@ -2,8 +2,7 @@
 id: jsx-spread-zh-CN
 title: JSX 展开属性
 permalink: jsx-spread-zh-CN.html
-prev: jsx-in-depth-zh-CN.html
-next: jsx-gotchas-zh-CN.html
+prev: jsx-conditional-statements.html
 ---
 
 如果你事先知道组件需要的全部 Props（属性），JSX 很容易地这样写：

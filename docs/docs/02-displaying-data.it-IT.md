@@ -3,7 +3,7 @@ id: displaying-data-it-IT
 title: Visualizzare Dati
 permalink: displaying-data-it-IT.html
 prev: why-react-it-IT.html
-next: jsx-in-depth-it-IT.html
+next: interactivity-and-dynamic-uis-it-IT.html
 ---
 
 L'attività più basilare che puoi effettuare con una UI è mostrare dei dati. React rende visualizzare dati semplice e mantiene automaticamente l'interfaccia aggiornata quando i dati cambiano.
@@ -94,7 +94,7 @@ Abbiamo scoperto che questo ha reso la costruzione di applicazioni React più se
 
 JSX è di dimensioni contenute. Per maggiori informazioni, consulta [JSX in profondità](/react/docs/jsx-in-depth-it-IT.html). Oppure osserva la trasformazione in tempo reale sulla [REPL di Babel](https://babeljs.io/repl/).
 
-JSX è simile all'HTML, ma non proprio identico. Consulta la guida [JSX gotchas](/react/docs/jsx-gotchas-it-IT.html) per alcune differenze fondamentali.
+JSX è simile all'HTML, ma non proprio identico. Consulta la guida [JSX - HTML Differences](/react/docs/jsx-html-differences-it-IT.html) per alcune differenze fondamentali.
 
 [Babel offre una varietà di strumenti per cominciare a usare JSX](http://babeljs.io/docs/setup/), dagli strumenti a riga di comando alle integrazioni in Ruby on Rails. Scegli lo strumento che funziona meglio per te.
 

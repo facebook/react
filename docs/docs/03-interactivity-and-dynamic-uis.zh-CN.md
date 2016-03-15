@@ -2,7 +2,7 @@
 id: interactivity-and-dynamic-uis-zh-CN
 title: 动态交互式用户界面
 permalink: interactivity-and-dynamic-uis-zh-CN.html
-prev: jsx-gotchas-zh-CN.html
+prev: displaying-data-zh-CN.html
 next: multiple-components-zh-CN.html
 ---
 

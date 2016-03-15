@@ -1,10 +1,10 @@
 ---
-id: if-else-in-JSX-ko-KR
+id: jsx-conditional-statements-ko-KR
 title: JSX에서 If-Else
-layout: tips
-permalink: if-else-in-JSX-ko-KR.html
-prev: inline-styles-ko-KR.html
-next: self-closing-tag-ko-KR.html
+permalink: jsx-conditional-statements-ko-KR.html
+prev: jsx-html-differences-ko-KR.html
+next: jsx-spread-ko-KR.html
+redirect_from: tips/if-else-in-JSX-ko-KR.html
 ---
 
 JSX 안에서는 `if-else` 구문이 작동하지 않습니다. 왜냐하면 JSX가 그저 함수 호출과 객체 생성의 편의 문법이기 때문입니다. 다음의 기본적인 예제를 살펴봅시다.

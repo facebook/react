@@ -2,8 +2,7 @@
 id: jsx-spread-ko-KR
 title: JSX 스프레드 어트리뷰트
 permalink: jsx-spread-ko-KR.html
-prev: jsx-in-depth-ko-KR.html
-next: jsx-gotchas-ko-KR.html
+prev: jsx-conditional-statements-ko-KR.html
 ---
 
 미리 컴포넌트에 넣을 모든 프로퍼티를 알게 된다면, JSX를 사용하기 쉬워집니다.
