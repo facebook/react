@@ -7,6 +7,43 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v15.0 Release Candidate 2</title>
+				<description>&lt;p&gt;Today we&amp;#39;re releasing a second release candidate for version 15. Primarily this is to address 2 issues, but we also picked up a few small changes from new contributors, including some improvements to some of our new warnings.&lt;/p&gt;
+
+&lt;p&gt;The most pressing change that was made is to fix a bug in our new code that removes &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s, as discussed in the original RC1 post. Specifically we have some code that takes a different path in IE11 and Edge due to the speed of some DOM operations. There was a bug in this code which didn&amp;#39;t break out of the optimization for &lt;code&gt;DocumentFragment&lt;/code&gt;s, resulting in text not appearing at all. Thanks to the several people who &lt;a href=&quot;https://github.com/facebook/react/issues/6246&quot;&gt;reported this&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The other change is to our SVG code. In RC1 we had made the decision to pass through all attributes directly. This led to &lt;a href=&quot;https://github.com/facebook/react/issues/6211&quot;&gt;some confusion with &lt;code&gt;class&lt;/code&gt; vs &lt;code&gt;className&lt;/code&gt;&lt;/a&gt; and ultimately led us to reconsider our position on the approach. Passing through all attributes meant that we would have two different patterns for using React where things like hyphenated attributes would work for SVG but not HTML. In the future, we &lt;em&gt;might&lt;/em&gt; change our approach to the problem for HTML as well but in the meantime, maintaining consistency is important. So we reverted the changes that allowed the attributes to be passed through and instead expanded the SVG property list to include all attributes that are in the spec. We believe we have everything now but definitely &lt;a href=&quot;https://github.com/facebook/react/issues/1657#issuecomment-197031403&quot;&gt;let us know&lt;/a&gt; if we missed anything. It was and still is our intent to support the full range of SVG tags and attributes in this release.&lt;/p&gt;
+
+&lt;p&gt;Thanks again to everybody who has tried the RC1 and reported issues. It has been extremely important and we wouldn&amp;#39;t be able to do this without your help!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;npm install --save react@15.0.0-rc.2 react-dom@15.0.0-rc.2&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
+
+&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we provide pre-built browser builds for your convenience, which are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.2.js&quot;&gt;https://fb.me/react-15.0.0-rc.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.2.min.js&quot;&gt;https://fb.me/react-15.0.0-rc.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.2.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.2.min.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.2.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.2.min.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2016-03-16T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/03/16/react-v15-rc2.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/16/react-v15-rc2.html</guid>
+			</item>
+		
+			<item>
 				<title>React v15.0 Release Candidate</title>
 				<description>&lt;p&gt;Sorry for the small delay in releasing this. As we said, we&amp;#39;ve been busy binge-watching House of Cards. That scene in the last episode where Francis and Claire Underwood &lt;abbr title=&quot;You didn't think we would actually spoil anything did you?&quot;&gt;████████████████████████████████████&lt;/abbr&gt;. WOW!&lt;/p&gt;
 
@@ -766,41 +803,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0
 				<pubDate>2015-11-18T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/11/18/react-v0.14.3.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/11/18/react-v0.14.3.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.14.2</title>
-				<description>&lt;p&gt;We have a quick update following the release of 0.14.1 last week. It turns out we broke a couple things in the development build of React when using Internet Explorer. Luckily it was only the development build, so your production applications were unaffected. This release is mostly to address those issues. There is one notable change if consuming React from npm. For the &lt;code&gt;react-dom&lt;/code&gt; package, we moved &lt;code&gt;react&lt;/code&gt; from a regular dependency to a peer dependency. This will impact very few people as these two are typically installed together at the top level, but it will fix some issues with dependencies of installed components also using &lt;code&gt;react&lt;/code&gt; as a peer dependency.&lt;/p&gt;
-
-&lt;p&gt;The release is now available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.2.js&quot;&gt;https://fb.me/react-0.14.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.2.min.js&quot;&gt;https://fb.me/react-0.14.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.2.js&quot;&gt;https://fb.me/react-with-addons-0.14.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.2.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.2.js&quot;&gt;https://fb.me/react-dom-0.14.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.2.min.js&quot;&gt;https://fb.me/react-dom-0.14.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed bug with development build preventing events from firing in some versions of Internet Explorer &amp;amp; Edge&lt;/li&gt;
-&lt;li&gt;Fixed bug with development build when using es5-sham in older versions of Internet Explorer&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;integrity&lt;/code&gt; attribute&lt;/li&gt;
-&lt;li&gt;Fixed bug resulting in &lt;code&gt;children&lt;/code&gt; prop being coerced to a string for custom elements, which was not the desired behavior.&lt;/li&gt;
-&lt;li&gt;Moved &lt;code&gt;react&lt;/code&gt; from &lt;code&gt;dependencies&lt;/code&gt; to &lt;code&gt;peerDependencies&lt;/code&gt; to match expectations and align with &lt;code&gt;react-addons-*&lt;/code&gt; packages&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2015-11-02T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/11/02/react-v0.14.2.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/11/02/react-v0.14.2.html</guid>
 			</item>
 		
 	</channel>

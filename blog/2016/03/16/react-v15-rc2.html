@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Use React and JSX in ASP.NET MVC | React</title>
+  <title>React v15.0 Release Candidate 2 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Use React and JSX in ASP.NET MVC | React">
+  <meta property="og:title" content="React v15.0 Release Candidate 2 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/blog/2014/04/04/reactnet.html">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2016/03/16/react-v15-rc2.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -67,7 +67,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
+        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html" class="active">React v15.0 Release Candidate 2</a></li>
       
         <li><a href="/react/blog/2016/03/07/react-v15-rc1.html">React v15.0 Release Candidate</a></li>
       
@@ -97,16 +97,16 @@
 
 <h1>
 
-  Use React and JSX in ASP.NET MVC
+  React v15.0 Release Candidate 2
 
 </h1>
 
 <p class="meta">
-  April  4, 2014
+  March 16, 2016
   by
   
     
-      <a href="http://dan.cx/">Daniel Lo Nigro</a>
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
     
     
   
@@ -115,38 +115,35 @@
 <hr>
 
 <div class="post">
-  <p>Today we&#39;re happy to announce the initial release of
-<a href="http://reactjs.net/">ReactJS.NET</a>, which makes it easier to use React and JSX
-in .NET applications, focusing specifically on ASP.NET MVC web applications.
-It has several purposes:</p>
+  <p>Today we&#39;re releasing a second release candidate for version 15. Primarily this is to address 2 issues, but we also picked up a few small changes from new contributors, including some improvements to some of our new warnings.</p>
 
-<ul>
-<li>On-the-fly JSX to JavaScript compilation. Simply reference JSX files and they
-will be compiled and cached server-side.</li>
-</ul>
-<div class="highlight"><pre><code class="language-html" data-lang="html">   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;@Url.Content(&quot;</span><span class="err">/</span><span class="na">Scripts</span><span class="err">/</span><span class="na">HelloWorld</span><span class="err">.</span><span class="na">jsx</span><span class="err">&quot;)&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<ul>
-<li>JSX to JavaScript compilation via popular minification/combination libraries
-(Cassette and ASP.NET Bundling and Minification). This is suggested for
-production websites.</li>
-<li>Server-side component rendering to make your initial render super fast.</li>
-</ul>
+<p>The most pressing change that was made is to fix a bug in our new code that removes <code>&lt;span&gt;</code>s, as discussed in the original RC1 post. Specifically we have some code that takes a different path in IE11 and Edge due to the speed of some DOM operations. There was a bug in this code which didn&#39;t break out of the optimization for <code>DocumentFragment</code>s, resulting in text not appearing at all. Thanks to the several people who <a href="https://github.com/facebook/react/issues/6246">reported this</a>.</p>
 
-<p>Even though we are focusing on ASP.NET MVC, ReactJS.NET can also be used in
-Web Forms applications as well as non-web applications (for example, in build
-scripts). ReactJS.NET currently only works on Microsoft .NET but we are working
-on support for Linux and Mac OS X via Mono as well.</p>
+<p>The other change is to our SVG code. In RC1 we had made the decision to pass through all attributes directly. This led to <a href="https://github.com/facebook/react/issues/6211">some confusion with <code>class</code> vs <code>className</code></a> and ultimately led us to reconsider our position on the approach. Passing through all attributes meant that we would have two different patterns for using React where things like hyphenated attributes would work for SVG but not HTML. In the future, we <em>might</em> change our approach to the problem for HTML as well but in the meantime, maintaining consistency is important. So we reverted the changes that allowed the attributes to be passed through and instead expanded the SVG property list to include all attributes that are in the spec. We believe we have everything now but definitely <a href="https://github.com/facebook/react/issues/1657#issuecomment-197031403">let us know</a> if we missed anything. It was and still is our intent to support the full range of SVG tags and attributes in this release.</p>
+
+<p>Thanks again to everybody who has tried the RC1 and reported issues. It has been extremely important and we wouldn&#39;t be able to do this without your help!</p>
 <h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
-<p>ReactJS.NET is packaged in NuGet. Simply run <code>Install-Package React.Mvc4</code> in the
-package manager console or search NuGet for &quot;React&quot; to install it.
-<a href="http://reactjs.net/docs">See the documentation</a> for more information. The
-GitHub project contains
-<a href="https://github.com/reactjs/React.NET/tree/master/src/React.Sample.Mvc4">a sample website</a>
-demonstrating all of the features.</p>
+<p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:</p>
 
-<p>Let us know what you think, and feel free to send through any feedback and
-report bugs <a href="https://github.com/reactjs/React.NET">on GitHub</a>.</p>
+<ul>
+<li><code>npm install --save react@15.0.0-rc.2 react-dom@15.0.0-rc.2</code></li>
+</ul>
+
+<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the <code>NODE_ENV</code> environment variable to <code>production</code> to use the production build of React which does not include the development warnings and runs significantly faster.</p>
+
+<p>If you can’t use <code>npm</code> yet, we provide pre-built browser builds for your convenience, which are also available in the <code>react</code> package on bower.</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-15.0.0-rc.2.js">https://fb.me/react-15.0.0-rc.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-15.0.0-rc.2.min.js">https://fb.me/react-15.0.0-rc.2.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-15.0.0-rc.2.js">https://fb.me/react-with-addons-15.0.0-rc.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-15.0.0-rc.2.min.js">https://fb.me/react-with-addons-15.0.0-rc.2.min.js</a><br></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
+Dev build with warnings: <a href="https://fb.me/react-dom-15.0.0-rc.2.js">https://fb.me/react-dom-15.0.0-rc.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.2.min.js">https://fb.me/react-dom-15.0.0-rc.2.min.js</a><br></li>
+</ul>
 
 </div>
 
