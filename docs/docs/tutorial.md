@@ -31,7 +31,7 @@ For sake of simplicity, the server we will run uses a `JSON` file as a database.
 
 ### Getting started
 
-For this tutorial, we're going to make it as easy as possible. Included in the server package discussed above is an HTML file which we'll work in. Open up `public/index.html` in your favorite editor. It should look something like this:
+For this tutorial, we're going to make it as easy as possible. Included in the server package discussed above is a HTML file which we'll work in. Open up `public/index.html` in your favorite editor. It should look something like this:
 
 ```html
 <!-- index.html -->
