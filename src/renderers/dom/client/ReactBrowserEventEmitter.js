@@ -287,23 +287,12 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
             );
           }
         } else if (dependency === topLevelTypes.topFocus ||
-            dependency === topLevelTypes.topBlur || dependency === topLevelTypes.topFocusIn ||
-            dependency === topLevelTypes.topFocusOut) {
+            dependency === topLevelTypes.topBlur) {
 
           if (isEventSupported('focus', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
               topLevelTypes.topFocus,
               'focus',
-              mountAt
-            );
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              topLevelTypes.topFocusIn,
-              'focusin',
-              mountAt
-            );
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              topLevelTypes.topFocusOut,
-              'focusout',
               mountAt
             );
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
@@ -329,8 +318,6 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
           // to make sure blur and focus event listeners are only attached once
           isListening[topLevelTypes.topBlur] = true;
           isListening[topLevelTypes.topFocus] = true;
-          isListening[topLevelTypes.topFocusIn] = true;
-          isListening[topLevelTypes.topFocusOut] = true;
         } else if (topEventMapping.hasOwnProperty(dependency)) {
           ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
             dependency,

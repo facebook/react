@@ -37,8 +37,6 @@ var eventTypes = {
       topLevelTypes.topChange,
       topLevelTypes.topClick,
       topLevelTypes.topFocus,
-      topLevelTypes.topFocusIn,
-      topLevelTypes.topFocusOut,
       topLevelTypes.topInput,
       topLevelTypes.topKeyDown,
       topLevelTypes.topKeyUp,
