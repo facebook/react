@@ -52,6 +52,17 @@ function getID(inst) {
   }
 }
 
+function stripComplexValues(key, value) {
+  if (typeof value !== 'object' || Array.isArray(value) || value == null) {
+    return value;
+  }
+  var prototype = Object.getPrototypeOf(value);
+  if (!prototype || prototype === Object.prototype) {
+    return value;
+  }
+  return '<not serializable>';
+}
+
 // This implementation of ReactPerf is going away some time mid 15.x.
 // While we plan to keep most of the API, the actual format of measurements
 // will change dramatically. To signal this, we wrap them into an opaque-ish
@@ -174,7 +185,7 @@ var ReactDefaultPerf = {
       var result = {};
       result[DOMProperty.ID_ATTRIBUTE_NAME] = item.id;
       result.type = item.type;
-      result.args = JSON.stringify(item.args);
+      result.args = JSON.stringify(item.args, stripComplexValues);
       return result;
     }));
     console.log(
