@@ -51,6 +51,17 @@ function getID(inst) {
   }
 }
 
+// This implementation of ReactPerf is going away some time mid 15.x.
+// While we plan to keep most of the API, the actual format of measurements
+// will change dramatically. To signal this, we wrap them into an opaque-ish
+// object to discourage reaching into it until the API stabilizes.
+function wrapLegacyMeasurements(measurements) {
+  return { __unstable_this_format_will_change: measurements };
+}
+function unwrapLegacyMeasurements(measurements) {
+  return measurements && measurements.__unstable_this_format_will_change || measurements;
+}
+
 var ReactDefaultPerf = {
   _allMeasurements: [], // last item in the list is the current one
   _mountStack: [0],
@@ -71,11 +82,11 @@ var ReactDefaultPerf = {
   },
 
   getLastMeasurements: function() {
-    return ReactDefaultPerf._allMeasurements;
+    return wrapLegacyMeasurements(ReactDefaultPerf._allMeasurements);
   },
 
   printExclusive: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     var summary = ReactDefaultPerfAnalysis.getExclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
@@ -93,7 +104,7 @@ var ReactDefaultPerf = {
   },
 
   printInclusive: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
@@ -109,6 +120,7 @@ var ReactDefaultPerf = {
   },
 
   getMeasurementsSummaryMap: function(measurements) {
+    measurements = unwrapLegacyMeasurements(measurements);
     var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
       measurements,
       true
@@ -123,7 +135,7 @@ var ReactDefaultPerf = {
   },
 
   printWasted: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     console.table(ReactDefaultPerf.getMeasurementsSummaryMap(measurements));
     console.log(
       'Total time:',
@@ -132,7 +144,7 @@ var ReactDefaultPerf = {
   },
 
   printDOM: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     console.table(summary.map(function(item) {
       var result = {};
