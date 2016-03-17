@@ -18,6 +18,7 @@ var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
 var performanceNow = require('performanceNow');
+var warning = require('warning');
 
 function roundFloat(val) {
   return Math.floor(val * 100) / 100;
@@ -61,6 +62,9 @@ function wrapLegacyMeasurements(measurements) {
 function unwrapLegacyMeasurements(measurements) {
   return measurements && measurements.__unstable_this_format_will_change || measurements;
 }
+
+var warnedAboutPrintDOM = false;
+var warnedAboutGetMeasurementsSummaryMap = false;
 
 var ReactDefaultPerf = {
   _allMeasurements: [], // last item in the list is the current one
@@ -120,6 +124,16 @@ var ReactDefaultPerf = {
   },
 
   getMeasurementsSummaryMap: function(measurements) {
+    warning(
+      warnedAboutGetMeasurementsSummaryMap,
+      '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
+      '`ReactPerf.getWasted(...)` instead.'
+    );
+    warnedAboutGetMeasurementsSummaryMap = true;
+    return ReactDefaultPerf.getWasted(measurements);
+  },
+
+  getWasted: function(measurements) {
     measurements = unwrapLegacyMeasurements(measurements);
     var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
       measurements,
@@ -136,7 +150,7 @@ var ReactDefaultPerf = {
 
   printWasted: function(measurements) {
     measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
-    console.table(ReactDefaultPerf.getMeasurementsSummaryMap(measurements));
+    console.table(ReactDefaultPerf.getWasted(measurements));
     console.log(
       'Total time:',
       ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
@@ -144,6 +158,16 @@ var ReactDefaultPerf = {
   },
 
   printDOM: function(measurements) {
+    warning(
+      warnedAboutPrintDOM,
+      '`ReactPerf.printDOM(...)` is deprecated. Use ' +
+      '`ReactPerf.printOperations(...)` instead.'
+    );
+    warnedAboutPrintDOM = true;
+    return ReactDefaultPerf.printOperations(measurements);
+  },
+
+  printOperations: function(measurements) {
     measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     console.table(summary.map(function(item) {
