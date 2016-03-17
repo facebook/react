@@ -58,7 +58,7 @@ describe('ReactDefaultPerf', function() {
     ReactDefaultPerf.start();
     fn();
     ReactDefaultPerf.stop();
-    return ReactDefaultPerf.getLastMeasurements();
+    return ReactDefaultPerf.getLastMeasurements().__unstable_this_format_will_change;
   }
 
   it('should count no-op update as waste', function() {
