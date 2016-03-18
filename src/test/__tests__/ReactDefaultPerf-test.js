@@ -237,6 +237,21 @@ describe('ReactDefaultPerf', function() {
     expect(summary).toEqual([]);
   });
 
+  it('should print a table after calling printOperations', function() {
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Div>hey</Div>, container);
+    });
+    spyOn(console, 'table');
+    ReactDefaultPerf.printOperations(measurements);
+    expect(console.table.calls.length).toBe(1);
+    expect(console.table.argsForCall[0][0]).toEqual([{
+      'data-reactid': '',
+      type: 'set innerHTML',
+      args: '{"node":"<not serializable>","children":[],"html":null,"text":null}',
+    }]);
+  });
+
   it('warns once when using getMeasurementsSummaryMap', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
