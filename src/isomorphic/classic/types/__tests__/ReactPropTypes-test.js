@@ -802,7 +802,7 @@ describe('ReactPropTypes', function() {
     it('should have been called with the right params', function() {
       var spy = jasmine.createSpy();
       Component = React.createClass({
-        propTypes: {num: spy},
+        propTypes: {num: PropTypes.custom(spy)},
 
         render: function() {
           return <div />;
@@ -817,22 +817,6 @@ describe('ReactPropTypes', function() {
       expect(spy.argsForCall[0][2]).toBe('Component');
     });
 
-    it('should have been called even if the prop is not present', function() {
-      var spy = jasmine.createSpy();
-      Component = React.createClass({
-        propTypes: {num: spy},
-
-        render: function() {
-          return <div />;
-        },
-      });
-
-      var instance = <Component bla={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
-
-      expect(spy.argsForCall.length).toBe(2); // temp double validation
-    });
-
     it('should have received the validator\'s return value', function() {
       var spy = jasmine.createSpy().andCallFake(
         function(props, propName, componentName) {
@@ -842,7 +826,7 @@ describe('ReactPropTypes', function() {
         }
       );
       Component = React.createClass({
-        propTypes: {num: spy},
+        propTypes: {num: PropTypes.custom(spy)},
 
         render: function() {
           return <div />;
@@ -865,7 +849,7 @@ describe('ReactPropTypes', function() {
           }
         );
         Component = React.createClass({
-          propTypes: {num: spy},
+          propTypes: {num: PropTypes.custom(spy)},
 
           render: function() {
             return <div />;
@@ -877,5 +861,24 @@ describe('ReactPropTypes', function() {
         expect(console.error.argsForCall.length).toBe(0);
       }
     );
+
+    it('should be implicitly optional and not warn without values', function() {
+      typeCheckPass(PropTypes.custom(jasmine.createSpy()), null);
+      typeCheckPass(PropTypes.custom(jasmine.createSpy()), undefined);
+    });
+
+    it('should warn for missing required values', function() {
+      typeCheckFail(
+        PropTypes.custom(jasmine.createSpy()).isRequired,
+        null,
+        requiredMessage
+      );
+      typeCheckFail(
+        PropTypes.custom(jasmine.createSpy()).isRequired,
+        undefined,
+        requiredMessage
+      );
+    });
+
   });
 });
