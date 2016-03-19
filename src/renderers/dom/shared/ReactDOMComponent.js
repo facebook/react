@@ -182,6 +182,11 @@ function assertValidProps(component, props) {
       'those nodes are unexpectedly modified or duplicated. This is ' +
       'probably not intentional.'
     );
+    warning(
+      !props.onFocusIn &&
+      !props.onFocusOut,
+      'Instead of using properties `onFocusIn` or `onFocusOut`, use only `onFocus`.'
+    );
   }
   invariant(
     props.style == null || typeof props.style === 'object',
