@@ -70,11 +70,13 @@ React.createClass({
     // oggetto di tipo Error se la validazione fallisce. Non lanciare eccezioni
     // o utilizzare `console.warn`, in quanto non funzionerebbe all'interno di
     // `oneOfType`.
-    customProp: function(props, propName, componentName) {
-      if (!/matchme/.test(props[propName])) {
-        return new Error('Validazione fallita!');
+    requiredCustomProp: React.PropTypes.custom(
+      function(props, propName, componentName) {
+        if (!/matchme/.test(props[propName])) {
+          return new Error('Validazione fallita!');
+        }
       }
-    }
+    ).isRequired,
   },
   /* ... */
 });

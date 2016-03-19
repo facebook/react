@@ -67,11 +67,13 @@ React.createClass({
     // 물론 사용자 정의 검증자도 지정할 수 있습니다. 이는 검증이 실패했을 때
     // Error 객체를 리턴해야합니다. `console.warn`을 이나 throw를 하면 안됩니다.
     // 그렇게하면 `oneOfType` 안에서 작동하지 않습니다.
-    customProp: function(props, propName, componentName) {
-      if (!/matchme/.test(props[propName])) {
-        return new Error('Validation failed!');
+    requiredCustomProp: React.PropTypes.custom(
+      function(props, propName, componentName) {
+        if (!/matchme/.test(props[propName])) {
+          return new Error('Validation failed!');
+        }
       }
-    }
+    ).isRequired,
   },
   /* ... */
 });

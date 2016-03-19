@@ -68,11 +68,13 @@ React.createClass({
     // You can also specify a custom validator. It should return an Error
     // object if the validation fails. Don't `console.warn` or throw, as this
     // won't work inside `oneOfType`.
-    customProp: function(props, propName, componentName) {
-      if (!/matchme/.test(props[propName])) {
-        return new Error('Validation failed!');
+    requiredCustomProp: React.PropTypes.custom(
+      function(props, propName, componentName) {
+        if (!/matchme/.test(props[propName])) {
+          return new Error('Validation failed!');
+        }
       }
-    }
+    ).isRequired,
   },
   /* ... */
 });

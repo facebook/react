@@ -68,11 +68,13 @@ React.createClass({
     // 你可以自定义一个验证器。如果验证失败需要返回一个 Error 对象。
     // 不要直接使用 `console.warn` 或抛异常，
     // 因为这在 `oneOfType` 里不起作用。
-    customProp: function(props, propName, componentName) {
-      if (!/matchme/.test(props[propName])) {
-        return new Error('Validation failed!');
+    requiredCustomProp: React.PropTypes.custom(
+      function(props, propName, componentName) {
+        if (!/matchme/.test(props[propName])) {
+          return new Error('Validation failed!');
+        }
       }
-    }
+    ).isRequired,
   },
   /* ... */
 });
