@@ -2,7 +2,7 @@
 
 'use strict';
 
-var envify = require('envify/custom');
+var envify = require('loose-envify/custom');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
