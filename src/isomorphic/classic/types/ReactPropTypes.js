@@ -83,6 +83,7 @@ var ReactPropTypes = {
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
   shape: createShapeTypeChecker,
+  custom: createCustomTypeChecker,
 };
 
 /**
@@ -357,6 +358,10 @@ function createShapeTypeChecker(shapeTypes) {
     return null;
   }
   return createChainableTypeChecker(validate);
+}
+
+function createCustomTypeChecker(customChecker) {
+  return createChainableTypeChecker(customChecker);
 }
 
 function isNode(propValue) {
