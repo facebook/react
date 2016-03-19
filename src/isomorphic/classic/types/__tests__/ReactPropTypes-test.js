@@ -22,6 +22,13 @@ var MyComponent;
 var requiredMessage =
   'Required prop `testProp` was not specified in `testComponent`.';
 
+/**
+ * Asserts a failing propType check.
+ *
+ * @param {function} declaration A propType function for checking a prop.
+ * @param {*} value A value whose type to check.
+ * @param {string} message The expected Error message from the failed assertion.
+ */
 function typeCheckFail(declaration, value, message) {
   var props = {testProp: value};
   var error = declaration(
@@ -34,6 +41,12 @@ function typeCheckFail(declaration, value, message) {
   expect(error.message).toBe(message);
 }
 
+/**
+ * Asserts a passing propType check.
+ *
+ * @param {function} declaration A propType function for checking a prop.
+ * @param {*} value A value whose type to check.
+ */
 function typeCheckPass(declaration, value) {
   var props = {testProp: value};
   var error = declaration(
@@ -142,7 +155,8 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.arrayOf({ foo: PropTypes.string }),
         { foo: 'bar' },
-        'Property `testProp` of component `testComponent` has invalid PropType notation inside arrayOf.'
+        'Property `testProp` of component `testComponent`' +
+        ' has invalid PropType notation inside arrayOf.'
       );
     });
 
