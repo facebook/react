@@ -129,8 +129,6 @@ var DOMChildrenOperations = {
 
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
 
-  updateTextContent: setTextContent,
-
   replaceDelimitedText: replaceDelimitedText,
 
   /**
@@ -180,7 +178,6 @@ var DOMChildrenOperations = {
 };
 
 ReactPerf.measureMethods(DOMChildrenOperations, 'DOMChildrenOperations', {
-  updateTextContent: 'updateTextContent',
   replaceDelimitedText: 'replaceDelimitedText',
 });
 
