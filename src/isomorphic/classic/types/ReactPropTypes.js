@@ -115,8 +115,8 @@ function createChainableTypeChecker(validate) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
     if (props[propName] == null) {
-      var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
+        var locationName = ReactPropTypeLocationNames[location];
         return new Error(
           `Required ${locationName} \`${propFullName}\` was not specified in ` +
           `\`${componentName}\`.`
