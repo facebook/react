@@ -28,7 +28,6 @@ var DOM_OPERATION_TYPES = {
   'setValueForStyles': 'update styles',
   'replaceNodeWithMarkup': 'replace',
   'replaceDelimitedText': 'replace',
-  'updateTextContent': 'set textContent',
 };
 
 function getTotalTime(measurements) {
