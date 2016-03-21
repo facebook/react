@@ -937,4 +937,44 @@ describe('ReactUpdates', function() {
       ReactFeatureFlags.logTopLevelRenders = false;
     }
   });
+
+  it('throws when the update callback is not a function', function() {
+    function Foo() {
+      this.a = 1;
+      this.b = 2;
+    }
+    var A = React.createClass({
+      getInitialState: function() {
+        return {};
+      },
+      render: function() {
+        return <div />;
+      },
+    });
+    var component = ReactTestUtils.renderIntoDocument(<A />);
+
+    var stringMessage =
+      'enqueueCallback(...): You called `setState`, `replaceState`, or '+
+      '`forceUpdate` with the last argument of type string. When specified, ' +
+      'their last `callback` argument is expected to be a function.';
+    expect(() => component.setState({}, 'no')).toThrow(stringMessage);
+    expect(() => component.replaceState({}, 'no')).toThrow(stringMessage);
+    expect(() => component.forceUpdate('no')).toThrow(stringMessage);
+
+    var objectMessage =
+      'enqueueCallback(...): You called `setState`, `replaceState`, or '+
+      '`forceUpdate` with the last argument of type Object. When specified, ' +
+      'their last `callback` argument is expected to be a function.';
+    expect(() => component.setState({}, {})).toThrow(objectMessage);
+    expect(() => component.replaceState({}, {})).toThrow(objectMessage);
+    expect(() => component.forceUpdate({})).toThrow(objectMessage);
+
+    var fooMessage =
+      'enqueueCallback(...): You called `setState`, `replaceState`, or '+
+      '`forceUpdate` with the last argument of type Foo (keys: a, b). When ' +
+      'specified, their last `callback` argument is expected to be a function.';
+    expect(() => component.setState({}, new Foo())).toThrow(fooMessage);
+    expect(() => component.replaceState({}, new Foo())).toThrow(fooMessage);
+    expect(() => component.forceUpdate(new Foo())).toThrow(fooMessage);
+  });
 });

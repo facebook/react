@@ -22,6 +22,19 @@ function enqueueUpdate(internalInstance) {
   ReactUpdates.enqueueUpdate(internalInstance);
 }
 
+function formatUnexpectedArgument(arg) {
+  var type = typeof arg;
+  if (type !== 'object') {
+    return type;
+  }
+  var displayName = arg.constructor && arg.constructor.name || type;
+  var keys = Object.keys(arg);
+  if (keys.length > 0 && keys.length < 20) {
+    return `${displayName} (keys: ${keys.join(', ')})`;
+  }
+  return displayName;
+}
+
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   var internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
@@ -108,11 +121,10 @@ var ReactUpdateQueue = {
   enqueueCallback: function(publicInstance, callback) {
     invariant(
       typeof callback === 'function',
-      'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
-      '%s. A function is expected',
-      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
-        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
+      'enqueueCallback(...): You called `setState`, `replaceState`, or ' +
+      '`forceUpdate` with the last argument of type %s. When specified, ' +
+      'their last `callback` argument is expected to be a function.',
+      formatUnexpectedArgument(callback)
     );
     var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
@@ -140,11 +152,10 @@ var ReactUpdateQueue = {
   enqueueCallbackInternal: function(internalInstance, callback) {
     invariant(
       typeof callback === 'function',
-      'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
-      '%s. A function is expected',
-      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
-        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
+      'enqueueCallback(...): You called `setState`, `replaceState`, or ' +
+      '`forceUpdate` with the last argument of type %s. When specified, ' +
+      'their last `callback` argument is expected to be a function.',
+      formatUnexpectedArgument(callback)
     );
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
