@@ -1,0 +1,11 @@
+---
+general:
+  branches:
+    ignore:
+      - gh-pages
+
+machine:
+  node:
+    version: 4
+  ruby:
+    version: 2.2.3
