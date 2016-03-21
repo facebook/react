@@ -815,6 +815,15 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall.length).toBe(0);
     });
 
+    it('should warn on onFocusIn/onFocusOut usage', function() {
+      spyOn(console, 'error');
+      mountComponent({onFocusIn: function() {}});
+      mountComponent({onFocusOut: function() {}});
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toContain('use only `onFocus`');
+      expect(console.error.argsForCall[1][0]).toContain('use only `onFocus`');
+    });
+
     it('should validate against invalid styles', function() {
       expect(function() {
         mountComponent({style: 'display: none'});
