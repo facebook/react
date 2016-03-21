@@ -244,8 +244,8 @@ var ReactUpdateQueue = {
   validateCallback: function(callback, callerName) {
     invariant(
       !callback || typeof callback === 'function',
-      'You called `%s` with the last argument of type %s. ' +
-      'When specified, its last `callback` argument must be a function.',
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
       callerName,
       formatUnexpectedArgument(callback)
     );

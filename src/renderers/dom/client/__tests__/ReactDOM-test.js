@@ -134,16 +134,16 @@ describe('ReactDOM', function() {
 
     var myDiv = document.createElement('div');
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrow(
-      'You called `ReactDOM.render` with the last argument of type string. ' +
-      'When specified, its last `callback` argument must be a function.'
+      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'to be a function. Instead received: string.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, {})).toThrow(
-      'You called `ReactDOM.render` with the last argument of type Object. ' +
-      'When specified, its last `callback` argument must be a function.'
+      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'to be a function. Instead received: Object.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrow(
-      'You called `ReactDOM.render` with the last argument of type Foo (keys: a, b). ' +
-      'When specified, its last `callback` argument must be a function.'
+      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'to be a function. Instead received: Foo (keys: a, b).'
     );
   });
 
@@ -165,16 +165,16 @@ describe('ReactDOM', function() {
     ReactDOM.render(<A />, myDiv);
 
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrow(
-      'You called `ReactDOM.render` with the last argument of type string. ' +
-      'When specified, its last `callback` argument must be a function.'
+      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'to be a function. Instead received: string.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, {})).toThrow(
-      'You called `ReactDOM.render` with the last argument of type Object. ' +
-      'When specified, its last `callback` argument must be a function.'
+      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'to be a function. Instead received: Object.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrow(
-      'You called `ReactDOM.render` with the last argument of type Foo (keys: a, b). ' +
-      'When specified, its last `callback` argument must be a function.'
+      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'to be a function. Instead received: Foo (keys: a, b).'
     );
   });
 });
