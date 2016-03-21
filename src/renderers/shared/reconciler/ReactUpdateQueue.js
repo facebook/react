@@ -120,13 +120,7 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueCallback: function(publicInstance, callback, callerName) {
-    invariant(
-      typeof callback === 'function',
-      'enqueueCallback(...): You called `%s` with the last argument of type ' +
-      '%s. When specified, its last `callback` argument must be a function.',
-      callerName,
-      formatUnexpectedArgument(callback)
-    );
+    ReactUpdateQueue.validateCallback(callback, callerName);
     var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     // Previously we would throw an error if we didn't have an internal
@@ -151,13 +145,6 @@ var ReactUpdateQueue = {
   },
 
   enqueueCallbackInternal: function(internalInstance, callback) {
-    invariant(
-      typeof callback === 'function',
-      'enqueueCallback(...): You called `setState`, `replaceState`, or ' +
-      '`forceUpdate` with the last argument of type %s. When specified, ' +
-      'their last `callback` argument is expected to be a function.',
-      formatUnexpectedArgument(callback)
-    );
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
     } else {
@@ -252,6 +239,16 @@ var ReactUpdateQueue = {
   enqueueElementInternal: function(internalInstance, newElement) {
     internalInstance._pendingElement = newElement;
     enqueueUpdate(internalInstance);
+  },
+
+  validateCallback: function(callback, callerName) {
+    invariant(
+      !callback || typeof callback === 'function',
+      'You called `%s` with the last argument of type %s. ' +
+      'When specified, its last `callback` argument must be a function.',
+      callerName,
+      formatUnexpectedArgument(callback)
+    );
   },
 
 };

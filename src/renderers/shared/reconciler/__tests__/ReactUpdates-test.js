@@ -954,19 +954,16 @@ describe('ReactUpdates', function() {
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => component.setState({}, 'no')).toThrow(
-      'enqueueCallback(...): You called `setState` with the last argument of ' +
-      'type string. When specified, its last `callback` argument must be a ' +
-      'function.'
+      'You called `setState` with the last argument of type string. ' +
+      'When specified, its last `callback` argument must be a function.'
     );
     expect(() => component.setState({}, {})).toThrow(
-      'enqueueCallback(...): You called `setState` with the last argument of ' +
-      'type Object. When specified, its last `callback` argument must be a ' +
-      'function.'
+      'You called `setState` with the last argument of type Object. ' +
+      'When specified, its last `callback` argument must be a function.'
     );
     expect(() => component.setState({}, new Foo())).toThrow(
-      'enqueueCallback(...): You called `setState` with the last argument of ' +
-      'type Foo (keys: a, b). When specified, its last `callback` argument ' +
-      'must be a function.'
+      'You called `setState` with the last argument of type Foo (keys: a, b). ' +
+      'When specified, its last `callback` argument must be a function.'
     );
   });
 
@@ -986,19 +983,16 @@ describe('ReactUpdates', function() {
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => component.replaceState({}, 'no')).toThrow(
-      'enqueueCallback(...): You called `replaceState` with the last ' +
-      'argument of type string. When specified, its last `callback` argument ' +
-      'must be a function.'
+      'You called `replaceState` with the last argument of type string. ' +
+      'When specified, its last `callback` argument must be a function.'
     );
     expect(() => component.replaceState({}, {})).toThrow(
-      'enqueueCallback(...): You called `replaceState` with the last ' +
-      'argument of type Object. When specified, its last `callback` argument ' +
-      'must be a function.'
+      'You called `replaceState` with the last argument of type Object. ' +
+      'When specified, its last `callback` argument must be a function.'
     );
     expect(() => component.replaceState({}, new Foo())).toThrow(
-      'enqueueCallback(...): You called `replaceState` with the last ' +
-      'argument of type Foo (keys: a, b). When specified, its last ' +
-      '`callback` argument must be a function.'
+      'You called `replaceState` with the last argument of type Foo (keys: a, b). ' +
+      'When specified, its last `callback` argument must be a function.'
     );
   });
 
@@ -1018,19 +1012,16 @@ describe('ReactUpdates', function() {
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => component.forceUpdate('no')).toThrow(
-      'enqueueCallback(...): You called `forceUpdate` with the last ' +
-      'argument of type string. When specified, its last `callback` argument ' +
-      'must be a function.'
+      'You called `forceUpdate` with the last argument of type string. ' +
+      'When specified, its last `callback` argument must be a function.'
     );
     expect(() => component.forceUpdate({})).toThrow(
-      'enqueueCallback(...): You called `forceUpdate` with the last ' +
-      'argument of type Object. When specified, its last `callback` argument ' +
-      'must be a function.'
+      'You called `forceUpdate` with the last argument of type Object. ' +
+      'When specified, its last `callback` argument must be a function.'
     );
     expect(() => component.forceUpdate(new Foo())).toThrow(
-      'enqueueCallback(...): You called `forceUpdate` with the last ' +
-      'argument of type Foo (keys: a, b). When specified, its last ' +
-      '`callback` argument must be a function.'
+      'You called `forceUpdate` with the last argument of type Foo (keys: a, b). ' +
+      'When specified, its last `callback` argument must be a function.'
     );
   });
 });
