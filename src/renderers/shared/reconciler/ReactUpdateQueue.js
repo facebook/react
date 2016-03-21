@@ -116,14 +116,15 @@ var ReactUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance to use as `this` context.
    * @param {?function} callback Called after state is updated.
+   * @param {string} callerName Name of the calling function in the public API.
    * @internal
    */
-  enqueueCallback: function(publicInstance, callback) {
+  enqueueCallback: function(publicInstance, callback, callerName) {
     invariant(
       typeof callback === 'function',
-      'enqueueCallback(...): You called `setState`, `replaceState`, or ' +
-      '`forceUpdate` with the last argument of type %s. When specified, ' +
-      'their last `callback` argument is expected to be a function.',
+      'enqueueCallback(...): You called `%s` with the last argument of type ' +
+      '%s. When specified, its last `callback` argument must be a function.',
+      callerName,
       formatUnexpectedArgument(callback)
     );
     var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
