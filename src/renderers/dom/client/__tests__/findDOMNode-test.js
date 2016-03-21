@@ -58,4 +58,17 @@ describe('findDOMNode', function() {
     );
   });
 
+  it('findDOMNode should not throw an error when called within a component that is not mounted', function() {
+    var Bar = React.createClass({
+      componentWillMount: function() {
+        expect(ReactDOM.findDOMNode(this)).toBeNull();
+      },
+      render: function() {
+        return <div/>;
+      },
+    });
+
+    expect(() => ReactTestUtils.renderIntoDocument(<Bar/>)).not.toThrow();
+  });
+
 });
