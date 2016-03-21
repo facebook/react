@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -417,7 +422,7 @@
 <h3><a class="anchor" name="-master"></a>使用 master <a class="hash-link" href="#-master">#</a></h3>
 <p>我们<a href="https://github.com/facebook/react">在我们的 GitHub repository</a>有从<code>master</code>构建的说明。我们在<code>build/modules</code> 下构建了一个CommonJS模块的树，你可以把它放到任何支持CommonJS的环境或者打包工具里。</p>
 <h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="jsx"></a>浏览器中的JSX转化 <a class="hash-link" href="#jsx">#</a></h3>
-<p>如果你喜欢使用JSX，Babel提供了一个被称为browser.js的<a href="http://babeljs.io/docs/usage/browser/">开发用的浏览器中的 ES6 和 JSX 转换器</a> ，它可以从<code>babel-core</code> npm release 或者<a href="http://cdnjs.com/libraries/babel-core">CDNJS</a> 中 include。Include <code>&lt;script type=&quot;text/babel&quot;&gt;</code> 标记来使用 JSX 转换器.</p>
+<p>如果你喜欢使用JSX，Babel5 提供了被称为browser.js 用于开发的一个浏览器内的 ES6 和 JSX 转换器，它可以从 <a href="http://cdnjs.com/libraries/babel-core/5.8.34">CDNJS</a> 引用。Include <code>&lt;script type=&quot;text/babel&quot;&gt;</code> 标记来使用 JSX 转换器.</p>
 
 <blockquote>
 <p>注意:</p>
@@ -509,6 +514,12 @@ ReactDOM.render(React.createElement(HelloMessage, { name: &quot;John&quot; }), m
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>

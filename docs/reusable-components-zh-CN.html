@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -616,7 +621,7 @@
 <p>因为无状态函数没有备份实例，你不能附加一个引用到一个无状态函数组件。 通常这不是问题，因为无状态函数不提供一个命令式的API。没有命令式的API，你就没有任何需要实例来做的事。然而，如果用户想查找无状态函数组件的DOM节点，他们必须把这个组件包装在一个有状态组件里（比如，ES6 类组件） 并且连接一个引用到有状态的包装组件。</p>
 </blockquote>
 
-<p>在理想世界里，你的大多数组件都应该是无状态函数式的，因为这些无状态组件可以在React核心里经过一个快速的代码路径。 如果可能，这是推荐的模式。</p>
+<p>在理想世界里，你的大多数组件都应该是无状态函数，因为将来我们可能会用避免不必要的检查和内存分配的方式来对这些组件进行优化。 如果可能，这是推荐的模式。</p>
 
 
     <div class="docs-prevnext">
@@ -661,6 +666,12 @@
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>

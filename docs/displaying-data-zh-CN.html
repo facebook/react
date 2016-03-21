@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -488,7 +493,7 @@
 
 <p>[Babel 公开了一些使用 JSX 的方式],从命令行工具到 Ruby on Rails 集成。选择一个对你来说最合适的工具。</p>
 <h2><a class="anchor" name="-jsx--react"></a>没有 JSX 的 React <a class="hash-link" href="#-jsx--react">#</a></h2>
-<p>JSX完全是可选的；你无需在 React 中必须使用 JSX。你可以通过 <code>React.createElement</code> 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，每三个是子节点。</p>
+<p>JSX完全是可选的；你无需在 React 中必须使用 JSX。你可以通过 <code>React.createElement</code> 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，第三个是子节点。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">child2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Second Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child1</span><span class="p">,</span> <span class="nx">child2</span><span class="p">);</span>
@@ -548,6 +553,12 @@
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>

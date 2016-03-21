@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/" class="active">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -529,6 +534,12 @@ This is not the intended way to use React but can be useful as last resort if yo
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>

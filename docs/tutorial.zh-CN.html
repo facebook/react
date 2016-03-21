@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -446,6 +451,7 @@
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
@@ -489,7 +495,7 @@
 </code></pre></div>
 <p>注意原生的HTML元素以小写开头，而制定的 React 类以大写开头。</p>
 <h4><a class="anchor" name="jsx-"></a>JSX 语法 <a class="hash-link" href="#jsx-">#</a></h4>
-<p>首先你会注意到你的 JavaScript 中 XML 式的语法。我们有一个简单的预编译器，将这种语法糖转换成单纯的 JavaScript ：</p>
+<p>首先你会注意到你的 JavaScript 中 XML 式的语法。我们有一个简单的预编译器，将语法糖转换成这种纯的JavaScript：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial1-raw.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s1">&#39;CommentBox&#39;</span><span class="p">,</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -514,6 +520,10 @@
 <p>你没有必要返回基本的 HTML。你可以返回一个你（或者其他人）创建的组件树。这就使 React <strong>组件化</strong>：一个可维护前端的关键原则。</p>
 
 <p><code>ReactDOM.render()</code> 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。</p>
+
+<p><code>ReactDOM</code> 模块暴露了 DOM 相关的方法， 而 <code>React</code> 保有被不同平台的 React 共享的核心工具 （例如 <a href="http://facebook.github.io/react-native/">React Native</a>）。</p>
+
+<p>对于本教程 <code>ReactDOM.render</code> 保持在脚本底部是很重要的。<code>ReactDOM.render</code> 应该只在复合组件被定义之后被调用。</p>
 <h2><a class="anchor" name=""></a>组合组件 <a class="hash-link" href="#">#</a></h2>
 <p>让我们为 <code>CommentList</code> 和 <code>CommentForm</code> 建造骨架，它们将会，再一次的，是一些简单的 <code>&lt;div&gt;</code>。添加这两个组件到你的文件里，保持现存的 <code>CommentBox</code> 声明和 <code>ReactDOM.render</code> 调用:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
@@ -587,19 +597,7 @@
 <h3><a class="anchor" name="-markdown"></a>添加 Markdown <a class="hash-link" href="#-markdown">#</a></h3>
 <p>Markdown 是一种简单的内联格式化你的文字的方法。例如，用星号包围文本将会使其强调突出。</p>
 
-<p>首先，添加第三方库 <strong>marked</strong> 到你的应用。这是一个JavaScript库，接受 Markdown 文本并且转换为原始的 HTML。这需要在你的头部有一个 script 标签（那个我们已经在 React 操场上包含了的标签）：</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
-<span class="nt">&lt;head&gt;</span>
-  <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="nt">/&gt;</span>
-  <span class="nt">&lt;title&gt;</span>React Tutorial<span class="nt">&lt;/title&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span><span class="nt">&lt;/head&gt;</span>
-</code></pre></div>
-<p>然后，让我们转换评论文本为 Markdown 并输出它：</p>
+<p>在本教程中我们使用第三方库 <strong>marked</strong>，它接受 Markdown 文本并且转换为原始的 HTML。我们已经在初始的页面标记里包含了这个库，所以我们可以直接开始使用它，让我们转换评论文本为 Markdown 并输出它：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -645,11 +643,11 @@
 <p>到目前为止我们已经完成了在源码里直接插入评论。作为替代，让我们渲染一团 JSON 数据到评论列表里。最终数据将会来自服务器，但是现在，写在你的源代码中：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>
 <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">[</span>
-  <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
-  <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
+  <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">author</span><span class="o">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
+  <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">author</span><span class="o">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
 <span class="p">];</span>
 </code></pre></div>
-<p>我们需要以一种模块化的方式将这个数据传入到 <code>CommentList</code>。修改 <code>CommentBox</code> 和 <code>ReactDOM.render()</code> 方法，以通过 props 传入数据到 <code>CommentList</code>：</p>
+<p>我们需要以一种模块化的方式将这个数据传入到 <code>CommentList</code>。修改 <code>CommentBox</code> 和 <code>ReactDOM.render()</code> 方法，以便于通过 props 传入数据到 <code>CommentList</code>：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial9.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -672,9 +670,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial10.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kd">var</span> <span class="nx">commentNodes</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">commentNodes</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="hll">      <span class="k">return</span> <span class="p">(</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">Comment</span> <span class="nx">author</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">Comment</span> <span class="nx">author</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="o">&gt;</span>
 </span><span class="hll">          <span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="err">/Comment&gt;</span>
 </span><span class="hll">      <span class="p">);</span>
@@ -723,7 +721,7 @@
 </code></pre></div>
 <p><code>getInitialState()</code> 在生命周期里只执行一次，并设置组件的初始状态。</p>
 <h4><a class="anchor" name=""></a>更新状态 <a class="hash-link" href="#">#</a></h4>
-<p>当组件第一次创建时，我们想从服务器获取一些 JSON 并且更新状态以反映最新的数据。我们将用 jQuery 来发送一个异步请求到我们刚才启动的服务器以获取我们需要的数据。看起来像这样：</p>
+<p>当组件第一次创建时，我们想从服务器获取一些 JSON 并且更新状态以反映最新的数据。我们将用 jQuery 来发送一个异步请求到我们刚才启动的服务器以获取我们需要的数据。这些数据已经被包含在了你已启动的服务器里（基于<code>comments.json</code>文件），所以一旦被获取，<code>this.state.data</code> 会看起来像这样：</p>
 <div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">[</span>
   <span class="p">{</span><span class="nt">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
   <span class="p">{</span><span class="nt">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
@@ -811,43 +809,95 @@
 </span>    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div>
-<p>让我们做一个交互式的表单。当用户提交表单时，我们应该清空它，提交一个请求给服务器，和刷新评论列表。要开始，让我们监听表单的提交事件并清空它。</p>
+</code></pre></div><h4><a class="anchor" name=""></a>受控组件 <a class="hash-link" href="#">#</a></h4>
+<p>对于传统的 DOM， <code>input</code> 元素被渲染并且浏览器管理它的状态（它的渲染值）。结果是，DOM的实际值会和组件不同。这是不理想的，因为视图的值会和组件的值不同。在React中，组件应该总是表示视图的值而不只是在初始化时。</p>
+
+<p>因此，我们将使用 <code>this.state</code> 来在用户输入时保存输入。我们定义一个初始 <code>state</code>，它带有 <code>author</code> 和 <code>text</code> 两个属性并将他们设置为空字符串。在我们的 <code>&lt;input&gt;</code> 元素里，我们设置 <code>value</code> prop 来反映组件的 <code>state</code> 并给他们附加 <code>onChange</code> 事件处理。这些带有设置了 <code>value</code> 的  <code>&lt;input&gt;</code> 元素被称为受控组件。更多关于受控组件请阅读 <a href="/react/docs/forms.html#controlled-components">Forms article</a>。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial16.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">).</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">).</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
-</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">text</span> <span class="o">||</span> <span class="o">!</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">      <span class="k">return</span><span class="p">;</span>
-</span><span class="hll">    <span class="p">}</span>
-</span><span class="hll">    <span class="c1">// TODO: send request to the server</span>
-</span><span class="hll">    <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">).</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-</span><span class="hll">    <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">).</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-</span><span class="hll">    <span class="k">return</span><span class="p">;</span>
+<span class="hll">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+</span><span class="hll">  <span class="p">},</span>
+</span><span class="hll">  <span class="nx">handleAuthorChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">},</span>
+</span><span class="hll">  <span class="nx">handleTextChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
 </span><span class="hll">  <span class="p">},</span>
 </span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="p">(</span>
-</span><span class="hll">      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;author&quot;</span> <span class="o">/&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">input</span>
+</span><span class="hll">          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+</span><span class="hll">          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span>
+</span><span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAuthorChange</span><span class="p">}</span>
+</span><span class="hll">        <span class="o">/&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span>
+</span><span class="hll">          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+</span><span class="hll">          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
+</span><span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleTextChange</span><span class="p">}</span>
+</span><span class="hll">        <span class="o">/&gt;</span>
 </span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div><h5><a class="anchor" name=""></a>事件 <a class="hash-link" href="#">#</a></h5>
-<p>React使用驼峰命名规范(camelCase)给组件绑定事件处理器。我们给表单绑定一个<code>onSubmit</code>处理器，它在表单提交了合法的输入后清空表单字段。</p>
+<p>React使用小驼峰命名规范(camelCase)给组件绑定事件处理器。我们附加 <code>onChange</code> 给两个 <code>&lt;input&gt;</code> 元素。现在，当用户输入文本到 <code>&lt;input&gt;</code> 中，被附加的 <code>onChange</code> 回调函数被激发并且组件的 <code>state</code> 被修改。然后，被渲染的 <code>input</code> 元素的值将会更新以反映当前组件的 <code>state</code>。</p>
+<h4><a class="anchor" name=""></a>提交表单 <a class="hash-link" href="#">#</a></h4>
+<p>让我们使表单具有交互性。当用户提交表单时，我们应该清除它，提交一个请求到服务器，并刷新评论列表。让我们监听表单的提交事件并清除它。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
+<span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">handleAuthorChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">handleTextChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
+<span class="hll">  <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">text</span> <span class="o">||</span> <span class="o">!</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">      <span class="k">return</span><span class="p">;</span>
+</span><span class="hll">    <span class="p">}</span>
+</span><span class="hll">    <span class="c1">// TODO: send request to the server</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">},</span>
+</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAuthorChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleTextChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/form&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>我们给表单绑定一个<code>onSubmit</code>处理器，它在表单提交了合法的输入后清空表单字段。</p>
 
 <p>在事件中调用<code>preventDefault()</code>来阻止浏览器提交表单的默认行为。</p>
-<h5><a class="anchor" name="refs"></a>Refs <a class="hash-link" href="#refs">#</a></h5>
-<p>我们利用<code>ref</code>属性给子组件赋予名字，<code>this.refs</code>-引用组件。我们可以在组件上调用 <code>React.findDOMNode(component)</code> 获取原生的浏览器DOM元素。</p>
 <h5><a class="anchor" name=""></a>回调函数作为属性 <a class="hash-link" href="#">#</a></h5>
 <p>当用户提交评论时，我们需要刷新评论列表来包含这条新评论。在<code>CommentBox</code>中完成所有逻辑是有道理的，因为<code>CommentBox</code> 拥有代表了评论列表的状态(state)。</p>
 
 <p>我们需要从子组件传回数据到它的父组件。我们在父组件的<code>render</code>方法中以传递一个新的回调函数（<code>handleCommentSubmit</code>）到子组件完成这件事，绑定它到子组件的 <code>onCommentSubmit</code> 事件上。无论事件什么时候触发，回调函数都将被调用：</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -883,26 +933,43 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>当用户提交表单时，让我们从 <code>CommentForm</code> 调用这个回调函数：</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
+<p>既然 <code>CommentBox</code> 已经通过 <code>onCommentSubmit</code> prop 使回调函数对于 <code>CommentForm</code> 可用，<code>CommentForm</code> 就可以在用户提交表单时调用回调函数：</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial19.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">handleAuthorChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">handleTextChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
   <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
-    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">).</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
-    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">).</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
     <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">text</span> <span class="o">||</span> <span class="o">!</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
 <span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onCommentSubmit</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">author</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">text</span><span class="p">});</span>
-</span>    <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">).</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">).</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-    <span class="k">return</span><span class="p">;</span>
+</span>    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;author&quot;</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAuthorChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleTextChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
@@ -910,7 +977,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>既然现在回调函数已经就绪，我们所需要做的就是提交到服务器然后刷新列表：</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial19.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial20.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -958,7 +1025,7 @@
 <span class="p">});</span>
 </code></pre></div><h3><a class="anchor" name="-"></a>优化: 优化的更新 <a class="hash-link" href="#-">#</a></h3>
 <p>我们的应用现在已经功能完备，但是它感觉很慢，因为在评论出现在列表前必须等待请求完成。我们可以优化添加这条评论到列表以使应用感觉更快。</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial20.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial21.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -975,6 +1042,10 @@
   <span class="p">},</span>
   <span class="nx">handleCommentSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">;</span>
+</span><span class="hll">    <span class="c1">// Optimistically set an id on the new comment. It will be replaced by an</span>
+</span><span class="hll">    <span class="c1">// id generated by the server. In a production application you would likely</span>
+</span><span class="hll">    <span class="c1">// not use Date.now() for this and would have a more robust system in place.</span>
+</span><span class="hll">    <span class="nx">comment</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
 </span><span class="hll">    <span class="kd">var</span> <span class="nx">newComments</span> <span class="o">=</span> <span class="nx">comments</span><span class="p">.</span><span class="nx">concat</span><span class="p">([</span><span class="nx">comment</span><span class="p">]);</span>
 </span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">newComments</span><span class="p">});</span>
 </span>    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -1054,6 +1125,12 @@
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>

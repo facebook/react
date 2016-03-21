@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -442,7 +447,14 @@
 
 <p>如果你正在使用 ES2015, 你将要使用 <code>babel-preset-es2015</code> 包.</p>
 </blockquote>
-<h2><a class="anchor" name="-npm-"></a>不用 npm 的快速开始 <a class="hash-link" href="#-npm-">#</a></h2>
+
+<p><strong>注意:</strong> 默认情况下，React 将会在开发模式，很缓慢，不建议用于生产。要在生产模式下使用 React，设置环境变量 <code>NODE_ENV</code> 为 <code>production</code> （使用 envify 或者 webpack&#39;s DefinePlugin）。例如：</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">DefinePlugin</span><span class="p">({</span>
+  <span class="s2">&quot;process.env&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">NODE_ENV</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="s2">&quot;production&quot;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div><h2><a class="anchor" name="-npm-"></a>不用 npm 的快速开始 <a class="hash-link" href="#-npm-">#</a></h2>
 <p>如果你现在还没准备要使用npm,你可以下载这个已经包含了预构建的 React 和 React DOM 拷贝的入门套件. </p>
 
 <div class="buttons-unit downloads">
@@ -472,7 +484,7 @@
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
-<p>在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 <a href="/react/docs/jsx-in-depth.html">JSX 语法</a> 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 <code>&lt;script type=&quot;text/babel&quot;&gt;</code> 标签，并引入 Babel 来完成在浏览器里的代码转换。</p>
+<p>在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 <a href="/react/docs/jsx-in-depth.html">JSX 语法</a> 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 <code>&lt;script type=&quot;text/babel&quot;&gt;</code> 标签，并引入 Babel 来完成在浏览器里的代码转换。在浏览器里打开这个html，你应该可以看到成功的消息！</p>
 <h3><a class="anchor" name=""></a>分离文件 <a class="hash-link" href="#">#</a></h3>
 <p>你的 React JSX 代码文件可以写在另外的文件里。新建下面的 <code>src/helloworld.js</code>。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
@@ -567,6 +579,12 @@ npm install babel-preset-react
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>

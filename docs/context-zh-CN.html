@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -411,7 +416,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>React最大的优势之一是他很容易从你的React组件里跟踪数据流动。当你看着一个组件，你可以很容易准确看出哪个props被传入，这让你的APP很容易推断。</p>
+    <p>React最大的优势之一是很容易从你的React组件里跟踪数据流动。当你看着一个组件，你可以很容易准确看出哪个props被传入，这让你的APP很容易推断。</p>
 
 <p>偶尔，你想通过组件树传递数据，而不在每一级上手工下传prop，React的 &quot;context&quot; 让你做到这点。</p>
 
@@ -541,6 +546,33 @@
   <span class="p">);</span>
 <span class="p">}</span>
 <span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
+</code></pre></div><h2><a class="anchor" name="updating-context"></a>Updating context <a class="hash-link" href="#updating-context">#</a></h2>
+<p>当 state 或者 props 变化时 <code>getChildContext</code> 函数会被调用。为了更新context里的数据，用 <code>this.setState</code> 触发一个本地的state更新。这将会触发一个新的 context 并且子级将收到变化。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MediaQuery</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span><span class="s1">&#39;desktop&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">childContextTypes</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+  <span class="p">},</span>
+  <span class="nx">getChildContext</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">checkMediaQuery</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+      <span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">matchMedia</span><span class="p">(</span><span class="s2">&quot;(min-width: 1025px)&quot;</span><span class="p">).</span><span class="nx">matches</span> <span class="o">?</span> <span class="s1">&#39;desktop&#39;</span> <span class="o">:</span> <span class="s1">&#39;mobile&#39;</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">type</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">){</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">type</span><span class="o">:</span><span class="nx">type</span><span class="p">});</span> 
+      <span class="p">}</span>
+    <span class="p">};</span>
+
+    <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;resize&#39;</span><span class="p">,</span> <span class="nx">checkMediaQuery</span><span class="p">);</span>
+    <span class="nx">checkMediaQuery</span><span class="p">();</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="-context"></a>什么时候不用 context <a class="hash-link" href="#-context">#</a></h2>
 <p>正像全局变量是在写清晰代码时最好要避免的,你应该在大多数情况下避免使用context. 特别是,在用它来&quot;节省输入&quot;和代替显示传入props时要三思.</p>
 
@@ -591,6 +623,12 @@
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>

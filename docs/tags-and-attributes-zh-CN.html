@@ -16,6 +16,7 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
   <link rel="stylesheet" href="/react/css/react.css">
@@ -28,6 +29,7 @@
   <script src="/react/js/es5-shim.min.js"></script>
   <script src="/react/js/es5-sham.min.js"></script>
   <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
   <script src="/react/js/react.js"></script>
@@ -50,6 +52,9 @@
           <li><a href="/react/support.html">Support</a></li>
           <li><a href="/react/downloads.html">Download</a></li>
           <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
         </ul>
 
         <ul class="nav-site nav-site-external">
@@ -418,15 +423,15 @@
 <div class="highlight"><pre><code class="language-text" data-lang="text">a abbr address area article aside audio b base bdi bdo big blockquote body br
 button canvas caption cite code col colgroup data datalist dd del details dfn
 dialog div dl dt em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5
-h6 head header hr html i iframe img input ins kbd keygen label legend li link
-main map mark menu menuitem meta meter nav noscript object ol optgroup option
-output p param picture pre progress q rp rt ruby s samp script section select
-small source span strong style sub summary sup table tbody td textarea tfoot th
-thead time title tr track u ul var video wbr
+h6 head header hgroup hr html i iframe img input ins kbd keygen label legend li
+link main map mark menu menuitem meta meter nav noscript object ol optgroup
+option output p param picture pre progress q rp rt ruby s samp script section
+select small source span strong style sub summary sup table tbody td textarea
+tfoot th thead time title tr track u ul var video wbr
 </code></pre></div><h3><a class="anchor" name="svg-"></a>SVG 元素 <a class="hash-link" href="#svg-">#</a></h3>
 <p>下面的 SVG 元素是被支持的:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
-radialGradient rect stop svg text tspan
+<div class="highlight"><pre><code class="language-text" data-lang="text">circle clipPath defs ellipse g image line linearGradient mask path pattern
+polygon polyline radialGradient rect stop svg text tspan
 </code></pre></div>
 <p>你也许对 <a href="https://github.com/facebook/react-art">react-art</a>有兴趣,一个让React绘制Canvas, SVG, 或者 VML (for IE8) 的绘制库.</p>
 <h2><a class="anchor" name=""></a>支持的属性 <a class="hash-link" href="#">#</a></h2>
@@ -442,25 +447,30 @@ radialGradient rect stop svg text tspan
 <h3><a class="anchor" name="html-"></a>HTML 属性 <a class="hash-link" href="#html-">#</a></h3>
 <p>下面的标准属性是被支持的:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accept acceptCharset accessKey action allowFullScreen allowTransparency alt
-async autoComplete autoFocus autoPlay capture cellPadding cellSpacing charSet
-challenge checked classID className cols colSpan content contentEditable contextMenu
-controls coords crossOrigin data dateTime defer dir disabled download draggable
-encType form formAction formEncType formMethod formNoValidate formTarget frameBorder
-headers height hidden high href hrefLang htmlFor httpEquiv icon id inputMode
-keyParams keyType label lang list loop low manifest marginHeight marginWidth max
-maxLength media mediaGroup method min minLength multiple muted name noValidate open
-optimum pattern placeholder poster preload radioGroup readOnly rel required role
-rows rowSpan sandbox scope scoped scrolling seamless selected shape size sizes
-span spellCheck src srcDoc srcSet start step style summary tabIndex target title
-type useMap value width wmode wrap
+async autoComplete autoFocus autoPlay capture cellPadding cellSpacing challenge
+charSet checked classID className colSpan cols content contentEditable
+contextMenu controls coords crossOrigin data dateTime default defer dir
+disabled download draggable encType form formAction formEncType formMethod
+formNoValidate formTarget frameBorder headers height hidden high href hrefLang
+htmlFor httpEquiv icon id inputMode integrity is keyParams keyType kind label
+lang list loop low manifest marginHeight marginWidth max maxLength media
+mediaGroup method min minLength multiple muted name noValidate nonce open
+optimum pattern placeholder poster preload radioGroup readOnly rel required
+reversed role rowSpan rows sandbox scope scoped scrolling seamless selected
+shape size sizes span spellCheck src srcDoc srcLang srcSet start step style
+summary tabIndex target title type useMap value width wmode wrap
+</code></pre></div>
+<p>这些RDFa属性是被支持的 （许多RDFa属性和标准的HTML属性重叠，因此被从这个列表里去除）：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">about datatype inlist prefix property resource typeof vocab
 </code></pre></div>
 <p>另外,支持下面的非标准属性:</p>
 
 <ul>
 <li><code>autoCapitalize autoCorrect</code> for Mobile Safari.</li>
-<li><code>property</code> for <a href="http://ogp.me/">Open Graph</a> meta tags.</li>
+<li><code>color</code> for <code>&lt;link rel=&quot;mask-icon&quot; /&gt;</code> in Safari.</li>
 <li><code>itemProp itemScope itemType itemRef itemID</code> for <a href="http://schema.org/docs/gs.html">HTML5 microdata</a>.</li>
-<li><code>unselectable</code> for Internet Explorer.</li>
+<li><code>security</code> 老的IE浏览器.</li>
+<li><code>unselectable</code> IE浏览器.</li>
 <li><code>results autoSave</code> for WebKit/Blink input fields of type <code>search</code>.</li>
 </ul>
 
@@ -517,6 +527,12 @@ xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
   </script>
 </body>
 </html>
