@@ -870,6 +870,8 @@ input#algolia-doc-search {
   background: transparent url('/react/img/search.png') no-repeat 10px center;
   background-size: 16px 16px;
 
+  position: relative;
+  vertical-align: top;
   margin-left: 10px;
   padding: 0 10px;
   padding-left: 35px;
