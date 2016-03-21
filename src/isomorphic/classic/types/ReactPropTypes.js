@@ -83,6 +83,7 @@ var ReactPropTypes = {
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
   shape: createShapeTypeChecker,
+  custom: createCustomTypeChecker,
 };
 
 /**
@@ -114,8 +115,8 @@ function createChainableTypeChecker(validate) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
     if (props[propName] == null) {
-      var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
+        var locationName = ReactPropTypeLocationNames[location];
         return new Error(
           `Required ${locationName} \`${propFullName}\` was not specified in ` +
           `\`${componentName}\`.`
@@ -357,6 +358,10 @@ function createShapeTypeChecker(shapeTypes) {
     return null;
   }
   return createChainableTypeChecker(validate);
+}
+
+function createCustomTypeChecker(customChecker) {
+  return createChainableTypeChecker(customChecker);
 }
 
 function isNode(propValue) {

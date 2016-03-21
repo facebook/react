@@ -66,11 +66,13 @@ React.createClass({
     // バリデータをカスタマイズすることもできます。
     // 以下はバリデーションが落ちた時にはエラーを返します。
     // `oneOfType` の中で動かなくなるので、 `console.warn` や throw はしないでください。
-    customProp: function(props, propName, componentName) {
-      if (!/matchme/.test(props[propName])) {
-        return new Error('Validation failed!');
+    requiredCustomProp: React.PropTypes.custom(
+      function(props, propName, componentName) {
+        if (!/matchme/.test(props[propName])) {
+          return new Error('Validation failed!');
+        }
       }
-    }
+    ).isRequired,
   },
   /* ... */
 });
