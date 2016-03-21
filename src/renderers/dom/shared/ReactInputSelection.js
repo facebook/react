@@ -30,12 +30,10 @@ function isInDocument(node) {
  */
 var ReactInputSelection = {
   hasSelectionCapabilities: function(elem) {
-    var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
     return (
-      nodeName &&
-      ((nodeName === 'input' && elem.type === 'text') ||
-        nodeName === 'textarea' ||
-        elem.contentEditable === 'true')
+      (elem instanceof HTMLInputElement && elem.type === 'text') ||
+      elem instanceof HTMLTextAreaElement ||
+      elem.contentEditable === 'true'
     );
   },
 

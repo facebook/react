@@ -1346,4 +1346,26 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('1');
     });
   });
+
+  it('an input with an id of `nodeName` works as intended', () => {
+    var spy = jest.fn();
+
+    class Test extends React.Component {
+      render() {
+        return (
+          <form onSubmit={spy}>
+            <input id="nodeName" name="nodeName" defaultValue="test" />
+            <input type="submit" />
+          </form>
+        );
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Test />);
+    var node = ReactDOM.findDOMNode(stub);
+
+    ReactTestUtils.Simulate.submit(node);
+
+    expect(spy).toHaveBeenCalled();
+  });
 });
