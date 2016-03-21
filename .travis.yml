@@ -19,6 +19,7 @@ before_install:
     npm --version
 script:
 - |
+    npm ls --depth=0
     if [ "$TEST_TYPE" = build_website ]; then
       if [ "$TRAVIS_BRANCH" = "$REACT_WEBSITE_BRANCH" ] && [ "$TRAVIS_PULL_REQUEST" = false ]; then
         set -e
