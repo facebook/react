@@ -94,7 +94,7 @@
     "flow": "flow"
   },
   "jest": {
-    "maxWorkers": 8,
+    "maxRunners": 8,
     "modulePathIgnorePatterns": [
       "/.module-cache/",
       "/react/build/"
