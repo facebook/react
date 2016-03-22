@@ -79,6 +79,31 @@ function validateExplicitKey(element, parentType) {
 }
 
 /**
+ * Convert element Component to string to display in the warning
+ * 
+ * @internal
+ * @param {ReactElement} element Component that doesn't have a key.
+ * @returns {string} A string representation of the element for warning message
+ * 
+*/
+function ElementToString(element){
+  //This was a element is already a string, usefull for resursion of children
+  if(typeof element === 'string'){
+    return element;
+  }
+  var children = element.props.children;
+  if(typeof children === 'object'){
+    //Use recursion to get the entire DOM tree of the children
+    children = children.map(function(child){
+      return ElementToString(child);
+    }).join('');
+
+  }
+  console.log(element);
+  return '<'+element.type+'>'+children+'<'+element.type+'/>';
+}
+
+/**
  * Shared warning and monitoring code for the key warnings.
  *
  * @internal
@@ -110,6 +135,7 @@ function getAddendaForKeyUse(messageType, element, parentType) {
     parentOrOwner: addendum,
     url: ' See https://fb.me/react-warning-keys for more information.',
     childOwner: null,
+    offendingElement: ` The head element renders to: ${ElementToString(element)}`
   };
 
   // Usually the current owner is the offender, but if it accepts children as a
