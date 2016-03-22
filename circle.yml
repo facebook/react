@@ -13,8 +13,8 @@ machine:
 
 dependencies:
   post:
-    - npm install -g grunt
     - npm ls --depth=0
 
 test:
-  override: grunt jest:normal
+  override:
+    - ./node_modules/bin/grunt jest:normal
