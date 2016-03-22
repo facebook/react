@@ -10,3 +10,11 @@ machine:
     version: 4
   ruby:
     version: 2.2.3
+
+dependencies:
+  post:
+    - npm install -g grunt
+    - npm ls --depth=0
+
+test:
+  override: grunt jest:normal
