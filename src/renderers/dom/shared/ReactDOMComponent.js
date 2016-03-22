@@ -187,6 +187,13 @@ function assertValidProps(component, props) {
       'those nodes are unexpectedly modified or duplicated. This is ' +
       'probably not intentional.'
     );
+    warning(
+      props.onFocusIn == null &&
+      props.onFocusOut == null,
+      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
+      'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
+      'are not needed/supported by React.'
+    );
   }
   invariant(
     props.style == null || typeof props.style === 'object',

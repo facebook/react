@@ -1234,5 +1234,17 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toContain('className');
     });
+
+    it('should warn about props that are no longer supported', function() {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div />);
+      expect(console.error.argsForCall.length).toBe(0);
+
+      ReactTestUtils.renderIntoDocument(<div onFocusIn={() => {}} />);
+      expect(console.error.argsForCall.length).toBe(1);
+
+      ReactTestUtils.renderIntoDocument(<div onFocusOut={() => {}} />);
+      expect(console.error.argsForCall.length).toBe(2);
+    });
   });
 });
