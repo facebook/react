@@ -5,6 +5,7 @@ general:
       - gh-pages
 
 machine:
+  timezone: America/Los_Angeles
   node:
     version: 4
   ruby:
