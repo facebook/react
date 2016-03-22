@@ -18,3 +18,4 @@ dependencies:
 test:
   override:
     - ./node_modules/.bin/grunt jest:normal
+    - ./node_modules/.bin/grunt lint
