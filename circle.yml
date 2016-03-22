@@ -12,6 +12,8 @@ machine:
     version: 2.2.3
 
 dependencies:
+  override:
+    - npm update
   post:
     - npm ls --depth=0
 
