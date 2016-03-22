@@ -94,7 +94,6 @@
     "flow": "flow"
   },
   "jest": {
-    "maxRunners": 8,
     "modulePathIgnorePatterns": [
       "/.module-cache/",
       "/react/build/"
