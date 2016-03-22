@@ -14,8 +14,11 @@ machine:
 dependencies:
   override:
     - npm update
+    - bundle install --gemfile=docs/Gemfile --deployment --path=docs/vendor/bundle --jobs=3 --retry=3
   post:
     - npm ls --depth=0
+  cache_directories:
+    - docs/vendor/bundle
 
 test:
   override:
