@@ -11,7 +11,7 @@ machine:
   ruby:
     version: 2.2.3
   environment:
-    COMMIT_RANGE: `echo CIRCLE_COMPARE_URL | cut -d/ -f7`
+    COMMIT_RANGE: echo CIRCLE_COMPARE_URL | cut -d/ -f7
 
 dependencies:
   override:
