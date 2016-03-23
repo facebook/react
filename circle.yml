@@ -30,6 +30,6 @@ test:
 
 deployment:
   staging:
-    branch: /*/
+    branch: /.*/
     commands:
       - ./scripts/upload_build.sh
