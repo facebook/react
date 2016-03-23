@@ -20,6 +20,7 @@ dependencies:
   cache_directories:
     - docs/vendor/bundle
     - .grunt # Show size comparisons between builds
+    - $HOME/react-gh-pages # docs checkout
 
 test:
   override:
