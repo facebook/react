@@ -25,7 +25,7 @@ test:
   override:
     - ./node_modules/.bin/grunt lint
     # - ./node_modules/.bin/grunt jest:normal
-    - ./scripts/circleci/set_feature_flag.sh && ./node_modules/.bin/grunt jest:normal
+    # - ./scripts/circleci/set_feature_flag.sh && ./node_modules/.bin/grunt jest:normal
   pre:
     - ./node_modules/.bin/grunt build
 
@@ -34,3 +34,4 @@ deployment:
     branch: /.*/
     commands:
       - ./scripts/circleci/upload_build.sh
+      - ./scripts/circleci/build_gh_pages.sh
