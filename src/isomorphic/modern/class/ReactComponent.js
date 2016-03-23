@@ -76,7 +76,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
   }
   this.updater.enqueueSetState(this, partialState);
   if (callback) {
-    this.updater.enqueueCallback(this, callback);
+    this.updater.enqueueCallback(this, callback, 'setState');
   }
 };
 
@@ -97,7 +97,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
 ReactComponent.prototype.forceUpdate = function(callback) {
   this.updater.enqueueForceUpdate(this);
   if (callback) {
-    this.updater.enqueueCallback(this, callback);
+    this.updater.enqueueCallback(this, callback, 'forceUpdate');
   }
 };
 

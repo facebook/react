@@ -710,7 +710,7 @@ var ReactClassMixin = {
   replaceState: function(newState, callback) {
     this.updater.enqueueReplaceState(this, newState);
     if (callback) {
-      this.updater.enqueueCallback(this, callback);
+      this.updater.enqueueCallback(this, callback, 'replaceState');
     }
   },
 

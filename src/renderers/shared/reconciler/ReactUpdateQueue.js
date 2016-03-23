@@ -22,6 +22,19 @@ function enqueueUpdate(internalInstance) {
   ReactUpdates.enqueueUpdate(internalInstance);
 }
 
+function formatUnexpectedArgument(arg) {
+  var type = typeof arg;
+  if (type !== 'object') {
+    return type;
+  }
+  var displayName = arg.constructor && arg.constructor.name || type;
+  var keys = Object.keys(arg);
+  if (keys.length > 0 && keys.length < 20) {
+    return `${displayName} (keys: ${keys.join(', ')})`;
+  }
+  return displayName;
+}
+
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   var internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
@@ -103,17 +116,11 @@ var ReactUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance to use as `this` context.
    * @param {?function} callback Called after state is updated.
+   * @param {string} callerName Name of the calling function in the public API.
    * @internal
    */
-  enqueueCallback: function(publicInstance, callback) {
-    invariant(
-      typeof callback === 'function',
-      'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
-      '%s. A function is expected',
-      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
-        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
-    );
+  enqueueCallback: function(publicInstance, callback, callerName) {
+    ReactUpdateQueue.validateCallback(callback, callerName);
     var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     // Previously we would throw an error if we didn't have an internal
@@ -138,14 +145,6 @@ var ReactUpdateQueue = {
   },
 
   enqueueCallbackInternal: function(internalInstance, callback) {
-    invariant(
-      typeof callback === 'function',
-      'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
-      '`setState`, `replaceState`, or `forceUpdate` with a callback of type ' +
-      '%s. A function is expected',
-      typeof callback === 'object' && Object.keys(callback).length && Object.keys(callback).length < 20 ?
-        typeof callback + ' (keys: ' + Object.keys(callback) + ')' : typeof callback
-    );
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
     } else {
@@ -240,6 +239,16 @@ var ReactUpdateQueue = {
   enqueueElementInternal: function(internalInstance, newElement) {
     internalInstance._pendingElement = newElement;
     enqueueUpdate(internalInstance);
+  },
+
+  validateCallback: function(callback, callerName) {
+    invariant(
+      !callback || typeof callback === 'function',
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      formatUnexpectedArgument(callback)
+    );
   },
 
 };
