@@ -28,6 +28,7 @@ test:
     - ./node_modules/.bin/grunt build
 
 deployment:
-  branch: /*/
-  commands:
-    - ./scripts/upload_build.sh
+  build:
+    branch: /*/
+    commands:
+      - ./scripts/upload_build.sh
