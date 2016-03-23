@@ -108,75 +108,116 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should warn when using hyphenated style names', function() {
+    var Comp = React.createClass({
+      displayName: 'Comp',
+      render: function() {
+        return <div style={{ 'background-color': 'crimson' }}/>;
+      },
+    });
     spyOn(console, 'error');
-
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      'background-color': 'crimson',
-    })).toBe('background-color:crimson;');
-
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('backgroundColor');
+    expect(console.error.argsForCall[0][0]).toEqual(
+      'Warning: Unsupported style property background-color. Did you mean backgroundColor? ' +
+      'Check the render method of `Comp`.'
+    );
   });
 
   it('should warn when updating hyphenated style names', function() {
+    var Comp = React.createClass({
+      displayName: 'Comp',
+      render: function() {
+        return <div style={this.props.style} />;
+      },
+    });
     spyOn(console, 'error');
-
-    var root = document.createElement('div');
     var styles = {
       '-ms-transform': 'translate3d(0, 0, 0)',
       '-webkit-transform': 'translate3d(0, 0, 0)',
     };
-
-    ReactDOM.render(<div />, root);
-    ReactDOM.render(<div style={styles} />, root);
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+    ReactDOM.render(<Comp style={styles} />, root);
 
     expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toContain('msTransform');
-    expect(console.error.argsForCall[1][0]).toContain('WebkitTransform');
+    expect(console.error.argsForCall[0][0]).toEqual(
+      'Warning: Unsupported style property -ms-transform. Did you mean msTransform? ' +
+      'Check the render method of `Comp`.'
+    );
+    expect(console.error.argsForCall[1][0]).toEqual(
+      'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform? ' +
+      'Check the render method of `Comp`.'
+    );
   });
 
   it('warns when miscapitalizing vendored style names', function() {
-    spyOn(console, 'error');
-
-    CSSPropertyOperations.createMarkupForStyles({
-      msTransform: 'translate3d(0, 0, 0)',
-      oTransform: 'translate3d(0, 0, 0)',
-      webkitTransform: 'translate3d(0, 0, 0)',
+    var Comp = React.createClass({
+      displayName: 'Comp',
+      render: function() {
+        return (<div style={{
+          msTransform: 'translate3d(0, 0, 0)',
+          oTransform: 'translate3d(0, 0, 0)',
+          webkitTransform: 'translate3d(0, 0, 0)',
+        }} />);
+      },
     });
-
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
     // msTransform is correct already and shouldn't warn
     expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toContain('oTransform');
-    expect(console.error.argsForCall[0][0]).toContain('OTransform');
-    expect(console.error.argsForCall[1][0]).toContain('webkitTransform');
-    expect(console.error.argsForCall[1][0]).toContain('WebkitTransform');
+    expect(console.error.argsForCall[0][0]).toEqual(
+      'Warning: Unsupported vendor-prefixed style property oTransform. ' +
+      'Did you mean OTransform? Check the render method of `Comp`.'
+    );
+    expect(console.error.argsForCall[1][0]).toEqual(
+      'Warning: Unsupported vendor-prefixed style property webkitTransform. ' +
+      'Did you mean WebkitTransform? Check the render method of `Comp`.'
+    );
   });
 
   it('should warn about style having a trailing semicolon', function() {
-    spyOn(console, 'error');
-
-    CSSPropertyOperations.createMarkupForStyles({
-      fontFamily: 'Helvetica, arial',
-      backgroundImage: 'url(foo;bar)',
-      backgroundColor: 'blue;',
-      color: 'red;   ',
+    var Comp = React.createClass({
+      displayName: 'Comp',
+      render: function() {
+        return (<div style={{
+          fontFamily: 'Helvetica, arial',
+          backgroundImage: 'url(foo;bar)',
+          backgroundColor: 'blue;',
+          color: 'red;   ',
+        }} />);
+      },
     });
-
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
     expect(console.error.calls.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
-    expect(console.error.argsForCall[1][0]).toContain('Try "color: red" instead');
+    expect(console.error.argsForCall[0][0]).toEqual(
+      'Warning: Style property values shouldn\'t contain a semicolon. ' +
+      'Check the render method of `Comp`. Try "backgroundColor: blue" instead.',
+    );
+    expect(console.error.argsForCall[1][0]).toEqual(
+      'Warning: Style property values shouldn\'t contain a semicolon. ' +
+      'Check the render method of `Comp`. Try "color: red" instead.',
+    );
   });
 
   it('should warn about style containing a NaN value', function() {
-    spyOn(console, 'error');
-
-    CSSPropertyOperations.createMarkupForStyles({
-      fontSize: NaN,
+    var Comp = React.createClass({
+      displayName: 'Comp',
+      render: function() {
+        return <div style={{ fontSize: NaN }}/>;
+      },
     });
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toEqual(
-      'Warning: `NaN` is an invalid value for the `fontSize` css style property'
+      'Warning: `NaN` is an invalid value for the `fontSize` css style property. ' +
+      'Check the render method of `Comp`.'
     );
   });
 });
