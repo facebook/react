@@ -10,11 +10,15 @@ machine:
     version: 4
   ruby:
     version: 2.2.3
+  environment:
+    COMMIT_RANGE: `echo CIRCLE_COMPARE_URL | cut -d/ -f7`
 
 dependencies:
   override:
     - npm update
     - bundle install --gemfile=docs/Gemfile --deployment --path=vendor/bundle --jobs=3 --retry=3
+  pre:
+    - echo $COMMIT_RANGE
   post:
     - npm ls --depth=0
   cache_directories:
