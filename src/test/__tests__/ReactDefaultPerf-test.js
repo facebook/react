@@ -14,6 +14,7 @@
 describe('ReactDefaultPerf', function() {
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactDefaultPerf;
   var ReactTestUtils;
   var ReactDefaultPerfAnalysis;
@@ -35,6 +36,7 @@ describe('ReactDefaultPerf', function() {
 
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDefaultPerf = require('ReactDefaultPerf');
     ReactTestUtils = require('ReactTestUtils');
     ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
@@ -248,7 +250,9 @@ describe('ReactDefaultPerf', function() {
     expect(console.table.argsForCall[0][0]).toEqual([{
       'data-reactid': '',
       type: 'set innerHTML',
-      args: '{"node":"<not serializable>","children":[],"html":null,"text":null}',
+      args: ReactDOMFeatureFlags.useCreateElement ?
+        '{"node":"<not serializable>","children":[],"html":null,"text":null}' :
+        '"<div data-reactroot=\\"\\" data-reactid=\\"1\\">hey</div>"',
     }]);
   });
 
