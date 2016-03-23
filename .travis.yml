@@ -66,6 +66,7 @@ script:
           $SERVER
       fi
     elif [ "$TEST_TYPE" = test ]; then
+      set -e
       ./node_modules/.bin/grunt jest:normal
       echo 'Testing in server-render (HTML generation) mode...'
       printf '\nmodule.exports.useCreateElement = false;\n' \
