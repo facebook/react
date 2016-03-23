@@ -32,4 +32,4 @@ deployment:
   staging:
     branch: /.*/
     commands:
-      - ./scripts/upload_build.sh
+      - ./scripts/circleci/upload_build.sh
