@@ -25,6 +25,7 @@
     "babel-plugin-transform-es2015-template-literals": "^6.5.2",
     "babel-plugin-transform-es3-member-expression-literals": "^6.5.0",
     "babel-plugin-transform-es3-property-literals": "^6.5.0",
+    "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-preset-react": "^6.5.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
