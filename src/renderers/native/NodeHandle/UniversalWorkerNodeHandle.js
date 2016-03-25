@@ -4,7 +4,7 @@
 
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 
-var invariant = require('fbjs/lib/invariant');
+var invariant = require('invariant');
 
 var UniversalWorkerNodeHandle = {
   getRootNodeID: function(nodeHandle) {

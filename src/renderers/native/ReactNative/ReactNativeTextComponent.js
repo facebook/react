@@ -14,7 +14,7 @@
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
 
-var invariant = require('fbjs/lib/invariant');
+var invariant = require('invariant');
 
 var ReactNativeTextComponent = function(props) {
   // This constructor and its argument is currently used by mocks.

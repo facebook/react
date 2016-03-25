@@ -16,7 +16,7 @@ var SyntheticEvent = require('SyntheticEvent');
 var UIManager = require('UIManager');
 
 var merge = require('merge');
-var warning = require('fbjs/lib/warning');
+var warning = require('warning');
 
 var customBubblingEventTypes = UIManager.customBubblingEventTypes;
 var customDirectEventTypes = UIManager.customDirectEventTypes;

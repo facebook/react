@@ -16,8 +16,8 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 
-var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+var invariant = require('invariant');
+var warning = require('warning');
 
 /**
  * ReactNative vs ReactWeb

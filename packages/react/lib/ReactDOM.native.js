@@ -1,3 +1,7 @@
+/**
+ * @providesModule ReactDOM
+ */
+
 'use strict';
 
 var ReactUpdates = require('./ReactUpdates');

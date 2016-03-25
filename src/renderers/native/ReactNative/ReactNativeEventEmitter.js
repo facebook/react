@@ -18,7 +18,7 @@ var NodeHandle = require('NodeHandle');
 var EventConstants = require('EventConstants');
 
 var merge = require('merge');
-var warning = require('fbjs/lib/warning');
+var warning = require('warning');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
