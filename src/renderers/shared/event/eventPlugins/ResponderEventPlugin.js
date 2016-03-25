@@ -58,6 +58,11 @@ var changeResponder = function(nextResponderInst, blockNativeResponder) {
   }
 };
 
+var topLevelTypes = EventConstants.topLevelTypes;
+
+var startDependencies = [topLevelTypes.topMouseDown, topLevelTypes.topTouchStart];
+var moveDependencies = [topLevelTypes.topMouseMove, topLevelTypes.topTouchMove];
+
 var eventTypes = {
   /**
    * On a `touchStart`/`mouseDown`, is it desired that this element become the
@@ -68,6 +73,7 @@ var eventTypes = {
       bubbled: keyOf({onStartShouldSetResponder: null}),
       captured: keyOf({onStartShouldSetResponderCapture: null}),
     },
+    dependencies: startDependencies,
   },
 
   /**
@@ -84,6 +90,9 @@ var eventTypes = {
       bubbled: keyOf({onScrollShouldSetResponder: null}),
       captured: keyOf({onScrollShouldSetResponderCapture: null}),
     },
+    dependencies: [
+      topLevelTypes.topScroll
+    ],
   },
 
   /**
@@ -98,6 +107,9 @@ var eventTypes = {
       bubbled: keyOf({onSelectionChangeShouldSetResponder: null}),
       captured: keyOf({onSelectionChangeShouldSetResponderCapture: null}),
     },
+    dependencies: [
+      topLevelTypes.topSelectionChange
+    ],
   },
 
   /**
@@ -109,21 +121,48 @@ var eventTypes = {
       bubbled: keyOf({onMoveShouldSetResponder: null}),
       captured: keyOf({onMoveShouldSetResponderCapture: null}),
     },
+    dependencies: moveDependencies,
   },
 
   /**
    * Direct responder events dispatched directly to responder. Do not bubble.
    */
-  responderStart: {registrationName: keyOf({onResponderStart: null})},
-  responderMove: {registrationName: keyOf({onResponderMove: null})},
-  responderEnd: {registrationName: keyOf({onResponderEnd: null})},
-  responderRelease: {registrationName: keyOf({onResponderRelease: null})},
+  responderStart: {
+    registrationName: keyOf({onResponderStart: null}),
+    dependencies: startDependencies,
+  },
+  responderMove: {
+    registrationName: keyOf({onResponderMove: null}),
+    dependencies: moveDependencies,
+  },
+  responderEnd: {
+    registrationName: keyOf({onResponderEnd: null}),
+    dependencies: [
+      topLevelTypes.topMouseUp,
+      topLevelTypes.topTouchEnd,
+      topLevelTypes.topTouchCancel
+    ],
+  },
+  responderRelease: {
+    registrationName: keyOf({onResponderRelease: null}),
+    dependencies: [],
+  },
   responderTerminationRequest: {
     registrationName: keyOf({onResponderTerminationRequest: null}),
+    dependencies: [],
   },
-  responderGrant: {registrationName: keyOf({onResponderGrant: null})},
-  responderReject: {registrationName: keyOf({onResponderReject: null})},
-  responderTerminate: {registrationName: keyOf({onResponderTerminate: null})},
+  responderGrant: {
+    registrationName: keyOf({onResponderGrant: null}),
+    dependencies: [],
+  },
+  responderReject: {
+    registrationName: keyOf({onResponderReject: null}),
+    dependencies: [],
+  },
+  responderTerminate: {
+    registrationName: keyOf({onResponderTerminate: null}),
+    dependencies: [],
+  },
 };
 
 /**

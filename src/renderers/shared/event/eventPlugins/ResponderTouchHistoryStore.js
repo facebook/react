@@ -147,19 +147,26 @@ var recordEndTouchData = function(touch) {
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 };
 
+var augmentTimestamp = function(timestamp, touch) {
+  touch.timestamp = timestamp;
+};
+
 var ResponderTouchHistoryStore = {
   recordTouchTrack: function(topLevelType, nativeEvent) {
     var touchBank = touchHistory.touchBank;
+    var timestamp = nativeEvent.timestamp || nativeEvent.timeStamp;
+    var changedTouches = Array.prototype.slice.call(nativeEvent.changedTouches);
+    changedTouches.forEach(augmentTimestamp.bind(null, timestamp));
     if (isMoveish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordMoveTouchData);
+      changedTouches.forEach(recordMoveTouchData);
     } else if (isStartish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordStartTouchData);
+      changedTouches.forEach(recordStartTouchData);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
         touchHistory.indexOfSingleActiveTouch = nativeEvent.touches[0].identifier;
       }
     } else if (isEndish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordEndTouchData);
+      changedTouches.forEach(recordEndTouchData);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
         for (var i = 0; i < touchBank.length; i++) {
