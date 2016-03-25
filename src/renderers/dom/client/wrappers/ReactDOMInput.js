@@ -92,6 +92,8 @@ var ReactDOMInput = {
         inst._currentElement._owner
       );
 
+      var owner = inst._currentElement._owner;
+
       if (props.valueLink !== undefined && !didWarnValueLink) {
         warning(
           false,
@@ -113,11 +115,14 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
+          '%s contains an input of type %s with both checked and defaultChecked props. ' +
           'Input elements must be either controlled or uncontrolled ' +
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components'
+          'https://fb.me/react-controlled-components',
+          owner && owner.getName() || 'A component',
+          props.type
         );
         didWarnCheckedDefaultChecked = true;
       }
@@ -128,11 +133,14 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
+          '%s contains an input of type %s with both value and defaultValue props. ' +
           'Input elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components'
+          'https://fb.me/react-controlled-components',
+          owner && owner.getName() || 'A component',
+          props.type
         );
         didWarnValueDefaultValue = true;
       }
