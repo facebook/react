@@ -12,6 +12,7 @@
 'use strict';
 
 var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var NodeHandle = require('NodeHandle');
@@ -91,7 +92,7 @@ var removeTouchesAtIndices = function(
  */
 var ReactNativeEventEmitter = merge(ReactEventEmitterMixin, {
 
-  registrationNames: EventPluginHub.registrationNameModules,
+  registrationNames: EventPluginRegistry.registrationNameModules,
 
   putListener: EventPluginHub.putListener,
 

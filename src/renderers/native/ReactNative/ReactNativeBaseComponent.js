@@ -56,10 +56,6 @@ ReactNativeBaseComponent.Mixin = {
     return this;
   },
 
-  construct: function(element) {
-    this._currentElement = element;
-  },
-
   unmountComponent: function() {
     deleteAllListeners(this._rootNodeID);
     this.unmountChildren();
@@ -172,6 +168,15 @@ ReactNativeBaseComponent.Mixin = {
         }
       }
     }
+  },
+
+  /**
+   * Currently this still uses IDs for reconciliation so this can return null.
+   *
+   * @return {null} Null.
+   */
+  getNativeNode: function() {
+    return null;
   },
 
   /**

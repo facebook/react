@@ -27,13 +27,12 @@ var ReactElement = require('ReactElement');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment');
 var ReactNativeGlobalInteractionHandler = require('ReactNativeGlobalInteractionHandler');
 var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
-var ReactNativeMount = require('ReactNativeMount');
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
+var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 var ResponderEventPlugin = require('ResponderEventPlugin');
 var UniversalWorkerNodeHandle = require('UniversalWorkerNodeHandle');
@@ -50,7 +49,6 @@ function inject() {
    * Inject module for resolving DOM hierarchy and plugin ordering.
    */
   EventPluginHub.injection.injectEventPluginOrder(IOSDefaultEventPluginOrder);
-  EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
 
   ResponderEventPlugin.injection.injectGlobalResponderHandler(
     ReactNativeGlobalResponderHandler
@@ -81,17 +79,19 @@ function inject() {
     ReactNativeComponentEnvironment
   );
 
-  var EmptyComponent = () => {
+  var EmptyComponent = (instantiate) => {
     // Can't import View at the top because it depends on React to make its composite
     var View = require('View');
-    return ReactElement.createElement(View, {
-      collapsable: true,
-      style: { position: 'absolute' }
-    });
+    return new ReactSimpleEmptyComponent(
+      ReactElement.createElement(View, {
+        collapsable: true,
+        style: { position: 'absolute' }
+      }),
+      instantiate
+    );
   };
-  ReactEmptyComponent.injection.injectEmptyComponent(EmptyComponent);
 
-  EventPluginUtils.injection.injectMount(ReactNativeMount);
+  ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
 
   ReactNativeComponent.injection.injectTextComponentClass(
     ReactNativeTextComponent
