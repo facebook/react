@@ -159,13 +159,13 @@ ReactElement.createElement = function(type, config, children) {
     var warnedProperties = {};
 
     for (propName in config) {
-
       var lowerCasedName = propName.toLowerCase();
 
-      if (!(DOMProperty.properties.hasOwnProperty(propName) || DOMProperty.isCustomAttribute(propName)) 
-           && !(reactProps.hasOwnProperty(name) && reactProps[name] 
-              || warnedProperties.hasOwnProperty(name) && warnedProperties[name]) 
-           && EventPluginRegistry.possibleRegistrationNames[lowerCasedName] !== propName) {
+      if (!DOMProperty.properties.hasOwnProperty(propName) && 
+          !DOMProperty.isCustomAttribute(propName) && 
+          !(reactProps.hasOwnProperty(name) && reactProps[name] || 
+            warnedProperties.hasOwnProperty(name) && warnedProperties[name]) && 
+          EventPluginRegistry.possibleRegistrationNames[lowerCasedName] !== propName) {
 
         warnedProperties[name] = true;
 
