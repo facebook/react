@@ -118,9 +118,10 @@ describe('update', function() {
     it('keeps reference equality when possible', function() {
       var original = {a: 1};
       expect(update(original, {a: {$set: 1}})).toBe(original);
+      expect(update(original, {a: {$set: 2}})).toNotBe(original);
     });
   });
-  
+
   describe('$apply', function() {
     var applier = function(node) {
       return {v: node.v * 2};
@@ -144,11 +145,12 @@ describe('update', function() {
         return val;
       }
       expect(update(original, {a: {$apply: identity}})).toBe(original);
+      expect(update(original, {a: {$apply: applier}})).toNotBe(original);
     });
   });
 
   describe('deep update', function() {
-    it('should work', function() {
+    it('works', function() {
       expect(update({
         a: 'b',
         c: {
@@ -179,6 +181,40 @@ describe('update', function() {
           l: 8,
         },
       });
+    });
+    it('keeps reference equality when possible', function() {
+      var original = {a: {b: 1}, c: {d: {e: 1}}};
+
+      expect(update(original, {a: {b: {$set: 1}}})).toBe(original);
+      expect(update(original, {a: {b: {$set: 1}}}).a).toBe(original.a);
+
+      expect(update(original, {c: {d: {e: {$set: 1}}}})).toBe(original);
+      expect(update(original, {c: {d: {e: {$set: 1}}}}).c).toBe(original.c);
+      expect(update(original, {c: {d: {e: {$set: 1}}}}).c.d).toBe(original.c.d);
+
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      })).toBe(original);
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      }).a).toBe(original.a);
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      }).c).toBe(original.c);
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      }).c.d).toBe(original.c.d);
+
+      expect(update(original, {a: {b: {$set: 2}}})).toNotBe(original);
+      expect(update(original, {a: {b: {$set: 2}}}).a).toNotBe(original.a);
+      expect(update(original, {a: {b: {$set: 2}}}).a.b).toNotBe(original.a.b);
+
+      expect(update(original, {a: {b: {$set: 2}}}).c).toBe(original.c);
+      expect(update(original, {a: {b: {$set: 2}}}).c.d).toBe(original.c.d);
     });
   });
 
