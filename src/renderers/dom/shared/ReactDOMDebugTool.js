@@ -11,8 +11,6 @@
 
 'use strict';
 
-var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
-
 var warning = require('warning');
 
 var eventHandlers = [];
@@ -60,7 +58,5 @@ var ReactDOMDebugTool = {
     emitEvent('onDeleteValueForProperty', node, name);
   },
 };
-
-ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
 
 module.exports = ReactDOMDebugTool;

@@ -12,7 +12,8 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-
+var DOMProperty = require('DOMProperty');
+var EventPluginRegistry = require('EventPluginRegistry');
 var assign = require('Object.assign');
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
@@ -146,6 +147,62 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
+  if (__DEV__) {
+
+    var reactProps = {
+      children: true,
+      dangerouslySetInnerHTML: true,
+      key: true,
+      ref: true,
+    };
+
+    var warnedProperties = {};
+
+    for (propName in config) {
+
+      var lowerCasedName = propName.toLowerCase();
+
+      if (!(DOMProperty.properties.hasOwnProperty(propName) || DOMProperty.isCustomAttribute(propName)) 
+           && !(reactProps.hasOwnProperty(name) && reactProps[name] 
+              || warnedProperties.hasOwnProperty(name) && warnedProperties[name]) 
+           && EventPluginRegistry.possibleRegistrationNames[lowerCasedName] !== propName) {
+
+        warnedProperties[name] = true;
+
+        var standardName = (
+          DOMProperty.isCustomAttribute(lowerCasedName) ?
+            lowerCasedName :
+          DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
+            DOMProperty.getPossibleStandardName[lowerCasedName] :
+            null
+        );
+        
+        // For now, only warn when we have a suggested correction. This prevents
+        // logging too much when using transferPropsTo.
+        warning(
+          standardName == null,
+          'Unknown DOM property %s. Did you mean %s?',
+          propName,
+          standardName
+        );
+
+        var registrationName = (
+          EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+            lowerCasedName
+          ) ?
+            EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
+            null
+        );
+
+        warning(
+          registrationName == null,
+          'Unknown event handler property %s. Did you mean `%s`?',
+          propName,
+          registrationName
+        );
+      }
+    }    
+  }
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
   var childrenLength = arguments.length - 2;
