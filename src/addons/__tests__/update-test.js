@@ -116,6 +116,11 @@ describe('update', function() {
       expect(obj).toEqual({a: 'b'});
     });
   });
+  
+  it('should keep reference equality when possible with set', function() {
+    var original = {a: 1};
+    expect(update(original, {a: {$set: 1}})).toBe(original);
+  });
 
   describe('$apply', function() {
     var applier = function(node) {
@@ -134,6 +139,14 @@ describe('update', function() {
         'update(): expected spec of $apply to be a function; got 123.'
       );
     });
+  });
+  
+  it('should keep reference equality when possible with apply', function() {
+    var original = {a: {b: {}}};
+    function identity(val) {
+      return val;
+    }
+    expect(update(original, {a: {$apply: identity}})).toBe(original);
   });
 
   it('should support deep updates', function() {
