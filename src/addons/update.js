@@ -82,29 +82,16 @@ function update(value, spec) {
       'Cannot have more than one key in an object with %s',
       COMMAND_SET
     );
-
-    // always return original if possible, to keep reference equality
     return spec[COMMAND_SET] === value ? value : spec[COMMAND_SET];
   }
 
-  // not created unless needed
-  var nextValue;
-  var updatedProp;
-
-  /* get a clone of value, create if not present */
-  function getNextValue() {
-    if (!nextValue) {
-      nextValue = shallowCopy(value);
-    }
-    return nextValue;
-  }
-
-  /* get newest available of nextValue or value */
-  function getCurrentValue() {
-    return nextValue ? nextValue : value;
-  }
+  // Make sure to shallowCopy() it before mutations
+  var nextValue = value;
 
   if (hasOwnProperty.call(spec, COMMAND_MERGE)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     var mergeObj = spec[COMMAND_MERGE];
     invariant(
       mergeObj && typeof mergeObj === 'object',
@@ -113,29 +100,38 @@ function update(value, spec) {
       mergeObj
     );
     invariant(
-      getCurrentValue() && typeof getCurrentValue() === 'object',
+      nextValue && typeof nextValue === 'object',
       'update(): %s expects a target of type \'object\'; got %s',
       COMMAND_MERGE,
-      getCurrentValue()
+      nextValue
     );
-    assign(getNextValue(), spec[COMMAND_MERGE]);
+    assign(nextValue, spec[COMMAND_MERGE]);
   }
 
   if (hasOwnProperty.call(spec, COMMAND_PUSH)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     invariantArrayCase(value, spec, COMMAND_PUSH);
     spec[COMMAND_PUSH].forEach(function(item) {
-      getNextValue().push(item);
+      nextValue.push(item);
     });
   }
 
   if (hasOwnProperty.call(spec, COMMAND_UNSHIFT)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     invariantArrayCase(value, spec, COMMAND_UNSHIFT);
     spec[COMMAND_UNSHIFT].forEach(function(item) {
-      getNextValue().unshift(item);
+      nextValue.unshift(item);
     });
   }
 
   if (hasOwnProperty.call(spec, COMMAND_SPLICE)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     invariant(
       Array.isArray(value),
       'Expected %s target to be an array; got %s',
@@ -157,7 +153,7 @@ function update(value, spec) {
         COMMAND_SPLICE,
         spec[COMMAND_SPLICE]
       );
-      getNextValue().splice.apply(getNextValue(), args);
+      nextValue.splice.apply(nextValue, args);
     });
   }
 
@@ -168,23 +164,24 @@ function update(value, spec) {
       COMMAND_APPLY,
       spec[COMMAND_APPLY]
     );
-
-    updatedProp = spec[COMMAND_APPLY](getCurrentValue());
-    if (updatedProp !== getCurrentValue()) {
-      nextValue = updatedProp;
-    }
+    nextValue = spec[COMMAND_APPLY](nextValue);
   }
 
   for (var k in spec) {
     if (!(ALL_COMMANDS_SET.hasOwnProperty(k) && ALL_COMMANDS_SET[k])) {
-      updatedProp = update(value[k], spec[k]);
-      if (updatedProp !== value[k]) {
-        getNextValue()[k] = updatedProp;
+      var nextValueForKey = update(value[k], spec[k]);
+      if (nextValueForKey === value[k]) {
+        continue;
       }
+
+      if (nextValue === value) {
+        nextValue = shallowCopy(value);
+      }
+      nextValue[k] = nextValueForKey;
     }
   }
 
-  return getCurrentValue();
+  return nextValue;
 }
 
 module.exports = update;
