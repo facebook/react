@@ -115,13 +115,12 @@ describe('update', function() {
       update(obj, {$set: {c: 'd'}});
       expect(obj).toEqual({a: 'b'});
     });
+    it('keeps reference equality when possible', function() {
+      var original = {a: 1};
+      expect(update(original, {a: {$set: 1}})).toBe(original);
+    });
   });
   
-  it('should keep reference equality when possible with set', function() {
-    var original = {a: 1};
-    expect(update(original, {a: {$set: 1}})).toBe(original);
-  });
-
   describe('$apply', function() {
     var applier = function(node) {
       return {v: node.v * 2};
@@ -139,46 +138,47 @@ describe('update', function() {
         'update(): expected spec of $apply to be a function; got 123.'
       );
     });
-  });
-  
-  it('should keep reference equality when possible with apply', function() {
-    var original = {a: {b: {}}};
-    function identity(val) {
-      return val;
-    }
-    expect(update(original, {a: {$apply: identity}})).toBe(original);
+    it('keeps reference equality when possible', function() {
+      var original = {a: {b: {}}};
+      function identity(val) {
+        return val;
+      }
+      expect(update(original, {a: {$apply: identity}})).toBe(original);
+    });
   });
 
-  it('should support deep updates', function() {
-    expect(update({
-      a: 'b',
-      c: {
-        d: 'e',
-        f: [1],
-        g: [2],
-        h: [3],
-        i: {j: 'k'},
-        l: 4,
-      },
-    }, {
-      c: {
-        d: {$set: 'm'},
-        f: {$push: [5]},
-        g: {$unshift: [6]},
-        h: {$splice: [[0, 1, 7]]},
-        i: {$merge: {n: 'o'}},
-        l: {$apply: (x) => x * 2},
-      },
-    })).toEqual({
-      a: 'b',
-      c: {
-        d: 'm',
-        f: [1, 5],
-        g: [6, 2],
-        h: [7],
-        i: {j: 'k', n: 'o'},
-        l: 8,
-      },
+  describe('deep update', function() {
+    it('should work', function() {
+      expect(update({
+        a: 'b',
+        c: {
+          d: 'e',
+          f: [1],
+          g: [2],
+          h: [3],
+          i: {j: 'k'},
+          l: 4,
+        },
+      }, {
+        c: {
+          d: {$set: 'm'},
+          f: {$push: [5]},
+          g: {$unshift: [6]},
+          h: {$splice: [[0, 1, 7]]},
+          i: {$merge: {n: 'o'}},
+          l: {$apply: (x) => x * 2},
+        },
+      })).toEqual({
+        a: 'b',
+        c: {
+          d: 'm',
+          f: [1, 5],
+          g: [6, 2],
+          h: [7],
+          i: {j: 'k', n: 'o'},
+          l: 8,
+        },
+      });
     });
   });
 
