@@ -82,7 +82,7 @@ function update(value, spec) {
       'Cannot have more than one key in an object with %s',
       COMMAND_SET
     );
-    return spec[COMMAND_SET] === value ? value : spec[COMMAND_SET];
+    return spec[COMMAND_SET];
   }
 
   // Make sure to shallowCopy() it before mutations
