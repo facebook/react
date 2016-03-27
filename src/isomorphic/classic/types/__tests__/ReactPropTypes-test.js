@@ -21,6 +21,8 @@ var Component;
 var MyComponent;
 var requiredMessage =
   'Required prop `testProp` was not specified in `testComponent`.';
+var deprecatedMessage =
+  'Deprecated prop `testProp` was specified in `testComponent`.';
 
 function typeCheckFail(declaration, value, message) {
   var props = {testProp: value};
@@ -117,6 +119,16 @@ describe('ReactPropTypes', function() {
       typeCheckFail(PropTypes.string.isRequired, null, requiredMessage);
       typeCheckFail(PropTypes.string.isRequired, undefined, requiredMessage);
     });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.string.isDeprecated, null);
+      typeCheckPass(PropTypes.string.isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.string.isDeprecated, '', deprecatedMessage);
+      typeCheckFail(PropTypes.bool.isDeprecated, true, deprecatedMessage);
+    });
   });
 
   describe('Any type', function() {
@@ -134,6 +146,17 @@ describe('ReactPropTypes', function() {
     it('should warn for missing required values', function() {
       typeCheckFail(PropTypes.any.isRequired, null, requiredMessage);
       typeCheckFail(PropTypes.any.isRequired, undefined, requiredMessage);
+    });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.any.isDeprecated, null);
+      typeCheckPass(PropTypes.any.isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.any.isDeprecated, 0, deprecatedMessage);
+      typeCheckFail(PropTypes.any.isDeprecated, 'str', deprecatedMessage);
+      typeCheckFail(PropTypes.any.isDeprecated, [], deprecatedMessage);
     });
   });
 
@@ -228,6 +251,24 @@ describe('ReactPropTypes', function() {
         requiredMessage
       );
     });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.arrayOf(PropTypes.number).isDeprecated, null);
+      typeCheckPass(PropTypes.arrayOf(PropTypes.number).isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(
+        PropTypes.arrayOf(PropTypes.number).isDeprecated,
+        123,
+        deprecatedMessage
+      );
+      typeCheckFail(
+        PropTypes.arrayOf(PropTypes.string).isDeprecated,
+        'string',
+        deprecatedMessage
+      );
+    });
   });
 
   describe('Component Type', function() {
@@ -235,6 +276,7 @@ describe('ReactPropTypes', function() {
       Component = React.createClass({
         propTypes: {
           label: PropTypes.element.isRequired,
+          title: PropTypes.element.isDeprecated,
         },
 
         render: function() {
@@ -271,6 +313,13 @@ describe('ReactPropTypes', function() {
       expect(console.error.argsForCall.length).toBe(1);
     });
 
+    it('should warn when passing title and isDeprecated is set', () => {
+      var instance = <Component title={<div />} />;
+      instance = ReactTestUtils.renderIntoDocument(instance);
+
+      expect(console.error.argsForCall.length).toBe(1);
+    });
+
     it('should be implicitly optional and not warn without values', function() {
       typeCheckPass(PropTypes.element, null);
       typeCheckPass(PropTypes.element, undefined);
@@ -279,6 +328,15 @@ describe('ReactPropTypes', function() {
     it('should warn for missing required values', function() {
       typeCheckFail(PropTypes.element.isRequired, null, requiredMessage);
       typeCheckFail(PropTypes.element.isRequired, undefined, requiredMessage);
+    });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.element.isDeprecated, null);
+      typeCheckPass(PropTypes.element.isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.element.isDeprecated, <div/>, deprecatedMessage);
     });
   });
 
@@ -358,6 +416,16 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.instanceOf(String).isRequired, undefined, requiredMessage
       );
+    });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.instanceOf(String).isDeprecated, null);
+      typeCheckPass(PropTypes.instanceOf(String).isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.instanceOf(String).isDeprecated, '', deprecatedMessage);
+      typeCheckFail(PropTypes.instanceOf(Number).isDeprecated, 123, deprecatedMessage);
     });
   });
 
@@ -466,6 +534,16 @@ describe('ReactPropTypes', function() {
     it('should accept empty array for required props', function() {
       typeCheckPass(PropTypes.node.isRequired, []);
     });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.node.isDeprecated, null);
+      typeCheckPass(PropTypes.node.isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.node.isDeprecated, <MyComponent />, deprecatedMessage);
+      typeCheckFail(PropTypes.node.isDeprecated, <div />, deprecatedMessage);
+    });
   });
 
   describe('ObjectOf Type', function() {
@@ -565,6 +643,15 @@ describe('ReactPropTypes', function() {
         requiredMessage
       );
     });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.objectOf(PropTypes.number).isDeprecated, null);
+      typeCheckPass(PropTypes.objectOf(PropTypes.number).isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.objectOf(PropTypes.number).isDeprecated, {a: 1, b: 2, c: 3}, deprecatedMessage);
+    });
   });
 
   describe('OneOf Types', function() {
@@ -625,6 +712,16 @@ describe('ReactPropTypes', function() {
         undefined,
         requiredMessage
       );
+    });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.oneOf(['red', 'blue']).isDeprecated, null);
+      typeCheckPass(PropTypes.oneOf(['red', 'blue']).isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.oneOf(['red', 'blue']).isDeprecated, 'red', deprecatedMessage);
+      typeCheckFail(PropTypes.oneOf(['red', 'blue']).isDeprecated, 'blue', deprecatedMessage);
     });
   });
 
@@ -692,6 +789,16 @@ describe('ReactPropTypes', function() {
         undefined,
         requiredMessage
       );
+    });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isDeprecated, null);
+      typeCheckPass(PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isDeprecated, '', deprecatedMessage);
+      typeCheckFail(PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isDeprecated, 123, deprecatedMessage);
     });
   });
 
@@ -775,6 +882,19 @@ describe('ReactPropTypes', function() {
         PropTypes.shape({key: PropTypes.number}).isRequired,
         undefined,
         requiredMessage
+      );
+    });
+
+    it('should be implicitly optional and not warn without values for deprecated values', function() {
+      typeCheckPass(PropTypes.shape(PropTypes.shape({key: PropTypes.number})).isDeprecated, null);
+      typeCheckPass(PropTypes.shape(PropTypes.shape({key: PropTypes.number})).isDeprecated, undefined);
+    });
+
+    it('should warn for using deprecated values', function() {
+      typeCheckFail(
+        PropTypes.shape(PropTypes.shape({key: PropTypes.number})).isDeprecated,
+        {key: 123},
+        deprecatedMessage
       );
     });
   });
