@@ -14,7 +14,6 @@
 var React = require('React');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
-var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 
 var ReactTransitionGroup = React.createClass({
@@ -42,6 +41,7 @@ var ReactTransitionGroup = React.createClass({
     this.currentlyTransitioningKeys = {};
     this.keysToEnter = [];
     this.keysToLeave = [];
+    this.keysLeaving = [];
   },
 
   componentDidMount: function() {
@@ -163,6 +163,7 @@ var ReactTransitionGroup = React.createClass({
 
   performLeave: function(key) {
     this.currentlyTransitioningKeys[key] = true;
+    this.keysLeaving.push(key);
 
     var component = this.refs[key];
     if (component.componentWillLeave) {
@@ -182,6 +183,7 @@ var ReactTransitionGroup = React.createClass({
       component.componentDidLeave();
     }
 
+    this.keysLeaving.splice(this.keysLeaving.indexOf(key), 1);
     delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -192,11 +194,11 @@ var ReactTransitionGroup = React.createClass({
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
-      this.setState(function(state) {
-        var newChildren = assign({}, state.children);
-        delete newChildren[key];
-        return {children: newChildren};
-      });
+      delete this.state.children[key];
+    }
+
+    if (this.keysLeaving.length === 0) {
+      this.forceUpdate();
     }
   },
 
