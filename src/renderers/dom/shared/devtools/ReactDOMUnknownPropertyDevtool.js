@@ -34,8 +34,13 @@ if (__DEV__) {
       return;
     }
 
-    warnedProperties[name] = true;
     var lowerCasedName = name.toLowerCase();
+
+    if(EventPluginRegistry.possibleRegistrationNames[lowerCasedName] == name) {
+      return;
+    }
+
+    warnedProperties[name] = true;
 
     // data-* attributes should be lowercase; suggest the lowercase version
     var standardName = (
@@ -73,13 +78,7 @@ if (__DEV__) {
 }
 
 var ReactDOMUnknownPropertyDevtool = {
-  onCreateMarkupForProperty(name, value) {
-    warnUnknownProperty(name);
-  },
-  onSetValueForProperty(node, name, value) {
-    warnUnknownProperty(name);
-  },
-  onDeleteValueForProperty(node, name) {
+  onCreateElement(name) {
     warnUnknownProperty(name);
   },
 };

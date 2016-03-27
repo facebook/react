@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
+
 var warning = require('warning');
 
 var eventHandlers = [];
@@ -48,15 +50,11 @@ var ReactDOMDebugTool = {
       }
     }
   },
-  onCreateMarkupForProperty(name, value) {
-    emitEvent('onCreateMarkupForProperty', name, value);
-  },
-  onSetValueForProperty(node, name, value) {
-    emitEvent('onSetValueForProperty', node, name, value);
-  },
-  onDeleteValueForProperty(node, name) {
-    emitEvent('onDeleteValueForProperty', node, name);
+  onCreateElement(name) {
+    emitEvent('onCreateElement', name);
   },
 };
+
+ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
 
 module.exports = ReactDOMDebugTool;
