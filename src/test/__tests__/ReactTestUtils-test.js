@@ -47,6 +47,26 @@ describe('ReactTestUtils', function() {
     ]);
   });
 
+  it('should shallow render a functional component', function() {
+    function SomeComponent() {
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    }
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    var result = shallowRenderer.render(<SomeComponent />);
+
+    expect(result.type).toBe('div');
+    expect(result.props.children).toEqual([
+      <span className="child1" />,
+      <span className="child2" />,
+    ]);
+  });
+
   it('should throw for invalid elements', function() {
     var SomeComponent = React.createClass({
       render: function() {

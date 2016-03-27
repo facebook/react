@@ -62,10 +62,23 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     key: key,
     ref: ref,
     props: props,
-
-    // Record the component responsible for creating this element.
-    _owner: owner,
   };
+
+  // Record the component responsible for creating this element.
+  // To make comparing ReactElements easier for testing purposes, we make
+  // the owner and some other properties below non-enumerable (where possible,
+  // which should include every environment we run tests in), so the test
+  // framework ignores them.
+  if (canDefineProperty) {
+    Object.defineProperty(element, '_owner', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: owner,
+    });
+  } else {
+    element._owner = owner;
+  }
 
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
@@ -74,11 +87,8 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     // commonly used development environments.
     element._store = {};
 
-    // To make comparing ReactElements easier for testing purposes, we make
-    // the validation flag non-enumerable (where possible, which should
-    // include every environment we run tests in), so the test framework
-    // ignores it.
     if (canDefineProperty) {
+      // The validation flag is irrelevant for tests so we hide it too.
       Object.defineProperty(element._store, 'validated', {
         configurable: false,
         enumerable: false,
@@ -93,7 +103,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
         value: self,
       });
       // Two elements created in two different places should be considered
-      // equal for testing purposes and therefore we hide it from enumeration.
+      // equal for testing purposes and therefore we hide them as well.
       Object.defineProperty(element, '_source', {
         configurable: false,
         enumerable: false,
