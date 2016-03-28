@@ -136,7 +136,9 @@ function createChainableTypeChecker(validate) {
 
   var chainedCheckType = checkType.bind(null, false, false);
   chainedCheckType.isRequired = checkType.bind(null, true, false);
-  chainedCheckType.isDeprecated = function (message) { return checkType.bind(null, false, message); }
+  chainedCheckType.isDeprecated = function(message) {
+    return checkType.bind(null, false, message);
+  };
 
   return chainedCheckType;
 }
