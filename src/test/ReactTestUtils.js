@@ -399,6 +399,8 @@ var ShallowComponentWrapper = function(element) {
 assign(
   ShallowComponentWrapper.prototype,
   ReactCompositeComponent.Mixin, {
+    _constructComponent:
+      ReactCompositeComponent.Mixin._constructComponentWithoutOwner,
     _instantiateReactComponent: function(element) {
       return new NoopInternalComponent(element);
     },
