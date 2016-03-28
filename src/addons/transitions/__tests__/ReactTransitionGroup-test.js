@@ -269,4 +269,20 @@ describe('ReactTransitionGroup', function() {
       'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2',
     ]);
   });
+
+  it('should handle a custom render function', function() {
+    var WrapperLessComponent = React.createClass({
+      render: function() {
+        return (
+          <ReactTransitionGroup render={children => children[0]}>
+            <div id="one" />
+          </ReactTransitionGroup>
+        );
+      },
+    });
+
+    var instance = ReactDOM.render(<WrapperLessComponent />, container);
+    expect(ReactDOM.findDOMNode(instance).childNodes.length).toBe(0);
+    expect(ReactDOM.findDOMNode(instance).id).toBe('one');
+  });
 });

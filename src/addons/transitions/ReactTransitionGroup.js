@@ -17,18 +17,28 @@ var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 
+function _defaultRender(childrenToRender) {
+  return React.createElement(
+    this.props.component,
+    this.props,
+    childrenToRender
+  );
+}
+
 var ReactTransitionGroup = React.createClass({
   displayName: 'ReactTransitionGroup',
 
   propTypes: {
     component: React.PropTypes.any,
     childFactory: React.PropTypes.func,
+    render: React.PropTypes.func,
   },
 
   getDefaultProps: function() {
     return {
       component: 'span',
       childFactory: emptyFunction.thatReturnsArgument,
+      render: _defaultRender,
     };
   },
 
@@ -203,6 +213,7 @@ var ReactTransitionGroup = React.createClass({
   render: function() {
     // TODO: we could get rid of the need for the wrapper node
     // by cloning a single child
+    var render = this.props.render.bind(this);
     var childrenToRender = [];
     for (var key in this.state.children) {
       var child = this.state.children[key];
@@ -218,11 +229,7 @@ var ReactTransitionGroup = React.createClass({
         ));
       }
     }
-    return React.createElement(
-      this.props.component,
-      this.props,
-      childrenToRender
-    );
+    return render(childrenToRender);
   },
 });
 
