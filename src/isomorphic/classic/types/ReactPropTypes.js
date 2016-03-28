@@ -105,7 +105,7 @@ function is(x, y) {
 function createChainableTypeChecker(validate) {
   function checkType(
     isRequired,
-    isDeprecated,
+    deprecatedMessage,
     props,
     propName,
     componentName,
@@ -124,10 +124,10 @@ function createChainableTypeChecker(validate) {
       }
       return null;
     } else {
-      if (isDeprecated) {
-        return new Error(
-          `Deprecated ${locationName} \`${propFullName}\` was specified in ` +
-          `\`${componentName}\`.`
+      if (deprecatedMessage) {
+        console.warn(
+          `Warning: Deprecated ${locationName} \`${propFullName}\` was specified in ` +
+          `\`${componentName}\`. ${deprecatedMessage}`
         );
       }
       return validate(props, propName, componentName, location, propFullName);
@@ -136,7 +136,7 @@ function createChainableTypeChecker(validate) {
 
   var chainedCheckType = checkType.bind(null, false, false);
   chainedCheckType.isRequired = checkType.bind(null, true, false);
-  chainedCheckType.isDeprecated = checkType.bind(null, false, true);
+  chainedCheckType.isDeprecated = function (message) { return checkType.bind(null, false, message); }
 
   return chainedCheckType;
 }
