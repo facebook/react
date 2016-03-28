@@ -291,4 +291,24 @@ describe('ReactCSSTransitionGroup', function() {
     // Testing that no exception is thrown here, as the timeout has been cleared.
     jest.runAllTimers();
   });
+
+  it('should handle a custom render function', function() {
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionEnterTimeout={500}
+            render={children => children[0]}>
+            {this.props.children}
+          </ReactCSSTransitionGroup>
+        );
+      },
+    });
+
+    var instance = ReactDOM.render(<Component><span id="one"/></Component>, container);
+    expect(ReactDOM.findDOMNode(instance).childNodes.length).toBe(0);
+    expect(ReactDOM.findDOMNode(instance).id).toBe('one');
+
+    ReactDOM.unmountComponentAtNode(container);
+  });
 });
