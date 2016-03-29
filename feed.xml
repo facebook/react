@@ -15,17 +15,17 @@
 &lt;p&gt;The release is now available for download:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.8.js&quot;&gt;https://fb.me/react-0.14.8.js&lt;/a&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.8.min.js&quot;&gt;https://fb.me/react-0.14.8.min.js&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.8.js&quot;&gt;https://fb.me/react-with-addons-0.14.8.js&lt;/a&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.8.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.8.min.js&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.8.js&quot;&gt;https://fb.me/react-dom-0.14.8.js&lt;/a&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.8.min.js&quot;&gt;https://fb.me/react-dom-0.14.8.min.js&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.8.js&quot;&gt;https://fb.me/react-dom-server-0.14.8.js&lt;/a&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.8.js&quot;&gt;https://fb.me/react-0.14.8.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.8.min.js&quot;&gt;https://fb.me/react-0.14.8.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.8.js&quot;&gt;https://fb.me/react-with-addons-0.14.8.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.8.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.8.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.8.js&quot;&gt;https://fb.me/react-dom-0.14.8.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.8.min.js&quot;&gt;https://fb.me/react-dom-0.14.8.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.8.js&quot;&gt;https://fb.me/react-dom-server-0.14.8.js&lt;/a&gt;&lt;br&gt;
 Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.8.min.js&quot;&gt;https://fb.me/react-dom-server-0.14.8.min.js&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
