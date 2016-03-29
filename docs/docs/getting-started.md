@@ -37,13 +37,68 @@ $ browserify -t [ babelify --presets [ react ] ] main.js -o bundle.js
 To install React DOM and build your bundle with webpack:
 
 ```sh
-$ npm install --save react react-dom babel-preset-react
+$ npm install --save react react-dom babel-preset-react babel-preset-es2015
 $ webpack
 ```
 
-> Note:
->
-> If you are using ES2015, you will want to also use the `babel-preset-es2015` package.
+A good starting webpack config for production mode would be:
+```javascript
+module.exports = {
+  entry: [
+    './client/index.jsx',
+  ],
+  output: {
+    path: path.join(__dirname, 'dist'),
+    filename: 'bundle.js',
+  },
+  resolve: {
+    modulesDirectories: ['node_modules', 'client'],
+    extensions: ['.js', '.jsx'],
+  },
+  module: {
+    loaders: [{
+      test: /\.jsx?$/,
+      exclude: /node_modules/,
+      loaders: ['babel'],
+      query: {
+        presets: ['react', 'es2015']
+      }
+    }],
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': JSON.stringify('production'),
+      },
+    }),
+    new webpack.optimize.UglifyJsPlugin({ comments: false }),
+  ],
+};
+```
+
+This assumes all React code lives under a directory called `client`, the entry
+point is `client/index.jsx` and that no `.jsx` files under `node_modules` needs
+to be compiled with babel. The combined output will be `dist/bundle.js`.
+
+Additionally, the define plugin sets React to build in production mode so some
+code in React will become:
+```javascript
+if ('production' === 'development') {
+  logAllTheThings();
+}
+```
+Combining this with the Uglify plugin will use [dead code elimination](https://en.wikipedia.org/wiki/Dead_code_elimination) to remove
+these blocks of code.
+
+To run the above use the following command
+```sh
+$ webpack -p --config webpack.config.js
+```
+
+For development mode things you may wish to do include:
+ - Removing the Uglify plugin
+ - Including source maps by adding the
+ [devtool](https://webpack.github.io/docs/configuration.html#devtool) option. `cheap-module-eval-source` is recommended.
 
 **Note:** by default, React will be in development mode, which is slower, and not advised for production. To use React in production mode, set the environment variable `NODE_ENV` to `production` (using envify or webpack's DefinePlugin). For example:
 
