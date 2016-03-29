@@ -583,13 +583,14 @@
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">tick</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
   <span class="nx">tick</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">});</span>
   <span class="p">}</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">}</span><span class="o">&gt;</span>
         <span class="nx">Clicks</span><span class="o">:</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">}</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
@@ -598,7 +599,25 @@
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
 </code></pre></div><h3><a class="anchor" name="no-autobinding"></a>No Autobinding <a class="hash-link" href="#no-autobinding">#</a></h3>
-<p>Methods follow the same semantics as regular ES6 classes, meaning that they don&#39;t automatically bind <code>this</code> to the instance. You&#39;ll have to explicitly use <code>.bind(this)</code> or <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow functions</a> <code>=&gt;</code>.</p>
+<p>Methods follow the same semantics as regular ES6 classes, meaning that they don&#39;t automatically bind <code>this</code> to the instance. You&#39;ll have to explicitly use <code>.bind(this)</code> or <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow functions</a> <code>=&gt;</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// You can use bind() to preserve `this`</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span><span class="o">&gt;</span>
+
+<span class="c1">// Or you can use arrow functions</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">()}</span><span class="o">&gt;</span>
+</code></pre></div>
+<p>We recommend that you bind your event handlers in the constructor so they are only bound once for every instance:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span><span class="p">};</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">tick</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Now you can use <code>this.tick</code> directly as it was bound once in the constructor:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// It is already bound in the constructor</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">}</span><span class="o">&gt;</span>
+</code></pre></div>
+<p>This is better for performance of your application, especially if you implement <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate()</a> with a <a href="/react/docs/shallow-compare.html">shallow comparison</a> in the child components.</p>
 <h3><a class="anchor" name="no-mixins"></a>No Mixins <a class="hash-link" href="#no-mixins">#</a></h3>
 <p>Unfortunately ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes. Instead, we&#39;re working on making it easier to support such use cases without resorting to mixins.</p>
 <h2><a class="anchor" name="stateless-functions"></a>Stateless Functions <a class="hash-link" href="#stateless-functions">#</a></h2>
