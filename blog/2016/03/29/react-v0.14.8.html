@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Relay Technical Preview | React</title>
+  <title>React v0.14.8 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Relay Technical Preview | React">
+  <meta property="og:title" content="React v0.14.8 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2016/03/29/react-v0.14.8.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -72,7 +72,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
+        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html" class="active">React v0.14.8</a></li>
       
         <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
       
@@ -102,16 +102,16 @@
 
 <h1>
 
-  Relay Technical Preview
+  React v0.14.8
 
 </h1>
 
 <p class="meta">
-  August 11, 2015
+  March 29, 2016
   by
   
     
-      <a href="https://twitter.com/en_JS">Joseph Savona</a>
+      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
     
     
   
@@ -120,31 +120,34 @@
 <hr>
 
 <div class="post">
-  <h1><a class="anchor" name="relay"></a>Relay <a class="hash-link" href="#relay">#</a></h1>
-<p>Today we&#39;re excited to share an update on Relay - the technical preview is now open-source and <a href="http://github.com/facebook/relay">available on GitHub</a>.</p>
-<h2><a class="anchor" name="why-relay"></a>Why Relay <a class="hash-link" href="#why-relay">#</a></h2>
-<p>While React simplified the process of developing complex user-interfaces, it left open the question of how to interact with data on the server. It turns out that this was a significant source of friction for our developers; fragile coupling between client and server caused data-related bugs and made iteration harder. Furthermore, developers were forced to constantly re-implement complex async logic instead of focusing on their apps. Relay addresses these concerns by borrowing important lessons from React: it provides <em>declarative, component-oriented data fetching for React applications</em>.</p>
+  <p>We have already released two release candidates for React 15, and the final version is coming soon.</p>
 
-<p>Declarative data-fetching means that Relay applications specify <em>what</em> data they need, not <em>how</em> to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.</p>
+<p>However <a href="https://github.com/iancmyers">Ian Christian Myers</a> discovered a memory leak related to server rendering in React 0.14 and <a href="https://github.com/facebook/react/pull/6060">contributed a fix</a>. While this memory leak has already been fixed in a different way in the React 15 release candidates, we decided to cut another 0.14 release that contains just this fix.</p>
 
-<p>Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.</p>
-
-<p>Relay is in use at Facebook in production apps, and we&#39;re using it more and more because <em>Relay lets developers focus on their products and move fast</em>. It&#39;s working for us and we&#39;d like to share it with the community.</p>
-<h2><a class="anchor" name="whats-included"></a>What&#39;s Included <a class="hash-link" href="#whats-included">#</a></h2>
-<p>We&#39;re open-sourcing a technical preview of Relay - the core framework that we use internally, with some modifications for use outside Facebook. As this is the first release, it&#39;s good to keep in mind that there may be some incomplete or missing features. We&#39;ll continue to develop Relay and are working closely with the GraphQL community to ensure that Relay tracks updates during GraphQL&#39;s RFC period. But we couldn&#39;t wait any longer to get this in your hands, and we&#39;re looking forward to your feedback and contributions.</p>
-
-<p>Relay is available on <a href="http://github.com/facebook/relay">GitHub</a> and <a href="https://www.npmjs.com/package/react-relay">npm</a>.</p>
-<h2><a class="anchor" name="whats-next"></a>What&#39;s Next <a class="hash-link" href="#whats-next">#</a></h2>
-<p>The team is super excited to be releasing Relay - and just as excited about what&#39;s next. Here are some of the things we&#39;ll be focusing on:</p>
+<p>The release is now available for download:</p>
 
 <ul>
-<li>Offline support. This will allow applications to fulfill queries and enqueue updates without connectivity.</li>
-<li>Real-time updates. In collaboration with the GraphQL community, we&#39;re working to define a specification for subscriptions and provide support for them in Relay.</li>
-<li>A generic Relay. Just as the power of React was never about the virtual DOM, Relay is much more than a GraphQL client. We&#39;re working to extend Relay to provide a unified interface for interacting not only with server data, but also in-memory and native device data (and, even better, a mix of all three).</li>
-<li>Finally, it&#39;s all too easy as developers to focus on those people with the newest devices and fastest internet connections. We&#39;re working to make it easier to build applications that are robust in the face of slow or intermittent connectivity.</li>
+<li><strong>React</strong>
+Dev build with warnings: <a href="https://fb.me/react-0.14.8.js">https://fb.me/react-0.14.8.js</a>
+Minified build for production: <a href="https://fb.me/react-0.14.8.min.js">https://fb.me/react-0.14.8.min.js</a></li>
+<li><strong>React with Add-Ons</strong>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.8.js">https://fb.me/react-with-addons-0.14.8.js</a>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.14.8.min.js">https://fb.me/react-with-addons-0.14.8.min.js</a></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)
+Dev build with warnings: <a href="https://fb.me/react-dom-0.14.8.js">https://fb.me/react-dom-0.14.8.js</a>
+Minified build for production: <a href="https://fb.me/react-dom-0.14.8.min.js">https://fb.me/react-dom-0.14.8.min.js</a></li>
+<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)
+Dev build with warnings: <a href="https://fb.me/react-dom-server-0.14.8.js">https://fb.me/react-dom-server-0.14.8.js</a>
+Minified build for production: <a href="https://fb.me/react-dom-server-0.14.8.min.js">https://fb.me/react-dom-server-0.14.8.min.js</a></li>
 </ul>
 
-<p>Thanks!</p>
+<p>We&#39;ve also published version <code>0.14.8</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
+
+<hr>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
+<ul>
+<li>Fixed memory leak when rendering on the server</li>
+</ul>
 
 </div>
 
