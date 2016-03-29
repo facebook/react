@@ -410,15 +410,17 @@
 
 
   <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.9-perf.md" target="_blank">Edit on GitHub</a>
     <h1>
       Performance Tools
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.9-perf.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
     <p>React is usually quite fast out of the box. However, in situations where you need to squeeze every ounce of performance out of your app, it provides a <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> hook where you can add optimization hints to React&#39;s diff algorithm.</p>
 
 <p>In addition to giving you an overview of your app&#39;s overall performance, ReactPerf is a profiling tool that tells you exactly where you need to put these hooks.</p>
+
+<p>See these two articles by the <a href="http://benchling.engineering">Benchling Engineering Team</a> for a in-depth introduction to performance tooling: <a href="http://benchling.engineering/performance-engineering-with-react/">&quot;Performance Engineering with React&quot;</a> and <a href="http://benchling.engineering/deep-dive-react-perf-debugging/">&quot;A Deep Dive into React Perf Debugging&quot;</a>!</p>
 <h2><a class="anchor" name="general-api"></a>General API <a class="hash-link" href="#general-api">#</a></h2>
 <p>The <code>Perf</code> object documented here is exposed as <code>require(&#39;react-addons-perf&#39;)</code> and can be used with React in development mode only. You should not include this bundle when building your app for production.</p>
 
