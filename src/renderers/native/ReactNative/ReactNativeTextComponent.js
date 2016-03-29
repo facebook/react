@@ -16,38 +16,38 @@ var UIManager = require('UIManager');
 
 var invariant = require('invariant');
 
-var ReactNativeTextComponent = function(props) {
-  // This constructor and its argument is currently used by mocks.
+var ReactNativeTextComponent = function(text) {
+  // This is really a ReactText (ReactNode), not a ReactElement
+  this._currentElement = text;
+  this._stringText = '' + text;
+  this._nativeParent = null;
+  this._rootNodeID = null;
 };
 
 Object.assign(ReactNativeTextComponent.prototype, {
 
-  construct: function(text) {
-    // This is really a ReactText (ReactNode), not a ReactElement
-    this._currentElement = text;
-    this._stringText = '' + text;
-    this._rootNodeID = null;
-  },
-
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(transaction, nativeParent, nativeContainerInfo, context) {
+    // TODO: nativeParent should have this context already. Stop abusing context.
     invariant(
       context.isInAParentText,
       'RawText "' + this._stringText + '" must be wrapped in an explicit ' +
         '<Text> component.'
     );
-    this._rootNodeID = rootID;
+    this._nativeParent = nativeParent;
     var tag = ReactNativeTagHandles.allocateTag();
-    var nativeTopRootID = ReactNativeTagHandles.getNativeTopRootIDFromNodeID(rootID);
+    this._rootNodeID = tag;
+    var nativeTopRootTag = nativeContainerInfo._tag;
     UIManager.createView(
       tag,
       'RCTRawText',
-      nativeTopRootID ? ReactNativeTagHandles.rootNodeIDToTag[nativeTopRootID] : null,
+      nativeTopRootTag,
       {text: this._stringText}
     );
-    return {
-      rootNodeID: rootID,
-      tag: tag,
-    };
+    return tag;
+  },
+
+  getNativeNode: function() {
+    return this._rootNodeID;
   },
 
   receiveComponent: function(nextText, transaction, context) {
@@ -56,10 +56,9 @@ Object.assign(ReactNativeTextComponent.prototype, {
       var nextStringText = '' + nextText;
       if (nextStringText !== this._stringText) {
         this._stringText = nextStringText;
+        console.log('receiveComponent', this, this._rootNodeID);
         UIManager.updateView(
-          ReactNativeTagHandles.mostRecentMountedNodeHandleForRootNodeID(
-            this._rootNodeID
-          ),
+          this._rootNodeID,
           'RCTRawText',
           {text: this._stringText}
         );

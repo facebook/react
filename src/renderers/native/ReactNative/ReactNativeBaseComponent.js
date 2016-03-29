@@ -82,17 +82,8 @@ ReactNativeBaseComponent.Mixin = {
       var createdTags = [];
       for (var i = 0, l = mountImages.length; i < l; i++) {
         var mountImage = mountImages[i];
-        var childTag = mountImage.tag;
-        var childID = mountImage.rootNodeID;
-        warning(
-          mountImage && mountImage.rootNodeID && mountImage.tag,
-          'Mount image returned does not have required data'
-        );
-        ReactNativeTagHandles.associateRootNodeIDWithMountedNodeHandle(
-          childID,
-          childTag
-        );
-        createdTags[i] = mountImage.tag;
+        var childTag = mountImage;
+        createdTags[i] = childTag;
       }
       UIManager.setChildren(containerTag, createdTags);
     }
@@ -126,7 +117,7 @@ ReactNativeBaseComponent.Mixin = {
 
     if (updatePayload) {
       UIManager.updateView(
-        ReactNativeTagHandles.mostRecentMountedNodeHandleForRootNodeID(this._rootNodeID),
+        this._rootNodeID,
         this.viewConfig.uiViewClassName,
         updatePayload
       );
@@ -176,7 +167,7 @@ ReactNativeBaseComponent.Mixin = {
    * @return {null} Null.
    */
   getNativeNode: function() {
-    return null;
+    return this._rootNodeID;
   },
 
   /**
@@ -184,10 +175,12 @@ ReactNativeBaseComponent.Mixin = {
    * @param {Transaction} transaction For creating/updating.
    * @return {string} Unique iOS view tag.
    */
-  mountComponent: function(rootID, transaction, context) {
-    this._rootNodeID = rootID;
-
+  mountComponent: function(transaction, nativeParent, nativeContainerInfo, context) {
     var tag = ReactNativeTagHandles.allocateTag();
+
+    this._rootNodeID = tag;
+    this._nativeParent = nativeParent;
+    this._nativeContainerInfo = nativeContainerInfo;
 
     if (__DEV__) {
       for (var key in this.viewConfig.validAttributes) {
@@ -202,17 +195,12 @@ ReactNativeBaseComponent.Mixin = {
       this.viewConfig.validAttributes
     );
 
-    var nativeTopRootID = ReactNativeTagHandles.getNativeTopRootIDFromNodeID(rootID);
-    if (nativeTopRootID == null) {
-      invariant(
-        false,
-        'nativeTopRootID not found for tag ' + tag + ' view type ' +
-          this.viewConfig.uiViewClassName + ' with rootID ' + rootID);
-    }
+    var nativeTopRootTag = nativeContainerInfo._tag;
+    console.log('mountInCmp', nativeContainerInfo, nativeTopRootTag);
     UIManager.createView(
       tag,
       this.viewConfig.uiViewClassName,
-      ReactNativeTagHandles.rootNodeIDToTag[nativeTopRootID],
+      nativeTopRootTag,
       updatePayload
     );
 
@@ -223,10 +211,7 @@ ReactNativeBaseComponent.Mixin = {
       transaction,
       context
     );
-    return {
-      rootNodeID: rootID,
-      tag: tag
-    };
+    return tag;
   }
 };
 

@@ -37,7 +37,8 @@ var dangerouslyProcessChildrenUpdates = function(childrenUpdates, markupList) {
   // containerID.
   for (var i = 0; i < childrenUpdates.length; i++) {
     var update = childrenUpdates[i];
-    var containerTag = ReactNativeTagHandles.mostRecentMountedNodeHandleForRootNodeID(update.parentID);
+    var containerTag = update.parentID;
+    throw new Error('parentID is borked. See changes to multiChild');
     var updates = byContainerTag[containerTag] || (byContainerTag[containerTag] = {});
     if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
       (updates.moveFromIndices || (updates.moveFromIndices = [])).push(update.fromIndex);
@@ -46,9 +47,8 @@ var dangerouslyProcessChildrenUpdates = function(childrenUpdates, markupList) {
       (updates.removeAtIndices || (updates.removeAtIndices = [])).push(update.fromIndex);
     } else if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP) {
       var mountImage = markupList[update.markupIndex];
-      var tag = mountImage.tag;
+      var tag = mountImage;
       var rootNodeID = mountImage.rootNodeID;
-      ReactNativeTagHandles.associateRootNodeIDWithMountedNodeHandle(rootNodeID, tag);
       (updates.addAtIndices || (updates.addAtIndices = [])).push(update.toIndex);
       (updates.addChildTags || (updates.addChildTags = [])).push(tag);
     }
@@ -92,9 +92,8 @@ var ReactNativeDOMIDOperations = {
     'ReactDOMIDOperations',
     'dangerouslyReplaceNodeWithMarkupByID',
     function(id, mountImage) {
-      var oldTag = ReactNativeTagHandles.mostRecentMountedNodeHandleForRootNodeID(id);
-      UIManager.replaceExistingNonRootView(oldTag, mountImage.tag);
-      ReactNativeTagHandles.associateRootNodeIDWithMountedNodeHandle(id, mountImage.tag);
+      var oldTag = id;
+      UIManager.replaceExistingNonRootView(oldTag, mountImage);
     }
   ),
 };

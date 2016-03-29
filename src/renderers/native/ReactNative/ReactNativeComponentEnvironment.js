@@ -18,7 +18,7 @@ var ReactNativeComponentEnvironment = {
 
   processChildrenUpdates: ReactNativeDOMIDOperations.dangerouslyProcessChildrenUpdates,
 
-  replaceNodeWithMarkupByID: ReactNativeDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
+  replaceNodeWithMarkup: ReactNativeDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
 
   /**
    * Nothing to do for UIKit bridge.

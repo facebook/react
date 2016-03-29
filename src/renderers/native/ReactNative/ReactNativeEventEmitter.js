@@ -15,7 +15,6 @@ var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
-var NodeHandle = require('NodeHandle');
 var EventConstants = require('EventConstants');
 
 var merge = require('merge');
@@ -139,7 +138,7 @@ var ReactNativeEventEmitter = merge(ReactEventEmitterMixin, {
     topLevelType: string,
     nativeEventParam: Object
   ) {
-    var rootNodeID = ReactNativeTagHandles.tagToRootNodeID[tag];
+    var rootNodeID = tag;
     ReactNativeEventEmitter._receiveRootNodeIDEvent(
       rootNodeID,
       topLevelType,
@@ -200,7 +199,7 @@ var ReactNativeEventEmitter = merge(ReactEventEmitterMixin, {
             );
           }
         } else {
-          rootNodeID = NodeHandle.getRootNodeID(target);
+          rootNodeID = target;
         }
       }
       ReactNativeEventEmitter._receiveRootNodeIDEvent(

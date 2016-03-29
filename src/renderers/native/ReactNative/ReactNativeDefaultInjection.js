@@ -22,7 +22,6 @@ var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
 var IOSDefaultEventPluginOrder = require('IOSDefaultEventPluginOrder');
 var IOSNativeBridgeEventPlugin = require('IOSNativeBridgeEventPlugin');
-var NodeHandle = require('NodeHandle');
 var ReactElement = require('ReactElement');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
@@ -35,7 +34,6 @@ var ReactNativeComponent = require('ReactNativeComponent');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 var ResponderEventPlugin = require('ResponderEventPlugin');
-var UniversalWorkerNodeHandle = require('UniversalWorkerNodeHandle');
 
 var invariant = require('invariant');
 
@@ -104,8 +102,6 @@ function inject() {
     }
     invariant(false, 'Expected a component class, got %s.%s', tag, info);
   });
-
-  NodeHandle.injection.injectImplementation(UniversalWorkerNodeHandle);
 }
 
 module.exports = {

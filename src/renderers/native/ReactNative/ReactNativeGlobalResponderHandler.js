@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNativeGlobalResponderHandler
- * @flow
  */
 'use strict';
 
@@ -15,10 +14,10 @@ var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
 
 var ReactNativeGlobalResponderHandler = {
-  onChange: function(from: string, to: string, blockNativeResponder: boolean) {
+  onChange: function(from, to, blockNativeResponder) {
     if (to !== null) {
       UIManager.setJSResponder(
-        ReactNativeTagHandles.mostRecentMountedNodeHandleForRootNodeID(to),
+        to._rootNodeID,
         blockNativeResponder
       );
     } else {

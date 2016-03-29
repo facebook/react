@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
+var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
@@ -22,10 +23,6 @@ var UIManager = require('UIManager');
 var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-
-function instanceNumberToChildRootID(rootNodeID, instanceNumber) {
-  return rootNodeID + '[' + instanceNumber + ']';
-}
 
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
@@ -47,19 +44,22 @@ TopLevelWrapper.prototype.render = function() {
  *
  * @param {ReactComponent} componentInstance The instance to mount.
  * @param {number} rootID ID of the root node.
- * @param {number} container container element to mount into.
+ * @param {number} containerTag container element to mount into.
  * @param {ReactReconcileTransaction} transaction
  */
 function mountComponentIntoNode(
     componentInstance,
-    rootID,
-    container,
+    containerTag,
     transaction) {
   var markup = ReactReconciler.mountComponent(
-    componentInstance, rootID, transaction, emptyObject
+    componentInstance,
+    transaction,
+    null,
+    ReactNativeContainerInfo(containerTag),
+    emptyObject
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
-  ReactNativeMount._mountImageIntoNode(markup, container);
+  ReactNativeMount._mountImageIntoNode(markup, containerTag);
 }
 
 /**
@@ -67,19 +67,17 @@ function mountComponentIntoNode(
  *
  * @param {ReactComponent} componentInstance The instance to mount.
  * @param {number} rootID ID of the root node.
- * @param {number} container container element to mount into.
+ * @param {number} containerTag container element to mount into.
  */
 function batchedMountComponentIntoNode(
     componentInstance,
-    rootID,
-    container) {
+    containerTag) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
   transaction.perform(
     mountComponentIntoNode,
     null,
     componentInstance,
-    rootID,
-    container,
+    containerTag,
     transaction
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
@@ -90,15 +88,10 @@ function batchedMountComponentIntoNode(
  * code between the two. For now, we'll hard code the ID logic.
  */
 var ReactNativeMount = {
-  instanceCount: 0,
-
   _instancesByContainerID: {},
 
   // these two functions are needed by React Devtools
   findNodeHandle: require('findNodeHandle'),
-  nativeTagToRootNodeID: function (nativeTag: number): string {
-    return ReactNativeTagHandles.tagToRootNodeID[nativeTag];
-  },
 
   /**
    * @param {ReactComponent} instance Instance to render.
@@ -119,21 +112,19 @@ var ReactNativeMount = {
       nextElement
     );
 
-    var topRootNodeID = ReactNativeTagHandles.tagToRootNodeID[containerTag];
-    if (topRootNodeID) {
-      var prevComponent = ReactNativeMount._instancesByContainerID[topRootNodeID];
-      if (prevComponent) {
-        var prevWrappedElement = prevComponent._currentElement;
-        var prevElement = prevWrappedElement.props;
-        if (shouldUpdateReactComponent(prevElement, nextElement)) {
-          ReactUpdateQueue.enqueueElementInternal(prevComponent, nextWrappedElement);
-          if (callback) {
-            ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
-          }
-          return prevComponent;
-        } else {
-          ReactNativeMount.unmountComponentAtNode(containerTag);
+    var topRootNodeID = containerTag;
+    var prevComponent = ReactNativeMount._instancesByContainerID[topRootNodeID];
+    if (prevComponent) {
+      var prevWrappedElement = prevComponent._currentElement;
+      var prevElement = prevWrappedElement.props;
+      if (shouldUpdateReactComponent(prevElement, nextElement)) {
+        ReactUpdateQueue.enqueueElementInternal(prevComponent, nextWrappedElement);
+        if (callback) {
+          ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
         }
+        return prevComponent;
+      } else {
+        ReactNativeMount.unmountComponentAtNode(containerTag);
       }
     }
 
@@ -142,19 +133,10 @@ var ReactNativeMount = {
       return;
     }
 
-    var topRootNodeID = ReactNativeTagHandles.allocateRootNodeIDForTag(containerTag);
-    ReactNativeTagHandles.associateRootNodeIDWithMountedNodeHandle(
-      topRootNodeID,
-      containerTag
-    );
+    ReactNativeTagHandles.assertRootTag(containerTag);
 
     var instance = instantiateReactComponent(nextWrappedElement);
-    ReactNativeMount._instancesByContainerID[topRootNodeID] = instance;
-
-    var childRootNodeID = instanceNumberToChildRootID(
-      topRootNodeID,
-      ReactNativeMount.instanceCount++
-    );
+    ReactNativeMount._instancesByContainerID[containerTag] = instance;
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -163,8 +145,7 @@ var ReactNativeMount = {
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
       instance,
-      childRootNodeID,
-      topRootNodeID
+      containerTag
     );
     var component = instance.getPublicInstance();
     if (callback) {
@@ -184,13 +165,10 @@ var ReactNativeMount = {
     function(mountImage, containerID) {
       // Since we now know that the `mountImage` has been mounted, we can
       // mark it as such.
-      ReactNativeTagHandles.associateRootNodeIDWithMountedNodeHandle(
-        mountImage.rootNodeID,
-        mountImage.tag
-      );
+      var childTag = mountImage;
       UIManager.setChildren(
-        ReactNativeTagHandles.mostRecentMountedNodeHandleForRootNodeID(containerID),
-        [mountImage.tag]
+        containerID,
+        [childTag]
       );
     }
   ),
@@ -222,13 +200,12 @@ var ReactNativeMount = {
       return false;
     }
 
-    var containerID = ReactNativeTagHandles.tagToRootNodeID[containerTag];
-    var instance = ReactNativeMount._instancesByContainerID[containerID];
+    var instance = ReactNativeMount._instancesByContainerID[containerTag];
     if (!instance) {
       return false;
     }
-    ReactNativeMount.unmountComponentFromNode(instance, containerID);
-    delete ReactNativeMount._instancesByContainerID[containerID];
+    ReactNativeMount.unmountComponentFromNode(instance, containerTag);
+    delete ReactNativeMount._instancesByContainerID[containerTag];
     return true;
   },
 
@@ -247,18 +224,9 @@ var ReactNativeMount = {
   ) {
     // Call back into native to remove all of the subviews from this container
     ReactReconciler.unmountComponent(instance);
-    var containerTag =
-      ReactNativeTagHandles.mostRecentMountedNodeHandleForRootNodeID(containerID);
-    UIManager.removeSubviewsFromContainerWithID(containerTag);
-  },
-
-  getNode: function(rootNodeID: string): number {
-    return ReactNativeTagHandles.rootNodeIDToTag[rootNodeID];
-  },
-
-  getID: function(nativeTag: number): string {
-    return ReactNativeTagHandles.tagToRootNodeID[nativeTag];
+    UIManager.removeSubviewsFromContainerWithID(containerID);
   }
+
 };
 
 ReactNativeMount.renderComponent = ReactPerf.measure(
