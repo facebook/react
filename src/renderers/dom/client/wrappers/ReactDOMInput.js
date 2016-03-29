@@ -73,7 +73,7 @@ var ReactDOMInput = {
       // Make sure we set .type before any other properties (setting .value
       // before .type means .value is lost in IE11 and below)
       type: undefined,
-    }, props, {
+    }, DisabledInputUtils.getNativeProps(inst, props), {
       defaultChecked: undefined,
       defaultValue: undefined,
       value: value != null ? value : inst._wrapperState.initialValue,
@@ -81,7 +81,7 @@ var ReactDOMInput = {
       onChange: inst._wrapperState.onChange,
     });
 
-    return DisabledInputUtils.getNativeProps(inst, nativeProps);
+    return nativeProps
   },
 
   mountWrapper: function(inst, props) {
