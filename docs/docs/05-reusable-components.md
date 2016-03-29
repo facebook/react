@@ -205,13 +205,14 @@ export class Counter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {count: props.initialCount};
+    this.tick = this.tick.bind(this);
   }
   tick() {
     this.setState({count: this.state.count + 1});
   }
   render() {
     return (
-      <div onClick={this.tick.bind(this)}>
+      <div onClick={this.tick}>
         Clicks: {this.state.count}
       </div>
     );
@@ -223,7 +224,34 @@ Counter.defaultProps = { initialCount: 0 };
 
 ### No Autobinding
 
-Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`.
+Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`:
+
+```javascript
+// You can use bind() to preserve `this`
+<div onClick={this.tick.bind(this)}>
+
+// Or you can use arrow functions
+<div onClick={() => this.tick()}>
+```
+
+We recommend that you bind your event handlers in the constructor so they are only bound once for every instance:
+
+```javascript
+constructor(props) {
+  super(props);
+  this.state = {count: props.initialCount};
+  this.tick = this.tick.bind(this);
+}
+```
+
+Now you can use `this.tick` directly as it was bound once in the constructor:
+
+```javascript
+// It is already bound in the constructor
+<div onClick={this.tick}>
+```
+
+This is better for performance of your application, especially if you implement [shouldComponentUpdate()](/react/docs/component-specs.html#updating-shouldcomponentupdate) with a [shallow comparison](/react/docs/shallow-compare.html) in the child components.
 
 ### No Mixins
 
