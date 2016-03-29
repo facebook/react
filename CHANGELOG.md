@@ -1,3 +1,8 @@
+## 0.14.8 (March 29, 2016)
+
+### React
+- Fixed memory leak when rendering on the server
+
 ## 0.14.7 (January 28, 2016)
 
 ### React
