@@ -79,30 +79,36 @@ describe('update', function() {
     });
   });
 
-  it('should reject malformed specs', function() {
-    var wrongSpecs = [
-      null,
-      false,
+  it('should reject arrays and specs containing arrays', function() {
+    var specs = [
       [],
-      [[]],
-      {a: {b: [[]]}},
+      {a: []},
+      {a: {$set: 1}, b: [[]]},
     ];
-
-    wrongSpecs.forEach(function(spec) {
+    specs.forEach(function(spec) {
       expect(update.bind(null, {a: 'b'}, spec)).toThrow(
-        'update(): You provided a key path to update() that did not contain ' +
-        'one of $push, $unshift, $splice, $set, $merge, $apply. Did you ' +
-        'forget to include {$set: ...}?'
+        'update(): You provided an invalid spec to update(). The spec ' +
+        'may not contain an array except as the value of $set, $push, ' +
+        '$unshift or $splice.'
       );
     });
   });
 
-  it('should require a command', function() {
-    expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
-      'update(): You provided a key path to update() that did not contain ' +
-      'one of $push, $unshift, $splice, $set, $merge, $apply. Did you ' +
-      'forget to include {$set: ...}?'
-    );
+  it('should require a plain object spec containing command(s)', function() {
+    var specs = [
+      null,
+      false,
+      {a: 'c'},
+      {a: {b: 'c'}},
+    ];
+    specs.forEach(function(spec) {
+      expect(update.bind(null, {a: 'b'}, spec)).toThrow(
+        'update(): You provided an invalid spec to update(). The spec ' +
+        'and every included key path must be plain objects containing one ' +
+        'of the following commands: $push, $unshift, $splice, $set, ' +
+        '$merge, $apply.'
+      );
+    });
   });
 
   it('should perform safe hasOwnProperty check', function() {

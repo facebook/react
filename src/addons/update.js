@@ -69,11 +69,18 @@ function invariantArrayCase(value, spec, command) {
 
 function update(value, spec) {
   invariant(
-    typeof spec === 'object' && spec !== null && !Array.isArray(spec),
-    'update(): You provided a key path to update() that did not contain one ' +
-    'of %s. Did you forget to include {%s: ...}?',
-    ALL_COMMANDS_LIST.join(', '),
-    COMMAND_SET
+    !Array.isArray(spec),
+    'update(): You provided an invalid spec to update(). The spec may ' +
+    'not contain an array except as the value of $set, $push, $unshift ' +
+    'or $splice.'
+  );
+
+  invariant(
+    typeof spec === 'object' && spec !== null,
+    'update(): You provided an invalid spec to update(). The spec and ' +
+    'every included key path must be plain objects containing one of the ' +
+    'following commands: %s.',
+    ALL_COMMANDS_LIST.join(', ')
   );
 
   if (hasOwnProperty.call(spec, COMMAND_SET)) {
