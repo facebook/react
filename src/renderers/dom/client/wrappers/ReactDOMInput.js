@@ -81,7 +81,7 @@ var ReactDOMInput = {
       onChange: inst._wrapperState.onChange,
     });
 
-    return nativeProps
+    return nativeProps;
   },
 
   mountWrapper: function(inst, props) {
