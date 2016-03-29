@@ -38,7 +38,7 @@ var DisabledInputUtils = {
     // Copy the props, except the mouse listeners
     var nativeProps = {};
     for (var key in props) {
-      if (props.hasOwnProperty(key) && !disableableMouseListenerNames[key]) {
+      if (!disableableMouseListenerNames[key] && props.hasOwnProperty(key)) {
         nativeProps[key] = props[key];
       }
     }
