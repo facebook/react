@@ -15,7 +15,6 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -23,7 +22,7 @@ var warning = require('warning');
 var ReactCompositeComponentWrapper = function(element) {
   this.construct(element);
 };
-assign(
+Object.assign(
   ReactCompositeComponentWrapper.prototype,
   ReactCompositeComponent.Mixin,
   {

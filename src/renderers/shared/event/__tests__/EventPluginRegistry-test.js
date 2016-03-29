@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 
 describe('EventPluginRegistry', function() {
   var EventPluginRegistry;
@@ -22,7 +21,7 @@ describe('EventPluginRegistry', function() {
     EventPluginRegistry._resetEventPlugins();
 
     createPlugin = function(properties) {
-      return assign({extractEvents: function() {}}, properties);
+      return Object.assign({extractEvents: function() {}}, properties);
     };
   });
 

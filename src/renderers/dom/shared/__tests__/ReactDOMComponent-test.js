@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 
 describe('ReactDOMComponent', function() {
   var React;
@@ -623,7 +622,7 @@ describe('ReactDOMComponent', function() {
         this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
-      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
+      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -672,7 +671,7 @@ describe('ReactDOMComponent', function() {
         this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
-      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
+      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();

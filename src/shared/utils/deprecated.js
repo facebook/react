@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 var warning = require('warning');
 
 /**
@@ -48,7 +47,7 @@ function deprecated(fnName, newModule, newPackage, ctx, fn) {
     };
     // We need to make sure all properties of the original fn are copied over.
     // In particular, this is needed to support PropTypes
-    return assign(newFn, fn);
+    return Object.assign(newFn, fn);
   }
 
   return fn;

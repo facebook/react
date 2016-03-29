@@ -14,7 +14,6 @@
 var ReactChildren = require('ReactChildren');
 var ReactDOMSelect = require('ReactDOMSelect');
 
-var assign = require('Object.assign');
 var warning = require('warning');
 
 /**
@@ -59,7 +58,7 @@ var ReactDOMOption = {
   },
 
   getNativeProps: function(inst, props) {
-    var nativeProps = assign({selected: undefined, children: undefined}, props);
+    var nativeProps = Object.assign({selected: undefined, children: undefined}, props);
 
     // Read state only from initial mount because <select> updates value
     // manually; we need the initial state only for server rendering

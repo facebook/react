@@ -20,7 +20,6 @@ var ReactElementValidator = require('ReactElementValidator');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
-var assign = require('Object.assign');
 var onlyChild = require('onlyChild');
 
 var createElement = ReactElement.createElement;
@@ -68,7 +67,7 @@ var React = {
   version: ReactVersion,
 
   // Hook for JSX spread, don't use this for anything else.
-  __spread: assign,
+  __spread: Object.assign,
 };
 
 module.exports = React;

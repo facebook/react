@@ -13,7 +13,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 var keyOf = require('keyOf');
 var invariant = require('invariant');
 var hasOwnProperty = {}.hasOwnProperty;
@@ -22,7 +21,7 @@ function shallowCopy(x) {
   if (Array.isArray(x)) {
     return x.concat();
   } else if (x && typeof x === 'object') {
-    return assign(new x.constructor(), x);
+    return Object.assign(new x.constructor(), x);
   } else {
     return x;
   }
@@ -102,7 +101,7 @@ function update(value, spec) {
       COMMAND_MERGE,
       nextValue
     );
-    assign(nextValue, spec[COMMAND_MERGE]);
+    Object.assign(nextValue, spec[COMMAND_MERGE]);
   }
 
   if (hasOwnProperty.call(spec, COMMAND_PUSH)) {

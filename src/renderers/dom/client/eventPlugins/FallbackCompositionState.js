@@ -13,7 +13,6 @@
 
 var PooledClass = require('PooledClass');
 
-var assign = require('Object.assign');
 var getTextContentAccessor = require('getTextContentAccessor');
 
 /**
@@ -33,7 +32,7 @@ function FallbackCompositionState(root) {
   this._fallbackText = null;
 }
 
-assign(FallbackCompositionState.prototype, {
+Object.assign(FallbackCompositionState.prototype, {
   destructor: function() {
     this._root = null;
     this._startText = null;
