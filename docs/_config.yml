@@ -36,7 +36,7 @@ sass:
   sass_dir: _css
 gems:
 - jekyll-redirect-from
-react_version: 0.14.7
+react_version: 0.14.8
 react_hashes:
   dev: xQae1pUPdAKUe0u0KUTNt09zzdwheX4VSUsV8vatqM+t6X7rta01qOzessL808ox
   prod: zTm/dblzLXQNp3CgY+hfaC/WJ6h4XtNrePh2CW2+rO9GPuNiPb9jmthvAL+oI/dQ
