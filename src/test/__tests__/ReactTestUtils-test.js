@@ -474,6 +474,29 @@ describe('ReactTestUtils', function() {
     expect(handler).not.toHaveBeenCalled();
   });
 
+  it('should not warn when simulating events with extra properties', function() {
+    spyOn(console, 'error');
+
+    var CLIENT_X = 100;
+
+    var Component = React.createClass({
+      handleClick: function(e) {
+        expect(e.clientX).toBe(CLIENT_X);
+      },
+      render: function() {
+        return <div onClick={this.handleClick} />;
+      },
+    });
+
+    var element = document.createElement('div');
+    var instance = ReactDOM.render(<Component />, element);
+    ReactTestUtils.Simulate.click(
+      ReactDOM.findDOMNode(instance),
+      {clientX: CLIENT_X}
+    );
+    expect(console.error.calls.length).toBe(0);
+  });
+
   it('can scry with stateless components involved', function() {
     var Stateless = () => <div><hr /></div>;
     var SomeComponent = React.createClass({
