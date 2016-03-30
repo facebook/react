@@ -21,7 +21,6 @@ describe('ReactClass-spec', function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    spyOn(console, 'error');
   });
 
   it('should throw when `render` is not specified', function() {
@@ -60,76 +59,62 @@ describe('ReactClass-spec', function() {
   });
 
   it('should warn on invalid prop types', function() {
-    var warn = console.error;
-    console.error = jest.genMockFn();
-    try {
-
-      React.createClass({
-        displayName: 'Component',
-        propTypes: {
-          prop: null,
-        },
-        render: function() {
-          return <span>{this.props.prop}</span>;
-        },
-      });
-      expect(console.error.mock.calls.length).toBe(1);
-      expect(console.error.mock.calls[0][0]).toBe(
-        'Warning: Component: prop type `prop` is invalid; ' +
-        'it must be a function, usually from React.PropTypes.'
-      );
-    } finally {
-      console.error = warn;
-    }
+    spyOn(console, 'error');
+    React.createClass({
+      displayName: 'Component',
+      propTypes: {
+        prop: null,
+      },
+      render: function() {
+        return <span>{this.props.prop}</span>;
+      },
+    });
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Component: prop type `prop` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
   });
 
   it('should warn on invalid context types', function() {
-    var warn = console.error;
-    console.error = jest.genMockFn();
-    try {
-      React.createClass({
-        displayName: 'Component',
-        contextTypes: {
-          prop: null,
-        },
-        render: function() {
-          return <span>{this.props.prop}</span>;
-        },
-      });
-      expect(console.error.mock.calls.length).toBe(1);
-      expect(console.error.mock.calls[0][0]).toBe(
-        'Warning: Component: context type `prop` is invalid; ' +
-        'it must be a function, usually from React.PropTypes.'
-      );
-    } finally {
-      console.error = warn;
-    }
+    spyOn(console, 'error');
+    React.createClass({
+      displayName: 'Component',
+      contextTypes: {
+        prop: null,
+      },
+      render: function() {
+        return <span>{this.props.prop}</span>;
+      },
+    });
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Component: context type `prop` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
   });
 
   it('should throw on invalid child context types', function() {
-    var warn = console.error;
-    console.error = jest.genMockFn();
-    try {
-      React.createClass({
-        displayName: 'Component',
-        childContextTypes: {
-          prop: null,
-        },
-        render: function() {
-          return <span>{this.props.prop}</span>;
-        },
-      });
-      expect(console.error.mock.calls.length).toBe(1);
-      expect(console.error.mock.calls[0][0]).toBe(
-        'Warning: Component: child context type `prop` is invalid; ' +
-        'it must be a function, usually from React.PropTypes.'
-      );
-    } finally {
-      console.error = warn;
-    }
+    spyOn(console, 'error');
+    React.createClass({
+      displayName: 'Component',
+      childContextTypes: {
+        prop: null,
+      },
+      render: function() {
+        return <span>{this.props.prop}</span>;
+      },
+    });
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Component: child context type `prop` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
   });
 
   it('should warn when mispelling shouldComponentUpdate', function() {
+    spyOn(console, 'error');
+
     React.createClass({
       componentShouldUpdate: function() {
         return false;
@@ -163,6 +148,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should warn when mispelling componentWillReceiveProps', function() {
+    spyOn(console, 'error');
     React.createClass({
       componentWillRecieveProps: function() {
         return false;
@@ -204,6 +190,7 @@ describe('ReactClass-spec', function() {
   // TODO: Consider actually moving these to statics or drop this unit test.
 
   xit('should warn when using deprecated non-static spec keys', function() {
+    spyOn(console, 'error');
     React.createClass({
       mixins: [{}],
       propTypes: {
@@ -348,6 +335,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should throw when using legacy factories', function() {
+    spyOn(console, 'error');
     var Component = React.createClass({
       render() {
         return <div />;
@@ -355,7 +343,7 @@ describe('ReactClass-spec', function() {
     });
 
     expect(() => Component()).toThrow();
-    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
       'factory or JSX instead. See: https://fb.me/react-legacyfactory'

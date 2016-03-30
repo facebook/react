@@ -31,8 +31,6 @@ describe('ReactContextValidator', function() {
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
-
-    spyOn(console, 'error');
   });
 
   // TODO: This behavior creates a runtime dependency on propTypes. We should
@@ -133,6 +131,8 @@ describe('ReactContextValidator', function() {
   });
 
   it('should check context types', function() {
+    spyOn(console, 'error');
+
     var Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string.isRequired,
@@ -202,6 +202,8 @@ describe('ReactContextValidator', function() {
   });
 
   it('should check child context types', function() {
+    spyOn(console, 'error');
+
     var Component = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
