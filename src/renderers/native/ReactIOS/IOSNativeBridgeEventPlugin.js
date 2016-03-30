@@ -41,25 +41,21 @@ var IOSNativeBridgeEventPlugin = {
   eventTypes: merge(customBubblingEventTypes, customDirectEventTypes),
 
   /**
-   * @param {string} topLevelType Record from `EventConstants`.
-   * @param {DOMEventTarget} topLevelTarget The listening component root node.
-   * @param {string} topLevelTargetID ID of `topLevelTarget`.
-   * @param {object} nativeEvent Native browser event.
-   * @return {*} An accumulation of synthetic events.
    * @see {EventPluginHub.extractEvents}
    */
   extractEvents: function(
-    topLevelType: string,
-    topLevelTarget: EventTarget,
-    topLevelTargetID: string,
-    nativeEvent: Event
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
   ): ?Object {
     var bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     var directDispatchConfig = customDirectEventTypes[topLevelType];
     var event = SyntheticEvent.getPooled(
       bubbleDispatchConfig || directDispatchConfig,
-      topLevelTargetID,
-      nativeEvent
+      targetInst,
+      nativeEvent,
+      nativeEventTarget
     );
     if (bubbleDispatchConfig) {
       EventPropagators.accumulateTwoPhaseDispatches(event);

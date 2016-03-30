@@ -30,7 +30,9 @@ var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment')
 var ReactNativeGlobalInteractionHandler = require('ReactNativeGlobalInteractionHandler');
 var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
+var ReactNativeTreeTraversal = require('ReactNativeTreeTraversal');
 var ReactNativeComponent = require('ReactNativeComponent');
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 var ResponderEventPlugin = require('ResponderEventPlugin');
@@ -47,6 +49,8 @@ function inject() {
    * Inject module for resolving DOM hierarchy and plugin ordering.
    */
   EventPluginHub.injection.injectEventPluginOrder(IOSDefaultEventPluginOrder);
+  EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
+  EventPluginUtils.injection.injectTreeTraversal(ReactNativeTreeTraversal);
 
   ResponderEventPlugin.injection.injectGlobalResponderHandler(
     ReactNativeGlobalResponderHandler

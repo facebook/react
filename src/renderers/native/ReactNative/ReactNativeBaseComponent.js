@@ -13,6 +13,7 @@
 
 var NativeMethodsMixin = require('NativeMethodsMixin');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactMultiChild = require('ReactMultiChild');
@@ -57,6 +58,7 @@ ReactNativeBaseComponent.Mixin = {
   },
 
   unmountComponent: function() {
+    ReactNativeComponentTree.uncacheNode(this);
     deleteAllListeners(this._rootNodeID);
     this.unmountChildren();
     this._rootNodeID = null;
@@ -196,13 +198,14 @@ ReactNativeBaseComponent.Mixin = {
     );
 
     var nativeTopRootTag = nativeContainerInfo._tag;
-    console.log('mountInCmp', nativeContainerInfo, nativeTopRootTag);
     UIManager.createView(
       tag,
       this.viewConfig.uiViewClassName,
       nativeTopRootTag,
       updatePayload
     );
+
+    ReactNativeComponentTree.precacheNode(this, tag);
 
     this._registerListenersUponCreation(this._currentElement.props);
     this.initializeChildren(

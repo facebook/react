@@ -14,6 +14,7 @@
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var EventConstants = require('EventConstants');
 
@@ -112,15 +113,15 @@ var ReactNativeEventEmitter = merge(ReactEventEmitterMixin, {
    * @param {object} nativeEventParam Object passed from native.
    */
   _receiveRootNodeIDEvent: function(
-    rootNodeID: ?string,
+    rootNodeID: number,
     topLevelType: string,
     nativeEventParam: Object
   ) {
     var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
+    var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
     ReactNativeEventEmitter.handleTopLevel(
       topLevelType,
-      rootNodeID,
-      rootNodeID,
+      inst,
       nativeEvent,
       nativeEvent.target
     );

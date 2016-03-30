@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
 
@@ -43,6 +44,9 @@ Object.assign(ReactNativeTextComponent.prototype, {
       nativeTopRootTag,
       {text: this._stringText}
     );
+
+    ReactNativeComponentTree.precacheNode(this, tag);
+
     return tag;
   },
 
@@ -56,7 +60,6 @@ Object.assign(ReactNativeTextComponent.prototype, {
       var nextStringText = '' + nextText;
       if (nextStringText !== this._stringText) {
         this._stringText = nextStringText;
-        console.log('receiveComponent', this, this._rootNodeID);
         UIManager.updateView(
           this._rootNodeID,
           'RCTRawText',
@@ -67,6 +70,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
   },
 
   unmountComponent: function() {
+    ReactNativeComponentTree.uncacheNode(this);
     this._currentElement = null;
     this._stringText = null;
     this._rootNodeID = null;
