@@ -369,7 +369,7 @@ function createSymbolTypeChecker() {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol
     if ((propType !== 'symbol') && (propValue['@@toStringTag'] !== 'Symbol')) {
       return new Error(
-        `Invalid ${locationName} \`${propFullName}\` of type \`${propType}\` ` +
+        `Invalid ${location} \`${propFullName}\` of type \`${propType}\` ` +
         `supplied to \`${componentName}\`, expected \`symbol\`.`
       );
     }
