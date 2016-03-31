@@ -83,6 +83,7 @@ var ReactPropTypes = {
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
   shape: createShapeTypeChecker,
+  symbol: createSymbolTypeChecker(),
 };
 
 /**
@@ -358,6 +359,26 @@ function createShapeTypeChecker(shapeTypes) {
   }
   return createChainableTypeChecker(validate);
 }
+
+function createSymbolTypeChecker() {
+  function validate(props, propName, componentName, location, propFullName) {
+    var propValue = props[propName];
+    var propType = getPropType(propValue)
+
+    // If it behaves like a Symbol, it is a Symbol.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol
+    if ((propType !== 'symbol') && (propValue['@@toStringTag'] !== 'Symbol')) {
+      return new Error(
+        `Invalid ${locationName} \`${propFullName}\` of type \`${propType}\` ` +
+        `supplied to \`${componentName}\`, expected \`symbol\`.`
+      );
+    }
+
+    return null;
+  }
+  return createChainableTypeChecker(validate);
+}
+
 
 function isNode(propValue) {
   switch (typeof propValue) {
