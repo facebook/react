@@ -363,7 +363,7 @@ function createShapeTypeChecker(shapeTypes) {
 function createSymbolTypeChecker() {
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
-    var propType = getPropType(propValue)
+    var propType = getPropType(propValue);
 
     // If it behaves like a Symbol, it is a Symbol.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol
