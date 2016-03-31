@@ -419,6 +419,12 @@ function getPropType(propValue) {
     // passes PropTypes.object.
     return 'object';
   }
+  if (propType === 'function' && typeof Symbol === 'function' &&
+      propValue instanceof Symbol) {
+    // ES6 polyfills will return 'function' rather than 'symbol' for typeof a
+    // Symbol.
+    return 'symbol';
+  }
   return propType;
 }
 
