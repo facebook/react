@@ -18,7 +18,7 @@ describe('ReactDOMProduction', function() {
   var ReactDOM;
 
   beforeEach(function() {
-    __DEV__ = true;
+    __DEV__ = false;
     oldProcess = process;
     global.process = {env: {NODE_ENV: 'production'}};
 
@@ -28,7 +28,7 @@ describe('ReactDOMProduction', function() {
   });
 
   afterEach(function() {
-    __DEV__ = false;
+    __DEV__ = true;
     global.process = oldProcess;
   });
 
