@@ -168,12 +168,14 @@ var newValueProp = {
   },
 };
 
-/**
- * (For IE <=11) Starts tracking propertychange events on the passed-in element
- * and override the value property so that we can distinguish user events from
- * value changes in JS.
- */
-function startWatchingForValueChange(target, targetInst) {
+function clearActiveElement() {
+  activeElement = null;
+  activeElementInst = null;
+  activeElementValue = null;
+  activeElementValueProp = null;
+}
+
+function updateActiveElement(target, targetInst) {
   activeElement = target;
   activeElementInst = targetInst;
   activeElementValue = target.value;
@@ -181,6 +183,15 @@ function startWatchingForValueChange(target, targetInst) {
     target.constructor.prototype,
     'value'
   );
+}
+
+/**
+ * (For IE <=11) Starts tracking propertychange events on the passed-in element
+ * and override the value property so that we can distinguish user events from
+ * value changes in JS.
+ */
+function startWatchingForValueChange(target, targetInst) {
+  updateActiveElement(target, targetInst);
 
   // Not guarded in a canDefineProperty check: IE8 supports defineProperty only
   // on DOM elements
@@ -210,10 +221,7 @@ function stopWatchingForValueChange() {
     activeElement.removeEventListener('propertychange', handlePropertyChange, false);
   }
 
-  activeElement = null;
-  activeElementInst = null;
-  activeElementValue = null;
-  activeElementValueProp = null;
+  clearActiveElement();
 }
 
 /**
@@ -322,6 +330,57 @@ function getTargetInstForClickEvent(
 }
 
 /**
+ * Some input types fire input and change events inconsistently across browsers
+ * in those cases, listen for both events and deduplicate them
+ * when necessary.
+ */
+function shouldUseInputAndChangeEvents(elem) {
+  return (
+    (elem.nodeName && elem.nodeName.toLowerCase() === 'input') &&
+    elem.type === 'range'
+  );
+}
+
+function getTargetInstOfInputOrChangeEvent(
+  topLevelType,
+  targetInst
+) {
+  var inst;
+
+  if (
+    topLevelType === topLevelTypes.topInput ||
+    topLevelType === topLevelTypes.topChange
+  ) {
+    var target = targetInst ?
+      ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
+
+    var value = target.value;
+
+    if (value !== activeElementValue) {
+      inst = (
+        getTargetInstForChangeEvent(topLevelType, targetInst) ||
+        getTargetInstForInputEvent(topLevelType, targetInst)
+      );
+      activeElementValue = value;
+    }
+  }
+
+  return inst;
+}
+
+function trackActiveElement(
+  topLevelType,
+  target,
+  targetInst
+) {
+  if (topLevelType === topLevelTypes.topFocus) {
+    updateActiveElement(target, targetInst);
+  } else if (topLevelType === topLevelTypes.topBlur) {
+    clearActiveElement();
+  }
+}
+
+/**
  * This plugin creates an `onChange` event that normalizes change events
  * across form elements. This event fires at a time when it's possible to
  * change the element's value without seeing a flicker.
@@ -351,6 +410,9 @@ var ChangeEventPlugin = {
       } else {
         handleEventFunc = handleEventsForChangeEventIE8;
       }
+    } else if (shouldUseInputAndChangeEvents(targetNode)) {
+      getTargetInstFunc = getTargetInstOfInputOrChangeEvent;
+      handleEventFunc = trackActiveElement;
     } else if (isTextInputElement(targetNode)) {
       if (isInputEventSupported) {
         getTargetInstFunc = getTargetInstForInputEvent;
