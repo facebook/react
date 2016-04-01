@@ -1281,5 +1281,14 @@ describe('ReactDOMComponent', function() {
       ReactTestUtils.renderIntoDocument(<div onFocusOut={() => {}} />);
       expect(console.error.argsForCall.length).toBe(2);
     });
+
+    it('gives source code refs for unknown property warnings', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
+      ReactDOMServer.renderToString(<div class="muffins"/>);
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toMatch(/.*\(.*:\d+\)/);
+      expect(console.error.argsForCall[1][0]).toMatch(/.*\(.*:\d+\)/);
+    });
   });
 });

@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -158,6 +159,10 @@ function instantiateReactComponent(node) {
     if (Object.preventExtensions) {
       Object.preventExtensions(instance);
     }
+  }
+
+  if (__DEV__) {
+    ReactDOMInstrumentation.debugTool.onInstantiateReactComponent(instance);
   }
 
   return instance;
