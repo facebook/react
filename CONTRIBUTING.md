@@ -68,6 +68,11 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 * IRC - [#reactjs on freenode](https://webchat.freenode.net/?channels=reactjs)
 * Discussion forum - [discuss.reactjs.org](https://discuss.reactjs.org/)
 
+## Meeting Notes
+
+React team meets once a week to discuss the development of React, future plans, and priorities.  
+You can find the meeting notes in a [dedicated repository](https://github.com/reactjs/core-notes/).
+
 ## Style Guide
 
 Our linter will catch most styling issues that may exist in your code.
