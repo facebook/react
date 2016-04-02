@@ -92,9 +92,8 @@ describe('ReactTransitionGroup', function() {
     });
   });
 
-  it('should handle enter/leave/enter/leave correctly', function() {
+  it('should handle enter/leave/enter/leave correctly when able to complete transitions', function() {
     var log = [];
-    var willEnterCb;
 
     var Child = React.createClass({
       componentDidMount: function() {
@@ -102,7 +101,7 @@ describe('ReactTransitionGroup', function() {
       },
       componentWillEnter: function(cb) {
         log.push('willEnter');
-        willEnterCb = cb;
+        cb();
       },
       componentDidEnter: function() {
         log.push('didEnter');
@@ -137,24 +136,34 @@ describe('ReactTransitionGroup', function() {
 
     var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
+
     instance.setState({count: 2});
-    expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var k = 0; k < 5; k++) {
-      instance.setState({count: 2});
-      expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-      instance.setState({count: 1});
-    }
-    // other animations are blocked until willEnterCb is called
-    willEnterCb();
+    expect(log).toEqual(['didMount', 'didMount', 'willEnter', 'didEnter']);
+
+    instance.setState({count: 1});
     expect(log).toEqual([
-      'didMount', 'didMount', 'willEnter',
-      'didEnter', 'willLeave', 'didLeave', 'willUnmount',
+      'didMount', 'didMount', 'willEnter', 'didEnter', 
+      'willLeave', 'didLeave', 'willUnmount',
+    ]);
+
+    instance.setState({count: 2});
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 'didEnter', 
+      'willLeave', 'didLeave', 'willUnmount',
+      'didMount', 'willEnter', 'didEnter',
+    ]);
+
+    instance.setState({count: 1});
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 'didEnter', 
+      'willLeave', 'didLeave', 'willUnmount',
+      'didMount', 'willEnter', 'didEnter',
+      'willLeave', 'didLeave', 'willUnmount',
     ]);
   });
 
-  it('should handle enter/leave/enter correctly', function() {
+  it('should handle enter/leave/enter/leave correctly when unable to complete enter transition', function() {
     var log = [];
-    var willEnterCb;
 
     var Child = React.createClass({
       componentDidMount: function() {
@@ -162,7 +171,7 @@ describe('ReactTransitionGroup', function() {
       },
       componentWillEnter: function(cb) {
         log.push('willEnter');
-        willEnterCb = cb;
+        // no callback (this animation didn't have time to complete)
       },
       componentDidEnter: function() {
         log.push('didEnter');
@@ -197,16 +206,110 @@ describe('ReactTransitionGroup', function() {
 
     var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
+
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var k = 0; k < 5; k++) {
-      instance.setState({count: 1});
-      expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-      instance.setState({count: 2});
-    }
-    willEnterCb();
+
+    instance.setState({count: 1});
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 
+      'willLeave', 'didLeave', 'willUnmount',
+    ]);
+
+    instance.setState({count: 2});
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 
+      'willLeave', 'didLeave', 'willUnmount',
+      'didMount', 'willEnter',
+    ]);
+
+    instance.setState({count: 1});
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 
+      'willLeave', 'didLeave', 'willUnmount',
+      'didMount', 'willEnter',
+      'willLeave', 'didLeave', 'willUnmount',
+    ]);
+  });
+
+  it('should handle enter/leave/enter/leave correctly when unable to complete leave transition', function() {
+    var log = [];
+    var leaveCB;
+
+    var Child = React.createClass({
+      componentDidMount: function() {
+        log.push('didMount');
+      },
+      componentWillEnter: function(cb) {
+        log.push('willEnter');
+        cb();
+      },
+      componentDidEnter: function() {
+        log.push('didEnter');
+      },
+      componentWillLeave: function(cb) {
+        log.push('willLeave');
+        // no callback (this animation didn't have time to complete)
+        leaveCB = cb;
+      },
+      componentDidLeave: function() {
+        log.push('didLeave');
+      },
+      componentWillUnmount: function() {
+        log.push('willUnmount');
+      },
+      render: function() {
+        return <span />;
+      },
+    });
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {count: 1};
+      },
+      render: function() {
+        var children = [];
+        for (var i = 0; i < this.state.count; i++) {
+          children.push(<Child key={i} />);
+        }
+        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+      },
+    });
+
+    var instance = ReactDOM.render(<Component />, container);
+    expect(log).toEqual(['didMount']);
+    instance.setState({count: 2});
+    expect(log).toEqual(['didMount', 'didMount', 'willEnter', 'didEnter']);
+
+    instance.setState({count: 1});
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter', 'didEnter',
+      'willLeave',
+    ]);
+
+    instance.setState({count: 2});
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 'didEnter',
+      'willLeave', 
+      'willEnter', 'didEnter',
+    ]);
+
+    instance.setState({count: 1});
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 'didEnter',
+      'willLeave', 
+      'willEnter', 'didEnter',
+      'willLeave',
+    ]);
+
+    leaveCB(); // Leave given enough time to complete
+
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 'didEnter',
+      'willLeave', 
+      'willEnter', 'didEnter',
+      'willLeave',
+      'didLeave', 'willUnmount',
     ]);
   });
 
