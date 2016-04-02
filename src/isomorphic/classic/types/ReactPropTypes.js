@@ -66,25 +66,52 @@ var getIteratorFn = require('getIteratorFn');
 
 var ANONYMOUS = '<<anonymous>>';
 
-var ReactPropTypes = {
-  array: createPrimitiveTypeChecker('array'),
-  bool: createPrimitiveTypeChecker('boolean'),
-  func: createPrimitiveTypeChecker('function'),
-  number: createPrimitiveTypeChecker('number'),
-  object: createPrimitiveTypeChecker('object'),
-  string: createPrimitiveTypeChecker('string'),
-  symbol: createPrimitiveTypeChecker('symbol'),
+if (__DEV__) {
+  var ReactPropTypes = {
+    array: createPrimitiveTypeChecker('array'),
+    bool: createPrimitiveTypeChecker('boolean'),
+    func: createPrimitiveTypeChecker('function'),
+    number: createPrimitiveTypeChecker('number'),
+    object: createPrimitiveTypeChecker('object'),
+    string: createPrimitiveTypeChecker('string'),
+    symbol: createPrimitiveTypeChecker('symbol'),
 
-  any: createAnyTypeChecker(),
-  arrayOf: createArrayOfTypeChecker,
-  element: createElementTypeChecker(),
-  instanceOf: createInstanceTypeChecker,
-  node: createNodeChecker(),
-  objectOf: createObjectOfTypeChecker,
-  oneOf: createEnumTypeChecker,
-  oneOfType: createUnionTypeChecker,
-  shape: createShapeTypeChecker,
-};
+    any: createAnyTypeChecker(),
+    arrayOf: createArrayOfTypeChecker,
+    element: createElementTypeChecker(),
+    instanceOf: createInstanceTypeChecker,
+    node: createNodeChecker(),
+    objectOf: createObjectOfTypeChecker,
+    oneOf: createEnumTypeChecker,
+    oneOfType: createUnionTypeChecker,
+    shape: createShapeTypeChecker,
+  };
+} else {
+  var noopTypeChecker = () => null;
+  noopTypeChecker.isRequired = noopTypeChecker;
+  function getNoopTypeChecker() {
+    return noopTypeChecker;
+  }
+  var ReactPropTypes = {
+    array: getNoopTypeChecker(),
+    bool: getNoopTypeChecker(),
+    func: getNoopTypeChecker(),
+    number: getNoopTypeChecker(),
+    object: getNoopTypeChecker(),
+    string: getNoopTypeChecker(),
+    symbol: getNoopTypeChecker(),
+
+    any: getNoopTypeChecker(),
+    arrayOf: getNoopTypeChecker,
+    element: getNoopTypeChecker(),
+    instanceOf: getNoopTypeChecker,
+    node: getNoopTypeChecker(),
+    objectOf: getNoopTypeChecker,
+    oneOf: getNoopTypeChecker,
+    oneOfType: getNoopTypeChecker,
+    shape: getNoopTypeChecker,
+  };
+}
 
 /**
  * inlined Object.is polyfill to avoid requiring consumers ship their own
