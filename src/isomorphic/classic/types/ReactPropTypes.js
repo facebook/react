@@ -408,23 +408,19 @@ function isNode(propValue) {
 }
 
 function isSymbol(propType, propValue) {
+  // Native Symbol.
   if (propType === 'symbol') {
-    return true; // This is a native Symbol.
+    return true;
   }
 
-  if (typeof Symbol === 'undefined') {
-    // No Symbol is available in the global namespace.
-    // We need to check if it has some spec-defined method (duck typing).
+  // 19.4.3.5 Symbol.prototype[@@toStringTag] === 'Symbol'
+  if (propValue['@@toStringTag'] === 'Symbol') {
+    return true;
+  }
 
-    if (propValue['@@toStringTag'] === 'Symbol') {
-      return true;
-    }
-
-    if (propValue.__key__ && propValue.prototype.__key__ === undefined) {
-      return propValue.toString() === 'Symbol'
-    }
-  } else {
-    return propValue instanceof Symbol; // This is a polyfilled Symbol.
+  // Fallback for non-spec compliant Symbols which are polyfilled.
+  if (typeof Symbol !== 'undefined' && propValue instanceof Symbol) {
+    return true;
   }
 
   return false;
