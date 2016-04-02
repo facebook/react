@@ -291,4 +291,24 @@ describe('ReactCSSTransitionGroup', function() {
     // Testing that no exception is thrown here, as the timeout has been cleared.
     jest.runAllTimers();
   });
+
+  it('should warn if some children do not have the key specified', function() {
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={true}
+        transitionLeaveTimeout={0}
+      >
+        <span key="one" id="one" />
+        <span id="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'You must provide the key attribute for all children of ReactCSSTransitionGroup'
+    );
+  });
 });

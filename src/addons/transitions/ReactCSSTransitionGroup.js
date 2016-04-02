@@ -14,6 +14,7 @@
 var React = require('React');
 
 var assign = require('Object.assign');
+var warning = require('warning');
 
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
@@ -63,6 +64,26 @@ var ReactCSSTransitionGroup = React.createClass({
       transitionEnter: true,
       transitionLeave: true,
     };
+  },
+
+  componentWillMount() {
+    if (__DEV__) {
+      if (this.props.children) {
+        var allChildrenHaveKeys = true;
+        React.Children.forEach(this.props.children, function(child) {
+          if (child != null && child.key == null) {
+            allChildrenHaveKeys = false;
+          }
+        });
+        warning(
+          allChildrenHaveKeys,
+          'You must provide the key attribute for all children of ' +
+          'ReactCSSTransitionGroup, even when only rendering a single item. ' +
+          'This is how React will determine which children have entered, ' +
+          'left, or stayed.'
+        );
+      }
+    }
   },
 
   _wrapChild: function(child) {
