@@ -70,9 +70,26 @@ React.createClass({
     // won't work inside `oneOfType`.
     customProp: function(props, propName, componentName) {
       if (!/matchme/.test(props[propName])) {
-        return new Error('Validation failed!');
+        return new Error(
+          'Invalid prop `' + propName + '` supplied to' +
+          ' `' + componentName + '`. Validation failed.'
+        );
       }
-    }
+    },
+
+    // You can also supply a custom validator to `arrayOf` and `objectOf`.
+    // It should return an Error object if the validation fails. The validator
+    // will be called for each key in the array or object. The first two
+    // arguments of the validator are the array or object itself, and the
+    // current item's key.
+    customArrayProp: React.PropTypes.arrayOf(function(propValue, key, componentName, location, propFullName) {
+      if (!/matchme/.test(propValue[key])) {
+        return new Error(
+          'Invalid prop `' + propFullName + '` supplied to' +
+          ' `' + componentName + '`. Validation failed.'
+        );
+      }
+    })
   },
   /* ... */
 });
