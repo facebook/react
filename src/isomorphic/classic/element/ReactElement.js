@@ -12,7 +12,7 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-
+var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var assign = require('Object.assign');
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
@@ -146,6 +146,11 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
+  if(__DEV__) {
+    for (propName in config) {
+      ReactDOMInstrumentation.debugTool.onCreateElement(propName);
+    }
+  }
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
   var childrenLength = arguments.length - 2;
