@@ -65,46 +65,15 @@ var ReactDOMTextarea = {
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
     );
 
-    var value = LinkedValueUtils.getValue(props);
-
-    // only bother fetching default value if we're going to use it
-    if (value == null) {
-      var defaultValue = props.defaultValue;
-      // TODO (yungsters): Remove support for children content in <textarea>.
-      var children = props.children;
-      if (children != null) {
-        if (__DEV__) {
-          warning(
-            false,
-            'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.'
-          );
-        }
-        invariant(
-          defaultValue == null,
-          'If you supply `defaultValue` on a <textarea>, do not pass children.'
-        );
-        if (Array.isArray(children)) {
-          invariant(
-            children.length <= 1,
-            '<textarea> can only have at most one child.'
-          );
-          children = children[0];
-        }
-
-        defaultValue = '' + children;
-      }
-      if (defaultValue == null) {
-        defaultValue = '';
-      }
-    }
-
-    // The value can be a boolean or object so that's why it's
-    // forced to be a string.
-    var nativeProps = Object.assign({}, DisabledInputUtils.getHostProps(inst, props), {
-      defaultValue: '' + (value != null ? value : defaultValue),
+    // Always set children to the same thing. In IE9, the selection range will
+    // get reset if `textContent` is mutated.  We could add a check in setTextContent
+    // to only set the value if/when the value differs from the node value (which would
+    // completely solve this IE9 bug), but Sebastian+Ben seemed to like this solution.
+    // The value can be a boolean or object so that's why it's forced to be a string.
+    var hostProps = Object.assign({}, DisabledInputUtils.getHostProps(inst, props), {
       value: undefined,
-      children: undefined,
+      defaultValue: undefined,
+      children: '' + inst._wrapperState.initialValue,
       onChange: inst._wrapperState.onChange,
     });
 
@@ -143,7 +112,45 @@ var ReactDOMTextarea = {
       warnIfValueIsNull(props);
     }
 
+
+    var value = LinkedValueUtils.getValue(props);
+    var initialValue = value;
+
+    // Only bother fetching default value if we're going to use it
+    if (value == null) {
+      var defaultValue = props.defaultValue;
+      // TODO (yungsters): Remove support for children content in <textarea>.
+      var children = props.children;
+      if (children != null) {
+        if (__DEV__) {
+          warning(
+            false,
+            'Use the `defaultValue` or `value` props instead of setting ' +
+            'children on <textarea>.'
+          );
+        }
+        invariant(
+          defaultValue == null,
+          'If you supply `defaultValue` on a <textarea>, do not pass children.'
+        );
+        if (Array.isArray(children)) {
+          invariant(
+            children.length <= 1,
+            '<textarea> can only have at most one child.'
+          );
+          children = children[0];
+        }
+
+        defaultValue = '' + children;
+      }
+      if (defaultValue == null) {
+        defaultValue = '';
+      }
+      initialValue = defaultValue;
+    }
+
     inst._wrapperState = {
+      initialValue: '' + initialValue,
       listeners: null,
       onChange: _handleChange.bind(inst),
     };
@@ -156,10 +163,9 @@ var ReactDOMTextarea = {
       warnIfValueIsNull(props);
     }
 
+    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
-      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
       var newValue = '' + value;
@@ -168,7 +174,20 @@ var ReactDOMTextarea = {
       if (newValue !== node.value) {
         node.value = newValue;
       }
+      if (props.defaultValue == null) {
+        node.defaultValue = newValue;
+      }
     }
+    if (props.defaultValue != null) {
+      node.defaultValue = props.defaultValue;
+    }
+  },
+
+  postMountWrapper: function(inst) {
+    // This is in postMount because we need access to the DOM node, which is not
+    // available until after the component has mounted.
+    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+    node.value = node.value; // Detach value from defaultValue
   },
 };
 

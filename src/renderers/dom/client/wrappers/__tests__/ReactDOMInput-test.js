@@ -18,6 +18,7 @@ describe('ReactDOMInput', function() {
   var EventConstants;
   var React;
   var ReactDOM;
+  var ReactDOMServer;
   var ReactDOMFeatureFlags;
   var ReactLink;
   var ReactTestUtils;
@@ -35,6 +36,7 @@ describe('ReactDOMInput', function() {
     EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
@@ -76,7 +78,8 @@ describe('ReactDOMInput', function() {
 
     ReactDOM.render(<input type="text" defaultValue="1" />, container);
 
-    expect(node.value).toBe('1');
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('1');
   });
 
   it('should take `defaultValue` when changing to uncontrolled input', function() {
@@ -88,7 +91,24 @@ describe('ReactDOMInput', function() {
 
     ReactDOM.render(<input type="text" defaultValue="1" />, container);
 
-    expect(node.value).toBe('1');
+    expect(node.value).toBe('0');
+  });
+
+  it('should render defaultValue for SSR', function() {
+    var markup = ReactDOMServer.renderToString(<input type="text" defaultValue="1" />);
+    var div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('value')).toBe('1');
+    expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
+  });
+
+  it('should render value for SSR', function() {
+    var element = <input type="text" value="1" onChange={function() {}} />;
+    var markup = ReactDOMServer.renderToString(element);
+    var div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('value')).toBe('1');
+    expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
   });
 
   it('should display "foobar" for `defaultValue` of `objToString`', function() {
@@ -165,7 +185,7 @@ describe('ReactDOMInput', function() {
     ReactDOM.render(<input value="a" />, container);
 
     var node = container.firstChild;
-    var nodeValue = 'a'; // node.value always returns undefined
+    var nodeValue = 'a';
     var nodeValueSetter = jest.genMockFn();
     Object.defineProperty(node, 'value', {
       get: function() {
@@ -444,6 +464,13 @@ describe('ReactDOMInput', function() {
 
   });
 
+  it('should update defaultValue to empty string', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<input type="text" defaultValue={'foo'} />, container);
+    ReactDOM.render(<input type="text" defaultValue={''} />, container);
+    expect(container.firstChild.defaultValue).toBe('');
+  });
+
   it('should throw if both checkedLink and valueLink are provided', function() {
     var node = document.createElement('div');
     var link = new ReactLink(true, jest.fn());
@@ -663,6 +690,11 @@ describe('ReactDOMInput', function() {
       'set data-reactroot',
       'set type',
       'set value',
+      'set value',
+      'set name',
+      'set checked',
+      'set checked',
+      'set name',
     ]);
   });
 

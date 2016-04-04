@@ -76,7 +76,7 @@ var ReactDOMInput = {
     }, DisabledInputUtils.getHostProps(inst, props), {
       defaultChecked: undefined,
       defaultValue: undefined,
-      value: value != null ? value : props.defaultValue,
+      value: value != null ? value : inst._wrapperState.initialValue,
       checked: checked != null ? checked : inst._wrapperState.initialChecked,
       onChange: inst._wrapperState.onChange,
     });
@@ -147,8 +147,10 @@ var ReactDOMInput = {
       warnIfValueIsNull(props);
     }
 
+    var defaultValue = props.defaultValue;
     inst._wrapperState = {
-      initialChecked: props.defaultChecked || false,
+      initialChecked: props.checked != null ? props.checked : props.defaultChecked,
+      initialValue: props.value != null ? props.value : defaultValue,
       listeners: null,
       onChange: _handleChange.bind(inst),
     };
@@ -164,13 +166,12 @@ var ReactDOMInput = {
     if (__DEV__) {
       warnIfValueIsNull(props);
 
-      var initialValue = inst._wrapperState.initialChecked || inst._wrapperState.initialValue;
       var defaultValue = props.defaultChecked || props.defaultValue;
       var controlled = props.checked !== undefined || props.value !== undefined;
       var owner = inst._currentElement._owner;
 
       if (
-        (initialValue || !inst._wrapperState.controlled) &&
+        !inst._wrapperState.controlled &&
         controlled && !didWarnUncontrolledToControlled
       ) {
         warning(
@@ -212,9 +213,9 @@ var ReactDOMInput = {
       );
     }
 
+    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
-      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
 
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
@@ -224,7 +225,32 @@ var ReactDOMInput = {
       if (newValue !== node.value) {
         node.value = newValue;
       }
+    } else {
+      if (props.value == null && props.defaultValue != null) {
+        node.defaultValue = '' + props.defaultValue;
+      }
+      if (props.checked == null && props.defaultChecked != null) {
+        node.defaultChecked = !!props.defaultChecked;
+      }
     }
+  },
+
+  postMountWrapper: function(inst) {
+    // This is in postMount because we need access to the DOM node, which is not
+    // available until after the component has mounted.
+    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+    node.value = node.value; // Detach value from defaultValue
+
+    // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
+    // this is needed to work around a chrome bug where setting defaultChecked
+    // will sometimes influence the value of checked (even after detachment).
+    // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
+    // We need to temporarily unset name to avoid disrupting radio button groups.
+    var name = node.name;
+    node.name = undefined;
+    node.defaultChecked = !node.defaultChecked;
+    node.defaultChecked = !node.defaultChecked;
+    node.name = name;
   },
 };
 
