@@ -25,7 +25,6 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
-var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -396,7 +395,7 @@ NoopInternalComponent.prototype = {
 var ShallowComponentWrapper = function(element) {
   this.construct(element);
 };
-assign(
+Object.assign(
   ShallowComponentWrapper.prototype,
   ReactCompositeComponent.Mixin, {
     _instantiateReactComponent: function(element) {
@@ -499,7 +498,7 @@ function makeSimulator(eventType) {
       fakeNativeEvent,
       node
     );
-    assign(event, eventData);
+    Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
       EventPropagators.accumulateTwoPhaseDispatches(event);
@@ -560,7 +559,7 @@ buildSimulators();
 function makeNativeSimulator(eventType) {
   return function(domComponentOrNode, nativeEventData) {
     var fakeNativeEvent = new Event(eventType);
-    assign(fakeNativeEvent, nativeEventData);
+    Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
         eventType,

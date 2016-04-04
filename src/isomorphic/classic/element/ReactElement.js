@@ -13,7 +13,6 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
-var assign = require('Object.assign');
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
 
@@ -253,7 +252,7 @@ ReactElement.cloneElement = function(element, config, children) {
   var propName;
 
   // Original props are copied
-  var props = assign({}, element.props);
+  var props = Object.assign({}, element.props);
 
   // Reserved names are extracted
   var key = element.key;

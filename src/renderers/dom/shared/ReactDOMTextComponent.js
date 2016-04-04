@@ -16,7 +16,6 @@ var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactPerf = require('ReactPerf');
 
-var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var validateDOMNesting = require('validateDOMNesting');
@@ -51,7 +50,7 @@ var ReactDOMTextComponent = function(text) {
   this._commentNodes = null;
 };
 
-assign(ReactDOMTextComponent.prototype, {
+Object.assign(ReactDOMTextComponent.prototype, {
 
   /**
    * Creates the markup for this text node. This node is not intended to have

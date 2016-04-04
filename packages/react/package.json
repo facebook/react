@@ -24,7 +24,8 @@
   },
   "dependencies": {
     "fbjs": "^0.8.0-alpha.2",
-    "loose-envify": "^1.1.0"
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.0.1"
   },
   "browserify": {
     "transform": [

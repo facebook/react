@@ -15,7 +15,6 @@
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 
 function reactComponentExpect(instance) {
@@ -47,7 +46,7 @@ function reactComponentExpectInternal(internalInstance) {
   this._instance = internalInstance;
 }
 
-assign(reactComponentExpectInternal.prototype, {
+Object.assign(reactComponentExpectInternal.prototype, {
   // Getters -------------------------------------------------------------------
 
   /**

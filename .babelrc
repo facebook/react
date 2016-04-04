@@ -20,6 +20,7 @@
     "transform-es2015-block-scoping",
     "transform-es2015-modules-commonjs",
     "transform-es3-member-expression-literals",
-    "transform-es3-property-literals"
+    "transform-es3-property-literals",
+    "./scripts/babel/transform-object-assign-require"
   ]
 }

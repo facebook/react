@@ -13,7 +13,6 @@
 
 var PooledClass = require('PooledClass');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 
 /**
@@ -32,7 +31,7 @@ function CallbackQueue() {
   this._contexts = null;
 }
 
-assign(CallbackQueue.prototype, {
+Object.assign(CallbackQueue.prototype, {
 
   /**
    * Enqueues a callback to be invoked when `notifyAll` is invoked.

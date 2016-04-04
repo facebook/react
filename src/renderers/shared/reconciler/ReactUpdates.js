@@ -18,7 +18,6 @@ var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 
 var dirtyComponents = [];
@@ -74,7 +73,7 @@ function ReactUpdatesFlushTransaction() {
   );
 }
 
-assign(
+Object.assign(
   ReactUpdatesFlushTransaction.prototype,
   Transaction.Mixin,
   {

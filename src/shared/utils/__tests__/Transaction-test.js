@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 
 var Transaction;
 
@@ -46,7 +45,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WON'T be set to something else
     };
-    assign(TestTransaction.prototype, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -97,7 +96,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
-    assign(TestTransaction.prototype, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -158,7 +157,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
-    assign(TestTransaction.prototype, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     // Now, none of the close/inits throw, but the operation we wrap will throw.
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
@@ -222,7 +221,7 @@ describe('Transaction', function() {
     var TestTransaction = function() {
       this.reinitializeTransaction();
     };
-    assign(TestTransaction.prototype, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     var exceptionMsg = 'This exception should throw.';
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
@@ -251,7 +250,7 @@ describe('Transaction', function() {
       this.reinitializeTransaction();
       this.firstCloseParam = INIT_ERRORED; // WILL be set to something else
     };
-    assign(TestTransaction.prototype, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -279,7 +278,7 @@ describe('Transaction', function() {
     var NestedTransaction = function() {
       this.reinitializeTransaction();
     };
-    assign(NestedTransaction.prototype, Transaction.Mixin);
+    Object.assign(NestedTransaction.prototype, Transaction.Mixin);
     NestedTransaction.prototype.getTransactionWrappers = function() {
       return [
         {

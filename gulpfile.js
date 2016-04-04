@@ -30,7 +30,15 @@ var paths = {
 
 var babelOpts = {
   plugins: [
-    [babelPluginModules, { map: require('fbjs/module-map') }],
+    [babelPluginModules, {
+      map: Object.assign(
+        {},
+        require('fbjs/module-map'),
+        {
+          'object-assign': 'object-assign',
+        }
+      ),
+    }],
   ],
 };
 

@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 var warning = require('warning');
 
@@ -76,7 +75,7 @@ if (__DEV__) {
   };
 
   var updatedAncestorInfo = function(oldInfo, tag, instance) {
-    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfo);
+    var ancestorInfo = Object.assign({}, oldInfo || emptyAncestorInfo);
     var info = {tag: tag, instance: instance};
 
     if (inScopeTags.indexOf(tag) !== -1) {

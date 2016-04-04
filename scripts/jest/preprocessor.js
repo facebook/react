@@ -27,7 +27,15 @@ var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
 // TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
   plugins: [
-    [babelPluginModules, { map: moduleMap }],
+    [babelPluginModules, {
+      map: Object.assign(
+        {},
+        moduleMap,
+        {
+          'object-assign': 'object-assign',
+        }
+      ),
+    }],
   ],
   retainLines: true,
 };
