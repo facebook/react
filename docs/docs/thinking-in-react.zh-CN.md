@@ -8,7 +8,7 @@ redirect_from: 'blog/2013/11/05/thinking-in-react.html'
 
 by Pete Hunt
 
-在我看来，React 是构建大型，快速 Web app 的首选方式。它已经在 Facebook 和 Instagram 被我们有了广泛的应用。
+在我看来，React 是构建大型，快速 Web app 的首选方式。它在 Facebook 和 Instagram 有广泛的应用。
 
 React 许多优秀的部分之一，是它使得你在构建 app 的过程中不断思考。在本文里，我将带你经历一次使用 React 构建可搜索的商品数据表的思考过程。
 
