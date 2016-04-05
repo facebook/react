@@ -206,7 +206,7 @@ function executeDirectDispatch(event) {
   );
   event.currentTarget = EventPluginUtils.getNodeFromInstance(dispatchInstance);
   var res = dispatchListener ? dispatchListener(event) : null;
-  event.curentTarget = null;
+  event.currentTarget = null;
   event._dispatchListeners = null;
   event._dispatchInstances = null;
   return res;
