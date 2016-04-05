@@ -11,6 +11,7 @@
  */
 'use strict';
 
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactPerf = require('ReactPerf');
@@ -24,50 +25,46 @@ var UIManager = require('UIManager');
  * (including deletes/moves). TODO: refactor so this can be shared with
  * DOMChildrenOperations.
  *
- * @param {array<object>} updates List of update configurations.
+ * @param {ReactNativeBaseComponent} updates List of update configurations.
  * @param {array<string>} markup List of markup strings - in the case of React
  * IOS, the ids of new components assumed to be already created.
  */
-var dangerouslyProcessChildrenUpdates = function(childrenUpdates, markupList) {
+var dangerouslyProcessChildrenUpdates = function(inst, childrenUpdates) {
   if (!childrenUpdates.length) {
     return;
   }
-  var byContainerTag = {};
-  // Group by parent ID - send them across the bridge in separate commands per
-  // containerID.
+
+  var containerTag = ReactNativeComponentTree.getNodeFromInstance(inst);
+
+  var moveFromIndices;
+  var moveToIndices;
+  var addChildTags;
+  var addAtIndices;
+  var removeAtIndices;
+
   for (var i = 0; i < childrenUpdates.length; i++) {
     var update = childrenUpdates[i];
-    var containerTag = update.parentID;
-    throw new Error('parentID is borked. See changes to multiChild');
-    var updates = byContainerTag[containerTag] || (byContainerTag[containerTag] = {});
     if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
-      (updates.moveFromIndices || (updates.moveFromIndices = [])).push(update.fromIndex);
-      (updates.moveToIndices || (updates.moveToIndices = [])).push(update.toIndex);
+      (moveFromIndices || (moveFromIndices = [])).push(update.fromIndex);
+      (moveToIndices || (moveToIndices = [])).push(update.toIndex);
     } else if (update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
-      (updates.removeAtIndices || (updates.removeAtIndices = [])).push(update.fromIndex);
+      (removeAtIndices || (removeAtIndices = [])).push(update.fromIndex);
     } else if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP) {
-      var mountImage = markupList[update.markupIndex];
+      var mountImage = update.content;
       var tag = mountImage;
-      var rootNodeID = mountImage.rootNodeID;
-      (updates.addAtIndices || (updates.addAtIndices = [])).push(update.toIndex);
-      (updates.addChildTags || (updates.addChildTags = [])).push(tag);
+      (addAtIndices || (addAtIndices = [])).push(update.toIndex);
+      (addChildTags || (addChildTags = [])).push(tag);
     }
   }
-  // Note this enumeration order will be different on V8!  Move `byContainerTag`
-  // to a sparse array as soon as we confirm there are not horrible perf
-  // penalties.
-  for (var updateParentTagString in byContainerTag) {
-    var updateParentTagNumber = +updateParentTagString;
-    var childUpdatesToSend = byContainerTag[updateParentTagNumber];
-    UIManager.manageChildren(
-      updateParentTagNumber,
-      childUpdatesToSend.moveFromIndices,
-      childUpdatesToSend.moveToIndices,
-      childUpdatesToSend.addChildTags,
-      childUpdatesToSend.addAtIndices,
-      childUpdatesToSend.removeAtIndices
-    );
-  }
+
+  UIManager.manageChildren(
+    containerTag,
+    moveFromIndices,
+    moveToIndices,
+    addChildTags,
+    addAtIndices,
+    removeAtIndices
+  );
 };
 
 /**
