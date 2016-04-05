@@ -407,6 +407,25 @@ function isNode(propValue) {
   }
 }
 
+function isSymbol(propType, propValue) {
+  // Native Symbol.
+  if (propType === 'symbol') {
+    return true;
+  }
+
+  // 19.4.3.5 Symbol.prototype[@@toStringTag] === 'Symbol'
+  if (propValue['@@toStringTag'] === 'Symbol') {
+    return true;
+  }
+
+  // Fallback for non-spec compliant Symbols which are polyfilled.
+  if (typeof Symbol !== 'undefined' && propValue instanceof Symbol) {
+    return true;
+  }
+
+  return false;
+}
+
 // Equivalent of `typeof` but with special handling for array and regexp.
 function getPropType(propValue) {
   var propType = typeof propValue;
@@ -419,10 +438,7 @@ function getPropType(propValue) {
     // passes PropTypes.object.
     return 'object';
   }
-  if (propType === 'function' && typeof Symbol === 'function' &&
-      propValue instanceof Symbol) {
-    // ES6 polyfills will return 'function' rather than 'symbol' for typeof a
-    // Symbol.
+  if (isSymbol(propType, propValue)) {
     return 'symbol';
   }
   return propType;

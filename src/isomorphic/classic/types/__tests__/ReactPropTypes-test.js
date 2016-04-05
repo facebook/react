@@ -798,6 +798,39 @@ describe('ReactPropTypes', function() {
     });
   });
 
+  describe('Symbol Type', function() {
+    it('should warn for non-symbol', function() {
+      typeCheckFail(
+        PropTypes.symbol,
+        'hello',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+      typeCheckFail(
+        PropTypes.symbol,
+        function () { },
+        'Invalid prop `testProp` of type `function` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+      typeCheckFail(
+        PropTypes.symbol,
+        {
+          '@@toStringTag': 'Katana'
+        },
+        'Invalid prop `testProp` of type `object` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+    });
+
+    it('should not warn for a polyfilled Symbol', function() {
+      var ES6Symbol = require('es6-symbol/polyfill');
+      var CoreSymbol = require('core-js/library/es6/symbol');
+
+      typeCheckPass(PropTypes.symbol, ES6Symbol('es6-symbol'))
+      typeCheckPass(PropTypes.symbol, CoreSymbol('core-js'))
+    });
+  });
+
   describe('Custom validator', function() {
     beforeEach(function() {
       jest.resetModuleRegistry();
