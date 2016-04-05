@@ -513,10 +513,10 @@ describe('ReactDOMComponent', function() {
       expect(nodeValueSetter.mock.calls.length).toBe(2);
 
       ReactDOM.render(<div value="" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
+      expect(nodeValueSetter.mock.calls.length).toBe(3);
 
       ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
+      expect(nodeValueSetter.mock.calls.length).toBe(3);
     });
 
     it('should not incur unnecessary DOM mutations for boolean properties', function() {
