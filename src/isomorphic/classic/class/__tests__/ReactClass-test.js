@@ -58,13 +58,19 @@ describe('ReactClass-spec', function() {
       .toBe(propValidator);
   });
 
-    it('gives methods a displayName for testing purposes', function() {
+  it('gives methods a displayName for testing purposes', function() {
     var a = function() {};
     var b = function() {};
     var c = function() {};
-    var d = function() {return <div />;};
-    var e = function() {return null};
-    var f = function() {return null};
+    var d = function() {
+      return <div />;
+    };
+    var e = function() {
+      return null;
+    };
+    var f = function() {
+      return null;
+    };
     var g = function() {};
     var mixin = {
       getInitialState: f,

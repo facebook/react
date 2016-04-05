@@ -531,7 +531,6 @@ function mixSpecIntoComponent(Constructor, spec, isFromMixin) {
           }
 
           if (__DEV__) {
-            var displayName;
             if (isFromMixin) {
               displayName = 'mixin';
             } else {
@@ -547,7 +546,6 @@ function mixSpecIntoComponent(Constructor, spec, isFromMixin) {
         } else {
           proto[name] = property;
           if (__DEV__) {
-            var displayName;
             if (isFromMixin) {
               displayName = 'mixin';
             } else {
