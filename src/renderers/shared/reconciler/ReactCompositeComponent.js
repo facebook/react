@@ -795,14 +795,9 @@ var ReactCompositeComponentMixin = {
     var inst = this._instance;
 
     var hasComponentDidUpdate = Boolean(inst.componentDidUpdate);
-    var prevProps;
-    var prevState;
-    var prevContext;
-    if (hasComponentDidUpdate) {
-      prevProps = inst.props;
-      prevState = inst.state;
-      prevContext = inst.context;
-    }
+    inst._prevProps = inst.props;
+    inst._prevState = inst.state;
+    inst._prevContext = inst.context;
 
     if (inst.componentWillUpdate) {
       inst.componentWillUpdate(nextProps, nextState, nextContext);
@@ -818,7 +813,7 @@ var ReactCompositeComponentMixin = {
 
     if (hasComponentDidUpdate) {
       transaction.getReactMountReady().enqueue(
-        inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
+        inst.componentDidUpdate.bind(inst, inst._prevProps, inst._prevState, inst._prevContext),
         inst
       );
     }
@@ -877,7 +872,7 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
     var inst = this._instance;
-    var renderedComponent = inst.render();
+    var renderedComponent = inst.render(inst._prevProps, inst._prevState, inst._prevContext);
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
       if (renderedComponent === undefined &&
