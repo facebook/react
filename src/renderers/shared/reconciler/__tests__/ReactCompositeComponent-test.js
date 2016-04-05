@@ -1062,6 +1062,54 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should initially pass previous state, props and context to render', function() {
+    spyOn(console, 'error');
+
+    var render = jasmine.createSpy('render').andReturn(<div />);
+    var prevProps = {};
+    var prevState = {};
+    var prevContext = {};
+    var prevContext = {
+      foo: 'bar'
+    };
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string,
+      },
+
+      getChildContext: function() {
+        return prevContext;
+      },
+
+      render: function() {
+        return this.props.children;
+      },
+    });
+
+    var Child = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getInitialState() {
+        return prevState;
+      },
+      
+      getDefaultProps() {
+        return prevProps;
+      },
+      
+      render: render
+    });
+
+    var component = ReactTestUtils.renderIntoDocument(<Parent><Child /></Parent>);
+    expect(render).toHaveBeenCalledWith(undefined, undefined, undefined);
+    
+    component.forceUpdate();
+    expect(render).toHaveBeenCalledWith(prevProps, prevState, prevContext);
+  });
+
   it('only renders once if updated in componentWillReceiveProps', function() {
     var renders = 0;
     var Component = React.createClass({
