@@ -472,6 +472,12 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
  * - ... (All keys from event plugin `eventTypes` objects)
  */
 function makeSimulator(eventType) {
+  var dispatchConfig = EventPluginRegistry.eventNameDispatchConfigs[eventType];
+  // Get the topLevelType so we can extract the right SyntheticEvent type so we
+  // copy properties correctly from the native event and also get our warnings
+  // related to pooling.
+  var topLevelType = EventConstants.topLevelTypes[dispatchConfig.dependencies[0]];
+
   return function(domComponentOrNode, eventData) {
     var node;
     invariant(
@@ -485,20 +491,30 @@ function makeSimulator(eventType) {
       node = domComponentOrNode;
     }
 
-    var dispatchConfig =
-      EventPluginRegistry.eventNameDispatchConfigs[eventType];
+    var EventPlugin = EventPluginRegistry.getPluginModuleForEvent({dispatchConfig});
 
+    // Assign the extra event data to the native event, ensuring we copy they
+    // correct data over for a given event. Other fields will be dropped.
     var fakeNativeEvent = new Event();
-    fakeNativeEvent.target = node;
-    // We don't use SyntheticEvent.getPooled in order to not have to worry about
-    // properly destroying any properties assigned from `eventData` upon release
-    var event = new SyntheticEvent(
-      dispatchConfig,
-      ReactDOMComponentTree.getInstanceFromNode(node),
+    Object.assign(fakeNativeEvent, {target: node}, eventData);
+
+    var inst = ReactDOMComponentTree.getInstanceFromNode(node);
+
+    var SyntheticEventConstructor = EventPlugin.extractEventConstructor(
+      topLevelType,
+      domComponentOrNode,
       fakeNativeEvent,
       node
     );
-    Object.assign(event, eventData);
+
+    // We don't use SyntheticEvent.getPooled in order to not have to worry about
+    // properly destroying any properties assigned from `eventData` upon release
+    var event = new SyntheticEventConstructor(
+      dispatchConfig,
+      domComponentOrNode,
+      fakeNativeEvent,
+      node
+    );
 
     if (dispatchConfig.phasedRegistrationNames) {
       EventPropagators.accumulateTwoPhaseDispatches(event);

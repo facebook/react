@@ -487,7 +487,7 @@ var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
 
-  extractEvents: function(
+  extractEventConstructor: function(
     topLevelType,
     targetInst,
     nativeEvent,
@@ -604,8 +604,27 @@ var SimpleEventPlugin = {
       'SimpleEventPlugin: Unhandled event type, `%s`.',
       topLevelType
     );
+    return EventConstructor;
+  },
+
+  extractEvents: function(
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget
+  ) {
+    var EventConstructor = SimpleEventPlugin.extractEventConstructor(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget
+    );
+    if (!EventConstructor) {
+      return null;
+    }
+
     var event = EventConstructor.getPooled(
-      dispatchConfig,
+      topLevelEventsToDispatchConfig[topLevelType],
       targetInst,
       nativeEvent,
       nativeEventTarget
