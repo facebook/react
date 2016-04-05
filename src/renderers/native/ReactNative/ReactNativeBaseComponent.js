@@ -59,7 +59,7 @@ ReactNativeBaseComponent.Mixin = {
 
   unmountComponent: function() {
     ReactNativeComponentTree.uncacheNode(this);
-    deleteAllListeners(this._rootNodeID);
+    deleteAllListeners(this);
     this.unmountChildren();
     this._rootNodeID = null;
   },
@@ -141,7 +141,7 @@ ReactNativeBaseComponent.Mixin = {
       // registers listeners the *first* time a component is created.
       if (registrationNames[key] && initialProps[key]) {
         var listener = initialProps[key];
-        putListener(this._rootNodeID, key, listener);
+        putListener(this, key, listener);
       }
     }
   },
@@ -155,9 +155,9 @@ ReactNativeBaseComponent.Mixin = {
     for (var key in nextProps) {
       if (registrationNames[key] && (nextProps[key] !== prevProps[key])) {
         if (nextProps[key]) {
-          putListener(this._rootNodeID, key, nextProps[key]);
+          putListener(this, key, nextProps[key]);
         } else {
-          deleteListener(this._rootNodeID, key);
+          deleteListener(this, key);
         }
       }
     }
