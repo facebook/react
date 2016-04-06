@@ -493,6 +493,7 @@ describe('ReactDOMComponent', function() {
           return nodeValue;
         },
         set: nodeValueSetter.mockImplementation(function(newValue) {
+          node.setAttribute('value', newValue);
           nodeValue = newValue;
         }),
       });
@@ -506,6 +507,7 @@ describe('ReactDOMComponent', function() {
       ReactDOM.render(<div value="foo" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
+      // Really, this _should_ remove the attribute but doesn't currently.
       ReactDOM.render(<div />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(2);
 
@@ -513,10 +515,10 @@ describe('ReactDOMComponent', function() {
       expect(nodeValueSetter.mock.calls.length).toBe(2);
 
       ReactDOM.render(<div value="" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(3);
+      expect(nodeValueSetter.mock.calls.length).toBe(2);
 
       ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(3);
+      expect(nodeValueSetter.mock.calls.length).toBe(2);
     });
 
     it('should not incur unnecessary DOM mutations for boolean properties', function() {
