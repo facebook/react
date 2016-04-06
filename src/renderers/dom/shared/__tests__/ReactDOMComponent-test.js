@@ -14,13 +14,14 @@
 
 describe('ReactDOMComponent', function() {
   var React;
-
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactDOMServer;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags')
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
   });
@@ -497,26 +498,35 @@ describe('ReactDOMComponent', function() {
         }),
       });
 
-      ReactDOM.render(<div value="" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(0);
+      function renderWithValueAndExpect(value, expected) {
+        ReactDOM.render(<div value={value} />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(expected);
+      }
 
-      ReactDOM.render(<div value="foo" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
-
-      ReactDOM.render(<div value="foo" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
-
-      ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
-
-      ReactDOM.render(<div value={null} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
-
-      ReactDOM.render(<div value="" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(3);
-
-      ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(3);
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        renderWithValueAndExpect(undefined, 0);
+        renderWithValueAndExpect('', 1);
+        renderWithValueAndExpect('foo', 2);
+        renderWithValueAndExpect('foo', 2);
+        renderWithValueAndExpect(undefined, 3);
+        renderWithValueAndExpect(null, 3);
+        renderWithValueAndExpect('', 4);
+        renderWithValueAndExpect(undefined, 4);
+      } else {
+        renderWithValueAndExpect(undefined, 0);
+        // This differs because we will have created a node with the value
+        // attribute set. This means it will hasAttribute, so we won't try to
+        // set the value.
+        renderWithValueAndExpect('', 0);
+        renderWithValueAndExpect('foo', 1);
+        renderWithValueAndExpect('foo', 1);
+        renderWithValueAndExpect(undefined, 2);
+        renderWithValueAndExpect(null, 2);
+        // Again, much like the initial update case, we will always have the
+        // attribute set so we won't set the value.
+        renderWithValueAndExpect('', 2);
+        renderWithValueAndExpect(undefined, 2);
+      }
     });
 
     it('should not incur unnecessary DOM mutations for boolean properties', function() {
