@@ -301,6 +301,6 @@ However, you may still specify `.propTypes` and `.defaultProps` by setting them 
 
 > NOTE:
 >
-> Due to some implementation details, returning `null` or `false` to indicate you don't want to render anything won't work in a functional component (see [react/4599](https://github.com/facebook/react/issues/4599) for details). Consider returning `<noscript />` instead.
+> In React v0.14, stateless functional components were not permitted to return `null` or `false` (a workaround is to return a `<noscript />` instead). This was fixed in React v15, and stateless functional components are now permitted to return `null`.
 
 In an ideal world, most of your components would be stateless functions because in the future we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations. This is the recommended pattern, when possible.
