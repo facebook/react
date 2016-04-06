@@ -461,7 +461,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a controlled input of type text to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or viceversa). ' +
+      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -475,7 +475,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a controlled input of type text to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or viceversa). ' +
+      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -489,7 +489,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a uncontrolled input of type text to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or viceversa). ' +
+      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -503,7 +503,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a controlled input of type checkbox to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or viceversa). ' +
+      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -517,7 +517,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a controlled input of type checkbox to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or viceversa). ' +
+      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -531,7 +531,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a uncontrolled input of type checkbox to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or viceversa). ' +
+      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -545,7 +545,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a controlled input of type radio to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or viceversa). ' +
+      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -559,7 +559,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a controlled input of type radio to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or viceversa). ' +
+      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
@@ -573,7 +573,7 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'A component is changing a uncontrolled input of type radio to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or viceversa). ' +
+      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
     );
