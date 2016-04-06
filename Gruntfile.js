@@ -11,7 +11,6 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    jsx: require('./grunt/config/jsx'),
     browserify: require('./grunt/config/browserify'),
     npm: require('./grunt/config/npm'),
     clean: [
@@ -61,9 +60,6 @@ module.exports = function(grunt) {
     // Use gulp here.
     spawnGulp(['react:clean'], null, this.async());
   });
-
-  // Register jsx:normal and :release tasks.
-  grunt.registerMultiTask('jsx', require('./grunt/tasks/jsx'));
 
   // Our own browserify-based tasks to build a single JS file build.
   grunt.registerMultiTask('browserify', require('./grunt/tasks/browserify'));
