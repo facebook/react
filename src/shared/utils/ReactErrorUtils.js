@@ -11,6 +11,8 @@
 
 'use strict';
 
+var SyntheticDragEvent = require('SyntheticDragEvent');
+
 var caughtError = null;
 
 /**
@@ -65,6 +67,11 @@ if (__DEV__) {
       typeof document.createEvent === 'function') {
     var fakeNode = document.createElement('react');
     ReactErrorUtils.invokeGuardedCallback = function(name, func, a, b) {
+      if (!canWrapEvent(a)) {
+        invokeGuardedCallback(name, func, a, b);
+        return;
+      }
+
       var boundFunc = func.bind(null, a, b);
       var evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
@@ -73,6 +80,41 @@ if (__DEV__) {
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);
     };
+  }
+
+  var cacheCanWrapEvent = null;
+
+  /**
+   * IE and Edge don't allow access to the DataTransfer.dropEffect property when
+   * it's wrapped in another event. This function detects whether we're in an
+   * environment that behaves this way.
+   *
+   * @param {*} ev Event that is being tested
+   */
+  function canWrapEvent(ev) {
+    if (!(ev instanceof SyntheticDragEvent)) {
+      return true;
+    } else if (cacheCanWrapEvent !== null) {
+      return cacheCanWrapEvent;
+    }
+
+    var canAccessDropEffect = false;
+    function handleWrappedEvent() {
+      try {
+        ev.dataTransfer.dropEffect; // eslint-disable-line no-unused-expressions
+        canAccessDropEffect = true;
+      } catch (e) {}
+    }
+
+    var wrappedEventName = 'react-wrappeddragevent';
+    var wrappedEvent = document.createEvent('Event');
+    wrappedEvent.initEvent(wrappedEventName, false, false);
+    fakeNode.addEventListener(wrappedEventName, handleWrappedEvent, false);
+    fakeNode.dispatchEvent(wrappedEvent);
+    fakeNode.removeEventListener(wrappedEventName, handleWrappedEvent, false);
+
+    cacheCanWrapEvent = canAccessDropEffect;
+    return canAccessDropEffect;
   }
 }
 
