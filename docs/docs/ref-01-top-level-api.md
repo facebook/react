@@ -139,7 +139,7 @@ The `react-dom` package provides DOM-specific methods that can be used at the to
 ### ReactDOM.render
 
 ```javascript
-ReactComponent render(
+render(
   ReactElement element,
   DOMElement container,
   [function callback]
@@ -161,6 +161,10 @@ If the optional callback is provided, it will be executed after the component is
 > `ReactDOM.render()` does not modify the container node (only modifies the children of the container). In
 > the future, it may be possible to insert a component to an existing DOM node without overwriting
 > the existing children.
+>
+> `ReactDOM.render()` currently returns a reference to the root `ReactComponent` instance. However, using this return value is legacy
+> and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
+> [callback ref](/react/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
 
 
 ### ReactDOM.unmountComponentAtNode
