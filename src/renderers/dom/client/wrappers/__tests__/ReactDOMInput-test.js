@@ -422,6 +422,7 @@ describe('ReactDOMInput', function() {
       <input type="radio" checked={true} defaultChecked={true} readOnly={true} />
     );
     expect(console.error.argsForCall[0][0]).toContain(
+      'A component contains an input of type radio with both checked and defaultChecked props. ' +
       'Input elements must be either controlled or uncontrolled ' +
       '(specify either the checked prop, or the defaultChecked prop, but not ' +
       'both). Decide between using a controlled or uncontrolled input ' +
@@ -440,6 +441,7 @@ describe('ReactDOMInput', function() {
       <input type="text" value="foo" defaultValue="bar" readOnly={true} />
     );
     expect(console.error.argsForCall[0][0]).toContain(
+      'A component contains an input of type text with both value and defaultValue props. ' +
       'Input elements must be either controlled or uncontrolled ' +
       '(specify either the value prop, or the defaultValue prop, but not ' +
       'both). Decide between using a controlled or uncontrolled input ' +
