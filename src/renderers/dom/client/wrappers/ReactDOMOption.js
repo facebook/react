@@ -39,7 +39,7 @@ var ReactDOMOption = {
         selectParent = selectParent._nativeParent;
       }
 
-      if (selectParent._tag === 'select') {
+      if (selectParent != null && selectParent._tag === 'select') {
         selectValue = ReactDOMSelect.getSelectValueContext(selectParent);
       }
     }
