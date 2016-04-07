@@ -2,17 +2,21 @@
 - - '839'
   - Aaron Franks
   - Aaron Gelter
+  - Adam Bloomston
   - Adam Krebs
   - Adam Mark
   - Adam Solove
   - Adam Timberlake
   - Adam Zapletal
   - Ahmad Wali Sidiqi
+  - Alan Plum
   - Alan Souza
   - Alan deLevie
   - Alastair Hole
   - Alex
+  - Alex Boatwright
   - Alex Boyd
+  - Alex Dajani
   - Alex Lopatin
   - Alex Mykyta
   - Alex Pien
@@ -24,22 +28,28 @@
   - Alexandre Gaudencio
   - Alexey Raspopov
   - Alexey Shamrin
+  - Ali Ukani
   - Andre Z Sanchez
   - Andreas Savvides
   - Andreas Svensson
   - Andres Kalle
   - Andres Suarez
+  - Andrew Clark
   - Andrew Cobby
   - Andrew Davey
+  - Andrew Henderson
+  - Andrew Kulakov
   - Andrew Rasmussen
   - Andrew Sokolov
   - Andrew Zich
   - Andrey Popp
   - Anthony van der Hoorn
+  - Anto Aravinth
   - Antonio Ruberto
   - Antti Ahti
   - Anuj Tomar
   - AoDev
+  - April Arcus
   - Areeb Malik
   - Aria Buckles
   - Aria Stewart
@@ -54,7 +64,9 @@
   - Beau Smith
   - Ben Alpert
   - Ben Anderson
+  - Ben Brooks
   - Ben Foxall
+  - Ben Halpern
   - Ben Jaffe
   - Ben Moss
   - Ben Newman
@@ -62,16 +74,20 @@
   - Benjamin Keen
   - Benjamin Leiken
   - Benjamin Woodruff
+  - Benjy Cui
+  - Bill Blanchard
   - Bill Fisher
   - Blaine Hatab
   - Blaine Kasten
   - Bob Eagan
   - Bob Ralian
   - Bob Renwick
+  - Bobby
   - Bojan Mihelac
   - Bradley Spaulding
   - Brandon Bloom
   - Brandon Tilley
+  - Brenard Cubacub
   - Brian Cooke
   - Brian Holt
   - Brian Hsu
@@ -82,14 +98,19 @@
   - Bruno Škvorc
   - Cam Song
   - Cam Spiers
+  - Cameron Chamberlain
+  - Cameron Matheson
   - Carter Chung
   - Cassus Adam Banko
   - Cat Chen
   - Cedric Sohrauer
+  - Cesar William Alvarenga
+  - Changsoon Bok
   - Charles Marsh
   - Chase Adams
   - Cheng Lou
   - Chitharanjan Das
+  - Chris Bolin
   - Chris Grovers
   - Chris Ha
   - Chris Rebert
@@ -97,12 +118,15 @@
   - Christian Alfoni
   - Christian Oliff
   - Christian Roman
+  - Christoffer Sawicki
   - Christoph Pojer
   - Christopher Monsanto
   - Clay Allsopp
   - Connor McSheffrey
+  - Conor Hastings
   - Cory House
   - Cotton Hou
+  - Craig Akimoto
   - Cristovao Verstraeten
   - Damien Pellier
   - Dan Abramov
@@ -113,6 +137,7 @@
   - Daniel Friesen
   - Daniel Gasienica
   - Daniel Hejl
+  - Daniel Hejl
   - Daniel Lo Nigro
   - Daniel Mané
   - Daniel Miladinov
@@ -122,23 +147,31 @@
   - Darcy
   - Daryl Lau
   - Darío Javier Cravero
+  - Dave Galbraith
   - David Baker
+  - David Ed Mellum
   - David Goldberg
+  - David Granado
   - David Greenspan
   - David Hellsing
   - David Hu
+  - David Khourshid
   - David Mininger
   - David Neubauer
   - David Percy
+  - Dean Shi
   - Denis Sokolov
+  - Deniss Jacenko
   - Dennis Johnson
   - Devon Blandin
   - Devon Harvey
   - Dmitrii Abramov
+  - Dmitriy Rozhkov
   - Dmitry Blues
   - Dmitry Mazuro
   - Domenico Matteo
   - Don Abrams
+  - Dongsheng Liu
   - Dustan Kasten
   - Dustin Getz
   - Dylan Harrington
@@ -154,6 +187,7 @@
   - Erik Harper
   - Espen Hovlandsdal
   - Evan Coonrod
+  - Evan Vosberg
   - Fabio M. Costa
   - Federico Rampazzo
   - Felipe Oliveira Carvalho
@@ -163,11 +197,15 @@
   - Frankie Bagnardi
   - François-Xavier Bois
   - Fred Zhao
+  - Freddy Rangel
+  - Fyodor Ivanishchev
   - G Scott Olson
   - G. Kay Lee
   - Gabe Levi
+  - Gajus Kuizinas
   - Gareth Nicholson
   - Garren Smith
+  - Gavin McQuistin
   - Geert Pasteels
   - Geert-Jan Brits
   - George A Sisco III
@@ -183,44 +221,57 @@
   - Guido Bouman
   - Harry Hull
   - Harry Marr
-- - Harry Moreno
+  - Harry Moreno
   - Harshad Sabne
   - Hekar Khani
   - Hendrik Swanepoel
   - Henrik Nyh
+  - Henry Wong
   - Henry Zhu
+  - Hideo Matsumoto
   - Hou Chia
+  - Huang-Wei Chang
+- - Hugo Agbonon
   - Hugo Jobling
+  - Hyeock Kwon
   - Héliton Nordt
   - Ian Obermiller
   - Ignacio Carbajo
   - Igor Scekic
+  - Ilia Pavlenkov
   - Ilya Shuklin
   - Ilyá Belsky
   - Ingvar Stepanyan
   - Irae Carvalho
   - Isaac Salier-Hellendag
+  - Iurii Kucherov
   - Ivan Kozik
   - Ivan Krechetov
   - Ivan Vergiliev
   - J. Andrew Brassington
   - J. Renée Beach
   - JD Isaacks
+  - JJ Weber
   - JW
   - Jack Zhang
+  - Jackie Wung
   - Jacob Gable
   - Jacob Greenleaf
   - Jae Hun Ro
+  - Jaeho Lee
   - Jaime Mingo
+  - Jake Worth
   - Jakub Malinowski
   - James
   - James Brantly
   - James Burnett
+  - James Friend
   - James Ide
   - James Long
   - James Pearce
   - James Seppi
   - James South
+  - James Wen
   - Jamie Wong
   - Jamis Charles
   - Jamison Dance
@@ -246,6 +297,7 @@
   - Jeff Morrison
   - Jeff Welch
   - Jeffrey Lin
+  - Jeremy Fairbank
   - Jesse Skinner
   - Jignesh Kakadiya
   - Jim OBrien
@@ -253,14 +305,19 @@
   - Jimmy Jea
   - Jing Chen
   - Jinwoo Oh
+  - Jinxiu Lee
   - Jiyeon Seo
+  - Jody McIntyre
+  - Joe Critchley
   - Joe Stein
   - Joel Auterson
   - Johannes Baiter
   - Johannes Emerich
   - Johannes Lumpe
   - John Heroy
+  - John Ryan
   - John Watson
+  - John-David Dalton
   - Jon Beebe
   - Jon Chester
   - Jon Hester
@@ -270,6 +327,7 @@
   - Jonas Enlund
   - Jonas Gebhardt
   - Jonathan Hsu
+  - Jonathan Persson
   - Jordan Harband
   - Jordan Walke
   - Jorrit Schippers
@@ -277,7 +335,9 @@
   - Joseph Savona
   - Josh Bassett
   - Josh Duck
+  - Josh Perez
   - Josh Yudaken
+  - Joshua Evans
   - Joshua Go
   - Joshua Goldberg
   - Joshua Ma
@@ -286,23 +346,34 @@
   - Julen Ruiz Aizpuru
   - Julian Viereck
   - Julien Bordellier
+  - Julio Lopez
   - Jun Wu
   - Juraj Dudak
+  - Justas Brazauskas
   - Justin Jaffray
   - Justin Robison
   - Justin Woo
+  - Kale
   - Kamron Batman
   - Karl Mikkelsen
   - Karpich Dmitry
   - Keito Uchiyama
+  - Ken Powers
+  - Kent C. Dodds
+  - Kevin Cheng
   - Kevin Coughlin
   - Kevin Huang
+  - Kevin Lau
   - Kevin Old
+  - Kevin Robinson
+  - Kewei Jiang
+  - Kier Borromeo
   - KimCoding
   - Kirk Steven Hansen
   - Kit Randel
   - Kohei TAKATA
   - Koo Youngmin
+  - Krystian Karczewski
   - Kunal Mehta
   - Kurt Ruppel
   - Kyle Kelley
@@ -312,6 +383,7 @@
   - Lee Byron
   - Lee Jaeyoung
   - Lei
+  - Leland Richardson
   - Leon Fedotov
   - Leon Yip
   - Leonardo YongUk Kim
@@ -319,9 +391,13 @@
   - Levi McCallum
   - Lily
   - Logan Allen
+  - Lovisa Svallingson
+  - Ludovico Fischer
   - Luigy Leon
   - Luke Horvat
   - MIKAMI Yoshiyuki
+  - Maher Beg
+  - Manas
   - Marcin K.
   - Marcin Kwiatkowski
   - Marcin Szczepanski
@@ -331,59 +407,83 @@
   - Mark Funk
   - Mark Hintz
   - Mark IJbema
+  - Mark Murphy
   - Mark Richardson
+  - Mark Rushakoff
+  - Mark Sun
   - Marlon Landaverde
   - Marshall Roch
   - Martin Andert
+  - Martin Hujer
   - Martin Jul
   - Martin Konicek
   - Martin Mihaylov
   - Masaki KOBAYASHI
   - Mathieu M-Gosselin
+  - Mathieu Savy
   - Matias Singers
   - Matsunoki
   - Matt Brookes
   - Matt Dunn-Rankin
   - Matt Harrison
   - Matt Huggins
+  - Matt Stow
   - Matt Zabriskie
   - Matthew Dapena-Tretter
+  - Matthew Herbst
+  - Matthew Hodgson
   - Matthew Johnston
   - Matthew King
+  - Matthew Looi
   - Matthew Miner
   - Matthias Le Brun
   - Matti Nelimarkka
+  - Mattijs Kneppers
   - Max F. Albrecht
   - Max Heiber
+  - Max Stoiber
   - Maxi Ferreira
   - Maxim Abramchuk
   - Merrick Christensen
   - Mert Kahyaoğlu
   - Michael Chan
+  - Michael McDermott
   - Michael Randers-Pehrson
   - Michael Ridgway
   - Michael Warner
+  - Michael Wiencek
+  - Michael Ziwisky
   - Michal Srb
   - Michelle Todd
   - Mihai Parparita
   - Mike D Pilsbury
-- - Mike Groseclose
+  - Mike Groseclose
+  - Mike Nordick
   - Mikolaj Dadela
+  - Miles Johnson
   - Minwe LUO
   - Miorel Palii
-  - Morhaus
+- - Morhaus
+  - Moshe Kolodny
   - Mouad Debbar
   - Murad
   - Murray M. Moss
   - Nadeesha Cabral
   - Naman Goel
   - Nate Hunzaker
+  - Nate Lee
+  - Nathan Smith
   - Nathan White
+  - Nee
   - Neri Marschik
+  - Nguyen Truong Duy
   - Nicholas Bergson-Shilcock
+  - Nicholas Clawson
+  - Nick Balestra
   - Nick Fitzgerald
   - Nick Gavalas
   - Nick Merwin
+  - Nick Presta
   - Nick Raienko
   - Nick Thompson
   - Nick Williams
@@ -399,8 +499,10 @@
   - Pablo Lacerda de Miranda
   - Paolo Moretti
   - Pascal Hartig
+  - Patrick
   - Patrick Laughlin
   - Patrick Stapleton
+  - Paul Benigeri
   - Paul Harper
   - Paul O’Shannessy
   - Paul Seiffert
@@ -410,19 +512,25 @@
   - Peter Blazejewicz
   - Peter Cottle
   - Peter Jaros
+  - Peter Newnham
   - Petri Lehtinen
   - Petri Lievonen
   - Pieter Vanderwerff
   - Pouja Nikray
   - Prathamesh Sonpatki
+  - Prayag Verma
   - Preston Parry
   - Rafael
   - Rafal Dittwald
+  - Rainer Oviir
+  - Rajat Sehgal
   - Rajiv Tirumalareddy
+  - Ram Kaniyur
   - Randall Randall
   - Ray
   - Raymond Ha
   - Reed Loden
+  - Remko Tronçon
   - Richard D. Worth
   - Richard Feldman
   - Richard Kho
@@ -430,16 +538,22 @@
   - Richard Livesey
   - Richard Wood
   - Rick Beerendonk
+  - Rick Ford
   - Riley Tomasek
   - Rob Arnold
+  - Robert Binna
   - Robert Knight
   - Robert Sedovsek
   - Robin Berjon
+  - Robin Frischmann
+  - Roman Pominov
   - Roman Vanesyan
   - Russ
   - Ryan Seddon
   - Sahat Yalkabov
   - Saif Hakim
+  - Saiichi Hashimoto
+  - Sam Beveridge
   - Sam Saccone
   - Sam Selikoff
   - Samy Al Zahrani
@@ -448,7 +562,9 @@
   - Scott Feeney
   - Sean Kinsey
   - Sebastian Markbåge
+  - Sebastian McKenzie
   - Seoh Char
+  - Sercan Eraslan
   - Serg
   - Sergey Generalov
   - Sergey Rubanov
@@ -457,18 +573,25 @@
   - Shaun Trennery
   - ShihChi Huang
   - Shim Won
+  - Shinnosuke Watanabe
+  - Shogun Sea
   - Shota Kubota
   - Shripad K
   - Sibi
+  - Simen Bekkhus
   - Simon Højberg
   - Simon Welsh
+  - Simone Vittori
+  - Soichiro Kawamura
   - Sophia Westwood
+  - Sota Ohara
   - Spencer Handley
   - Stefan Dombrowski
   - Stephen Murphy
   - Sterling Cobb
   - Steve Baker
   - Steven Luscher
+  - Steven Vachon
   - Stoyan Stefanov
   - Sundeep Malladi
   - Sunny Juneja
@@ -479,9 +602,11 @@
   - Taeho Kim
   - Tay Yang Shun
   - Ted Kim
+  - Tengfei Guo
   - Teodor Szente
   - Thomas Aylott
   - Thomas Boyt
+  - Thomas Broadley
   - Thomas Reggi
   - Thomas Röggla
   - Thomas Shaddox
@@ -491,12 +616,15 @@
   - Tim Routowicz
   - Tim Schaub
   - Timothy Yung
+  - Timur Carpeev
   - Tobias Reiss
+  - Tom Duncalf
   - Tom Haggie
   - Tom Hauburger
   - Tom MacWright
   - Tom Occhino
   - Tomasz Kołodziejski
+  - Tomoya Suzuki
   - Tony Spiro
   - Toru Kobayashi
   - Trinh Hoang Nhu
@@ -507,14 +635,17 @@
   - Varun Rau
   - Vasiliy Loginevskiy
   - Victor Alvarez
+  - Victor Homyakov
   - Victor Koenders
   - Ville Immonen
   - Vincent Riemer
   - Vincent Siao
   - Vipul A M
   - Vitaly Kramskikh
+  - Vitor Balocco
   - Vjeux
   - Volkan Unsal
+  - Wander Wang
   - Wayne Larsen
   - WickyNilliams
   - Wincent Colaiuta
@@ -526,9 +657,14 @@
   - YouBao Nong
   - Yuichi Hagio
   - Yuriy Dybskiy
+  - Yutaka Nakajima
   - Yuval Dekel
   - Zach Bruggeman
+  - Zach Ramaekers
   - Zacharias
+  - Zeke Sikelianos
+  - Zhangjd
+  - adraeth
   - arush
   - brafdlog
   - chen
@@ -539,14 +675,23 @@
   - dongmeng.ldm
   - iamchenxin
   - iamdoron
+  - iawia002
   - imagentleman
+  - koh-taka
+  - kohashi85
   - laiso
+  - leeyoungalias
   - li.li
+  - maxprafferty
+  - rgarifullin
+  - songawee
   - sugarshin
   - wali-s
   - yiminghe
   - youmoo
   - zhangjg
-  - Árni Hermann Reynisson
-  - 凌恒
-  - 张敏
+  - zwhitchcox
+  - "Árni Hermann Reynisson"
+  - "元彦"
+  - "凌恒"
+  - "张敏"
