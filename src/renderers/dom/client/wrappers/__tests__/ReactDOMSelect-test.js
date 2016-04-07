@@ -548,8 +548,7 @@ describe('ReactDOMSelect', function() {
         </optgroup>
       </select>;
     var container = document.createElement('div');
-    stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    var node = ReactDOM.render(stub, container);
 
     expect(node.options[0].selected).toBe(false);  // a
     expect(node.options[1].selected).toBe(true);   // b
