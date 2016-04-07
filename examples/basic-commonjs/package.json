@@ -8,8 +8,8 @@
     "babel-preset-react": "^6.5.0",
     "babelify": "^7.2.0",
     "browserify": "^11.0.1",
-    "react": "15.0.0-rc.2",
-    "react-dom": "15.0.0-rc.2",
+    "react": "15.0.0",
+    "react-dom": "15.0.0",
     "watchify": "^3.4.0"
   },
   "scripts": {
