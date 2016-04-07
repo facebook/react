@@ -65,9 +65,6 @@ var React = {
   DOM: ReactDOMFactories,
 
   version: ReactVersion,
-
-  // Hook for JSX spread, don't use this for anything else.
-  __spread: Object.assign,
 };
 
 module.exports = React;
