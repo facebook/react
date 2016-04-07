@@ -537,4 +537,22 @@ describe('ReactDOMSelect', function() {
       "Cannot set property 'pendingUpdate' of null"
     );
   });
+
+  it('should select grandchild options nested inside an optgroup', function() {
+    var stub =
+      <select value="b" onChange={noop}>
+        <optgroup label="group">
+          <option value="a">a</option>
+          <option value="b">b</option>
+          <option value="c">c</option>
+        </optgroup>
+      </select>;
+    var container = document.createElement('div');
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.options[0].selected).toBe(false);  // a
+    expect(node.options[1].selected).toBe(true);   // b
+    expect(node.options[2].selected).toBe(false);  // c
+  });
 });
