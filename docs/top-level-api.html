@@ -472,7 +472,7 @@ html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a <code>ReactC
 <p>Return the <code>children</code> opaque data structure as a flat array with keys assigned to each child. Useful if you want to manipulate collections of children in your render methods, especially if you want to reorder or slice <code>this.props.children</code> before passing it down.</p>
 <h2><a class="anchor" name="reactdom"></a>ReactDOM <a class="hash-link" href="#reactdom">#</a></h2>
 <p>The <code>react-dom</code> package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.</p>
-<h3><a class="anchor" name="reactdom.render"></a>ReactDOM.render <a class="hash-link" href="#reactdom.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
+<h3><a class="anchor" name="reactdom.render"></a>ReactDOM.render <a class="hash-link" href="#reactdom.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">(</span>
   <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
@@ -494,6 +494,10 @@ updates.</p>
 <p><code>ReactDOM.render()</code> does not modify the container node (only modifies the children of the container). In
 the future, it may be possible to insert a component to an existing DOM node without overwriting
 the existing children.</p>
+
+<p><code>ReactDOM.render()</code> currently returns a reference to the root <code>ReactComponent</code> instance. However, using this return value is legacy
+and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root <code>ReactComponent</code> instance, the preferred solution is to attach a
+<a href="/react/docs/more-about-refs.html#the-ref-callback-attribute">callback ref</a> to the root element.</p>
 </blockquote>
 <h3><a class="anchor" name="reactdom.unmountcomponentatnode"></a>ReactDOM.unmountComponentAtNode <a class="hash-link" href="#reactdom.unmountcomponentatnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
 </code></pre></div>

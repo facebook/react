@@ -502,7 +502,9 @@ As such, you cannot access the event in an asynchronous way.</p>
 </code></pre></div>
 <p>Properties:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
-</code></pre></div><h3><a class="anchor" name="form-events"></a>Form Events <a class="hash-link" href="#form-events">#</a></h3>
+</code></pre></div>
+<p>These focus events work on all elements in the React DOM, not just form elements.</p>
+<h3><a class="anchor" name="form-events"></a>Form Events <a class="hash-link" href="#form-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onChange onInput onSubmit
 </code></pre></div>
@@ -568,6 +570,22 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 </code></pre></div><h3><a class="anchor" name="image-events"></a>Image Events <a class="hash-link" href="#image-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onLoad onError
+</code></pre></div><h3><a class="anchor" name="animation-events"></a>Animation Events <a class="hash-link" href="#animation-events">#</a></h3>
+<p>Event names:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onAnimationStart onAnimationEnd onAnimationIteration
+</code></pre></div>
+<p>Properties:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">animationName</span>
+<span class="nx">string</span> <span class="nx">pseudoElement</span>
+<span class="kr">float</span> <span class="nx">elapsedTime</span>
+</code></pre></div><h3><a class="anchor" name="transition-events"></a>Transition Events <a class="hash-link" href="#transition-events">#</a></h3>
+<p>Event names:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onTransitionEnd
+</code></pre></div>
+<p>Properties:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">propertyName</span>
+<span class="nx">string</span> <span class="nx">pseudoElement</span>
+<span class="kr">float</span> <span class="nx">elapsedTime</span>
 </code></pre></div>
 
     <div class="docs-prevnext">

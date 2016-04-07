@@ -9,12 +9,12 @@ var CodeMirrorEditor = React.createClass({
     lineNumbers: React.PropTypes.bool,
     onChange: React.PropTypes.func
   },
-  getDefaultProps: function getDefaultProps() {
+  getDefaultProps: function () {
     return {
       lineNumbers: false
     };
   },
-  componentDidMount: function componentDidMount() {
+  componentDidMount: function () {
     if (IS_MOBILE) return;
 
     this.editor = CodeMirror.fromTextArea(ReactDOM.findDOMNode(this.refs.editor), {
@@ -29,19 +29,19 @@ var CodeMirrorEditor = React.createClass({
     this.editor.on('change', this.handleChange);
   },
 
-  componentDidUpdate: function componentDidUpdate() {
+  componentDidUpdate: function () {
     if (this.props.readOnly) {
       this.editor.setValue(this.props.codeText);
     }
   },
 
-  handleChange: function handleChange() {
+  handleChange: function () {
     if (!this.props.readOnly) {
       this.props.onChange && this.props.onChange(this.editor.getValue());
     }
   },
 
-  render: function render() {
+  render: function () {
     // wrap in a div to fully contain CodeMirror
     var editor;
 
@@ -64,24 +64,14 @@ var CodeMirrorEditor = React.createClass({
 });
 
 var selfCleaningTimeout = {
-  componentDidUpdate: function componentDidUpdate() {
+  componentDidUpdate: function () {
     clearTimeout(this.timeoutID);
   },
 
-  setTimeout: (function (_setTimeout) {
-    function setTimeout() {
-      return _setTimeout.apply(this, arguments);
-    }
-
-    setTimeout.toString = function () {
-      return _setTimeout.toString();
-    };
-
-    return setTimeout;
-  })(function () {
+  setTimeout: function () {
     clearTimeout(this.timeoutID);
     this.timeoutID = setTimeout.apply(null, arguments);
-  })
+  }
 };
 
 var ReactPlayground = React.createClass({
@@ -100,9 +90,9 @@ var ReactPlayground = React.createClass({
     editorTabTitle: React.PropTypes.string
   },
 
-  getDefaultProps: function getDefaultProps() {
+  getDefaultProps: function () {
     return {
-      transformer: function transformer(code) {
+      transformer: function (code) {
         return babel.transform(code).code;
       },
       editorTabTitle: 'Live JSX Editor',
@@ -111,27 +101,27 @@ var ReactPlayground = React.createClass({
     };
   },
 
-  getInitialState: function getInitialState() {
+  getInitialState: function () {
     return {
       mode: this.MODES.JSX,
       code: this.props.codeText
     };
   },
 
-  handleCodeChange: function handleCodeChange(value) {
+  handleCodeChange: function (value) {
     this.setState({ code: value });
     this.executeCode();
   },
 
-  handleCodeModeSwitch: function handleCodeModeSwitch(mode) {
+  handleCodeModeSwitch: function (mode) {
     this.setState({ mode: mode });
   },
 
-  compileCode: function compileCode() {
+  compileCode: function () {
     return this.props.transformer(this.state.code);
   },
 
-  render: function render() {
+  render: function () {
     var isJS = this.state.mode === this.MODES.JS;
     var compiledCode = '';
     try {
@@ -196,11 +186,11 @@ var ReactPlayground = React.createClass({
     );
   },
 
-  componentDidMount: function componentDidMount() {
+  componentDidMount: function () {
     this.executeCode();
   },
 
-  componentDidUpdate: function componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate: function (prevProps, prevState) {
     // execute code only when the state's not being updated by switching tab
     // this avoids re-displaying the error, which comes after a certain delay
     if (this.props.transformer !== prevProps.transformer || this.state.code !== prevState.code) {
@@ -208,7 +198,7 @@ var ReactPlayground = React.createClass({
     }
   },
 
-  executeCode: function executeCode() {
+  executeCode: function () {
     var mountNode = ReactDOM.findDOMNode(this.refs.mount);
 
     try {

@@ -447,32 +447,19 @@
 <p>&quot;Wasted&quot; time is spent on components that didn&#39;t actually render anything, e.g. the render stayed the same, so the DOM wasn&#39;t touched.</p>
 
 <p><img src="/react/img/docs/perf-wasted.png" alt=""></p>
-<h3><a class="anchor" name="perf.printdommeasurements"></a><code>Perf.printDOM(measurements)</code> <a class="hash-link" href="#perf.printdommeasurements">#</a></h3>
+<h3><a class="anchor" name="perf.printoperationsmeasurements"></a><code>Perf.printOperations(measurements)</code> <a class="hash-link" href="#perf.printoperationsmeasurements">#</a></h3>
 <p>Prints the underlying DOM manipulations, e.g. &quot;set innerHTML&quot; and &quot;remove&quot;.</p>
 
 <p><img src="/react/img/docs/perf-dom.png" alt=""></p>
+<h3><a class="anchor" name="perf.printdommeasurements"></a><code>Perf.printDOM(measurements)</code> <a class="hash-link" href="#perf.printdommeasurements">#</a></h3>
+<p>This method has been renamed to <code>printOperations()</code> which is described in the previous paragraph. Currently <code>printDOM()</code> still exists as an alias but it prints a deprecation warning and will eventually be removed.</p>
 <h2><a class="anchor" name="advanced-api"></a>Advanced API <a class="hash-link" href="#advanced-api">#</a></h2>
 <p>The above print methods use <code>Perf.getLastMeasurements()</code> to pretty-print the result.</p>
 <h3><a class="anchor" name="perf.getlastmeasurements"></a><code>Perf.getLastMeasurements()</code> <a class="hash-link" href="#perf.getlastmeasurements">#</a></h3>
-<p>Get the measurements array from the last start-stop session. The array contains objects, each of which looks like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
-  <span class="c1">// The term &quot;inclusive&quot; and &quot;exclusive&quot; are explained below</span>
-  <span class="s2">&quot;exclusive&quot;</span><span class="o">:</span> <span class="p">{},</span>
-  <span class="c1">// &#39;.0.0&#39; is the React ID of the node</span>
-  <span class="s2">&quot;inclusive&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.0670000008540228</span><span class="p">,</span> <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.3259999939473346</span><span class="p">},</span>
-  <span class="s2">&quot;render&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.036999990697950125</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.010000003385357559</span><span class="p">},</span>
-  <span class="c1">// Number of instances</span>
-  <span class="s2">&quot;counts&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">},</span>
-  <span class="c1">// DOM touches</span>
-  <span class="s2">&quot;writes&quot;</span><span class="o">:</span> <span class="p">{},</span>
-  <span class="c1">// Extra debugging info</span>
-  <span class="s2">&quot;displayNames&quot;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;&lt;root&gt;&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;Box&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">}</span>
-  <span class="p">},</span>
-  <span class="s2">&quot;totalTime&quot;</span><span class="o">:</span> <span class="mf">0.48499999684281647</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>Get the opaque data structure describing measurements from the last start-stop session. You can save it and pass it to the methods above to analyze past measurements.</p>
+
+<p>Don&#39;t rely on the exact format of the return value because it may change in minor releases. We will update the documentation if the return value format becomes a supported part of the public API.</p>
+
 
     <div class="docs-prevnext">
       

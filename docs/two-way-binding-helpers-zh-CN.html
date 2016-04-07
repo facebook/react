@@ -474,7 +474,7 @@
 &lt;input type=&quot;checkbox&quot; checkedLink={this.linkState(&#39;booleanValue&#39;)} /&gt;
 </code></p>
 <h2><a class="anchor" name=""></a>引擎盖下 <a class="hash-link" href="#">#</a></h2>
-<p>There are two sides to <code>ReactLink</code>: the place where you create the <code>ReactLink</code> instance and the place where you use it. To prove how simple <code>ReactLink</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
+<p>这里对 <code>ReactLink</code>有两方面：创建<code>ReactLink</code>的实例以及使用它的地方。为了证明<code>ReactLink</code>有多简单，让我们重写两方面一边更好的理解。</p>
 <h3><a class="anchor" name="reactlink-without-linkedstatemixin"></a>ReactLink Without LinkedStateMixin <a class="hash-link" href="#reactlink-without-linkedstatemixin">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
@@ -491,7 +491,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>As you can see, <code>ReactLink</code> objects are very simple objects that just have a <code>value</code> and <code>requestChange</code> prop. And <code>LinkedStateMixin</code> is similarly simple: it just populates those fields with a value from <code>this.state</code> and a callback that calls <code>this.setState()</code>.</p>
+<p>正如你所见，<code>ReactLink</code>对象是非常简单,只有<code>value</code>和<code>requestChange</code>属性.并且<code>LinkStateMixin</code>也很简单:它只是作用(populates)于<code>this.state</code>的元素值并且回调名为<code>this.setState()</code>的函数.</p>
 <h3><a class="anchor" name="reactlink-without-valuelink"></a>ReactLink Without valueLink <a class="hash-link" href="#reactlink-without-valuelink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -508,7 +508,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>The <code>valueLink</code> prop is also quite simple. It simply handles the <code>onChange</code> event and calls <code>this.props.valueLink.requestChange()</code> and also uses <code>this.props.valueLink.value</code> instead of <code>this.props.value</code>. That&#39;s it!</p>
+<p>对于<code>valueLink</code>的属性同样也很简单,它只是简单的处理<code>onChange</code>事件,调用<code>this.props.valueLink.requestChange()</code>的时候也使用<code>this.props.valueLink.requestChange()</code>代替<code>this.props.value</code>.这就是双向绑定!</p>
 
 
     <div class="docs-prevnext">

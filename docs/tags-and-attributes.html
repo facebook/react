@@ -416,10 +416,12 @@
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="supported-tags"></a>Supported Tags <a class="hash-link" href="#supported-tags">#</a></h2>
-<p>React attempts to support all common elements. If you need an element that isn&#39;t listed here, please <a href="https://github.com/facebook/react/issues/new">file an issue</a>.</p>
-<h3><a class="anchor" name="html-elements"></a>HTML Elements <a class="hash-link" href="#html-elements">#</a></h3>
-<p>The following HTML elements are supported:</p>
+    <h2><a class="anchor" name="supported-elements"></a>Supported Elements <a class="hash-link" href="#supported-elements">#</a></h2>
+<p>React attempts to support all common elements in both HTML and SVG. Any lower case tag in JSX will be rendered to an element with that tag. SVG elements must be contained within an <code>&lt;svg&gt;</code> element to work properly.</p>
+<h3><a class="anchor" name="using-react.dom-factory-methods"></a>Using <code>React.DOM</code> Factory methods <a class="hash-link" href="#using-react.dom-factory-methods">#</a></h3>
+<p>If you aren&#39;t using JSX and are using the <code>React.DOM.*</code> API to create elements, then you are slightly more limited and there is list of supported elements that will be available on that API.</p>
+<h4><a class="anchor" name="html-elements"></a>HTML Elements <a class="hash-link" href="#html-elements">#</a></h4>
+<p>The following HTML elements are supported in <code>React.DOM.*</code>:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">a abbr address area article aside audio b base bdi bdo big blockquote body br
 button canvas caption cite code col colgroup data datalist dd del details dfn
 dialog div dl dt em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5
@@ -428,8 +430,8 @@ link main map mark menu menuitem meta meter nav noscript object ol optgroup
 option output p param picture pre progress q rp rt ruby s samp script section
 select small source span strong style sub summary sup table tbody td textarea
 tfoot th thead time title tr track u ul var video wbr
-</code></pre></div><h3><a class="anchor" name="svg-elements"></a>SVG elements <a class="hash-link" href="#svg-elements">#</a></h3>
-<p>The following SVG elements are supported:</p>
+</code></pre></div><h4><a class="anchor" name="svg-elements"></a>SVG elements <a class="hash-link" href="#svg-elements">#</a></h4>
+<p>The following SVG elements are supported in <code>React.DOM.*</code>:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">circle clipPath defs ellipse g image line linearGradient mask path pattern
 polygon polyline radialGradient rect stop svg text tspan
 </code></pre></div>
@@ -448,17 +450,17 @@ polygon polyline radialGradient rect stop svg text tspan
 <p>These standard attributes are supported:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accept acceptCharset accessKey action allowFullScreen allowTransparency alt
 async autoComplete autoFocus autoPlay capture cellPadding cellSpacing challenge
-charSet checked classID className colSpan cols content contentEditable
+charSet checked cite classID className colSpan cols content contentEditable
 contextMenu controls coords crossOrigin data dateTime default defer dir
 disabled download draggable encType form formAction formEncType formMethod
 formNoValidate formTarget frameBorder headers height hidden high href hrefLang
 htmlFor httpEquiv icon id inputMode integrity is keyParams keyType kind label
 lang list loop low manifest marginHeight marginWidth max maxLength media
 mediaGroup method min minLength multiple muted name noValidate nonce open
-optimum pattern placeholder poster preload radioGroup readOnly rel required
-reversed role rowSpan rows sandbox scope scoped scrolling seamless selected
-shape size sizes span spellCheck src srcDoc srcLang srcSet start step style
-summary tabIndex target title type useMap value width wmode wrap
+optimum pattern placeholder poster preload profile radioGroup readOnly rel
+required reversed role rowSpan rows sandbox scope scoped scrolling seamless
+selected shape size sizes span spellCheck src srcDoc srcLang srcSet start step
+style summary tabIndex target title type useMap value width wmode wrap
 </code></pre></div>
 <p>These RDFa attributes are supported (several RDFa attributes overlap with standard HTML attributes and thus are excluded from this list):</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">about datatype inlist prefix property resource typeof vocab
@@ -474,15 +476,43 @@ summary tabIndex target title type useMap value width wmode wrap
 <li><code>results autoSave</code> for WebKit/Blink input fields of type <code>search</code>.</li>
 </ul>
 
-<p>There is also the React-specific attribute <code>dangerouslySetInnerHTML</code> (<a href="/react/docs/special-non-dom-attributes.html">more here</a>), used for directly inserting HTML strings into a component.</p>
-<h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">clipPath cx cy d dx dy fill fillOpacity fontFamily
-fontSize fx fy gradientTransform gradientUnits markerEnd
-markerMid markerStart offset opacity patternContentUnits
-patternUnits points preserveAspectRatio r rx ry spreadMethod
-stopColor stopOpacity stroke  strokeDasharray strokeLinecap
-strokeOpacity strokeWidth textAnchor transform version
-viewBox x1 x2 x xlinkActuate xlinkArcrole xlinkHref xlinkRole
-xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y
+<p>There is also 2 React-specific attributes:
+- <code>dangerouslySetInnerHTML</code> (<a href="/react/docs/special-non-dom-attributes.html">more here</a>), used for directly inserting HTML strings into a component.
+- <code>suppressContentEditableWarning</code>, used to suppress the warning when using <code>contentEditable</code> and <code>children</code>.</p>
+<h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">accentHeight accumulate additive alignmentBaseline allowReorder alphabetic
+amplitude arabicForm ascent attributeName attributeType autoReverse azimuth
+baseFrequency baseProfile baselineShift bbox begin bias by calcMode capHeight
+clip clipPath clipPathUnits clipRule colorInterpolation
+colorInterpolationFilters colorProfile colorRendering contentScriptType
+contentStyleType cursor cx cy d decelerate descent diffuseConstant direction
+display divisor dominantBaseline dur dx dy edgeMode elevation enableBackground
+end exponent externalResourcesRequired fill fillOpacity fillRule filter
+filterRes filterUnits floodColor floodOpacity focusable fontFamily fontSize
+fontSizeAdjust fontStretch fontStyle fontVariant fontWeight format from fx fy
+g1 g2 glyphName glyphOrientationHorizontal glyphOrientationVertical glyphRef
+gradientTransform gradientUnits hanging horizAdvX horizOriginX ideographic
+imageRendering in in2 intercept k k1 k2 k3 k4 kernelMatrix kernelUnitLength
+kerning keyPoints keySplines keyTimes lengthAdjust letterSpacing lightingColor
+limitingConeAngle local markerEnd markerHeight markerMid markerStart
+markerUnits markerWidth mask maskContentUnits maskUnits mathematical mode
+numOctaves offset opacity operator order orient orientation origin overflow
+overlinePosition overlineThickness paintOrder panose1 pathLength
+patternContentUnits patternTransform patternUnits pointerEvents points
+pointsAtX pointsAtY pointsAtZ preserveAlpha preserveAspectRatio primitiveUnits
+r radius refX refY renderingIntent repeatCount repeatDur requiredExtensions
+requiredFeatures restart result rotate rx ry scale seed shapeRendering slope
+spacing specularConstant specularExponent speed spreadMethod startOffset
+stdDeviation stemh stemv stitchTiles stopColor stopOpacity
+strikethroughPosition strikethroughThickness string stroke strokeDasharray
+strokeDashoffset strokeLinecap strokeLinejoin strokeMiterlimit strokeOpacity
+strokeWidth surfaceScale systemLanguage tableValues targetX targetY textAnchor
+textDecoration textLength textRendering to transform u1 u2 underlinePosition
+underlineThickness unicode unicodeBidi unicodeRange unitsPerEm vAlphabetic
+vHanging vIdeographic vMathematical values vectorEffect version vertAdvY
+vertOriginX vertOriginY viewBox viewTarget visibility widths wordSpacing
+writingMode x x1 x2 xChannelSelector xHeight xlinkActuate xlinkArcrole
+xlinkHref xlinkRole xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace
+y y1 y2 yChannelSelector z zoomAndPan
 </code></pre></div>
 
     <div class="docs-prevnext">

@@ -1,5 +1,7 @@
+"use strict";
+
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,8 +13,6 @@
  * This is a web interface for the HTML to JSX converter contained in
  * `html-jsx-lib.js`.
  */
-"use strict";
-
 ;(function () {
 
   var HELLO_COMPONENT = "\
@@ -27,30 +27,30 @@
   var HTMLtoJSXComponent = React.createClass({
     displayName: "HTMLtoJSXComponent",
 
-    getInitialState: function getInitialState() {
+    getInitialState: function () {
       return {
         outputClassName: 'NewComponent',
         createClass: true
       };
     },
-    onReactClassNameChange: function onReactClassNameChange(evt) {
+    onReactClassNameChange: function (evt) {
       this.setState({ outputClassName: evt.target.value });
     },
-    onCreateClassChange: function onCreateClassChange(evt) {
+    onCreateClassChange: function (evt) {
       this.setState({ createClass: evt.target.checked });
     },
-    setInput: function setInput(input) {
+    setInput: function (input) {
       this.setState({ input: input });
       this.convertToJsx();
     },
-    convertToJSX: function convertToJSX(input) {
+    convertToJSX: function (input) {
       var converter = new HTMLtoJSX({
         outputClassName: this.state.outputClassName,
         createClass: this.state.createClass
       });
       return converter.convert(input);
     },
-    render: function render() {
+    render: function () {
       return React.createElement(
         "div",
         null,

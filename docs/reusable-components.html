@@ -476,9 +476,26 @@
     <span class="c1">// won&#39;t work inside `oneOfType`.</span>
     <span class="nx">customProp</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">propName</span><span class="p">,</span> <span class="nx">componentName</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="sr">/matchme/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">props</span><span class="p">[</span><span class="nx">propName</span><span class="p">]))</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Validation failed!&#39;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span>
+          <span class="s1">&#39;Invalid prop `&#39;</span> <span class="o">+</span> <span class="nx">propName</span> <span class="o">+</span> <span class="s1">&#39;` supplied to&#39;</span> <span class="o">+</span>
+          <span class="s1">&#39; `&#39;</span> <span class="o">+</span> <span class="nx">componentName</span> <span class="o">+</span> <span class="s1">&#39;`. Validation failed.&#39;</span>
+        <span class="p">);</span>
       <span class="p">}</span>
-    <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="c1">// You can also supply a custom validator to `arrayOf` and `objectOf`.</span>
+    <span class="c1">// It should return an Error object if the validation fails. The validator</span>
+    <span class="c1">// will be called for each key in the array or object. The first two</span>
+    <span class="c1">// arguments of the validator are the array or object itself, and the</span>
+    <span class="c1">// current item&#39;s key.</span>
+    <span class="nx">customArrayProp</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">propValue</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">componentName</span><span class="p">,</span> <span class="nx">location</span><span class="p">,</span> <span class="nx">propFullName</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="sr">/matchme/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">propValue</span><span class="p">[</span><span class="nx">key</span><span class="p">]))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span>
+          <span class="s1">&#39;Invalid prop `&#39;</span> <span class="o">+</span> <span class="nx">propFullName</span> <span class="o">+</span> <span class="s1">&#39;` supplied to&#39;</span> <span class="o">+</span>
+          <span class="s1">&#39; `&#39;</span> <span class="o">+</span> <span class="nx">componentName</span> <span class="o">+</span> <span class="s1">&#39;`. Validation failed.&#39;</span>
+        <span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">})</span>
   <span class="p">},</span>
   <span class="cm">/* ... */</span>
 <span class="p">});</span>
@@ -638,6 +655,10 @@ However, you may still specify <code>.propTypes</code> and <code>.defaultProps</
 <p>NOTE:</p>
 
 <p>Because stateless functions don&#39;t have a backing instance, you can&#39;t attach a ref to a stateless function component. Normally this isn&#39;t an issue, since stateless functions do not provide an imperative API. Without an imperative API, there isn&#39;t much you could do with an instance anyway. However, if a user wants to find the DOM node of a stateless function component, they must wrap the component in a stateful component (eg. ES6 class component) and attach the ref to the stateful wrapper component.</p>
+
+<p>NOTE:</p>
+
+<p>In React v0.14, stateless functional components were not permitted to return <code>null</code> or <code>false</code> (a workaround is to return a <code>&lt;noscript /&gt;</code> instead). This was fixed in React v15, and stateless functional components are now permitted to return <code>null</code>.</p>
 </blockquote>
 
 <p>In an ideal world, most of your components would be stateless functions because in the future we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations. This is the recommended pattern, when possible.</p>

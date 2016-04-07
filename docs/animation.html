@@ -600,13 +600,30 @@
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
-<p>Every DOM component that React can render is available for use. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself! Just write <code>component={List}</code> and your component will receive <code>this.props.children</code>.</p>
-
 <p>Any additional, user-defined, properties will become properties of the rendered component. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code> with CSS class:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
+<p>Every DOM component that React can render is available for use. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself! Just write <code>component={List}</code> and your component will receive <code>this.props.children</code>.</p>
+<h3><a class="anchor" name="rendering-a-single-child"></a>Rendering a Single Child <a class="hash-link" href="#rendering-a-single-child">#</a></h3>
+<p>People often use <code>ReactTransitionGroup</code> to animate mounting and unmounting of a single child such as a collapsible panel. Normally <code>ReactTransitionGroup</code> wraps all its children in a <code>span</code> (or a custom <code>component</code> as described above). This is because any React component has to return a single root element, and <code>ReactTransitionGroup</code> is no exception to this rule.</p>
+
+<p>However if you only need to render a single child inside <code>ReactTransitionGroup</code>, you can completely avoid wrapping it in a <code>&lt;span&gt;</code> or any other DOM component. To do this, create a custom component that renders the first child passed to it directly:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="kd">var</span> <span class="nx">FirstChild</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">||</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Now you can specify <code>FirstChild</code> as the <code>component</code> prop in <code>&lt;ReactTransitionGroup&gt;</code> props and avoid any wrappers in the result DOM:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">FirstChild</span><span class="p">}</span><span class="o">&gt;</span>
+</span>  <span class="p">{</span><span class="nx">someCondition</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="kc">null</span><span class="p">}</span>
+<span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
+</code></pre></div>
+<p>This only works when you are animating a single child in and out, such as a collapsible panel. This approach wouldn&#39;t work when animating multiple children or replacing the single child with another child, such as an image carousel. For an image carousel, while the current image is animating out, another image will animate in, so <code>&lt;ReactTransitionGroup&gt;</code> needs to give them a common DOM parent. You can&#39;t avoid the wrapper for multiple children, but you can customize the wrapper with the <code>component</code> prop as described above.</p>
+
 
     <div class="docs-prevnext">
       
