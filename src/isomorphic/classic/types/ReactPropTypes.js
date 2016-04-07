@@ -419,7 +419,7 @@ function isSymbol(propType, propValue) {
   }
 
   // Fallback for non-spec compliant Symbols which are polyfilled.
-  if (typeof Symbol !== 'undefined' && propValue instanceof Symbol) {
+  if (typeof Symbol === 'function' && propValue instanceof Symbol) {
     return true;
   }
 
