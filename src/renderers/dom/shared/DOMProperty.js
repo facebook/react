@@ -11,7 +11,23 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var invariant = require('fbjs/lib/invariant');
+
+var RESERVED_PROPS = {
+  children: true,
+  dangerouslySetInnerHTML: true,
+  key: true,
+  ref: true,
+
+  autoFocus: true,
+  defaultValue: true,
+  defaultChecked: true,
+  innerHTML: true,
+  suppressContentEditableWarning: true,
+  onFocusIn: true,
+  onFocusOut: true,
+};
 
 function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
@@ -224,6 +240,38 @@ var DOMProperty = {
       }
     }
     return false;
+  },
+
+  /**
+   * Checks whether a property name is a writeable attribute.
+   * @method
+   */
+  isWriteableAttribute: function(attributeName) {
+    if (DOMProperty.isReservedProp(attributeName)) {
+      return false;
+    }
+
+    if (
+      ReactDOMFeatureFlags.allowCustomAttributes ||
+      DOMProperty.properties[attributeName]
+    ) {
+      return true;
+    }
+
+    return this.isCustomAttribute(attributeName);
+  },
+
+  /**
+   * Checks to see if a property name is within the list of properties
+   * reserved for internal React operations. These properties should
+   * not be set on an HTML element.
+   *
+   * @private
+   * @param {string} name
+   * @return {boolean} If the name is within reserved props
+   */
+  isReservedProp(name) {
+    return RESERVED_PROPS.hasOwnProperty(name);
   },
 
   injection: DOMPropertyInjection,
