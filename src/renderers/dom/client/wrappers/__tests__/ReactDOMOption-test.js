@@ -71,4 +71,15 @@ describe('ReactDOMOption', function() {
     var node = ReactDOM.findDOMNode(stub);
     expect(node.innerHTML).toBe('foobar');
   });
+
+  it('should set attribute for empty value', function() {
+    var container = document.createElement('div');
+    var option = ReactDOM.render(<option value="" />, container);
+    expect(option.hasAttribute('value')).toBe(true);
+    expect(option.getAttribute('value')).toBe('');
+
+    ReactDOM.render(<option value="lava" />, container);
+    expect(option.hasAttribute('value')).toBe(true);
+    expect(option.getAttribute('value')).toBe('lava');
+  });
 });
