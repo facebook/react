@@ -141,28 +141,6 @@ describe('ReactDOMComponent', () => {
       expectDev(() => (style.position = 'absolute')).toThrow();
     });
 
-    it('should warn for unknown prop', () => {
-      spyOn(console, 'error');
-      var container = document.createElement('div');
-      ReactDOM.render(<div foo="bar" />, container);
-      expectDev(console.error.calls.count(0)).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown prop `foo` on <div> tag. Remove this prop from the element. ' +
-          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
-      );
-    });
-
-    it('should group multiple unknown prop warnings together', () => {
-      spyOn(console, 'error');
-      var container = document.createElement('div');
-      ReactDOM.render(<div foo="bar" baz="qux" />, container);
-      expectDev(console.error.calls.count(0)).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown props `foo`, `baz` on <div> tag. Remove these props from the element. ' +
-          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
-      );
-    });
-
     it('should warn for onDblClick prop', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');

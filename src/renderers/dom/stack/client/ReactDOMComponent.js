@@ -52,11 +52,6 @@ var CONTENT_TYPES = {string: true, number: true};
 
 var STYLE = 'style';
 var HTML = '__html';
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-};
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -638,13 +633,14 @@ ReactDOMComponent.Mixin = {
     var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
-      if (!props.hasOwnProperty(propKey)) {
+      if (
+        !props.hasOwnProperty(propKey) ||
+        DOMProperty.isReservedProp(propKey)
+      ) {
         continue;
       }
       var propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
+
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
           ensureListeningTo(this, propKey, transaction);
@@ -663,7 +659,7 @@ ReactDOMComponent.Mixin = {
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          if (!DOMProperty.isReservedProp(propKey)) {
             markup = DOMPropertyOperations.createMarkupForCustomAttribute(
               propKey,
               propValue,
@@ -901,7 +897,8 @@ ReactDOMComponent.Mixin = {
       if (
         nextProps.hasOwnProperty(propKey) ||
         !lastProps.hasOwnProperty(propKey) ||
-        lastProps[propKey] == null
+        lastProps[propKey] == null ||
+        DOMProperty.isReservedProp(propKey)
       ) {
         continue;
       }
@@ -913,16 +910,10 @@ ReactDOMComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
+        this._previousStyleCopy = null;
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
-      } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
-        }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
+      } else {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
@@ -932,7 +923,8 @@ ReactDOMComponent.Mixin = {
       if (
         !nextProps.hasOwnProperty(propKey) ||
         nextProp === lastProp ||
-        (nextProp == null && lastProp == null)
+        (nextProp == null && lastProp == null) ||
+        DOMProperty.isReservedProp(propKey)
       ) {
         continue;
       }
@@ -972,17 +964,14 @@ ReactDOMComponent.Mixin = {
           ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMProperty.isReservedProp(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,
             nextProp,
           );
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
+      } else {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This

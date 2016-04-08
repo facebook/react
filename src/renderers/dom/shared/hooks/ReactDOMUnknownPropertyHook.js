@@ -30,31 +30,68 @@ function getStackAddendum(debugID) {
 }
 
 if (__DEV__) {
-  var reactProps = {
-    children: true,
-    dangerouslySetInnerHTML: true,
-    key: true,
-    ref: true,
+  var additionalProps = [
+    // Case sensitive properties not included in properties list
+    'acceptCharset',
+    'accessKey',
+    'allowTransparency',
+    'autoCapitalize',
+    'autoComplete',
+    'autoCorrect',
+    'autoFocus',
+    'autoSave',
+    'cellPadding',
+    'cellSpacing',
+    'charSet',
+    'classID',
+    'className',
+    'colSpan',
+    'contentEditable',
+    'contextMenu',
+    'crossOrigin',
+    'dateTime',
+    'encType',
+    'formAction',
+    'formEncType',
+    'formMethod',
+    'formTarget',
+    'frameBorder',
+    'hrefLang',
+    'htmlFor',
+    'httpEquiv',
+    'inputMode',
+    'itemID',
+    'itemProp',
+    'itemRef',
+    'itemType',
+    'keyParams',
+    'keyType',
+    'marginHeight',
+    'marginWidth',
+    'maxLength',
+    'mediaGroup',
+    'minLength',
+    'playsInline',
+    'radioGroup',
+    'referrerPolicy',
+    'spellCheck',
+    'srcDoc',
+    'srcLang',
+    'srcSet',
+    'tabIndex',
+    'useMap',
+  ];
 
-    autoFocus: true,
-    defaultValue: true,
-    defaultChecked: true,
-    innerHTML: true,
-    suppressContentEditableWarning: true,
-    onFocusIn: true,
-    onFocusOut: true,
-  };
+  additionalProps.forEach(function(name) {
+    DOMProperty.getPossibleStandardName[name.toLowerCase()] = name;
+  });
+
   var warnedProperties = {};
 
   var validateProperty = function(tagName, name, debugID) {
     if (
       DOMProperty.properties.hasOwnProperty(name) ||
-      DOMProperty.isCustomAttribute(name)
-    ) {
-      return true;
-    }
-    if (
-      (reactProps.hasOwnProperty(name) && reactProps[name]) ||
+      DOMProperty.isReservedProp(name) ||
       (warnedProperties.hasOwnProperty(name) && warnedProperties[name])
     ) {
       return true;
@@ -66,11 +103,9 @@ if (__DEV__) {
     var lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = DOMProperty.isCustomAttribute(lowerCasedName)
-      ? lowerCasedName
-      : DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)
-          ? DOMProperty.getPossibleStandardName[lowerCasedName]
-          : null;
+    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(name)
+      ? DOMProperty.getPossibleStandardName[name]
+      : null;
 
     var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
