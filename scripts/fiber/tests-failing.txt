@@ -1,1 +1,6 @@
+src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
+* allows assignment of custom attributes to elements
 
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders unknown attributes with clean client render
+* renders no unknown attributes for non-standard elements with clean client render

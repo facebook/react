@@ -1,2 +1,55 @@
-src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* gives source code refs for unknown prop warning for exact elements in composition (ssr)
+src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
+* should allow valid aria-* props
+* should warn for an improperly cased aria-* prop
+
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders boolean prop with true value with client render on top of good server markup
+* renders boolean prop with false value with client render on top of good server markup
+* renders boolean prop with self value with client render on top of good server markup
+* renders boolean prop with "" value with client render on top of good server markup
+* renders boolean prop with string value with client render on top of good server markup
+* renders boolean prop with array value with client render on top of good server markup
+* renders boolean prop with object value with client render on top of good server markup
+* renders boolean prop with non-zero number value with client render on top of good server markup
+* renders boolean prop with zero value with client render on top of good server markup
+* renders download prop with true value with client render on top of good server markup
+* renders download prop with false value with client render on top of good server markup
+* renders className prop with string value with client render on top of good server markup
+* renders className prop with empty string value with client render on top of good server markup
+* renders className prop with true value with client render on top of good server markup
+* renders className prop with false value with client render on top of good server markup
+* renders htmlFor with string value with client render on top of good server markup
+* renders htmlFor with an empty string with client render on top of good server markup
+* renders htmlFor prop with true value with client render on top of good server markup
+* renders htmlFor prop with false value with client render on top of good server markup
+* renders no positive numeric property with zero value with client render on top of good server markup
+* renders simple strings with server string render
+* renders simple strings with server stream render
+* renders simple strings with clean client render
+* renders simple strings with client render on top of good server markup
+* renders simple strings with client render on top of bad server markup
+* renders aria string prop with false value with server string render
+* renders aria string prop with false value with server stream render
+* renders aria string prop with false value with clean client render
+* renders aria string prop with false value with client render on top of good server markup
+* renders aria string prop with false value with client render on top of bad server markup
+* renders no aria prop with null value with server string render
+* renders no aria prop with null value with server stream render
+* renders no aria prop with null value with clean client render
+* renders no aria prop with null value with client render on top of good server markup
+* renders no aria prop with null value with client render on top of bad server markup
+* renders svg element with an xlink with client render on top of good server markup
+* renders an input with a value and readOnly with client render on top of good server markup
+* renders an input value overriding defaultValue with client render on top of good server markup
+* renders an input value overriding defaultValue no matter the prop order with client render on top of good server markup
+* renders a checkbox that is checked with readOnly with client render on top of good server markup
+* renders a checkbox checked overriding defaultChecked with client render on top of good server markup
+* renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of good server markup
+* renders a textarea with a value and readOnly with client render on top of good server markup
+* renders a textarea value overriding defaultValue with client render on top of good server markup
+* renders a textarea value overriding defaultValue no matter the prop order with client render on top of good server markup
+* renders a select with a value and readOnly with client render on top of good server markup
+* renders a select with a multiple values and an onChange with client render on top of good server markup
+* renders a select with a multiple values and readOnly with client render on top of good server markup
+* renders a select value overriding defaultValue with client render on top of good server markup
+* renders a select value overriding defaultValue no matter the prop order with client render on top of good server markup

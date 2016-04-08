@@ -1021,7 +1021,7 @@ var ReactDOMFiberComponent = {
           }
         } else if (
           isCustomComponentTag ||
-          DOMProperty.isCustomAttribute(propKey)
+          DOMProperty.isWriteableAttribute(propKey)
         ) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propKey);
