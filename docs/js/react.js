@@ -1,5 +1,5 @@
  /**
-  * React v15.0.0
+  * React v15.0.1
   */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.React = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 /**
@@ -1841,8 +1841,7 @@ var DOMPropertyOperations = {
         var propName = propertyInfo.propertyName;
         // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
         // property type before comparing; only `value` does and is string.
-        // Must set `value` property if it is not null and not yet set.
-        if (!propertyInfo.hasSideEffects || '' + node[propName] !== '' + value || !node.hasAttribute(propertyInfo.attributeName)) {
+        if (!propertyInfo.hasSideEffects || '' + node[propName] !== '' + value) {
           // Contrary to `setAttribute`, object properties are properly
           // `toString`ed by IE8/9.
           node[propName] = value;
@@ -3713,6 +3712,8 @@ module.exports = PooledClass;
 
 'use strict';
 
+var _assign = _dereq_(167);
+
 var ReactChildren = _dereq_(27);
 var ReactComponent = _dereq_(29);
 var ReactClass = _dereq_(28);
@@ -3723,6 +3724,7 @@ var ReactPropTypes = _dereq_(83);
 var ReactVersion = _dereq_(93);
 
 var onlyChild = _dereq_(133);
+var warning = _dereq_(166);
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -3732,6 +3734,17 @@ if ("development" !== 'production') {
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
   cloneElement = ReactElementValidator.cloneElement;
+}
+
+var __spread = _assign;
+
+if ("development" !== 'production') {
+  var warned = false;
+  __spread = function () {
+    "development" !== 'production' ? warning(warned, 'React.__spread is deprecated and should not be used. Use ' + 'Object.assign directly or another helper function with similar ' + 'semantics. You may be seeing this warning due to your compiler. ' + 'See https://fb.me/react-spread-deprecation for more details.') : void 0;
+    warned = true;
+    return _assign.apply(null, arguments);
+  };
 }
 
 var React = {
@@ -3766,11 +3779,14 @@ var React = {
   // since they are just generating DOM strings.
   DOM: ReactDOMFactories,
 
-  version: ReactVersion
+  version: ReactVersion,
+
+  // Deprecated hook for JSX spread, don't use this for anything.
+  __spread: __spread
 };
 
 module.exports = React;
-},{"133":133,"27":27,"28":28,"29":29,"42":42,"60":60,"61":61,"83":83,"93":93}],25:[function(_dereq_,module,exports){
+},{"133":133,"166":166,"167":167,"27":27,"28":28,"29":29,"42":42,"60":60,"61":61,"83":83,"93":93}],25:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -6493,6 +6509,11 @@ function putListener() {
   EventPluginHub.putListener(listenerToPut.inst, listenerToPut.registrationName, listenerToPut.listener);
 }
 
+function optionPostMount() {
+  var inst = this;
+  ReactDOMOption.postMountWrapper(inst);
+}
+
 // There are so many media events, it makes sense to just
 // maintain a list rather than create a `trapBubbledEvent` for each
 var mediaEvents = {
@@ -6801,6 +6822,8 @@ ReactDOMComponent.Mixin = {
           transaction.getReactMountReady().enqueue(AutoFocusUtils.focusDOMComponent, this);
         }
         break;
+      case 'option':
+        transaction.getReactMountReady().enqueue(optionPostMount, this);
     }
 
     return mountImage;
@@ -8050,6 +8073,7 @@ module.exports = { debugTool: ReactDOMDebugTool };
 var _assign = _dereq_(167);
 
 var ReactChildren = _dereq_(27);
+var ReactDOMComponentTree = _dereq_(38);
 var ReactDOMSelect = _dereq_(48);
 
 var warning = _dereq_(166);
@@ -8091,6 +8115,15 @@ var ReactDOMOption = {
     inst._wrapperState = { selected: selected };
   },
 
+  postMountWrapper: function (inst) {
+    // value="" should make a value attribute (#6219)
+    var props = inst._currentElement.props;
+    if (props.value != null) {
+      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+      node.setAttribute('value', props.value);
+    }
+  },
+
   getNativeProps: function (inst, props) {
     var nativeProps = _assign({ selected: undefined, children: undefined }, props);
 
@@ -8125,7 +8158,7 @@ var ReactDOMOption = {
 };
 
 module.exports = ReactDOMOption;
-},{"166":166,"167":167,"27":27,"48":48}],48:[function(_dereq_,module,exports){
+},{"166":166,"167":167,"27":27,"38":38,"48":48}],48:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -13858,7 +13891,7 @@ module.exports = ReactUpdates;
 
 'use strict';
 
-module.exports = '15.0.0';
+module.exports = '15.0.1';
 },{}],94:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
