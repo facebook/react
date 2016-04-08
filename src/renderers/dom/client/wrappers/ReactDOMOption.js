@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactChildren = require('ReactChildren');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMSelect = require('ReactDOMSelect');
 
 var warning = require('warning');
@@ -55,6 +56,15 @@ var ReactDOMOption = {
     }
 
     inst._wrapperState = {selected: selected};
+  },
+
+  postMountWrapper: function(inst) {
+    // value="" should make a value attribute (#6219)
+    var props = inst._currentElement.props;
+    if (props.value != null) {
+      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+      node.setAttribute('value', props.value);
+    }
   },
 
   getNativeProps: function(inst, props) {
