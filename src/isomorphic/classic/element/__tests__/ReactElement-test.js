@@ -170,6 +170,86 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
+  it('should not extract key and ref getters from the config when creating an element', function() {
+    var props = {
+      foo: '56',
+    };
+
+    Object.defineProperty(props, 'key', {
+      get: function() {
+        return '12';
+      },
+    });
+
+    Object.defineProperty(props, 'ref', {
+      get: function() {
+        return '34';
+      },
+    });
+
+    var element = React.createFactory(ComponentClass)(props);
+    expect(element.type).toBe(ComponentClass);
+    expect(element.key).toBe(null);
+    expect(element.ref).toBe(null);
+    var expectation = {foo:'56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
+  });
+
+  it('should not extract key and ref getters from the config when cloning an element', function() {
+    var element = React.createFactory(ComponentClass)({
+      key: '12',
+      ref: '34',
+      foo: '56',
+    });
+
+    var props = {
+      foo: 'ef',
+    };
+
+    Object.defineProperty(props, 'key', {
+      get: function() {
+        return 'ab';
+      },
+    });
+
+    Object.defineProperty(props, 'ref', {
+      get: function() {
+        return 'cd';
+      },
+    });
+
+    var clone = React.cloneElement(element, props);
+    expect(clone.type).toBe(ComponentClass);
+    expect(clone.key).toBe('12');
+    expect(clone.ref).toBe('34');
+    var expectation = {foo:'ef'};
+    Object.freeze(expectation);
+    expect(clone.props).toEqual(expectation);
+  });
+
+  it('should allow null key and ref values when cloning an element', function() {
+    var element = React.createFactory(ComponentClass)({
+      key: '12',
+      ref: '34',
+      foo: '56',
+    });
+
+    var props = {
+      key: null,
+      ref: null,
+      foo: 'ef',
+    };
+
+    var clone = React.cloneElement(element, props);
+    expect(clone.type).toBe(ComponentClass);
+    expect(clone.key).toBe('null');
+    expect(clone.ref).toBe(null);
+    var expectation = {foo:'ef'};
+    Object.freeze(expectation);
+    expect(clone.props).toEqual(expectation);
+  });
+
   it('coerces the key to a string', function() {
     var element = React.createFactory(ComponentClass)({
       key: 12,

@@ -32,6 +32,19 @@ var RESERVED_PROPS = {
 
 var specialPropKeyWarningShown, specialPropRefWarningShown;
 
+function isValidConfigRefOrKey(config, name) {
+  if (__DEV__) {
+    return hasOwnProperty.call(config, name) &&
+      !Object.getOwnPropertyDescriptor(config, name).get;
+  }
+
+  return config[name] !== undefined;
+}
+
+function getConfigKey(config) {
+  return '' + config.key;
+}
+
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, no instanceof check
@@ -138,14 +151,16 @@ ReactElement.createElement = function(type, config, children) {
         'React.createElement(...): Expected props argument to be a plain object. ' +
         'Properties defined in its prototype chain will be ignored.'
       );
-      ref = !hasOwnProperty.call(config, 'ref') ||
-        Object.getOwnPropertyDescriptor(config, 'ref').get ? null : config.ref;
-      key = !hasOwnProperty.call(config, 'key') ||
-        Object.getOwnPropertyDescriptor(config, 'key').get ? null : '' + config.key;
-    } else {
-      ref = config.ref === undefined ? null : config.ref;
-      key = config.key === undefined ? null : '' + config.key;
     }
+
+    if (isValidConfigRefOrKey(config, 'ref')) {
+      ref = config.ref;
+    }
+
+    if (isValidConfigRefOrKey(config, 'key')) {
+      key = getConfigKey(config);
+    }
+
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
@@ -297,14 +312,17 @@ ReactElement.cloneElement = function(element, config, children) {
         'Properties defined in its prototype chain will be ignored.'
       );
     }
-    if (config.ref !== undefined) {
+
+    if (isValidConfigRefOrKey(config, 'ref')) {
       // Silently steal the ref from the parent.
       ref = config.ref;
       owner = ReactCurrentOwner.current;
     }
-    if (config.key !== undefined) {
-      key = '' + config.key;
+
+    if (isValidConfigRefOrKey(config, 'key')) {
+      key = getConfigKey(config);
     }
+
     // Remaining properties override existing props
     var defaultProps;
     if (element.type && element.type.defaultProps) {
