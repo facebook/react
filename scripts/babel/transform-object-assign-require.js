@@ -12,6 +12,20 @@
 module.exports = function autoImporter(babel) {
   const t = babel.types;
 
+  function getAssignIdent(path, file, state) {
+    if (!state.id) {
+      state.id = path.scope.generateUidIdentifier('assign');
+      path.scope.getProgramParent().push({
+        id: state.id,
+        init: t.callExpression(
+          t.identifier('require'),
+          [t.stringLiteral('object-assign')]
+        ),
+      });
+    }
+    return state.id;
+  }
+
   return {
     pre: function() {
       // map from module to generated identifier
@@ -22,17 +36,15 @@ module.exports = function autoImporter(babel) {
       CallExpression: function(path, file) {
         if (path.get('callee').matchesPattern('Object.assign')) {
           // generate identifier and require if it hasn't been already
-          if (!this.id) {
-            this.id = path.scope.generateUidIdentifier('assign');
-            path.scope.getProgramParent().push({
-              id: this.id,
-              init: t.callExpression(
-                t.identifier('require'),
-                [t.stringLiteral('object-assign')]
-              ),
-            });
-          }
-          path.node.callee = this.id;
+          var id = getAssignIdent(path, file, this);
+          path.node.callee = id;
+        }
+      },
+
+      MemberExpression: function(path, file) {
+        if (path.matchesPattern('Object.assign')) {
+          var id = getAssignIdent(path, file, this);
+          path.replaceWith(id);
         }
       },
     },
