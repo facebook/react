@@ -823,10 +823,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not warn for a polyfilled Symbol', function() {
-      var ES6Symbol = require('es6-symbol/polyfill');
       var CoreSymbol = require('core-js/library/es6/symbol');
-
-      typeCheckPass(PropTypes.symbol, ES6Symbol('es6-symbol'));
       typeCheckPass(PropTypes.symbol, CoreSymbol('core-js'));
     });
   });
