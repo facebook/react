@@ -17,20 +17,31 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var warning = require('warning');
 
 if (__DEV__) {
-  var reactProps = {
-    children: true,
-    dangerouslySetInnerHTML: true,
-    key: true,
-    ref: true,
-  };
+  var additionalProps = [
+    // Case sensitive properties not included in properties list
+    'acceptCharset', 'accessKey', 'allowTransparency', 'autoComplete',
+    'autoFocus', 'cellPadding', 'cellSpacing', 'charSet', 'classID',
+    'colSpan', 'contentEditable', 'contextMenu', 'crossOrigin',
+    'dateTime', 'encType', 'formAction', 'formEncType', 'formMethod',
+    'formTarget', 'frameBorder', 'hrefLang', 'htmlFor', 'httpEquiv',
+    'inputMode', 'keyParam', 'keyType', 'marginHeight', 'marginWidth',
+    'maxLength', 'mediaGroup', 'minLength', 'radioGroup',
+    'spellCheck', 'srcDoc', 'srcLang', 'srcSet', 'tabIndex', 'useMap',
+    'autoCapitalize', 'autoCorrect', 'autoSave', 'itemProp',
+    'itemType', 'itemID', 'itemRef'
+  ];
+
+  additionalProps.forEach(function(name) {
+    DOMProperty.getPossibleStandardName[name.toLowerCase()] = name;
+  });
+
   var warnedProperties = {};
 
   var warnUnknownProperty = function(name) {
-    if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
+    if (DOMProperty.isReservedProp(name) || DOMProperty.properties.hasOwnProperty(name)) {
       return;
     }
-    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
-        warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+    if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return;
     }
 
@@ -38,13 +49,8 @@ if (__DEV__) {
     var lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = (
-      DOMProperty.isCustomAttribute(lowerCasedName) ?
-        lowerCasedName :
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
-        DOMProperty.getPossibleStandardName[lowerCasedName] :
-        null
-    );
+    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(name) ?
+        DOMProperty.getPossibleStandardName[name] : null;
 
     // For now, only warn when we have a suggested correction. This prevents
     // logging too much when using transferPropsTo.

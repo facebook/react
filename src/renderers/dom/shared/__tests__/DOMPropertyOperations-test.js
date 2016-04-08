@@ -394,13 +394,13 @@ describe('DOMPropertyOperations', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'foobar',
         'simple'
-      )).toBe(null);
+      )).toBe('foobar="simple"');
 
       // foo-* does not exist yet
       expect(DOMPropertyOperations.createMarkupForProperty(
         'foo-xyz',
         'simple'
-      )).toBe(null);
+      )).toBe('foo-xyz="simple"');
 
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
