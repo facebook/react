@@ -1,6 +1,6 @@
 {
   "name": "react-build",
-  "version": "15.0.0",
+  "version": "15.0.1",
   "dependencies": {
     "async": {
       "version": "1.5.2",
