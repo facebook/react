@@ -235,6 +235,11 @@ function putListener() {
   );
 }
 
+function optionPostMount() {
+  var inst = this;
+  ReactDOMOption.postMountWrapper(inst);
+}
+
 // There are so many media events, it makes sense to just
 // maintain a list rather than create a `trapBubbledEvent` for each
 var mediaEvents = {
@@ -600,6 +605,11 @@ ReactDOMComponent.Mixin = {
           );
         }
         break;
+      case 'option':
+        transaction.getReactMountReady().enqueue(
+          optionPostMount,
+          this
+        );
     }
 
     return mountImage;

@@ -149,10 +149,8 @@ var DOMPropertyOperations = {
         var propName = propertyInfo.propertyName;
         // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
         // property type before comparing; only `value` does and is string.
-        // Must set `value` property if it is not null and not yet set.
         if (!propertyInfo.hasSideEffects ||
-            ('' + node[propName]) !== ('' + value) ||
-            !node.hasAttribute(propertyInfo.attributeName)) {
+            ('' + node[propName]) !== ('' + value)) {
           // Contrary to `setAttribute`, object properties are properly
           // `toString`ed by IE8/9.
           node[propName] = value;
