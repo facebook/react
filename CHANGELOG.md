@@ -1,3 +1,12 @@
+## 15.0.1 (April 8, 2016)
+
+### React
+- Restore `React.__spread` API to unbreak code compiled with some tools making use of this undocumented API. It is now officially deprecated. ([@zpao](https://github.com/zpao) in [#6444](https://github.com/facebook/react/pull/6444))
+
+### ReactDOM
+- Fixed issue resulting in loss of cursor position in controlled inputs. ([@spicyj](https://github.com/spicyj) in [#6449](https://github.com/facebook/react/pull/6449))
+
+
 ## 15.0.0 (April 7, 2016)
 
 ### Major changes
