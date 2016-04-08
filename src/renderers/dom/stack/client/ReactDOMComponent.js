@@ -57,11 +57,6 @@ var CONTENT_TYPES = {string: true, number: true};
 
 var STYLE = 'style';
 var HTML = '__html';
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-};
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -710,7 +705,7 @@ ReactDOMComponent.Mixin = {
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          if (!DOMProperty.isReservedProp(propKey)) {
             markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
               propValue,
@@ -966,13 +961,10 @@ ReactDOMComponent.Mixin = {
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMProperty.isReservedProp(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
+      } else if (DOMProperty.isWriteableAttribute(propKey)) {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
@@ -1022,17 +1014,14 @@ ReactDOMComponent.Mixin = {
           ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMProperty.isReservedProp(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,
             nextProp,
           );
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
+      } else if (DOMProperty.isWriteableAttribute(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
