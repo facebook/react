@@ -38,11 +38,11 @@ gems:
 - jekyll-redirect-from
 react_version: 15.0.0
 react_hashes:
-  dev: Cq98Gnp/9Q99TFfuPlSLebblQc+9qMrZtWD0FCe4s7GUZxPiQs3xrnDfXGa4ViyS
-  prod: 9BYbHhdnftnl0BXeFq2Vu9/Q4PbgcQEzhgGVV+AdFn45HLRsjIt7quhJDydhEhXy
-  addons_dev: Qztew90JWMrd/+bXguDKMh+COfzS4qdH8OErl+vquQj4AUkbHVmLuhrvSYMt0vMP
-  addons_prod: MKtYvu68gr8fPQLs3JN5YEdJWxG31GD1kTLWu/bdTs+c5PzBVqGtiOT7zPREK/G8
-  dom_dev: WsglX3Pa1NYQZilMa8GLvlqA5nD7k1WkNmpEHgGxsVvwkb8jVAe9Xyk2FkusiMXH
-  dom_prod: UAMUzFqVISGZygGa8Jiue1c43+A/XIz5Vqo/nhhQ+nDxFYvWtiHF88BDiqUdQeEl
-  dom_server_dev: WTVIOMLvdH0B5Ci5GizQ6EijmhJ42lwT9AlLpxjvRxWNgAqBye3+CQjap+v3IvAn
-  dom_server_prod: lYJlraCIcrpyivOoXRj6kFa1mPZndbT5R2Hjq70IPkxwL1MxcGOxg+14bWolaeWs
+  dev: PcrCc8vAh3jounTGQGibvUE4liSu8s91ycPotf/cfEHdSnq9qaW2c9tFr3oyDzW4
+  prod: S9sTQnq5vvBUhj91S9s9dhE4fiZWgytnfFyIW7hu3Vk5leHzq03A9dULSd0IqW9N
+  addons_dev: TUMXymomVw+mFbSSojSWXtBVJiWEfUKUYzgZsgvUsdD9fL/y0PPc55825Ui2ZPY6
+  addons_prod: rBjtXXl33XbsJR2IbEYJRYH5VnUUMi4o6Zr7ai4UPxcrY0Cw3QpnaU9iIJ2GcyLy
+  dom_dev: ukADzi8g85qHW1NDinecbLJu/a+yfhgXK6G2Kl7vCckNICr4Pt1hN7mpfPzsgbD2
+  dom_prod: n1Sg+vSen3Mb4Ggzsi2jq4MHCXmlKD0spQXmiYaPSt/8WR7PzpwLTmH8OI+yAluA
+  dom_server_dev: eQOoGEpIR1fqOenVhLKRmPctitl54hZLIFg9uMYElEMx0r175Qedt3utJwCjsSrr
+  dom_server_prod: 41Tbqk6dOco41BSH7Fb2xAWh8PJTYntH+OR/m80NT+L5IF6XWcq/kvNZGzhBws60
