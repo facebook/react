@@ -103,7 +103,7 @@ var DOMPropertyOperations = {
         return attributeName + '=""';
       }
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
-    } else if (DOMProperty.isCustomAttribute(name)) {
+    } else {
       if (value == null) {
         return '';
       }
@@ -171,7 +171,7 @@ var DOMPropertyOperations = {
           node.setAttribute(attributeName, '' + value);
         }
       }
-    } else if (DOMProperty.isCustomAttribute(name)) {
+    } else {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
     }
   },
@@ -217,7 +217,7 @@ var DOMPropertyOperations = {
       } else {
         node.removeAttribute(propertyInfo.attributeName);
       }
-    } else if (DOMProperty.isCustomAttribute(name)) {
+    } else {
       node.removeAttribute(name);
     }
   },

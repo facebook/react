@@ -622,13 +622,11 @@ ReactDOMComponent.Mixin = {
     var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
-      if (!props.hasOwnProperty(propKey)) {
+      if (!props.hasOwnProperty(propKey) || props[propKey] == null || DOMProperty.isReservedProp(propKey)) {
         continue;
       }
       var propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
+
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
           enqueuePutListener(this, propKey, propValue, transaction);
@@ -841,7 +839,8 @@ ReactDOMComponent.Mixin = {
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey) ||
-         lastProps[propKey] == null) {
+         lastProps[propKey] == null ||
+         DOMProperty.isReservedProp(propKey)) {
         continue;
       }
       if (propKey === STYLE) {
@@ -860,9 +859,7 @@ ReactDOMComponent.Mixin = {
           // listener (e.g., onClick={null})
           deleteListener(this, propKey);
         }
-      } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
+      } else {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
@@ -873,7 +870,8 @@ ReactDOMComponent.Mixin = {
         lastProps != null ? lastProps[propKey] : undefined;
       if (!nextProps.hasOwnProperty(propKey) ||
           nextProp === lastProp ||
-          nextProp == null && lastProp == null) {
+          nextProp == null && lastProp == null ||
+         DOMProperty.isReservedProp(propKey)) {
         continue;
       }
       if (propKey === STYLE) {
@@ -925,9 +923,7 @@ ReactDOMComponent.Mixin = {
             nextProp
           );
         }
-      } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
+      } else {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
