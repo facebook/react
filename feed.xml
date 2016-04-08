@@ -7,6 +7,43 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v15.0.1</title>
+				<description>&lt;p&gt;Yesterday afternoon we shipped v15.0.0 and quickly got some feedback about a couple of issues. We apologize for these problems and we&amp;#39;ve been working since then to make sure we get fixes into your hands as quickly as possible.&lt;/p&gt;
+
+&lt;p&gt;The first of these issues is related to the removal of an undocumented API. This API was added to enable &lt;a href=&quot;/react/docs/jsx-spread.html&quot;&gt;JSX Spread Attributes&lt;/a&gt; in our JS compile tools (react-tools, JSXTransformer) before &lt;code&gt;Object.assign&lt;/code&gt; was standard. When we stopped supporting these tools last year, we kept the API there to catch the longer tail of people using those tools. Meanwhile we moved to using Babel and encouraged others to do the same. Babel will typically compile the spread use to an &lt;code&gt;_extends&lt;/code&gt; helper, which will use &lt;code&gt;Object.assign&lt;/code&gt;. We did not properly research other compilation tools before deciding to remove the API in v15. Specifically, TypeScript and coffee-react are two popular packages using &lt;code&gt;React.__spread&lt;/code&gt;, as well as reactify which still makes use react-tools. In order to make sure that code compiled with these tools is not broken, we will be restoring the &lt;code&gt;React.__spread&lt;/code&gt; API and adding a warning. It will be removed in the future so if you maintain a project making using of it, we encourage you to compile to &lt;code&gt;Object.assign&lt;/code&gt; directly or a similar helper function.&lt;/p&gt;
+
+&lt;p&gt;The second issue resulted in cursor position being lost in controlled inputs. We merged a pull request earlier this week to fix a separate regression from v0.14. Our goal was to target &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; elements but we ended up targeting all interactions with &lt;code&gt;value&lt;/code&gt; properties. Unfortunately we didn&amp;#39;t test it as thoroughly as we thought. We backed out the offending change and fixed the issue in different way which doesn&amp;#39;t have the same problem.&lt;/p&gt;
+
+&lt;p&gt;We apologize if you installed 15.0.0 and have encountered these issues yourselves.&lt;/p&gt;
+
+&lt;p&gt;As usual, you can get install the &lt;code&gt;react&lt;/code&gt; package via npm or download a browser bundle.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-15.0.1.js&quot;&gt;https://fb.me/react-15.0.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-15.0.1.min.js&quot;&gt;https://fb.me/react-15.0.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.1.js&quot;&gt;https://fb.me/react-with-addons-15.0.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.1.min.js&quot;&gt;https://fb.me/react-with-addons-15.0.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.js&quot;&gt;https://fb.me/react-dom-15.0.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.min.js&quot;&gt;https://fb.me/react-dom-15.0.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Restore &lt;code&gt;React.__spread&lt;/code&gt; API to unbreak code compiled with some tools making use of this undocumented API. It is now officially deprecated. (&lt;a href=&quot;https://github.com/zpao&quot;&gt;@zpao&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6444&quot;&gt;#6444&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactdom&quot;&gt;&lt;/a&gt;ReactDOM &lt;a class=&quot;hash-link&quot; href=&quot;#reactdom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed issue resulting in loss of cursor position in controlled inputs. (&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6449&quot;&gt;#6449&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2016-04-08T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/04/08/react-v15.0.1.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/04/08/react-v15.0.1.html</guid>
+			</item>
+		
+			<item>
 				<title>React v15.0</title>
 				<description>&lt;p&gt;We would like to thank the React community for reporting issues and regressions in the release candidates on our &lt;a href=&quot;https://github.com/facebook/react/issues/&quot;&gt;issue tracker&lt;/a&gt;. Over the last few weeks we fixed those issues, and now, after two release candidates, we are excited to finally release the stable version of React 15.&lt;/p&gt;
 
@@ -64,7 +101,7 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.m
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/mwiencek&quot;&gt;@mwiencek&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5753&quot;&gt;#5753&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-null-now-uses-comment-nodes&quot;&gt;&lt;/a&gt;Rendering &lt;code&gt;null&lt;/code&gt; now uses comment nodes &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-null-now-uses-comment-nodes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;We’ve also made use of these comment nodes to change what &lt;code&gt;null&lt;/code&gt; renders to. Rendering to &lt;code&gt;null&lt;/code&gt; was a feature we added in React 0.11 and was implemented by rendering &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements. By rendering to comment nodes now, there’s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of &lt;code&gt;:nth-child&lt;/code&gt; selectors. This, along with the other changes mentioned above, have always been considered implementation details of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.  &lt;/p&gt;
+&lt;p&gt;We’ve also made use of these comment nodes to change what &lt;code&gt;null&lt;/code&gt; renders to. Rendering to &lt;code&gt;null&lt;/code&gt; was a feature we added in React 0.11 and was implemented by rendering &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements. By rendering to comment nodes now, there’s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of &lt;code&gt;:nth-child&lt;/code&gt; selectors. React’s use of the &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; tag has always been considered an implementation detail of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5451&quot;&gt;#5451&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;functional-components-can-now-return-null-too&quot;&gt;&lt;/a&gt;Functional components can now return &lt;code&gt;null&lt;/code&gt; too &lt;a class=&quot;hash-link&quot; href=&quot;#functional-components-can-now-return-null-too&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
@@ -285,7 +322,7 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-r
 		
 			<item>
 				<title>React v15.0 Release Candidate</title>
-				<description>&lt;p&gt;Sorry for the small delay in releasing this. As we said, we&amp;#39;ve been busy binge-watching House of Cards. That scene in the last episode where Francis and Claire Underwood &lt;abbr title=&quot;You didn't think we would actually spoil anything did you?&quot;&gt;████████████████████████████████████&lt;/abbr&gt;. WOW!&lt;/p&gt;
+				<description>&lt;p&gt;Sorry for the small delay in releasing this. As we said, we&amp;#39;ve been busy binge-watching House of Cards. That scene in the last episode where Francis and Claire Underwood &lt;abbr title=&quot;You didn&#39;t think we would actually spoil anything did you?&quot;&gt;████████████████████████████████████&lt;/abbr&gt;. WOW!&lt;/p&gt;
 
 &lt;p&gt;But now we&amp;#39;re ready, so without further ado, we&amp;#39;re shipping a release candidate for React v15 now. As a reminder, &lt;a href=&quot;/react/blog/2016/02/19/new-versioning-scheme.html&quot;&gt;we&amp;#39;re switching to major versions&lt;/a&gt; to indicate that we have been using React in production for a long time. This 15.0 release follows our previous 0.14 version and we&amp;#39;ll continue to follow semver like we&amp;#39;ve been doing since 2013. It&amp;#39;s also worth noting that &lt;a href=&quot;/react/blog/2016/01/12/discontinuing-ie8-support.html&quot;&gt;we no longer actively support Internet Explorer 8&lt;/a&gt;. We believe React will work in its current form there but we will not be prioritizing any efforts to fix new issues that only affect IE8.&lt;/p&gt;
 
@@ -875,78 +912,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0
 				<pubDate>2015-12-18T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2015/12/18/react-components-elements-and-instances.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/12/18/react-components-elements-and-instances.html</guid>
-			</item>
-		
-			<item>
-				<title>isMounted is an Antipattern</title>
-				<description>&lt;p&gt;As we move closer to officially deprecating isMounted, it&amp;#39;s worth understanding why the function is an antipattern, and how to write code without the isMounted function.&lt;/p&gt;
-
-&lt;p&gt;The primary use case for &lt;code&gt;isMounted()&lt;/code&gt; is to avoid calling &lt;code&gt;setState()&lt;/code&gt; after a component has unmounted, because calling &lt;code&gt;setState()&lt;/code&gt; after a component has unmounted will emit a warning. The “setState warning” exists to help you catch bugs, because calling &lt;code&gt;setState()&lt;/code&gt; on an unmounted component is an indication that your app/component has somehow failed to clean up properly. Specifically, calling &lt;code&gt;setState()&lt;/code&gt; in an unmounted component means that your app is still holding a reference to the component after the component has been unmounted - which often indicates a memory leak!&lt;/p&gt;
-
-&lt;p&gt;To avoid the error message, people often add lines like this:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isMounted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// This is bad.&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({...});&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Checking &lt;code&gt;isMounted&lt;/code&gt; before calling &lt;code&gt;setState()&lt;/code&gt; does eliminate the warning, but it also defeats the purpose of the warning, since now you will never get the warning (even when you should!)&lt;/p&gt;
-
-&lt;p&gt;Other uses of &lt;code&gt;isMounted()&lt;/code&gt; are similarly erroneous; using &lt;code&gt;isMounted()&lt;/code&gt; is a code smell because the only reason you would check is because you think you might be holding a reference after the component has unmounted.&lt;/p&gt;
-
-&lt;p&gt;An easy migration strategy for anyone upgrading their code to avoid &lt;code&gt;isMounted()&lt;/code&gt; is to track the mounted status yourself.  Just set a &lt;code&gt;_isMounted&lt;/code&gt; property to true in &lt;code&gt;componentDidMount&lt;/code&gt; and set it to false in &lt;code&gt;componentWillUnmount&lt;/code&gt;, and use this variable to check your component&amp;#39;s status.&lt;/p&gt;
-
-&lt;p&gt;An optimal solution would be to find places where &lt;code&gt;setState()&lt;/code&gt; might be called after a component has unmounted, and fix them. Such situations most commonly occur due to callbacks, when a component is waiting for some data and gets unmounted before the data arrives. Ideally, any callbacks should be canceled in &lt;code&gt;componentWillUnmount&lt;/code&gt;, prior to unmounting.&lt;/p&gt;
-
-&lt;p&gt;For instance, if you are using a Flux store in your component, you must unsubscribe in &lt;code&gt;componentWillUnmount&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;componentDidMount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;mydatastore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;subscribe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;componentWillUnmount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;nx&quot;&gt;mydatastore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;unsubscribe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;If you use ES6 promises, you may need to wrap your promise in order to make it cancelable.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;cancelablePromise&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;makeCancelable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Promise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;component&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({...}}))&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;cancelablePromise&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;promise&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;then&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;resolved&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;reason&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;isCanceled&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reason&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isCanceled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;cancelablePromise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cancel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Cancel the promise&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Where &lt;code&gt;makeCancelable&lt;/code&gt; is &lt;a href=&quot;https://github.com/facebook/react/issues/5465#issuecomment-157888325&quot;&gt;defined by @istarkov&lt;/a&gt; as:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;makeCancelable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;promise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;hasCanceled_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-  &lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;wrappedPromise&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Promise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;promise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;then&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;hasCanceled_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isCanceled&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;resolve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;promise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;hasCanceled_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isCanceled&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;promise&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;wrappedPromise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;cancel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;hasCanceled_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;As an added bonus for getting your code cleaned up early, getting rid of &lt;code&gt;isMounted()&lt;/code&gt; makes it one step easier for you to upgrade to ES6 classes, where using &lt;code&gt;isMounted()&lt;/code&gt; is already prohibited.  Happy coding!&lt;/p&gt;
-</description>
-				<pubDate>2015-12-16T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2015/12/16/ismounted-antipattern.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2015/12/16/ismounted-antipattern.html</guid>
 			</item>
 		
 	</channel>
