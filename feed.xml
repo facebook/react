@@ -31,11 +31,13 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.m
 &lt;/ul&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;Restore &lt;code&gt;React.__spread&lt;/code&gt; API to unbreak code compiled with some tools making use of this undocumented API. It is now officially deprecated. (&lt;a href=&quot;https://github.com/zpao&quot;&gt;@zpao&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6444&quot;&gt;#6444&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Restore &lt;code&gt;React.__spread&lt;/code&gt; API to unbreak code compiled with some tools making use of this undocumented API. It is now officially deprecated.&lt;br&gt;
+&lt;small&gt;&lt;a href=&quot;https://github.com/zpao&quot;&gt;@zpao&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6444&quot;&gt;#6444&lt;/a&gt;&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactdom&quot;&gt;&lt;/a&gt;ReactDOM &lt;a class=&quot;hash-link&quot; href=&quot;#reactdom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;Fixed issue resulting in loss of cursor position in controlled inputs. (&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6449&quot;&gt;#6449&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fixed issue resulting in loss of cursor position in controlled inputs.&lt;br&gt;
+&lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6449&quot;&gt;#6449&lt;/a&gt;&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
 				<pubDate>2016-04-08T00:00:00-07:00</pubDate>
