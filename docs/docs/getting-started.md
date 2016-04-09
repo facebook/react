@@ -38,7 +38,7 @@ To install React DOM and build your bundle with webpack:
 
 ```sh
 $ npm install --save react react-dom babel-preset-react babel-loader babel-core
-$ webpack main.js bundle.js --module-bind 'js=babel-loader'
+$ webpack main.js bundle.js --module-bind 'js=babel-loader?presets=react'
 ```
 
 > Note:
