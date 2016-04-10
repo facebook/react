@@ -18,7 +18,7 @@ React是Facebook和Instagram用來建立使用者介面的JavaScript函式庫. �
 
 ## 建立可組合的元件(Composable Components)
 
-React就是在建造可重用的元件(Components). 事實上, 當你使用React時 *唯一* 在做的事就是建立元件(Components). 由於它們封裝的非常好,元件使得程式碼能夠易於重複使用, 測試, 並且容易做到讓關注點分離(separation of concerns easy).
+React就是在建造可重用的元件(Components). 事實上, 當你使用React時 *唯一* 在做的事就是建立元件(Components). 由於它們封裝性高,元件使得程式碼能夠易於重複使用, 測試, 並且容易做到讓關注點分離(separation of concerns easy).
 
 ## 指引(Give It Five Minutes)
 
