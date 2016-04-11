@@ -55,8 +55,8 @@ var ReactDebugTool = {
   onEndProcessingChildContext() {
     emitEvent('onEndProcessingChildContext');
   },
-  onSetState() {
-    emitEvent('onSetState');
+  onSetState(componentInstance = null) {
+    emitEvent('onSetState', componentInstance);
   },
   onMountRootComponent(internalInstance) {
     emitEvent('onMountRootComponent', internalInstance);
