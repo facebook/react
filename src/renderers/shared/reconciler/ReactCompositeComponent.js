@@ -343,7 +343,7 @@ var ReactCompositeComponentMixin = {
       }
       checkpoint = transaction.checkpoint();
 
-      this._renderedComponent.unmountComponent(true);
+      ReactReconciler.unmountComponent(this._renderedComponent, transaction, true);
       transaction.rollback(checkpoint);
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
@@ -395,23 +395,25 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
-  unmountComponent: function(safely) {
+  unmountComponent: function(transaction, safely) {
     if (!this._renderedComponent) {
       return;
     }
     var inst = this._instance;
 
-    if (inst.componentWillUnmount) {
-      if (safely) {
-        var name = this.getName() + '.componentWillUnmount()';
-        ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
-      } else {
-        inst.componentWillUnmount();
+    if (transaction.hasReactMountReady) {
+      if (inst.componentWillUnmount) {
+        if (safely) {
+          var name = this.getName() + '.componentWillUnmount()';
+          ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+        } else {
+          inst.componentWillUnmount();
+        }
       }
     }
 
     if (this._renderedComponent) {
-      ReactReconciler.unmountComponent(this._renderedComponent, safely);
+      ReactReconciler.unmountComponent(this._renderedComponent, transaction, safely);
       this._renderedNodeType = null;
       this._renderedComponent = null;
       this._instance = null;
@@ -843,7 +845,7 @@ var ReactCompositeComponentMixin = {
       );
     } else {
       var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
-      ReactReconciler.unmountComponent(prevComponentInstance, false);
+      ReactReconciler.unmountComponent(prevComponentInstance, transaction, false);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(

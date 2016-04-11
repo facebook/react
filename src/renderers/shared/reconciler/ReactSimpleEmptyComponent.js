@@ -38,8 +38,8 @@ Object.assign(ReactSimpleEmptyComponent.prototype, {
   getNativeNode: function() {
     return ReactReconciler.getNativeNode(this._renderedComponent);
   },
-  unmountComponent: function() {
-    ReactReconciler.unmountComponent(this._renderedComponent);
+  unmountComponent: function(transaction) {
+    ReactReconciler.unmountComponent(this._renderedComponent, transaction);
     this._renderedComponent = null;
   },
 });

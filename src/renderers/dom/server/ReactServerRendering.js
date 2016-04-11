@@ -14,6 +14,7 @@ var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
+var ReactReconciler = require('ReactReconciler');
 var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
@@ -36,12 +37,19 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element);
-      var markup = componentInstance.mountComponent(
+      var markup = ReactReconciler.mountComponent(
+        componentInstance,
         transaction,
         null,
         ReactDOMContainerInfo(),
         emptyObject
       );
+      if (__DEV__) {
+        // We unmount in __DEV__ to clean up the ReactDebugInstanceMap
+        // registrations that occur during instance construction.
+        // We don't do this pass in prod because we don't use it there.
+        ReactReconciler.unmountComponent(componentInstance, transaction);
+      }
       if (!makeStaticMarkup) {
         markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
       }

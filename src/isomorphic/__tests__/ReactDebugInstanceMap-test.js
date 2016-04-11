@@ -15,12 +15,18 @@ describe('ReactDebugInstanceMap', function() {
   var React;
   var ReactDebugInstanceMap;
   var ReactDOM;
+  var ReactDOMComponentTree;
+  var ReactDOMServer;
+  var ReactInstanceMap;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDebugInstanceMap = require('ReactDebugInstanceMap');
     ReactDOM = require('ReactDOM');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
+    ReactDOMServer = require('ReactDOMServer');
+    ReactInstanceMap = require('ReactInstanceMap');
   });
 
   function createStubInstance() {
@@ -169,5 +175,116 @@ describe('ReactDebugInstanceMap', function() {
         'There is an internal error in the React developer tools integration.'
       );
     }
+  });
+
+  describe('integration', () => {
+    describe('ReactDOM', () => {
+      it('registers native components', () => {
+        var div = document.createElement('div');
+
+        var spanInst;
+        ReactDOM.render(
+          <span ref={span => {
+            if (span) {
+              spanInst = ReactDOMComponentTree.getInstanceFromNode(span);
+            }
+          }} />,
+          div
+        );
+        expect(ReactDebugInstanceMap.isRegisteredInstance(spanInst)).toBe(true);
+
+        var pInst;
+        ReactDOM.render(
+          <p ref={p => {
+            if (p) {
+              pInst = ReactDOMComponentTree.getInstanceFromNode(p);
+            }
+          }} />,
+          div
+        );
+        expect(ReactDebugInstanceMap.isRegisteredInstance(spanInst)).toBe(false);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(pInst)).toBe(true);
+
+        ReactDOM.unmountComponentAtNode(div);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(spanInst)).toBe(false);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(pInst)).toBe(false);
+      });
+
+      it('registers composite components', () => {
+        var fooInst;
+        var Foo = React.createClass({
+          render() {
+            fooInst = ReactInstanceMap.get(this);
+            return null;
+          },
+        });
+        var barInst;
+        var Bar = React.createClass({
+          render() {
+            barInst = ReactInstanceMap.get(this);
+            return null;
+          },
+        });
+        var div = document.createElement('div');
+
+        ReactDOM.render(<Foo />, div);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(true);
+
+        ReactDOM.render(<Bar />, div);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(false);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(barInst)).toBe(true);
+
+        ReactDOM.unmountComponentAtNode(div);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(false);
+        expect(ReactDebugInstanceMap.isRegisteredInstance(barInst)).toBe(false);
+      });
+    });
+  });
+
+  describe('ReactDOMServer', () => {
+    it('registers components but unregisters them in the end', () => {
+      var fooInst;
+      var Foo = React.createClass({
+        render() {
+          fooInst = ReactInstanceMap.get(this);
+          expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(true);
+          return null;
+        },
+      });
+
+      ReactDOMServer.renderToString(<Foo />);
+      expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(false);
+
+      ReactDOMServer.renderToStaticMarkup(<Foo />);
+      expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(false);
+    });
+
+    it('can be used together with ReactDOM', () => {
+      var fooInst;
+      var Foo = React.createClass({
+        render() {
+          fooInst = ReactInstanceMap.get(this);
+          expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(true);
+          return null;
+        },
+      });
+      var barInst;
+      var Bar = React.createClass({
+        render() {
+          barInst = ReactInstanceMap.get(this);
+          expect(ReactDebugInstanceMap.isRegisteredInstance(barInst)).toBe(true);
+          return <div>{ReactDOMServer.renderToString(<Foo />)}</div>;
+        },
+      });
+
+      var div = document.createElement('div');
+      ReactDOM.render(<Bar />, div);
+      expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(false);
+      expect(ReactDebugInstanceMap.isRegisteredInstance(barInst)).toBe(true);
+
+      ReactDOM.unmountComponentAtNode(div);
+      expect(ReactDebugInstanceMap.isRegisteredInstance(fooInst)).toBe(false);
+      expect(ReactDebugInstanceMap.isRegisteredInstance(barInst)).toBe(false);
+    });
   });
 });
