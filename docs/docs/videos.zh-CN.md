@@ -10,13 +10,13 @@ next: complementary-tools-zh-CN.html
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
-"在 Facebook 和 Instagram, 我们正在努力挑战React在web上能达到的极限。我的讲话会从对框架的简单介绍开始，然后深入三个有争议的话题：扔掉模板的概念并用JavaScript构建views, 当数据改变 “re-rendering” 你的整个应用，以及一个DOM和events的轻量级实现。" -- [Pete Hunt](http://www.petehunt.net/)
+"在 Facebook 和 Instagram, 我们正在努力挑战 React 在 web 上能达到的极限。我的讲话会从对框架的简单介绍开始，然后深入三个有争议的话题：扔掉模板的概念并用 JavaScript 构建 views, 当数据改变 “re-rendering” 你的整个应用，以及一个 DOM 和 events 的轻量级实现。" -- [Pete Hunt](http://www.petehunt.net/)
 
 * * *
 
 ### Thinking in react - tagtree.tv
 
-一个 [tagtree.tv](http://tagtree.tv/) 传达 [Thinking in React](/react/docs/thinking-in-react.html) 原则的视频  在构建一个简单app时。
+一个 [tagtree.tv](http://tagtree.tv/) 传达 [Thinking in React](/react/docs/thinking-in-react.html) 原则的视频在构建一个简单 app 时。
 <figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
 
 * * *
@@ -31,7 +31,7 @@ next: complementary-tools-zh-CN.html
 
 ### Going big with React
 
-"理论上，所有的JS框架都大有可为：干净的实现,快速的代码设计,完美的执行。但是当你压力测试时Javascript会怎样？当你丢进6MB的代码时会怎样？在这次演讲中，我们会探究React在高压环境下如何表现，以及它如何帮助我们的团队在大规模时构建安全代码。 "
+"理论上，所有的 JS 框架都大有可为：干净的实现,快速的代码设计,完美的执行。但是当你压力测试时 Javascript 会怎样？当你丢进 6MB 的代码时会怎样？在这次演讲中，我们会探究 React 在高压环境下如何表现，以及它如何帮助我们的团队在大规模时构建安全代码。 "
 <figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
 
 * * *
@@ -42,26 +42,26 @@ next: complementary-tools-zh-CN.html
 <figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
 
 <table width="100%"><tr><td>
-02:08 - 什么是React，为什么我们用它?<br />
+02:08 - 什么是 React，为什么我们用它?<br />
 03:08 - ClojureScript 和 React 的共生关系<br />
 04:54 - React 的历史以及为什么它被创造<br />
-09:43 - 用React更新Web页面，而不绑定数据<br />
-13:11 - 用虚拟DOM来改变浏览器DOM<br />
-13:57 - 用React编程，绘制目标HTML，canvas和其他<br />
-16:45 - 和设计师一起工作，对比于Ember 和 AngularJS<br />
-21:45 - JSX编译器桥接HTML和 React javascript<br />
-23:50 - React的自动绑定JSX以及浏览器内工具<br />
-24:50 - 用React工作的提示和技巧，入门<br />
+09:43 - 用 React 更新 Web 页面，而不绑定数据<br />
+13:11 - 用虚拟 DOM 来改变浏览器 DOM <br />
+13:57 - 用 React 编程，绘制目标 HTML ，canvas 和其他<br />
+16:45 - 和设计师一起工作，对比于 Ember 和 AngularJS<br />
+21:45 - JSX 编译器桥接HTML和 React javascript<br />
+23:50 - React 的自动绑定 JSX 以及浏览器内工具<br />
+24:50 - 用 React 工作的提示和技巧，入门<br />
 </td><td>
-27:17 - 在服务器端用Node.js渲染HTML。后端渲染<br />
-29:20 - React在Facebook通过优胜劣汰进化<br />
-30:15 - 用web sockets，在服务器端和客户端持有状态的想法持有<br />
-32:05 - 多用户React - 用 Firebase 分布式共享可变状态<br />
-33:03 - 用状态转换，事件重放来更好的调式React<br />
-34:08 - 来自Web组件的不同之处<br />
-34:25 - 使用React的著名公司<br />
-35:16 - 一个React的后端插件可以用来创建PDF吗?<br />
-36:30 - React的未来，下一步是什么?<br />
+27:17 - 在服务器端用 Node.js 渲染 HTML。后端渲染<br />
+29:20 - React 在 Facebook 通过优胜劣汰进化<br />
+30:15 - 用 web sockets，在服务器端和客户端持有状态的想法持有<br />
+32:05 - 多用户 React - 用 Firebase 分布式共享可变状态<br />
+33:03 - 用状态转换，事件重放来更好的调式 React<br />
+34:08 - 来自 Web 组件的不同之处<br />
+34:25 - 使用 React 的著名公司<br />
+35:16 - 一个 React 的后端插件可以用来创建 PDF 吗?<br />
+36:30 - React 的未来，下一步是什么?<br />
 39:38 - 贡献和获得帮助<br />
 </td></tr></table>
 
@@ -71,7 +71,7 @@ next: complementary-tools-zh-CN.html
 
 ### JavaScript Jabber
 
-[Pete Hunt](http://www.petehunt.net/) 和 [Jordan Walke](https://github.com/jordwalke) 在 JavaScript Jabber 73 上关于React的谈话.
+[Pete Hunt](http://www.petehunt.net/) 和 [Jordan Walke](https://github.com/jordwalke) 在 JavaScript Jabber 73 上关于 React 的谈话.
 <figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
 
 <table width="100%"><tr><td>
@@ -108,7 +108,7 @@ next: complementary-tools-zh-CN.html
 ### Backbone + React + Middleman Screencast
 <iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
-Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏博展示了用 [Backbone-React-Component](https://github.com/magalhas/backbone-react-component)如何整合两者. Middleman 是在本例中使用的框架但很容易被替换成其他框架。对此可支持的template可以在[这里](https://github.com/jbhatab/middleman-backbone-react-template) 找到. -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
+Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏博展示了用 [Backbone-React-Component](https://github.com/magalhas/backbone-react-component)如何整合两者。Middleman 是在本例中使用的框架但很容易被替换成其他框架。对此可支持的template可以在[这里](https://github.com/jbhatab/middleman-backbone-react-template) 找到。 -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
 
 * * *
 
@@ -152,7 +152,7 @@ Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏�
 
 <iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
-Facebook 工程师 [Bill Fisher](https://twitter.com/fisherwebdev) 和 [Jing Chen](https://twitter.com/jingc) 谈论 Flux 和 React, 以及如何使用单向数据流的程序架构清理他们的代码 .
+Facebook 工程师 [Bill Fisher](https://twitter.com/fisherwebdev) 和 [Jing Chen](https://twitter.com/jingc) 谈论 Flux 和 React, 以及如何使用单向数据流的程序架构清理他们的代码。
 
 * * *
 
