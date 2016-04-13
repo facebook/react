@@ -37,7 +37,7 @@ $ browserify -t [ babelify --presets [ react ] ] main.js -o bundle.js
 To install React DOM and build your bundle with webpack:
 
 ```sh
-$ npm install --save react react-dom babel-preset-react
+$ npm install --save react react-dom babel-loader babel-preset-react
 $ webpack
 ```
 
