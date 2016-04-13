@@ -35,21 +35,12 @@ function checkValidInstance(internalInstance) {
   return isValid;
 }
 
-var idCounter = 1;
 var instancesByIDs = {};
-var instancesToIDs;
 
 function getIDForInstance(internalInstance) {
-  if (!instancesToIDs) {
-    instancesToIDs = new WeakMap();
-  }
-  if (instancesToIDs.has(internalInstance)) {
-    return instancesToIDs.get(internalInstance);
-  } else {
-    var instanceID = (idCounter++).toString();
-    instancesToIDs.set(internalInstance, instanceID);
-    return instanceID;
-  }
+  // This is only available in __DEV__.
+  // Eventually we might want to use WeakMap for storing IDs.
+  return internalInstance._debugID;
 }
 
 function getInstanceByID(instanceID) {

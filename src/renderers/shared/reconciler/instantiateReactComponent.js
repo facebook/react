@@ -57,6 +57,8 @@ function isInternalComponentType(type) {
   );
 }
 
+var nextDebugID = 0;
+
 /**
  * Given a ReactNode, create an instance that will actually be mounted.
  *
@@ -120,6 +122,7 @@ function instantiateReactComponent(node) {
   if (__DEV__) {
     instance._isOwnerNecessary = false;
     instance._warnedAboutRefsInRender = false;
+    instance._debugID = (nextDebugID++).toString();
   }
 
   // Internal instances should fully constructed at this point, so they should

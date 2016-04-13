@@ -19,6 +19,8 @@ describe('ReactDebugInstanceMap', function() {
   var ReactDOMServer;
   var ReactInstanceMap;
 
+  var nextDebugID = 0;
+
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
@@ -27,10 +29,15 @@ describe('ReactDebugInstanceMap', function() {
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMServer = require('ReactDOMServer');
     ReactInstanceMap = require('ReactInstanceMap');
+
+    nextDebugID = 0;
   });
 
   function createStubInstance() {
-    return { mountComponent: () => {} };
+    return {
+      mountComponent: () => {},
+      _debugID: (nextDebugID++).toString(),
+    };
   }
 
   it('should register and unregister instances', function() {
