@@ -2,7 +2,7 @@
 id: addons
 title: Add-ons
 permalink: addons.html
-prev: package-management.html
+prev: environments.html
 next: animation.html
 ---
 

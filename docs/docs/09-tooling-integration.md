@@ -10,4 +10,4 @@ We've tried to make React as environment-agnostic as possible. People use React 
 
 * [Language Tooling](/react/docs/language-tooling.html) describes how to set up tools like Babel to transpile JSX for a better development experience.
 * [Package Management](/react/docs/package-management.html) describes how to configure React as a dependency of your project.
-
+* [Server-side Environments](/react/docs/environments.html) describes how to configure your environment for server-side rendering with React.
