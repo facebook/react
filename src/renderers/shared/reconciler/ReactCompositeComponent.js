@@ -60,6 +60,10 @@ function warnIfInvalidElement(Component, element) {
   }
 }
 
+function shouldConstruct(Component) {
+  return Component.prototype && Component.prototype.isReactComponent;
+}
+
 /**
  * ------------------ The Life-Cycle of a Composite Component ------------------
  *
@@ -158,44 +162,22 @@ var ReactCompositeComponentMixin = {
     var Component = this._currentElement.type;
 
     // Initialize the public class
-    var inst;
+    var inst = this._constructComponent(publicProps, publicContext);
     var renderedElement;
 
-    if (Component.prototype && Component.prototype.isReactComponent) {
-      if (__DEV__) {
-        ReactCurrentOwner.current = this;
-        try {
-          inst = new Component(publicProps, publicContext, ReactUpdateQueue);
-        } finally {
-          ReactCurrentOwner.current = null;
-        }
-      } else {
-        inst = new Component(publicProps, publicContext, ReactUpdateQueue);
-      }
-    } else {
-      if (__DEV__) {
-        ReactCurrentOwner.current = this;
-        try {
-          inst = Component(publicProps, publicContext, ReactUpdateQueue);
-        } finally {
-          ReactCurrentOwner.current = null;
-        }
-      } else {
-        inst = Component(publicProps, publicContext, ReactUpdateQueue);
-      }
-      if (inst == null || inst.render == null) {
-        renderedElement = inst;
-        warnIfInvalidElement(Component, renderedElement);
-        invariant(
-          inst === null ||
-          inst === false ||
-          ReactElement.isValidElement(inst),
-          '%s(...): A valid React element (or null) must be returned. You may have ' +
-          'returned undefined, an array or some other invalid object.',
-          Component.displayName || Component.name || 'Component'
-        );
-        inst = new StatelessComponent(Component);
-      }
+    // Support functional components
+    if (!shouldConstruct(Component) && (inst == null || inst.render == null)) {
+      renderedElement = inst;
+      warnIfInvalidElement(Component, renderedElement);
+      invariant(
+        inst === null ||
+        inst === false ||
+        ReactElement.isValidElement(inst),
+        '%s(...): A valid React element (or null) must be returned. You may have ' +
+        'returned undefined, an array or some other invalid object.',
+        Component.displayName || Component.name || 'Component'
+      );
+      inst = new StatelessComponent(Component);
     }
 
     if (__DEV__) {
@@ -321,6 +303,28 @@ var ReactCompositeComponentMixin = {
     }
 
     return markup;
+  },
+
+  _constructComponent: function(publicProps, publicContext) {
+    if (__DEV__) {
+      ReactCurrentOwner.current = this;
+      try {
+        return this._constructComponentWithoutOwner(publicProps, publicContext);
+      } finally {
+        ReactCurrentOwner.current = null;
+      }
+    } else {
+      return this._constructComponentWithoutOwner(publicProps, publicContext);
+    }
+  },
+
+  _constructComponentWithoutOwner: function(publicProps, publicContext) {
+    var Component = this._currentElement.type;
+    if (shouldConstruct(Component)) {
+      return new Component(publicProps, publicContext, ReactUpdateQueue);
+    } else {
+      return Component(publicProps, publicContext, ReactUpdateQueue);
+    }
   },
 
   performInitialMountWithErrorHandling: function(
