@@ -12,7 +12,7 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-
+var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
 
@@ -149,6 +149,12 @@ ReactElement.createElement = function(type, config, children) {
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         props[propName] = config[propName];
       }
+    }
+  }
+
+  if (__DEV__) {
+    for (propName in config) {
+      ReactDOMInstrumentation.debugTool.onCreateElement(propName);
     }
   }
 
