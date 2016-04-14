@@ -22,6 +22,7 @@ function ReactDOMContainerInfo(topLevelWrapper, node) {
     _ownerDocument: node ?
       node.nodeType === DOC_NODE_TYPE ? node : node.ownerDocument :
       null,
+    _node: node,
     _tag: node ? node.nodeName.toLowerCase() : null,
     _namespaceURI: node ? node.namespaceURI : null,
   };
