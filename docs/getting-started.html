@@ -190,6 +190,22 @@
           <li>
             <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
             
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/package-management.html">Package Management</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/environments.html">Server-side Environments</a>
+                  </li>
+                
+              </ul>
+            
           </li>
         
           <li>
@@ -423,39 +439,8 @@
 <li><strong><a href="https://jsfiddle.net/reactjs/69z2wepo/">React JSFiddle</a></strong></li>
 <li><a href="https://jsfiddle.net/reactjs/5vjqabv3/">React JSFiddle without JSX</a></li>
 </ul>
-<h2><a class="anchor" name="using-react-from-npm"></a>Using React from npm <a class="hash-link" href="#using-react-from-npm">#</a></h2>
-<p>We recommend using React with a CommonJS module system like <a href="http://browserify.org/">browserify</a> or <a href="https://webpack.github.io/">webpack</a>. Use the <a href="https://www.npmjs.com/package/react"><code>react</code></a> and <a href="https://www.npmjs.com/package/react-dom"><code>react-dom</code></a> npm packages.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// main.js</span>
-<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">ReactDOM</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom&#39;</span><span class="p">);</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>To install React DOM and build your bundle with browserify:</p>
-<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babelify babel-preset-react
-<span class="nv">$ </span>browserify -t <span class="o">[</span> babelify --presets <span class="o">[</span> react <span class="o">]</span> <span class="o">]</span> main.js -o bundle.js
-</code></pre></div>
-<p>To install React DOM and build your bundle with webpack:</p>
-<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>npm install --save react react-dom babel-preset-react
-<span class="nv">$ </span>webpack
-</code></pre></div>
-<blockquote>
-<p>Note:</p>
-
-<p>If you are using ES2015, you will want to also use the <code>babel-preset-es2015</code> package.</p>
-</blockquote>
-
-<p><strong>Note:</strong> by default, React will be in development mode, which is slower, and not advised for production. To use React in production mode, set the environment variable <code>NODE_ENV</code> to <code>production</code> (using envify or webpack&#39;s DefinePlugin). For example:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">DefinePlugin</span><span class="p">({</span>
-  <span class="s2">&quot;process.env&quot;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">NODE_ENV</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="s2">&quot;production&quot;</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="quick-start-without-npm"></a>Quick Start Without npm <a class="hash-link" href="#quick-start-without-npm">#</a></h2>
-<p>If you&#39;re not ready to use npm yet, you can download the starter kit which includes prebuilt copies of React and React DOM.</p>
+<h2><a class="anchor" name="starter-pack"></a>Starter Pack <a class="hash-link" href="#starter-pack">#</a></h2>
+<p>If you&#39;re just getting started, you can download the starter kit. The starter kit includes prebuilt copies of React and React DOM for the browser, as well as a collection of usage examples to help you get started.</p>
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-15.0.1.zip" class="button">
@@ -496,45 +481,10 @@
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
 <p>Note that some browsers (Chrome, e.g.) will fail to load the file unless it&#39;s served via HTTP.</p>
-<h3><a class="anchor" name="offline-transform"></a>Offline Transform <a class="hash-link" href="#offline-transform">#</a></h3>
-<p>First install the <a href="http://babeljs.io/">Babel</a> command-line tools (requires <a href="https://www.npmjs.com/">npm</a>):</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install --global babel-cli
-npm install babel-preset-react
-</code></pre></div>
-<p>Then, translate your <code>src/helloworld.js</code> file to plain JavaScript:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">babel --presets react src --watch --out-dir build
-</code></pre></div>
-<blockquote>
-<p>Note:</p>
-
-<p>If you are using ES2015, you will want to also use the <code>babel-preset-es2015</code> package.</p>
-</blockquote>
-
-<p>The file <code>build/helloworld.js</code> is autogenerated whenever you make a change. Read the <a href="http://babeljs.io/docs/usage/cli/">Babel CLI documentation</a> for more advanced usage.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-<span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello, world!&#39;</span><span class="p">),</span>
-</span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>Update your HTML file as below:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;html&gt;</span>
-  <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">    <span class="c">&lt;!-- No need for Babel! --&gt;</span>
-</span>  <span class="nt">&lt;/head&gt;</span>
-  <span class="nt">&lt;body&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-<span class="hll">    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</span>  <span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
-</code></pre></div><h2><a class="anchor" name="next-steps"></a>Next Steps <a class="hash-link" href="#next-steps">#</a></h2>
+<h2><a class="anchor" name="using-react-with-npm-or-bower"></a>Using React with npm or Bower <a class="hash-link" href="#using-react-with-npm-or-bower">#</a></h2>
+<p>You can also use React with package managers like npm or Bower. You can learn more in our <a href="/react/docs/package-management.html">Package Managers</a> section.</p>
+<h2><a class="anchor" name="next-steps"></a>Next Steps <a class="hash-link" href="#next-steps">#</a></h2>
 <p>Check out <a href="/react/docs/tutorial.html">the tutorial</a> and the other examples in the starter kit&#39;s <code>examples</code> directory to learn more.</p>
-
-<p>We also have a wiki where the community contributes with <a href="https://github.com/facebook/react/wiki/Complementary-Tools">workflows, UI-components, routing, data management etc.</a></p>
 
 <p>Good luck, and welcome!</p>
 

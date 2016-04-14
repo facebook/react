@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Displaying Data | React</title>
+  <title>Language Tooling | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Displaying Data | React">
+  <meta property="og:title" content="Language Tooling | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/displaying-data.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/language-tooling.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -129,7 +129,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html" class="active">Displaying Data</a>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
             
               <ul>
                 
@@ -193,7 +193,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
+                    <a href="/react/docs/language-tooling.html" class="active">Language Tooling</a>
                   </li>
                 
                   <li>
@@ -426,113 +426,73 @@
 
 
   <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02-displaying-data.md" target="_blank">Edit on GitHub</a>
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.1-language-tooling.md" target="_blank">Edit on GitHub</a>
     <h1>
-      Displaying Data
+      Language Tooling
     </h1>
     <div class="subHeader"></div>
 
-    <p>The most basic thing you can do with a UI is display some data. React makes it easy to display data and automatically keeps the interface up-to-date when the data changes.</p>
-<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2>
-<p>Let&#39;s look at a really simple example. Create a <code>hello-react.html</code> file with the following code:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;html&gt;</span>
-  <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-15.0.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://fb.me/react-dom-15.0.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;/head&gt;</span>
-  <span class="nt">&lt;body&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span><span class="nt">&gt;</span>
-
-      <span class="c1">// ** Your code goes here! **</span>
-
-    <span class="nt">&lt;/script&gt;</span>
-  <span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
-</code></pre></div>
-<p>For the rest of the documentation, we&#39;ll just focus on the JavaScript code and assume it&#39;s inserted into a template like the one above. Replace the placeholder comment above with the following JSX:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">HelloWorld</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
-        <span class="nx">Hello</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name here&quot;</span> <span class="o">/&gt;!</span>
-        <span class="nx">It</span> <span class="nx">is</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">toTimeString</span><span class="p">()}</span>
-      <span class="o">&lt;</span><span class="err">/p&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">HelloWorld</span> <span class="nx">date</span><span class="o">=</span><span class="p">{</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()}</span> <span class="o">/&gt;</span><span class="p">,</span>
-    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-  <span class="p">);</span>
-<span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="reactive-updates"></a>Reactive Updates <a class="hash-link" href="#reactive-updates">#</a></h2>
-<p>Open <code>hello-react.html</code> in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI — any input you put in the text field remains, even though you haven&#39;t written any code to manage this behavior. React figures it out for you and does the right thing.</p>
-
-<p>The way we are able to figure this out is that React does not manipulate the DOM unless it needs to. <strong>It uses a fast, internal mock DOM to perform diffs and computes the most efficient DOM mutation for you.</strong></p>
-
-<p>The inputs to this component are called <code>props</code> — short for &quot;properties&quot;. They&#39;re passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, <strong>never write to <code>this.props</code></strong>.</p>
-<h2><a class="anchor" name="components-are-just-like-functions"></a>Components are Just Like Functions <a class="hash-link" href="#components-are-just-like-functions">#</a></h2>
-<p>React components are very simple. You can think of them as simple functions that take in <code>props</code> and <code>state</code> (discussed later) and render HTML. With this in mind, components are easy to reason about.</p>
+    <h2><a class="anchor" name="es2015-with-jsx"></a>ES2015 with JSX <a class="hash-link" href="#es2015-with-jsx">#</a></h2><h3><a class="anchor" name="in-browser-jsx-transform"></a>In-browser JSX Transform <a class="hash-link" href="#in-browser-jsx-transform">#</a></h3>
+<p>If you like using JSX, Babel 5 provided an in-browser ES2015 and JSX transformer for development called browser.js that can be included from <a href="https://cdnjs.com/libraries/babel-core/5.8.34">CDNJS</a>. Include a <code>&lt;script type=&quot;text/babel&quot;&gt;</code> tag to engage the JSX transformer.</p>
 
 <blockquote>
 <p>Note:</p>
 
-<p><strong>One limitation</strong>: React components can only render a single root node. If you want to return multiple nodes they <em>must</em> be wrapped in a single root.</p>
+<p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
 </blockquote>
-<h2><a class="anchor" name="jsx-syntax"></a>JSX Syntax <a class="hash-link" href="#jsx-syntax">#</a></h2>
-<p>We strongly believe that components are the right way to separate concerns rather than &quot;templates&quot; and &quot;display logic.&quot; We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.</p>
+<h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
+<p>If you have <a href="https://www.npmjs.com/">npm</a>, you can run <code>npm install -g babel-cli</code>. Babel has built-in support for React v0.12+. Tags are automatically transformed to their equivalent <code>React.createElement(...)</code>, <code>displayName</code> is automatically inferred and added to all <code>React.createClass</code> calls.</p>
 
-<p>We&#39;ve found that the best solution for this problem is to generate HTML and component trees directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs.</p>
+<p>This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>babel --watch src/ --out-dir lib/</code>.</p>
 
-<p>In order to make this easier, we&#39;ve added a very simple, <strong>optional</strong> HTML-like syntax to create these React tree nodes.</p>
+<p>Beginning with Babel 6, there are no transforms included by default. This means that options must be specified when running the <code>babel</code> command, or a <code>.babelrc</code> must specify options. Additional packages must also be installed which bundle together a number of transforms, called presets. The most common use when working with React will be to include the <code>es2015</code> and <code>react</code> presets. More information about the changes to Babel can be found in <a href="http://babeljs.io/blog/2015/10/29/6.0.0">their blog post announcing Babel 6</a>.</p>
 
-<p><strong>JSX lets you create JavaScript objects using HTML syntax.</strong> To generate a link in React using pure JavaScript you&#39;d write:</p>
-
-<p><code>React.createElement(&#39;a&#39;, {href: &#39;https://facebook.github.io/react/&#39;}, &#39;Hello!&#39;)</code></p>
-
-<p>With JSX this becomes:</p>
-
-<p><code>&lt;a href=&quot;https://facebook.github.io/react/&quot;&gt;Hello!&lt;/a&gt;</code></p>
-
-<p>We&#39;ve found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so <strong>JSX is not required to use React.</strong></p>
-
-<p>JSX is very small. To learn more about it, see <a href="/react/docs/jsx-in-depth.html">JSX in depth</a>. Or see the transform in action in <a href="https://babeljs.io/repl/">the Babel REPL</a>.</p>
-
-<p>JSX is similar to HTML, but not exactly the same. See <a href="/react/docs/jsx-gotchas.html">JSX gotchas</a> for some key differences.</p>
-
-<p><a href="http://babeljs.io/docs/setup/">Babel exposes a number of ways to get started using JSX</a>, ranging from command line tools to Ruby on Rails integrations. Choose the tool that works best for you.</p>
-<h2><a class="anchor" name="react-without-jsx"></a>React without JSX <a class="hash-link" href="#react-without-jsx">#</a></h2>
-<p>JSX is completely optional; you don&#39;t have to use JSX with React. You can create React elements in plain JavaScript using <code>React.createElement</code>, which takes a tag name or component, a properties object, and variable number of optional child arguments.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">child2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Second Text Content&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child1</span><span class="p">,</span> <span class="nx">child2</span><span class="p">);</span>
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+<p>Here is an example of what you will do if using ES2015 syntax and React:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install babel-preset-es2015 babel-preset-react
+babel --presets es2015,react --watch src/ --out-dir lib/
 </code></pre></div>
-<p>For convenience, you can create short-hand factory functions to create elements from custom components.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Factory</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">ComponentClass</span><span class="p">);</span>
-<span class="p">...</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">Factory</span><span class="p">({</span> <span class="nx">custom</span><span class="o">:</span> <span class="s1">&#39;prop&#39;</span> <span class="p">});</span>
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-</code></pre></div>
-<p>React already has built-in factories for common HTML tags:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span>
-             <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">li</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">)</span>
-           <span class="p">);</span>
-</code></pre></div>
+<p>By default JSX files with a <code>.js</code> extension are transformed. Run <code>babel --help</code> for more information on how to use Babel.</p>
+
+<p>Example output:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ cat test.js
+var HelloMessage = React.createClass({
+  render: function() {
+    return &lt;div&gt;Hello {this.props.name}&lt;/div&gt;;
+  }
+});
+
+ReactDOM.render(&lt;HelloMessage name=&quot;John&quot; /&gt;, mountNode);
+$ babel test.js
+&quot;use strict&quot;;
+
+var HelloMessage = React.createClass({
+  displayName: &quot;HelloMessage&quot;,
+
+  render: function render() {
+    return React.createElement(
+      &quot;div&quot;,
+      null,
+      &quot;Hello &quot;,
+      this.props.name
+    );
+  }
+});
+
+ReactDOM.render(React.createElement(HelloMessage, { name: &quot;John&quot; }), mountNode);
+</code></pre></div><h3><a class="anchor" name="helpful-open-source-projects"></a>Helpful Open-Source Projects <a class="hash-link" href="#helpful-open-source-projects">#</a></h3>
+<p>The open-source community has built tools that integrate JSX with several editors and build systems. See <a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSX integrations</a> for the full list.</p>
+<h2><a class="anchor" name="flow"></a>Flow <a class="hash-link" href="#flow">#</a></h2>
+<p>Flow is a JavaScript type checker released by Facebook, and it supports JSX. For more info, checkout the <a href="http://flowtype.org/">Flow homepage</a>.</p>
+<h2><a class="anchor" name="typescript"></a>TypeScript <a class="hash-link" href="#typescript">#</a></h2>
+<p>Microsoft TypeScript now supports JSX. For more info, check out the <a href="http://www.typescriptlang.org/docs/handbook/jsx.html">TypeScript JSX Documentation</a> or their guide on <a href="https://github.com/Microsoft/TypeScript-Handbook/blob/master/pages/quick-start/react-webpack.md">getting started with react+webpack</a>.</p>
+
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/why-react.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/tooling-integration.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/jsx-in-depth.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/package-management.html">Next &rarr;</a>
       
     </div>
   </div>

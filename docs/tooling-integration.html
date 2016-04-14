@@ -190,6 +190,22 @@
           <li>
             <a href="/react/docs/tooling-integration.html" class="active">Tooling Integration</a>
             
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/package-management.html">Package Management</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/environments.html">Server-side Environments</a>
+                  </li>
+                
+              </ul>
+            
           </li>
         
           <li>
@@ -416,60 +432,13 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>Every project uses a different system for building and deploying JavaScript. We&#39;ve tried to make React as environment-agnostic as possible.</p>
-<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2><h3><a class="anchor" name="cdn-hosted-react"></a>CDN-hosted React <a class="hash-link" href="#cdn-hosted-react">#</a></h3>
-<p>We provide CDN-hosted versions of React <a href="/react/downloads.html">on our download page</a>. These pre-built files use the UMD module format. Dropping them in with a simple <code>&lt;script&gt;</code> tag will inject a <code>React</code> global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.</p>
-<h3><a class="anchor" name="using-master"></a>Using master <a class="hash-link" href="#using-master">#</a></h3>
-<p>We have instructions for building from <code>master</code> <a href="https://github.com/facebook/react">in our GitHub repository</a>. We build a tree of CommonJS modules under <code>build/modules</code> which you can drop into any environment or packaging tool that supports CommonJS.</p>
-<h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="in-browser-jsx-transform"></a>In-browser JSX Transform <a class="hash-link" href="#in-browser-jsx-transform">#</a></h3>
-<p>If you like using JSX, Babel 5 provided an in-browser ES6 and JSX transformer for development called browser.js that can be included from <a href="http://cdnjs.com/libraries/babel-core/5.8.34">CDNJS</a>. Include a <code>&lt;script type=&quot;text/babel&quot;&gt;</code> tag to engage the JSX transformer.</p>
+    <p>We&#39;ve tried to make React as environment-agnostic as possible. People use React in a variety of languages (JavaScript, TypeScript, ClojureScript, etc) and in a variety of environments (web, iOS, Android, NodeJS, Nashorn, etc). There are many tools to help you build great applications. In these sections we introduce some of the tools that are most commonly used together with React.</p>
 
-<blockquote>
-<p>Note:</p>
-
-<p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
-</blockquote>
-<h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
-<p>If you have <a href="https://www.npmjs.com/">npm</a>, you can run <code>npm install -g babel-cli</code>. Babel has built-in support for React v0.12+. Tags are automatically transformed to their equivalent <code>React.createElement(...)</code>, <code>displayName</code> is automatically inferred and added to all <code>React.createClass</code> calls.</p>
-
-<p>This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>babel --watch src/ --out-dir lib/</code>.</p>
-
-<p>Beginning with Babel 6, there are no transforms included by default. This means that options must be specified when running the <code>babel</code> command, or a <code>.babelrc</code> must specify options. Additional packages must also be installed which bundle together a number of transforms, called presets. The most common use when working with React will be to include the <code>es2015</code> and <code>react</code> presets. More information about the changes to Babel can be found in <a href="http://babeljs.io/blog/2015/10/29/6.0.0/">their blog post announcing Babel 6</a>.</p>
-
-<p>Here is an example of what you will do if using ES2015 syntax and React:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install babel-preset-es2015 babel-preset-react
-babel --presets es2015,react --watch src/ --out-dir lib/
-</code></pre></div>
-<p>By default JSX files with a <code>.js</code> extension are transformed. Run <code>babel --help</code> for more information on how to use Babel.</p>
-
-<p>Example output:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$ cat test.jsx
-var HelloMessage = React.createClass({
-  render: function() {
-    return &lt;div&gt;Hello {this.props.name}&lt;/div&gt;;
-  }
-});
-
-ReactDOM.render(&lt;HelloMessage name=&quot;John&quot; /&gt;, mountNode);
-$ babel test.jsx
-&quot;use strict&quot;;
-
-var HelloMessage = React.createClass({
-  displayName: &quot;HelloMessage&quot;,
-
-  render: function render() {
-    return React.createElement(
-      &quot;div&quot;,
-      null,
-      &quot;Hello &quot;,
-      this.props.name
-    );
-  }
-});
-
-ReactDOM.render(React.createElement(HelloMessage, { name: &quot;John&quot; }), mountNode);
-</code></pre></div><h3><a class="anchor" name="helpful-open-source-projects"></a>Helpful Open-Source Projects <a class="hash-link" href="#helpful-open-source-projects">#</a></h3>
-<p>The open-source community has built tools that integrate JSX with several editors and build systems. See <a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSX integrations</a> for the full list.</p>
+<ul>
+<li><a href="/react/docs/language-tooling.html">Language Tooling</a> describes how to set up tools like Babel to transpile JSX for a better development experience.</li>
+<li><a href="/react/docs/package-management.html">Package Management</a> describes how to configure React as a dependency of your project.</li>
+<li><a href="/react/docs/environments.html">Server-side Environments</a> describes how to configure your environment for server-side rendering with React.</li>
+</ul>
 
 
     <div class="docs-prevnext">
@@ -477,7 +446,7 @@ ReactDOM.render(React.createElement(HelloMessage, { name: &quot;John&quot; }), m
         <a class="docs-prev" href="/react/docs/more-about-refs.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/addons.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/language-tooling.html">Next &rarr;</a>
       
     </div>
   </div>
