@@ -11,40 +11,14 @@
 
 'use strict';
 
-var mouseListenerNames = {
-  onClick: true,
-  onDoubleClick: true,
-  onMouseDown: true,
-  onMouseMove: true,
-  onMouseUp: true,
-
-  onClickCapture: true,
-  onDoubleClickCapture: true,
-  onMouseDownCapture: true,
-  onMouseMoveCapture: true,
-  onMouseUpCapture: true,
-};
+var DisabledInputUtils = require('DisabledInputUtils');
 
 /**
  * Implements a <button> native component that does not receive mouse events
  * when `disabled` is set.
  */
 var ReactDOMButton = {
-  getNativeProps: function(inst, props) {
-    if (!props.disabled) {
-      return props;
-    }
-
-    // Copy the props, except the mouse listeners
-    var nativeProps = {};
-    for (var key in props) {
-      if (props.hasOwnProperty(key) && !mouseListenerNames[key]) {
-        nativeProps[key] = props[key];
-      }
-    }
-
-    return nativeProps;
-  },
+  getNativeProps: DisabledInputUtils.getNativeProps,
 };
 
 module.exports = ReactDOMButton;
