@@ -12,7 +12,8 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-
+var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
+var assign = require('Object.assign');
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
 
@@ -126,13 +127,6 @@ ReactElement.createElement = function(type, config, children) {
 
   if (config != null) {
     if (__DEV__) {
-      warning(
-        /* eslint-disable no-proto */
-        config.__proto__ == null || config.__proto__ === Object.prototype,
-        /* eslint-enable no-proto */
-        'React.createElement(...): Expected props argument to be a plain object. ' +
-        'Properties defined in its prototype chain will be ignored.'
-      );
       ref = !config.hasOwnProperty('ref') ||
         Object.getOwnPropertyDescriptor(config, 'ref').get ? null : config.ref;
       key = !config.hasOwnProperty('key') ||
@@ -152,6 +146,11 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
+  if (__DEV__) {
+    for (propName in config) {
+      ReactDOMInstrumentation.debugTool.onCreateElement(propName);
+    }
+  }
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
   var childrenLength = arguments.length - 2;
@@ -259,7 +258,7 @@ ReactElement.cloneElement = function(element, config, children) {
   var propName;
 
   // Original props are copied
-  var props = Object.assign({}, element.props);
+  var props = assign({}, element.props);
 
   // Reserved names are extracted
   var key = element.key;
@@ -275,15 +274,6 @@ ReactElement.cloneElement = function(element, config, children) {
   var owner = element._owner;
 
   if (config != null) {
-    if (__DEV__) {
-      warning(
-        /* eslint-disable no-proto */
-        config.__proto__ == null || config.__proto__ === Object.prototype,
-        /* eslint-enable no-proto */
-        'React.cloneElement(...): Expected props argument to be a plain object. ' +
-        'Properties defined in its prototype chain will be ignored.'
-      );
-    }
     if (config.ref !== undefined) {
       // Silently steal the ref from the parent.
       ref = config.ref;
