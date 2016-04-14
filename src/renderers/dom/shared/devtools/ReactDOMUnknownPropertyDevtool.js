@@ -36,7 +36,7 @@ if (__DEV__) {
 
     var lowerCasedName = name.toLowerCase();
 
-    if(EventPluginRegistry.possibleRegistrationNames[lowerCasedName] == name) {
+    if (EventPluginRegistry.possibleRegistrationNames[lowerCasedName] === name) {
       return;
     }
 

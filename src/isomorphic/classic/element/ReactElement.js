@@ -146,7 +146,7 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
 
-  if(__DEV__) {
+  if (__DEV__) {
     for (propName in config) {
       ReactDOMInstrumentation.debugTool.onCreateElement(propName);
     }
