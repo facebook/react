@@ -33,10 +33,9 @@ var supportedInputTypes = {
 };
 
 function isTextInputElement(elem) {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-  return nodeName && (
-    (nodeName === 'input' && supportedInputTypes[elem.type]) ||
-    nodeName === 'textarea'
+  return (
+    elem instanceof window.HTMLTextAreaElement ||
+    (elem instanceof window.HTMLInputElement && supportedInputTypes[elem.type])
   );
 }
 

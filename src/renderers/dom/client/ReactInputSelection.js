@@ -30,12 +30,9 @@ function isInDocument(node) {
 var ReactInputSelection = {
 
   hasSelectionCapabilities: function(elem) {
-    var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-    return nodeName && (
-      (nodeName === 'input' && elem.type === 'text') ||
-      nodeName === 'textarea' ||
-      elem.contentEditable === 'true'
-    );
+    return elem instanceof window.HTMLTextAreaElement ||
+      (elem instanceof window.HTMLInputElement && elem.type === 'text') ||
+      elem.contentEditable === 'true';
   },
 
   getSelectionInformation: function() {
@@ -85,8 +82,7 @@ var ReactInputSelection = {
         start: input.selectionStart,
         end: input.selectionEnd,
       };
-    } else if (document.selection &&
-        (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
+    } else if (document.selection && input instanceof window.HTMLInputElement) {
       // IE8 input.
       var range = document.selection.createRange();
       // There can only be one selection per document in IE, so it must
@@ -122,7 +118,7 @@ var ReactInputSelection = {
       input.selectionStart = start;
       input.selectionEnd = Math.min(end, input.value.length);
     } else if (document.selection &&
-        (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
+        input instanceof window.HTMLInputElement) {
       var range = input.createTextRange();
       range.collapse(true);
       range.moveStart('character', start);
