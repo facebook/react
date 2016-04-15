@@ -26,7 +26,7 @@ if (__DEV__) {
   };
   var warnedProperties = {};
 
-  var warnUnknownProperty = function(name, source) {
+  var warnUnknownProperty = function(name) {
     if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
       return;
     }
@@ -54,7 +54,7 @@ if (__DEV__) {
       'Unknown DOM property %s. Did you mean %s? %s',
       name,
       standardName,
-      formatSource(source)
+      formatSource(cachedSource)
     );
 
     var registrationName = (
@@ -70,28 +70,25 @@ if (__DEV__) {
       'Unknown event handler property %s. Did you mean `%s`? %s',
       name,
       registrationName,
-      formatSource(source)
+      formatSource(cachedSource)
     );
   };
 
   var formatSource = function(source) {
     return source ? `(${source.fileName.replace(/^.*[\\\/]/, '')}:${source.lineNumber})` : '';
   };
+
 }
 
 var ReactDOMUnknownPropertyDevtool = {
   onCreateMarkupForProperty(name, value) {
-    warnUnknownProperty(name, cachedSource);
+    warnUnknownProperty(name);
   },
   onSetValueForProperty(node, name, value) {
-    warnUnknownProperty(name, cachedSource);
+    warnUnknownProperty(name);
   },
   onDeleteValueForProperty(node, name) {
-    warnUnknownProperty(name, cachedSource);
-  },
-  onInstantiateReactComponent(instance) {
-    //Get JSX _source for use in warnings
-    cachedSource = instance._currentElement ? instance._currentElement._source : null;
+    warnUnknownProperty(name);
   },
 };
 

@@ -62,6 +62,27 @@ var ReactDOMDebugTool = {
   onTestEvent() {
     emitEvent('onTestEvent');
   },
+  onBeginProcessingChildContext() {
+    emitEvent('onBeginProcessingChildContext');
+  },
+  onEndProcessingChildContext() {
+    emitEvent('onEndProcessingChildContext');
+  },
+  onSetState() {
+    emitEvent('onSetState');
+  },
+  onMountRootComponent(internalInstance) {
+    emitEvent('onMountRootComponent', internalInstance);
+  },
+  onMountComponent(internalInstance) {
+    emitEvent('onMountComponent', internalInstance);
+  },
+  onUpdateComponent(internalInstance) {
+    emitEvent('onUpdateComponent', internalInstance);
+  },
+  onUnmountComponent(internalInstance) {
+    emitEvent('onUnmountComponent', internalInstance);
+  },
 };
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);

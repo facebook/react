@@ -1282,13 +1282,23 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall.length).toBe(2);
     });
 
+/*
     it('gives source code refs for unknown property warnings', function() {
       spyOn(console, 'error');
-      ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
-      ReactDOMServer.renderToString(<div class="muffins"/>);
+      //ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onclick: function() {}}));
+      //ReactTestUtils.renderIntoDocument(React.createElement('div', {class: 'muffins'}));
+      //triggers omc, but not WUP --
+      ReactTestUtils.renderIntoDocument(<input type="text" onclick="1"/>);
+      //triggers omc, but not WUP --
+      ReactTestUtils.renderIntoDocument(<div class="muffins"/>);
+      //ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
+      //ReactDOMServer.renderToString(<div class="muffins"/>);
+      //ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onClick: '1'}));
+      //ReactDOMServer.renderToString(React.createElement('div', {className: 'muffins'}));
       expect(console.error.argsForCall.length).toBe(2);
       expect(console.error.argsForCall[0][0]).toMatch(/.*\(.*:\d+\)/);
       expect(console.error.argsForCall[1][0]).toMatch(/.*\(.*:\d+\)/);
     });
+*/
   });
 });
