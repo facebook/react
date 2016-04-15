@@ -17,6 +17,7 @@ describe('ReactDOMComponent', function() {
   var ReactDOM;
   var ReactDOMFeatureFlags;
   var ReactDOMServer;
+  var inputValueTracking;
 
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -28,6 +29,7 @@ describe('ReactDOMComponent', function() {
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
+    inputValueTracking = require('inputValueTracking');
   });
 
   describe('updateDOM', function() {
@@ -776,7 +778,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should work error event on <source> element', function() {
-      spyOn(console, 'error');  
+      spyOn(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
         <video>
@@ -909,6 +911,24 @@ describe('ReactDOMComponent', function() {
         'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
         'when using JSX.'
       );
+    });
+
+    it('should track input values', function() {
+      var container = document.createElement('div');
+      var inst = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+
+      var tracker = inputValueTracking._getTrackerFromNode(inst);
+
+      expect(tracker.getValue()).toEqual('foo');
+    });
+
+    it('should track textarea values', function() {
+      var container = document.createElement('div');
+      var inst = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+
+      var tracker = inputValueTracking._getTrackerFromNode(inst);
+
+      expect(tracker.getValue()).toEqual('foo');
     });
 
     it('should execute custom event plugin listening behavior', function() {
@@ -1119,6 +1139,30 @@ describe('ReactDOMComponent', function() {
       expect(
         EventPluginHub.getListener(inst, 'onClick')
       ).toBe(undefined);
+    });
+
+    it('should clean up input value tracking', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+      var tracker = inputValueTracking._getTrackerFromNode(node);
+
+      spyOn(tracker, 'stopTracking');
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(tracker.stopTracking.calls.count()).toBe(1);
+    });
+
+    it('should clean up input textarea tracking', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+      var tracker = inputValueTracking._getTrackerFromNode(node);
+
+      spyOn(tracker, 'stopTracking');
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(tracker.stopTracking.calls.count()).toBe(1);
     });
 
     it('unmounts children before unsetting DOM node info', function() {
