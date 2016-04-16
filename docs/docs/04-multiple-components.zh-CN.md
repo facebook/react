@@ -60,13 +60,13 @@ ReactDOM.render(
 
 ## 子级
 
-实例化 React 组件时，你可以在开始标签和结束标签之间引用在React 组件或者Javascript 表达式：
+实例化 React 组件时，你可以在开始标签和结束标签之间引用在 React 组件或者 Javascript 表达式：
 
 ```javascript
 <Parent><Child /></Parent>
 ```
 
-`Parent` 能通过专门的 `this.props.children`  props 读取子级。**`this.props.children` 是一个不透明的数据结构：** 通过 [React.Children 工具类](/react/docs/top-level-api.html#react.children) 来操作。
+`Parent` 能通过专门的 `this.props.children` props 读取子级。**`this.props.children` 是一个不透明的数据结构：** 通过 [React.Children 工具类](/react/docs/top-level-api.html#react.children)来操作。
 
 ### 子级校正（Reconciliation）
 
@@ -164,16 +164,16 @@ var MyComponent = React.createClass({
 });
 ```
 
-也可以传递ReactFragment 对象 来做有 key 的子级。详见[Keyed Fragments](create-fragment.html)
+也可以传递ReactFragment 对象来做有 key 的子级。详见[Keyed Fragments](create-fragment.html)
 
 ## 数据流
 
-React 里，数据通过上面介绍过的 `props` 从拥有者流向归属者。这就是高效的单向数据绑定(one-way data binding)：拥有者通过它的 `props` 或 `state` 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有被使用的地方自动反映出来。
+React 里，数据通过上面介绍过的 `props` 从拥有者流向归属者。这就是高效的单向数据绑定（one-way data binding）：拥有者通过它的 `props` 或 `state` 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有被使用的地方自动反映出来。
 
 
 ## 性能提醒
 
-你或许会担心如果一个拥有者有大量子级时，对于数据变化做出响应非常耗费性能。值得庆幸的是执行 JavaScript  非常的快，而且 `render()` 方法一般比较简单，所以在大部分应用里这样做速度极快。此外，性能的瓶颈大多是因为 DOM 更新，而非 JS 执行，而且 React 会通过批量更新和变化检测来优化性能。
+你或许会担心如果一个拥有者有大量子级时，对于数据变化做出响应非常耗费性能。值得庆幸的是执行 JavaScript 非常的快，而且 `render()` 方法一般比较简单，所以在大部分应用里这样做速度极快。此外，性能的瓶颈大多是因为 DOM 更新，而非 JS 执行，而且 React 会通过批量更新和变化检测来优化性能。
 
 但是，有时候需要做细粒度的性能控制。这种情况下，可以重写 `shouldComponentUpdate()` 方法返回 false 来让 React 跳过对子树的处理。参考 [React reference docs](/react/docs/component-specs.html) 了解更多。
 

@@ -8,7 +8,7 @@ next: working-with-the-browser-zh-CN.html
 
 诸如 `<input>`、`<textarea>`、`<option>` 这样的表单组件不同于其他组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。
 
-关于 `<form>` 事件详情请查看 [表单事件](/react/docs/events-zh-CN.html#form-events)。
+关于 `<form>` 事件详情请查看[表单事件](/react/docs/events-zh-CN.html#form-events)。
 
 ## 交互属性
 
@@ -28,7 +28,7 @@ next: working-with-the-browser-zh-CN.html
 
 和所有 DOM 事件一样，所有的 HTML 原生组件都支持 `onChange` 属性，而且可以用来监听冒泡的 `change` 事件。
 
-> 注意:
+> 注意：
 >
 > 对于 `<input>` and `<textarea>`， `onChange` 取代 — 一般应该用来替代 — DOM内建的 [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) 事件处理。
 
@@ -42,7 +42,7 @@ next: working-with-the-browser-zh-CN.html
   }
 ```
 
-用户输入在被渲染的元素里将没有作用,因为 React 已经声明值为 `Hello!`。要更新 value 来响应用户输入，你可以使用 `onChange` 事件：
+用户输入在被渲染的元素里将没有作用，因为 React 已经声明值为 `Hello!`。要更新 value 来响应用户输入，你可以使用 `onChange` 事件：
 
 ```javascript
   getInitialState: function() {
@@ -76,11 +76,11 @@ next: working-with-the-browser-zh-CN.html
 
 ### 复选框与单选按钮的潜在问题
 
-当心，在力图标准化复选框与单选按钮的变换处理中，React使用`click` 事件代替 `change` 事件。在大多数情况下它们表现的如同预期，除了在`change` handler中调用`preventDefault` 。`preventDefault` 阻止了浏览器视觉上更新输入，即使`checked`被触发。变通的方式是要么移除`preventDefault`的调用，要么把`checked` 的触发放在一个`setTimeout`里。
+当心，在力图标准化复选框与单选按钮的变换处理中，React使用 `click` 事件代替 `change` 事件。在大多数情况下它们表现的如同预期，除了在 `change` handler 中调用 `preventDefault`。`preventDefault` 阻止了浏览器视觉上更新输入，即使 `checked` 被触发。变通的方式是要么移除 `preventDefault` 的调用，要么把 `checked` 的触发放在一个 `setTimeout` 里。
 
 ## 不受控组件
 
-一个没有 `value` 属性的 `<input>` 是一个不*受控*组件:
+一个没有 `value` 属性的 `<input>` 是一个不*受控*组件：
 
 ```javascript
   render: function() {
@@ -104,11 +104,11 @@ next: working-with-the-browser-zh-CN.html
 
 这个例子会像上面的 **不受控组件** 例子一样运行。
 
-同样的， `<input type="checkbox">` 和 `<input type="radio">` 支持 `defaultChecked` 、 `<select>` 支持 `defaultValue`.
+同样的，`<input type="checkbox">` 和 `<input type="radio">` 支持 `defaultChecked`、`<select>` 支持 `defaultValue`。
 
-> 注意:
+> 注意：
 >
->  `defaultValue` 和 `defaultChecked` props 只能在内部渲染时被使用。 如果你需要在随后的渲染更新值, 你需要使用 [受控组件](#受控组件).
+>  `defaultValue` 和 `defaultChecked` props 只能在内部渲染时被使用。如果你需要在随后的渲染更新值，你需要使用 [受控组件](#受控组件)。
 
 ## 高级主题
 
@@ -120,7 +120,7 @@ next: working-with-the-browser-zh-CN.html
   <input type="text" name="title" value="Untitled" />
 ```
 
-它渲染一个*初始值*为 `Untitled` 的输入框。当用户改变输入框的值时，节点的 `value` 属性( *property*)将随之变化，但是 `node.getAttribute('value')` 还是会返回初始设置的值 `Untitled`.
+它渲染一个*初始值*为 `Untitled` 的输入框。当用户改变输入框的值时，节点的 `value` 属性( *property*)将随之变化，但是 `node.getAttribute('value')` 还是会返回初始设置的值 `Untitled`。
 
 与 HTML 不同，React 组件必须在任何时间点表现视图的状态，而不仅仅是在初始化时。比如在 React 中：
 
@@ -134,14 +134,14 @@ next: working-with-the-browser-zh-CN.html
 
 ### 为什么 `<textarea>` 使用 `value` 属性？
 
-在 HTML 中， `<textarea>` 的值通常使用子节点设置：
+在 HTML 中，`<textarea>` 的值通常使用子节点设置：
 
 ```html
   <!-- 反例：在 React 中不要这样使用！ -->
   <textarea name="description">This is the description.</textarea>
 ```
 
-对 HTML 而言，让开发者设置多行的值很容易。但是，React 是 JavaScript，没有字符串限制，可以使用 `\n` 实现换行。简言之，React 已经有 `value`、`defaultValue` 属性，`</textarea>` 组件的子节点扮演什么角色就有点模棱两可了。基于此， 设置 `<textarea>` 值时不应该使用子节点：
+对 HTML 而言，让开发者设置多行的值很容易。但是，React 是 JavaScript，没有字符串限制，可以使用 `\n` 实现换行。简言之，React 已经有 `value`、`defaultValue` 属性，`</textarea>` 组件的子节点扮演什么角色就有点模棱两可了。基于此，设置 `<textarea>` 值时不应该使用子节点：
 
 ```javascript
   <textarea name="description" value="This is a description." />
