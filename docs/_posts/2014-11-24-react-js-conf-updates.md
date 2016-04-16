@@ -10,7 +10,7 @@ amazed that 600 people requested to be notified when ticket go on sale. This is 
 When we organized the conference, we decided to start small since this is the
 first React.js conference. Also, we weren't sure what level of demand to expect,
 so we planned for a single-track, two-day conference on Facebook's campus. The
-largest room available would accomodate 18 speaking slots and 200 attendees.
+largest room available would accommodate 18 speaking slots and 200 attendees.
 The spacial configuration makes it difficult to add a second track and changing
 venues only two months in advance would be too difficult, so we are deciding to
 stick with the originally planned format and venue on Facebook's campus.
