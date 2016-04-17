@@ -13,7 +13,7 @@
 
 var NS = {
   xlink: 'http://www.w3.org/1999/xlink',
-  xml: 'http://www.w3.org/XML/1998/namespace',
+  xml: 'http://www.w3.org/2000/svg',
 };
 
 // We use attributes for everything SVG so let's avoid some duplication and run
@@ -264,7 +264,9 @@ var ATTRS = {
   xlinkType: 'xlink:type',
   xmlBase: 'xml:base',
   xmlLang: 'xml:lang',
+  xmlNS: 'xmlns',
   xmlSpace: 'xml:space',
+  xmlnsXlink: 'xmlns:xlink',
   y: 0,
   y1: 0,
   y2: 0,
