@@ -168,16 +168,6 @@ Object.assign(reactComponentExpectInternal.prototype, {
   },
 
   /**
-   * @deprecated
-   * @see toBeComponentOfType
-   */
-  toBeDOMComponentWithTag: function(tag) {
-    this.toBeDOMComponent();
-    expect(this.instance().tagName).toBe(tag.toUpperCase());
-    return this;
-  },
-
-  /**
    * Check that internal state values are equal to a state of expected values.
    */
   scalarStateEqual: function(stateNameToExpectedValue) {
