@@ -1,6 +1,5 @@
 /**
- * @module <%= package %>
- * @version <%= version %>
+ * <%= package %> v<%= version %>
  * @license
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
