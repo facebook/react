@@ -113,6 +113,7 @@ function ReactReconcileTransaction(useCreateElement) {
   // `ReactTextComponent` checks it in `mountComponent`.`
   this.renderToStaticMarkup = false;
   this.reactMountReady = CallbackQueue.getPooled(null);
+  this.hasReactMountReady = true;
   this.useCreateElement = useCreateElement;
 }
 

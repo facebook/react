@@ -1002,16 +1002,16 @@ ReactDOMComponent.Mixin = {
     if (lastChildren != null && nextChildren == null) {
       this.updateChildren(null, transaction, context);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
-      this.updateTextContent('');
+      this.updateTextContent('', transaction);
     }
 
     if (nextContent != null) {
       if (lastContent !== nextContent) {
-        this.updateTextContent('' + nextContent);
+        this.updateTextContent('' + nextContent, transaction);
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        this.updateMarkup('' + nextHtml);
+        this.updateMarkup('' + nextHtml, transaction);
       }
     } else if (nextChildren != null) {
       this.updateChildren(nextChildren, transaction, context);
@@ -1028,7 +1028,7 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    */
-  unmountComponent: function(safely) {
+  unmountComponent: function(transaction, safely) {
     switch (this._tag) {
       case 'iframe':
       case 'object':
@@ -1057,7 +1057,7 @@ ReactDOMComponent.Mixin = {
          * management. So we just document it and throw in dangerous cases.
          */
         invariant(
-          false,
+          !transaction.hasReactMountReady,
           '<%s> tried to unmount. Because of cross-browser quirks it is ' +
           'impossible to unmount some top-level components (eg <html>, ' +
           '<head>, and <body>) reliably and efficiently. To fix this, have a ' +
@@ -1068,7 +1068,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    this.unmountChildren(safely);
+    this.unmountChildren(transaction, safely);
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);

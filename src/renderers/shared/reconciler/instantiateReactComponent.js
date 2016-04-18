@@ -13,6 +13,7 @@
 
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeComponent = require('ReactNativeComponent');
 
 var invariant = require('invariant');
@@ -55,6 +56,8 @@ function isInternalComponentType(type) {
     typeof type.prototype.receiveComponent === 'function'
   );
 }
+
+var nextDebugID = 0;
 
 /**
  * Given a ReactNode, create an instance that will actually be mounted.
@@ -119,6 +122,7 @@ function instantiateReactComponent(node) {
   if (__DEV__) {
     instance._isOwnerNecessary = false;
     instance._warnedAboutRefsInRender = false;
+    instance._debugID = (nextDebugID++).toString();
   }
 
   // Internal instances should fully constructed at this point, so they should
@@ -127,6 +131,10 @@ function instantiateReactComponent(node) {
     if (Object.preventExtensions) {
       Object.preventExtensions(instance);
     }
+  }
+
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onInstantiateComponent(instance);
   }
 
   return instance;

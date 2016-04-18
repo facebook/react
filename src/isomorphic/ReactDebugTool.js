@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactDebugInstanceMap = require('ReactDebugInstanceMap');
 var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
 var warning = require('warning');
 
@@ -58,6 +59,10 @@ var ReactDebugTool = {
   onSetState() {
     emitEvent('onSetState');
   },
+  onInstantiateComponent(internalInstance) {
+    ReactDebugInstanceMap.registerInstance(internalInstance);
+    emitEvent('onInstantiateComponent', internalInstance);
+  },
   onMountRootComponent(internalInstance) {
     emitEvent('onMountRootComponent', internalInstance);
   },
@@ -69,6 +74,7 @@ var ReactDebugTool = {
   },
   onUnmountComponent(internalInstance) {
     emitEvent('onUnmountComponent', internalInstance);
+    ReactDebugInstanceMap.unregisterInstance(internalInstance);
   },
 };
 

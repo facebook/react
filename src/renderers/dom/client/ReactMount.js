@@ -170,7 +170,11 @@ function batchedMountComponentIntoNode(
  * @see {ReactMount.unmountComponentAtNode}
  */
 function unmountComponentFromNode(instance, container, safely) {
-  ReactReconciler.unmountComponent(instance, safely);
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
+    /* useCreateElement */ true
+  );
+  ReactReconciler.unmountComponent(instance, transaction, safely);
+  ReactUpdates.ReactReconcileTransaction.release(transaction);
 
   if (container.nodeType === DOC_NODE_TYPE) {
     container = container.documentElement;
