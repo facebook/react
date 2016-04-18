@@ -27,7 +27,7 @@ var ReactNativeGlobalInteractionHandler = {
     } else if (!interactionHandle) {
       interactionHandle = InteractionManager.createInteractionHandle();
     }
-  }
+  },
 };
 
 module.exports = ReactNativeGlobalInteractionHandler;

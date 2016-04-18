@@ -12,7 +12,6 @@
 'use strict';
 
 var invariant = require('invariant');
-var warning = require('warning');
 
 /**
  * Keeps track of allocating and associating native "tags" which are numeric,
@@ -28,7 +27,6 @@ var warning = require('warning');
  * unmount a component with a `rootNodeID`, then mount a new one in its place,
  */
 var INITIAL_TAG_COUNT = 1;
-var NATIVE_TOP_ROOT_ID_SEPARATOR = '{TOP_LEVEL}';
 var ReactNativeTagHandles = {
   tagsStartAt: INITIAL_TAG_COUNT,
   tagCount: INITIAL_TAG_COUNT,
@@ -46,14 +44,14 @@ var ReactNativeTagHandles = {
   assertRootTag: function(tag: number): void {
     invariant(
       this.reactTagIsNativeTopRootID(tag),
-      'Expect a native root tag, instead got ', tag
+      'Expect a native root tag, instead got %s', tag
     );
   },
 
   reactTagIsNativeTopRootID: function(reactTag: number): bool {
     // We reserve all tags that are 1 mod 10 for native root views
     return reactTag % 10 === 1;
-  }
+  },
 };
 
 module.exports = ReactNativeTagHandles;

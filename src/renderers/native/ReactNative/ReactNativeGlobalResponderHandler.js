@@ -10,7 +10,6 @@
  */
 'use strict';
 
-var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
 
 var ReactNativeGlobalResponderHandler = {
@@ -23,7 +22,7 @@ var ReactNativeGlobalResponderHandler = {
     } else {
       UIManager.clearJSResponder();
     }
-  }
+  },
 };
 
 module.exports = ReactNativeGlobalResponderHandler;

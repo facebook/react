@@ -16,9 +16,7 @@
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeDefaultInjection = require('ReactNativeDefaultInjection');
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactNativeMount = require('ReactNativeMount');
 var ReactUpdates = require('ReactUpdates');
 
@@ -45,16 +43,6 @@ var ReactNative = {
   /* eslint-enable camelcase */
 
   unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
-
-  // Deprecations (remove for 0.13)
-  renderComponent: function(
-    element: ReactElement,
-    mountInto: number,
-    callback?: ?(() => void)
-  ): ?ReactComponent {
-    warning('Use React.render instead of React.renderComponent');
-    return ReactNative.render(element, mountInto, callback);
-  },
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.

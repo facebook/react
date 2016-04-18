@@ -13,7 +13,7 @@
 
 function ReactNativeContainerInfo(tag) {
   var info = {
-    _tag: tag
+    _tag: tag,
   };
   return info;
 }

@@ -130,7 +130,7 @@ var ReactNativeMount = {
 
     if (!ReactNativeTagHandles.reactTagIsNativeTopRootID(containerTag)) {
       console.error('You cannot render into anything but a top root');
-      return;
+      return null;
     }
 
     ReactNativeTagHandles.assertRootTag(containerTag);
@@ -225,7 +225,7 @@ var ReactNativeMount = {
     // Call back into native to remove all of the subviews from this container
     ReactReconciler.unmountComponent(instance);
     UIManager.removeSubviewsFromContainerWithID(containerID);
-  }
+  },
 
 };
 

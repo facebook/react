@@ -13,7 +13,7 @@
 
 var IOSDefaultEventPluginOrder = [
   'ResponderEventPlugin',
-  'IOSNativeBridgeEventPlugin'
+  'IOSNativeBridgeEventPlugin',
 ];
 
 module.exports = IOSDefaultEventPluginOrder;

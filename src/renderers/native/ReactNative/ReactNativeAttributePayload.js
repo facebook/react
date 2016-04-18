@@ -408,9 +408,9 @@ function diffProperties(
         defaultDiffer(prevProp, nextProp)
       );
       if (shouldUpdate) {
-        var nextValue = typeof attributeConfig.process === 'function' ?
-                        attributeConfig.process(nextProp) :
-                        nextProp;
+        nextValue = typeof attributeConfig.process === 'function' ?
+                    attributeConfig.process(nextProp) :
+                    nextProp;
         (updatePayload || (updatePayload = {}))[altKey] = nextValue;
       }
     } else {
@@ -437,7 +437,7 @@ function diffProperties(
   // Also iterate through all the previous props to catch any that have been
   // removed and make sure native gets the signal so it can reset them to the
   // default.
-  for (var propKey in prevProps) {
+  for (propKey in prevProps) {
     if (nextProps[propKey] !== undefined) {
       continue; // we've already covered this key in the previous pass
     }
@@ -539,7 +539,7 @@ var ReactNativeAttributePayload = {
       nextProps,
       validAttributes
     );
-  }
+  },
 
 };
 

@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactPerf = require('ReactPerf');
 var UIManager = require('UIManager');

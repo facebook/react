@@ -66,7 +66,7 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginsByName({
     'ResponderEventPlugin': ResponderEventPlugin,
-    'IOSNativeBridgeEventPlugin': IOSNativeBridgeEventPlugin
+    'IOSNativeBridgeEventPlugin': IOSNativeBridgeEventPlugin,
   });
 
   ReactUpdates.injection.injectReconcileTransaction(
@@ -87,7 +87,7 @@ function inject() {
     return new ReactSimpleEmptyComponent(
       ReactElement.createElement(View, {
         collapsable: true,
-        style: { position: 'absolute' }
+        style: { position: 'absolute' },
       }),
       instantiate
     );

@@ -209,7 +209,7 @@ var ReactNativeEventEmitter = merge(ReactEventEmitterMixin, {
         nativeEvent
       );
     }
-  }
+  },
 });
 
 module.exports = ReactNativeEventEmitter;

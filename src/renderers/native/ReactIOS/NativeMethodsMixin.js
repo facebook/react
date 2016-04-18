@@ -169,7 +169,7 @@ var NativeMethodsMixin = {
    */
   blur: function() {
     TextInputState.blurTextInput(findNodeHandle(this));
-  }
+  },
 };
 
 function throwOnStylesProp(component, props) {
@@ -195,10 +195,10 @@ if (__DEV__) {
     !NativeMethodsMixin_DEV.componentWillReceiveProps,
     'Do not override existing functions.'
   );
-  NativeMethodsMixin_DEV.componentWillMount = function () {
+  NativeMethodsMixin_DEV.componentWillMount = function() {
     throwOnStylesProp(this, this.props);
   };
-  NativeMethodsMixin_DEV.componentWillReceiveProps = function (newProps) {
+  NativeMethodsMixin_DEV.componentWillReceiveProps = function(newProps) {
     throwOnStylesProp(this, newProps);
   };
 }
@@ -210,7 +210,7 @@ if (__DEV__) {
 var mountSafeCallback = function(context: ReactComponent, callback: ?Function): any {
   return function() {
     if (!callback || (context.isMounted && !context.isMounted())) {
-      return;
+      return undefined;
     }
     return callback.apply(context, arguments);
   };

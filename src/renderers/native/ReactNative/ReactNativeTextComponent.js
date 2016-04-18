@@ -31,8 +31,8 @@ Object.assign(ReactNativeTextComponent.prototype, {
     // TODO: nativeParent should have this context already. Stop abusing context.
     invariant(
       context.isInAParentText,
-      'RawText "' + this._stringText + '" must be wrapped in an explicit ' +
-        '<Text> component.'
+      'RawText "%s" must be wrapped in an explicit <Text> component.',
+      this._stringText
     );
     this._nativeParent = nativeParent;
     var tag = ReactNativeTagHandles.allocateTag();
@@ -74,7 +74,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
     this._currentElement = null;
     this._stringText = null;
     this._rootNodeID = null;
-  }
+  },
 
 });
 

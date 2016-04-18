@@ -2,7 +2,7 @@
  * @providesModule PanResponder
  */
 
-"use strict";
+'use strict';
 
 var TouchHistoryMath = require('TouchHistoryMath');
 
@@ -320,25 +320,25 @@ var PanResponder = {
         gestureState.y0 = currentCentroidY(e.touchHistory);
         gestureState.dx = 0;
         gestureState.dy = 0;
-        config.onPanResponderGrant && config.onPanResponderGrant(e, gestureState);
+        if (config.onPanResponderGrant) config.onPanResponderGrant(e, gestureState);
         // TODO: t7467124 investigate if this can be removed
         return config.onShouldBlockNativeResponder === undefined ? true :
           config.onShouldBlockNativeResponder();
       },
 
       onResponderReject: function(e) {
-        config.onPanResponderReject && config.onPanResponderReject(e, gestureState);
+        if (config.onPanResponderReject) config.onPanResponderReject(e, gestureState);
       },
 
       onResponderRelease: function(e) {
-        config.onPanResponderRelease && config.onPanResponderRelease(e, gestureState);
+        if (config.onPanResponderRelease) config.onPanResponderRelease(e, gestureState);
         PanResponder._initializeGestureState(gestureState);
       },
 
       onResponderStart: function(e) {
         var touchHistory = e.touchHistory;
         gestureState.numberActiveTouches = touchHistory.numberActiveTouches;
-        config.onPanResponderStart && config.onPanResponderStart(e, gestureState);
+        if (config.onPanResponderStart) config.onPanResponderStart(e, gestureState);
       },
 
       onResponderMove: function(e) {
@@ -351,18 +351,19 @@ var PanResponder = {
         // Filter out any touch moves past the first one - we would have
         // already processed multi-touch geometry during the first event.
         PanResponder._updateGestureStateOnMove(gestureState, touchHistory);
-        config.onPanResponderMove && config.onPanResponderMove(e, gestureState);
+        if (config.onPanResponderMove) config.onPanResponderMove(e, gestureState);
       },
 
       onResponderEnd: function(e) {
         var touchHistory = e.touchHistory;
         gestureState.numberActiveTouches = touchHistory.numberActiveTouches;
-        config.onPanResponderEnd && config.onPanResponderEnd(e, gestureState);
+        if (config.onPanResponderEnd) config.onPanResponderEnd(e, gestureState);
       },
 
       onResponderTerminate: function(e) {
-        config.onPanResponderTerminate &&
+        if (config.onPanResponderTerminate) {
           config.onPanResponderTerminate(e, gestureState);
+        }
         PanResponder._initializeGestureState(gestureState);
       },
 

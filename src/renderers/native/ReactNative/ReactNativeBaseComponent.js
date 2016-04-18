@@ -20,8 +20,6 @@ var ReactMultiChild = require('ReactMultiChild');
 var UIManager = require('UIManager');
 
 var deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
-var invariant = require('invariant');
-var warning = require('warning');
 
 var registrationNames = ReactNativeEventEmitter.registrationNames;
 var putListener = ReactNativeEventEmitter.putListener;
@@ -215,7 +213,7 @@ ReactNativeBaseComponent.Mixin = {
       context
     );
     return tag;
-  }
+  },
 };
 
 /**

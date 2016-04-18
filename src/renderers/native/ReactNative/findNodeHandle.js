@@ -14,7 +14,6 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNativeTagHandles = require('ReactNativeTagHandles');
 
 var invariant = require('invariant');
 var warning = require('warning');

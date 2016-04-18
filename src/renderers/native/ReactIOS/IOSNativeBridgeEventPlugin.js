@@ -65,7 +65,7 @@ var IOSNativeBridgeEventPlugin = {
       return null;
     }
     return event;
-  }
+  },
 };
 
 module.exports = IOSNativeBridgeEventPlugin;

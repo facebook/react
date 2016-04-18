@@ -87,10 +87,10 @@ describe('ReactNativeAttributePayload', function() {
 
   it('should do deep diffs of Objects by default', () => {
     expect(diff(
-      {a: [1], b: {k: [3,4]}, c: {k: [4,4]} },
-      {a: [2], b: {k: [3,4]}, c: {k: [4,5]} },
+      {a: [1], b: {k: [3, 4]}, c: {k: [4, 4]} },
+      {a: [2], b: {k: [3, 4]}, c: {k: [4, 5]} },
       {a: true, b: true, c: true}
-    )).toEqual({a: [2], c: {k: [4,5]}});
+    )).toEqual({a: [2], c: {k: [4, 5]}});
   });
 
   it('should work with undefined styles', () => {
@@ -222,10 +222,25 @@ describe('ReactNativeAttributePayload', function() {
     // Note that if the property changes from one function to another, we don't
     // need to send an update.
     expect(diff(
-      {a: function() { return 1; }, b: function() { return 2; }, c: 3},
-      {b: function() { return 9; }, c: function() { return 3; }, },
+      {
+        a: function() {
+          return 1;
+        },
+        b: function() {
+          return 2;
+        },
+        c: 3,
+      },
+      {
+        b: function() {
+          return 9;
+        },
+        c: function() {
+          return 3;
+        },
+      },
       {a: true, b: true, c: true}
     )).toEqual({a: null, c: true});
   });
 
- });
+});

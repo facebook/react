@@ -32,7 +32,7 @@ var ON_DOM_READY_QUEUEING = {
    */
   close: function() {
     this.reactMountReady.notifyAll();
-  }
+  },
 };
 
 /**
@@ -88,7 +88,7 @@ var Mixin = {
   destructor: function() {
     CallbackQueue.release(this.reactMountReady);
     this.reactMountReady = null;
-  }
+  },
 };
 
 Object.assign(
