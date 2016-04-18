@@ -72,9 +72,11 @@ var ReactReconciler = {
    * @final
    * @internal
    */
-  unmountComponent: function(internalInstance, safely) {
-    ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
-    internalInstance.unmountComponent(safely);
+  unmountComponent: function(internalInstance, transaction, safely) {
+    if (transaction.hasReactMountReady) {
+      ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
+    }
+    internalInstance.unmountComponent(transaction, safely);
     if (__DEV__) {
       ReactInstrumentation.debugTool.onUnmountComponent(internalInstance);
     }

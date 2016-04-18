@@ -23,6 +23,7 @@ var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -369,6 +370,9 @@ ReactShallowRenderer.prototype.getMountedInstance = function() {
 var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onInstantiateComponent(this);
+  }
 };
 
 NoopInternalComponent.prototype = {
@@ -457,7 +461,9 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
 
 ReactShallowRenderer.prototype.unmount = function() {
   if (this._instance) {
-    this._instance.unmountComponent(false);
+    var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
+    this._instance.unmountComponent(transaction, false);
+    ReactUpdates.ReactReconcileTransaction.release(transaction);
   }
 };
 

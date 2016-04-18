@@ -13,6 +13,7 @@
 
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeComponent = require('ReactNativeComponent');
 
 var invariant = require('invariant');
@@ -127,6 +128,10 @@ function instantiateReactComponent(node) {
     if (Object.preventExtensions) {
       Object.preventExtensions(instance);
     }
+  }
+
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onInstantiateComponent(instance);
   }
 
   return instance;

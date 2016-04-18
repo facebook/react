@@ -86,15 +86,18 @@ var ReactDebugInstanceMap = {
     }
     return getIDForInstance(internalInstance);
   },
+
   getInstanceByID(instanceID) {
     return getInstanceByID(instanceID);
   },
+
   isRegisteredInstance(internalInstance) {
     if (!checkValidInstance(internalInstance)) {
       return false;
     }
     return isRegisteredInstance(internalInstance);
   },
+
   registerInstance(internalInstance) {
     if (!checkValidInstance(internalInstance)) {
       return;
@@ -107,6 +110,7 @@ var ReactDebugInstanceMap = {
     );
     registerInstance(internalInstance);
   },
+
   unregisterInstance(internalInstance) {
     if (!checkValidInstance(internalInstance)) {
       return;
