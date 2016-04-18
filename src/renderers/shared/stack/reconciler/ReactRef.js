@@ -62,8 +62,10 @@ ReactRef.shouldUpdateRefs = function(prevElement, nextElement) {
   return (
     // This has a few false positives w/r/t empty components.
     prevEmpty || nextEmpty ||
-    nextElement._owner !== prevElement._owner ||
-    nextElement.ref !== prevElement.ref
+    nextElement.ref !== prevElement.ref ||
+    // If owner changes but we have an unchanged function ref, don't update refs
+    (typeof nextElement.ref === 'string' &&
+     nextElement._owner !== prevElement._owner)
   );
 };
 

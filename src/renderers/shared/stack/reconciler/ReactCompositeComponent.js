@@ -1117,12 +1117,17 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponent: function() {
     var renderedComponent;
-    ReactCurrentOwner.current = this;
-    try {
+    if (__DEV__ || !(this._instance instanceof StatelessComponent)) {
+      ReactCurrentOwner.current = this;
+      try {
+        renderedComponent =
+          this._renderValidatedComponentWithoutOwnerOrContext();
+      } finally {
+        ReactCurrentOwner.current = null;
+      }
+    } else {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
-    } finally {
-      ReactCurrentOwner.current = null;
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
