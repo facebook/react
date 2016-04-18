@@ -13,6 +13,7 @@
 
 // Require ReactNativeDefaultInjection first for its side effects of setting up
 // the JS environment
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeDefaultInjection = require('ReactNativeDefaultInjection');
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -63,11 +64,24 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-    CurrentOwner: ReactCurrentOwner,
-    InstanceHandles: ReactInstanceHandles,
+    ComponentTree: {
+      getClosestInstanceFromNode: function(node) {
+        return ReactNativeComponentTree.getClosestInstanceFromNode(node);
+      },
+      getNodeFromInstance: function(inst) {
+        // inst is an internal instance (but could be a composite)
+        while (inst._renderedComponent) {
+          inst = inst._renderedComponent;
+        }
+        if (inst) {
+          return ReactNativeComponentTree.getNodeFromInstance(inst);
+        } else {
+          return null;
+        }
+      },
+    },
     Mount: ReactNativeMount,
     Reconciler: require('ReactReconciler'),
-    TextComponent: require('ReactNativeTextComponent'),
   });
 }
 
