@@ -32,6 +32,7 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
@@ -756,6 +757,14 @@ ReactDOMComponent.Mixin = {
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
+        if (__DEV__) {
+          var inlinedTextDebugID = this._debugID + '#text';
+          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
+          ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
+          ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
+          ReactInstrumentation.debugTool.onSetChildren(inlinedTextDebugID, []);
+          ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, contentToUse);
+        }
         DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(

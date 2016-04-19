@@ -377,6 +377,14 @@ var ReactCompositeComponentMixin = {
     this._renderedComponent = this._instantiateReactComponent(
       renderedElement
     );
+    if (__DEV__) {
+      if (this._renderedComponent._debugID) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          [this._renderedComponent._debugID]
+        );
+      }
+    }
 
     var markup = ReactReconciler.mountComponent(
       this._renderedComponent,

@@ -14,6 +14,7 @@
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
+var ReactInstrumentation = require('ReactInstrumentation');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -40,6 +41,21 @@ function getDeclarationErrorAddendum(owner) {
   return '';
 }
 
+function getDisplayName(instance) {
+   var element = instance._currentElement;
+   if (element == null) {
+     return '#empty';
+   } else if (typeof element === 'string' || typeof element === 'number') {
+     return '#text';
+   } else if (typeof element.type === 'string') {
+     return element.type;
+   } else if (instance.getName) {
+     return instance.getName() || 'Unknown';
+   } else {
+     return element.type.displayName || element.type.name || 'Unknown';
+   }
+}
+
 /**
  * Check if the type reference is a known internal type. I.e. not a user
  * provided composite type.
@@ -56,6 +72,8 @@ function isInternalComponentType(type) {
   );
 }
 
+var nextDebugID = 1;
+
 /**
  * Given a ReactNode, create an instance that will actually be mounted.
  *
@@ -66,7 +84,12 @@ function isInternalComponentType(type) {
 function instantiateReactComponent(node) {
   var instance;
 
+  var isEmpty = false;
+  var isText = false;
+  var isComposite = false;
+
   if (node === null || node === false) {
+    isEmpty = true;
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
@@ -88,9 +111,11 @@ function instantiateReactComponent(node) {
       // representation, we can drop this code path.
       instance = new element.type(element);
     } else {
+      isComposite = true;
       instance = new ReactCompositeComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
+    isText = true;
     instance = ReactNativeComponent.createInstanceForText(node);
   } else {
     invariant(
@@ -119,6 +144,21 @@ function instantiateReactComponent(node) {
   if (__DEV__) {
     instance._isOwnerNecessary = false;
     instance._warnedAboutRefsInRender = false;
+  }
+
+  if (__DEV__) {
+    instance._debugID = isEmpty ? 0 : nextDebugID++;
+    var displayName = getDisplayName(instance);
+    ReactInstrumentation.debugTool.onSetIsComposite(instance._debugID, isComposite);
+    ReactInstrumentation.debugTool.onSetDisplayName(instance._debugID, displayName);
+    ReactInstrumentation.debugTool.onSetChildren(instance._debugID, []);
+    var owner = node && node._owner;
+    if (owner) {
+      ReactInstrumentation.debugTool.onSetOwner(instance._debugID, owner._debugID);
+    }
+    if (isText) {
+      ReactInstrumentation.debugTool.onSetText(instance._debugID, node);
+    }
   }
 
   // Internal instances should fully constructed at this point, so they should

@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -214,6 +215,14 @@ var ReactMultiChild = {
         nestedChildren, transaction, context
       );
       this._renderedChildren = children;
+
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          Object.keys(children).map(key => children[key]._debugID)
+        );
+      }
+
       var mountImages = [];
       var index = 0;
       for (var name in children) {

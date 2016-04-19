@@ -58,6 +58,21 @@ var ReactDebugTool = {
   onSetState() {
     emitEvent('onSetState');
   },
+  onSetIsComposite(debugID, isComposite) {
+    emitEvent('onSetIsComposite', debugID, isComposite);
+  },
+  onSetDisplayName(debugID, displayName) {
+    emitEvent('onSetDisplayName', debugID, displayName);
+  },
+  onSetChildren(debugID, childDebugIDs) {
+    emitEvent('onSetChildren', debugID, childDebugIDs);
+  },
+  onSetOwner(debugID, ownerDebugID) {
+    emitEvent('onSetOwner', debugID, ownerDebugID);
+  },
+  onSetText(debugID, text) {
+    emitEvent('onSetText', debugID, text);
+  },
   onMountRootComponent(internalInstance) {
     emitEvent('onMountRootComponent', internalInstance);
   },
