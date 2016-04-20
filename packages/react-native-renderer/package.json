@@ -1,0 +1,23 @@
+{
+  "name": "react-native-renderer",
+  "version": "16.0.0-alpha",
+  "description": "React package for use inside react-native.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "keywords": [
+    "react",
+    "react-native"
+  ],
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://facebook.github.io/react-native/",
+  "dependencies": {
+    "fbjs": "^0.8.0",
+    "react": "^16.0.0-alpha"
+  }
+}

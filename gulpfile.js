@@ -20,6 +20,7 @@ var paths = {
   react: {
     src: [
       'src/**/*.js',
+      '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
       '!src/shared/vendor/**/*.js',
@@ -28,17 +29,36 @@ var paths = {
   },
 };
 
+var fbjsModuleMap = require('fbjs/module-map');
+var moduleMap = {};
+for (var key in fbjsModuleMap) {
+  moduleMap[key] = fbjsModuleMap[key];
+}
+var whiteListNames = [
+  'deepDiffer',
+  'deepFreezeAndThrowOnMutationInDev',
+  'flattenStyle',
+  'InitializeJavaScriptAppEngine',
+  'InteractionManager',
+  'JSTimersExecution',
+  'merge',
+  'Platform',
+  'RCTEventEmitter',
+  'RCTLog',
+  'TextInputState',
+  'UIManager',
+  'View',
+];
+
+whiteListNames.forEach(function(name) {
+  moduleMap[name] = name;
+});
+
+moduleMap['object-assign'] = 'object-assign';
+
 var babelOpts = {
   plugins: [
-    [babelPluginModules, {
-      map: Object.assign(
-        {},
-        require('fbjs/module-map'),
-        {
-          'object-assign': 'object-assign',
-        }
-      ),
-    }],
+    [babelPluginModules, { map: moduleMap }],
   ],
 };
 
