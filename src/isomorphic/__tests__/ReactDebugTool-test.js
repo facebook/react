@@ -552,6 +552,16 @@ describe('ReactDebugTool', () => {
       };
       assertTreeMatches([element, tree]);
     });
+
+    it('reports html content as no children', () => {
+      var element = <div dangerouslySetInnerHTML={{__html: 'Bye.'}} />;
+      var tree = {
+        isComposite: false,
+        displayName: 'div',
+        children: [],
+      };
+      assertTreeMatches([element, tree]);
+    });
   });
 
   describe('update', () => {
@@ -639,6 +649,58 @@ describe('ReactDebugTool', () => {
         ]);
       });
 
+      it('updates from html content to a single text child', () => {
+        var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
+        var treeBefore = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        var elementAfter = <div>Hi.</div>;
+        var treeAfter = {
+          isComposite: false,
+          displayName: 'div',
+          children: [{
+            isComposite: false,
+            displayName: '#text',
+            text: 'Hi.',
+            children: [],
+          }],
+        };
+
+        assertTreeMatches([
+          [elementBefore, treeBefore],
+          [elementAfter, treeAfter],
+        ]);
+      });
+
+      it('updates from a single text child to html content', () => {
+        var elementBefore = <div>Hi.</div>;
+        var treeBefore = {
+          isComposite: false,
+          displayName: 'div',
+          children: [{
+            isComposite: false,
+            displayName: '#text',
+            text: 'Hi.',
+            children: [],
+          }],
+        };
+
+        var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
+        var treeAfter = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        assertTreeMatches([
+          [elementBefore, treeBefore],
+          [elementAfter, treeAfter],
+        ]);
+      });
+
       it('updates from no children to multiple text children', () => {
         var elementBefore = <div />;
         var treeBefore = {
@@ -689,6 +751,110 @@ describe('ReactDebugTool', () => {
         };
 
         var elementAfter = <div />;
+        var treeAfter = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        assertTreeMatches([
+          [elementBefore, treeBefore],
+          [elementAfter, treeAfter],
+        ]);
+      });
+
+      it('updates from html content to multiple text children', () => {
+        var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
+        var treeBefore = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
+        var treeAfter = {
+          isComposite: false,
+          displayName: 'div',
+          children: [{
+            isComposite: false,
+            displayName: '#text',
+            text: 'Hi.',
+            children: [],
+          }, {
+            isComposite: false,
+            displayName: '#text',
+            text: 'Bye.',
+            children: [],
+          }],
+        };
+
+        assertTreeMatches([
+          [elementBefore, treeBefore],
+          [elementAfter, treeAfter],
+        ]);
+      });
+
+      it('updates from multiple text children to html content', () => {
+        var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
+        var treeBefore = {
+          isComposite: false,
+          displayName: 'div',
+          children: [{
+            isComposite: false,
+            displayName: '#text',
+            text: 'Hi.',
+            children: [],
+          }, {
+            isComposite: false,
+            displayName: '#text',
+            text: 'Bye.',
+            children: [],
+          }],
+        };
+
+        var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
+        var treeAfter = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        assertTreeMatches([
+          [elementBefore, treeBefore],
+          [elementAfter, treeAfter],
+        ]);
+      });
+
+      it('updates from html content to no children', () => {
+        var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
+        var treeBefore = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        var elementAfter = <div />;
+        var treeAfter = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        assertTreeMatches([
+          [elementBefore, treeBefore],
+          [elementAfter, treeAfter],
+        ]);
+      });
+
+      it('updates from no children to html content', () => {
+        var elementBefore = <div />;
+        var treeBefore = {
+          isComposite: false,
+          displayName: 'div',
+          children: [],
+        };
+
+        var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
         var treeAfter = {
           isComposite: false,
           displayName: 'div',
