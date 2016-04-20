@@ -3,10 +3,7 @@
   "version": "16.0.0-alpha",
   "description": "React package for use inside react-native.",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/facebook/react.git"
-  },
+  "repository": "facebook/react",
   "keywords": [
     "react",
     "react-native"
@@ -17,7 +14,6 @@
   },
   "homepage": "https://facebook.github.io/react-native/",
   "dependencies": {
-    "fbjs": "^0.8.0",
     "react": "^16.0.0-alpha"
   }
 }
