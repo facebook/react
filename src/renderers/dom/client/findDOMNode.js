@@ -22,6 +22,8 @@ var warning = require('warning');
 /**
  * Returns the DOM node rendered by this element.
  *
+ * See https://facebook.github.io/react/docs/top-level-api.html#reactdom.finddomnode
+ *
  * @param {ReactComponent|DOMElement} componentOrElement
  * @return {?DOMElement} The root node of this element.
  */
