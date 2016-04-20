@@ -719,6 +719,13 @@ ReactDOMComponent.Mixin = {
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
         ret = escapeTextContentForBrowser(contentToUse);
+        if (__DEV__) {
+          this._contentDebugID = this._debugID + '#text';
+          ReactInstrumentation.debugTool.onSetIsComposite(this._contentDebugID, false);
+          ReactInstrumentation.debugTool.onSetDisplayName(this._contentDebugID, '#text');
+          ReactInstrumentation.debugTool.onSetText(this._contentDebugID, '' + contentToUse);
+          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [this._contentDebugID]);
+        }
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,

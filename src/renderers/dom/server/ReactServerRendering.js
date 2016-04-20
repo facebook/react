@@ -13,7 +13,9 @@
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
+var ReactReconciler = require('ReactReconciler');
 var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
@@ -36,12 +38,19 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element);
-      var markup = componentInstance.mountComponent(
+      var nativeContainerInfo = ReactDOMContainerInfo();
+      var markup = ReactReconciler.mountComponent(
+        componentInstance,
         transaction,
         null,
-        ReactDOMContainerInfo(),
+        nativeContainerInfo,
         emptyObject
       );
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onUnmountNativeContainer(
+          nativeContainerInfo._debugID
+        );
+      }
       if (!makeStaticMarkup) {
         markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
       }

@@ -576,6 +576,11 @@ var ReactMount = {
       container,
       false
     );
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onUnmountNativeContainer(
+        prevComponent._nativeContainerInfo._debugID
+      );
+    }
     return true;
   },
 

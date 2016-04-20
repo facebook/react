@@ -76,14 +76,17 @@ var ReactDebugTool = {
   onMountRootComponent(debugID) {
     emitEvent('onMountRootComponent', debugID);
   },
-  onMountComponent(debugID) {
-    emitEvent('onMountComponent', debugID);
+  onMountComponent(debugID, nativeContainerDebugID) {
+    emitEvent('onMountComponent', debugID, nativeContainerDebugID);
   },
   onUpdateComponent(debugID) {
     emitEvent('onUpdateComponent', debugID);
   },
   onUnmountComponent(debugID) {
     emitEvent('onUnmountComponent', debugID);
+  },
+  onUnmountNativeContainer(nativeContainerDebugID) {
+    emitEvent('onUnmountNativeContainer', nativeContainerDebugID);
   },
 };
 

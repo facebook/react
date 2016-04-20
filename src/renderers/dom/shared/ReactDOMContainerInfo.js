@@ -14,6 +14,7 @@
 var validateDOMNesting = require('validateDOMNesting');
 
 var DOC_NODE_TYPE = 9;
+var nextContainerDebugID = 1;
 
 function ReactDOMContainerInfo(topLevelWrapper, node) {
   var info = {
@@ -27,6 +28,7 @@ function ReactDOMContainerInfo(topLevelWrapper, node) {
     _namespaceURI: node ? node.namespaceURI : null,
   };
   if (__DEV__) {
+    info._debugID = nextContainerDebugID++;
     info._ancestorInfo = node ?
       validateDOMNesting.updatedAncestorInfo(null, info._tag, null) : null;
   }

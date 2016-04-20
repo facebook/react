@@ -466,7 +466,7 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
     this._instance.receiveComponent(element, transaction, context);
   } else {
     var instance = new ShallowComponentWrapper(element);
-    instance.mountComponent(transaction, null, null, context);
+    instance.mountComponent(transaction, null, {}, context);
     this._instance = instance;
   }
 };

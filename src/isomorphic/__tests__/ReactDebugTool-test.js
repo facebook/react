@@ -15,11 +15,12 @@ describe('ReactDebugTool', () => {
   var React;
   var ReactDebugTool;
   var ReactDOM;
+  var ReactDOMServer;
   var ReactInstanceMap;
 
-  var devtool;
-
   function createDevtool() {
+    var unmountedContainerIDs = [];
+    var allChildIDsByContainerID = {};
     var tree = {};
 
     function updateTree(id, update) {
@@ -55,8 +56,14 @@ describe('ReactDebugTool', () => {
         return;
       }
 
-      var {childIDs} = item;
+      var {childIDs, containerID} = item;
       delete tree[id];
+
+      if (containerID) {
+        allChildIDsByContainerID[containerID] = allChildIDsByContainerID[containerID].filter(
+          childID => childID !== id
+        );
+      }
 
       if (childIDs) {
         childIDs.forEach(purgeTree);
@@ -92,12 +99,31 @@ describe('ReactDebugTool', () => {
         updateTree(id, item => item.text = text);
       },
 
+      onMountComponent(id, containerID) {
+        if (!allChildIDsByContainerID[containerID]) {
+          allChildIDsByContainerID[containerID] = [];
+        }
+        allChildIDsByContainerID[containerID].push(id);
+        updateTree(id, item => item.containerID = containerID);
+      },
+
       onUnmountComponent(id) {
         purgeTree(id);
       },
 
-      getRegisteredDebugIDs() {
-        return Object.keys(tree);
+      onUnmountNativeContainer(containerID) {
+        unmountedContainerIDs.push(containerID);
+      },
+
+      purgeUnmountedContainers() {
+        unmountedContainerIDs.forEach(containerID => {
+          allChildIDsByContainerID[containerID].forEach(purgeTree);
+        });
+        unmountedContainerIDs = [];
+      },
+
+      getRegisteredDisplayNames() {
+        return Object.keys(tree).map(id => tree[id].displayName);
       },
 
       getTree(rootDebugID, includeOwner) {
@@ -112,14 +138,8 @@ describe('ReactDebugTool', () => {
     React = require('React');
     ReactDebugTool = require('ReactDebugTool');
     ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
     ReactInstanceMap = require('ReactInstanceMap');
-
-    devtool = createDevtool();
-    ReactDebugTool.addDevtool(devtool);
-  });
-
-  afterEach(() => {
-    ReactDebugTool.removeDevtool(devtool);
   });
 
   function assertTreeMatches(pairs, includeOwner) {
@@ -128,28 +148,42 @@ describe('ReactDebugTool', () => {
     }
 
     var currentElement;
+    var rootInstance;
     class Wrapper extends React.Component {
       render() {
+        rootInstance = ReactInstanceMap.get(this);
         return currentElement;
       }
     }
 
+    var clientDevtool = createDevtool();
+    ReactDebugTool.addDevtool(clientDevtool);
     var node = document.createElement('div');
-
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
-
-      var rootPublicInstance = ReactDOM.render(<Wrapper />, node);
-      var rootInstance = ReactInstanceMap.get(rootPublicInstance);
-      var actualTree = devtool.getTree(
+      ReactDOM.render(<Wrapper />, node);
+      expect(clientDevtool.getTree(
         rootInstance._renderedComponent._debugID,
         includeOwner
-      );
-      expect(actualTree).toEqual(expectedTree);
+      )).toEqual(expectedTree);
     });
-
     ReactDOM.unmountComponentAtNode(node);
-    expect(devtool.getRegisteredDebugIDs()).toEqual([]);
+    ReactDebugTool.removeDevtool(clientDevtool);
+    expect(clientDevtool.getRegisteredDisplayNames()).toEqual([]);
+
+    var serverDevtool = createDevtool();
+    pairs.forEach(([element, expectedTree]) => {
+      currentElement = element;
+      ReactDebugTool.addDevtool(serverDevtool);
+      ReactDOMServer.renderToString(<Wrapper />);
+      ReactDebugTool.removeDevtool(serverDevtool);
+      expect(serverDevtool.getTree(
+        rootInstance._renderedComponent._debugID,
+        includeOwner
+      )).toEqual(expectedTree);
+      serverDevtool.purgeUnmountedContainers();
+      expect(serverDevtool.getRegisteredDisplayNames()).toEqual([]);
+    });
   }
 
   describe('mount', () => {
