@@ -58,6 +58,7 @@ script:
           -F "react-dom-server.min=@build/react-dom-server.min.js" \
           -F "npm-react=@build/packages/react.tgz" \
           -F "npm-react-dom=@build/packages/react-dom.tgz" \
+          -F "npm-react-native=@build/packages/react-native-renderer.tgz" \
           -F "commit=$TRAVIS_COMMIT" \
           -F "date=`git log --format='%ct' -1`" \
           -F "pull_request=$TRAVIS_PULL_REQUEST" \
