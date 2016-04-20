@@ -216,13 +216,6 @@ var ReactMultiChild = {
       );
       this._renderedChildren = children;
 
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onSetChildren(
-          this._debugID,
-          Object.keys(children).map(key => children[key]._debugID)
-        );
-      }
-
       var mountImages = [];
       var index = 0;
       for (var name in children) {
@@ -239,6 +232,16 @@ var ReactMultiChild = {
           mountImages.push(mountImage);
         }
       }
+
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          children ?
+            Object.keys(children).map(key => children[key]._debugID) :
+            []
+        );
+      }
+
       return mountImages;
     },
 
@@ -366,6 +369,15 @@ var ReactMultiChild = {
         processQueue(this, updates);
       }
       this._renderedChildren = nextChildren;
+
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          nextChildren ?
+            Object.keys(nextChildren).map(key => nextChildren[key]._debugID) :
+            []
+        );
+      }
     },
 
     /**

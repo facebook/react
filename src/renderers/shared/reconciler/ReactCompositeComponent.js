@@ -378,12 +378,12 @@ var ReactCompositeComponentMixin = {
       renderedElement
     );
     if (__DEV__) {
-      if (this._renderedComponent._debugID) {
-        ReactInstrumentation.debugTool.onSetChildren(
-          this._debugID,
+      ReactInstrumentation.debugTool.onSetChildren(
+        this._debugID,
+        this._renderedNodeType === ReactNodeTypes.EMPTY ?
+          [] :
           [this._renderedComponent._debugID]
-        );
-      }
+      );
     }
 
     var markup = ReactReconciler.mountComponent(
@@ -861,6 +861,15 @@ var ReactCompositeComponentMixin = {
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          this._renderedNodeType === ReactNodeTypes.EMPTY ?
+            [] :
+            [this._renderedComponent._debugID]
+        );
+      }
+
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
         transaction,

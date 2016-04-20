@@ -42,18 +42,18 @@ function getDeclarationErrorAddendum(owner) {
 }
 
 function getDisplayName(instance) {
-   var element = instance._currentElement;
-   if (element == null) {
-     return '#empty';
-   } else if (typeof element === 'string' || typeof element === 'number') {
-     return '#text';
-   } else if (typeof element.type === 'string') {
-     return element.type;
-   } else if (instance.getName) {
-     return instance.getName() || 'Unknown';
-   } else {
-     return element.type.displayName || element.type.name || 'Unknown';
-   }
+  var element = instance._currentElement;
+  if (element == null) {
+    return '#empty';
+  } else if (typeof element === 'string' || typeof element === 'number') {
+    return '#text';
+  } else if (typeof element.type === 'string') {
+    return element.type;
+  } else if (instance.getName) {
+    return instance.getName() || 'Unknown';
+  } else {
+    return element.type.displayName || element.type.name || 'Unknown';
+  }
 }
 
 /**
@@ -85,7 +85,6 @@ function instantiateReactComponent(node) {
   var instance;
 
   var isEmpty = false;
-  var isText = false;
   var isComposite = false;
 
   if (node === null || node === false) {
@@ -115,7 +114,6 @@ function instantiateReactComponent(node) {
       instance = new ReactCompositeComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
-    isText = true;
     instance = ReactNativeComponent.createInstanceForText(node);
   } else {
     invariant(
@@ -155,9 +153,6 @@ function instantiateReactComponent(node) {
     var owner = node && node._owner;
     if (owner) {
       ReactInstrumentation.debugTool.onSetOwner(instance._debugID, owner._debugID);
-    }
-    if (isText) {
-      ReactInstrumentation.debugTool.onSetText(instance._debugID, node);
     }
   }
 

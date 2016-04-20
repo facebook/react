@@ -763,7 +763,7 @@ ReactDOMComponent.Mixin = {
           ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
           ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
           ReactInstrumentation.debugTool.onSetChildren(inlinedTextDebugID, []);
-          ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, contentToUse);
+          ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + contentToUse);
         }
         DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
@@ -1012,11 +1012,22 @@ ReactDOMComponent.Mixin = {
       this.updateChildren(null, transaction, context);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
       this.updateTextContent('');
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
+      }
     }
 
     if (nextContent != null) {
       if (lastContent !== nextContent) {
         this.updateTextContent('' + nextContent);
+        if (__DEV__) {
+          var inlinedTextDebugID = this._debugID + '#text';
+          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
+          ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
+          ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
+          ReactInstrumentation.debugTool.onSetChildren(inlinedTextDebugID, []);
+          ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + nextContent);
+        }
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
