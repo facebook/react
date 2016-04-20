@@ -22,22 +22,22 @@ describe('ReactDebugTool', () => {
   function createDevtool() {
     var tree = {};
 
-    function updateTree(debugID, update) {
-      if (!tree[debugID]) {
-        tree[debugID] = {};
+    function updateTree(id, update) {
+      if (!tree[id]) {
+        tree[id] = {};
       }
-      update(tree[debugID]);
+      update(tree[id]);
     }
 
-    function getTree(debugID, includeOwner) {
-      var item = tree[debugID];
+    function getTree(id, includeOwner) {
+      var item = tree[id];
       var result = {
         isComposite: item.isComposite,
         displayName: item.displayName,
       };
-      if (item.childDebugIDs) {
-        result.children = item.childDebugIDs.map(childDebugID =>
-          getTree(childDebugID, includeOwner)
+      if (item.childIDs) {
+        result.children = item.childIDs.map(childID =>
+          getTree(childID, includeOwner)
         );
       }
       if (item.text != null) {
@@ -49,29 +49,57 @@ describe('ReactDebugTool', () => {
       return result;
     }
 
+    function purgeTree(id) {
+      var item = tree[id];
+      if (!item) {
+        return;
+      }
+
+      var {childIDs} = item;
+      delete tree[id];
+
+      if (childIDs) {
+        childIDs.forEach(purgeTree);
+      }
+    }
+
     return {
-      onSetIsComposite(debugID, isComposite) {
-        updateTree(debugID, item => item.isComposite = isComposite);
+      onSetIsComposite(id, isComposite) {
+        updateTree(id, item => item.isComposite = isComposite);
       },
-      onSetDisplayName(debugID, displayName) {
-        updateTree(debugID, item => item.displayName = displayName);
+
+      onSetDisplayName(id, displayName) {
+        updateTree(id, item => item.displayName = displayName);
       },
-      onSetChildren(debugID, childDebugIDs) {
-        childDebugIDs.forEach(childDebugID => {
-          var childItem = tree[childDebugID];
+
+      onSetChildren(id, childIDs) {
+        childIDs.forEach(childID => {
+          var childItem = tree[childID];
           expect(childItem).toBeDefined();
           expect(childItem.isComposite).toBeDefined();
           expect(childItem.displayName).toBeDefined();
-          expect(childItem.childDebugIDs || childItem.text).toBeDefined();
+          expect(childItem.childIDs || childItem.text).toBeDefined();
         });
-        updateTree(debugID, item => item.childDebugIDs = childDebugIDs);
+
+        updateTree(id, item => item.childIDs = childIDs);
       },
-      onSetOwner(debugID, ownerDebugID) {
-        updateTree(debugID, item => item.ownerDebugID = ownerDebugID);
+
+      onSetOwner(id, ownerDebugID) {
+        updateTree(id, item => item.ownerDebugID = ownerDebugID);
       },
-      onSetText(debugID, text) {
-        updateTree(debugID, item => item.text = text);
+
+      onSetText(id, text) {
+        updateTree(id, item => item.text = text);
       },
+
+      onUnmountComponent(id) {
+        purgeTree(id);
+      },
+
+      getRegisteredDebugIDs() {
+        return Object.keys(tree);
+      },
+
       getTree(rootDebugID, includeOwner) {
         return getTree(rootDebugID, includeOwner);
       },
@@ -119,6 +147,9 @@ describe('ReactDebugTool', () => {
       );
       expect(actualTree).toEqual(expectedTree);
     });
+
+    ReactDOM.unmountComponentAtNode(node);
+    expect(devtool.getRegisteredDebugIDs()).toEqual([]);
   }
 
   describe('mount', () => {

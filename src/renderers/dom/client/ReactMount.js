@@ -349,7 +349,7 @@ var ReactMount = {
     instancesByReactRootID[wrapperID] = componentInstance;
 
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onMountRootComponent(componentInstance);
+      ReactInstrumentation.debugTool.onMountRootComponent(componentInstance._debugID);
     }
 
     return componentInstance;

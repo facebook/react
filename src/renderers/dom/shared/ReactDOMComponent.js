@@ -453,6 +453,7 @@ function ReactDOMComponent(element) {
   this._flags = 0;
   if (__DEV__) {
     this._ancestorInfo = null;
+    this._contentDebugID = null;
   }
 }
 
@@ -758,11 +759,11 @@ ReactDOMComponent.Mixin = {
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
         if (__DEV__) {
-          var inlinedTextDebugID = this._debugID + '#text';
-          ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
-          ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
-          ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + contentToUse);
-          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
+          this._contentDebugID = this._debugID + '#text';
+          ReactInstrumentation.debugTool.onSetIsComposite(this._contentDebugID, false);
+          ReactInstrumentation.debugTool.onSetDisplayName(this._contentDebugID, '#text');
+          ReactInstrumentation.debugTool.onSetText(this._contentDebugID, '' + contentToUse);
+          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [this._contentDebugID]);
         }
         DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
@@ -1020,11 +1021,11 @@ ReactDOMComponent.Mixin = {
       if (lastContent !== nextContent) {
         this.updateTextContent('' + nextContent);
         if (__DEV__) {
-          var inlinedTextDebugID = this._debugID + '#text';
-          ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
-          ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
-          ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + nextContent);
-          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
+          this._contentDebugID = this._debugID + '#text';
+          ReactInstrumentation.debugTool.onSetIsComposite(this._contentDebugID, false);
+          ReactInstrumentation.debugTool.onSetDisplayName(this._contentDebugID, '#text');
+          ReactInstrumentation.debugTool.onSetText(this._contentDebugID, '' + nextContent);
+          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [this._contentDebugID]);
         }
       }
     } else if (nextHtml != null) {
@@ -1035,6 +1036,13 @@ ReactDOMComponent.Mixin = {
         ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
       }
     } else if (nextChildren != null) {
+      if (__DEV__) {
+        if (this._contentDebugID) {
+          ReactInstrumentation.debugTool.onUnmountComponent(this._contentDebugID);
+          this._contentDebugID = null;
+        }
+      }
+
       this.updateChildren(nextChildren, transaction, context);
     }
   },
@@ -1096,6 +1104,11 @@ ReactDOMComponent.Mixin = {
     this._rootNodeID = null;
     this._domID = null;
     this._wrapperState = null;
+
+    if (this._contentDebugID) {
+      ReactInstrumentation.debugTool.onUnmountComponent(this._contentDebugID);
+      this._contentDebugID = null;
+    }
   },
 
   getPublicInstance: function() {

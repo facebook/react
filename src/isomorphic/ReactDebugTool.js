@@ -73,17 +73,17 @@ var ReactDebugTool = {
   onSetText(debugID, text) {
     emitEvent('onSetText', debugID, text);
   },
-  onMountRootComponent(internalInstance) {
-    emitEvent('onMountRootComponent', internalInstance);
+  onMountRootComponent(debugID) {
+    emitEvent('onMountRootComponent', debugID);
   },
-  onMountComponent(internalInstance) {
-    emitEvent('onMountComponent', internalInstance);
+  onMountComponent(debugID) {
+    emitEvent('onMountComponent', debugID);
   },
-  onUpdateComponent(internalInstance) {
-    emitEvent('onUpdateComponent', internalInstance);
+  onUpdateComponent(debugID) {
+    emitEvent('onUpdateComponent', debugID);
   },
-  onUnmountComponent(internalInstance) {
-    emitEvent('onUnmountComponent', internalInstance);
+  onUnmountComponent(debugID) {
+    emitEvent('onUnmountComponent', debugID);
   },
 };
 
