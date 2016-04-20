@@ -762,7 +762,6 @@ ReactDOMComponent.Mixin = {
           ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
           ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
           ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
-          ReactInstrumentation.debugTool.onSetChildren(inlinedTextDebugID, []);
           ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + contentToUse);
         }
         DOMLazyTree.queueText(lazyTree, contentToUse);
@@ -1025,7 +1024,6 @@ ReactDOMComponent.Mixin = {
           ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
           ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
           ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
-          ReactInstrumentation.debugTool.onSetChildren(inlinedTextDebugID, []);
           ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + nextContent);
         }
       }

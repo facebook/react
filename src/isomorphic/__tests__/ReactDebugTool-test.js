@@ -35,9 +35,11 @@ describe('ReactDebugTool', () => {
         isComposite: item.isComposite,
         displayName: item.displayName,
       };
-      result.children = item.childDebugIDs.map(childDebugID =>
-        getTree(childDebugID, includeOwner)
-      );
+      if (item.childDebugIDs) {
+        result.children = item.childDebugIDs.map(childDebugID =>
+          getTree(childDebugID, includeOwner)
+        );
+      }
       if (item.text != null) {
         result.text = item.text;
       }
@@ -299,13 +301,11 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Hi!',
-              children: [],
             }],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Wow.',
-            children: [],
           }],
         }, {
           isComposite: false,
@@ -395,13 +395,11 @@ describe('ReactDebugTool', () => {
                   isComposite: false,
                   displayName: '#text',
                   text: 'Hi,',
-                  children: [],
                 }],
               }, {
                 isComposite: false,
                 displayName: '#text',
                 text: 'Mom',
-                children: [],
               }],
             }],
           }, {
@@ -411,7 +409,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Click me.',
-              children: [],
             }],
           }],
         }],
@@ -458,12 +455,10 @@ describe('ReactDebugTool', () => {
           isComposite: false,
           displayName: '#text',
           text: '1',
-          children: [],
         }, {
           isComposite: false,
           displayName: '#text',
           text: '2',
-          children: [],
         }],
       };
       assertTreeMatches([element, tree]);
@@ -478,7 +473,6 @@ describe('ReactDebugTool', () => {
           isComposite: false,
           displayName: '#text',
           text: '1',
-          children: [],
         }],
       };
       assertTreeMatches([element, tree]);
@@ -493,7 +487,6 @@ describe('ReactDebugTool', () => {
           isComposite: false,
           displayName: '#text',
           text: '42',
-          children: [],
         }],
       };
       assertTreeMatches([element, tree]);
@@ -508,7 +501,6 @@ describe('ReactDebugTool', () => {
           isComposite: false,
           displayName: '#text',
           text: '0',
-          children: [],
         }],
       };
       assertTreeMatches([element, tree]);
@@ -534,12 +526,10 @@ describe('ReactDebugTool', () => {
           isComposite: false,
           displayName: '#text',
           text: 'hi',
-          children: [],
         }, {
           isComposite: false,
           displayName: '#text',
           text: '42',
-          children: [],
         }, {
           isComposite: true,
           displayName: 'Foo',
@@ -575,7 +565,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
 
@@ -587,7 +576,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -613,7 +601,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
 
@@ -632,7 +619,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
 
@@ -665,7 +651,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
 
@@ -684,7 +669,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
 
@@ -717,12 +701,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -741,12 +723,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -779,12 +759,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -803,12 +781,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -876,7 +852,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
 
@@ -888,12 +863,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -912,12 +885,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -929,7 +900,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
         assertTreeMatches([
@@ -947,12 +917,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }],
         };
 
@@ -964,12 +932,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'Bye.',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: 'Hi.',
-            children: [],
           }],
         };
         assertTreeMatches([
@@ -995,7 +961,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Hi.',
-              children: [],
             }],
           }, {
             isComposite: false,
@@ -1004,7 +969,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Bye.',
-              children: [],
             }],
           }],
         };
@@ -1025,7 +989,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Bye.',
-              children: [],
             }],
           }, {
             isComposite: false,
@@ -1034,7 +997,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Hi.',
-              children: [],
             }],
           }],
         };
@@ -1062,7 +1024,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Hi.',
-              children: [],
             }],
           }, {
             isComposite: false,
@@ -1071,7 +1032,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Bye.',
-              children: [],
             }],
           }],
         };
@@ -1092,7 +1052,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Bye.',
-              children: [],
             }],
           }, {
             isComposite: false,
@@ -1101,7 +1060,6 @@ describe('ReactDebugTool', () => {
               isComposite: false,
               displayName: '#text',
               text: 'Hi.',
-              children: [],
             }],
           }],
         };
@@ -1268,12 +1226,10 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'hi',
-            children: [],
           }, {
             isComposite: false,
             displayName: '#text',
             text: '42',
-            children: [],
           }, {
             isComposite: true,
             displayName: 'Foo',
@@ -1308,7 +1264,6 @@ describe('ReactDebugTool', () => {
             isComposite: false,
             displayName: '#text',
             text: 'hi',
-            children: [],
           }],
         };
 
@@ -1863,13 +1818,11 @@ describe('ReactDebugTool', () => {
                 isComposite: false,
                 displayName: '#text',
                 text: 'Hi.',
-                children: [],
               }],
             }, {
               isComposite: false,
               displayName: '#text',
               text: ' Mom',
-              children: [],
             }],
           }],
         }],
