@@ -57,6 +57,13 @@ describe('ReactDebugTool', () => {
         updateTree(debugID, item => item.displayName = displayName);
       },
       onSetChildren(debugID, childDebugIDs) {
+        childDebugIDs.forEach(childDebugID => {
+          var childItem = tree[childDebugID];
+          expect(childItem).toBeDefined();
+          expect(childItem.isComposite).toBeDefined();
+          expect(childItem.displayName).toBeDefined();
+          expect(childItem.childDebugIDs || childItem.text).toBeDefined();
+        });
         updateTree(debugID, item => item.childDebugIDs = childDebugIDs);
       },
       onSetOwner(debugID, ownerDebugID) {

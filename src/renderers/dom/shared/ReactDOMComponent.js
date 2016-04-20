@@ -759,10 +759,10 @@ ReactDOMComponent.Mixin = {
         // TODO: Validate that text is allowed as a child of this node
         if (__DEV__) {
           var inlinedTextDebugID = this._debugID + '#text';
-          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
           ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
           ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
           ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + contentToUse);
+          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
         }
         DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
@@ -1021,10 +1021,10 @@ ReactDOMComponent.Mixin = {
         this.updateTextContent('' + nextContent);
         if (__DEV__) {
           var inlinedTextDebugID = this._debugID + '#text';
-          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
           ReactInstrumentation.debugTool.onSetIsComposite(inlinedTextDebugID, false);
           ReactInstrumentation.debugTool.onSetDisplayName(inlinedTextDebugID, '#text');
           ReactInstrumentation.debugTool.onSetText(inlinedTextDebugID, '' + nextContent);
+          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [inlinedTextDebugID]);
         }
       }
     } else if (nextHtml != null) {
