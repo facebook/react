@@ -11,7 +11,7 @@
 
 'use strict';
 
-describe('ReactDebugTool', () => {
+describe('ReactComponentTreeDevtool', () => {
   var React;
   var ReactDebugTool;
   var ReactDOM;
