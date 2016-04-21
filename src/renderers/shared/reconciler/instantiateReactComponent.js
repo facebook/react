@@ -84,12 +84,10 @@ var nextDebugID = 1;
 function instantiateReactComponent(node) {
   var instance;
 
-  var isEmpty = false;
   var isNative = false;
   var isComposite = false;
 
   if (node === null || node === false) {
-    isEmpty = true;
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
@@ -148,7 +146,7 @@ function instantiateReactComponent(node) {
   }
 
   if (__DEV__) {
-    instance._debugID = isEmpty ? 0 : nextDebugID++;
+    instance._debugID = nextDebugID++;
     var displayName = getDisplayName(instance);
     ReactInstrumentation.debugTool.onSetIsComposite(instance._debugID, isComposite);
     ReactInstrumentation.debugTool.onSetDisplayName(instance._debugID, displayName);
