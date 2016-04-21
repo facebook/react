@@ -17,120 +17,7 @@ describe('ReactDebugTool', () => {
   var ReactDOM;
   var ReactDOMServer;
   var ReactInstanceMap;
-
-  function createDevtool() {
-    var unmountedContainerIDs = [];
-    var allChildIDsByContainerID = {};
-    var tree = {};
-
-    function updateTree(id, update) {
-      if (!tree[id]) {
-        tree[id] = {};
-      }
-      update(tree[id]);
-    }
-
-    function getTree(id, includeOwner) {
-      var item = tree[id];
-      var result = {
-        isComposite: item.isComposite,
-        displayName: item.displayName,
-      };
-      if (item.childIDs) {
-        result.children = item.childIDs.map(childID =>
-          getTree(childID, includeOwner)
-        );
-      }
-      if (item.text != null) {
-        result.text = item.text;
-      }
-      if (includeOwner && item.ownerDebugID) {
-        result.ownerDisplayName = tree[item.ownerDebugID].displayName;
-      }
-      return result;
-    }
-
-    function purgeTree(id) {
-      var item = tree[id];
-      if (!item) {
-        return;
-      }
-
-      var {childIDs, containerID} = item;
-      delete tree[id];
-
-      if (containerID) {
-        allChildIDsByContainerID[containerID] = allChildIDsByContainerID[containerID].filter(
-          childID => childID !== id
-        );
-      }
-
-      if (childIDs) {
-        childIDs.forEach(purgeTree);
-      }
-    }
-
-    return {
-      onSetIsComposite(id, isComposite) {
-        updateTree(id, item => item.isComposite = isComposite);
-      },
-
-      onSetDisplayName(id, displayName) {
-        updateTree(id, item => item.displayName = displayName);
-      },
-
-      onSetChildren(id, childIDs) {
-        childIDs.forEach(childID => {
-          var childItem = tree[childID];
-          expect(childItem).toBeDefined();
-          expect(childItem.isComposite).toBeDefined();
-          expect(childItem.displayName).toBeDefined();
-          expect(childItem.childIDs || childItem.text).toBeDefined();
-        });
-
-        updateTree(id, item => item.childIDs = childIDs);
-      },
-
-      onSetOwner(id, ownerDebugID) {
-        updateTree(id, item => item.ownerDebugID = ownerDebugID);
-      },
-
-      onSetText(id, text) {
-        updateTree(id, item => item.text = text);
-      },
-
-      onMountComponent(id, containerID) {
-        if (!allChildIDsByContainerID[containerID]) {
-          allChildIDsByContainerID[containerID] = [];
-        }
-        allChildIDsByContainerID[containerID].push(id);
-        updateTree(id, item => item.containerID = containerID);
-      },
-
-      onUnmountComponent(id) {
-        purgeTree(id);
-      },
-
-      onUnmountNativeContainer(containerID) {
-        unmountedContainerIDs.push(containerID);
-      },
-
-      purgeUnmountedContainers() {
-        unmountedContainerIDs.forEach(containerID => {
-          allChildIDsByContainerID[containerID].forEach(purgeTree);
-        });
-        unmountedContainerIDs = [];
-      },
-
-      getRegisteredDisplayNames() {
-        return Object.keys(tree).map(id => tree[id].displayName);
-      },
-
-      getTree(rootDebugID, includeOwner) {
-        return getTree(rootDebugID, includeOwner);
-      },
-    };
-  }
+  var ReactComponentTreeDevtool;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -140,15 +27,48 @@ describe('ReactDebugTool', () => {
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
     ReactInstanceMap = require('ReactInstanceMap');
+    ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+
+    ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
   });
+
+  afterEach(() => {
+    ReactDebugTool.removeDevtool(ReactComponentTreeDevtool);
+  });
+
+  function denormalizeTree(tree, rootID, includeOwner) {
+    var item = tree[rootID];
+    var result = {
+      isComposite: item.isComposite,
+      displayName: item.displayName,
+    };
+    if (item.childIDs) {
+      result.children = item.childIDs.map(childID =>
+        denormalizeTree(tree, childID, includeOwner)
+      );
+    }
+    if (item.text != null) {
+      result.text = item.text;
+    }
+    if (includeOwner && item.ownerDebugID) {
+      result.ownerDisplayName = tree[item.ownerDebugID].displayName;
+    }
+    return result;
+  }
+
+  function getRegisteredDisplayNames(tree) {
+    return Object.keys(tree).map(id => tree[id].displayName);
+  }
 
   function assertTreeMatches(pairs, includeOwner) {
     if (!Array.isArray(pairs[0])) {
       pairs = [pairs];
     }
 
+    var node = document.createElement('div');
     var currentElement;
     var rootInstance;
+
     class Wrapper extends React.Component {
       render() {
         rootInstance = ReactInstanceMap.get(this);
@@ -156,33 +76,32 @@ describe('ReactDebugTool', () => {
       }
     }
 
-    var clientDevtool = createDevtool();
-    ReactDebugTool.addDevtool(clientDevtool);
-    var node = document.createElement('div');
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
       ReactDOM.render(<Wrapper />, node);
-      expect(clientDevtool.getTree(
+      expect(denormalizeTree(
+        ReactComponentTreeDevtool.getTree(),
         rootInstance._renderedComponent._debugID,
         includeOwner
       )).toEqual(expectedTree);
     });
     ReactDOM.unmountComponentAtNode(node);
-    ReactDebugTool.removeDevtool(clientDevtool);
-    expect(clientDevtool.getRegisteredDisplayNames()).toEqual([]);
+    expect(
+      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
+    ).toEqual([]);
 
-    var serverDevtool = createDevtool();
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
-      ReactDebugTool.addDevtool(serverDevtool);
       ReactDOMServer.renderToString(<Wrapper />);
-      ReactDebugTool.removeDevtool(serverDevtool);
-      expect(serverDevtool.getTree(
+      expect(denormalizeTree(
+        ReactComponentTreeDevtool.getTree(),
         rootInstance._renderedComponent._debugID,
         includeOwner
       )).toEqual(expectedTree);
-      serverDevtool.purgeUnmountedContainers();
-      expect(serverDevtool.getRegisteredDisplayNames()).toEqual([]);
+      ReactComponentTreeDevtool.purgeUnmountedContainers();
+      expect(
+        getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
+      ).toEqual([]);
     });
   }
 
