@@ -36,22 +36,32 @@ describe('ReactComponentTreeDevtool', () => {
     ReactDebugTool.removeDevtool(ReactComponentTreeDevtool);
   });
 
-  function denormalizeTree(tree, rootID, includeOwner) {
+  function denormalizeTree(
+    tree,
+    rootID,
+    includeOwner = false,
+    expectedParentID = null
+  ) {
     var item = tree[rootID];
     var result = {
       isComposite: item.isComposite,
       displayName: item.displayName,
     };
+
+    if (expectedParentID) {
+      expect(item.parentID).toBe(expectedParentID);
+    }
+
     if (item.childIDs) {
       result.children = item.childIDs.map(childID =>
-        denormalizeTree(tree, childID, includeOwner)
+        denormalizeTree(tree, childID, includeOwner, rootID)
       );
     }
     if (item.text != null) {
       result.text = item.text;
     }
-    if (includeOwner && item.ownerDebugID) {
-      result.ownerDisplayName = tree[item.ownerDebugID].displayName;
+    if (includeOwner && item.ownerID) {
+      result.ownerDisplayName = tree[item.ownerID].displayName;
     }
     return result;
   }

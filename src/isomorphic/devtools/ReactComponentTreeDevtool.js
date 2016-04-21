@@ -50,20 +50,34 @@ var ReactComponentTreeDevtool = {
     updateTree(id, item => item.displayName = displayName);
   },
 
-  onSetChildren(id, childIDs) {
-    childIDs.forEach(childID => {
-      var childItem = tree[childID];
-      expect(childItem).toBeDefined();
-      expect(childItem.isComposite).toBeDefined();
-      expect(childItem.displayName).toBeDefined();
-      expect(childItem.childIDs || childItem.text).toBeDefined();
+  onSetChildren(id, nextChildIDs) {
+    var prevChildIDs;
+    updateTree(id, item => {
+      prevChildIDs = item.childIDs || [];
+      item.childIDs = nextChildIDs;
     });
 
-    updateTree(id, item => item.childIDs = childIDs);
+    prevChildIDs.forEach(prevChildID => {
+      if (tree[prevChildID] && nextChildIDs.indexOf(prevChildID) === -1) {
+        tree[prevChildID].parentID = null;
+      }
+    });
+
+    nextChildIDs.forEach(nextChildID => {
+      var item = tree[nextChildID];
+      expect(item).toBeDefined();
+      expect(item.isComposite).toBeDefined();
+      expect(item.displayName).toBeDefined();
+      expect(item.childIDs || item.text).toBeDefined();
+
+      if (tree[nextChildID] && prevChildIDs.indexOf(nextChildID) === -1) {
+        tree[nextChildID].parentID = id;
+      }
+    });
   },
 
-  onSetOwner(id, ownerDebugID) {
-    updateTree(id, item => item.ownerDebugID = ownerDebugID);
+  onSetOwner(id, ownerID) {
+    updateTree(id, item => item.ownerID = ownerID);
   },
 
   onSetText(id, text) {
