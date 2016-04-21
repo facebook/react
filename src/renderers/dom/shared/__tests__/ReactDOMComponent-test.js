@@ -15,6 +15,7 @@
 describe('ReactDOMComponent', function() {
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactDOMServer;
   var inputValueTracking;
 
@@ -22,6 +23,7 @@ describe('ReactDOMComponent', function() {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
     inputValueTracking = require('inputValueTracking');
   });
@@ -905,6 +907,17 @@ describe('ReactDOMComponent', function() {
         'input is a void element tag and must not have `children` ' +
         'or use `props.dangerouslySetInnerHTML`. Check the render method of X.'
       );
+    });
+
+    it('should support custom elements which extend native elements', function() {
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        var container = document.createElement('div');
+        spyOn(document, 'createElement').andCallThrough();
+        ReactDOM.render(<div is="custom-div" />, container);
+        expect(document.createElement).toHaveBeenCalledWith('div', 'custom-div');
+      } else {
+        expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
+      }
     });
   });
 
