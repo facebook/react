@@ -11,6 +11,8 @@
 
 'use strict';
 
+var invariant = require('invariant');
+
 var unmountedContainerIDs = [];
 var allChildIDsByContainerID = {};
 var tree = {};
@@ -65,10 +67,27 @@ var ReactComponentTreeDevtool = {
 
     nextChildIDs.forEach(nextChildID => {
       var item = tree[nextChildID];
-      expect(item).toBeDefined();
-      expect(item.isComposite).toBeDefined();
-      expect(item.displayName).toBeDefined();
-      expect(item.childIDs || item.text).toBeDefined();
+
+      invariant(
+        item,
+        'Expected devtool events to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
+      invariant(
+        item.isComposite != null,
+        'Expected onSetIsComposite() to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
+      invariant(
+        item.displayName != null,
+        'Expected onSetDisplayName() to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
+      invariant(
+        item.childIDs != null || item.text != null,
+        'Expected either onSetChildren() or onSetText() to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
 
       if (tree[nextChildID] && prevChildIDs.indexOf(nextChildID) === -1) {
         tree[nextChildID].parentID = id;
