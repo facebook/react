@@ -833,7 +833,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 ### JSX
 
-* Improved compatability with other coding styles (specifically, multiple assignments with a single `var`).
+* Improved compatibility with other coding styles (specifically, multiple assignments with a single `var`).
 
 ### react-tools
 
