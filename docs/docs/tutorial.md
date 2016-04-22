@@ -380,8 +380,8 @@ When the component is first created, we want to GET some JSON from the server an
 
 ```json
 [
-  {"author": "Pete Hunt", "text": "This is one comment"},
-  {"author": "Jordan Walke", "text": "This is *another* comment"}
+  {"id": "1", "author": "Pete Hunt", "text": "This is one comment"},
+  {"id": "2", "author": "Jordan Walke", "text": "This is *another* comment"}
 ]
 ```
 
