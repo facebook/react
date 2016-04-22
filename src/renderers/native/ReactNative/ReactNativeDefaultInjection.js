@@ -27,7 +27,6 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment');
-var ReactNativeGlobalInteractionHandler = require('ReactNativeGlobalInteractionHandler');
 var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactNativeTreeTraversal = require('ReactNativeTreeTraversal');
@@ -54,10 +53,6 @@ function inject() {
 
   ResponderEventPlugin.injection.injectGlobalResponderHandler(
     ReactNativeGlobalResponderHandler
-  );
-
-  ResponderEventPlugin.injection.injectGlobalInteractionHandler(
-    ReactNativeGlobalInteractionHandler
   );
 
   /**
