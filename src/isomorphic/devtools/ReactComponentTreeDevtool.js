@@ -23,7 +23,10 @@ function updateTree(id, update) {
     return;
   }
   if (!tree[id]) {
-    tree[id] = {};
+    tree[id] = {
+      parentID: null,
+      childIDs: [],
+    };
   }
   update(tree[id]);
 }
@@ -41,10 +44,7 @@ function purgeTree(id) {
     allChildIDsByContainerID[containerID] = allChildIDsByContainerID[containerID]
       .filter(childID => childID !== id);
   }
-
-  if (childIDs) {
-    childIDs.forEach(purgeTree);
-  }
+  childIDs.forEach(purgeTree);
 }
 
 var ReactComponentTreeDevtool = {
@@ -65,7 +65,7 @@ var ReactComponentTreeDevtool = {
 
   onSetChildren(id, nextChildIDs) {
     updateTree(id, item => {
-      var prevChildIDs = item.childIDs || [];
+      var prevChildIDs = item.childIDs;
       item.childIDs = nextChildIDs;
 
       prevChildIDs.forEach(prevChildID => {
@@ -136,11 +136,32 @@ var ReactComponentTreeDevtool = {
     unmountedContainerIDs = [];
   },
 
-  getTree() {
-    return Object.keys(tree).reduce((result, key) => {
-      result[key] = {...tree[key]};
-      return result;
-    }, {});
+  isComposite(id) {
+    return tree[id].isComposite;
+  },
+
+  getChildIDs(id) {
+    return tree[id].childIDs;
+  },
+
+  getDisplayName(id) {
+    return tree[id].displayName;
+  },
+
+  getOwnerID(id) {
+    return tree[id].ownerID;
+  },
+
+  getParentID(id) {
+    return tree[id].parentID;
+  },
+
+  getText(id) {
+    return tree[id].text;
+  },
+
+  getRegisteredIDs() {
+    return Object.keys(tree);
   },
 };
 

@@ -36,38 +36,38 @@ describe('ReactComponentTreeDevtool', () => {
     ReactDebugTool.removeDevtool(ReactComponentTreeDevtool);
   });
 
-  function explodeTree(
-    tree,
-    rootID,
-    includeOwner = false,
-    expectedParentID = null
-  ) {
-    var item = tree[rootID];
-    var result = {
-      isComposite: item.isComposite,
-      displayName: item.displayName,
-    };
-
-    if (expectedParentID) {
-      expect(item.parentID).toBe(expectedParentID);
-    }
-
-    if (item.childIDs) {
-      result.children = item.childIDs.map(childID =>
-        explodeTree(tree, childID, includeOwner, rootID)
-      );
-    }
-    if (item.text != null) {
-      result.text = item.text;
-    }
-    if (includeOwner && item.ownerID) {
-      result.ownerDisplayName = tree[item.ownerID].displayName;
-    }
-    return result;
+  function getRegisteredDisplayNames() {
+    return ReactComponentTreeDevtool.getRegisteredIDs()
+      .map(ReactComponentTreeDevtool.getDisplayName);
   }
 
-  function getRegisteredDisplayNames(tree) {
-    return Object.keys(tree).map(id => tree[id].displayName);
+  function getTree(rootID, includeOwner = false, expectedParentID = null) {
+    var result = {
+      isComposite: ReactComponentTreeDevtool.isComposite(rootID),
+      displayName: ReactComponentTreeDevtool.getDisplayName(rootID),
+    };
+
+    var parentID = ReactComponentTreeDevtool.getParentID(rootID);
+    if (expectedParentID) {
+      expect(parentID).toBe(expectedParentID);
+    }
+
+    var childIDs = ReactComponentTreeDevtool.getChildIDs(rootID);
+    var text = ReactComponentTreeDevtool.getText(rootID);
+    if (text != null) {
+      result.text = text;
+    } else {
+      result.children = childIDs.map(childID =>
+        getTree(childID, includeOwner, rootID)
+      );
+    }
+
+    var ownerID = ReactComponentTreeDevtool.getOwnerID(rootID);
+    if (includeOwner && ownerID) {
+      result.ownerDisplayName = ReactComponentTreeDevtool.getDisplayName(ownerID);
+    }
+
+    return result;
   }
 
   function assertTreeMatches(pairs, includeOwner) {
@@ -89,29 +89,21 @@ describe('ReactComponentTreeDevtool', () => {
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
       ReactDOM.render(<Wrapper />, node);
-      expect(explodeTree(
-        ReactComponentTreeDevtool.getTree(),
-        rootInstance._renderedComponent._debugID,
-        includeOwner
-      )).toEqual(expectedTree);
+      expect(
+        getTree(rootInstance._renderedComponent._debugID, includeOwner)
+      ).toEqual(expectedTree);
     });
     ReactDOM.unmountComponentAtNode(node);
-    expect(
-      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
-    ).toEqual([]);
+    expect(getRegisteredDisplayNames()).toEqual([]);
 
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
       ReactDOMServer.renderToString(<Wrapper />);
-      expect(explodeTree(
-        ReactComponentTreeDevtool.getTree(),
-        rootInstance._renderedComponent._debugID,
-        includeOwner
-      )).toEqual(expectedTree);
-      ReactComponentTreeDevtool.purgeUnmountedContainers();
       expect(
-        getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
-      ).toEqual([]);
+        getTree(rootInstance._renderedComponent._debugID, includeOwner)
+      ).toEqual(expectedTree);
+      ReactComponentTreeDevtool.purgeUnmountedContainers();
+      expect(getRegisteredDisplayNames()).toEqual([]);
     });
   }
 
@@ -1835,16 +1827,10 @@ describe('ReactComponentTreeDevtool', () => {
   it('ignores top-level wrapper', () => {
     var node = document.createElement('div');
     ReactDOM.render(<div className="a" />, node);
-    expect(
-      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
-    ).toEqual(['div']);
+    expect(getRegisteredDisplayNames()).toEqual(['div']);
     ReactDOM.render(<div className="b" />, node);
-    expect(
-      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
-    ).toEqual(['div']);
+    expect(getRegisteredDisplayNames()).toEqual(['div']);
     ReactDOM.unmountComponentAtNode(node);
-    expect(
-      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
-    ).toEqual([]);
+    expect(getRegisteredDisplayNames()).toEqual([]);
   });
 });
