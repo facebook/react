@@ -11,6 +11,7 @@
 
 'use strict';
 
+var MarkupMismatchError = require('MarkupMismatchError');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
@@ -206,29 +207,41 @@ var ReactMultiChild = {
      * of `ReactDOMComponent`, a mount image is a string of markup.
      *
      * @param {?object} nestedChildren Nested child maps.
+     * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+     * @param {object} context
+     * @param {?DOMNode} when reconnecting to server markup, the DOM node to reuse.
      * @return {array} An array of mounted representations.
      * @internal
      */
-    mountChildren: function(nestedChildren, transaction, context) {
+    mountChildren: function(nestedChildren, transaction, context, childNodesToReuse, parentNode) {
       var children = this._reconcilerInstantiateChildren(
         nestedChildren, transaction, context
       );
       this._renderedChildren = children;
       var mountImages = [];
       var index = 0;
+      var childNodeIndex = 0;
       for (var name in children) {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
+          if (childNodesToReuse && !childNodesToReuse[childNodeIndex]) {
+            MarkupMismatchError.throwChildAddedError(parentNode, child._currentElement);
+          }
           var mountImage = ReactReconciler.mountComponent(
             child,
             transaction,
             this,
             this._nativeContainerInfo,
-            context
+            context,
+            childNodesToReuse ? childNodesToReuse[childNodeIndex] : undefined
           );
           child._mountIndex = index++;
           mountImages.push(mountImage);
+          childNodeIndex++;
         }
+      }
+      if (childNodesToReuse && childNodeIndex < childNodesToReuse.length) {
+        MarkupMismatchError.throwChildMissingError(childNodesToReuse[childNodeIndex]);
       }
       return mountImages;
     },

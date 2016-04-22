@@ -162,6 +162,7 @@ var ReactDOMSelect = {
     return Object.assign({}, DisabledInputUtils.getNativeProps(inst, props), {
       onChange: inst._wrapperState.onChange,
       value: undefined,
+      defaultValue: undefined,
     });
   },
 

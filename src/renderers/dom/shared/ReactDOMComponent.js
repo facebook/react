@@ -22,6 +22,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
+var MarkupMismatchError = require('MarkupMismatchError');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
@@ -32,6 +33,7 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
@@ -62,6 +64,9 @@ var RESERVED_PROPS = {
 };
 
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
+var TEXT_NODE_TYPE = 3;
+var COMMENT_NODE_TYPE = 8;
+var ELEMENT_NODE_TYPE = 1;
 var DOC_FRAGMENT_TYPE = 11;
 
 
@@ -417,6 +422,41 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
+/**
+ * Returns the children of this dom node in a way that is easily consumable for
+ * comparing to the component hierarchy.
+ * Unfortunately, a node's DOM children don't correspond exactly to its component's
+ * children. For example, text nodes in the component tree become 2 commment DOM
+ * nodes and an optional text dom node. Empty components become a single comment DOM node.
+ *
+ * Returns an array which contains domNodes and arrays of domNodes. Each item in
+ * the returned array represents either one or multiple dom nodes that should correspond
+ * to a single child node in the component tree.
+ */
+function getChildrenFromDomNode(parent) {
+  var result = [];
+  var childNode = parent.firstChild;
+  while (childNode) {
+
+    if (childNode.nodeType === COMMENT_NODE_TYPE && childNode.nodeValue.lastIndexOf(' react-text', 0) === 0) {
+      if (childNode.nextSibling && childNode.nextSibling.nodeType === TEXT_NODE_TYPE) {
+        // text component with content: two comment nodes surrounding a text node.
+        result.push([childNode, childNode.nextSibling, childNode.nextSibling.nextSibling]);
+        childNode = childNode.nextSibling.nextSibling.nextSibling;
+      } else {
+        // text component with no content; two comment nodes next to each other.
+        result.push([childNode, childNode.nextSibling]);
+        childNode = childNode.nextSibling.nextSibling;
+      }
+    } else {
+      // a regular node.
+      result.push(childNode);
+      childNode = childNode.nextSibling;
+    }
+  }
+  return result;
+}
+
 var globalIdCounter = 1;
 
 /**
@@ -467,14 +507,18 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?ReactDOMComponent} the containing DOM component instance
    * @param {?object} info about the native container
-   * @param {object} context
+	 * @param {object} context
+	 * @param {?DOMNode|Array<DOMNode>} when reconnecting to server markup, the
+   *   DOM node to reuse or an array of DOM nodes to reuse. Note that with this
+   *   component type, it should always be a single DOMNode, not an array.
    * @return {string} The computed markup.
    */
   mountComponent: function(
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+		nodesToReuse
   ) {
     this._rootNodeID = globalIdCounter++;
     this._domID = nativeContainerInfo._idCounter++;
@@ -564,7 +608,33 @@ ReactDOMComponent.Mixin = {
     }
 
     var mountImage;
-    if (transaction.useCreateElement) {
+    if (nodesToReuse) {
+      // Check to see if the reusable node is of the correct type. It should be
+      // a single element (not an array, which is used for text components), and
+      // it should be an ELEMENT node.
+      if (Array.isArray(nodesToReuse) || nodesToReuse.nodeType !== ELEMENT_NODE_TYPE) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nodesToReuse,
+          `A <${this._currentElement.type}> element.`);
+      }
+
+      // Check to make sure the node to reuse is the same tag as this component.
+      if (this._currentElement.type !== nodesToReuse.tagName.toLowerCase()) {
+        MarkupMismatchError.throwNodeTypeMismatchError(
+          nodesToReuse, this._currentElement.type);
+      }
+      // Precache the node, like we do in the useCreateElement branch, for event
+      // handling.
+      ReactDOMComponentTree.precacheNode(this, nodesToReuse);
+      this._flags |= Flags.hasCachedChildNodes;
+
+      // Check that the attributes are the same between the DOM node and the component
+      // props. This method throws if it finds a difference.
+      this._compareNodeAttributesToProps(nodesToReuse, props, transaction);
+
+      // Check that children are of the DOM node and this component are
+      // the same. This method throws if it finds a difference.
+      this._compareChildren(transaction, props, context, nodesToReuse);
+    } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el;
       if (namespaceURI === DOMNamespaces.html) {
@@ -624,6 +694,77 @@ ReactDOMComponent.Mixin = {
     }
 
     return mountImage;
+  },
+
+  /**
+   * When walking the DOM tree to see if server-rendered markup mismatches
+   * the rendered component, this method checks to make sure the attributes
+   * values of the DOM node match the props of this node.
+   *
+   * This method has side effects because events get registered.
+   *
+   * @private
+   * @param {DOMElement} node with attributes to test
+   * @param {object} component props to compare to node attributes
+   * @throws when they don't match.
+   */
+  _compareNodeAttributesToProps: function(node, props, transaction) {
+    var attrs = node.attributes;
+    for (var i = 0; i < attrs.length; i++) {
+      var attrName = attrs[i].name;
+      var attrValue = attrs[i].value;
+      if (attrName === DOMProperty.ID_ATTRIBUTE_NAME ||
+        attrName === DOMProperty.ROOT_ATTRIBUTE_NAME ||
+        attrName === ReactMarkupChecksum.CHECKSUM_ATTR_NAME) {
+        continue;
+      }
+      if (attrName === 'class') {
+        attrName = 'className';
+      }
+      if (!props.hasOwnProperty(attrName)) {
+        MarkupMismatchError.throwAttributeMissingMismatchError(node, attrName, attrValue);
+      }
+      var propValue = props[attrName];
+      if (attrName === 'style') {
+        // style is an object in props but a string attribute in the DOM. Ideally,
+        // we would do a style-by-style comparison here, so as not to be order-sensitive,
+        // but for now, we will just string compare, which is order-sensitive.
+        propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
+      }
+      // boolean attributes, like disabled or checked, show up with a blank string as their
+      // value in the DOM and true as their value in props.
+      if (propValue === true) {
+        propValue = '';
+      }
+      if (propValue !== attrValue) {
+        MarkupMismatchError.throwAttributeChangedMismatchError(node, attrName, attrValue, propValue);
+      }
+    }
+    for (var name in props) {
+      if (!props.hasOwnProperty(name)) {
+        continue;
+      }
+      var value = props[name];
+      if (registrationNameModules.hasOwnProperty(name)) {
+        if (value) {
+          enqueuePutListener(this, name, value, transaction);
+        }
+      } else {
+        // inputs are automatically given a bunch of attributes like type with the
+        // value undefined, so we ignore those (see ReactDOMInput).
+        if (value !== undefined
+          && value !== null
+          && !node.hasAttribute(name === 'className' ? 'class' : name)
+          && name !== 'children'
+          && name !== 'dangerouslySetInnerHTML'
+          // for boolean props, having a value of false in component props is the same
+          // as just not existing in the DOM, so we shouldn't throw in that case.
+          && !(value === false && !node.hasAttribute(name))
+        ) {
+          MarkupMismatchError.throwAttributeAddedMismatchError(node, name, props[name]);
+        }
+      }
+    }
   },
 
   /**
@@ -740,6 +881,68 @@ ReactDOMComponent.Mixin = {
       return '\n' + ret;
     } else {
       return ret;
+    }
+  },
+
+  _compareChildren: function(transaction, props, context, node) {
+    // Intentional use of != to avoid catching zero/false.
+    var innerHTML = props.dangerouslySetInnerHTML;
+    if (innerHTML != null) {
+      if (innerHTML.__html != null) {
+        // getting innerHTML can normalize some things (like adding closing tags, for example).
+        // to see if server and client are the same, we have to normalize the client text.
+        var el = document.createElement('div');
+        el.innerHTML = innerHTML.__html;
+        if (el.innerHTML !== node.innerHTML) {
+          MarkupMismatchError.throwInnerHtmlMismatchError(node, node.innerHTML, el.innerHTML);
+        }
+      }
+    } else {
+      // textareas may have been modified before markup reconnection, which results
+      // in a mismatch because the text node child of the textarea mismatches with
+      // the value or defaultValue in props. because of this, we just ignore textarea
+      // children.
+      if (this._tag === 'textarea') {
+        return;
+      }
+      var contentToUse =
+        CONTENT_TYPES[typeof props.children] ? props.children : null;
+      var childrenToUse = contentToUse != null ? null : props.children;
+      var childNodesToReuse = getChildrenFromDomNode(node);
+      if (contentToUse != null) {
+        // TODO: Validate that text is allowed as a child of this node
+        if ('' === contentToUse) {
+          if (childNodesToReuse.length > 0) {
+            MarkupMismatchError.throwChildMissingError(childNodesToReuse[0]);
+          }
+        } else {
+          if (childNodesToReuse.length === 0) {
+            MarkupMismatchError.throwTextMismatchError(node, '<Nothing>', contentToUse);
+          }
+          if (childNodesToReuse.length > 1) {
+            MarkupMismatchError.throwChildMissingError(childNodesToReuse[1]);
+          }
+          if (Array.isArray(childNodesToReuse[0]) || childNodesToReuse[0].nodeType !== TEXT_NODE_TYPE) {
+            MarkupMismatchError.throwComponentTypeMismatchError(childNodesToReuse[0], `The text '${contentToUse}'`);
+          }
+          if (childNodesToReuse[0].textContent !== String(contentToUse)) {
+            MarkupMismatchError.throwTextMismatchError(node, node.textContent, contentToUse);
+          }
+        }
+      } else if (childrenToUse != null) {
+        this.mountChildren(
+          childrenToUse,
+          transaction,
+          context,
+          childNodesToReuse,
+          node
+        );
+      } else {
+        // there are no children in the component tree; check to see if the DOM has children.
+        if (childNodesToReuse.length > 0) {
+          MarkupMismatchError.throwChildMissingError(childNodesToReuse[0]);
+        }
+      }
     }
   },
 

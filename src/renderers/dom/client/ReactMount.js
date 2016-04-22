@@ -13,6 +13,7 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
+var MarkupMismatchError = require('MarkupMismatchError');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -21,7 +22,6 @@ var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstrumentation = require('ReactInstrumentation');
-var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
@@ -38,26 +38,12 @@ var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
 
 var ELEMENT_NODE_TYPE = 1;
+var TEXT_NODE_TYPE = 3;
+var COMMENT_NODE_TYPE = 8;
 var DOC_NODE_TYPE = 9;
 var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
 var instancesByReactRootID = {};
-
-/**
- * Finds the index of the first character
- * that's not common between the two given strings.
- *
- * @return {number} the index of the character where the strings diverge
- */
-function firstDifferenceIndex(string1, string2) {
-  var minLen = Math.min(string1.length, string2.length);
-  for (var i = 0; i < minLen; i++) {
-    if (string1.charAt(i) !== string2.charAt(i)) {
-      return i;
-    }
-  }
-  return string1.length === string2.length ? -1 : minLen;
-}
 
 /**
  * @param {DOMElement|DOMDocument} container DOM element that may contain
@@ -81,6 +67,32 @@ function internalGetID(node) {
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
   return node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+}
+
+function getUserReadableNodePath(node) {
+  var pathToNode = [];
+  while (node) {
+    if (node.nodeType === COMMENT_NODE_TYPE) {
+      pathToNode.unshift('#comment');
+    } else if (node.nodeType === TEXT_NODE_TYPE) {
+      pathToNode.unshift('#text');
+    } else if (node.nodeType === ELEMENT_NODE_TYPE) {
+      var elementName = node.tagName.toLowerCase();
+      if (node.id) {
+        elementName = elementName + '#' + node.id;
+      } else if (node.className) {
+        elementName = elementName + '.' + node.className.split(' ').join('.');
+      }
+      pathToNode.unshift(elementName);
+      if (node.hasAttribute(DOMProperty.ROOT_ATTRIBUTE_NAME)) {
+        break;
+      }
+    } else {
+      pathToNode.unshift('node');
+    }
+    node = node.parentNode;
+  }
+  return pathToNode.join(' > ');
 }
 
 /**
@@ -109,13 +121,75 @@ function mountComponentIntoNode(
     console.time(markerName);
   }
 
-  var markup = ReactReconciler.mountComponent(
-    wrapperInstance,
-    transaction,
-    null,
-    ReactDOMContainerInfo(wrapperInstance, container),
-    context
-  );
+  try {
+    var markup = ReactReconciler.mountComponent(
+      wrapperInstance,
+      transaction,
+      null,
+      ReactDOMContainerInfo(wrapperInstance, container),
+      context,
+      shouldReuseMarkup ? container.firstChild : undefined
+    );
+  } catch (e) {
+    if (e instanceof MarkupMismatchError.error) {
+      // the server-generated markup had a mismatch with the client-side component;
+      // we need to inform the user and attempt to re-render if we can.
+
+      invariant(
+        container.nodeType !== DOC_NODE_TYPE,
+        'You\'re trying to render a component to the document using ' +
+        'server rendering but the markup did not match. This usually ' +
+        'means you rendered a different component type or props on ' +
+        'the client from the one on the server, or your render() ' +
+        'methods are impure. React cannot handle this case due to ' +
+        'cross-browser quirks by rendering at the document root. You ' +
+        'should look for environment dependent code in your components ' +
+        'and ensure the props are the same client and server side:\n' +
+        'Node: %s\n' +
+        'Mismatch: %s\n' +
+        'On server: %s\n' +
+        'On client: %s\n',
+        getUserReadableNodePath(e.node),
+        e.message,
+        e.serverVersion,
+        e.clientVersion
+      );
+
+      if (__DEV__) {
+        warning(
+          false,
+          'React attempted to reuse markup in a container but the ' +
+          'markup did not match. This generally means that you are ' +
+          'using server rendering and the markup generated on the ' +
+          'server was not what the client was expecting. React injected ' +
+          'new markup to compensate which works but you have lost many ' +
+          'of the benefits of server rendering. Instead, figure out ' +
+          'why the markup being generated is different on the client ' +
+          'or server:\n' +
+          'Node: %s\n' +
+          'Mismatch: %s\n' +
+          'On server: %s\n' +
+          'On client: %s\n',
+          getUserReadableNodePath(e.node),
+          e.message,
+          e.serverVersion,
+          e.clientVersion
+        );
+      }
+
+      // render again with just blowing away the existing server-rendered markup.
+      markup = ReactReconciler.mountComponent(
+        wrapperInstance,
+        transaction,
+        null,
+        ReactDOMContainerInfo(wrapperInstance, container),
+        context
+      );
+      shouldReuseMarkup = false;
+    } else {
+      throw e;
+    }
+  }
 
   if (markerName) {
     console.timeEnd(markerName);
@@ -597,78 +671,12 @@ var ReactMount = {
 
     if (shouldReuseMarkup) {
       var rootElement = getReactRootElementInContainer(container);
-      if (ReactMarkupChecksum.canReuseMarkup(markup, rootElement)) {
-        ReactDOMComponentTree.precacheNode(instance, rootElement);
-        return;
-      } else {
-        var checksum = rootElement.getAttribute(
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME
-        );
-        rootElement.removeAttribute(ReactMarkupChecksum.CHECKSUM_ATTR_NAME);
-
-        var rootMarkup = rootElement.outerHTML;
-        rootElement.setAttribute(
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME,
-          checksum
-        );
-
-        var normalizedMarkup = markup;
-        if (__DEV__) {
-          // because rootMarkup is retrieved from the DOM, various normalizations
-          // will have occurred which will not be present in `markup`. Here,
-          // insert markup into a <div> or <iframe> depending on the container
-          // type to perform the same normalizations before comparing.
-          var normalizer;
-          if (container.nodeType === ELEMENT_NODE_TYPE) {
-            normalizer = document.createElement('div');
-            normalizer.innerHTML = markup;
-            normalizedMarkup = normalizer.innerHTML;
-          } else {
-            normalizer = document.createElement('iframe');
-            document.body.appendChild(normalizer);
-            normalizer.contentDocument.write(markup);
-            normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
-            document.body.removeChild(normalizer);
-          }
-        }
-
-        var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
-        var difference = ' (client) ' +
-          normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
-          '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
-
-        invariant(
-          container.nodeType !== DOC_NODE_TYPE,
-          'You\'re trying to render a component to the document using ' +
-          'server rendering but the checksum was invalid. This usually ' +
-          'means you rendered a different component type or props on ' +
-          'the client from the one on the server, or your render() ' +
-          'methods are impure. React cannot handle this case due to ' +
-          'cross-browser quirks by rendering at the document root. You ' +
-          'should look for environment dependent code in your components ' +
-          'and ensure the props are the same client and server side:\n%s',
-          difference
-        );
-
-        if (__DEV__) {
-          warning(
-            false,
-            'React attempted to reuse markup in a container but the ' +
-            'checksum was invalid. This generally means that you are ' +
-            'using server rendering and the markup generated on the ' +
-            'server was not what the client was expecting. React injected ' +
-            'new markup to compensate which works but you have lost many ' +
-            'of the benefits of server rendering. Instead, figure out ' +
-            'why the markup being generated is different on the client ' +
-            'or server:\n%s',
-            difference
-          );
-        }
-      }
+      ReactDOMComponentTree.precacheNode(instance, rootElement);
+      return;
     }
 
     invariant(
-      container.nodeType !== DOC_NODE_TYPE,
+      !shouldReuseMarkup && container.nodeType !== DOC_NODE_TYPE,
       'You\'re trying to render a component to the document but ' +
         'you didn\'t use server rendering. We can\'t do this ' +
         'without using server rendering due to cross-browser quirks. ' +

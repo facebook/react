@@ -13,6 +13,7 @@
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
+var MarkupMismatchError = require('MarkupMismatchError');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactPerf = require('ReactPerf');
 
@@ -57,6 +58,13 @@ Object.assign(ReactDOMTextComponent.prototype, {
    * any features besides containing text content.
    *
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {?ReactDOMComponent} the containing DOM component instance
+   * @param {?object} info about the native container
+	 * @param {object} context
+   * @param {?DOMNode|Array<DOMNode>} when reconnecting to server markup, the
+   *   DOM node to reuse or an array of DOM nodes to reuse. Note that with this
+   *   component type, it should always be an array of DOM nodes, not a single
+   *   node.
    * @return {string} Markup for this text node.
    * @internal
    */
@@ -64,7 +72,8 @@ Object.assign(ReactDOMTextComponent.prototype, {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    nodesToReuse
   ) {
     if (__DEV__) {
       var parentInfo;
@@ -85,7 +94,18 @@ Object.assign(ReactDOMTextComponent.prototype, {
     var closingValue = ' /react-text ';
     this._domID = domID;
     this._nativeParent = nativeParent;
-    if (transaction.useCreateElement) {
+    if (nodesToReuse) {
+      if (nodesToReuse.length === 3 && nodesToReuse[1].textContent !== this._stringText) {
+        MarkupMismatchError.throwTextMismatchError(nodesToReuse[1], nodesToReuse[1].textContent, this._stringText);
+      } else if (nodesToReuse.length === 2 && this._stringText) {
+        MarkupMismatchError.throwTextMismatchError(nodesToReuse[0], '', this._stringText);
+      } else if (!Array.isArray(nodesToReuse) || nodesToReuse.length < 2 || nodesToReuse.length > 3) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nodesToReuse,
+          `A text component with text: '${this._stringText}'`);
+      }
+      ReactDOMComponentTree.precacheNode(this, nodesToReuse[0]);
+      this._closingComment = nodesToReuse[nodesToReuse.length - 1];
+    } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var openingComment = ownerDocument.createComment(openingValue);
       var closingComment = ownerDocument.createComment(closingValue);
