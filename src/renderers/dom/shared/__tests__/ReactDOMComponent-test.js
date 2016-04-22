@@ -1247,9 +1247,16 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn about incorrect casing on properties', function() {
+    it('should warn about incorrect casing on properties (server render)', function() {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(React.createElement('input', {type: 'text', tabindex: '1'}));
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
+    });
+
+    it('should warn about incorrect casing on properties', function() {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', tabindex: '1'}));
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toContain('tabIndex');
     });
