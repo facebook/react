@@ -178,9 +178,6 @@ var ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, classNames) {
-    if (!Array.isArray(classNames)) {
-      classNames = classNames.split(/\s+/);
-    }
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
         var className = inst.className;
@@ -189,6 +186,15 @@ var ReactTestUtils = {
           className = inst.getAttribute('class') || '';
         }
         var classList = className.split(/\s+/);
+
+        if (!Array.isArray(classNames)) {
+          invariant(
+            classNames !== undefined,
+            'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
+            'className as a second argument.'
+          );
+          classNames = classNames.split(/\s+/);
+        }
         return classNames.every(function(name) {
           return classList.indexOf(name) !== -1;
         });
