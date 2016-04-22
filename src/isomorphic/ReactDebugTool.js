@@ -58,6 +58,9 @@ var ReactDebugTool = {
   onSetState() {
     emitEvent('onSetState');
   },
+  onSetIsTopLevelWrapper(debugID, isTopLevelWrapper) {
+    emitEvent('onSetIsTopLevelWrapper', debugID, isTopLevelWrapper);
+  },
   onSetIsComposite(debugID, isComposite) {
     emitEvent('onSetIsComposite', debugID, isComposite);
   },

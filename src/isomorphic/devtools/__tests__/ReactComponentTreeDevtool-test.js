@@ -36,7 +36,7 @@ describe('ReactComponentTreeDevtool', () => {
     ReactDebugTool.removeDevtool(ReactComponentTreeDevtool);
   });
 
-  function denormalizeTree(
+  function explodeTree(
     tree,
     rootID,
     includeOwner = false,
@@ -54,7 +54,7 @@ describe('ReactComponentTreeDevtool', () => {
 
     if (item.childIDs) {
       result.children = item.childIDs.map(childID =>
-        denormalizeTree(tree, childID, includeOwner, rootID)
+        explodeTree(tree, childID, includeOwner, rootID)
       );
     }
     if (item.text != null) {
@@ -89,7 +89,7 @@ describe('ReactComponentTreeDevtool', () => {
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
       ReactDOM.render(<Wrapper />, node);
-      expect(denormalizeTree(
+      expect(explodeTree(
         ReactComponentTreeDevtool.getTree(),
         rootInstance._renderedComponent._debugID,
         includeOwner
@@ -103,7 +103,7 @@ describe('ReactComponentTreeDevtool', () => {
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
       ReactDOMServer.renderToString(<Wrapper />);
-      expect(denormalizeTree(
+      expect(explodeTree(
         ReactComponentTreeDevtool.getTree(),
         rootInstance._renderedComponent._debugID,
         includeOwner
@@ -1830,5 +1830,21 @@ describe('ReactComponentTreeDevtool', () => {
       }],
     };
     assertTreeMatches([element, tree], true);
+  });
+
+  it('ignores top-level wrapper', () => {
+    var node = document.createElement('div');
+    ReactDOM.render(<div className="a" />, node);
+    expect(
+      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
+    ).toEqual(['div']);
+    ReactDOM.render(<div className="b" />, node);
+    expect(
+      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
+    ).toEqual(['div']);
+    ReactDOM.unmountComponentAtNode(node);
+    expect(
+      getRegisteredDisplayNames(ReactComponentTreeDevtool.getTree())
+    ).toEqual([]);
   });
 });

@@ -13,11 +13,15 @@
 
 var invariant = require('invariant');
 
+var isTopLevelWrapperByID = {};
 var unmountedContainerIDs = [];
 var allChildIDsByContainerID = {};
 var tree = {};
 
 function updateTree(id, update) {
+  if (isTopLevelWrapperByID[id]) {
+    return;
+  }
   if (!tree[id]) {
     tree[id] = {};
   }
@@ -44,6 +48,13 @@ function purgeTree(id) {
 }
 
 var ReactComponentTreeDevtool = {
+  onSetIsTopLevelWrapper(id, isTopLevelWrapper) {
+    if (isTopLevelWrapper) {
+      delete tree[id];
+      isTopLevelWrapperByID[id] = true;
+    }
+  },
+
   onSetIsComposite(id, isComposite) {
     updateTree(id, item => item.isComposite = isComposite);
   },
@@ -53,45 +64,44 @@ var ReactComponentTreeDevtool = {
   },
 
   onSetChildren(id, nextChildIDs) {
-    var prevChildIDs;
     updateTree(id, item => {
-      prevChildIDs = item.childIDs || [];
+      var prevChildIDs = item.childIDs || [];
       item.childIDs = nextChildIDs;
-    });
 
-    prevChildIDs.forEach(prevChildID => {
-      if (tree[prevChildID] && nextChildIDs.indexOf(prevChildID) === -1) {
-        tree[prevChildID].parentID = null;
-      }
-    });
+      prevChildIDs.forEach(prevChildID => {
+        var prevChild = tree[prevChildID];
+        if (prevChild && nextChildIDs.indexOf(prevChildID) === -1) {
+          prevChild.parentID = null;
+        }
+      });
 
-    nextChildIDs.forEach(nextChildID => {
-      var item = tree[nextChildID];
+      nextChildIDs.forEach(nextChildID => {
+        var nextChild = tree[nextChildID];
+        invariant(
+          nextChild,
+          'Expected devtool events to fire for the child ' +
+          'before its parent includes it in onSetChildren().'
+        );
+        invariant(
+          nextChild.isComposite != null,
+          'Expected onSetIsComposite() to fire for the child ' +
+          'before its parent includes it in onSetChildren().'
+        );
+        invariant(
+          nextChild.displayName != null,
+          'Expected onSetDisplayName() to fire for the child ' +
+          'before its parent includes it in onSetChildren().'
+        );
+        invariant(
+          nextChild.childIDs != null || nextChild.text != null,
+          'Expected either onSetChildren() or onSetText() to fire for the child ' +
+          'before its parent includes it in onSetChildren().'
+        );
 
-      invariant(
-        item,
-        'Expected devtool events to fire for the child ' +
-        'before its parent includes it in onSetChildren().'
-      );
-      invariant(
-        item.isComposite != null,
-        'Expected onSetIsComposite() to fire for the child ' +
-        'before its parent includes it in onSetChildren().'
-      );
-      invariant(
-        item.displayName != null,
-        'Expected onSetDisplayName() to fire for the child ' +
-        'before its parent includes it in onSetChildren().'
-      );
-      invariant(
-        item.childIDs != null || item.text != null,
-        'Expected either onSetChildren() or onSetText() to fire for the child ' +
-        'before its parent includes it in onSetChildren().'
-      );
-
-      if (tree[nextChildID] && prevChildIDs.indexOf(nextChildID) === -1) {
-        tree[nextChildID].parentID = id;
-      }
+        if (prevChildIDs.indexOf(nextChildID) === -1) {
+          nextChild.parentID = id;
+        }
+      });
     });
   },
 
