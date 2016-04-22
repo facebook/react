@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Server-side Environments | React</title>
+  <title>Web Components | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Server-side Environments | React">
+  <meta property="og:title" content="Web Components | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/environments.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/webcomponents-zh-CN.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -201,7 +201,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/environments.html" class="active">Server-side Environments</a>
+                    <a href="/react/docs/environments.html">Server-side Environments</a>
                   </li>
                 
               </ul>
@@ -426,81 +426,55 @@
 
 
   <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.3-environments.md" target="_blank">Edit on GitHub</a>
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-09-webcomponents.zh-CN.md" target="_blank">Edit on GitHub</a>
     <h1>
-      Server-side Environments
+      Web Components
     </h1>
     <div class="subHeader"></div>
 
-    <p>One of the great things about React is that it doesn&#39;t require the DOM as a dependency, which means it is possible to render a React application on the server and send the HTML markup down to the client. There are a few things that React expects, so this guide will help you get started in your preferred environment.</p>
-<h2><a class="anchor" name="node.js"></a>Node.js <a class="hash-link" href="#node.js">#</a></h2>
-<p><a href="http://nodejs.org/">Node.js</a> is a popular JavaScript runtime that comes with an extensive core library and support for installing packages from npm to expand on the basic functionality. As we&#39;ve described elsewhere in the documentation, you can install <code>react</code> and <code>react-dom</code> from npm.</p>
-
-<p>Example:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">ReactDOMServer</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom/server&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello World!&#39;</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">ReactDOMServer</span><span class="p">.</span><span class="nx">renderToString</span><span class="p">(</span><span class="nx">element</span><span class="p">));</span>
+    <p>因为React和Web组件是用来解决不同问题的, 试图比较两者将不可避免地导致似是而非的结论, 。Web组件为可复用组件提供了强大的封装, 而React则提供了一个使DOM与你的数据同步的声明式库。两者的目标是互补的；工程师可以混合使用这些技术。作为一个开发者，你可以在你的Web组件中使用React，或者在React中使用Web组件，或者两者一起使用。</p>
+<h2><a class="anchor" name="reactweb"></a>在React中使用Web组件 <a class="hash-link" href="#reactweb">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span><span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="o">&lt;</span><span class="nx">x</span><span class="o">-</span><span class="nx">search</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/x-search&gt;!&lt;/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>If you use JSX, you may want to pre-compile your components. Alternatively you may want to consider using <a href="https://babeljs.io/docs/usage/require/">Babel&#39;s require hook</a> or <a href="https://babeljs.io/docs/usage/cli/#babel-node"><code>babel-node</code></a>.</p>
-
 <blockquote>
-<p>Note:</p>
+<p>注意:</p>
 
-<p>Some versions of Node.js have an <code>Object.assign</code> implementation that does not preserve key order. This can cause errors when validating the markup, creating a warning that says &quot;React attempted to reuse markup in a container but the checksum was invalid&quot;. If you run into this issue, you can override <code>Object.assign</code> to use a polyfill that preserves key order. For more details, see <a href="https://github.com/facebook/react/issues/6451">Issue #6451</a>.</p>
+<p>两个组件系统的程序模型 (web 组件 与 react 组件) 区别在
+web组件通常暴露一个命令式的API (比如 一个 <code>video</code> web 组件可能暴露 <code>play()</code>
+与 <code>pause()</code> 函数)。 因为web 组件是它们属性的声明式函数,
+他们应该可以执行, 但是如果要访问命令式API的一个web组件, 你将需要在组件上附加一个引用
+并与DOM节点直接交互。如果你在使用第三方web组件, 
+我们推荐你写一个React组件作为你的web组件的封装。</p>
+
+<p>当前，一个由web组件触发的事件可能不能准确地在React渲染树中传递。
+你将需要手动附加event handlers来在你的react组件中处理这些事件。</p>
 </blockquote>
-<h2><a class="anchor" name="nashorn"></a>Nashorn <a class="hash-link" href="#nashorn">#</a></h2>
-<p>Nashorn is a lightweight high-performance JavaScript runtime that runs within the JVM. React should run out of the box in Java 8+.</p>
+<h2><a class="anchor" name="web-react"></a>在Web 组件中使用React <a class="hash-link" href="#web-react">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">proto</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">HTMLElement</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">createdCallback</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">value</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">mountPoint</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">);</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">createShadowRoot</span><span class="p">().</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">mountPoint</span><span class="p">);</span>
 
-<p>Example:</p>
-<div class="highlight"><pre><code class="language-java" data-lang="java"><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">java.io.InputStream</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">java.io.FileReader</span><span class="o">;</span>
-
-<span class="kn">import</span> <span class="nn">javax.script.ScriptEngine</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">javax.script.ScriptEngineManager</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">javax.script.ScriptException</span><span class="o">;</span>
-
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ReactRender</span>
-<span class="o">{</span>
-  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ScriptException</span><span class="o">,</span> <span class="n">IOException</span> <span class="o">{</span>
-    <span class="n">ScriptEngine</span> <span class="n">nashorn</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ScriptEngineManager</span><span class="o">().</span><span class="na">getEngineByName</span><span class="o">(</span><span class="s">&quot;nashorn&quot;</span><span class="o">);</span>
-
-    <span class="c1">// These files can be downloaded as a part of the starter kit</span>
-    <span class="c1">// from https://facebook.github.io/react</span>
-    <span class="n">nashorn</span><span class="o">.</span><span class="na">eval</span><span class="o">(</span><span class="k">new</span> <span class="nf">FileReader</span><span class="o">(</span><span class="s">&quot;path/to/react.js&quot;</span><span class="o">));</span>
-    <span class="n">nashorn</span><span class="o">.</span><span class="na">eval</span><span class="o">(</span><span class="k">new</span> <span class="nf">FileReader</span><span class="o">(</span><span class="s">&quot;path/to/react-dom-server.js&quot;</span><span class="o">));</span>
-
-    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">nashorn</span><span class="o">.</span><span class="na">eval</span><span class="o">(</span>
-      <span class="s">&quot;ReactDOMServer.renderToString(&quot;</span> <span class="o">+</span>
-        <span class="s">&quot;React.createElement(&#39;div&#39;, null, &#39;Hello World!&#39;)&quot;</span> <span class="o">+</span>
-      <span class="s">&quot;);&quot;</span>
-    <span class="o">));</span>
-  <span class="o">}</span>
-<span class="o">}</span>
-</code></pre></div>
-<p>If your application uses npm packages, or you want to transform JSX in Nashorn, you will need to do some additional environment setup. The following resources may be helpful in getting you started:</p>
-
-<ul>
-<li><a href="http://winterbe.com/posts/2015/02/16/isomorphic-react-webapps-on-the-jvm/">http://winterbe.com/posts/2015/02/16/isomorphic-react-webapps-on-the-jvm/</a></li>
-<li><a href="https://github.com/nodyn/jvm-npm">https://github.com/nodyn/jvm-npm</a></li>
-<li><a href="https://gist.github.com/aesteve/883e0fd33390451cb8eb">https://gist.github.com/aesteve/883e0fd33390451cb8eb</a></li>
-</ul>
-
-<blockquote>
-<p>Note:</p>
-
-<p>Using Babel within Nashorn will require Java 8u72+, as update 72 fixed <a href="https://bugs.openjdk.java.net/browse/JDK-8135190">JDK-8135190</a>.</p>
-</blockquote>
+      <span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">);</span>
+      <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;https://www.google.com/search?q=&#39;</span> <span class="o">+</span> <span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+      <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="nx">url</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;, mountPoint);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+<span class="nb">document</span><span class="p">.</span><span class="nx">registerElement</span><span class="p">(</span><span class="s1">&#39;x-search&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">prototype</span><span class="o">:</span> <span class="nx">proto</span><span class="p">});</span>
+</code></pre></div><h2><a class="anchor" name=""></a>完整样例 <a class="hash-link" href="#">#</a></h2>
+<p>若要查看完整样例，请参照<a href="/react/downloads.html">starter kit</a>中的<code>webcomponents</code>例子。</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/package-management.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/reconciliation-zh-CN.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/addons.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/glossary-zh-CN.html">Next &rarr;</a>
       
     </div>
   </div>

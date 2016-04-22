@@ -434,7 +434,13 @@
 
     <p><code>ReactTestUtils</code> makes it easy to test React components in the testing framework of your choice (we use <a href="https://facebook.github.io/jest/">Jest</a>).</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">var ReactTestUtils = require(&#39;react-addons-test-utils&#39;);
-</code></pre></div><h3><a class="anchor" name="simulate"></a>Simulate <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
+</code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>Airbnb has released a testing utility called Enzyme, which makes it easy to assert, manipulate, and traverse your React Components&#39; output. If you&#39;re deciding on a unit testing library, it&#39;s worth checking out: <a href="http://airbnb.io/enzyme/">http://airbnb.io/enzyme/</a></p>
+</blockquote>
+<h3><a class="anchor" name="simulate"></a>Simulate <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
   <span class="nx">DOMElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="p">[</span><span class="nx">object</span> <span class="nx">eventData</span><span class="p">]</span>
 <span class="p">)</span>
