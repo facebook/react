@@ -101,7 +101,7 @@ describe('ReactComponentTreeDevtool', () => {
       expect(
         getTree(rootInstance._debugID, includeOwner).children[0]
       ).toEqual(expectedTree);
-      ReactComponentTreeDevtool.purgeUnmountedContainers();
+      ReactComponentTreeDevtool.purgeComponentsFromUnmountedContainers();
       expect(getRegisteredDisplayNames()).toEqual([]);
     });
   }

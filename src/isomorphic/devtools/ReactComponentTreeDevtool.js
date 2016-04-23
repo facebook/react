@@ -14,12 +14,12 @@
 var invariant = require('invariant');
 
 var unmountedContainerIDs = [];
-var allChildIDsByContainerID = {};
 var tree = {};
 
 function updateTree(id, update) {
   if (!tree[id]) {
     tree[id] = {
+      nativeContainerID: null,
       parentID: null,
       ownerID: null,
       text: null,
@@ -33,18 +33,11 @@ function updateTree(id, update) {
 
 function purgeTree(id) {
   var item = tree[id];
-  if (!item) {
-    return;
+  if (item) {
+    var {childIDs} = item;
+    delete tree[id];
+    childIDs.forEach(purgeTree);
   }
-
-  var {childIDs, containerID} = item;
-  delete tree[id];
-
-  if (containerID) {
-    allChildIDsByContainerID[containerID] = allChildIDsByContainerID[containerID]
-      .filter(childID => childID !== id);
-  }
-  childIDs.forEach(purgeTree);
 }
 
 var ReactComponentTreeDevtool = {
@@ -114,27 +107,24 @@ var ReactComponentTreeDevtool = {
     updateTree(id, item => item.text = text);
   },
 
-  onMountComponent(id, containerID) {
-    if (!allChildIDsByContainerID[containerID]) {
-      allChildIDsByContainerID[containerID] = [];
-    }
-    allChildIDsByContainerID[containerID].push(id);
-    updateTree(id, item => item.containerID = containerID);
+  onMountComponent(id, nativeContainerID) {
+    updateTree(id, item => item.nativeContainerID = nativeContainerID);
   },
 
   onUnmountComponent(id) {
     purgeTree(id);
   },
 
-  onUnmountNativeContainer(containerID) {
-    unmountedContainerIDs.push(containerID);
+  onUnmountNativeContainer(nativeContainerID) {
+    unmountedContainerIDs.push(nativeContainerID);
   },
 
-  purgeUnmountedContainers() {
-    unmountedContainerIDs.forEach(containerID => {
-      allChildIDsByContainerID[containerID].forEach(purgeTree);
-    });
+  purgeComponentsFromUnmountedContainers() {
+    var unmountedIDs = Object.keys(tree).filter(id =>
+      unmountedContainerIDs.indexOf(tree[id].nativeContainerID) !== -1
+    );
     unmountedContainerIDs = [];
+    unmountedIDs.forEach(purgeTree);
   },
 
   isComposite(id) {
