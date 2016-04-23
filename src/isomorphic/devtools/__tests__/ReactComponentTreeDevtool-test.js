@@ -38,6 +38,7 @@ describe('ReactComponentTreeDevtool', () => {
 
   function getRegisteredDisplayNames() {
     return ReactComponentTreeDevtool.getRegisteredIDs()
+      .filter(id => !ReactComponentTreeDevtool.isTopLevelWrapper(id))
       .map(ReactComponentTreeDevtool.getDisplayName);
   }
 
@@ -48,9 +49,7 @@ describe('ReactComponentTreeDevtool', () => {
     };
 
     var parentID = ReactComponentTreeDevtool.getParentID(rootID);
-    if (expectedParentID) {
-      expect(parentID).toBe(expectedParentID);
-    }
+    expect(parentID).toBe(expectedParentID);
 
     var childIDs = ReactComponentTreeDevtool.getChildIDs(rootID);
     var text = ReactComponentTreeDevtool.getText(rootID);
@@ -90,7 +89,7 @@ describe('ReactComponentTreeDevtool', () => {
       currentElement = element;
       ReactDOM.render(<Wrapper />, node);
       expect(
-        getTree(rootInstance._renderedComponent._debugID, includeOwner)
+        getTree(rootInstance._debugID, includeOwner).children[0]
       ).toEqual(expectedTree);
     });
     ReactDOM.unmountComponentAtNode(node);
@@ -100,7 +99,7 @@ describe('ReactComponentTreeDevtool', () => {
       currentElement = element;
       ReactDOMServer.renderToString(<Wrapper />);
       expect(
-        getTree(rootInstance._renderedComponent._debugID, includeOwner)
+        getTree(rootInstance._debugID, includeOwner).children[0]
       ).toEqual(expectedTree);
       ReactComponentTreeDevtool.purgeUnmountedContainers();
       expect(getRegisteredDisplayNames()).toEqual([]);

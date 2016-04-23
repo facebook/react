@@ -13,19 +13,19 @@
 
 var invariant = require('invariant');
 
-var isTopLevelWrapperByID = {};
 var unmountedContainerIDs = [];
 var allChildIDsByContainerID = {};
 var tree = {};
 
 function updateTree(id, update) {
-  if (isTopLevelWrapperByID[id]) {
-    return;
-  }
   if (!tree[id]) {
     tree[id] = {
       parentID: null,
+      ownerID: null,
+      text: null,
       childIDs: [],
+      displayName: 'Unknown',
+      isTopLevelWrapper: false,
     };
   }
   update(tree[id]);
@@ -49,10 +49,7 @@ function purgeTree(id) {
 
 var ReactComponentTreeDevtool = {
   onSetIsTopLevelWrapper(id, isTopLevelWrapper) {
-    if (isTopLevelWrapper) {
-      delete tree[id];
-      isTopLevelWrapperByID[id] = true;
-    }
+    updateTree(id, item => item.isTopLevelWrapper = isTopLevelWrapper);
   },
 
   onSetIsComposite(id, isComposite) {
@@ -64,6 +61,10 @@ var ReactComponentTreeDevtool = {
   },
 
   onSetChildren(id, nextChildIDs) {
+    if (ReactComponentTreeDevtool.isTopLevelWrapper(id)) {
+      return;
+    }
+
     updateTree(id, item => {
       var prevChildIDs = item.childIDs;
       item.childIDs = nextChildIDs;
@@ -137,27 +138,38 @@ var ReactComponentTreeDevtool = {
   },
 
   isComposite(id) {
-    return tree[id].isComposite;
+    var item = tree[id];
+    return item ? item.isComposite : false;
+  },
+
+  isTopLevelWrapper(id) {
+    var item = tree[id];
+    return item ? item.isTopLevelWrapper : false;
   },
 
   getChildIDs(id) {
-    return tree[id].childIDs;
+    var item = tree[id];
+    return item ? item.childIDs : [];
   },
 
   getDisplayName(id) {
-    return tree[id].displayName;
+    var item = tree[id];
+    return item ? item.displayName : 'Unknown';
   },
 
   getOwnerID(id) {
-    return tree[id].ownerID;
+    var item = tree[id];
+    return item ? item.ownerID : null;
   },
 
   getParentID(id) {
-    return tree[id].parentID;
+    var item = tree[id];
+    return item ? item.parentID : null;
   },
 
   getText(id) {
-    return tree[id].text;
+    var item = tree[id];
+    return item ? item.text : null;
   },
 
   getRegisteredIDs() {
