@@ -13,7 +13,7 @@
     "watchify": "^3.4.0"
   },
   "scripts": {
-    "build": "browserify ./index.js -t babelify -o bundle.js",
-    "start": "watchify ./index.js -v -t babelify -o bundle.js"
+    "build": "browserify ./index.js -o bundle.js -t [ babelify --presets [ es2015 react ] ]",
+    "start": "watchify ./index.js -v -o bundle.js -t [ babelify --presets [ es2015 react ] ]"
   }
 }
