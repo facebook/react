@@ -332,11 +332,11 @@ var ReactMount = {
 
     ReactBrowserEventEmitter.ensureScrollValueMonitoring();
     var componentInstance = instantiateReactComponent(nextElement);
+
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetIsTopLevelWrapper(
-        componentInstance._debugID,
-        true
-      );
+      // Mute future events from the top level wrapper.
+      // It is an implementation detail that devtools should not know about.
+      componentInstance._debugID = 0;
     }
 
     // The initial render is synchronous but any updates that happen during
@@ -355,7 +355,10 @@ var ReactMount = {
     instancesByReactRootID[wrapperID] = componentInstance;
 
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onMountRootComponent(componentInstance._debugID);
+      // The instance here is TopLevelWrapper so we report mount for its child.
+      ReactInstrumentation.debugTool.onMountRootComponent(
+        componentInstance._renderedComponent._debugID
+      );
     }
 
     return componentInstance;
@@ -582,11 +585,6 @@ var ReactMount = {
       container,
       false
     );
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onUnmountNativeContainer(
-        prevComponent._nativeContainerInfo._debugID
-      );
-    }
     return true;
   },
 

@@ -377,14 +377,6 @@ var ReactCompositeComponentMixin = {
     this._renderedComponent = this._instantiateReactComponent(
       renderedElement
     );
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetChildren(
-        this._debugID,
-        this._renderedNodeType === ReactNodeTypes.EMPTY ?
-          [] :
-          [this._renderedComponent._debugID]
-      );
-    }
 
     var markup = ReactReconciler.mountComponent(
       this._renderedComponent,
@@ -393,6 +385,13 @@ var ReactCompositeComponentMixin = {
       nativeContainerInfo,
       this._processChildContext(context)
     );
+
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onSetChildren(
+        this._debugID,
+        [this._renderedComponent._debugID]
+      );
+    }
 
     return markup;
   },
@@ -861,14 +860,6 @@ var ReactCompositeComponentMixin = {
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onSetChildren(
-          this._debugID,
-          this._renderedNodeType === ReactNodeTypes.EMPTY ?
-            [] :
-            [this._renderedComponent._debugID]
-        );
-      }
 
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
@@ -877,6 +868,14 @@ var ReactCompositeComponentMixin = {
         this._nativeContainerInfo,
         this._processChildContext(context)
       );
+
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          [this._renderedComponent._debugID]
+        );
+      }
+
       this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);
     }
   },

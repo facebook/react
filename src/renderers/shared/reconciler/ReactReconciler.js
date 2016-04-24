@@ -53,10 +53,7 @@ var ReactReconciler = {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onMountComponent(
-        internalInstance._debugID,
-        nativeContainerInfo._debugID
-      );
+      ReactInstrumentation.debugTool.onMountComponent(internalInstance._debugID);
     }
     return markup;
   },

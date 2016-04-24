@@ -37,6 +37,11 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
   }
 }
 
+// This can be removed once TopLevelWrapper is gone.
+function isTopLevelWrapper(debugID) {
+  return debugID === 0;
+}
+
 var ReactDebugTool = {
   addDevtool(devtool) {
     eventHandlers.push(devtool);
@@ -58,17 +63,16 @@ var ReactDebugTool = {
   onSetState() {
     emitEvent('onSetState');
   },
-  onSetIsTopLevelWrapper(debugID, isTopLevelWrapper) {
-    emitEvent('onSetIsTopLevelWrapper', debugID, isTopLevelWrapper);
-  },
-  onSetIsComposite(debugID, isComposite) {
-    emitEvent('onSetIsComposite', debugID, isComposite);
-  },
   onSetDisplayName(debugID, displayName) {
     emitEvent('onSetDisplayName', debugID, displayName);
   },
+  onSetIsEmpty(debugID, isEmpty) {
+    emitEvent('onSetIsEmpty', debugID, isEmpty);
+  },
   onSetChildren(debugID, childDebugIDs) {
-    emitEvent('onSetChildren', debugID, childDebugIDs);
+    if (!isTopLevelWrapper(debugID)) {
+      emitEvent('onSetChildren', debugID, childDebugIDs);
+    }
   },
   onSetOwner(debugID, ownerDebugID) {
     emitEvent('onSetOwner', debugID, ownerDebugID);
@@ -79,17 +83,20 @@ var ReactDebugTool = {
   onMountRootComponent(debugID) {
     emitEvent('onMountRootComponent', debugID);
   },
-  onMountComponent(debugID, nativeContainerDebugID) {
-    emitEvent('onMountComponent', debugID, nativeContainerDebugID);
+  onMountComponent(debugID) {
+    if (!isTopLevelWrapper(debugID)) {
+      emitEvent('onMountComponent', debugID);
+    }
   },
   onUpdateComponent(debugID) {
-    emitEvent('onUpdateComponent', debugID);
+    if (!isTopLevelWrapper(debugID)) {
+      emitEvent('onUpdateComponent', debugID);
+    }
   },
   onUnmountComponent(debugID) {
-    emitEvent('onUnmountComponent', debugID);
-  },
-  onUnmountNativeContainer(nativeContainerDebugID) {
-    emitEvent('onUnmountNativeContainer', nativeContainerDebugID);
+    if (!isTopLevelWrapper(debugID)) {
+      emitEvent('onUnmountComponent', debugID);
+    }
   },
 };
 

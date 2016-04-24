@@ -36,9 +36,13 @@ describe('ReactComponentTreeDevtool', () => {
     ReactDebugTool.removeDevtool(ReactComponentTreeDevtool);
   });
 
+  function getRootDisplayNames() {
+    return ReactComponentTreeDevtool.getRootIDs()
+      .map(ReactComponentTreeDevtool.getDisplayName);
+  }
+
   function getRegisteredDisplayNames() {
     return ReactComponentTreeDevtool.getRegisteredIDs()
-      .filter(id => !ReactComponentTreeDevtool.isTopLevelWrapper(id))
       .map(ReactComponentTreeDevtool.getDisplayName);
   }
 
@@ -50,7 +54,6 @@ describe('ReactComponentTreeDevtool', () => {
     } = options;
 
     var result = {
-      isComposite: ReactComponentTreeDevtool.isComposite(rootID),
       displayName: ReactComponentTreeDevtool.getDisplayName(rootID),
     };
 
@@ -102,14 +105,14 @@ describe('ReactComponentTreeDevtool', () => {
       currentElement = element;
       ReactDOM.render(<Wrapper />, node);
       expect(getActualTree()).toEqual(expectedTree);
+      ReactComponentTreeDevtool.purgeUnmountedComponents();
+      expect(getActualTree()).toEqual(expectedTree);
     });
     ReactDOM.unmountComponentAtNode(node);
 
-    var lastExpectedTree = pairs[pairs.length - 1][1];
-    expect(getActualTree()).toEqual(lastExpectedTree);
-
     ReactComponentTreeDevtool.purgeUnmountedComponents();
     expect(getActualTree()).toBe(undefined);
+    expect(getRootDisplayNames()).toEqual([]);
     expect(getRegisteredDisplayNames()).toEqual([]);
 
     pairs.forEach(([element, expectedTree]) => {
@@ -119,6 +122,7 @@ describe('ReactComponentTreeDevtool', () => {
 
       ReactComponentTreeDevtool.purgeUnmountedComponents();
       expect(getActualTree()).toBe(undefined);
+      expect(getRootDisplayNames()).toEqual([]);
       expect(getRegisteredDisplayNames()).toEqual([]);
     });
   }
@@ -145,18 +149,14 @@ describe('ReactComponentTreeDevtool', () => {
 
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: true,
           displayName: 'Bar',
           children: [],
         }, {
-          isComposite: true,
           displayName: 'Baz',
           children: [],
         }, {
-          isComposite: true,
           displayName: 'Unknown',
           children: [],
         }],
@@ -185,18 +185,14 @@ describe('ReactComponentTreeDevtool', () => {
 
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: true,
           displayName: 'Bar',
           children: [],
         }, {
-          isComposite: true,
           displayName: 'Baz',
           children: [],
         }, {
-          isComposite: true,
           // Note: Ideally fallback name should be consistent (e.g. "Unknown")
           displayName: 'ReactComponent',
           children: [],
@@ -232,18 +228,14 @@ describe('ReactComponentTreeDevtool', () => {
 
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: true,
           displayName: 'Bar',
           children: [],
         }, {
-          isComposite: true,
           displayName: 'Baz',
           children: [],
         }, {
-          isComposite: true,
           displayName: 'Unknown',
           children: [],
         }],
@@ -266,18 +258,14 @@ describe('ReactComponentTreeDevtool', () => {
 
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: true,
           displayName: 'Bar',
           children: [],
         }, {
-          isComposite: true,
           displayName: 'Baz',
           children: [],
         }, {
-          isComposite: true,
           displayName: 'Unknown',
           children: [],
         }],
@@ -298,26 +286,20 @@ describe('ReactComponentTreeDevtool', () => {
         </div>
       );
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: false,
           displayName: 'p',
           children: [{
-            isComposite: false,
             displayName: 'span',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Hi!',
             }],
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Wow.',
           }],
         }, {
-          isComposite: false,
           displayName: 'hr',
           children: [],
         }],
@@ -334,10 +316,8 @@ describe('ReactComponentTreeDevtool', () => {
 
       var element = <Foo />;
       var tree = {
-        isComposite: true,
         displayName: 'Foo',
         children: [{
-          isComposite: false,
           displayName: 'div',
           children: [],
         }],
@@ -378,44 +358,33 @@ describe('ReactComponentTreeDevtool', () => {
 
       var element = <Baz />;
       var tree = {
-        isComposite: true,
         displayName: 'Baz',
         children: [{
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [{
-              isComposite: true,
               displayName: 'Qux',
               children: [],
             }],
           }, {
-            isComposite: true,
             displayName: 'Bar',
             children: [{
-              isComposite: false,
               displayName: 'h1',
               children: [{
-                isComposite: false,
                 displayName: 'span',
                 children: [{
-                  isComposite: false,
                   displayName: '#text',
                   text: 'Hi,',
                 }],
               }, {
-                isComposite: false,
                 displayName: '#text',
                 text: 'Mom',
               }],
             }],
           }, {
-            isComposite: false,
             displayName: 'a',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Click me.',
             }],
@@ -433,7 +402,6 @@ describe('ReactComponentTreeDevtool', () => {
       }
       var element = <Foo />;
       var tree = {
-        isComposite: true,
         displayName: 'Foo',
         children: [],
       };
@@ -448,7 +416,6 @@ describe('ReactComponentTreeDevtool', () => {
       }
       var element = <Foo />;
       var tree = {
-        isComposite: true,
         displayName: 'Foo',
         children: [],
       };
@@ -458,14 +425,11 @@ describe('ReactComponentTreeDevtool', () => {
     it('reports text nodes as children', () => {
       var element = <div>{'1'}{2}</div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: false,
           displayName: '#text',
           text: '1',
         }, {
-          isComposite: false,
           displayName: '#text',
           text: '2',
         }],
@@ -476,10 +440,8 @@ describe('ReactComponentTreeDevtool', () => {
     it('reports a single text node as a child', () => {
       var element = <div>{'1'}</div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: false,
           displayName: '#text',
           text: '1',
         }],
@@ -490,10 +452,8 @@ describe('ReactComponentTreeDevtool', () => {
     it('reports a single number node as a child', () => {
       var element = <div>{42}</div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: false,
           displayName: '#text',
           text: '42',
         }],
@@ -504,10 +464,8 @@ describe('ReactComponentTreeDevtool', () => {
     it('reports a zero as a child', () => {
       var element = <div>{0}</div>;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: false,
           displayName: '#text',
           text: '0',
         }],
@@ -529,21 +487,16 @@ describe('ReactComponentTreeDevtool', () => {
         </div>
       );
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [{
-          isComposite: false,
           displayName: '#text',
           text: 'hi',
         }, {
-          isComposite: false,
           displayName: '#text',
           text: '42',
         }, {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -555,7 +508,6 @@ describe('ReactComponentTreeDevtool', () => {
     it('reports html content as no children', () => {
       var element = <div dangerouslySetInnerHTML={{__html: 'Bye.'}} />;
       var tree = {
-        isComposite: false,
         displayName: 'div',
         children: [],
       };
@@ -568,10 +520,8 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates text of a single text child', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -579,10 +529,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div>Bye.</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -597,17 +545,14 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from no children to a single text child', () => {
         var elementBefore = <div />;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
 
         var elementAfter = <div>Hi.</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -622,10 +567,8 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from a single text child to no children', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -633,7 +576,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div />;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
@@ -647,17 +589,14 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from html content to a single text child', () => {
         var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
 
         var elementAfter = <div>Hi.</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -672,10 +611,8 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from a single text child to html content', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -683,7 +620,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
@@ -697,21 +633,17 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from no children to multiple text children', () => {
         var elementBefore = <div />;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
 
         var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -726,14 +658,11 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from multiple text children to no children', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -741,7 +670,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div />;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
@@ -755,21 +683,17 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from html content to multiple text children', () => {
         var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
 
         var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -784,14 +708,11 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from multiple text children to html content', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -799,7 +720,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
@@ -813,14 +733,12 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from html content to no children', () => {
         var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
 
         var elementAfter = <div />;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
@@ -834,14 +752,12 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from no children to html content', () => {
         var elementBefore = <div />;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
 
         var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
@@ -855,10 +771,8 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from one text child to multiple text children', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -866,14 +780,11 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -888,14 +799,11 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates from multiple text children to one text child', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -903,10 +811,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div>Hi.</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -920,14 +826,11 @@ describe('ReactComponentTreeDevtool', () => {
       it('updates text nodes when reordering', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }],
@@ -935,14 +838,11 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div>{'Bye.'}{'Hi.'}</div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'Bye.',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'Hi.',
           }],
@@ -961,21 +861,16 @@ describe('ReactComponentTreeDevtool', () => {
           </div>
         );
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Hi.',
             }],
           }, {
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Bye.',
             }],
@@ -989,21 +884,16 @@ describe('ReactComponentTreeDevtool', () => {
           </div>
         );
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Bye.',
             }],
           }, {
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Hi.',
             }],
@@ -1024,21 +914,16 @@ describe('ReactComponentTreeDevtool', () => {
           </div>
         );
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Hi.',
             }],
           }, {
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Bye.',
             }],
@@ -1052,21 +937,16 @@ describe('ReactComponentTreeDevtool', () => {
           </div>
         );
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Bye.',
             }],
           }, {
-            isComposite: false,
             displayName: 'div',
             children: [{
-              isComposite: false,
               displayName: '#text',
               text: 'Hi.',
             }],
@@ -1090,10 +970,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <div><Foo /></div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [],
           }],
@@ -1101,10 +979,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div><Bar /></div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1123,13 +999,10 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <div><Foo><div /></Foo></div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [{
-              isComposite: false,
               displayName: 'div',
               children: [],
             }],
@@ -1138,13 +1011,10 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div><Foo><span /></Foo></div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [{
-              isComposite: false,
               displayName: 'span',
               children: [],
             }],
@@ -1164,17 +1034,14 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <div />;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
 
         var elementAfter = <div><Foo /></div>;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [],
           }],
@@ -1193,10 +1060,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <div><Foo /></div>;
         var treeBefore = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [],
           }],
@@ -1204,7 +1069,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <div />;
         var treeAfter = {
-          isComposite: false,
           displayName: 'div',
           children: [],
         };
@@ -1229,21 +1093,16 @@ describe('ReactComponentTreeDevtool', () => {
           </div>
         );
         var tree1 = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: false,
             displayName: '#text',
             text: 'hi',
           }, {
-            isComposite: false,
             displayName: '#text',
             text: '42',
           }, {
-            isComposite: true,
             displayName: 'Foo',
             children: [{
-              isComposite: false,
               displayName: 'div',
               children: [],
             }],
@@ -1259,18 +1118,14 @@ describe('ReactComponentTreeDevtool', () => {
           </div>
         );
         var tree2 = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [{
-              isComposite: false,
               displayName: 'div',
               children: [],
             }],
           }, {
-            isComposite: false,
             displayName: '#text',
             text: 'hi',
           }],
@@ -1282,13 +1137,10 @@ describe('ReactComponentTreeDevtool', () => {
           </div>
         );
         var tree3 = {
-          isComposite: false,
           displayName: 'div',
           children: [{
-            isComposite: true,
             displayName: 'Foo',
             children: [{
-              isComposite: false,
               displayName: 'div',
               children: [],
             }],
@@ -1311,10 +1163,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1322,10 +1172,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo><span /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'span',
             children: [],
           }],
@@ -1344,17 +1192,14 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo>{null}</Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
 
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1373,10 +1218,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1384,7 +1227,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo>{null}</Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
@@ -1406,10 +1248,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1417,10 +1257,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1443,10 +1281,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1454,10 +1290,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1480,17 +1314,14 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo>{null}</Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
 
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1513,10 +1344,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1524,7 +1353,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo>{null}</Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
@@ -1546,10 +1374,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1557,10 +1383,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo><span /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'span',
             children: [],
           }],
@@ -1581,17 +1405,14 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo>{null}</Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
 
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1612,10 +1433,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1623,7 +1442,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo>{null}</Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
@@ -1649,10 +1467,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1660,10 +1476,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1690,10 +1504,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1701,10 +1513,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             children: [],
           }],
@@ -1731,17 +1541,14 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo>{null}</Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
 
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1768,10 +1575,8 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
-          isComposite: true,
           displayName: 'Foo',
           children: [{
-            isComposite: true,
             displayName: 'Bar',
             children: [],
           }],
@@ -1779,7 +1584,6 @@ describe('ReactComponentTreeDevtool', () => {
 
         var elementAfter = <Foo>{null}</Foo>;
         var treeAfter = {
-          isComposite: true,
           displayName: 'Foo',
           children: [],
         };
@@ -1806,30 +1610,23 @@ describe('ReactComponentTreeDevtool', () => {
     // because they are not created from real elements.
     var element = <article><Foo /></article>;
     var tree = {
-      isComposite: false,
       displayName: 'article',
       children: [{
-        isComposite: true,
         displayName: 'Foo',
         children: [{
-          isComposite: true,
           displayName: 'Bar',
           ownerDisplayName: 'Foo',
           children: [{
-            isComposite: false,
             displayName: 'div',
             ownerDisplayName: 'Bar',
             children: [{
-              isComposite: false,
               displayName: 'h1',
               ownerDisplayName: 'Foo',
               children: [{
-                isComposite: false,
                 displayName: '#text',
                 text: 'Hi.',
               }],
             }, {
-              isComposite: false,
               displayName: '#text',
               text: ' Mom',
             }],
@@ -1840,7 +1637,7 @@ describe('ReactComponentTreeDevtool', () => {
     assertTreeMatches([element, tree], {includeOwnerDisplayName: true});
   });
 
-  it.only('preserves unmounted components until purge', () => {
+  it('preserves unmounted components until purge', () => {
     var node = document.createElement('div');
     var renderBar = true;
     var fooInstance;
@@ -1864,10 +1661,9 @@ describe('ReactComponentTreeDevtool', () => {
     expect(
       getTree(barInstance._debugID, {
         includeParentDisplayName: true,
-        expectedParentID: fooInstance._debugID
+        expectedParentID: fooInstance._debugID,
       })
     ).toEqual({
-      isComposite: true,
       displayName: 'Bar',
       parentDisplayName: 'Foo',
       children: [],
@@ -1878,10 +1674,9 @@ describe('ReactComponentTreeDevtool', () => {
     expect(
       getTree(barInstance._debugID, {
         includeParentDisplayName: true,
-        expectedParentID: fooInstance._debugID
+        expectedParentID: fooInstance._debugID,
       })
     ).toEqual({
-      isComposite: true,
       displayName: 'Bar',
       parentDisplayName: 'Foo',
       children: [],
@@ -1894,7 +1689,6 @@ describe('ReactComponentTreeDevtool', () => {
         expectedParentID: fooInstance._debugID,
       })
     ).toEqual({
-      isComposite: true,
       displayName: 'Bar',
       parentDisplayName: 'Foo',
       children: [],
@@ -1904,21 +1698,28 @@ describe('ReactComponentTreeDevtool', () => {
     expect(
       getTree(barInstance._debugID, {includeParentDisplayName: true})
     ).toEqual({
-      isComposite: false,
       displayName: 'Unknown',
       children: [],
     });
   });
 
-  it('ignores top-level wrapper', () => {
+  it('does not report top-level wrapper as a root', () => {
     var node = document.createElement('div');
+
     ReactDOM.render(<div className="a" />, node);
-    expect(getRegisteredDisplayNames()).toEqual(['div']);
+    expect(getRootDisplayNames()).toEqual(['div']);
+
     ReactDOM.render(<div className="b" />, node);
-    expect(getRegisteredDisplayNames()).toEqual(['div']);
+    expect(getRootDisplayNames()).toEqual(['div']);
+
     ReactDOM.unmountComponentAtNode(node);
-    expect(getRegisteredDisplayNames()).toEqual(['div']);
+    expect(getRootDisplayNames()).toEqual([]);
+
     ReactComponentTreeDevtool.purgeUnmountedComponents();
+    expect(getRootDisplayNames()).toEqual([]);
+
+    // This currently contains TopLevelWrapper until purge
+    // so we only check it at the very end.
     expect(getRegisteredDisplayNames()).toEqual([]);
   });
 });

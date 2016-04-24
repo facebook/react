@@ -13,40 +13,36 @@
 
 var invariant = require('invariant');
 
-var unmountedContainerIDs = [];
 var tree = {};
+var rootIDs = [];
 
 function updateTree(id, update) {
   if (!tree[id]) {
     tree[id] = {
-      nativeContainerID: null,
       parentID: null,
       ownerID: null,
       text: null,
       childIDs: [],
       displayName: 'Unknown',
-      isTopLevelWrapper: false,
+      isMounted: false,
+      isEmpty: false,
     };
   }
   update(tree[id]);
 }
 
-function purgeTree(id) {
+function purgeDeep(id) {
   var item = tree[id];
   if (item) {
     var {childIDs} = item;
     delete tree[id];
-    childIDs.forEach(purgeTree);
+    childIDs.forEach(purgeDeep);
   }
 }
 
 var ReactComponentTreeDevtool = {
-  onSetIsTopLevelWrapper(id, isTopLevelWrapper) {
-    updateTree(id, item => item.isTopLevelWrapper = isTopLevelWrapper);
-  },
-
-  onSetIsComposite(id, isComposite) {
-    updateTree(id, item => item.isComposite = isComposite);
+  onSetIsEmpty(id, isEmpty) {
+    updateTree(id, item => item.isEmpty = isEmpty);
   },
 
   onSetDisplayName(id, displayName) {
@@ -54,20 +50,9 @@ var ReactComponentTreeDevtool = {
   },
 
   onSetChildren(id, nextChildIDs) {
-    if (ReactComponentTreeDevtool.isTopLevelWrapper(id)) {
-      return;
-    }
-
     updateTree(id, item => {
       var prevChildIDs = item.childIDs;
       item.childIDs = nextChildIDs;
-
-      prevChildIDs.forEach(prevChildID => {
-        var prevChild = tree[prevChildID];
-        if (prevChild && nextChildIDs.indexOf(prevChildID) === -1) {
-          prevChild.parentID = null;
-        }
-      });
 
       nextChildIDs.forEach(nextChildID => {
         var nextChild = tree[nextChildID];
@@ -77,18 +62,18 @@ var ReactComponentTreeDevtool = {
           'before its parent includes it in onSetChildren().'
         );
         invariant(
-          nextChild.isComposite != null,
-          'Expected onSetIsComposite() to fire for the child ' +
-          'before its parent includes it in onSetChildren().'
-        );
-        invariant(
           nextChild.displayName != null,
           'Expected onSetDisplayName() to fire for the child ' +
           'before its parent includes it in onSetChildren().'
         );
         invariant(
           nextChild.childIDs != null || nextChild.text != null,
-          'Expected either onSetChildren() or onSetText() to fire for the child ' +
+          'Expected onSetChildren() or onSetText() to fire for the child ' +
+          'before its parent includes it in onSetChildren().'
+        );
+        invariant(
+          nextChild.isMounted,
+          'Expected onMountComponent() to fire for the child ' +
           'before its parent includes it in onSetChildren().'
         );
 
@@ -107,39 +92,33 @@ var ReactComponentTreeDevtool = {
     updateTree(id, item => item.text = text);
   },
 
-  onMountComponent(id, nativeContainerID) {
-    updateTree(id, item => item.nativeContainerID = nativeContainerID);
+  onMountComponent(id) {
+    updateTree(id, item => item.isMounted = true);
+  },
+
+  onMountRootComponent(id) {
+    rootIDs.push(id);
   },
 
   onUnmountComponent(id) {
-    purgeTree(id);
-  },
-
-  onUnmountNativeContainer(nativeContainerID) {
-    unmountedContainerIDs.push(nativeContainerID);
+    updateTree(id, item => item.isMounted = false);
+    rootIDs = rootIDs.filter(rootID => rootID !== id);
   },
 
   purgeUnmountedComponents() {
-    var unmountedIDs = Object.keys(tree).filter(id =>
-      unmountedContainerIDs.indexOf(tree[id].nativeContainerID) !== -1
-    );
-    unmountedContainerIDs = [];
-    unmountedIDs.forEach(purgeTree);
+    Object.keys(tree)
+      .filter(id => !tree[id].isMounted)
+      .forEach(purgeDeep);
   },
 
-  isComposite(id) {
+  isMounted(id) {
     var item = tree[id];
-    return item ? item.isComposite : false;
-  },
-
-  isTopLevelWrapper(id) {
-    var item = tree[id];
-    return item ? item.isTopLevelWrapper : false;
+    return item ? item.isMounted : false;
   },
 
   getChildIDs(id) {
     var item = tree[id];
-    return item ? item.childIDs : [];
+    return item ? item.childIDs.filter(childID => !tree[childID].isEmpty) : [];
   },
 
   getDisplayName(id) {
@@ -160,6 +139,10 @@ var ReactComponentTreeDevtool = {
   getText(id) {
     var item = tree[id];
     return item ? item.text : null;
+  },
+
+  getRootIDs() {
+    return rootIDs;
   },
 
   getRegisteredIDs() {

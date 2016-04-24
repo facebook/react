@@ -36,6 +36,7 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
+var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -244,6 +245,20 @@ function putListener() {
 function optionPostMount() {
   var inst = this;
   ReactDOMOption.postMountWrapper(inst);
+}
+
+var setContentChildForInstrumentation = emptyFunction;
+if (__DEV__) {
+  setContentChildForInstrumentation = function(contentToUse) {
+    var debugID = this._debugID;
+    var contentDebugID = debugID + '#text';
+    this._contentDebugID = contentDebugID;
+    ReactInstrumentation.debugTool.onSetIsEmpty(contentDebugID, false);
+    ReactInstrumentation.debugTool.onSetDisplayName(contentDebugID, '#text');
+    ReactInstrumentation.debugTool.onSetText(contentDebugID, '' + contentToUse);
+    ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
+    ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);
+  };
 }
 
 // There are so many media events, it makes sense to just
@@ -720,11 +735,7 @@ ReactDOMComponent.Mixin = {
         // TODO: Validate that text is allowed as a child of this node
         ret = escapeTextContentForBrowser(contentToUse);
         if (__DEV__) {
-          this._contentDebugID = this._debugID + '#text';
-          ReactInstrumentation.debugTool.onSetIsComposite(this._contentDebugID, false);
-          ReactInstrumentation.debugTool.onSetDisplayName(this._contentDebugID, '#text');
-          ReactInstrumentation.debugTool.onSetText(this._contentDebugID, '' + contentToUse);
-          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [this._contentDebugID]);
+          setContentChildForInstrumentation.call(this, contentToUse);
         }
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
@@ -766,11 +777,7 @@ ReactDOMComponent.Mixin = {
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
         if (__DEV__) {
-          this._contentDebugID = this._debugID + '#text';
-          ReactInstrumentation.debugTool.onSetIsComposite(this._contentDebugID, false);
-          ReactInstrumentation.debugTool.onSetDisplayName(this._contentDebugID, '#text');
-          ReactInstrumentation.debugTool.onSetText(this._contentDebugID, '' + contentToUse);
-          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [this._contentDebugID]);
+          setContentChildForInstrumentation.call(this, contentToUse);
         }
         DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
@@ -1029,10 +1036,7 @@ ReactDOMComponent.Mixin = {
         this.updateTextContent('' + nextContent);
         if (__DEV__) {
           this._contentDebugID = this._debugID + '#text';
-          ReactInstrumentation.debugTool.onSetIsComposite(this._contentDebugID, false);
-          ReactInstrumentation.debugTool.onSetDisplayName(this._contentDebugID, '#text');
-          ReactInstrumentation.debugTool.onSetText(this._contentDebugID, '' + nextContent);
-          ReactInstrumentation.debugTool.onSetChildren(this._debugID, [this._contentDebugID]);
+          setContentChildForInstrumentation.call(this, nextContent);
         }
       }
     } else if (nextHtml != null) {

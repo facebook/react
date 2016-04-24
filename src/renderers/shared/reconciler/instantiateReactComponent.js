@@ -86,8 +86,10 @@ function instantiateReactComponent(node) {
 
   var isNative = false;
   var isComposite = false;
+  var isEmpty = false;
 
   if (node === null || node === false) {
+    isEmpty = true;
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
@@ -146,16 +148,18 @@ function instantiateReactComponent(node) {
   }
 
   if (__DEV__) {
-    instance._debugID = nextDebugID++;
+    var debugID = nextDebugID++;
+    instance._debugID = debugID;
+
     var displayName = getDisplayName(instance);
-    ReactInstrumentation.debugTool.onSetIsComposite(instance._debugID, isComposite);
-    ReactInstrumentation.debugTool.onSetDisplayName(instance._debugID, displayName);
+    ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
+    ReactInstrumentation.debugTool.onSetIsEmpty(debugID, isEmpty);
     if (isNative || isComposite) {
-      ReactInstrumentation.debugTool.onSetChildren(instance._debugID, []);
+      ReactInstrumentation.debugTool.onSetChildren(debugID, []);
     }
     var owner = node && node._owner;
     if (owner) {
-      ReactInstrumentation.debugTool.onSetOwner(instance._debugID, owner._debugID);
+      ReactInstrumentation.debugTool.onSetOwner(debugID, owner._debugID);
     }
   }
 

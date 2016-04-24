@@ -38,17 +38,16 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element);
-      var nativeContainerInfo = ReactDOMContainerInfo();
       var markup = ReactReconciler.mountComponent(
         componentInstance,
         transaction,
         null,
-        nativeContainerInfo,
+        ReactDOMContainerInfo(),
         emptyObject
       );
       if (__DEV__) {
-        ReactInstrumentation.debugTool.onUnmountNativeContainer(
-          nativeContainerInfo._debugID
+        ReactInstrumentation.debugTool.onUnmountComponent(
+          componentInstance._debugID
         );
       }
       if (!makeStaticMarkup) {
