@@ -70,6 +70,9 @@ var ReactDebugTool = {
   onUnmountComponent(internalInstance) {
     emitEvent('onUnmountComponent', internalInstance);
   },
+  onTestEvent() {
+    emitEvent('onTestEvent');
+  },
 };
 
 ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);

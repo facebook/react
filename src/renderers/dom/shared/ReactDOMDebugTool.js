@@ -59,6 +59,9 @@ var ReactDOMDebugTool = {
   onDeleteValueForProperty(node, name) {
     emitEvent('onDeleteValueForProperty', node, name);
   },
+  onTestEvent() {
+    emitEvent('onTestEvent');
+  },
 };
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
