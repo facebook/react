@@ -119,7 +119,7 @@ var ReactComponentTreeDevtool = {
     unmountedContainerIDs.push(nativeContainerID);
   },
 
-  purgeComponentsFromUnmountedContainers() {
+  purgeUnmountedComponents() {
     var unmountedIDs = Object.keys(tree).filter(id =>
       unmountedContainerIDs.indexOf(tree[id].nativeContainerID) !== -1
     );
