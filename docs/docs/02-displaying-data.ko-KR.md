@@ -1,7 +1,7 @@
 ---
 id: displaying-data-ko-KR
 title: 데이터를 표시하기
-permalink: displaying-data-ko-KR.html
+permalink: docs/displaying-data-ko-KR.html
 prev: why-react-ko-KR.html
 next: jsx-in-depth-ko-KR.html
 ---

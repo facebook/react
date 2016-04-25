@@ -1,7 +1,7 @@
 ---
 id: videos
 title: Videos
-permalink: videos.html
+permalink: docs/videos.html
 prev: conferences.html
 next: complementary-tools.html
 ---

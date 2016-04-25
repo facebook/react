@@ -2,7 +2,7 @@
 id: inline-styles-ko-KR
 title: 인라인 스타일
 layout: tips
-permalink: inline-styles-ko-KR.html
+permalink: tips/inline-styles-ko-KR.html
 next: if-else-in-JSX-ko-KR.html
 prev: introduction-ko-KR.html
 ---

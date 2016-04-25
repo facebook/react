@@ -1,7 +1,7 @@
 ---
 id: component-api-zh-CN
 title: 组件 API
-permalink: component-api-zh-CN.html
+permalink: docs/component-api-zh-CN.html
 prev: top-level-api-zh-CN.html
 next: component-specs-zh-CN.html
 ---

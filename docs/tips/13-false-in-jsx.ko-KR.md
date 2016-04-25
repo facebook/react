@@ -2,7 +2,7 @@
 id: false-in-jsx-ko-KR
 title: JSX에서 False
 layout: tips
-permalink: false-in-jsx-ko-KR.html
+permalink: tips/false-in-jsx-ko-KR.html
 prev: initial-ajax-ko-KR.html
 next: communicate-between-components-ko-KR.html
 ---

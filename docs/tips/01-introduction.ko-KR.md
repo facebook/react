@@ -2,7 +2,7 @@
 id: introduction-ko-KR
 title: 개요
 layout: tips
-permalink: introduction-ko-KR.html
+permalink: tips/introduction-ko-KR.html
 next: inline-styles-ko-KR.html
 ---
 

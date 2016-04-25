@@ -1,7 +1,7 @@
 ---
 id: multiple-components-zh-CN
 title: 复合组件
-permalink: multiple-components-zh-CN.html
+permalink: docs/multiple-components-zh-CN.html
 prev: interactivity-and-dynamic-uis-zh-CN.html
 next: reusable-components-zh-CN.html
 ---

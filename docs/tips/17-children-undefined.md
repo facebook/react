@@ -2,7 +2,7 @@
 id: children-undefined
 title: this.props.children undefined
 layout: tips
-permalink: children-undefined.html
+permalink: tips/children-undefined.html
 prev: expose-component-functions.html
 next: use-react-with-other-libraries.html
 ---

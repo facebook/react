@@ -1,7 +1,7 @@
 ---
 id: working-with-the-browser
 title: ブラウザと動くこと
-permalink: working-with-the-browser-ja-JP.html
+permalink: docs/working-with-the-browser-ja-JP.html
 prev: forms-ja-JP.html
 next: more-about-refs-ja-JP.html
 ---

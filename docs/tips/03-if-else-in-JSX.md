@@ -2,7 +2,7 @@
 id: if-else-in-JSX
 title: If-Else in JSX
 layout: tips
-permalink: if-else-in-JSX.html
+permalink: tips/if-else-in-JSX.html
 prev: inline-styles.html
 next: self-closing-tag.html
 ---
