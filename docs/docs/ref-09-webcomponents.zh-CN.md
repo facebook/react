@@ -1,7 +1,7 @@
 ---
 id: webcomponents-zh-CN
 title: Web Components
-permalink: webcomponents-zh-CN.html
+permalink: docs/webcomponents-zh-CN.html
 prev: reconciliation-zh-CN.html
 next: glossary-zh-CN.html
 ---

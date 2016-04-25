@@ -1,7 +1,7 @@
 ---
 id: addons-it-IT
 title: Add-ons
-permalink: addons-it-IT.html
+permalink: docs/addons-it-IT.html
 prev: tooling-integration-it-IT.html
 next: animation-it-IT.html
 ---

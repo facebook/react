@@ -2,7 +2,7 @@
 id: dom-event-listeners-ko-KR
 title: 컴포넌트에서 DOM 이벤트 리스너
 layout: tips
-permalink: dom-event-listeners-ko-KR.html
+permalink: tips/dom-event-listeners-ko-KR.html
 prev: props-in-getInitialState-as-anti-pattern-ko-KR.html
 next: initial-ajax-ko-KR.html
 ---

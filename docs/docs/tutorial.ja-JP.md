@@ -1,7 +1,7 @@
 ---
 id: tutorial-ja-JP
 title: チュートリアル
-permalink: tutorial-ja-JP.html
+permalink: docs/tutorial-ja-JP.html
 prev: getting-started-ja-JP.html
 next: thinking-in-react-ja-JP.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: transferring-props
 title: propsの移譲
-permalink: transferring-props-ja-JP.html
+permalink: docs/transferring-props-ja-JP.html
 prev: reusable-components-ja-JP.html
 next: forms-ja-JP.html
 

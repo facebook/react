@@ -1,7 +1,7 @@
 ---
 id: glossary
 title: React (Virtual) DOM Terminology
-permalink: glossary.html
+permalink: docs/glossary.html
 prev: webcomponents.html
 ---
 

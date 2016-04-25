@@ -2,7 +2,7 @@
 id: introduction
 title: Introduction
 layout: tips
-permalink: introduction.html
+permalink: tips/introduction.html
 next: inline-styles.html
 ---
 

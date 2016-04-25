@@ -2,7 +2,7 @@
 id: maximum-number-of-jsx-root-nodes-ko-KR
 title: JSX 루트 노드의 최대 갯수
 layout: tips
-permalink: maximum-number-of-jsx-root-nodes-ko-KR.html
+permalink: tips/maximum-number-of-jsx-root-nodes-ko-KR.html
 prev: self-closing-tag-ko-KR.html
 next: style-props-value-px-ko-KR.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: component-api-it-IT
 title: API dei Componenti
-permalink: component-api-it-IT.html
+permalink: docs/component-api-it-IT.html
 prev: top-level-api-it-IT.html
 next: component-specs-it-IT.html
 ---

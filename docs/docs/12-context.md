@@ -1,7 +1,7 @@
 ---
 id: context
 title: Context
-permalink: context.html
+permalink: docs/context.html
 prev: advanced-performance.html
 ---
 

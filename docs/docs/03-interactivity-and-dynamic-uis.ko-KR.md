@@ -1,7 +1,7 @@
 ---
 id: interactivity-and-dynamic-uis-ko-KR
 title: 상호 작용 및 동적 UI
-permalink: interactivity-and-dynamic-uis-ko-KR.html
+permalink: docs/interactivity-and-dynamic-uis-ko-KR.html
 prev: jsx-gotchas-ko-KR.html
 next: multiple-components-ko-KR.html
 ---

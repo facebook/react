@@ -1,7 +1,7 @@
 ---
 id: special-non-dom-attributes-ko-KR
 title: DOM이 아닌 특별한 어트리뷰트
-permalink: special-non-dom-attributes-ko-KR.html
+permalink: docs/special-non-dom-attributes-ko-KR.html
 prev: dom-differences-ko-KR.html
 next: reconciliation-ko-KR.html
 ---

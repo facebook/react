@@ -1,7 +1,7 @@
 ---
 id: component-api-ko-KR
 title: 컴포넌트 API
-permalink: component-api-ko-KR.html
+permalink: docs/component-api-ko-KR.html
 prev: top-level-api-ko-KR.html
 next: component-specs-ko-KR.html
 ---

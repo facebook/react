@@ -1,7 +1,7 @@
 ---
 id: forms-zh-CN
 title: 表单组件
-permalink: forms-zh-CN.html
+permalink: docs/forms-zh-CN.html
 prev: transferring-props-zh-CN.html
 next: working-with-the-browser-zh-CN.html
 ---

@@ -2,7 +2,7 @@
 id: false-in-jsx
 title: False in JSX
 layout: tips
-permalink: false-in-jsx.html
+permalink: tips/false-in-jsx.html
 prev: initial-ajax.html
 next: communicate-between-components.html
 ---

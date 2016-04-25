@@ -1,7 +1,7 @@
 ---
 id: top-level-api-zh-CN
 title: Top-Level API
-permalink: top-level-api-zh-CN.html
+permalink: docs/top-level-api-zh-CN.html
 next: component-api-zh-CN.html
 redirect_from: "/docs/reference-zh-CN.html"
 ---

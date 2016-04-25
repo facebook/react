@@ -1,7 +1,7 @@
 ---
 id: reconciliation-ko-KR
 title: 비교조정(Reconciliation)
-permalink: reconciliation-ko-KR.html
+permalink: docs/reconciliation-ko-KR.html
 prev: special-non-dom-attributes-ko-KR.html
 next: webcomponents.html
 ---

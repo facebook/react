@@ -1,7 +1,7 @@
 ---
 id: multiple-components
 title: 複数のコンポーネント
-permalink: multiple-components-ja-JP.html
+permalink: docs/multiple-components-ja-JP.html
 prev: interactivity-and-dynamic-uis-ja-JP.html
 next: reusable-components-ja-JP.html
 ---

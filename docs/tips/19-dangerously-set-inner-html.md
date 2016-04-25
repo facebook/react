@@ -2,7 +2,7 @@
 id: dangerously-set-inner-html
 title: Dangerously Set innerHTML
 layout: tips
-permalink: dangerously-set-inner-html.html
+permalink: tips/dangerously-set-inner-html.html
 prev: children-undefined.html
 ---
 

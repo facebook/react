@@ -2,7 +2,7 @@
 id: self-closing-tag-ja-JP
 title: 自己終了タグ
 layout: tips
-permalink: self-closing-tag-ja-JP.html
+permalink: tips/self-closing-tag-ja-JP.html
 prev: if-else-in-JSX-ja-JP.html
 next: maximum-number-of-jsx-root-nodes-ja-JP.html
 ---

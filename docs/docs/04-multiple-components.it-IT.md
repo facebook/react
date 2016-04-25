@@ -1,7 +1,7 @@
 ---
 id: multiple-components-it-IT
 title: Componenti Multipli
-permalink: multiple-components-it-IT.html
+permalink: docs/multiple-components-it-IT.html
 prev: interactivity-and-dynamic-uis-it-IT.html
 next: reusable-components-it-IT.html
 ---

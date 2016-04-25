@@ -1,7 +1,7 @@
 ---
 id: displaying-data
 title: Displaying Data
-permalink: displaying-data.html
+permalink: docs/displaying-data.html
 prev: why-react.html
 next: jsx-in-depth.html
 ---

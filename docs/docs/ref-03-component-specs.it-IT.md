@@ -1,7 +1,7 @@
 ---
 id: component-specs-it-IT
 title: Specifica dei Componenti e Ciclo di Vita
-permalink: component-specs-it-IT.html
+permalink: docs/component-specs-it-IT.html
 prev: component-api-it-IT.html
 next: tags-and-attributes-it-IT.html
 ---

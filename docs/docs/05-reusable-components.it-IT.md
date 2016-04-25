@@ -1,7 +1,7 @@
 ---
 id: reusable-components-it-IT
 title: Componenti Riutilizzabili
-permalink: reusable-components-it-IT.html
+permalink: docs/reusable-components-it-IT.html
 prev: multiple-components-it-IT.html
 next: transferring-props-it-IT.html
 ---
