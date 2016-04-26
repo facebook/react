@@ -741,7 +741,14 @@ ReactDOMComponent.Mixin = {
         MarkupMismatchError.throwAttributeMissingMismatchError(node, attrName, attrValue);
       }
       var propValue = props[attrName];
-      if (attrName === 'style') {
+      if (attrName === STYLE) {
+        // we must hold on to a copy of the styles for _updateDOMProperties for later
+        // updates.
+        if (__DEV__) {
+          // See `_updateDOMProperties`. style block
+          this._previousStyle = propValue;
+        }
+        this._previousStyleCopy = Object.assign({}, propValue);
         // style is an object in props but a string attribute in the DOM. Ideally,
         // we would do a style-by-style comparison here, so as not to be order-sensitive,
         // but for now, we will just string compare, which is order-sensitive.

@@ -594,7 +594,7 @@ describe('ReactServerRendering', function() {
       });
 
       // DOM Updates after server rendering
-      
+
       // returns a component that has a button and elementBeforeClick wrapped in a div
       // after the button is clicked, it should have the button and elementAfterClick.
       // these components are useful for testing client-side diffing.
@@ -621,6 +621,9 @@ describe('ReactServerRendering', function() {
         const cases = [
           { element: <div title="Foo"/>, test: (e) => expect(e.title).toBe('Foo') },
           { element: <div title="Bar"/>, test: (e) => expect(e.title).toBe('Bar') },
+          { element: <div style={{color: 'red'}}/>, test: (e) => expect(e.style.color).toBe('red') },
+          { element: <div style={{color: 'white'}}/>, test: (e) => expect(e.style.color).toBe('white') },
+          { element: <div/>, test: (e) => expect(e.style.color).toBe('') },
           { element: <div/>, test: (e) => expect(e.tagName.toLowerCase()).toBe('div') },
           { element: <span/>, test: (e) => expect(e.tagName.toLowerCase()).toBe('span') },
           { element: <div><span/></div>, test: (e) => expect(e.firstChild.tagName.toLowerCase()).toBe('span') },
