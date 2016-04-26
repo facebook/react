@@ -14,6 +14,7 @@
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
+var ReactInstrumentation = require('ReactInstrumentation');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -40,6 +41,21 @@ function getDeclarationErrorAddendum(owner) {
   return '';
 }
 
+function getDisplayName(instance) {
+  var element = instance._currentElement;
+  if (element == null) {
+    return '#empty';
+  } else if (typeof element === 'string' || typeof element === 'number') {
+    return '#text';
+  } else if (typeof element.type === 'string') {
+    return element.type;
+  } else if (instance.getName) {
+    return instance.getName() || 'Unknown';
+  } else {
+    return element.type.displayName || element.type.name || 'Unknown';
+  }
+}
+
 /**
  * Check if the type reference is a known internal type. I.e. not a user
  * provided composite type.
@@ -56,6 +72,8 @@ function isInternalComponentType(type) {
   );
 }
 
+var nextDebugID = 1;
+
 /**
  * Given a ReactNode, create an instance that will actually be mounted.
  *
@@ -66,7 +84,8 @@ function isInternalComponentType(type) {
 function instantiateReactComponent(node) {
   var instance;
 
-  if (node === null || node === false) {
+  var isEmpty = node === null || node === false;
+  if (isEmpty) {
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
@@ -119,6 +138,18 @@ function instantiateReactComponent(node) {
   if (__DEV__) {
     instance._isOwnerNecessary = false;
     instance._warnedAboutRefsInRender = false;
+  }
+
+  if (__DEV__) {
+    var debugID = isEmpty ? 0 : nextDebugID++;
+    instance._debugID = debugID;
+
+    var displayName = getDisplayName(instance);
+    ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
+    var owner = node && node._owner;
+    if (owner) {
+      ReactInstrumentation.debugTool.onSetOwner(debugID, owner._debugID);
+    }
   }
 
   // Internal instances should fully constructed at this point, so they should

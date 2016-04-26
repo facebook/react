@@ -13,12 +13,14 @@
 
 var MarkupMismatchError = require('MarkupMismatchError');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 
+var emptyFunction = require('emptyFunction');
 var flattenChildren = require('flattenChildren');
 var invariant = require('invariant');
 
@@ -138,6 +140,16 @@ function processQueue(inst, updateQueue) {
   );
 }
 
+var setChildrenForInstrumentation = emptyFunction;
+if (__DEV__) {
+  setChildrenForInstrumentation = function(children) {
+    ReactInstrumentation.debugTool.onSetChildren(
+      this._debugID,
+      children ? Object.keys(children).map(key => children[key]._debugID) : []
+    );
+  };
+}
+
 /**
  * ReactMultiChild are capable of reconciling multiple children.
  *
@@ -218,6 +230,7 @@ var ReactMultiChild = {
         nestedChildren, transaction, context
       );
       this._renderedChildren = children;
+
       var mountImages = [];
       var index = 0;
       var childNodeIndex = 0;
@@ -243,6 +256,11 @@ var ReactMultiChild = {
       if (childNodesToReuse && childNodeIndex < childNodesToReuse.length) {
         MarkupMismatchError.throwChildMissingError(childNodesToReuse[childNodeIndex]);
       }
+
+      if (__DEV__) {
+        setChildrenForInstrumentation.call(this, children);
+      }
+
       return mountImages;
     },
 
@@ -370,6 +388,10 @@ var ReactMultiChild = {
         processQueue(this, updates);
       }
       this._renderedChildren = nextChildren;
+
+      if (__DEV__) {
+        setChildrenForInstrumentation.call(this, nextChildren);
+      }
     },
 
     /**
