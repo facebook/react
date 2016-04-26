@@ -593,6 +593,61 @@ describe('ReactServerRendering', function() {
         expect(clickCount).toBe(1);
       });
 
+      // DOM Updates after server rendering
+      
+      // returns a component that has a button and elementBeforeClick wrapped in a div
+      // after the button is clicked, it should have the button and elementAfterClick.
+      // these components are useful for testing client-side diffing.
+      function getUpdatingComponent(elementBeforeClick, elementAfterClick) {
+        return class extends React.Component {
+          constructor() {
+            super();
+            this.state = {};
+          }
+          render() {
+            return (
+              <div>
+                {this.state.clicked ? elementAfterClick : elementBeforeClick}
+                <button onClick={() => this.setState({clicked: true})}/>
+              </div>
+            );
+          }
+
+        };
+      }
+      it('should be able to render and do a variety of diffing', () => {
+        // an array of elements to render, each with a test function that validates whether
+        // or not it was rendered correctly.
+        const cases = [
+          { element: <div title="Foo"/>, test: (e) => expect(e.title).toBe('Foo') },
+          { element: <div title="Bar"/>, test: (e) => expect(e.title).toBe('Bar') },
+          { element: <div/>, test: (e) => expect(e.tagName.toLowerCase()).toBe('div') },
+          { element: <span/>, test: (e) => expect(e.tagName.toLowerCase()).toBe('span') },
+          { element: <div><span/></div>, test: (e) => expect(e.firstChild.tagName.toLowerCase()).toBe('span') },
+          { element: <div><img/></div>, test: (e) => expect(e.firstChild.tagName.toLowerCase()).toBe('img') },
+          { element: <div>Foo</div>, test: (e) => expect(e.textContent).toBe('Foo') },
+          { element: <div>Bar</div>, test: (e) => expect(e.textContent).toBe('Bar') },
+          { element: <div>{'Foo'}{'Bar'}</div>, test: (e) => expect(e.textContent).toBe('FooBar') },
+          { element: <div>{'Too'}{'Asdf'}</div>, test: (e) => expect(e.textContent).toBe('TooAsdf') },
+          { element: <div>{'Baz'}{'Bak'}{'Qux'}</div>, test: (e) => expect(e.textContent).toBe('BazBakQux') },
+          { element: <div/>, test: (e) => expect(e.textContent).toBe('') },
+          { element: <div>{null}</div>, test: (e) => expect(e.textContent).toBe('') },
+          { element: <div>{null}{'OtherText'}</div>, test: (e) => expect(e.textContent).toBe('OtherText') },
+        ];
+
+        // test each element in the array as both the before and after element, and perform their
+        // render tests when they are supposed to be rendered.
+        cases.forEach((caseBefore) => {
+          cases.forEach((caseAfter) => {
+            const Component = getUpdatingComponent(caseBefore.element, caseAfter.element);
+            const root = connectToServerRendering(<Component/>);
+            caseBefore.test(root.firstChild.firstChild);
+            ReactTestUtils.Simulate.click(root.querySelector('button'));
+            caseAfter.test(root.firstChild.firstChild);
+          });
+        });
+      });
+
       // Controlled inputs
       const getControlledFieldClass = (initialValue, onChange = () => {}, TagName = 'input',
         valueKey = 'value', extraProps = {}, children = null) => {
