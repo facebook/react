@@ -50,14 +50,8 @@ var ReactDOMDebugTool = {
       }
     }
   },
-  onCreateMarkupForProperty(name, value) {
-    emitEvent('onCreateMarkupForProperty', name, value);
-  },
-  onSetValueForProperty(node, name, value) {
-    emitEvent('onSetValueForProperty', node, name, value);
-  },
-  onDeleteValueForProperty(node, name) {
-    emitEvent('onDeleteValueForProperty', node, name);
+  onCreateElement(name) {
+    emitEvent('onCreateElement', name);
   },
   onTestEvent() {
     emitEvent('onTestEvent');
