@@ -84,12 +84,8 @@ var nextDebugID = 1;
 function instantiateReactComponent(node) {
   var instance;
 
-  var isNative = false;
-  var isComposite = false;
-  var isEmpty = false;
-
-  if (node === null || node === false) {
-    isEmpty = true;
+  var isEmpty = node === null || node === false;
+  if (isEmpty) {
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
@@ -104,16 +100,13 @@ function instantiateReactComponent(node) {
 
     // Special case string values
     if (typeof element.type === 'string') {
-      isNative = true;
       instance = ReactNativeComponent.createInternalComponent(element);
     } else if (isInternalComponentType(element.type)) {
-      isComposite = true;
       // This is temporarily available for custom components that are not string
       // representations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
       instance = new element.type(element);
     } else {
-      isComposite = true;
       instance = new ReactCompositeComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
@@ -148,15 +141,11 @@ function instantiateReactComponent(node) {
   }
 
   if (__DEV__) {
-    var debugID = nextDebugID++;
+    var debugID = isEmpty ? 0 : nextDebugID++;
     instance._debugID = debugID;
 
     var displayName = getDisplayName(instance);
     ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
-    ReactInstrumentation.debugTool.onSetIsEmpty(debugID, isEmpty);
-    if (isNative || isComposite) {
-      ReactInstrumentation.debugTool.onSetChildren(debugID, []);
-    }
     var owner = node && node._owner;
     if (owner) {
       ReactInstrumentation.debugTool.onSetOwner(debugID, owner._debugID);

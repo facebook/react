@@ -387,10 +387,14 @@ var ReactCompositeComponentMixin = {
     );
 
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetChildren(
-        this._debugID,
-        [this._renderedComponent._debugID]
-      );
+      if (this._debugID !== 0) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          this._renderedComponent._debugID !== 0 ?
+            [this._renderedComponent._debugID] :
+            []
+        );
+      }
     }
 
     return markup;
@@ -870,10 +874,14 @@ var ReactCompositeComponentMixin = {
       );
 
       if (__DEV__) {
-        ReactInstrumentation.debugTool.onSetChildren(
-          this._debugID,
-          [this._renderedComponent._debugID]
-        );
+        if (this._debugID !== 0) {
+          ReactInstrumentation.debugTool.onSetChildren(
+            this._debugID,
+            this._renderedComponent._debugID !== 0 ?
+              [this._renderedComponent._debugID] :
+              []
+          );
+        }
       }
 
       this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);

@@ -25,7 +25,6 @@ function updateTree(id, update) {
       childIDs: [],
       displayName: 'Unknown',
       isMounted: false,
-      isEmpty: false,
     };
   }
   update(tree[id]);
@@ -41,10 +40,6 @@ function purgeDeep(id) {
 }
 
 var ReactComponentTreeDevtool = {
-  onSetIsEmpty(id, isEmpty) {
-    updateTree(id, item => item.isEmpty = isEmpty);
-  },
-
   onSetDisplayName(id, displayName) {
     updateTree(id, item => item.displayName = displayName);
   },
@@ -118,7 +113,7 @@ var ReactComponentTreeDevtool = {
 
   getChildIDs(id) {
     var item = tree[id];
-    return item ? item.childIDs.filter(childID => !tree[childID].isEmpty) : [];
+    return item ? item.childIDs : [];
   },
 
   getDisplayName(id) {

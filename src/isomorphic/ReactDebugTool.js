@@ -37,11 +37,6 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
   }
 }
 
-// This can be removed once TopLevelWrapper is gone.
-function isTopLevelWrapper(debugID) {
-  return debugID === 0;
-}
-
 var ReactDebugTool = {
   addDevtool(devtool) {
     eventHandlers.push(devtool);
@@ -66,13 +61,8 @@ var ReactDebugTool = {
   onSetDisplayName(debugID, displayName) {
     emitEvent('onSetDisplayName', debugID, displayName);
   },
-  onSetIsEmpty(debugID, isEmpty) {
-    emitEvent('onSetIsEmpty', debugID, isEmpty);
-  },
   onSetChildren(debugID, childDebugIDs) {
-    if (!isTopLevelWrapper(debugID)) {
-      emitEvent('onSetChildren', debugID, childDebugIDs);
-    }
+    emitEvent('onSetChildren', debugID, childDebugIDs);
   },
   onSetOwner(debugID, ownerDebugID) {
     emitEvent('onSetOwner', debugID, ownerDebugID);
@@ -84,19 +74,13 @@ var ReactDebugTool = {
     emitEvent('onMountRootComponent', debugID);
   },
   onMountComponent(debugID) {
-    if (!isTopLevelWrapper(debugID)) {
-      emitEvent('onMountComponent', debugID);
-    }
+    emitEvent('onMountComponent', debugID);
   },
   onUpdateComponent(debugID) {
-    if (!isTopLevelWrapper(debugID)) {
-      emitEvent('onUpdateComponent', debugID);
-    }
+    emitEvent('onUpdateComponent', debugID);
   },
   onUnmountComponent(debugID) {
-    if (!isTopLevelWrapper(debugID)) {
-      emitEvent('onUnmountComponent', debugID);
-    }
+    emitEvent('onUnmountComponent', debugID);
   },
 };
 
