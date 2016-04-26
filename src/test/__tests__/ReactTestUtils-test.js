@@ -89,7 +89,7 @@ describe('ReactTestUtils', function() {
   });
 
   it('should have shallow unmounting', function() {
-    var componentWillUnmount = jest.genMockFn();
+    var componentWillUnmount = jest.fn();
 
     var SomeComponent = React.createClass({
       render: function() {

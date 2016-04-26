@@ -12,7 +12,7 @@
 'use strict';
 
 jest
-  .dontMock('accumulateInto');
+  .unmock('accumulateInto');
 
 var accumulateInto;
 

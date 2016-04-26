@@ -30,7 +30,7 @@ describe('ReactEventListener', function() {
     ReactEventListener = require('ReactEventListener');
     ReactTestUtils = require('ReactTestUtils');
 
-    handleTopLevel = jest.genMockFn();
+    handleTopLevel = jest.fn();
     ReactEventListener._handleTopLevel = handleTopLevel;
   });
 

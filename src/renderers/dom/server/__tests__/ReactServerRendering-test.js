@@ -86,7 +86,7 @@ describe('ReactServerRendering', function() {
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = jest.genMockFn();
+      var cb = jest.fn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
@@ -303,7 +303,7 @@ describe('ReactServerRendering', function() {
 
     it('should not register event listeners', function() {
       var EventPluginHub = require('EventPluginHub');
-      var cb = jest.genMockFn();
+      var cb = jest.fn();
 
       ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>

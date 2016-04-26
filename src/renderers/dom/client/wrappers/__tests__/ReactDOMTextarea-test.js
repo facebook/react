@@ -237,7 +237,7 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should support ReactLink', function() {
-    var link = new ReactLink('yolo', jest.genMockFn());
+    var link = new ReactLink('yolo', jest.fn());
     var instance = <textarea valueLink={link} />;
 
     spyOn(console, 'error');

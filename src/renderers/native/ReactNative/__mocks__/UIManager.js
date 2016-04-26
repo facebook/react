@@ -12,10 +12,10 @@
 // Mock of the Native Hooks
 
 var RCTUIManager = {
-  createView: jest.genMockFunction(),
-  setChildren: jest.genMockFunction(),
-  manageChildren: jest.genMockFunction(),
-  updateView: jest.genMockFunction(),
+  createView: jest.fn(),
+  setChildren: jest.fn(),
+  manageChildren: jest.fn(),
+  updateView: jest.fn(),
 };
 
 module.exports = RCTUIManager;

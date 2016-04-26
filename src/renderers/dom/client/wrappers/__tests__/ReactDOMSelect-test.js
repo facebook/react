@@ -348,7 +348,7 @@ describe('ReactDOMSelect', function() {
   });
 
   it('should support ReactLink', function() {
-    var link = new ReactLink('giraffe', jest.genMockFn());
+    var link = new ReactLink('giraffe', jest.fn());
     var stub =
       <select valueLink={link}>
         <option value="monkey">A monkey!</option>
