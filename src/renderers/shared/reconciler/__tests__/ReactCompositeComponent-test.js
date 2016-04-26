@@ -1303,4 +1303,45 @@ describe('ReactCompositeComponent', function() {
 
   });
 
+  it('should only call componentWillUnmount once', function() {
+    var app;
+    var count = 0;
+
+    class App extends React.Component {
+      render() {
+        if (this.props.stage === 1) {
+          return <UnunmountableComponent />;
+        } else {
+          return null;
+        }
+      }
+    }
+
+    class UnunmountableComponent extends React.Component {
+      componentWillUnmount() {
+        app.setState({});
+        count++;
+        throw Error('always fails');
+      }
+
+      render() {
+        return <div>Hello {this.props.name}</div>;
+      }
+    }
+
+    var container = document.createElement('div');
+
+    var setRef = (ref) => {
+      if (ref) {
+        app = ref;
+      }
+    };
+
+    expect(function() {
+      ReactDOM.render(<App ref={setRef} stage={1} />, container);
+      ReactDOM.render(<App ref={setRef} stage={2} />, container);
+    }).toThrow();
+    expect(count).toBe(1);
+  });
+
 });
