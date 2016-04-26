@@ -888,7 +888,11 @@ var ReactCompositeComponentMixin = {
         }
       }
 
-      this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);
+      this._replaceNodeWithMarkup(
+        oldNativeNode,
+        nextMarkup,
+        prevComponentInstance
+      );
     }
   },
 
@@ -897,10 +901,11 @@ var ReactCompositeComponentMixin = {
    *
    * @protected
    */
-  _replaceNodeWithMarkup: function(oldNativeNode, nextMarkup) {
+  _replaceNodeWithMarkup: function(oldNativeNode, nextMarkup, prevInstance) {
     ReactComponentEnvironment.replaceNodeWithMarkup(
       oldNativeNode,
-      nextMarkup
+      nextMarkup,
+      prevInstance
     );
   },
 

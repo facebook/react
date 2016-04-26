@@ -55,6 +55,9 @@ var ReactDebugTool = {
   onEndProcessingChildContext() {
     emitEvent('onEndProcessingChildContext');
   },
+  onNativeOperation(debugID, type, payload) {
+    emitEvent('onNativeOperation', debugID, type, payload);
+  },
   onSetState() {
     emitEvent('onSetState');
   },
