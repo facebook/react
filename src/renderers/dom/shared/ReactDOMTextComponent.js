@@ -14,6 +14,7 @@
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactPerf = require('ReactPerf');
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -67,6 +68,8 @@ Object.assign(ReactDOMTextComponent.prototype, {
     context
   ) {
     if (__DEV__) {
+      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
+
       var parentInfo;
       if (nativeParent != null) {
         parentInfo = nativeParent._ancestorInfo;
@@ -140,6 +143,10 @@ Object.assign(ReactDOMTextComponent.prototype, {
           commentNodes[1],
           nextStringText
         );
+
+        if (__DEV__) {
+          ReactInstrumentation.debugTool.onSetText(this._debugID, nextStringText);
+        }
       }
     }
   },

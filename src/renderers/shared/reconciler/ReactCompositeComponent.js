@@ -386,6 +386,17 @@ var ReactCompositeComponentMixin = {
       this._processChildContext(context)
     );
 
+    if (__DEV__) {
+      if (this._debugID !== 0) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          this._renderedComponent._debugID !== 0 ?
+            [this._renderedComponent._debugID] :
+            []
+        );
+      }
+    }
+
     return markup;
   },
 
@@ -853,6 +864,7 @@ var ReactCompositeComponentMixin = {
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement
       );
+
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
         transaction,
@@ -860,6 +872,18 @@ var ReactCompositeComponentMixin = {
         this._nativeContainerInfo,
         this._processChildContext(context)
       );
+
+      if (__DEV__) {
+        if (this._debugID !== 0) {
+          ReactInstrumentation.debugTool.onSetChildren(
+            this._debugID,
+            this._renderedComponent._debugID !== 0 ?
+              [this._renderedComponent._debugID] :
+              []
+          );
+        }
+      }
+
       this._replaceNodeWithMarkup(oldNativeNode, nextMarkup);
     }
   },
