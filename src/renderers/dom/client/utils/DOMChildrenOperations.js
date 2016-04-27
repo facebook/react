@@ -14,6 +14,8 @@
 var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactPerf = require('ReactPerf');
 
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
@@ -120,6 +122,26 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
       removeDelimitedText(parentNode, openingComment, closingComment);
     }
   }
+
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onNativeOperation(
+      ReactDOMComponentTree.getInstanceFromNode(openingComment)._debugID,
+      'replace text',
+      stringText
+    );
+  }
+}
+
+var dangerouslyReplaceNodeWithMarkup = Danger.dangerouslyReplaceNodeWithMarkup;
+if (__DEV__) {
+  dangerouslyReplaceNodeWithMarkup = function(oldChild, markup, prevInstance) {
+    Danger.dangerouslyReplaceNodeWithMarkup(oldChild, markup);
+    ReactInstrumentation.debugTool.onNativeOperation(
+      prevInstance._debugID,
+      'replace with',
+      markup.toString()
+    );
+  };
 }
 
 /**
@@ -127,7 +149,7 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
  */
 var DOMChildrenOperations = {
 
-  dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
+  dangerouslyReplaceNodeWithMarkup: dangerouslyReplaceNodeWithMarkup,
 
   replaceDelimitedText: replaceDelimitedText,
 
@@ -139,6 +161,11 @@ var DOMChildrenOperations = {
    * @internal
    */
   processUpdates: function(parentNode, updates) {
+    if (__DEV__) {
+      var parentNodeDebugID =
+        ReactDOMComponentTree.getInstanceFromNode(parentNode)._debugID;
+    }
+
     for (var k = 0; k < updates.length; k++) {
       var update = updates[k];
       switch (update.type) {
@@ -148,6 +175,13 @@ var DOMChildrenOperations = {
             update.content,
             getNodeAfter(parentNode, update.afterNode)
           );
+          if (__DEV__) {
+            ReactInstrumentation.debugTool.onNativeOperation(
+              parentNodeDebugID,
+              'insert child',
+              {toIndex: update.toIndex, content: update.content.toString()}
+            );
+          }
           break;
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           moveChild(
@@ -155,21 +189,49 @@ var DOMChildrenOperations = {
             update.fromNode,
             getNodeAfter(parentNode, update.afterNode)
           );
+          if (__DEV__) {
+            ReactInstrumentation.debugTool.onNativeOperation(
+              parentNodeDebugID,
+              'move child',
+              {fromIndex: update.fromIndex, toIndex: update.toIndex}
+            );
+          }
           break;
         case ReactMultiChildUpdateTypes.SET_MARKUP:
           setInnerHTML(
             parentNode,
             update.content
           );
+          if (__DEV__) {
+            ReactInstrumentation.debugTool.onNativeOperation(
+              parentNodeDebugID,
+              'replace children',
+              update.content.toString()
+            );
+          }
           break;
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
           setTextContent(
             parentNode,
             update.content
           );
+          if (__DEV__) {
+            ReactInstrumentation.debugTool.onNativeOperation(
+              parentNodeDebugID,
+              'replace text',
+              update.content.toString()
+            );
+          }
           break;
         case ReactMultiChildUpdateTypes.REMOVE_NODE:
           removeChild(parentNode, update.fromNode);
+          if (__DEV__) {
+            ReactInstrumentation.debugTool.onNativeOperation(
+              parentNodeDebugID,
+              'remove child',
+              {fromIndex: update.fromIndex}
+            );
+          }
           break;
       }
     }

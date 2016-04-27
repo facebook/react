@@ -12,15 +12,18 @@
 'use strict';
 
 describe('ReactDOMIDOperations', function() {
+  var ReactDOMComponentTree = require('ReactDOMComponentTree');
   var ReactDOMIDOperations = require('ReactDOMIDOperations');
   var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
   it('should update innerHTML and preserve whitespace', function() {
     var stubNode = document.createElement('div');
-    var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
+    var stubInstance = {};
+    ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
+    var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
-      {_nativeNode: stubNode},
+      stubInstance,
       [{
         type: ReactMultiChildUpdateTypes.SET_MARKUP,
         content: html,

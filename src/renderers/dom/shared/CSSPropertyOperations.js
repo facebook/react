@@ -13,6 +13,7 @@
 
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactPerf = require('ReactPerf');
 
 var camelizeStyleName = require('camelizeStyleName');
@@ -192,6 +193,14 @@ var CSSPropertyOperations = {
    * @param {ReactDOMComponent} component
    */
   setValueForStyles: function(node, styles, component) {
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onNativeOperation(
+        component._debugID,
+        'update styles',
+        styles
+      );
+    }
+
     var style = node.style;
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
