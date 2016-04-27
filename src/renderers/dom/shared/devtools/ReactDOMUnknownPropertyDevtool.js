@@ -90,6 +90,12 @@ var ReactDOMUnknownPropertyDevtool = {
   onDeleteValueForProperty(node, name) {
     warnUnknownProperty(name);
   },
+  onMountComponent(instance) {
+    cachedSource = instance._currentElement ? instance._currentElement._source : null;
+  },
+  onUpdateComponent(instance) {
+    cachedSource = instance._currentElement ? instance._currentElement._source : null;
+  },
 };
 
 module.exports = ReactDOMUnknownPropertyDevtool;

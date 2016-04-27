@@ -62,26 +62,11 @@ var ReactDOMDebugTool = {
   onTestEvent() {
     emitEvent('onTestEvent');
   },
-  onBeginProcessingChildContext() {
-    emitEvent('onBeginProcessingChildContext');
+  onMountComponent(internalInstance) {
+    emitEvent('onMountComponent', internalInstance);
   },
-  onEndProcessingChildContext() {
-    emitEvent('onEndProcessingChildContext');
-  },
-  onSetState() {
-    emitEvent('onSetState');
-  },
-  onMountRootComponent(debugID) {
-    emitEvent('onMountRootComponent', debugID);
-  },
-  onMountComponent(debugID) {
-    emitEvent('onMountComponent', debugID);
-  },
-  onUpdateComponent(debugID) {
-    emitEvent('onUpdateComponent', debugID);
-  },
-  onUnmountComponent(debugID) {
-    emitEvent('onUnmountComponent', debugID);
+  onUpdateComponent(internalInstance) {
+    emitEvent('onUpdateComponent', internalInstance);
   },
 };
 
