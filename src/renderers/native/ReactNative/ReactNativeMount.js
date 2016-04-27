@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactPerf = require('ReactPerf');
@@ -138,6 +139,12 @@ var ReactNativeMount = {
     var instance = instantiateReactComponent(nextWrappedElement);
     ReactNativeMount._instancesByContainerID[containerTag] = instance;
 
+    if (__DEV__) {
+      // Mute future events from the top level wrapper.
+      // It is an implementation detail that devtools should not know about.
+      instance._debugID = 0;
+    }
+
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
     // according to the current batching strategy.
@@ -147,6 +154,12 @@ var ReactNativeMount = {
       instance,
       containerTag
     );
+    if (__DEV__) {
+      // The instance here is TopLevelWrapper so we report mount for its child.
+      ReactInstrumentation.debugTool.onMountRootComponent(
+        instance._renderedComponent._debugID
+      );
+    }
     var component = instance.getPublicInstance();
     if (callback) {
       callback.call(component);
