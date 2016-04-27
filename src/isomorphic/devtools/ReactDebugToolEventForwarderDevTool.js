@@ -23,17 +23,17 @@ var ReactDebugToolEventForwarderDevTool = {
   onSetState() {
     ReactDOMDebugTool.onSetState();
   },
-  onMountRootComponent(internalInstance) {
-    ReactDOMDebugTool.onMountRootComponent(internalInstance);
+  onMountRootComponent(debugID) {
+    ReactDOMDebugTool.onMountRootComponent(debugID);
   },
-  onMountComponent(internalInstance) {
-    ReactDOMDebugTool.onMountComponent(internalInstance);
+  onMountComponent(debugID) {
+    ReactDOMDebugTool.onMountComponent(debugID);
   },
-  onUpdateComponent(internalInstance) {
-    ReactDOMDebugTool.onUpdateComponent(internalInstance);
+  onUpdateComponent(debugID) {
+    ReactDOMDebugTool.onUpdateComponent(debugID);
   },
-  onUnmountComponent(internalInstance) {
-    ReactDOMDebugTool.onUnmountComponent(internalInstance);
+  onUnmountComponent(debugID) {
+    ReactDOMDebugTool.onUnmountComponent(debugID);
   },
 };
 
