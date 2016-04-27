@@ -14,6 +14,7 @@
 describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
+  var ReactDOMComponentTree;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -22,6 +23,7 @@ describe('DOMPropertyOperations', function() {
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
   });
 
   describe('createMarkupForProperty', function() {
@@ -175,6 +177,7 @@ describe('DOMPropertyOperations', function() {
 
     beforeEach(function() {
       stubNode = document.createElement('div');
+      ReactDOMComponentTree.precacheNode({}, stubNode);
     });
 
     it('should set values as properties by default', function() {
@@ -223,6 +226,8 @@ describe('DOMPropertyOperations', function() {
 
     it('should not remove empty attributes for special properties', function() {
       stubNode = document.createElement('input');
+      ReactDOMComponentTree.precacheNode({}, stubNode);
+
       DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
       // JSDOM does not behave correctly for attributes/properties
       //expect(stubNode.getAttribute('value')).toBe('');
@@ -346,6 +351,7 @@ describe('DOMPropertyOperations', function() {
 
     beforeEach(function() {
       stubNode = document.createElement('div');
+      ReactDOMComponentTree.precacheNode({}, stubNode);
     });
 
     it('should remove attributes for normal properties', function() {
@@ -361,6 +367,8 @@ describe('DOMPropertyOperations', function() {
 
     it('should not remove attributes for special properties', function() {
       stubNode = document.createElement('input');
+      ReactDOMComponentTree.precacheNode({}, stubNode);
+
       stubNode.setAttribute('value', 'foo');
 
       DOMPropertyOperations.deleteValueForProperty(stubNode, 'value');
@@ -371,6 +379,8 @@ describe('DOMPropertyOperations', function() {
 
     it('should not leave all options selected when deleting multiple', function() {
       stubNode = document.createElement('select');
+      ReactDOMComponentTree.precacheNode({}, stubNode);
+
       stubNode.multiple = true;
       stubNode.appendChild(document.createElement('option'));
       stubNode.appendChild(document.createElement('option'));

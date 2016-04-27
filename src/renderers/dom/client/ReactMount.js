@@ -693,6 +693,14 @@ var ReactMount = {
       setInnerHTML(container, markup);
       ReactDOMComponentTree.precacheNode(instance, container.firstChild);
     }
+
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onNativeOperation(
+        ReactDOMComponentTree.getInstanceFromNode(container.firstChild)._debugID,
+        'mount',
+        markup.toString()
+      );
+    }
   },
 };
 
