@@ -778,8 +778,11 @@ var ReactClass = {
         // We allow auto-mocks to proceed as if they're returning null.
         if (initialState === undefined &&
             this.getInitialState._isMockFunction) {
-          // This is probably bad practice. Consider warning here and
-          // deprecating this convenience.
+          warning(
+            typeof initialState === 'object' && initialState == null && !Array.isArray(initialState),
+             '%s.getInitialState(): should return an object, instead returned null',
+             Constructor.displayName || 'ReactCompositeComponent'
+             );
           initialState = null;
         }
       }
