@@ -20,9 +20,9 @@ describe('autobind optout', function() {
 
   it('should work with manual binding', function() {
 
-    var mouseDidEnter = jest.genMockFn();
-    var mouseDidLeave = jest.genMockFn();
-    var mouseDidClick = jest.genMockFn();
+    var mouseDidEnter = jest.fn();
+    var mouseDidLeave = jest.fn();
+    var mouseDidClick = jest.fn();
 
     var TestBindComponent = React.createClass({
       autobind: false,
@@ -138,7 +138,7 @@ describe('autobind optout', function() {
   });
 
   it('works with mixins that have not opted out of autobinding', function() {
-    var mouseDidClick = jest.genMockFn();
+    var mouseDidClick = jest.fn();
 
     var TestMixin = {
       onClick: mouseDidClick,
@@ -164,7 +164,7 @@ describe('autobind optout', function() {
   });
 
   it('works with mixins that have opted out of autobinding', function() {
-    var mouseDidClick = jest.genMockFn();
+    var mouseDidClick = jest.fn();
 
     var TestMixin = {
       autobind: false,

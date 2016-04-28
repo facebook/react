@@ -50,7 +50,7 @@ describe('ReactErrorBoundaries', function() {
 
     var EventPluginHub = require('EventPluginHub');
     var container = document.createElement('div');
-    EventPluginHub.putListener = jest.genMockFn();
+    EventPluginHub.putListener = jest.fn();
     ReactDOM.render(<Boundary />, container);
     expect(EventPluginHub.putListener).not.toBeCalled();
   });
@@ -120,7 +120,7 @@ describe('ReactErrorBoundaries', function() {
 
     var EventPluginHub = require('EventPluginHub');
     var container = document.createElement('div');
-    EventPluginHub.putListener = jest.genMockFn();
+    EventPluginHub.putListener = jest.fn();
     ReactDOM.render(<Boundary />, container);
     expect(EventPluginHub.putListener).toBeCalled();
   });

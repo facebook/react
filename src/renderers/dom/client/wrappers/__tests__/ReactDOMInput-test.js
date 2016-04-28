@@ -245,7 +245,7 @@ describe('ReactDOMInput', function() {
   });
 
   it('should support ReactLink', function() {
-    var link = new ReactLink('yolo', jest.genMockFn());
+    var link = new ReactLink('yolo', jest.fn());
     var instance = <input type="text" valueLink={link} />;
 
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -262,7 +262,7 @@ describe('ReactDOMInput', function() {
   });
 
   it('should warn with value and no onChange handler', function() {
-    var link = new ReactLink('yolo', jest.genMockFn());
+    var link = new ReactLink('yolo', jest.fn());
     ReactTestUtils.renderIntoDocument(<input type="text" valueLink={link} />);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
@@ -270,7 +270,7 @@ describe('ReactDOMInput', function() {
     );
 
     ReactTestUtils.renderIntoDocument(
-      <input type="text" value="zoink" onChange={jest.genMockFn()} />
+      <input type="text" value="zoink" onChange={jest.fn()} />
     );
     expect(console.error.argsForCall.length).toBe(1);
     ReactTestUtils.renderIntoDocument(<input type="text" value="zoink" />);
@@ -302,7 +302,7 @@ describe('ReactDOMInput', function() {
 
   it('should throw if both value and valueLink are provided', function() {
     var node = document.createElement('div');
-    var link = new ReactLink('yolo', jest.genMockFn());
+    var link = new ReactLink('yolo', jest.fn());
     var instance = <input type="text" valueLink={link} />;
 
     expect(() => ReactDOM.render(instance, node)).not.toThrow();
@@ -322,7 +322,7 @@ describe('ReactDOMInput', function() {
   });
 
   it('should support checkedLink', function() {
-    var link = new ReactLink(true, jest.genMockFn());
+    var link = new ReactLink(true, jest.fn());
     var instance = <input type="checkbox" checkedLink={link} />;
 
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -340,7 +340,7 @@ describe('ReactDOMInput', function() {
 
   it('should warn with checked and no onChange handler', function() {
     var node = document.createElement('div');
-    var link = new ReactLink(true, jest.genMockFn());
+    var link = new ReactLink(true, jest.fn());
     ReactDOM.render(<input type="checkbox" checkedLink={link} />, node);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
@@ -351,7 +351,7 @@ describe('ReactDOMInput', function() {
       <input
         type="checkbox"
         checked="false"
-        onChange={jest.genMockFn()}
+        onChange={jest.fn()}
       />
     );
     expect(console.error.argsForCall.length).toBe(1);
@@ -379,7 +379,7 @@ describe('ReactDOMInput', function() {
 
   it('should throw if both checked and checkedLink are provided', function() {
     var node = document.createElement('div');
-    var link = new ReactLink(true, jest.genMockFn());
+    var link = new ReactLink(true, jest.fn());
     var instance = <input type="checkbox" checkedLink={link} />;
 
     expect(() => ReactDOM.render(instance, node)).not.toThrow();
@@ -401,7 +401,7 @@ describe('ReactDOMInput', function() {
 
   it('should throw if both checkedLink and valueLink are provided', function() {
     var node = document.createElement('div');
-    var link = new ReactLink(true, jest.genMockFn());
+    var link = new ReactLink(true, jest.fn());
     var instance = <input type="checkbox" checkedLink={link} />;
 
     expect(() => ReactDOM.render(instance, node)).not.toThrow();

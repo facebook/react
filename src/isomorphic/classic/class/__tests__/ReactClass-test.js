@@ -43,7 +43,7 @@ describe('ReactClass-spec', function() {
   });
 
   it('should copy prop types onto the Constructor', function() {
-    var propValidator = jest.genMockFn();
+    var propValidator = jest.fn();
     var TestComponent = React.createClass({
       propTypes: {
         value: propValidator,

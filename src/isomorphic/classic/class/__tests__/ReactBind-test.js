@@ -20,9 +20,9 @@ describe('autobinding', function() {
 
   it('Holds reference to instance', function() {
 
-    var mouseDidEnter = jest.genMockFn();
-    var mouseDidLeave = jest.genMockFn();
-    var mouseDidClick = jest.genMockFn();
+    var mouseDidEnter = jest.fn();
+    var mouseDidLeave = jest.fn();
+    var mouseDidClick = jest.fn();
 
     var TestBindComponent = React.createClass({
       getInitialState: function() {
@@ -95,7 +95,7 @@ describe('autobinding', function() {
   });
 
   it('works with mixins', function() {
-    var mouseDidClick = jest.genMockFn();
+    var mouseDidClick = jest.fn();
 
     var TestMixin = {
       onClick: mouseDidClick,
