@@ -130,7 +130,7 @@ describe('ReactCompositeComponent-state', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
-    var stateListener = jest.genMockFn();
+    var stateListener = jest.fn();
     var instance = ReactDOM.render(
       <TestComponent stateListener={stateListener} />,
       container,

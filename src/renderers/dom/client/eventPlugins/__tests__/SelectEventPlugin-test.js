@@ -66,7 +66,7 @@ describe('SelectEventPlugin', function() {
       },
     });
 
-    var cb = jest.genMockFn();
+    var cb = jest.fn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />

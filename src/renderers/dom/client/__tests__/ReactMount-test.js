@@ -87,8 +87,8 @@ describe('ReactMount', function() {
   it('should unmount and remount if the key changes', function() {
     var container = document.createElement('container');
 
-    var mockMount = jest.genMockFn();
-    var mockUnmount = jest.genMockFn();
+    var mockMount = jest.fn();
+    var mockUnmount = jest.fn();
 
     var Component = React.createClass({
       componentDidMount: mockMount,

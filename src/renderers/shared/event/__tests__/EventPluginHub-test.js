@@ -12,7 +12,7 @@
 'use strict';
 
 jest
-  .dontMock('EventPluginHub')
+  .unmock('EventPluginHub')
   .mock('isEventSupported');
 
 describe('EventPluginHub', function() {

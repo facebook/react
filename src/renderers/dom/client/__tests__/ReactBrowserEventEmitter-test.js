@@ -35,7 +35,7 @@ var recordIDAndReturnFalse = function(id, event) {
   recordID(id);
   return false;
 };
-var LISTENER = jest.genMockFn();
+var LISTENER = jest.fn();
 var ON_CLICK_KEY = keyOf({onClick: null});
 var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
 var ON_CHANGE_KEY = keyOf({onChange: null});
@@ -284,7 +284,7 @@ describe('ReactBrowserEventEmitter', function() {
    */
 
   it('should invoke handlers that were removed while bubbling', function() {
-    var handleParentClick = jest.genMockFn();
+    var handleParentClick = jest.fn();
     var handleChildClick = function(event) {
       EventPluginHub.deleteAllListeners(getInternal(PARENT));
     };
@@ -303,7 +303,7 @@ describe('ReactBrowserEventEmitter', function() {
   });
 
   it('should not invoke newly inserted handlers while bubbling', function() {
-    var handleParentClick = jest.genMockFn();
+    var handleParentClick = jest.fn();
     var handleChildClick = function(event) {
       EventPluginHub.putListener(
         getInternal(PARENT),

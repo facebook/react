@@ -9,8 +9,8 @@
  */
 'use strict';
 
-jest.dontMock('ReactNativeAttributePayload');
-jest.dontMock('ReactNativePropRegistry');
+jest.unmock('ReactNativeAttributePayload');
+jest.unmock('ReactNativePropRegistry');
 // jest.dontMock('deepDiffer');
 // jest.dontMock('flattenStyle');
 
@@ -62,8 +62,8 @@ describe('ReactNativeAttributePayload', function() {
   });
 
   it('should use the diff attribute', () => {
-    var diffA = jest.genMockFunction().mockImpl((a, b) => true);
-    var diffB = jest.genMockFunction().mockImpl((a, b) => false);
+    var diffA = jest.fn((a, b) => true);
+    var diffB = jest.fn((a, b) => false);
     expect(diff(
       {a: [1], b: [3]},
       {a: [2], b: [4]},
@@ -74,8 +74,8 @@ describe('ReactNativeAttributePayload', function() {
   });
 
   it('should not use the diff attribute on addition/removal', () => {
-    var diffA = jest.genMockFunction();
-    var diffB = jest.genMockFunction();
+    var diffA = jest.fn();
+    var diffB = jest.fn();
     expect(diff(
       {a: [1]},
       {b: [2]},

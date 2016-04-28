@@ -90,7 +90,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
-    var logger = jest.genMockFn();
+    var logger = jest.fn();
 
     void ReactDOM.render(
       <ParentComponent logger={logger} />,
