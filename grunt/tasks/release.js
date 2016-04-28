@@ -16,7 +16,7 @@ var BOWER_FILES = [
 ];
 
 var EXAMPLES_PATH = 'examples/';
-var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*'];
+var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*', EXAMPLES_PATH + '**/.babelrc'];
 
 var STARTER_PATH = 'starter/';
 var STARTER_GLOB = [STARTER_PATH + '/**/*.*'];
