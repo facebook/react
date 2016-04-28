@@ -581,7 +581,7 @@ ReactDOMComponent.Mixin = {
     }
 
     if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onMountComponent(this);
+      ReactDOMInstrumentation.debugTool.onMountDOMComponent(this._currentElement);
     }
 
     var mountImage;
@@ -860,7 +860,7 @@ ReactDOMComponent.Mixin = {
     );
 
     if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onUpdateComponent(this);
+      ReactDOMInstrumentation.debugTool.onUpdateDOMComponent(this._currentElement);
     }
 
     if (this._tag === 'select') {
