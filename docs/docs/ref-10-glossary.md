@@ -137,6 +137,7 @@ This is why you shouldn't construct your own instance. Instead, `ReactElement` i
 
 The `render` method of a `ReactComponent` is expected to return another `ReactElement`. This allows these components to be composed. Ultimately the render resolves into `ReactElement` with a `string` tag which instantiates a DOM `Element` instance and inserts it into the document.
 
+React 0.14 introduced [stateless functional components](/react/blog/2015/10/07/react-v0.14.html#stateless-functional-components) as an alternative way of defining components. Instead of being a class, it is a simple function that accepts props and is expected to return a `ReactElement`.
 
 ## Formal Type Definitions
 
@@ -165,7 +166,7 @@ type ReactDOMElement = {
 };
 
 type ReactComponentElement<TProps> = {
-  type : ReactClass<TProps>,
+  type : ReactClass<TProps> | ReactFunctionalComponent<TProps>,
   props : TProps,
   key : string | boolean | number | null,
   ref : string | null
@@ -189,5 +190,7 @@ type ReactComponent<TProps> = {
   props : TProps,
   render : () => ReactElement
 };
+
+type ReactFunctionalComponent<TProps> = (TProps) => ReactElement;
 ```
 
