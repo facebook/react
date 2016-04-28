@@ -308,6 +308,10 @@ var ReactMount = {
     shouldReuseMarkup,
     context
   ) {
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onBeginFlush();
+    }
+
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
     // verify that that's the case.
@@ -359,6 +363,7 @@ var ReactMount = {
       ReactInstrumentation.debugTool.onMountRootComponent(
         componentInstance._renderedComponent._debugID
       );
+      ReactInstrumentation.debugTool.onEndFlush();
     }
 
     return componentInstance;

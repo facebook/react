@@ -13,7 +13,6 @@
 
 describe('ReactComponentTreeDevtool', () => {
   var React;
-  var ReactDebugTool;
   var ReactDOM;
   var ReactDOMServer;
   var ReactInstanceMap;
@@ -23,17 +22,10 @@ describe('ReactComponentTreeDevtool', () => {
     jest.resetModuleRegistry();
 
     React = require('React');
-    ReactDebugTool = require('ReactDebugTool');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
-
-    ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
-  });
-
-  afterEach(() => {
-    ReactDebugTool.removeDevtool(ReactComponentTreeDevtool);
   });
 
   function getRootDisplayNames() {

@@ -145,7 +145,10 @@ Object.assign(ReactDOMTextComponent.prototype, {
         );
 
         if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(this._debugID, nextStringText);
+          ReactInstrumentation.debugTool.onSetText(
+            this._debugID,
+            nextStringText
+          );
         }
       }
     }

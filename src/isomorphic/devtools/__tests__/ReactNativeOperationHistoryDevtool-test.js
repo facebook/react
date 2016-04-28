@@ -13,7 +13,6 @@
 
 describe('ReactNativeOperationHistoryDevtool', () => {
   var React;
-  var ReactDebugTool;
   var ReactDOM;
   var ReactDOMComponentTree;
   var ReactDOMFeatureFlags;
@@ -23,17 +22,10 @@ describe('ReactNativeOperationHistoryDevtool', () => {
     jest.resetModuleRegistry();
 
     React = require('React');
-    ReactDebugTool = require('ReactDebugTool');
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactNativeOperationHistoryDevtool = require('ReactNativeOperationHistoryDevtool');
-
-    ReactDebugTool.addDevtool(ReactNativeOperationHistoryDevtool);
-  });
-
-  afterEach(() => {
-    ReactDebugTool.removeDevtool(ReactNativeOperationHistoryDevtool);
   });
 
   function assertHistoryMatches(expectedHistory) {
