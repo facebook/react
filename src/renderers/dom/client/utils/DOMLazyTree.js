@@ -73,7 +73,11 @@ function replaceChildWithTree(oldNode, newTree) {
 }
 
 function queueChild(parentTree, childTree) {
-  if (enableLazy) {
+  // Flash Player (and perhaps <object> in general) is created immediately
+  // upon inserting into the DOM, so <param> children will not exist yet.
+  if (enableLazy &&
+      !childTree.node.nodeName &&
+      !childTree.node.nodeName.toLowerCase() === 'object') {
     parentTree.children.push(childTree);
   } else {
     parentTree.node.appendChild(childTree.node);
