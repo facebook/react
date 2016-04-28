@@ -19,7 +19,6 @@ var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactUpdates = require('ReactUpdates');
 var EventConstants = require('EventConstants');
 
-var merge = require('merge');
 var warning = require('warning');
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -91,7 +90,9 @@ var removeTouchesAtIndices = function(
  *
  * @internal
  */
-var ReactNativeEventEmitter = merge(ReactEventEmitterMixin, {
+var ReactNativeEventEmitter = {
+
+  ...ReactEventEmitterMixin,
 
   registrationNames: EventPluginRegistry.registrationNameModules,
 
@@ -218,6 +219,6 @@ var ReactNativeEventEmitter = merge(ReactEventEmitterMixin, {
       );
     }
   },
-});
+};
 
 module.exports = ReactNativeEventEmitter;

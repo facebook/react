@@ -15,7 +15,6 @@ var EventPropagators = require('EventPropagators');
 var SyntheticEvent = require('SyntheticEvent');
 var UIManager = require('UIManager');
 
-var merge = require('merge');
 var warning = require('warning');
 
 var customBubblingEventTypes = UIManager.customBubblingEventTypes;
@@ -38,7 +37,7 @@ for (var directTypeName in customDirectEventTypes) {
 
 var IOSNativeBridgeEventPlugin = {
 
-  eventTypes: merge(customBubblingEventTypes, customDirectEventTypes),
+  eventTypes: { ...customBubblingEventTypes, ...customDirectEventTypes },
 
   /**
    * @see {EventPluginHub.extractEvents}
