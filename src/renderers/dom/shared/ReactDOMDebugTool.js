@@ -62,11 +62,11 @@ var ReactDOMDebugTool = {
   onTestEvent() {
     emitEvent('onTestEvent');
   },
-  onMountDOMComponent(element) {
-    emitEvent('onMountDOMComponent', element);
+  onMountDOMComponent(debugID, element) {
+    emitEvent('onMountDOMComponent', debugID, element);
   },
-  onUpdateDOMComponent(element) {
-    emitEvent('onMountDOMComponent', element);
+  onUpdateDOMComponent(debugID, element) {
+    emitEvent('onMountDOMComponent', debugID, element);
   },
 };
 

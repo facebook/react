@@ -90,10 +90,10 @@ var ReactDOMUnknownPropertyDevtool = {
   onDeleteValueForProperty(node, name) {
     warnUnknownProperty(name);
   },
-  onMountDOMComponent(element) {
+  onMountDOMComponent(debugID, element) {
     cachedSource = element ? element._source : null;
   },
-  onUpdateDOMComponent(element) {
+  onUpdateDOMComponent(debugID, element) {
     cachedSource = element ? element._source : null;
   },
 };
