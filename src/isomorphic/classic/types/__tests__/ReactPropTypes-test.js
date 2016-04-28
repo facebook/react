@@ -13,6 +13,7 @@
 
 var PropTypes;
 var React;
+var ReactDOM;
 var ReactFragment;
 var ReactPropTypeLocations;
 var ReactTestUtils;
@@ -49,6 +50,7 @@ describe('ReactPropTypes', function() {
   beforeEach(function() {
     PropTypes = require('ReactPropTypes');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
     ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
@@ -869,5 +871,27 @@ describe('ReactPropTypes', function() {
         expect(console.error.argsForCall.length).toBe(0);
       }
     );
+  });
+
+  describe('Catching Typos', function() {
+    it('should warn if propType spelled with a different case', function() {
+      spyOn(console, 'error');
+
+      Component = React.createClass({
+        propTypes: {'testProp': PropTypes.string},
+
+        render: function() {
+          return <div/>;
+        },
+      });
+
+      var container = document.createElement('div');
+      ReactDOM.render(<Component testprop=""/>, container);
+
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: Did you miscapitalize testProp as testprop in Component?'
+      );
+    });
   });
 });
