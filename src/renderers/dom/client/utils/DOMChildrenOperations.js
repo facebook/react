@@ -16,7 +16,6 @@ var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
-var ReactPerf = require('ReactPerf');
 
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 var setInnerHTML = require('setInnerHTML');
@@ -238,9 +237,5 @@ var DOMChildrenOperations = {
   },
 
 };
-
-ReactPerf.measureMethods(DOMChildrenOperations, 'DOMChildrenOperations', {
-  replaceDelimitedText: 'replaceDelimitedText',
-});
 
 module.exports = DOMChildrenOperations;

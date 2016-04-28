@@ -15,7 +15,6 @@ var DOMProperty = require('DOMProperty');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var ReactInstrumentation = require('ReactInstrumentation');
-var ReactPerf = require('ReactPerf');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var warning = require('warning');
@@ -249,11 +248,5 @@ var DOMPropertyOperations = {
   },
 
 };
-
-ReactPerf.measureMethods(DOMPropertyOperations, 'DOMPropertyOperations', {
-  setValueForProperty: 'setValueForProperty',
-  setValueForAttribute: 'setValueForAttribute',
-  deleteValueForProperty: 'deleteValueForProperty',
-});
 
 module.exports = DOMPropertyOperations;
