@@ -342,7 +342,7 @@ function stop() {
 }
 
 var ReactPerfAnalysis = {
-  getFlushHistory,
+  getLastMeasurements: getFlushHistory,
   getExclusive,
   getInclusive,
   getWasted,
