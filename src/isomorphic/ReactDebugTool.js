@@ -72,6 +72,7 @@ function resetMeasurements() {
           tree[id] = {
             displayName: ReactComponentTreeDevtool.getDisplayName(id),
             text: ReactComponentTreeDevtool.getText(id),
+            updateCount: ReactComponentTreeDevtool.getUpdateCount(id),
             childIDs: ReactComponentTreeDevtool.getChildIDs(id),
             // Text nodes don't have owners but this is close enough.
             ownerID: ownerID || ReactComponentTreeDevtool.getOwnerID(parentID),
