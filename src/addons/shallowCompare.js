@@ -17,10 +17,11 @@ var shallowEqual = require('shallowEqual');
  * Does a shallow comparison for props and state.
  * See ReactComponentWithPureRenderMixin
  */
-function shallowCompare(instance, nextProps, nextState) {
+function shallowCompare(instance, nextProps, nextState, nextContext) {
   return (
     !shallowEqual(instance.props, nextProps) ||
-    !shallowEqual(instance.state, nextState)
+    !shallowEqual(instance.state, nextState) ||
+    (typeof nextContext !== 'undefined' && !shallowEqual(instance.context, nextContext))
   );
 }
 
