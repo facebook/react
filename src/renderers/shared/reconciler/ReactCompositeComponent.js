@@ -153,6 +153,7 @@ var ReactCompositeComponentMixin = {
     this._nativeContainerInfo = null;
 
     // See ReactUpdateQueue
+    this._updateBatchNumber = null;
     this._pendingElement = null;
     this._pendingStateQueue = null;
     this._pendingReplaceState = false;
@@ -765,9 +766,7 @@ var ReactCompositeComponentMixin = {
         transaction,
         this._context
       );
-    }
-
-    if (this._pendingStateQueue !== null || this._pendingForceUpdate) {
+    } else if (this._pendingStateQueue !== null || this._pendingForceUpdate) {
       this.updateComponent(
         transaction,
         this._currentElement,
@@ -775,6 +774,8 @@ var ReactCompositeComponentMixin = {
         this._context,
         this._context
       );
+    } else {
+      this._updateBatchNumber = null;
     }
   },
 
@@ -878,6 +879,7 @@ var ReactCompositeComponentMixin = {
       );
     }
 
+    this._updateBatchNumber = null;
     if (shouldUpdate) {
       this._pendingForceUpdate = false;
       // Will set `this.props`, `this.state` and `this.context`.
