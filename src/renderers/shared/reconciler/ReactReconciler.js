@@ -14,6 +14,8 @@
 var ReactRef = require('ReactRef');
 var ReactInstrumentation = require('ReactInstrumentation');
 
+var invariant = require('invariant');
+
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
  * to avoid allocations in the transaction mount-ready queue.
@@ -190,8 +192,22 @@ var ReactReconciler = {
    */
   performUpdateIfNecessary: function(
     internalInstance,
-    transaction
+    transaction,
+    updateBatchNumber
   ) {
+    if (internalInstance._updateBatchNumber !== updateBatchNumber) {
+      // The component's enqueued batch number should always be the current
+      // batch or the following one.
+      invariant(
+        internalInstance._updateBatchNumber == null ||
+        internalInstance._updateBatchNumber === updateBatchNumber + 1,
+        'performUpdateIfNecessary: Unexpected batch number (current %s, ' +
+        'pending %s)',
+        updateBatchNumber,
+        internalInstance._updateBatchNumber
+      );
+      return;
+    }
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
         ReactInstrumentation.debugTool.onBeginReconcilerTimer(
