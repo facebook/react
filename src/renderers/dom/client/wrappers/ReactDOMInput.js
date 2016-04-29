@@ -177,7 +177,7 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
-          '%s is changing a uncontrolled input of type %s to be controlled. ' +
+          '%s is changing an uncontrolled input of type %s to be controlled. ' +
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
