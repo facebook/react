@@ -13,19 +13,42 @@
 
 describe('ReactComponentTreeDevtool', () => {
   var React;
-  var ReactDOM;
-  var ReactDOMServer;
+  var ReactNative;
   var ReactInstanceMap;
   var ReactComponentTreeDevtool;
+  var createReactNativeComponentClass;
+  var View;
+  var Image;
+  var Text;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactNative = require('ReactNative');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+    View = require('View');
+    createReactNativeComponentClass = require('createReactNativeComponentClass');
+    Image = createReactNativeComponentClass({
+      validAttributes: {},
+      uiViewClassName: 'Image',
+    });
+    var RCText = createReactNativeComponentClass({
+      validAttributes: {},
+      uiViewClassName: 'RCText',
+    });
+    Text = React.createClass({
+      childContextTypes: {
+        isInAParentText: React.PropTypes.bool,
+      },
+      getChildContext() {
+        return {isInAParentText: true};
+      },
+      render() {
+        return <RCText {...this.props} />;
+      },
+    });
   });
 
   function getRootDisplayNames() {
@@ -78,7 +101,6 @@ describe('ReactComponentTreeDevtool', () => {
       pairs = [pairs];
     }
 
-    var node = document.createElement('div');
     var currentElement;
     var rootInstance;
 
@@ -97,22 +119,23 @@ describe('ReactComponentTreeDevtool', () => {
     // Ensure the tree is correct on every step.
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
-      ReactDOM.render(<Wrapper />, node);
+      ReactNative.render(<Wrapper />, 1);
       expect(getActualTree()).toEqual(expectedTree);
       ReactComponentTreeDevtool.purgeUnmountedComponents();
       expect(getActualTree()).toEqual(expectedTree);
     });
-    ReactDOM.unmountComponentAtNode(node);
+    ReactNative.unmountComponentAtNode(1);
     ReactComponentTreeDevtool.purgeUnmountedComponents();
     expect(getActualTree()).toBe(undefined);
     expect(getRootDisplayNames()).toEqual([]);
     expect(getRegisteredDisplayNames()).toEqual([]);
 
-    // Server render every pair.
+    // Mount and unmount for every pair.
     // Ensure the tree is correct on every step.
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
-      ReactDOMServer.renderToString(<Wrapper />);
+      ReactNative.render(<Wrapper />, 1);
+      ReactNative.unmountComponentAtNode(1);
       expect(getActualTree()).toEqual(expectedTree);
       ReactComponentTreeDevtool.purgeUnmountedComponents();
       expect(getActualTree()).toBe(undefined);
@@ -141,9 +164,9 @@ describe('ReactComponentTreeDevtool', () => {
       });
       delete Qux.displayName;
 
-      var element = <div><Foo /><Baz /><Qux /></div>;
+      var element = <View><Foo /><Baz /><Qux /></View>;
       var tree = {
-        displayName: 'div',
+        displayName: 'View',
         children: [{
           displayName: 'Bar',
           children: [],
@@ -177,9 +200,9 @@ describe('ReactComponentTreeDevtool', () => {
       }
       delete Qux.name;
 
-      var element = <div><Foo /><Baz /><Qux /></div>;
+      var element = <View><Foo /><Baz /><Qux /></View>;
       var tree = {
-        displayName: 'div',
+        displayName: 'View',
         children: [{
           displayName: 'Bar',
           children: [],
@@ -220,9 +243,9 @@ describe('ReactComponentTreeDevtool', () => {
       }
       delete Qux.name;
 
-      var element = <div><Foo /><Baz /><Qux /></div>;
+      var element = <View><Foo /><Baz /><Qux /></View>;
       var tree = {
-        displayName: 'div',
+        displayName: 'View',
         children: [{
           displayName: 'Bar',
           children: [],
@@ -250,9 +273,9 @@ describe('ReactComponentTreeDevtool', () => {
       }
       delete Qux.name;
 
-      var element = <div><Foo /><Baz /><Qux /></div>;
+      var element = <View><Foo /><Baz /><Qux /></View>;
       var tree = {
-        displayName: 'div',
+        displayName: 'View',
         children: [{
           displayName: 'Bar',
           children: [],
@@ -269,32 +292,31 @@ describe('ReactComponentTreeDevtool', () => {
 
     it('reports a native tree correctly', () => {
       var element = (
-        <div>
-          <p>
-            <span>
+        <View>
+          <View>
+            <Text>
               Hi!
-            </span>
-            Wow.
-          </p>
-          <hr />
-        </div>
+            </Text>
+          </View>
+          <Image />
+        </View>
       );
       var tree = {
-        displayName: 'div',
+        displayName: 'View',
         children: [{
-          displayName: 'p',
+          displayName: 'View',
           children: [{
-            displayName: 'span',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Hi!',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Hi!',
+              }],
             }],
-          }, {
-            displayName: '#text',
-            text: 'Wow.',
           }],
         }, {
-          displayName: 'hr',
+          displayName: 'Image',
           children: [],
         }],
       };
@@ -304,7 +326,7 @@ describe('ReactComponentTreeDevtool', () => {
     it('reports a simple tree with composites correctly', () => {
       class Foo extends React.Component {
         render() {
-          return <div />;
+          return <Image />;
         }
       }
 
@@ -312,7 +334,7 @@ describe('ReactComponentTreeDevtool', () => {
       var tree = {
         displayName: 'Foo',
         children: [{
-          displayName: 'div',
+          displayName: 'Image',
           children: [],
         }],
       };
@@ -333,19 +355,18 @@ describe('ReactComponentTreeDevtool', () => {
         };
       }
       function Bar({children}) {
-        return <h1>{children}</h1>;
+        return <View>{children}</View>;
       }
       class Baz extends React.Component {
         render() {
           return (
-            <div>
+            <View>
               <Foo />
               <Bar>
-                <span>Hi,</span>
-                Mom
+                <Text>Hi,</Text>
               </Bar>
-              <a href="#">Click me.</a>
-            </div>
+              <Image />
+            </View>
           );
         }
       }
@@ -354,7 +375,7 @@ describe('ReactComponentTreeDevtool', () => {
       var tree = {
         displayName: 'Baz',
         children: [{
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [{
@@ -364,24 +385,21 @@ describe('ReactComponentTreeDevtool', () => {
           }, {
             displayName: 'Bar',
             children: [{
-              displayName: 'h1',
+              displayName: 'View',
               children: [{
-                displayName: 'span',
+                displayName: 'Text',
                 children: [{
-                  displayName: '#text',
-                  text: 'Hi,',
+                  displayName: 'RCText',
+                  children: [{
+                    displayName: '#text',
+                    text: 'Hi,',
+                  }],
                 }],
-              }, {
-                displayName: '#text',
-                text: 'Mom',
               }],
             }],
           }, {
-            displayName: 'a',
-            children: [{
-              displayName: '#text',
-              text: 'Click me.',
-            }],
+            displayName: 'Image',
+            children: [],
           }],
         }],
       };
@@ -417,51 +435,63 @@ describe('ReactComponentTreeDevtool', () => {
     });
 
     it('reports text nodes as children', () => {
-      var element = <div>{'1'}{2}</div>;
+      var element = <Text>{'1'}{2}</Text>;
       var tree = {
-        displayName: 'div',
+        displayName: 'Text',
         children: [{
-          displayName: '#text',
-          text: '1',
-        }, {
-          displayName: '#text',
-          text: '2',
+          displayName: 'RCText',
+          children: [{
+            displayName: '#text',
+            text: '1',
+          }, {
+            displayName: '#text',
+            text: '2',
+          }],
         }],
       };
       assertTreeMatches([element, tree]);
     });
 
     it('reports a single text node as a child', () => {
-      var element = <div>{'1'}</div>;
+      var element = <Text>{'1'}</Text>;
       var tree = {
-        displayName: 'div',
+        displayName: 'Text',
         children: [{
-          displayName: '#text',
-          text: '1',
+          displayName: 'RCText',
+          children: [{
+            displayName: '#text',
+            text: '1',
+          }],
         }],
       };
       assertTreeMatches([element, tree]);
     });
 
     it('reports a single number node as a child', () => {
-      var element = <div>{42}</div>;
+      var element = <Text>{42}</Text>;
       var tree = {
-        displayName: 'div',
+        displayName: 'Text',
         children: [{
-          displayName: '#text',
-          text: '42',
+          displayName: 'RCText',
+          children: [{
+            displayName: '#text',
+            text: '42',
+          }],
         }],
       };
       assertTreeMatches([element, tree]);
     });
 
     it('reports a zero as a child', () => {
-      var element = <div>{0}</div>;
+      var element = <Text>{0}</Text>;
       var tree = {
-        displayName: 'div',
+        displayName: 'Text',
         children: [{
-          displayName: '#text',
-          text: '0',
+          displayName: 'RCText',
+          children: [{
+            displayName: '#text',
+            text: '0',
+          }],
         }],
       };
       assertTreeMatches([element, tree]);
@@ -469,41 +499,31 @@ describe('ReactComponentTreeDevtool', () => {
 
     it('skips empty nodes for multiple children', () => {
       function Foo() {
-        return <div />;
+        return <Image />;
       }
       var element = (
-        <div>
-          {'hi'}
+        <View>
           {false}
-          {42}
+          <Foo />
           {null}
           <Foo />
-        </div>
+        </View>
       );
       var tree = {
-        displayName: 'div',
+        displayName: 'View',
         children: [{
-          displayName: '#text',
-          text: 'hi',
-        }, {
-          displayName: '#text',
-          text: '42',
+          displayName: 'Foo',
+          children: [{
+            displayName: 'Image',
+            children: [],
+          }],
         }, {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'Image',
             children: [],
           }],
         }],
-      };
-      assertTreeMatches([element, tree]);
-    });
-
-    it('reports html content as no children', () => {
-      var element = <div dangerouslySetInnerHTML={{__html: 'Bye.'}} />;
-      var tree = {
-        displayName: 'div',
-        children: [],
       };
       assertTreeMatches([element, tree]);
     });
@@ -512,21 +532,27 @@ describe('ReactComponentTreeDevtool', () => {
   describe('update', () => {
     describe('native component', () => {
       it('updates text of a single text child', () => {
-        var elementBefore = <div>Hi.</div>;
+        var elementBefore = <Text>Hi.</Text>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }],
           }],
         };
 
-        var elementAfter = <div>Bye.</div>;
+        var elementAfter = <Text>Bye.</Text>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Bye.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Bye.',
+            }],
           }],
         };
 
@@ -537,18 +563,24 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from no children to a single text child', () => {
-        var elementBefore = <div />;
+        var elementBefore = <Text />;
         var treeBefore = {
-          displayName: 'div',
-          children: [],
+          displayName: 'Text',
+          children: [{
+            displayName: 'RCText',
+            children: [],
+          }],
         };
 
-        var elementAfter = <div>Hi.</div>;
+        var elementAfter = <Text>Hi.</Text>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }],
           }],
         };
 
@@ -559,63 +591,25 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from a single text child to no children', () => {
-        var elementBefore = <div>Hi.</div>;
+        var elementBefore = <Text>Hi.</Text>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }],
           }],
         };
 
-        var elementAfter = <div />;
+        var elementAfter = <Text />;
         var treeAfter = {
-          displayName: 'div',
-          children: [],
-        };
-
-        assertTreeMatches([
-          [elementBefore, treeBefore],
-          [elementAfter, treeAfter],
-        ]);
-      });
-
-      it('updates from html content to a single text child', () => {
-        var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
-        var treeBefore = {
-          displayName: 'div',
-          children: [],
-        };
-
-        var elementAfter = <div>Hi.</div>;
-        var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
+            displayName: 'RCText',
+            children: [],
           }],
-        };
-
-        assertTreeMatches([
-          [elementBefore, treeBefore],
-          [elementAfter, treeAfter],
-        ]);
-      });
-
-      it('updates from a single text child to html content', () => {
-        var elementBefore = <div>Hi.</div>;
-        var treeBefore = {
-          displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
-        };
-
-        var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
-        var treeAfter = {
-          displayName: 'div',
-          children: [],
         };
 
         assertTreeMatches([
@@ -625,21 +619,27 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from no children to multiple text children', () => {
-        var elementBefore = <div />;
+        var elementBefore = <Text />;
         var treeBefore = {
-          displayName: 'div',
-          children: [],
+          displayName: 'Text',
+          children: [{
+            displayName: 'RCText',
+            children: [],
+          }],
         };
 
-        var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
+        var elementAfter = <Text>{'Hi.'}{'Bye.'}</Text>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }, {
+              displayName: '#text',
+              text: 'Bye.',
+            }],
           }],
         };
 
@@ -650,112 +650,29 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from multiple text children to no children', () => {
-        var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
+        var elementBefore = <Text>{'Hi.'}{'Bye.'}</Text>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }, {
+              displayName: '#text',
+              text: 'Bye.',
+            }],
           }],
         };
 
-        var elementAfter = <div />;
+        var elementAfter = <Text />;
         var treeAfter = {
-          displayName: 'div',
-          children: [],
-        };
-
-        assertTreeMatches([
-          [elementBefore, treeBefore],
-          [elementAfter, treeAfter],
-        ]);
-      });
-
-      it('updates from html content to multiple text children', () => {
-        var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
-        var treeBefore = {
-          displayName: 'div',
-          children: [],
-        };
-
-        var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
-        var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
+            displayName: 'RCText',
+            children: [],
           }],
         };
-
-        assertTreeMatches([
-          [elementBefore, treeBefore],
-          [elementAfter, treeAfter],
-        ]);
-      });
-
-      it('updates from multiple text children to html content', () => {
-        var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
-        var treeBefore = {
-          displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
-        };
-
-        var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
-        var treeAfter = {
-          displayName: 'div',
-          children: [],
-        };
-
-        assertTreeMatches([
-          [elementBefore, treeBefore],
-          [elementAfter, treeAfter],
-        ]);
-      });
-
-      it('updates from html content to no children', () => {
-        var elementBefore = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
-        var treeBefore = {
-          displayName: 'div',
-          children: [],
-        };
-
-        var elementAfter = <div />;
-        var treeAfter = {
-          displayName: 'div',
-          children: [],
-        };
-
-        assertTreeMatches([
-          [elementBefore, treeBefore],
-          [elementAfter, treeAfter],
-        ]);
-      });
-
-      it('updates from no children to html content', () => {
-        var elementBefore = <div />;
-        var treeBefore = {
-          displayName: 'div',
-          children: [],
-        };
-
-        var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
-        var treeAfter = {
-          displayName: 'div',
-          children: [],
-        };
-
         assertTreeMatches([
           [elementBefore, treeBefore],
           [elementAfter, treeAfter],
@@ -763,24 +680,30 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from one text child to multiple text children', () => {
-        var elementBefore = <div>Hi.</div>;
+        var elementBefore = <Text>Hi.</Text>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }],
           }],
         };
 
-        var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
+        var elementAfter = <Text>{'Hi.'}{'Bye.'}</Text>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }, {
+              displayName: '#text',
+              text: 'Bye.',
+            }],
           }],
         };
 
@@ -791,24 +714,30 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from multiple text children to one text child', () => {
-        var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
+        var elementBefore = <Text>{'Hi.'}{'Bye.'}</Text>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }, {
+              displayName: '#text',
+              text: 'Bye.',
+            }],
           }],
         };
 
-        var elementAfter = <div>Hi.</div>;
+        var elementAfter = <Text>Hi.</Text>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }],
           }],
         };
         assertTreeMatches([
@@ -818,27 +747,33 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates text nodes when reordering', () => {
-        var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
+        var elementBefore = <Text>{'Hi.'}{'Bye.'}</Text>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Hi.',
+            }, {
+              displayName: '#text',
+              text: 'Bye.',
+            }],
           }],
         };
 
-        var elementAfter = <div>{'Bye.'}{'Hi.'}</div>;
+        var elementAfter = <Text>{'Bye.'}{'Hi.'}</Text>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'Text',
           children: [{
-            displayName: '#text',
-            text: 'Bye.',
-          }, {
-            displayName: '#text',
-            text: 'Hi.',
+            displayName: 'RCText',
+            children: [{
+              displayName: '#text',
+              text: 'Bye.',
+            }, {
+              displayName: '#text',
+              text: 'Hi.',
+            }],
           }],
         };
         assertTreeMatches([
@@ -849,47 +784,59 @@ describe('ReactComponentTreeDevtool', () => {
 
       it('updates native nodes when reordering with keys', () => {
         var elementBefore = (
-          <div>
-            <div key="a">Hi.</div>
-            <div key="b">Bye.</div>
-          </div>
+          <View>
+            <Text key="a">Hi.</Text>
+            <Text key="b">Bye.</Text>
+          </View>
         );
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Hi.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Hi.',
+              }],
             }],
           }, {
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Bye.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Bye.',
+              }],
             }],
           }],
         };
 
         var elementAfter = (
-          <div>
-            <div key="b">Bye.</div>
-            <div key="a">Hi.</div>
-          </div>
+          <View>
+            <Text key="b">Bye.</Text>
+            <Text key="a">Hi.</Text>
+          </View>
         );
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Bye.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Bye.',
+              }],
             }],
           }, {
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Hi.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Hi.',
+              }],
             }],
           }],
         };
@@ -900,49 +847,61 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates native nodes when reordering without keys', () => {
+      it('updates native nodes when reordering with keys', () => {
         var elementBefore = (
-          <div>
-            <div>Hi.</div>
-            <div>Bye.</div>
-          </div>
+          <View>
+            <Text>Hi.</Text>
+            <Text>Bye.</Text>
+          </View>
         );
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Hi.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Hi.',
+              }],
             }],
           }, {
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Bye.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Bye.',
+              }],
             }],
           }],
         };
 
         var elementAfter = (
-          <div>
-            <div>Bye.</div>
-            <div>Hi.</div>
-          </div>
+          <View>
+            <Text>Bye.</Text>
+            <Text>Hi.</Text>
+          </View>
         );
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Bye.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Bye.',
+              }],
             }],
           }, {
-            displayName: 'div',
+            displayName: 'Text',
             children: [{
-              displayName: '#text',
-              text: 'Hi.',
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'Hi.',
+              }],
             }],
           }],
         };
@@ -962,18 +921,18 @@ describe('ReactComponentTreeDevtool', () => {
           return null;
         }
 
-        var elementBefore = <div><Foo /></div>;
+        var elementBefore = <View><Foo /></View>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [],
           }],
         };
 
-        var elementAfter = <div><Bar /></div>;
+        var elementAfter = <View><Bar /></View>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Bar',
             children: [],
@@ -991,25 +950,25 @@ describe('ReactComponentTreeDevtool', () => {
           return children;
         }
 
-        var elementBefore = <div><Foo><div /></Foo></div>;
+        var elementBefore = <View><Foo><View /></Foo></View>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [{
-              displayName: 'div',
+              displayName: 'View',
               children: [],
             }],
           }],
         };
 
-        var elementAfter = <div><Foo><span /></Foo></div>;
+        var elementAfter = <View><Foo><Image /></Foo></View>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [{
-              displayName: 'span',
+              displayName: 'Image',
               children: [],
             }],
           }],
@@ -1026,15 +985,15 @@ describe('ReactComponentTreeDevtool', () => {
           return null;
         }
 
-        var elementBefore = <div />;
+        var elementBefore = <View />;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'View',
           children: [],
         };
 
-        var elementAfter = <div><Foo /></div>;
+        var elementAfter = <View><Foo /></View>;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [],
@@ -1052,18 +1011,18 @@ describe('ReactComponentTreeDevtool', () => {
           return null;
         }
 
-        var elementBefore = <div><Foo /></div>;
+        var elementBefore = <View><Foo /></View>;
         var treeBefore = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [],
           }],
         };
 
-        var elementAfter = <div />;
+        var elementAfter = <View />;
         var treeAfter = {
-          displayName: 'div',
+          displayName: 'View',
           children: [],
         };
 
@@ -1075,67 +1034,85 @@ describe('ReactComponentTreeDevtool', () => {
 
       it('updates mixed children', () => {
         function Foo() {
-          return <div />;
+          return <View />;
         }
         var element1 = (
-          <div>
-            {'hi'}
+          <View>
+            <Text>hi</Text>
             {false}
-            {42}
+            <Text>{42}</Text>
             {null}
             <Foo />
-          </div>
+          </View>
         );
         var tree1 = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
-            displayName: '#text',
-            text: 'hi',
+            displayName: 'Text',
+            children: [{
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'hi',
+              }],
+            }],
           }, {
-            displayName: '#text',
-            text: '42',
+            displayName: 'Text',
+            children: [{
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: '42',
+              }],
+            }],
           }, {
             displayName: 'Foo',
             children: [{
-              displayName: 'div',
+              displayName: 'View',
               children: [],
             }],
           }],
         };
 
         var element2 = (
-          <div>
+          <View>
             <Foo />
             {false}
-            {'hi'}
+            <Text>hi</Text>
             {null}
-          </div>
+          </View>
         );
         var tree2 = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [{
-              displayName: 'div',
+              displayName: 'View',
               children: [],
             }],
           }, {
-            displayName: '#text',
-            text: 'hi',
+            displayName: 'Text',
+            children: [{
+              displayName: 'RCText',
+              children: [{
+                displayName: '#text',
+                text: 'hi',
+              }],
+            }],
           }],
         };
 
         var element3 = (
-          <div>
+          <View>
             <Foo />
-          </div>
+          </View>
         );
         var tree3 = {
-          displayName: 'div',
+          displayName: 'View',
           children: [{
             displayName: 'Foo',
             children: [{
-              displayName: 'div',
+              displayName: 'View',
               children: [],
             }],
           }],
@@ -1155,20 +1132,20 @@ describe('ReactComponentTreeDevtool', () => {
           return children;
         }
 
-        var elementBefore = <Foo><div /></Foo>;
+        var elementBefore = <Foo><View /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
 
-        var elementAfter = <Foo><span /></Foo>;
+        var elementAfter = <Foo><Image /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
           children: [{
-            displayName: 'span',
+            displayName: 'Image',
             children: [],
           }],
         };
@@ -1190,11 +1167,11 @@ describe('ReactComponentTreeDevtool', () => {
           children: [],
         };
 
-        var elementAfter = <Foo><div /></Foo>;
+        var elementAfter = <Foo><View /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1210,11 +1187,11 @@ describe('ReactComponentTreeDevtool', () => {
           return children;
         }
 
-        var elementBefore = <Foo><div /></Foo>;
+        var elementBefore = <Foo><View /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1240,11 +1217,11 @@ describe('ReactComponentTreeDevtool', () => {
           return children;
         }
 
-        var elementBefore = <Foo><div /></Foo>;
+        var elementBefore = <Foo><View /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1282,11 +1259,11 @@ describe('ReactComponentTreeDevtool', () => {
           }],
         };
 
-        var elementAfter = <Foo><div /></Foo>;
+        var elementAfter = <Foo><View /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1366,20 +1343,20 @@ describe('ReactComponentTreeDevtool', () => {
           },
         });
 
-        var elementBefore = <Foo><div /></Foo>;
+        var elementBefore = <Foo><View /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
 
-        var elementAfter = <Foo><span /></Foo>;
+        var elementAfter = <Foo><Image /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
           children: [{
-            displayName: 'span',
+            displayName: 'Image',
             children: [],
           }],
         };
@@ -1403,11 +1380,11 @@ describe('ReactComponentTreeDevtool', () => {
           children: [],
         };
 
-        var elementAfter = <Foo><div /></Foo>;
+        var elementAfter = <Foo><View /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1425,11 +1402,11 @@ describe('ReactComponentTreeDevtool', () => {
           },
         });
 
-        var elementBefore = <Foo><div /></Foo>;
+        var elementBefore = <Foo><View /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1459,11 +1436,11 @@ describe('ReactComponentTreeDevtool', () => {
           },
         });
 
-        var elementBefore = <Foo><div /></Foo>;
+        var elementBefore = <Foo><View /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1505,11 +1482,11 @@ describe('ReactComponentTreeDevtool', () => {
           }],
         };
 
-        var elementAfter = <Foo><div /></Foo>;
+        var elementAfter = <Foo><View /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             children: [],
           }],
         };
@@ -1593,36 +1570,48 @@ describe('ReactComponentTreeDevtool', () => {
   it('tracks owner correctly', () => {
     class Foo extends React.Component {
       render() {
-        return <Bar><h1>Hi.</h1></Bar>;
+        return <Bar><Text>Hi.</Text></Bar>;
       }
     }
     function Bar({children}) {
-      return <div>{children} Mom</div>;
+      return <View>{children}<Text>Mom</Text></View>;
     }
 
     // Note that owner is not calculated for text nodes
     // because they are not created from real elements.
-    var element = <article><Foo /></article>;
+    var element = <View><Foo /></View>;
     var tree = {
-      displayName: 'article',
+      displayName: 'View',
       children: [{
         displayName: 'Foo',
         children: [{
           displayName: 'Bar',
           ownerDisplayName: 'Foo',
           children: [{
-            displayName: 'div',
+            displayName: 'View',
             ownerDisplayName: 'Bar',
             children: [{
-              displayName: 'h1',
+              displayName: 'Text',
               ownerDisplayName: 'Foo',
               children: [{
-                displayName: '#text',
-                text: 'Hi.',
+                displayName: 'RCText',
+                ownerDisplayName: 'Text',
+                children: [{
+                  displayName: '#text',
+                  text: 'Hi.',
+                }],
               }],
             }, {
-              displayName: '#text',
-              text: ' Mom',
+              displayName: 'Text',
+              ownerDisplayName: 'Bar',
+              children: [{
+                displayName: 'RCText',
+                ownerDisplayName: 'Text',
+                children: [{
+                  displayName: '#text',
+                  text: 'Mom',
+                }],
+              }],
             }],
           }],
         }],
@@ -1632,7 +1621,6 @@ describe('ReactComponentTreeDevtool', () => {
   });
 
   it('preserves unmounted components until purge', () => {
-    var node = document.createElement('div');
     var renderBar = true;
     var fooInstance;
     var barInstance;
@@ -1651,7 +1639,7 @@ describe('ReactComponentTreeDevtool', () => {
       }
     }
 
-    ReactDOM.render(<Foo />, node);
+    ReactNative.render(<Foo />, 1);
     expect(
       getTree(barInstance._debugID, {
         includeParentDisplayName: true,
@@ -1664,7 +1652,7 @@ describe('ReactComponentTreeDevtool', () => {
     });
 
     renderBar = false;
-    ReactDOM.render(<Foo />, node);
+    ReactNative.render(<Foo />, 1);
     expect(
       getTree(barInstance._debugID, {
         includeParentDisplayName: true,
@@ -1676,7 +1664,7 @@ describe('ReactComponentTreeDevtool', () => {
       children: [],
     });
 
-    ReactDOM.unmountComponentAtNode(node);
+    ReactNative.unmountComponentAtNode(1);
     expect(
       getTree(barInstance._debugID, {
         includeParentDisplayName: true,
@@ -1698,15 +1686,13 @@ describe('ReactComponentTreeDevtool', () => {
   });
 
   it('does not report top-level wrapper as a root', () => {
-    var node = document.createElement('div');
+    ReactNative.render(<View><Image /></View>, 1);
+    expect(getRootDisplayNames()).toEqual(['View']);
 
-    ReactDOM.render(<div className="a" />, node);
-    expect(getRootDisplayNames()).toEqual(['div']);
+    ReactNative.render(<View><Text /></View>, 1);
+    expect(getRootDisplayNames()).toEqual(['View']);
 
-    ReactDOM.render(<div className="b" />, node);
-    expect(getRootDisplayNames()).toEqual(['div']);
-
-    ReactDOM.unmountComponentAtNode(node);
+    ReactNative.unmountComponentAtNode(1);
     expect(getRootDisplayNames()).toEqual([]);
 
     ReactComponentTreeDevtool.purgeUnmountedComponents();

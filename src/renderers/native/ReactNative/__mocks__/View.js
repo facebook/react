@@ -9,15 +9,11 @@
 
 'use strict';
 
-// Mock of the Native Hooks
+var createReactNativeComponentClass = require('createReactNativeComponentClass');
 
-var RCTUIManager = {
-  createView: jest.fn(),
-  setChildren: jest.fn(),
-  manageChildren: jest.fn(),
-  updateView: jest.fn(),
-  removeSubviewsFromContainerWithID: jest.fn(),
-  replaceExistingNonRootView: jest.fn(),
-};
+var View = createReactNativeComponentClass({
+  validAttributes: {},
+  uiViewClassName: 'View',
+});
 
-module.exports = RCTUIManager;
+module.exports = View;
