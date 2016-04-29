@@ -1104,9 +1104,11 @@ ReactDOMComponent.Mixin = {
     this._domID = null;
     this._wrapperState = null;
 
-    if (this._contentDebugID) {
-      ReactInstrumentation.debugTool.onUnmountComponent(this._contentDebugID);
-      this._contentDebugID = null;
+    if (__DEV__) {
+      if (this._contentDebugID) {
+        ReactInstrumentation.debugTool.onUnmountComponent(this._contentDebugID);
+        this._contentDebugID = null;
+      }
     }
   },
 

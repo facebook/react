@@ -16,7 +16,7 @@ var addons = {
     docs: 'two-way-binding-helpers',
   },
   Perf: {
-    module: 'ReactDefaultPerf',
+    module: 'ReactPerfAnalysis',
     name: 'perf',
     docs: 'perf',
   },
