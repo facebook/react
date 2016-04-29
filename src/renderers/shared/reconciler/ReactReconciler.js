@@ -42,6 +42,14 @@ var ReactReconciler = {
     nativeContainerInfo,
     context
   ) {
+    if (__DEV__) {
+      if (internalInstance._debugID !== 0) {
+        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
+          internalInstance._debugID,
+          'mountComponent'
+        );
+      }
+    }
     var markup = internalInstance.mountComponent(
       transaction,
       nativeParent,
@@ -54,7 +62,13 @@ var ReactReconciler = {
     }
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onMountComponent(internalInstance._debugID);
+        ReactInstrumentation.debugTool.onEndReconcilerTimer(
+          internalInstance._debugID,
+          'mountComponent'
+        );
+        ReactInstrumentation.debugTool.onMountComponent(
+          internalInstance._debugID
+        );
       }
     }
     return markup;
@@ -75,11 +89,25 @@ var ReactReconciler = {
    * @internal
    */
   unmountComponent: function(internalInstance, safely) {
+    if (__DEV__) {
+      if (internalInstance._debugID !== 0) {
+        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
+          internalInstance._debugID,
+          'unmountComponent'
+        );
+      }
+    }
     ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
     internalInstance.unmountComponent(safely);
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onUnmountComponent(internalInstance._debugID);
+        ReactInstrumentation.debugTool.onEndReconcilerTimer(
+          internalInstance._debugID,
+          'unmountComponent'
+        );
+        ReactInstrumentation.debugTool.onUnmountComponent(
+          internalInstance._debugID
+        );
       }
     }
   },
@@ -114,6 +142,15 @@ var ReactReconciler = {
       return;
     }
 
+    if (__DEV__) {
+      if (internalInstance._debugID !== 0) {
+        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
+          internalInstance._debugID,
+          'receiveComponent'
+        );
+      }
+    }
+
     var refsChanged = ReactRef.shouldUpdateRefs(
       prevElement,
       nextElement
@@ -133,7 +170,13 @@ var ReactReconciler = {
 
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onUpdateComponent(internalInstance._debugID);
+        ReactInstrumentation.debugTool.onEndReconcilerTimer(
+          internalInstance._debugID,
+          'receiveComponent'
+        );
+        ReactInstrumentation.debugTool.onUpdateComponent(
+          internalInstance._debugID
+        );
       }
     }
   },
@@ -149,10 +192,24 @@ var ReactReconciler = {
     internalInstance,
     transaction
   ) {
+    if (__DEV__) {
+      if (internalInstance._debugID !== 0) {
+        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
+          internalInstance._debugID,
+          'performUpdateIfNecessary'
+        );
+      }
+    }
     internalInstance.performUpdateIfNecessary(transaction);
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onUpdateComponent(internalInstance._debugID);
+        ReactInstrumentation.debugTool.onEndReconcilerTimer(
+          internalInstance._debugID,
+          'performUpdateIfNecessary'
+        );
+        ReactInstrumentation.debugTool.onUpdateComponent(
+          internalInstance._debugID
+        );
       }
     }
   },
