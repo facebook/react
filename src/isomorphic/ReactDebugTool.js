@@ -175,7 +175,7 @@ var ReactDebugTool = {
         currentFlushMeasurements.push({
           timerType,
           instanceID: debugID,
-          duration: performance.now() - currentTimerStartTime,
+          duration: performanceNow() - currentTimerStartTime,
         });
         currentTimerStartTime = null;
         currentTimerDebugID = null;
