@@ -84,7 +84,7 @@ function getInclusive(flushHistory = getFlushHistory(), wastedOnly) {
     var {displayName, ownerID} = treeSnapshot[instanceID];
 
     var owner = treeSnapshot[ownerID];
-    var key = `${owner ? owner.displayName : '(no owner)'} > ${displayName}`;
+    var key = `${owner ? owner.displayName + ' >' : ''} ${displayName}`;
     var stats = aggregatedStats[key];
 
     if (!stats) {
@@ -151,7 +151,7 @@ function getWasted(flushHistory = getFlushHistory()) {
     var {displayName, ownerID} = treeSnapshot[instanceID];
 
     var owner = treeSnapshot[ownerID];
-    var key = `${owner ? owner.displayName : '(no owner)'} > ${displayName}`;
+    var key = (owner ? owner.displayName + ' > ' : '') + displayName;
     var stats = aggregatedStats[key];
 
     if (!stats) {
@@ -232,7 +232,7 @@ function getOperations(flushHistory = getFlushHistory()) {
       var {instanceID, type, payload} = operation;
       var {displayName, ownerID} = treeSnapshot[instanceID];
       var owner = treeSnapshot[ownerID];
-      var key = `${(owner ? owner.displayName : '(no owner)')} > ${displayName}`;
+      var key = (owner ? owner.displayName + ' > ' : '') + displayName;
 
       stats.push({
         flushIndex,
