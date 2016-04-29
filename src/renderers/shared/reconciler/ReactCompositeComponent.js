@@ -394,7 +394,7 @@ var ReactCompositeComponentMixin = {
       instanceOrElement = Component(publicProps, publicContext, ReactUpdateQueue);
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'render'
           );
