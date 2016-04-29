@@ -59,21 +59,6 @@ function shouldIgnoreValue(propertyInfo, value) {
  */
 var DOMPropertyOperations = {
 
-  /**
-   * Creates markup for the ID property.
-   *
-   * @param {string} id Unescaped ID.
-   * @return {string} Markup string.
-   */
-  createMarkupForID: function(id) {
-    return DOMProperty.ID_ATTRIBUTE_NAME + '=' +
-      quoteAttributeValueForBrowser(id);
-  },
-
-  setAttributeForID: function(node, id) {
-    node.setAttribute(DOMProperty.ID_ATTRIBUTE_NAME, id);
-  },
-
   createMarkupForRoot: function() {
     return DOMProperty.ROOT_ATTRIBUTE_NAME + '=""';
   },

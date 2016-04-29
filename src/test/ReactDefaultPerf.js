@@ -11,7 +11,6 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
 var ReactMount = require('ReactMount');
@@ -183,7 +182,6 @@ var ReactDefaultPerf = {
     var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     console.table(summary.map(function(item) {
       var result = {};
-      result[DOMProperty.ID_ATTRIBUTE_NAME] = item.id;
       result.type = item.type;
       result.args = JSON.stringify(item.args, stripComplexValues);
       return result;

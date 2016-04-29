@@ -19,7 +19,6 @@ var ReactReconcileTransaction;
 var ReactTestUtils;
 var ReactServerRendering;
 
-var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactServerRendering', function() {
@@ -36,7 +35,6 @@ describe('ReactServerRendering', function() {
     ReactServerRendering = require('ReactServerRendering');
 
     var DOMProperty = require('DOMProperty');
-    ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
@@ -47,7 +45,6 @@ describe('ReactServerRendering', function() {
       );
       expect(response).toMatch(
         '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
       );
     });
@@ -58,7 +55,6 @@ describe('ReactServerRendering', function() {
       );
       expect(response).toMatch(
         '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
       );
     });
@@ -69,7 +65,6 @@ describe('ReactServerRendering', function() {
       );
       expect(response).toMatch(
         '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
       );
     });
@@ -81,7 +76,7 @@ describe('ReactServerRendering', function() {
         },
       });
       var response = ReactServerRendering.renderToString(<NullComponent />);
-      expect(response).toBe('<!-- react-empty: 1 -->');
+      expect(response).toBe('<!-- react-empty -->');
     });
 
     it('should not register event listeners', function() {
@@ -110,11 +105,10 @@ describe('ReactServerRendering', function() {
       );
       expect(response).toMatch(
         '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
+          '<span>' +
+            '<!-- react-text -->My name is <!-- /react-text -->' +
+            '<!-- react-text -->child<!-- /react-text -->' +
           '</span>' +
         '</div>'
       );
@@ -161,10 +155,9 @@ describe('ReactServerRendering', function() {
 
         expect(response).toMatch(
           '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-            ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
+            '<!-- react-text -->Component name: <!-- /react-text -->' +
+            '<!-- react-text -->TestComponent<!-- /react-text -->' +
           '</span>'
         );
         expect(lifecycle).toEqual(

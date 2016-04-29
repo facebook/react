@@ -25,6 +25,7 @@ describe('ReactEventIndependence', function() {
   });
 
   it('does not crash with other react inside', function() {
+    throw new Error('Need to rewrite this test');
     var clicks = 0;
     var div = ReactTestUtils.renderIntoDocument(
       <div
@@ -39,6 +40,7 @@ describe('ReactEventIndependence', function() {
   });
 
   it('does not crash with other react outside', function() {
+    throw new Error('Need to rewrite this test');
     var clicks = 0;
     var outer = document.createElement('div');
     outer.setAttribute('data-reactid', '.z');

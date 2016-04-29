@@ -44,7 +44,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         type: 'mount',
         payload: ReactDOMFeatureFlags.useCreateElement ?
           'DIV' :
-          '<div data-reactroot="" data-reactid="1"><p data-reactid="2">Hi.</p></div>',
+          '<div data-reactroot=""><p>Hi.</p></div>',
       }]);
     });
 
@@ -60,8 +60,8 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         type: 'mount',
         payload: ReactDOMFeatureFlags.useCreateElement ?
           'DIV' :
-          '<div data-reactroot="" data-reactid="1">' +
-          '<p data-reactid="2">Hi.</p></div>',
+          '<div data-reactroot="">' +
+          '<p>Hi.</p></div>',
       }]);
     });
 
@@ -77,7 +77,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         type: 'mount',
         payload: ReactDOMFeatureFlags.useCreateElement ?
           '#comment' :
-          '<!-- react-empty: 1 -->',
+          '<!-- react-empty -->',
       }]);
     });
   });
@@ -109,7 +109,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
           instanceID: inst._debugID,
           type: 'mount',
           payload: '<div style="color:red;background-color:yellow;" ' +
-          'data-reactroot="" data-reactid="1"></div>',
+          'data-reactroot=""></div>',
         }]);
       }
     });
@@ -198,8 +198,8 @@ describe('ReactNativeOperationHistoryDevtool', () => {
           assertHistoryMatches([{
             instanceID: inst._debugID,
             type: 'mount',
-            payload: '<div class="rad" tabindex="42" data-reactroot="" ' +
-            'data-reactid="1"></div>',
+            payload: '<div class="rad" tabindex="42" data-reactroot="">' +
+            '</div>',
           }]);
         }
       });
@@ -282,8 +282,8 @@ describe('ReactNativeOperationHistoryDevtool', () => {
           assertHistoryMatches([{
             instanceID: inst._debugID,
             type: 'mount',
-            payload: '<div data-x="rad" data-y="42" data-reactroot="" ' +
-            'data-reactid="1"></div>',
+            payload: '<div data-x="rad" data-y="42" data-reactroot="">' +
+            '</div>',
           }]);
         }
       });
@@ -346,7 +346,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
             instanceID: inst._debugID,
             type: 'mount',
             payload: '<my-component className="rad" tabIndex="42" ' +
-            'data-reactroot="" data-reactid="1"></my-component>',
+            'data-reactroot=""></my-component>',
           }]);
         }
       });
