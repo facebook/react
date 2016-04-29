@@ -80,7 +80,7 @@ function getInclusive(flushHistory = getFlushHistory()) {
   function updateAggregatedStats(treeSnapshot, instanceID, applyUpdate) {
     var {displayName, ownerID} = treeSnapshot[instanceID];
     var owner = treeSnapshot[ownerID];
-    var key = `${owner ? owner.displayName + ' >' : ''} ${displayName}`;
+    var key = (owner ? owner.displayName + ' > ' : '') + displayName;
     var stats = aggregatedStats[key];
     if (!stats) {
       affectedIDs[key] = {};
