@@ -144,7 +144,7 @@ var ReactDebugTool = {
   onBeginLifeCycleTimer(debugID, timerType) {
     emitEvent('onBeginLifeCycleTimer', debugID, timerType);
     if (__DEV__) {
-      if (isProfiling) {
+      if (isProfiling && currentFlushNesting > 0) {
         warning(
           !currentTimerType,
           'There is an internal error in the React performance measurement code. ' +
@@ -162,7 +162,7 @@ var ReactDebugTool = {
   },
   onEndLifeCycleTimer(debugID, timerType) {
     if (__DEV__) {
-      if (isProfiling) {
+      if (isProfiling && currentFlushNesting > 0) {
         warning(
           currentTimerType === timerType,
           'There is an internal error in the React performance measurement code. ' +
