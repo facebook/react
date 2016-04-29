@@ -27,12 +27,10 @@ function getExclusive(flushHistory = getFlushHistory()) {
   var aggregatedStats = {};
   var affectedIDs = {};
 
-  function updateAggregatedStats(treeSnapshot, instanceID, applyUpdate) {
+  function updateAggregatedStats(treeSnapshot, instanceID, timerType, applyUpdate) {
     var {displayName} = treeSnapshot[instanceID];
-
     var key = displayName;
     var stats = aggregatedStats[key];
-
     if (!stats) {
       affectedIDs[key] = {};
       stats = aggregatedStats[key] = {
@@ -43,7 +41,12 @@ function getExclusive(flushHistory = getFlushHistory()) {
         totalDuration: 0,
       };
     }
-
+    if (!stats.durations[timerType]) {
+      stats.durations[timerType] = 0;
+    }
+    if (!stats.counts[timerType]) {
+      stats.counts[timerType] = 0;
+    }
     affectedIDs[key][instanceID] = true;
     applyUpdate(stats);
   }
@@ -52,17 +55,9 @@ function getExclusive(flushHistory = getFlushHistory()) {
     var {measurements, treeSnapshot} = flush;
     measurements.forEach(measurement => {
       var {duration, instanceID, timerType} = measurement;
-      updateAggregatedStats(treeSnapshot, instanceID, stats => {
+      updateAggregatedStats(treeSnapshot, instanceID, timerType, stats => {
         stats.totalDuration += duration;
-
-        if (!stats.durations[timerType]) {
-          stats.durations[timerType] = 0;
-        }
         stats.durations[timerType] += duration;
-
-        if (!stats.counts[timerType]) {
-          stats.counts[timerType] = 0;
-        }
         stats.counts[timerType]++;
       });
     });
@@ -73,20 +68,20 @@ function getExclusive(flushHistory = getFlushHistory()) {
       ...aggregatedStats[key],
       instanceCount: Object.keys(affectedIDs[key]).length,
     }))
-    .sort((a, b) => b.totalDuration - a.totalDuration);
+    .sort((a, b) =>
+      b.totalDuration - a.totalDuration
+    );
 }
 
-function getInclusive(flushHistory = getFlushHistory(), wastedOnly) {
+function getInclusive(flushHistory = getFlushHistory()) {
   var aggregatedStats = {};
   var affectedIDs = {};
 
   function updateAggregatedStats(treeSnapshot, instanceID, applyUpdate) {
     var {displayName, ownerID} = treeSnapshot[instanceID];
-
     var owner = treeSnapshot[ownerID];
     var key = `${owner ? owner.displayName + ' >' : ''} ${displayName}`;
     var stats = aggregatedStats[key];
-
     if (!stats) {
       affectedIDs[key] = {};
       stats = aggregatedStats[key] = {
@@ -96,12 +91,11 @@ function getInclusive(flushHistory = getFlushHistory(), wastedOnly) {
         renderCount: 0,
       };
     }
-
     affectedIDs[key][instanceID] = true;
     applyUpdate(stats);
   }
 
-  var hasRenderedByID = {};
+  var isCompositeByID = {};
   flushHistory.forEach(flush => {
     var {measurements} = flush;
     measurements.forEach(measurement => {
@@ -109,7 +103,7 @@ function getInclusive(flushHistory = getFlushHistory(), wastedOnly) {
       if (timerType !== 'render') {
         return;
       }
-      hasRenderedByID[instanceID] = true;
+      isCompositeByID[instanceID] = true;
     });
   });
 
@@ -125,7 +119,9 @@ function getInclusive(flushHistory = getFlushHistory(), wastedOnly) {
       });
       var nextParentID = instanceID;
       while (nextParentID) {
-        if (hasRenderedByID[nextParentID]) {
+        // As we traverse parents, only count inclusive time towards composites.
+        // We know something is a composite if its render() was called.
+        if (isCompositeByID[nextParentID]) {
           updateAggregatedStats(treeSnapshot, nextParentID, stats => {
             stats.inclusiveRenderDuration += duration;
           });
@@ -140,7 +136,9 @@ function getInclusive(flushHistory = getFlushHistory(), wastedOnly) {
       ...aggregatedStats[key],
       instanceCount: Object.keys(affectedIDs[key]).length,
     }))
-    .sort((a, b) => b.inclusiveRenderDuration - a.inclusiveRenderDuration);
+    .sort((a, b) =>
+      b.inclusiveRenderDuration - a.inclusiveRenderDuration
+    );
 }
 
 function getWasted(flushHistory = getFlushHistory()) {
@@ -149,11 +147,9 @@ function getWasted(flushHistory = getFlushHistory()) {
 
   function updateAggregatedStats(treeSnapshot, instanceID, applyUpdate) {
     var {displayName, ownerID} = treeSnapshot[instanceID];
-
     var owner = treeSnapshot[ownerID];
     var key = (owner ? owner.displayName + ' > ' : '') + displayName;
     var stats = aggregatedStats[key];
-
     if (!stats) {
       affectedIDs[key] = {};
       stats = aggregatedStats[key] = {
@@ -163,25 +159,27 @@ function getWasted(flushHistory = getFlushHistory()) {
         renderCount: 0,
       };
     }
-
     affectedIDs[key][instanceID] = true;
     applyUpdate(stats);
   }
 
   flushHistory.forEach(flush => {
     var {measurements, treeSnapshot, operations} = flush;
-    var dirtyInstanceIDs = {};
+    var isDefinitelyNotWastedByID = {};
 
+    // Find native components associated with an operation in this batch.
+    // Mark all components in their parent tree as definitely not wasted.
     operations.forEach(operation => {
       var {instanceID} = operation;
-
       var nextParentID = instanceID;
       while (nextParentID) {
-        dirtyInstanceIDs[nextParentID] = true;
+        isDefinitelyNotWastedByID[nextParentID] = true;
         nextParentID = treeSnapshot[nextParentID].parentID;
       }
     });
 
+    // Find composite components that rendered in this batch.
+    // These are potential candidates for being wasted renders.
     var renderedCompositeIDs = {};
     measurements.forEach(measurement => {
       var {instanceID, timerType} = measurement;
@@ -196,21 +194,31 @@ function getWasted(flushHistory = getFlushHistory()) {
       if (timerType !== 'render') {
         return;
       }
+
+      // If there was a DOM update below this component, or it has just been
+      // mounted, its render() is not considered wasted.
       var { updateCount } = treeSnapshot[instanceID];
-      if (dirtyInstanceIDs[instanceID] || updateCount === 0) {
+      if (isDefinitelyNotWastedByID[instanceID] || updateCount === 0) {
         return;
       }
+
+      // We consider this render() wasted.
       updateAggregatedStats(treeSnapshot, instanceID, stats => {
         stats.renderCount++;
       });
+
       var nextParentID = instanceID;
       while (nextParentID) {
-        if (!renderedCompositeIDs[nextParentID]) {
-          break;
+        // Any parents rendered during this batch are considered wasted
+        // unless we previously marked them as dirty.
+        var isWasted =
+          renderedCompositeIDs[nextParentID] &&
+          !isDefinitelyNotWastedByID[nextParentID];
+        if (isWasted) {
+          updateAggregatedStats(treeSnapshot, nextParentID, stats => {
+            stats.inclusiveRenderDuration += duration;
+          });
         }
-        updateAggregatedStats(treeSnapshot, nextParentID, stats => {
-          stats.inclusiveRenderDuration += duration;
-        });
         nextParentID = treeSnapshot[nextParentID].parentID;
       }
     });
@@ -221,7 +229,9 @@ function getWasted(flushHistory = getFlushHistory()) {
       ...aggregatedStats[key],
       instanceCount: Object.keys(affectedIDs[key]).length,
     }))
-    .sort((a, b) => b.inclusiveRenderDuration - a.inclusiveRenderDuration);
+    .sort((a, b) =>
+      b.inclusiveRenderDuration - a.inclusiveRenderDuration
+    );
 }
 
 function getOperations(flushHistory = getFlushHistory()) {
