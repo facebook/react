@@ -685,7 +685,7 @@ var ReactMount = {
     }
 
     invariant(
-      !shouldReuseMarkup && container.nodeType !== DOC_NODE_TYPE,
+      container.nodeType !== DOC_NODE_TYPE,
       'You\'re trying to render a component to the document but ' +
         'you didn\'t use server rendering. We can\'t do this ' +
         'without using server rendering due to cross-browser quirks. ' +
