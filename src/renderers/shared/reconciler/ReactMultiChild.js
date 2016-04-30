@@ -245,7 +245,7 @@ var ReactMultiChild = {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
           if (childNodesToReuse && !childNodesToReuse[childNodeIndex]) {
-            MarkupMismatchError.throwChildAddedError(parentNode, child._currentElement);
+            MarkupMismatchError.throwChildAddedError(parentNode, child);
           }
           var mountImage = ReactReconciler.mountComponent(
             child,

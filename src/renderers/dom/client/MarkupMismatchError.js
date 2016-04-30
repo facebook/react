@@ -11,6 +11,8 @@
 
 'use strict';
 
+var getInstanceDisplayName = require('getInstanceDisplayName');
+
 var ELEMENT_NODE_TYPE = 1;
 var TEXT_NODE_TYPE = 3;
 var COMMENT_NODE_TYPE = 8;
@@ -37,22 +39,16 @@ MarkupMismatchError.prototype.constructor = MarkupMismatchError;
 /**
  * throw an error when there is a child of the node in the client component tree
  * that was not present in the server markup.
- * @param {DOMElement} parent in the server markup
- * @param {ReactElement} The React element of the child in the client component tree.
+ * @param {DOMElement} node parent in the server markup
+ * @param {ReactComponent} child The child instance in the client component tree
+ * that wasn't present in the server markup.
  */
 function throwChildAddedError(node, child) {
-  let childDesc = 'An unknown type of child.';
-  if (typeof child === 'string') {
-    childDesc = `The text ${child}`;
-  } else if (child.type) {
-    childDesc = `A child of type <${child.type}>`;
-  }
-
   throw new MarkupMismatchError(
     `The client rendered a node that was not present in the server-generated markup.`,
     node,
     `<Nothing>`,
-    childDesc);
+    `A child of type '${getInstanceDisplayName(child)}'`);
 }
 
 /**

@@ -16,6 +16,7 @@ var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
 var ReactInstrumentation = require('ReactInstrumentation');
 
+var getInstanceDisplayName = require('getInstanceDisplayName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -39,21 +40,6 @@ function getDeclarationErrorAddendum(owner) {
     }
   }
   return '';
-}
-
-function getDisplayName(instance) {
-  var element = instance._currentElement;
-  if (element == null) {
-    return '#empty';
-  } else if (typeof element === 'string' || typeof element === 'number') {
-    return '#text';
-  } else if (typeof element.type === 'string') {
-    return element.type;
-  } else if (instance.getName) {
-    return instance.getName() || 'Unknown';
-  } else {
-    return element.type.displayName || element.type.name || 'Unknown';
-  }
 }
 
 /**
@@ -144,7 +130,7 @@ function instantiateReactComponent(node) {
     var debugID = isEmpty ? 0 : nextDebugID++;
     instance._debugID = debugID;
 
-    var displayName = getDisplayName(instance);
+    var displayName = getInstanceDisplayName(instance);
     ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
     var owner = node && node._owner;
     if (owner) {
