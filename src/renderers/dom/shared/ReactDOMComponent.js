@@ -23,6 +23,7 @@ var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var MarkupMismatchError = require('MarkupMismatchError');
+var NativeNodes = require('NativeNodes');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
@@ -66,9 +67,6 @@ var RESERVED_PROPS = {
 };
 
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var TEXT_NODE_TYPE = 3;
-var COMMENT_NODE_TYPE = 8;
-var ELEMENT_NODE_TYPE = 1;
 var DOC_FRAGMENT_TYPE = 11;
 
 
@@ -437,41 +435,6 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-/**
- * Returns the children of this dom node in a way that is easily consumable for
- * comparing to the component hierarchy.
- * Unfortunately, a node's DOM children don't correspond exactly to its component's
- * children. For example, text nodes in the component tree become 2 commment DOM
- * nodes and an optional text dom node. Empty components become a single comment DOM node.
- *
- * Returns an array which contains domNodes and arrays of domNodes. Each item in
- * the returned array represents either one or multiple dom nodes that should correspond
- * to a single child node in the component tree.
- */
-function getChildrenFromDomNode(parent) {
-  var result = [];
-  var childNode = parent.firstChild;
-  while (childNode) {
-
-    if (childNode.nodeType === COMMENT_NODE_TYPE && childNode.nodeValue.lastIndexOf(' react-text', 0) === 0) {
-      if (childNode.nextSibling && childNode.nextSibling.nodeType === TEXT_NODE_TYPE) {
-        // text component with content: two comment nodes surrounding a text node.
-        result.push([childNode, childNode.nextSibling, childNode.nextSibling.nextSibling]);
-        childNode = childNode.nextSibling.nextSibling.nextSibling;
-      } else {
-        // text component with no content; two comment nodes next to each other.
-        result.push([childNode, childNode.nextSibling]);
-        childNode = childNode.nextSibling.nextSibling;
-      }
-    } else {
-      // a regular node.
-      result.push(childNode);
-      childNode = childNode.nextSibling;
-    }
-  }
-  return result;
-}
-
 var globalIdCounter = 1;
 
 /**
@@ -524,9 +487,9 @@ ReactDOMComponent.Mixin = {
    * @param {?ReactDOMComponent} the containing DOM component instance
    * @param {?object} info about the native container
 	 * @param {object} context
-	 * @param {?DOMNode|Array<DOMNode>} when reconnecting to server markup, the
-   *   DOM node to reuse or an array of DOM nodes to reuse. Note that with this
-   *   component type, it should always be a single DOMNode, not an array.
+	 * @param {?DOMNode} nativeNodeToReuse when reconnecting to server markup, the
+   *   DOM node to reuse. Note that with this component type, it should always be a
+   *   single DOM Element.
    * @return {string} The computed markup.
    */
   mountComponent: function(
@@ -534,7 +497,7 @@ ReactDOMComponent.Mixin = {
     nativeParent,
     nativeContainerInfo,
     context,
-		nodesToReuse
+		nativeNodeToReuse
   ) {
     this._rootNodeID = globalIdCounter++;
     this._domID = nativeContainerInfo._idCounter++;
@@ -624,32 +587,31 @@ ReactDOMComponent.Mixin = {
     }
 
     var mountImage;
-    if (nodesToReuse) {
+    if (nativeNodeToReuse) {
       // Check to see if the reusable node is of the correct type. It should be
-      // a single element (not an array, which is used for text components), and
-      // it should be an ELEMENT node.
-      if (Array.isArray(nodesToReuse) || nodesToReuse.nodeType !== ELEMENT_NODE_TYPE) {
-        MarkupMismatchError.throwComponentTypeMismatchError(nodesToReuse,
+      // a single element.
+      if (NativeNodes.getType(nativeNodeToReuse) !== NativeNodes.types.ELEMENT) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nativeNodeToReuse,
           `A <${this._currentElement.type}> element.`);
       }
 
       // Check to make sure the node to reuse is the same tag as this component.
-      if (this._currentElement.type !== nodesToReuse.tagName.toLowerCase()) {
+      if (this._currentElement.type !== nativeNodeToReuse.tagName.toLowerCase()) {
         MarkupMismatchError.throwNodeTypeMismatchError(
-          nodesToReuse, this._currentElement.type);
+          nativeNodeToReuse, this._currentElement.type);
       }
       // Precache the node, like we do in the useCreateElement branch, for event
       // handling.
-      ReactDOMComponentTree.precacheNode(this, nodesToReuse);
+      ReactDOMComponentTree.precacheNode(this, nativeNodeToReuse);
       this._flags |= Flags.hasCachedChildNodes;
 
       // Check that the attributes are the same between the DOM node and the component
       // props. This method throws if it finds a difference.
-      this._compareNodeAttributesToProps(nodesToReuse, props, transaction);
+      this._compareNodeAttributesToProps(nativeNodeToReuse, props, transaction);
 
-      // Check that children are of the DOM node and this component are
+      // Check that children of the DOM node and this component are
       // the same. This method throws if it finds a difference.
-      this._compareChildren(transaction, props, context, nodesToReuse);
+      this._compareChildren(transaction, props, context, nativeNodeToReuse);
     } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el;
@@ -715,9 +677,10 @@ ReactDOMComponent.Mixin = {
   /**
    * When walking the DOM tree to see if server-rendered markup mismatches
    * the rendered component, this method checks to make sure the attributes
-   * values of the DOM node match the props of this node.
+   * values of the DOM node match the props of this component.
    *
-   * This method has side effects because events get registered.
+   * This method has side effects because events get registered and the style
+   * attribute gets cached in this._previousStyleCopy.
    *
    * @private
    * @param {DOMElement} node with attributes to test
@@ -934,39 +897,27 @@ ReactDOMComponent.Mixin = {
       var contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
-      var childNodesToReuse = getChildrenFromDomNode(node);
+      var childNativeNodesToReuse = NativeNodes.getNativeNodeChildren(node);
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
-        if ('' === contentToUse) {
-          if (childNodesToReuse.length > 0) {
-            MarkupMismatchError.throwChildMissingError(childNodesToReuse[0]);
-          }
-        } else {
-          if (childNodesToReuse.length === 0) {
-            MarkupMismatchError.throwTextMismatchError(node, '<Nothing>', contentToUse);
-          }
-          if (childNodesToReuse.length > 1) {
-            MarkupMismatchError.throwChildMissingError(childNodesToReuse[1]);
-          }
-          if (Array.isArray(childNodesToReuse[0]) || childNodesToReuse[0].nodeType !== TEXT_NODE_TYPE) {
-            MarkupMismatchError.throwComponentTypeMismatchError(childNodesToReuse[0], `The text '${contentToUse}'`);
-          }
-          if (childNodesToReuse[0].textContent !== String(contentToUse)) {
-            MarkupMismatchError.throwTextMismatchError(node, node.textContent, contentToUse);
-          }
+        if (childNativeNodesToReuse.length > 0) {
+          MarkupMismatchError.throwChildMissingError(childNativeNodesToReuse[0]);
+        }
+        if (NativeNodes.getText(node) !== String(contentToUse)) {
+          MarkupMismatchError.throwTextMismatchError(node, NativeNodes.getText(node), contentToUse);
         }
       } else if (childrenToUse != null) {
         this.mountChildren(
           childrenToUse,
           transaction,
           context,
-          childNodesToReuse,
+          childNativeNodesToReuse,
           node
         );
       } else {
         // there are no children in the component tree; check to see if the DOM has children.
-        if (childNodesToReuse.length > 0) {
-          MarkupMismatchError.throwChildMissingError(childNodesToReuse[0]);
+        if (childNativeNodesToReuse.length > 0) {
+          MarkupMismatchError.throwChildMissingError(childNativeNodesToReuse[0]);
         }
       }
     }

@@ -12,10 +12,9 @@
 'use strict';
 
 var DOMLazyTree = require('DOMLazyTree');
+var NativeNodes = require('NativeNodes');
 var MarkupMismatchError = require('MarkupMismatchError');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-
-var COMMENT_NODE_TYPE = 8;
 
 var ReactDOMEmptyComponent = function(instantiate) {
   // ReactCompositeComponent uses this:
@@ -32,7 +31,7 @@ Object.assign(ReactDOMEmptyComponent.prototype, {
     nativeParent,
     nativeContainerInfo,
     context,
-    nodesToReuse
+    nativeNodeToReuse
   ) {
     var domID = nativeContainerInfo._idCounter++;
     this._domID = domID;
@@ -41,11 +40,11 @@ Object.assign(ReactDOMEmptyComponent.prototype, {
 
     var nodeValue = ' react-empty: ' + this._domID + ' ';
 
-    if (nodesToReuse) {
-      if (Array.isArray(nodesToReuse) || nodesToReuse.nodeType !== COMMENT_NODE_TYPE) {
-        MarkupMismatchError.throwComponentTypeMismatchError(nodesToReuse, 'An empty (or null) component');
+    if (nativeNodeToReuse) {
+      if (NativeNodes.getType(nativeNodeToReuse) !== NativeNodes.types.EMPTY) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nativeNodeToReuse, 'An empty (or null) component');
       }
-      ReactDOMComponentTree.precacheNode(this, nodesToReuse);
+      ReactDOMComponentTree.precacheNode(this, nativeNodeToReuse);
     } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var node = ownerDocument.createComment(nodeValue);

@@ -221,18 +221,17 @@ var ReactMultiChild = {
      * @param {?object} nestedChildren Nested child maps.
      * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
      * @param {object} context
-     * @param {?Array<DOMNode|Array<DOMNode>>} childNodesToReuse when reconnecting to server markup,
+     * @param {?DOMNode[]} childNativeNodesToReuse when reconnecting to server markup,
      * an array of the DOM nodes to reuse. The length of this array should be exactly the same
      * as the number of children in nestedChildren, as each element in this array corresponds
-     * to one element in nestedChildren. The elements in the array can be either
-     * single DOM nodes (in the case of ReactDOMComponent and ReactDOMEmptyComponent)
-     * or an array of 2-3 DOM nodes (in the case of ReactDOMTextComponent).
+     * to one element in nestedChildren. Each DOM node in this array should be the first
+     * rendered DOM node of the corresponding component child.
      * @param {?DOMNode} parentNode When reconnecting to server markup, the DOM node
      * used for this component. This argument is only used to give good dev error messages.
      * @return {array} An array of mounted representations.
      * @internal
      */
-    mountChildren: function(nestedChildren, transaction, context, childNodesToReuse, parentNode) {
+    mountChildren: function(nestedChildren, transaction, context, childNativeNodesToReuse, parentNode) {
       var children = this._reconcilerInstantiateChildren(
         nestedChildren, transaction, context
       );
@@ -244,7 +243,7 @@ var ReactMultiChild = {
       for (var name in children) {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
-          if (childNodesToReuse && !childNodesToReuse[childNodeIndex]) {
+          if (childNativeNodesToReuse && !childNativeNodesToReuse[childNodeIndex]) {
             MarkupMismatchError.throwChildAddedError(parentNode, child);
           }
           var mountImage = ReactReconciler.mountComponent(
@@ -253,15 +252,15 @@ var ReactMultiChild = {
             this,
             this._nativeContainerInfo,
             context,
-            childNodesToReuse ? childNodesToReuse[childNodeIndex] : undefined
+            childNativeNodesToReuse ? childNativeNodesToReuse[childNodeIndex] : undefined
           );
           child._mountIndex = index++;
           mountImages.push(mountImage);
           childNodeIndex++;
         }
       }
-      if (childNodesToReuse && childNodeIndex < childNodesToReuse.length) {
-        MarkupMismatchError.throwChildMissingError(childNodesToReuse[childNodeIndex]);
+      if (childNativeNodesToReuse && childNodeIndex < childNativeNodesToReuse.length) {
+        MarkupMismatchError.throwChildMissingError(childNativeNodesToReuse[childNodeIndex]);
       }
 
       if (__DEV__) {

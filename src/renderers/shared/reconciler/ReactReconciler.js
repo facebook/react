@@ -31,7 +31,7 @@ var ReactReconciler = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?object} the containing native component instance
 	 * @param {?object} info about the native container
-	 * @param {?DOMNode} when reconnecting to server markup, the DOM node to reuse.
+	 * @param {?DOMNode} nativeNodeToReuse when reconnecting to server markup, the DOM node to reuse.
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -42,14 +42,14 @@ var ReactReconciler = {
     nativeParent,
     nativeContainerInfo,
     context,
-		nodesToReuse
+		nativeNodeToReuse
   ) {
     var markup = internalInstance.mountComponent(
       transaction,
       nativeParent,
       nativeContainerInfo,
       context,
-			nodesToReuse
+			nativeNodeToReuse
     );
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {

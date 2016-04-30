@@ -144,7 +144,7 @@ var ReactCompositeComponentMixin = {
    * @param {?object} nativeParent
    * @param {?object} nativeContainerInfo
    * @param {?object} context
-   * @param {?DOMNode} when reconnecting to server markup, the DOM node to reuse.
+   * @param {?DOMNode} nativeNodeToReuse when reconnecting to server markup, the DOM node to reuse.
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -154,7 +154,7 @@ var ReactCompositeComponentMixin = {
     nativeParent,
     nativeContainerInfo,
     context,
-    nodesToReuse
+    nativeNodeToReuse
   ) {
     this._context = context;
     this._mountOrder = nextMountID++;
@@ -298,11 +298,11 @@ var ReactCompositeComponentMixin = {
         nativeContainerInfo,
         transaction,
         context,
-        nodesToReuse
+        nativeNodeToReuse
       );
     } else {
       markup = this.performInitialMount(
-        renderedElement, nativeParent, nativeContainerInfo, transaction, context, nodesToReuse
+        renderedElement, nativeParent, nativeContainerInfo, transaction, context, nativeNodeToReuse
       );
     }
 
@@ -341,13 +341,13 @@ var ReactCompositeComponentMixin = {
     nativeContainerInfo,
     transaction,
     context,
-    nodesToReuse
+    nativeNodeToReuse
   ) {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
       markup = this.performInitialMount(
-        renderedElement, nativeParent, nativeContainerInfo, transaction, context, nodesToReuse
+        renderedElement, nativeParent, nativeContainerInfo, transaction, context, nativeNodeToReuse
       );
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
@@ -364,14 +364,14 @@ var ReactCompositeComponentMixin = {
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
       markup = this.performInitialMount(
-        renderedElement, nativeParent, nativeContainerInfo, transaction, context, nodesToReuse
+        renderedElement, nativeParent, nativeContainerInfo, transaction, context, nativeNodeToReuse
       );
     }
     return markup;
   },
 
   performInitialMount: function(
-    renderedElement, nativeParent, nativeContainerInfo, transaction, context, nodesToReuse) {
+    renderedElement, nativeParent, nativeContainerInfo, transaction, context, nativeNodeToReuse) {
     var inst = this._instance;
     if (inst.componentWillMount) {
       inst.componentWillMount();
@@ -398,7 +398,7 @@ var ReactCompositeComponentMixin = {
       nativeParent,
       nativeContainerInfo,
       this._processChildContext(context),
-      nodesToReuse
+      nativeNodeToReuse
     );
 
     if (__DEV__) {

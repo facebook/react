@@ -12,10 +12,7 @@
 'use strict';
 
 var getInstanceDisplayName = require('getInstanceDisplayName');
-
-var ELEMENT_NODE_TYPE = 1;
-var TEXT_NODE_TYPE = 3;
-var COMMENT_NODE_TYPE = 8;
+var NativeNodes = require('NativeNodes');
 
 // we cannot use class MarkupMismatchError extends Error {} because Babel cannot extend built-in
 // objects in a way that allows for instanceof checks.
@@ -36,6 +33,22 @@ function MarkupMismatchError(message, node, serverVersion, clientVersion) {
 MarkupMismatchError.prototype = Object.create(Error.prototype);
 MarkupMismatchError.prototype.constructor = MarkupMismatchError;
 
+/**
+ * Returns a user-readable description of a DOM node in the server-generated markup.
+ */
+function getDescription(node) {
+  switch (NativeNodes.getType(node)) {
+    case NativeNodes.types.TEXT:
+      return `A text node with text: '${abridgeContent(NativeNodes.getText(node))}'`;
+    case NativeNodes.types.EMPTY:
+      return 'An empty (or null) node';
+    case NativeNodes.types.ELEMENT:
+      return `A <${node.tagName.toLowerCase()}> element with text: ` +
+        `'${abridgeContent(NativeNodes.getText(node))}'`;
+    default:
+      return `An illegal DOM node with text: '${abridgeContent(NativeNodes.getText(node))}'`;
+  }
+}
 /**
  * throw an error when there is a child of the node in the client component tree
  * that was not present in the server markup.
@@ -58,19 +71,10 @@ function throwChildAddedError(node, child) {
  *   component tree.
  */
 function throwChildMissingError(serverChild) {
-  let serverText = `A child node of type ${serverChild.nodeType}`;
-  switch (serverChild.nodeType) {
-    case ELEMENT_NODE_TYPE:
-      serverText = `A child <${serverChild.tagName}> element with text: '${abridgeContent(serverChild.textContent)}'`;
-      break;
-    case TEXT_NODE_TYPE:
-      serverText = `A text node with text '${abridgeContent(serverChild.textContent)}'`;
-      break;
-  }
   throw new MarkupMismatchError(
     'The client failed to render a node that was present in the server-generated markup.',
     serverChild,
-    serverText,
+    getDescription(serverChild),
     '<Nothing>'
   );
 }
@@ -180,24 +184,12 @@ function throwTextMismatchError(node, serverValue, clientValue) {
  *   component tree.
  */
 function throwComponentTypeMismatchError(node, clientComponentDesc) {
-  var serverValue = '';
-
-  if (Array.isArray(node) && node.length === 3) {
-    serverValue = `A text node with text: '${abridgeContent(node[1].textContent)}'`;
-  } else if (Array.isArray(node) && node.length === 2) {
-    serverValue = 'A blank text node.';
-  } else if (node.nodeType === COMMENT_NODE_TYPE) {
-    serverValue = 'An empty (or null) node';
-  } else if (node.nodeType === ELEMENT_NODE_TYPE) {
-    serverValue = `A <${node.tagName.toLowerCase()}> element with text: '${abridgeContent(node.textContent)}'`;
-  } else {
-    serverValue = `An illegal DOM node with text: '${abridgeContent(node.textContent)}'`;
-  }
+  var serverValue = getDescription(node);
 
   throw new MarkupMismatchError(
     'The client rendered one type of node, but a different type of node ' +
     'was present in the server-generated markup.',
-    Array.isArray(node) ? node[0] : node,
+    node,
     serverValue,
     clientComponentDesc);
 }

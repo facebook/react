@@ -13,6 +13,7 @@
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
+var NativeNodes = require('NativeNodes');
 var MarkupMismatchError = require('MarkupMismatchError');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -62,10 +63,10 @@ Object.assign(ReactDOMTextComponent.prototype, {
    * @param {?ReactDOMComponent} the containing DOM component instance
    * @param {?object} info about the native container
 	 * @param {object} context
-   * @param {?DOMNode|Array<DOMNode>} when reconnecting to server markup, the
-   *   DOM node to reuse or an array of DOM nodes to reuse. Note that with this
-   *   component type, it should always be an array of DOM nodes, not a single
-   *   node.
+   * @param {?DOMNode} nativeNodeToReuse when reconnecting to server markup, the
+   *   first DOM node to reuse. Note that with this component type, it should always be a comment
+   *   node, followed by either another comment node (for empty text) or followed by
+   *   a text node and a second comment node.
    * @return {string} Markup for this text node.
    * @internal
    */
@@ -74,7 +75,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
     nativeParent,
     nativeContainerInfo,
     context,
-    nodesToReuse
+    nativeNodeToReuse
   ) {
     if (__DEV__) {
       ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
@@ -97,17 +98,20 @@ Object.assign(ReactDOMTextComponent.prototype, {
     var closingValue = ' /react-text ';
     this._domID = domID;
     this._nativeParent = nativeParent;
-    if (nodesToReuse) {
-      if (nodesToReuse.length === 3 && nodesToReuse[1].textContent !== this._stringText) {
-        MarkupMismatchError.throwTextMismatchError(nodesToReuse[1], nodesToReuse[1].textContent, this._stringText);
-      } else if (nodesToReuse.length === 2 && this._stringText) {
-        MarkupMismatchError.throwTextMismatchError(nodesToReuse[0], '', this._stringText);
-      } else if (!Array.isArray(nodesToReuse) || nodesToReuse.length < 2 || nodesToReuse.length > 3) {
-        MarkupMismatchError.throwComponentTypeMismatchError(nodesToReuse,
+    if (nativeNodeToReuse) {
+      if (NativeNodes.getType(nativeNodeToReuse) !== NativeNodes.types.TEXT) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nativeNodeToReuse,
           `A text component with text: '${this._stringText}'`);
       }
-      ReactDOMComponentTree.precacheNode(this, nodesToReuse[0]);
-      this._closingComment = nodesToReuse[nodesToReuse.length - 1];
+      if (this._stringText !== NativeNodes.getText(nativeNodeToReuse)) {
+        MarkupMismatchError.throwTextMismatchError(
+          nativeNodeToReuse,
+          NativeNodes.getText(nativeNodeToReuse),
+          this._stringText);
+      }
+
+      ReactDOMComponentTree.precacheNode(this, nativeNodeToReuse);
+      this._closingComment = NativeNodes.getLastNode(nativeNodeToReuse);
     } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var openingComment = ownerDocument.createComment(openingValue);
