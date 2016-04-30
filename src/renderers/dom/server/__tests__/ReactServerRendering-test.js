@@ -66,7 +66,7 @@ function connectToServerRendering(
     shouldMatch);
 }
 
-function expectMarkupMismatch(elementToRenderOnServer, elementToRenderOnClient = elementToRenderOnServer) {
+function expectMarkupMismatch(elementToRenderOnServer, elementToRenderOnClient) {
   return connectToServerRendering(elementToRenderOnServer, elementToRenderOnClient, false);
 }
 
