@@ -1083,7 +1083,6 @@ describe('ReactUpdates', function() {
         this.state = { showChild: true };
       }
       componentDidMount() {
-        console.log('about to remove child via set state');
         this.setState({ showChild: false });
       }
       render() {
