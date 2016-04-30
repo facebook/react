@@ -221,7 +221,14 @@ var ReactMultiChild = {
      * @param {?object} nestedChildren Nested child maps.
      * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
      * @param {object} context
-     * @param {?DOMNode} when reconnecting to server markup, the DOM node to reuse.
+     * @param {?Array<DOMNode|Array<DOMNode>>} childNodesToReuse when reconnecting to server markup,
+     * an array of the DOM nodes to reuse. The length of this array should be exactly the same
+     * as the number of children in nestedChildren, as each element in this array corresponds
+     * to one element in nestedChildren. The elements in the array can be either
+     * single DOM nodes (in the case of ReactDOMComponent and ReactDOMEmptyComponent)
+     * or an array of 2-3 DOM nodes (in the case of ReactDOMTextComponent).
+     * @param {?DOMNode} parentNode When reconnecting to server markup, the DOM node
+     * used for this component. This argument is only used to give good dev error messages.
      * @return {array} An array of mounted representations.
      * @internal
      */
