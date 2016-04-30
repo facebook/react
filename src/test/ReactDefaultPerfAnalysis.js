@@ -175,12 +175,13 @@ function getUnchangedComponents(measurement) {
   // the amount of time it took to render the entire subtree.
   var cleanComponents = {};
   var writes = measurement.writes;
+  var hierarchy = measurement.hierarchy;
   var dirtyComposites = {};
   Object.keys(writes).forEach(function(id) {
     writes[id].forEach(function(write) {
       // Root mounting (innerHTML set) is recorded with an ID of ''
-      if (id !== '') {
-        measurement.hierarchy[id].forEach((c) => dirtyComposites[c] = true);
+      if (id !== '' && hierarchy.hasOwnProperty(id)) {
+        hierarchy[id].forEach((c) => dirtyComposites[c] = true);
       }
     });
   });

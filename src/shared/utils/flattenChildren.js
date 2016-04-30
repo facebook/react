@@ -11,6 +11,7 @@
 
 'use strict';
 
+var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
@@ -29,7 +30,7 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
       'flattenChildren(...): Encountered two children with the same key, ' +
       '`%s`. Child keys must be unique; when two children share a key, only ' +
       'the first child will be used.',
-      name
+      KeyEscapeUtils.unescape(name)
     );
   }
   if (keyUnique && child != null) {

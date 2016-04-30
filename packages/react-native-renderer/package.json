@@ -1,0 +1,19 @@
+{
+  "name": "react-native-renderer",
+  "version": "15.0.2-alpha.4",
+  "description": "React package for use inside react-native.",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "react",
+    "react-native"
+  ],
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://facebook.github.io/react-native/",
+  "dependencies": {
+    "react": "^15.0.2-alpha.4"
+  }
+}

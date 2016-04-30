@@ -4,6 +4,7 @@
   "plugins": [
     "fbjs-scripts/babel-6/dev-expression",
     "syntax-trailing-function-commas",
+    "babel-plugin-transform-object-rest-spread",
     "transform-es2015-template-literals",
     "transform-es2015-literals",
     "transform-es2015-arrow-functions",

@@ -239,6 +239,18 @@ describe('ReactDefaultPerf', function() {
     expect(summary).toEqual([]);
   });
 
+  it('should not fail on input change events', function() {
+    var container = document.createElement('div');
+    var onChange = () => {};
+    var input = ReactDOM.render(
+      <input checked={true} onChange={onChange} />,
+      container
+    );
+    expectNoWaste(() => {
+      ReactTestUtils.Simulate.change(input);
+    });
+  });
+
   it('should print a table after calling printOperations', function() {
     var container = document.createElement('div');
     var measurements = measure(() => {
