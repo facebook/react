@@ -211,7 +211,8 @@ describe('rendering React components at document', function() {
       'environment dependent code in your components and ensure ' +
       'the props are the same client and server side:\n' +
       'Node: html > body\n' +
-      'Mismatch: Text content differed.\n' +
+      'Mismatch: The client rendered some text which was different than that ' +
+      'which was present in the server-generated markup.\n' +
       'On server: \'Goodbye world\'\n' +
       'On client: \'Hello world\'\n'
     );

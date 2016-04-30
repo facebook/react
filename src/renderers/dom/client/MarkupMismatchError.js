@@ -49,7 +49,7 @@ function throwChildAddedError(node, child) {
   }
 
   throw new MarkupMismatchError(
-    `Added a child node.`,
+    `The client rendered a node that was not present in the server-generated markup.`,
     node,
     `<Nothing>`,
     childDesc);
@@ -72,7 +72,7 @@ function throwChildMissingError(serverChild) {
       break;
   }
   throw new MarkupMismatchError(
-    'Missing a child node.',
+    'The client failed to render a node that was present in the server-generated markup.',
     serverChild,
     serverText,
     '<Nothing>'
@@ -88,7 +88,8 @@ function throwChildMissingError(serverChild) {
  */
 function throwNodeTypeMismatchError(node, clientTagname) {
   throw new MarkupMismatchError(
-    'The DOM element types differed',
+    'The client rendered a DOM element with a different HTML tag than that ' +
+    'which was present in the server-generated markup.',
     node,
     `A <${node.tagName.toLowerCase()}> tag`,
     `A <${clientTagname}> tag`);
@@ -102,7 +103,11 @@ function throwNodeTypeMismatchError(node, clientTagname) {
  * @param {String} the attribute value in the server markup
  */
 function throwAttributeMissingMismatchError(node, attr, value) {
-  throw new MarkupMismatchError(`The attribute '${attr}' is missing.`, node, `${attr}=${value}`, `<No ${attr} value>`);
+  throw new MarkupMismatchError(
+    `The client failed to render a '${attr}' attribute that was present in the server-generated markup.`,
+    node,
+    `${attr}=${value}`,
+    `<No ${attr} value>`);
 }
 
 /**
@@ -113,7 +118,11 @@ function throwAttributeMissingMismatchError(node, attr, value) {
  * @param {String} the attribute value in the client component tree.
  */
 function throwAttributeAddedMismatchError(node, attr, value) {
-  throw new MarkupMismatchError(`The attribute '${attr}' was added.`, node, `<No ${attr} value>`, `${attr}=${value}`);
+  throw new MarkupMismatchError(
+    `The client rendered a '${attr}' attribute that was not present in the server-generated markup.`,
+    node,
+    `<No ${attr} value>`,
+    `${attr}=${value}`);
 }
 
 /**
@@ -126,7 +135,8 @@ function throwAttributeAddedMismatchError(node, attr, value) {
  */
 function throwAttributeChangedMismatchError(node, attr, serverValue, clientValue) {
   throw new MarkupMismatchError(
-    `The value of the attribute '${attr}' differed.`,
+    `The client rendered a '${attr}' attribute with a different value than ` +
+    `that which was present in the server-generated markup.`,
     node,
     `${attr}=${serverValue}`,
     `${attr}=${clientValue}`);
@@ -141,7 +151,8 @@ function throwAttributeChangedMismatchError(node, attr, serverValue, clientValue
  */
 function throwInnerHtmlMismatchError(node, serverValue, clientValue) {
   throw new MarkupMismatchError(
-    'The value for dangerouslySetInnerHTML differed.',
+    'The client rendered a dangerouslySetInnerHTML value that was different ' +
+    'than that which was present in the server-generated markup.',
     node,
     serverValue,
     clientValue
@@ -156,7 +167,12 @@ function throwInnerHtmlMismatchError(node, serverValue, clientValue) {
  * @param {String} the text value in the client component tree.
  */
 function throwTextMismatchError(node, serverValue, clientValue) {
-  throw new MarkupMismatchError('Text content differed.', node, `'${serverValue}'`, `'${clientValue}'`);
+  throw new MarkupMismatchError(
+    'The client rendered some text which was different than that which was ' +
+    'present in the server-generated markup.',
+    node,
+    `'${serverValue}'`,
+    `'${clientValue}'`);
 }
 
 /**
@@ -183,7 +199,8 @@ function throwComponentTypeMismatchError(node, clientComponentDesc) {
   }
 
   throw new MarkupMismatchError(
-    'The type of component differed.',
+    'The client rendered one type of node, but a different type of node ' +
+    'was present in the server-generated markup.',
     Array.isArray(node) ? node[0] : node,
     serverValue,
     clientComponentDesc);
