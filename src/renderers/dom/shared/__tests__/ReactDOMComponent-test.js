@@ -1063,6 +1063,12 @@ describe('ReactDOMComponent', function() {
         'Warning: This browser doesn\'t support the `onScroll` event'
       );
     });
+
+    it('should not warn when server-side rendering `onScroll`', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<div onScroll={() => {}}/>);
+      expect(console.error).not.toHaveBeenCalled();
+    });
   });
 
   describe('tag sanitization', function() {

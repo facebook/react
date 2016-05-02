@@ -34,6 +34,7 @@ var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
@@ -207,6 +208,9 @@ function assertValidProps(component, props) {
 }
 
 function enqueuePutListener(inst, registrationName, listener, transaction) {
+  if (transaction instanceof ReactServerRenderingTransaction) {
+    return;
+  }
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
     // bubble.
@@ -218,10 +222,6 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
   var containerInfo = inst._nativeContainerInfo;
   var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
-  if (!doc) {
-    // Server rendering.
-    return;
-  }
   listenTo(registrationName, doc);
   transaction.getReactMountReady().enqueue(putListener, {
     inst: inst,
