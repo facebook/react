@@ -36,6 +36,8 @@ var shallowCompare = require('shallowCompare');
  * complex data structures this mixin may have false-negatives for deeper
  * differences. Only mixin to components which have simple props and state, or
  * use `forceUpdate()` when you know deep data structures have changed.
+ *
+ * See https://facebook.github.io/react/docs/pure-render-mixin.html
  */
 var ReactComponentWithPureRenderMixin = {
   shouldComponentUpdate: function(nextProps, nextState) {

@@ -14,6 +14,7 @@
 /**
  * ReactPerf is a general AOP system designed to measure performance. This
  * module only has the hooks: see ReactDefaultPerf for the analysis tool.
+ * See also https://facebook.github.io/react/docs/perf.html
  */
 var ReactPerf = {
   /**

@@ -71,6 +71,10 @@ function findAllInRenderedTreeInternal(inst, test) {
 }
 
 /**
+ * Utilities for making it easy to test React components.
+ *
+ * See https://facebook.github.io/react/docs/test-utils.html
+ *
  * Todo: Support the entire DOM.scry query syntax. For now, these simple
  * utilities will suffice for testing purposes.
  * @lends ReactTestUtils
