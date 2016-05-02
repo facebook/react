@@ -1,3 +1,6 @@
+/// <reference path="../React.d.ts" />
+/// <reference path="../ReactDOM.d.ts" />
+
 /*!
  * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
