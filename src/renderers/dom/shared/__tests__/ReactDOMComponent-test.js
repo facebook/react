@@ -190,6 +190,18 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.length).toBe(2);
     });
 
+    it('should not warn for "0" as a unitless style value', function() {
+      spyOn(console, 'error');
+      var Component = React.createClass({
+        render: function() {
+          return <div style={{margin: '0'}} />;
+        },
+      });
+
+      ReactTestUtils.renderIntoDocument(<Component />);
+      expect(console.error.calls.length).toBe(0);
+    });
+
     it('should warn nicely about NaN in style', function() {
       spyOn(console, 'error');
 
