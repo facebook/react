@@ -1,7 +1,7 @@
 ---
 id: component-api
 title: Component API
-permalink: component-api.html
+permalink: docs/component-api.html
 prev: top-level-api.html
 next: component-specs.html
 ---

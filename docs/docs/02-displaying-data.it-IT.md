@@ -1,7 +1,7 @@
 ---
 id: displaying-data-it-IT
 title: Visualizzare Dati
-permalink: displaying-data-it-IT.html
+permalink: docs/displaying-data-it-IT.html
 prev: why-react-it-IT.html
 next: jsx-in-depth-it-IT.html
 ---

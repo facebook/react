@@ -1,7 +1,7 @@
 ---
 id: reusable-components-zh-CN
 title: 可复用组件
-permalink: reusable-components-zh-CN.html
+permalink: docs/reusable-components-zh-CN.html
 prev: multiple-components-zh-CN.html
 next: transferring-props-zh-CN.html
 ---

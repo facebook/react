@@ -1,7 +1,7 @@
 ---
 id: why-react-it-IT
 title: Perché React?
-permalink: why-react-it-IT.html
+permalink: docs/why-react-it-IT.html
 next: displaying-data-it-IT.html
 ---
 React è una libreria JavaScript per creare interfacce utente scritta da Facebook e Instagram. A molti piace pensare a React come alla **V** di **[MVC](https://it.wikipedia.org/wiki/Model-View-Controller)**.

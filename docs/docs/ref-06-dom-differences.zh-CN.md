@@ -1,7 +1,7 @@
 ---
 id: dom-differences-zh-CN
 title: DOM 的不同之处
-permalink: dom-differences-zh-CN.html
+permalink: docs/dom-differences-zh-CN.html
 prev: events-zh-CN.html
 next: special-non-dom-attributes-zh-CN.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: dom-differences-it-IT
 title: Differenze del DOM
-permalink: dom-differences-it-IT.html
+permalink: docs/dom-differences-it-IT.html
 prev: events-it-IT.html
 next: special-non-dom-attributes-it-IT.html
 ---

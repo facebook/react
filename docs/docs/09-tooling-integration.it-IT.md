@@ -1,7 +1,7 @@
 ---
 id: tooling-integration-it-IT
 title: Integrazione con Strumenti
-permalink: tooling-integration-it-IT.html
+permalink: docs/tooling-integration-it-IT.html
 prev: more-about-refs-it-IT.html
 next: addons-it-IT.html
 ---

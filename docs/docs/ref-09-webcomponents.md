@@ -1,7 +1,7 @@
 ---
 id: webcomponents
 title: Web Components
-permalink: webcomponents.html
+permalink: docs/webcomponents.html
 prev: reconciliation.html
 next: glossary.html
 ---

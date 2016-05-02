@@ -2,7 +2,7 @@
 id: expose-component-functions
 title: Expose Component Functions
 layout: tips
-permalink: expose-component-functions.html
+permalink: tips/expose-component-functions.html
 prev: communicate-between-components.html
 next: children-undefined.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: events-zh-CN
 title: 事件系统
-permalink: events-zh-CN.html
+permalink: docs/events-zh-CN.html
 prev: tags-and-attributes-zh-CN.html
 next: dom-differences-zh-CN.html
 ---

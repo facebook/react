@@ -1,7 +1,7 @@
 ---
 id: context
 title: 컨텍스트
-permalink: context-ko-KR.html
+permalink: docs/context-ko-KR.html
 prev: advanced-performance-ko-KR.html
 ---
 

@@ -1,7 +1,7 @@
 ---
 id: reusable-components-ko-KR
 title: 재사용가능한 컴포넌트
-permalink: reusable-components-ko-KR.html
+permalink: docs/reusable-components-ko-KR.html
 prev: multiple-components-ko-KR.html
 next: transferring-props-ko-KR.html
 ---

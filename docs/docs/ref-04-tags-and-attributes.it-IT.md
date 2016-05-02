@@ -1,7 +1,7 @@
 ---
 id: tags-and-attributes-it-IT
 title: Tag e Attributi
-permalink: tags-and-attributes-it-IT.html
+permalink: docs/tags-and-attributes-it-IT.html
 prev: component-specs-it-IT.html
 next: events-it-IT.html
 ---

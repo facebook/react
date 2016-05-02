@@ -2,7 +2,7 @@
 id: children-undefined-ko-KR
 title: 정의되지 않은 this.props.children
 layout: tips
-permalink: children-undefined-ko-KR.html
+permalink: tips/children-undefined-ko-KR.html
 prev: expose-component-functions-ko-KR.html
 next: use-react-with-other-libraries-ko-KR.html
 ---

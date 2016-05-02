@@ -1,7 +1,7 @@
 ---
 id: transferring-props-ko-KR
 title: Props 전달
-permalink: transferring-props-ko-KR.html
+permalink: docs/transferring-props-ko-KR.html
 prev: reusable-components-ko-KR.html
 next: forms-ko-KR.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: transferring-props-it-IT
 title: Trasferimento delle Proprietà
-permalink: transferring-props-it-IT.html
+permalink: docs/transferring-props-it-IT.html
 prev: reusable-components-it-IT.html
 next: forms-it-IT.html
 ---

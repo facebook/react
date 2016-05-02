@@ -1,7 +1,7 @@
 ---
 id: interactivity-and-dynamic-uis
 title: Interactivity and Dynamic UIs
-permalink: interactivity-and-dynamic-uis.html
+permalink: docs/interactivity-and-dynamic-uis.html
 prev: jsx-gotchas.html
 next: multiple-components.html
 ---

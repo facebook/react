@@ -2,7 +2,7 @@
 id: self-closing-tag
 title: Self-Closing Tag
 layout: tips
-permalink: self-closing-tag.html
+permalink: tips/self-closing-tag.html
 prev: if-else-in-JSX.html
 next: maximum-number-of-jsx-root-nodes.html
 ---
