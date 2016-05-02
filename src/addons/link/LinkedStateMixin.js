@@ -16,6 +16,7 @@ var ReactStateSetters = require('ReactStateSetters');
 
 /**
  * A simple mixin around ReactLink.forState().
+ * See https://facebook.github.io/react/docs/two-way-binding-helpers.html
  */
 var LinkedStateMixin = {
   /**

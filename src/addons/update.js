@@ -66,6 +66,10 @@ function invariantArrayCase(value, spec, command) {
   );
 }
 
+/**
+ * Returns a updated shallow copy of an object without mutating the original.
+ * See https://facebook.github.io/react/docs/update.html for details.
+ */
 function update(value, spec) {
   invariant(
     typeof spec === 'object',
