@@ -87,6 +87,7 @@ env:
   - TEST_TYPE=build
   - TEST_TYPE=test
   - TEST_TYPE=lint
+  - TEST_TYPE=flow
   - TEST_TYPE=build_website
   global:
   # SERVER
