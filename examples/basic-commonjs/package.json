@@ -1,6 +1,5 @@
 {
   "name": "react-basic-commonjs-example",
-  "version": "1.0.0",
   "description": "Basic example of using React with CommonJS",
   "private": true,
   "main": "index.js",
