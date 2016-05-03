@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule IOSDefaultEventPluginOrder
+ * @providesModule ReactNativeEventPluginOrder
  * @flow
  */
 'use strict';
 
-var IOSDefaultEventPluginOrder = [
+var ReactNativeEventPluginOrder = [
   'ResponderEventPlugin',
-  'IOSNativeBridgeEventPlugin',
+  'ReactNativeBridgeEventPlugin',
 ];
 
-module.exports = IOSDefaultEventPluginOrder;
+module.exports = ReactNativeEventPluginOrder;
