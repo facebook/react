@@ -43,10 +43,10 @@ var ReactNativeBridgeEventPlugin = {
    * @see {EventPluginHub.extractEvents}
    */
   extractEvents: function(
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget
+    topLevelType: string,
+    targetInst: Object,
+    nativeEvent: Event,
+    nativeEventTarget: Object
   ): ?Object {
     var bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     var directDispatchConfig = customDirectEventTypes[topLevelType];
