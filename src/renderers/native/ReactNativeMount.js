@@ -233,7 +233,7 @@ var ReactNativeMount = {
    */
   unmountComponentFromNode: function(
     instance: ReactComponent,
-    containerID: string
+    containerID: number
   ) {
     // Call back into native to remove all of the subviews from this container
     ReactReconciler.unmountComponent(instance);
