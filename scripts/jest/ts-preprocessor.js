@@ -79,8 +79,7 @@ function compile(content, contentFilename) {
       return ts.sys.fileExists(filename);
     },
     useCaseSensitiveFileNames() {
-      var platform = os.platform();
-      return platform !== 'win32' && platform !== 'win64' && platform !== 'darwin';
+      return ts.sys.useCaseSensitiveFileNames;
     },
   };
   var program = ts.createProgram([
