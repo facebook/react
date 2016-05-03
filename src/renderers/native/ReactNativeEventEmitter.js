@@ -11,13 +11,13 @@
  */
 'use strict';
 
+var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactUpdates = require('ReactUpdates');
-var EventConstants = require('EventConstants');
 
 var warning = require('warning');
 

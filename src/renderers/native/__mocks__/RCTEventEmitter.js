@@ -9,6 +9,8 @@
 
 'use strict';
 
-// Noop
+var RCTEventEmitter = {
+  register: jest.fn(),
+};
 
-// TODO: Move all initialization callers back into react-native
+module.exports = RCTEventEmitter;
