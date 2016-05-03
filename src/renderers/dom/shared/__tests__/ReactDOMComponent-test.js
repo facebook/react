@@ -1300,5 +1300,102 @@ describe('ReactDOMComponent', function() {
       ReactTestUtils.renderIntoDocument(<div onFocusOut={() => {}} />);
       expect(console.error.argsForCall.length).toBe(2);
     });
+
+    it('gives source code refs for unknown prop warning', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<div class="paladin"/>);
+      ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toMatch(/.*className.*\(.*:\d+\)/);
+      expect(console.error.argsForCall[1][0]).toMatch(/.*onClick.*\(.*:\d+\)/);
+    });
+
+    it('gives source code refs for unknown prop warning for update render', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      ReactDOMServer.renderToString(<div className="paladin" />, container);
+      expect(console.error.argsForCall.length).toBe(0);
+
+      ReactDOMServer.renderToString(<div class="paladin" />, container);
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toMatch(/.*className.*\(.*:\d+\)/);
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements ', function() {
+      spyOn(console, 'error');
+
+      ReactDOMServer.renderToString(
+        <div className="foo1">
+        <div class="foo2"/>
+        <div onClick="foo3"/>
+        <div onclick="foo4"/>
+        <div className="foo5"/>
+        <div className="foo6"/>
+        </div>
+      );
+
+      expect(console.error.argsForCall.length).toBe(2);
+
+      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      var previousLine = matches[1];
+
+      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements in composition ', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      var Parent = React.createClass({
+        render: function() {
+          return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
+        },
+      });
+
+      var Child1 = React.createClass({
+        render: function() {
+          return <div class="paladin">Child1</div>;
+        },
+      });
+
+      var Child2 = React.createClass({
+        render: function() {
+          return <div>Child2</div>;
+        },
+      });
+
+      var Child3 = React.createClass({
+        render: function() {
+          return <div onclick="1">Child3</div>;
+        },
+      });
+
+      var Child4 = React.createClass({
+        render: function() {
+          return <div>Child4</div>;
+        },
+      });
+
+      ReactDOMServer.renderToString(<Parent />, container);
+
+      expect(console.error.argsForCall.length).toBe(2);
+
+      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      var previousLine = matches[1];
+
+      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+
+    });
   });
 });

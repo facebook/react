@@ -17,6 +17,7 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var warning = require('warning');
 
 if (__DEV__) {
+  var cachedSource;
   var reactProps = {
     children: true,
     dangerouslySetInnerHTML: true,
@@ -50,9 +51,10 @@ if (__DEV__) {
     // logging too much when using transferPropsTo.
     warning(
       standardName == null,
-      'Unknown DOM property %s. Did you mean %s?',
+      'Unknown DOM property %s. Did you mean %s? %s',
       name,
-      standardName
+      standardName,
+      formatSource(cachedSource)
     );
 
     var registrationName = (
@@ -65,11 +67,17 @@ if (__DEV__) {
 
     warning(
       registrationName == null,
-      'Unknown event handler property %s. Did you mean `%s`?',
+      'Unknown event handler property %s. Did you mean `%s`? %s',
       name,
-      registrationName
+      registrationName,
+      formatSource(cachedSource)
     );
   };
+
+  var formatSource = function(source) {
+    return source ? `(${source.fileName.replace(/^.*[\\\/]/, '')}:${source.lineNumber})` : '';
+  };
+
 }
 
 var ReactDOMUnknownPropertyDevtool = {
@@ -81,6 +89,12 @@ var ReactDOMUnknownPropertyDevtool = {
   },
   onDeleteValueForProperty(node, name) {
     warnUnknownProperty(name);
+  },
+  onMountDOMComponent(debugID, element) {
+    cachedSource = element ? element._source : null;
+  },
+  onUpdateDOMComponent(debugID, element) {
+    cachedSource = element ? element._source : null;
   },
 };
 
