@@ -1,0 +1,34 @@
+[ignore]
+
+.*/build/.*
+.*/node_modules/y18n/.*
+.*/__mocks__/.*
+.*/__tests__/.*
+
+# Ignore Docs
+.*/docs/.*
+
+[include]
+
+[libs]
+./node_modules/fbjs/flow/lib
+./flow
+
+[options]
+module.system=haste
+
+esproposal.class_static_fields=enable
+esproposal.class_instance_fields=enable
+
+munge_underscores=false
+
+suppress_type=$FlowIssue
+suppress_type=$FlowFixMe
+suppress_type=$FixMe
+
+suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe\\($\\|[^(]\\|(\\(>=0\\.\\(2[0-4]\\|1[0-9]\\|[0-9]\\).[0-9]\\)? *\\(site=[a-z,_]*\\)?)\\)
+suppress_comment=\\(.\\|\n\\)*\\$FlowIssue\\((\\(>=0\\.\\(2[0-4]\\|1[0-9]\\|[0-9]\\).[0-9]\\)? *\\(site=[a-z,_]*\\)?)\\)? #[0-9]+
+suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
+
+[version]
+0.24.0
