@@ -6,7 +6,8 @@ var ts = require('typescript');
 var os = require('os');
 
 var tsOptions = {
-  module: 'commonjs',
+  module: ts.ModuleKind.CommonJS,
+  jsx: 'React',
 };
 
 function formatErrorMessage(error) {
