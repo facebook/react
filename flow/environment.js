@@ -6,16 +6,15 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeContainerInfo
  * @flow
  */
-'use strict';
 
-function ReactNativeContainerInfo(tag: number) {
-  var info = {
-    _tag: tag,
-  };
-  return info;
-}
+/* eslint-disable */
 
-module.exports = ReactNativeContainerInfo;
+declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
+  inject: ?((stuff: Object) => void)
+};*/
+
+// temporary patches for React.Component and React.Element
+declare var ReactComponent: typeof React$Component;
+declare var ReactElement: typeof React$Element;
