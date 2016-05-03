@@ -7,7 +7,7 @@ var os = require('os');
 
 var tsOptions = {
   module: ts.ModuleKind.CommonJS,
-  jsx: 'React',
+  jsx: ts.JsxEmit.React,
 };
 
 function formatErrorMessage(error) {
