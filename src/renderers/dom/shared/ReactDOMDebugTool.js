@@ -62,6 +62,12 @@ var ReactDOMDebugTool = {
   onTestEvent() {
     emitEvent('onTestEvent');
   },
+  onMountDOMComponent(debugID, element) {
+    emitEvent('onMountDOMComponent', debugID, element);
+  },
+  onUpdateDOMComponent(debugID, element) {
+    emitEvent('onMountDOMComponent', debugID, element);
+  },
 };
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
