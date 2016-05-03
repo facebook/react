@@ -401,16 +401,19 @@ describe('DOMPropertyOperations', function() {
   describe('injectDOMPropertyConfig', function() {
     it('should support custom attributes', function() {
       // foobar does not exist yet
+      spyOn(console, 'error');
       expect(DOMPropertyOperations.createMarkupForProperty(
         'foobar',
         'simple'
       )).toBe(null);
+      expect(console.error.argsForCall.length).toBe(1);
 
       // foo-* does not exist yet
       expect(DOMPropertyOperations.createMarkupForProperty(
         'foo-xyz',
         'simple'
       )).toBe(null);
+      expect(console.error.argsForCall.length).toBe(2);
 
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({

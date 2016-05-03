@@ -19,6 +19,7 @@ var warning = require('warning');
 if (__DEV__) {
   var reactProps = {
     children: true,
+    defaultValue: true,
     dangerouslySetInnerHTML: true,
     key: true,
     ref: true,
@@ -46,11 +47,10 @@ if (__DEV__) {
         null
     );
 
-    // For now, only warn when we have a suggested correction. This prevents
-    // logging too much when using transferPropsTo.
+    // Suggest a property name correction if possible
     warning(
       standardName == null,
-      'Unknown DOM property %s. Did you mean %s?',
+      'Unable to assign unsupported DOM property %s. Did you mean %s?',
       name,
       standardName
     );
@@ -63,11 +63,19 @@ if (__DEV__) {
       null
     );
 
+    // Suggest an event name correction if possible
     warning(
       registrationName == null,
-      'Unknown event handler property %s. Did you mean `%s`?',
+      'Unable to register unsupported event handler property %s. Did you mean %s?',
       name,
       registrationName
+    );
+
+    // Otherwise at least make it clear that the attributes will be filtered out
+    warning(
+      standardName != null || registrationName != null,
+      'Unable to assign unsupported DOM property %s.',
+      name
     );
   };
 }
