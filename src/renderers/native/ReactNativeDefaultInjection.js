@@ -20,18 +20,18 @@ require('InitializeJavaScriptAppEngine');
 
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
-var IOSDefaultEventPluginOrder = require('IOSDefaultEventPluginOrder');
-var IOSNativeBridgeEventPlugin = require('IOSNativeBridgeEventPlugin');
-var ReactElement = require('ReactElement');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
+var ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
+var ReactNativeComponent = require('ReactNativeComponent');
 var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment');
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
+var ReactNativeEventPluginOrder = require('ReactNativeEventPluginOrder');
 var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactNativeTreeTraversal = require('ReactNativeTreeTraversal');
-var ReactNativeComponent = require('ReactNativeComponent');
-var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 var ResponderEventPlugin = require('ResponderEventPlugin');
@@ -47,7 +47,7 @@ function inject() {
   /**
    * Inject module for resolving DOM hierarchy and plugin ordering.
    */
-  EventPluginHub.injection.injectEventPluginOrder(IOSDefaultEventPluginOrder);
+  EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
   EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
   EventPluginUtils.injection.injectTreeTraversal(ReactNativeTreeTraversal);
 
@@ -61,7 +61,7 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginsByName({
     'ResponderEventPlugin': ResponderEventPlugin,
-    'IOSNativeBridgeEventPlugin': IOSNativeBridgeEventPlugin,
+    'ReactNativeBridgeEventPlugin': ReactNativeBridgeEventPlugin,
   });
 
   ReactUpdates.injection.injectReconcileTransaction(
