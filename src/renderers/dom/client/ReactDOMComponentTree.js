@@ -11,12 +11,10 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 
 var invariant = require('invariant');
 
-var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var Flags = ReactDOMComponentFlags;
 
 var internalInstanceKey =
@@ -74,32 +72,51 @@ function precacheChildNodes(inst, node) {
     return;
   }
   var children = inst._renderedChildren;
+  if (!inst._renderedChildren) {
+    return;
+  }
   var childNode = node.firstChild;
-  outer: for (var name in children) {
+  for (var name in children) {
     if (!children.hasOwnProperty(name)) {
       continue;
     }
     var childInst = children[name];
     var childID = getRenderedNativeOrTextFromComponent(childInst)._domID;
-    if (childID == null) {
-      // We're currently unmounting this child in ReactMultiChild; skip it.
-      continue;
+    invariant(
+      // We reached the end of the DOM children without finding an ID match.
+      childNode != null,
+      'Too few children in DOM node (expected %s components)',
+      Object.keys(children).length
+    );
+    // We assume the child nodes match 1:1 the child instances.
+    var isElement = childNode.nodeType === 1;
+    var isText =
+      childNode.nodeType === 8 && childNode.nodeValue === ' react-text ';
+    var isEmpty =
+      childNode.nodeType === 8 && childNode.nodeValue === ' react-empty ';
+    invariant(
+      isElement || isText || isEmpty,
+      'Unexpected node with type %s found while traversing',
+      childNode.nodeType
+    );
+    if (childID != null) {
+      // Skip this child if we're currently unmounting it in ReactMultiChild
+      precacheNode(childInst, childNode);
     }
-    // We assume the child nodes are in the same order as the child instances.
-    for (; childNode !== null; childNode = childNode.nextSibling) {
-      if ((childNode.nodeType === 1 &&
-           childNode.getAttribute(ATTR_NAME) === String(childID)) ||
-          (childNode.nodeType === 8 &&
-           childNode.nodeValue === ' react-text: ' + childID + ' ') ||
-          (childNode.nodeType === 8 &&
-           childNode.nodeValue === ' react-empty: ' + childID + ' ')) {
-        precacheNode(childInst, childNode);
-        continue outer;
-      }
+    while (
+      isText &&
+      (childNode.nodeType !== 8 ||
+       childNode.nodeValue !== ' /react-text ')
+    ) {
+      childNode = childNode.nextSibling;
     }
-    // We reached the end of the DOM children without finding an ID match.
-    invariant(false, 'Unable to find element with ID %s.', childID);
+    childNode = childNode.nextSibling;
   }
+  invariant(
+    childNode == null,
+    'Too many children in DOM node (expected %s components)',
+    Object.keys(children).length
+  );
   inst._flags |= Flags.hasCachedChildNodes;
 }
 

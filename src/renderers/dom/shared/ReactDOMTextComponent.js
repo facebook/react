@@ -84,7 +84,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
     }
 
     var domID = nativeContainerInfo._idCounter++;
-    var openingValue = ' react-text: ' + domID + ' ';
+    var openingValue = ' react-text ';
     var closingValue = ' /react-text ';
     this._domID = domID;
     this._nativeParent = nativeParent;

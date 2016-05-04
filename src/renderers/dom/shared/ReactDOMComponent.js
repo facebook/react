@@ -709,7 +709,6 @@ ReactDOMComponent.Mixin = {
     if (!this._nativeParent) {
       ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
     }
-    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
     return ret;
   },
 

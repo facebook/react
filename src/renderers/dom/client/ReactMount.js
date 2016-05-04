@@ -76,13 +76,6 @@ function getReactRootElementInContainer(container) {
   }
 }
 
-function internalGetID(node) {
-  // If node is something like a window, document, or text node, none of
-  // which support attributes or a .getAttribute method, gracefully return
-  // the empty string, as if the attribute were missing.
-  return node.getAttribute && node.getAttribute(ATTR_NAME) || '';
-}
-
 /**
  * Mounts this component and inserts it into the DOM.
  *
@@ -244,7 +237,7 @@ TopLevelWrapper.prototype.render = function() {
  *   );
  *
  *   <div id="container">                   <-- Supplied `container`.
- *     <div data-reactid=".3">              <-- Rendered reactRoot of React
+ *     <div>                                <-- Rendered reactRoot of React
  *       // ...                                 component.
  *     </div>
  *   </div>
@@ -459,7 +452,9 @@ var ReactMount = {
 
     var reactRootElement = getReactRootElementInContainer(container);
     var containerHasReactMarkup =
-      reactRootElement && !!internalGetID(reactRootElement);
+      reactRootElement &&
+      reactRootElement.nodeType === 1 &&
+      reactRootElement.hasAttribute(ROOT_ATTR_NAME);
     var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
@@ -474,7 +469,8 @@ var ReactMount = {
       if (!containerHasReactMarkup || reactRootElement.nextSibling) {
         var rootElementSibling = reactRootElement;
         while (rootElementSibling) {
-          if (internalGetID(rootElementSibling)) {
+          if (rootElementSibling.nodeType === 1 &&
+              rootElementSibling.hasAttribute(ROOT_ATTR_NAME)) {
             warning(
               false,
               'render(): Target node has markup rendered by React, but there ' +

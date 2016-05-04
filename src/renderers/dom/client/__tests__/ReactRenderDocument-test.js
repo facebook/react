@@ -210,8 +210,8 @@ describe('rendering React components at document', function() {
       'quirks by rendering at the document root. You should look for ' +
       'environment dependent code in your components and ensure ' +
       'the props are the same client and server side:\n' +
-      ' (client) dy data-reactid="4">Hello world</body></\n' +
-      ' (server) dy data-reactid="4">Goodbye world</body>'
+      ' (client) /title></head><body>Hello world</body></\n' +
+      ' (server) /title></head><body>Goodbye world</body>'
     );
   });
 

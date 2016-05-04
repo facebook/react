@@ -260,11 +260,10 @@ describe('ReactDefaultPerf', function() {
     ReactDefaultPerf.printOperations(measurements);
     expect(console.table.calls.length).toBe(1);
     expect(console.table.argsForCall[0][0]).toEqual([{
-      'data-reactid': '',
       type: 'set innerHTML',
       args: ReactDOMFeatureFlags.useCreateElement ?
         '{"node":"<not serializable>","children":[],"html":null,"text":null}' :
-        '"<div data-reactroot=\\"\\" data-reactid=\\"1\\">hey</div>"',
+        '"<div data-reactroot=\\"\\">hey</div>"',
     }]);
   });
 
