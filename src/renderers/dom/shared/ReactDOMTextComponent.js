@@ -13,6 +13,8 @@
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
+var NativeNodes = require('NativeNodes');
+var MarkupMismatchError = require('MarkupMismatchError');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactPerf = require('ReactPerf');
@@ -58,6 +60,13 @@ Object.assign(ReactDOMTextComponent.prototype, {
    * any features besides containing text content.
    *
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {?ReactDOMComponent} the containing DOM component instance
+   * @param {?object} info about the native container
+	 * @param {object} context
+   * @param {?DOMNode} nativeNodeToReuse when reconnecting to server markup, the
+   *   first DOM node to reuse. Note that with this component type, it should always be a comment
+   *   node, followed by either another comment node (for empty text) or followed by
+   *   a text node and a second comment node.
    * @return {string} Markup for this text node.
    * @internal
    */
@@ -65,7 +74,8 @@ Object.assign(ReactDOMTextComponent.prototype, {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    nativeNodeToReuse
   ) {
     if (__DEV__) {
       ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
@@ -88,7 +98,21 @@ Object.assign(ReactDOMTextComponent.prototype, {
     var closingValue = ' /react-text ';
     this._domID = domID;
     this._nativeParent = nativeParent;
-    if (transaction.useCreateElement) {
+    if (nativeNodeToReuse) {
+      if (NativeNodes.getType(nativeNodeToReuse) !== NativeNodes.types.TEXT) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nativeNodeToReuse,
+          `A text component with text: '${this._stringText}'`);
+      }
+      if (this._stringText !== NativeNodes.getText(nativeNodeToReuse)) {
+        MarkupMismatchError.throwTextMismatchError(
+          nativeNodeToReuse,
+          NativeNodes.getText(nativeNodeToReuse),
+          this._stringText);
+      }
+
+      ReactDOMComponentTree.precacheNode(this, nativeNodeToReuse);
+      this._closingComment = NativeNodes.getLastNode(nativeNodeToReuse);
+    } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var openingComment = ownerDocument.createComment(openingValue);
       var closingComment = ownerDocument.createComment(closingValue);

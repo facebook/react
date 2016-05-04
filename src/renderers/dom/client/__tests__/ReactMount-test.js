@@ -176,8 +176,8 @@ describe('ReactMount', function() {
     );
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      ' (client) nbsp entity: &nbsp; client text</div>\n' +
-      ' (server) nbsp entity: &nbsp; server text</div>'
+      'On server: \'This markup contains an nbsp entity:   server text\'\n' +
+      'On client: \'This markup contains an nbsp entity:   client text\''
     );
   });
 

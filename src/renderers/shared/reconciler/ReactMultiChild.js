@@ -11,6 +11,7 @@
 
 'use strict';
 
+var MarkupMismatchError = require('MarkupMismatchError');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
@@ -218,10 +219,19 @@ var ReactMultiChild = {
      * of `ReactDOMComponent`, a mount image is a string of markup.
      *
      * @param {?object} nestedChildren Nested child maps.
+     * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+     * @param {object} context
+     * @param {?DOMNode[]} childNativeNodesToReuse when reconnecting to server markup,
+     * an array of the DOM nodes to reuse. The length of this array should be exactly the same
+     * as the number of children in nestedChildren, as each element in this array corresponds
+     * to one element in nestedChildren. Each DOM node in this array should be the first
+     * rendered DOM node of the corresponding component child.
+     * @param {?DOMNode} parentNode When reconnecting to server markup, the DOM node
+     * used for this component. This argument is only used to give good dev error messages.
      * @return {array} An array of mounted representations.
      * @internal
      */
-    mountChildren: function(nestedChildren, transaction, context) {
+    mountChildren: function(nestedChildren, transaction, context, childNativeNodesToReuse, parentNode) {
       var children = this._reconcilerInstantiateChildren(
         nestedChildren, transaction, context
       );
@@ -229,19 +239,28 @@ var ReactMultiChild = {
 
       var mountImages = [];
       var index = 0;
+      var childNodeIndex = 0;
       for (var name in children) {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
+          if (childNativeNodesToReuse && !childNativeNodesToReuse[childNodeIndex]) {
+            MarkupMismatchError.throwChildAddedError(parentNode, child);
+          }
           var mountImage = ReactReconciler.mountComponent(
             child,
             transaction,
             this,
             this._nativeContainerInfo,
-            context
+            context,
+            childNativeNodesToReuse ? childNativeNodesToReuse[childNodeIndex] : undefined
           );
           child._mountIndex = index++;
           mountImages.push(mountImage);
+          childNodeIndex++;
         }
+      }
+      if (childNativeNodesToReuse && childNodeIndex < childNativeNodesToReuse.length) {
+        MarkupMismatchError.throwChildMissingError(childNativeNodesToReuse[childNodeIndex]);
       }
 
       if (__DEV__) {

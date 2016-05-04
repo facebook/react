@@ -12,8 +12,9 @@
 'use strict';
 
 var DOMLazyTree = require('DOMLazyTree');
+var NativeNodes = require('NativeNodes');
+var MarkupMismatchError = require('MarkupMismatchError');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-
 
 var ReactDOMEmptyComponent = function(instantiate) {
   // ReactCompositeComponent uses this:
@@ -29,7 +30,8 @@ Object.assign(ReactDOMEmptyComponent.prototype, {
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+    nativeNodeToReuse
   ) {
     var domID = nativeContainerInfo._idCounter++;
     this._domID = domID;
@@ -37,7 +39,13 @@ Object.assign(ReactDOMEmptyComponent.prototype, {
     this._nativeContainerInfo = nativeContainerInfo;
 
     var nodeValue = ' react-empty: ' + this._domID + ' ';
-    if (transaction.useCreateElement) {
+
+    if (nativeNodeToReuse) {
+      if (NativeNodes.getType(nativeNodeToReuse) !== NativeNodes.types.EMPTY) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nativeNodeToReuse, 'An empty (or null) component');
+      }
+      ReactDOMComponentTree.precacheNode(this, nativeNodeToReuse);
+    } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var node = ownerDocument.createComment(nodeValue);
       ReactDOMComponentTree.precacheNode(this, node);

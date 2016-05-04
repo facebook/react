@@ -22,6 +22,8 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
+var MarkupMismatchError = require('MarkupMismatchError');
+var NativeNodes = require('NativeNodes');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
@@ -34,6 +36,7 @@ var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
+var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
@@ -484,14 +487,18 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?ReactDOMComponent} the containing DOM component instance
    * @param {?object} info about the native container
-   * @param {object} context
+	 * @param {object} context
+	 * @param {?DOMNode} nativeNodeToReuse when reconnecting to server markup, the
+   *   DOM node to reuse. Note that with this component type, it should always be a
+   *   single DOM Element.
    * @return {string} The computed markup.
    */
   mountComponent: function(
     transaction,
     nativeParent,
     nativeContainerInfo,
-    context
+    context,
+		nativeNodeToReuse
   ) {
     this._rootNodeID = globalIdCounter++;
     this._domID = nativeContainerInfo._idCounter++;
@@ -585,7 +592,32 @@ ReactDOMComponent.Mixin = {
     }
 
     var mountImage;
-    if (transaction.useCreateElement) {
+    if (nativeNodeToReuse) {
+      // Check to see if the reusable node is of the correct type. It should be
+      // a single element.
+      if (NativeNodes.getType(nativeNodeToReuse) !== NativeNodes.types.ELEMENT) {
+        MarkupMismatchError.throwComponentTypeMismatchError(nativeNodeToReuse,
+          `A <${this._currentElement.type}> element.`);
+      }
+
+      // Check to make sure the node to reuse is the same tag as this component.
+      if (this._currentElement.type !== nativeNodeToReuse.tagName.toLowerCase()) {
+        MarkupMismatchError.throwNodeTypeMismatchError(
+          nativeNodeToReuse, this._currentElement.type);
+      }
+      // Precache the node, like we do in the useCreateElement branch, for event
+      // handling.
+      ReactDOMComponentTree.precacheNode(this, nativeNodeToReuse);
+      this._flags |= Flags.hasCachedChildNodes;
+
+      // Check that the attributes are the same between the DOM node and the component
+      // props. This method throws if it finds a difference.
+      this._compareNodeAttributesToProps(nativeNodeToReuse, props, transaction);
+
+      // Check that children of the DOM node and this component are
+      // the same. This method throws if it finds a difference.
+      this._compareChildren(transaction, props, context, nativeNodeToReuse);
+    } else if (transaction.useCreateElement) {
       var ownerDocument = nativeContainerInfo._ownerDocument;
       var el;
       if (namespaceURI === DOMNamespaces.html) {
@@ -645,6 +677,85 @@ ReactDOMComponent.Mixin = {
     }
 
     return mountImage;
+  },
+
+  /**
+   * When walking the DOM tree to see if server-rendered markup mismatches
+   * the rendered component, this method checks to make sure the attributes
+   * values of the DOM node match the props of this component.
+   *
+   * This method has side effects because events get registered and the style
+   * attribute gets cached in this._previousStyleCopy.
+   *
+   * @private
+   * @param {DOMElement} node with attributes to test
+   * @param {object} component props to compare to node attributes
+   * @throws when they don't match.
+   */
+  _compareNodeAttributesToProps: function(node, props, transaction) {
+    var attrs = node.attributes;
+    for (var i = 0; i < attrs.length; i++) {
+      var attrName = attrs[i].name;
+      var attrValue = attrs[i].value;
+      if (attrName === DOMProperty.ID_ATTRIBUTE_NAME ||
+        attrName === DOMProperty.ROOT_ATTRIBUTE_NAME ||
+        attrName === ReactMarkupChecksum.CHECKSUM_ATTR_NAME) {
+        continue;
+      }
+      if (attrName === 'class') {
+        attrName = 'className';
+      }
+      if (!props.hasOwnProperty(attrName)) {
+        MarkupMismatchError.throwAttributeMissingMismatchError(node, attrName, attrValue);
+      }
+      var propValue = props[attrName];
+      if (attrName === STYLE) {
+        // we must hold on to a copy of the styles for _updateDOMProperties for later
+        // updates.
+        if (__DEV__) {
+          // See `_updateDOMProperties`. style block
+          this._previousStyle = propValue;
+        }
+        this._previousStyleCopy = Object.assign({}, propValue);
+        // style is an object in props but a string attribute in the DOM. Ideally,
+        // we would do a style-by-style comparison here, so as not to be order-sensitive,
+        // but for now, we will just string compare, which is order-sensitive.
+        propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
+      }
+      // boolean attributes, like disabled or checked, show up with a blank string as their
+      // value in the DOM and true as their value in props.
+      if (propValue === true) {
+        propValue = '';
+      }
+      if (propValue !== attrValue) {
+        MarkupMismatchError.throwAttributeChangedMismatchError(node, attrName, attrValue, propValue);
+      }
+    }
+    for (var name in props) {
+      if (!props.hasOwnProperty(name)) {
+        continue;
+      }
+      var value = props[name];
+      if (registrationNameModules.hasOwnProperty(name)) {
+        if (value) {
+          enqueuePutListener(this, name, value, transaction);
+        }
+      } else {
+        // inputs are automatically given a bunch of attributes like type with the
+        // value undefined, so we ignore those (see ReactDOMInput).
+        if (value !== undefined
+          && value !== null
+          && !node.hasAttribute(name === 'className' ? 'class' : name)
+          && name !== 'children'
+          && name !== 'dangerouslySetInnerHTML'
+          // for boolean props, having a value of false in component props is the same
+          // as just not existing in the DOM, so we shouldn't throw in that case.
+          && !(value === false && !node.hasAttribute(name))
+        ) {
+          MarkupMismatchError.throwAttributeAddedMismatchError(node, name, props[name]);
+        }
+      }
+    }
   },
 
   /**
@@ -764,6 +875,56 @@ ReactDOMComponent.Mixin = {
       return '\n' + ret;
     } else {
       return ret;
+    }
+  },
+
+  _compareChildren: function(transaction, props, context, node) {
+    // Intentional use of != to avoid catching zero/false.
+    var innerHTML = props.dangerouslySetInnerHTML;
+    if (innerHTML != null) {
+      if (innerHTML.__html != null) {
+        // getting innerHTML can normalize some things (like adding closing tags, for example).
+        // to see if server and client are the same, we have to normalize the client text.
+        var el = document.createElement('div');
+        el.innerHTML = innerHTML.__html;
+        if (el.innerHTML !== node.innerHTML) {
+          MarkupMismatchError.throwInnerHtmlMismatchError(node, node.innerHTML, el.innerHTML);
+        }
+      }
+    } else {
+      // textareas may have been modified before markup reconnection, which results
+      // in a mismatch because the text node child of the textarea mismatches with
+      // the value or defaultValue in props. because of this, we just ignore textarea
+      // children.
+      if (this._tag === 'textarea') {
+        return;
+      }
+      var contentToUse =
+        CONTENT_TYPES[typeof props.children] ? props.children : null;
+      var childrenToUse = contentToUse != null ? null : props.children;
+      var childNativeNodesToReuse = NativeNodes.getNativeNodeChildren(node);
+      if (contentToUse != null) {
+        // TODO: Validate that text is allowed as a child of this node
+        if (childNativeNodesToReuse.length > 0) {
+          MarkupMismatchError.throwChildMissingError(childNativeNodesToReuse[0]);
+        }
+        if (NativeNodes.getText(node) !== String(contentToUse)) {
+          MarkupMismatchError.throwTextMismatchError(node, NativeNodes.getText(node), contentToUse);
+        }
+      } else if (childrenToUse != null) {
+        this.mountChildren(
+          childrenToUse,
+          transaction,
+          context,
+          childNativeNodesToReuse,
+          node
+        );
+      } else {
+        // there are no children in the component tree; check to see if the DOM has children.
+        if (childNativeNodesToReuse.length > 0) {
+          MarkupMismatchError.throwChildMissingError(childNativeNodesToReuse[0]);
+        }
+      }
     }
   },
 

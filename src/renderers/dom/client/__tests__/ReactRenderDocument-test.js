@@ -203,15 +203,18 @@ describe('rendering React components at document', function() {
       ReactDOM.render(<Component text="Hello world" />, testDocument);
     }).toThrow(
       'You\'re trying to render a component to the document using ' +
-      'server rendering but the checksum was invalid. This usually ' +
+      'server rendering but the markup did not match. This usually ' +
       'means you rendered a different component type or props on ' +
       'the client from the one on the server, or your render() methods ' +
       'are impure. React cannot handle this case due to cross-browser ' +
       'quirks by rendering at the document root. You should look for ' +
       'environment dependent code in your components and ensure ' +
       'the props are the same client and server side:\n' +
-      ' (client) dy data-reactid="4">Hello world</body></\n' +
-      ' (server) dy data-reactid="4">Goodbye world</body>'
+      'Node: html > body\n' +
+      'Mismatch: The client rendered some text which was different than that ' +
+      'which was present in the server-generated markup.\n' +
+      'On server: \'Goodbye world\'\n' +
+      'On client: \'Hello world\'\n'
     );
   });
 
