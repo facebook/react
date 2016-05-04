@@ -23,6 +23,6 @@
     "transform-es3-member-expression-literals",
     "transform-es3-property-literals",
     "./scripts/babel/transform-object-assign-require",
-    "babel-preset-react/node_modules/babel-plugin-transform-react-jsx-source"
+    "transform-react-jsx-source"
   ]
 }
