@@ -177,6 +177,25 @@ describe('CSSPropertyOperations', function() {
     );
   });
 
+  it('should allow array of vendor prefixed values', function() {
+    var styles = {
+      padding: 0,
+      margin: 0,
+      listStyle: 'none',
+      display: ReactDOM.CSS.multi('-webkit-box', '-moz-box', '-ms-flexbox', '-webkit-flex'),
+      WebkitFlexFlow: 'row wrap',
+      justifyContent: 'space-around',
+    };
+
+    var markup = ReactDOMServer.renderToString(
+      <div style={styles} />
+    );
+
+    expect(markup).toContain('-ms-flexbox');
+    expect(markup).toContain('-webkit-flex');
+    expect(markup).toContain('-webkit-box');
+  });
+
   it('should warn about style having a trailing semicolon', function() {
     var Comp = React.createClass({
       displayName: 'Comp',
