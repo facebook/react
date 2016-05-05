@@ -170,6 +170,10 @@ var ReactCompositeComponentMixin = {
 
     // ComponentWillUnmount shall only be called once
     this._calledComponentWillUnmount = false;
+
+    if (__DEV__) {
+      this._warnedAboutRefsInRender = false;
+    }
   },
 
   /**
