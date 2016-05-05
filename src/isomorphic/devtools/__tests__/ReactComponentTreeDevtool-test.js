@@ -1697,6 +1697,31 @@ describe('ReactComponentTreeDevtool', () => {
     });
   });
 
+  it('reports update counts', () => {
+    var node = document.createElement('div');
+
+    ReactDOM.render(<div className="a" />, node);
+    var divID = ReactComponentTreeDevtool.getRootIDs()[0];
+    expect(ReactComponentTreeDevtool.getUpdateCount(divID)).toEqual(0);
+
+    ReactDOM.render(<span className="a" />, node);
+    var spanID = ReactComponentTreeDevtool.getRootIDs()[0];
+    expect(ReactComponentTreeDevtool.getUpdateCount(divID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(spanID)).toEqual(0);
+
+    ReactDOM.render(<span className="b" />, node);
+    expect(ReactComponentTreeDevtool.getUpdateCount(divID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(spanID)).toEqual(1);
+
+    ReactDOM.render(<span className="c" />, node);
+    expect(ReactComponentTreeDevtool.getUpdateCount(divID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(spanID)).toEqual(2);
+
+    ReactDOM.unmountComponentAtNode(node);
+    expect(ReactComponentTreeDevtool.getUpdateCount(divID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(spanID)).toEqual(2);
+  });
+
   it('does not report top-level wrapper as a root', () => {
     var node = document.createElement('div');
 

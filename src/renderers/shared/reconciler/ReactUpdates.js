@@ -15,7 +15,6 @@ var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstrumentation = require('ReactInstrumentation');
-var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
@@ -222,11 +221,6 @@ var flushBatchedUpdates = function() {
     ReactInstrumentation.debugTool.onEndFlush();
   }
 };
-flushBatchedUpdates = ReactPerf.measure(
-  'ReactUpdates',
-  'flushBatchedUpdates',
-  flushBatchedUpdates
-);
 
 /**
  * Mark a component as needing a rerender, adding an optional callback to a

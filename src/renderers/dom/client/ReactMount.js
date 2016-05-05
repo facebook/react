@@ -22,7 +22,6 @@ var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
@@ -710,10 +709,5 @@ var ReactMount = {
     }
   },
 };
-
-ReactPerf.measureMethods(ReactMount, 'ReactMount', {
-  _renderNewRootComponent: '_renderNewRootComponent',
-  _mountImageIntoNode: '_mountImageIntoNode',
-});
 
 module.exports = ReactMount;

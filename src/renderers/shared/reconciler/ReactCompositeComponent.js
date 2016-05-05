@@ -18,7 +18,6 @@ var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
-var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactReconciler = require('ReactReconciler');
@@ -395,7 +394,7 @@ var ReactCompositeComponentMixin = {
       instanceOrElement = Component(publicProps, publicContext, ReactUpdateQueue);
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'render'
           );
@@ -1209,16 +1208,6 @@ var ReactCompositeComponentMixin = {
   _instantiateReactComponent: null,
 
 };
-
-ReactPerf.measureMethods(
-  ReactCompositeComponentMixin,
-  'ReactCompositeComponent',
-  {
-    mountComponent: 'mountComponent',
-    updateComponent: 'updateComponent',
-    _renderValidatedComponent: '_renderValidatedComponent',
-  }
-);
 
 var ReactCompositeComponent = {
 

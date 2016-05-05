@@ -1685,6 +1685,29 @@ describe('ReactComponentTreeDevtool', () => {
     });
   });
 
+  it('reports update counts', () => {
+    ReactNative.render(<View />, 1);
+    var viewID = ReactComponentTreeDevtool.getRootIDs()[0];
+    expect(ReactComponentTreeDevtool.getUpdateCount(viewID)).toEqual(0);
+
+    ReactNative.render(<Image />, 1);
+    var imageID = ReactComponentTreeDevtool.getRootIDs()[0];
+    expect(ReactComponentTreeDevtool.getUpdateCount(viewID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(imageID)).toEqual(0);
+
+    ReactNative.render(<Image />, 1);
+    expect(ReactComponentTreeDevtool.getUpdateCount(viewID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(imageID)).toEqual(1);
+
+    ReactNative.render(<Image />, 1);
+    expect(ReactComponentTreeDevtool.getUpdateCount(viewID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(imageID)).toEqual(2);
+
+    ReactNative.unmountComponentAtNode(1);
+    expect(ReactComponentTreeDevtool.getUpdateCount(viewID)).toEqual(0);
+    expect(ReactComponentTreeDevtool.getUpdateCount(imageID)).toEqual(2);
+  });
+
   it('does not report top-level wrapper as a root', () => {
     ReactNative.render(<View><Image /></View>, 1);
     expect(getRootDisplayNames()).toEqual(['View']);

@@ -15,7 +15,6 @@ var ReactElement = require('ReactElement');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
-var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
@@ -143,6 +142,10 @@ var ReactNativeMount = {
       // Mute future events from the top level wrapper.
       // It is an implementation detail that devtools should not know about.
       instance._debugID = 0;
+
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onBeginFlush();
+      }
     }
 
     // The initial render is synchronous but any updates that happen during
@@ -159,6 +162,7 @@ var ReactNativeMount = {
       ReactInstrumentation.debugTool.onMountRootComponent(
         instance._renderedComponent._debugID
       );
+      ReactInstrumentation.debugTool.onEndFlush();
     }
     var component = instance.getPublicInstance();
     if (callback) {
@@ -171,20 +175,15 @@ var ReactNativeMount = {
    * @param {View} view View tree image.
    * @param {number} containerViewID View to insert sub-view into.
    */
-  _mountImageIntoNode: ReactPerf.measure(
-    // FIXME(frantic): #4441289 Hack to avoid modifying react-tools
-    'ReactComponentBrowserEnvironment',
-    'mountImageIntoNode',
-    function(mountImage, containerID) {
-      // Since we now know that the `mountImage` has been mounted, we can
-      // mark it as such.
-      var childTag = mountImage;
-      UIManager.setChildren(
-        containerID,
-        [childTag]
-      );
-    }
-  ),
+  _mountImageIntoNode: function(mountImage, containerID) {
+    // Since we now know that the `mountImage` has been mounted, we can
+    // mark it as such.
+    var childTag = mountImage;
+    UIManager.setChildren(
+      containerID,
+      [childTag]
+    );
+  },
 
   /**
    * Standard unmounting of the component that is rendered into `containerID`,
@@ -241,11 +240,5 @@ var ReactNativeMount = {
   },
 
 };
-
-ReactNativeMount.renderComponent = ReactPerf.measure(
-  'ReactMount',
-  '_renderNewRootComponent',
-  ReactNativeMount.renderComponent
-);
 
 module.exports = ReactNativeMount;
