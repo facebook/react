@@ -13,7 +13,6 @@
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactPerf = require('ReactPerf');
 
 /**
  * Abstracts away all functionality of the reconciler that requires knowledge of
@@ -39,13 +38,5 @@ var ReactComponentBrowserEnvironment = {
   },
 
 };
-
-ReactPerf.measureMethods(
-  ReactComponentBrowserEnvironment,
-  'ReactComponentBrowserEnvironment',
-  {
-    replaceNodeWithMarkup: 'replaceNodeWithMarkup',
-  }
-);
 
 module.exports = ReactComponentBrowserEnvironment;

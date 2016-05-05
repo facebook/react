@@ -34,7 +34,6 @@ var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
-var ReactPerf = require('ReactPerf');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
 var emptyFunction = require('emptyFunction');
@@ -1117,11 +1116,6 @@ ReactDOMComponent.Mixin = {
   },
 
 };
-
-ReactPerf.measureMethods(ReactDOMComponent.Mixin, 'ReactDOMComponent', {
-  mountComponent: 'mountComponent',
-  receiveComponent: 'receiveComponent',
-});
 
 Object.assign(
   ReactDOMComponent.prototype,

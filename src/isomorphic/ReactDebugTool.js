@@ -72,6 +72,7 @@ function resetMeasurements() {
           tree[id] = {
             displayName: ReactComponentTreeDevtool.getDisplayName(id),
             text: ReactComponentTreeDevtool.getText(id),
+            updateCount: ReactComponentTreeDevtool.getUpdateCount(id),
             childIDs: ReactComponentTreeDevtool.getChildIDs(id),
             // Text nodes don't have owners but this is close enough.
             ownerID: ownerID || ReactComponentTreeDevtool.getOwnerID(parentID),
@@ -144,7 +145,7 @@ var ReactDebugTool = {
   onBeginLifeCycleTimer(debugID, timerType) {
     emitEvent('onBeginLifeCycleTimer', debugID, timerType);
     if (__DEV__) {
-      if (isProfiling) {
+      if (isProfiling && currentFlushNesting > 0) {
         warning(
           !currentTimerType,
           'There is an internal error in the React performance measurement code. ' +
@@ -162,7 +163,7 @@ var ReactDebugTool = {
   },
   onEndLifeCycleTimer(debugID, timerType) {
     if (__DEV__) {
-      if (isProfiling) {
+      if (isProfiling && currentFlushNesting > 0) {
         warning(
           currentTimerType === timerType,
           'There is an internal error in the React performance measurement code. ' +
@@ -175,7 +176,7 @@ var ReactDebugTool = {
         currentFlushMeasurements.push({
           timerType,
           instanceID: debugID,
-          duration: performance.now() - currentTimerStartTime,
+          duration: performanceNow() - currentTimerStartTime,
         });
         currentTimerStartTime = null;
         currentTimerDebugID = null;

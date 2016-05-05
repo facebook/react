@@ -25,6 +25,7 @@ function updateTree(id, update) {
       childIDs: [],
       displayName: 'Unknown',
       isMounted: false,
+      updateCount: 0,
     };
   }
   update(tree[id]);
@@ -95,6 +96,10 @@ var ReactComponentTreeDevtool = {
     rootIDs.push(id);
   },
 
+  onUpdateComponent(id) {
+    updateTree(id, item => item.updateCount++);
+  },
+
   onUnmountComponent(id) {
     updateTree(id, item => item.isMounted = false);
     rootIDs = rootIDs.filter(rootID => rootID !== id);
@@ -134,6 +139,11 @@ var ReactComponentTreeDevtool = {
   getText(id) {
     var item = tree[id];
     return item ? item.text : null;
+  },
+
+  getUpdateCount(id) {
+    var item = tree[id];
+    return item ? item.updateCount : 0;
   },
 
   getRootIDs() {
