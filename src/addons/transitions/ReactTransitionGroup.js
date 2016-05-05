@@ -117,7 +117,7 @@ var ReactTransitionGroup = React.createClass({
 
   _handleDoneAppearing: function(key) {
     var component = this.refs[key];
-    if (component.componentDidAppear) {
+    if (component && component.componentDidAppear) {
       component.componentDidAppear();
     }
 
@@ -182,7 +182,7 @@ var ReactTransitionGroup = React.createClass({
   _handleDoneLeaving: function(key) {
     var component = this.refs[key];
 
-    if (component.componentDidLeave) {
+    if (component && component.componentDidLeave) {
       component.componentDidLeave();
     }
 
