@@ -136,11 +136,6 @@ function instantiateReactComponent(node) {
   instance._mountImage = null;
 
   if (__DEV__) {
-    instance._isOwnerNecessary = false;
-    instance._warnedAboutRefsInRender = false;
-  }
-
-  if (__DEV__) {
     var debugID = isEmpty ? 0 : nextDebugID++;
     instance._debugID = debugID;
 
