@@ -68,7 +68,9 @@ script:
       fi
     elif [ "$TEST_TYPE" = test ]; then
       set -e
-      if [ "$TRAVIS_PULL_REQUEST" = false ]; then
+      # Disabling coverage because it's broken:
+      # https://travis-ci.org/facebook/react/jobs/128163922
+      if false; then
         ./node_modules/.bin/grunt jest:coverage
         cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
       else
