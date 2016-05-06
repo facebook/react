@@ -14,7 +14,9 @@
 'use strict';
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDebugToolEventForwarderDevTool = require('ReactDebugToolEventForwarderDevTool');
 var ReactDefaultInjection = require('ReactDefaultInjection');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMount = require('ReactMount');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
@@ -133,6 +135,9 @@ if (__DEV__) {
       }
     }
   }
+
+  ReactInstrumentation.debugTool.addDevtool(ReactDebugToolEventForwarderDevTool);
+
 }
 
 module.exports = React;
