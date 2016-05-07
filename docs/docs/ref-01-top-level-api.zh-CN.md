@@ -17,7 +17,7 @@ redirect_from: "/docs/reference-zh-CN.html"
 class Component
 ```
 
-当使用ES6 类定义时，React.Component是 React 组件的基类。如何在React中使用 ES6 class 请参见 [可重用组件](/react/docs/reusable-components-zh-CN.html#es6-classes)。基类实际提供了哪些方法 请参见 [组件 API](/react/docs/component-api-zh-CN.html).
+当使用 ES6 类定义时，React.Component 是 React 组件的基类。如何在 React 中使用 ES6 class 请参见[可重用组件](/react/docs/reusable-components-zh-CN.html#es6-classes)。基类实际提供了哪些方法 请参见[组件 API](/react/docs/component-api-zh-CN.html)。
 
 
 ### React.createClass
@@ -26,9 +26,9 @@ class Component
 ReactClass createClass(object specification)
 ```
 
-给定一份规格（specification），创建一个组件类。组件通常要实现一个 `render()` 方法，它返回 **单个的** 子级。该子级可能包含任意深度的子级结构。组件与标准原型类的不同之处在于，你不需要对它们调用 new。  它们是为你在后台构造实例（通过 new）的便利的包装器。
+给定一份规格（specification），创建一个组件类。组件通常要实现一个 `render()` 方法，它返回 **单个的** 子级。该子级可能包含任意深度的子级结构。组件与标准原型类的不同之处在于，你不需要对它们调用 new。它们是为你在后台构造实例（通过 new）的便利的包装器。
 
-更多关于规格对象（specification object）的信息，请见 [组件规格和生命周期](/react/docs/component-specs-zh-CN.html) 。
+更多关于规格对象（specification object）的信息，请见[组件规格和生命周期](/react/docs/component-specs-zh-CN.html)。
 
 
 ### React.createElement
@@ -41,7 +41,7 @@ ReactElement createElement(
 )
 ```
 
-创建并返回一个新的给定类型的 `ReactElement`。type 参数既可以是一个 html 标签名字符串（例如. “div”，“span”，等等），也可以是一个 `ReactClass` （用 `React.createClass` 创建的）。
+创建并返回一个新的给定类型的 `ReactElement`。type 参数既可以是一个 html 标签名字符串（例如：“div”，“span”，等等），也可以是一个 `ReactClass` （用 `React.createClass` 创建的）。
 
 
 
@@ -85,7 +85,7 @@ boolean isValidElement(* object)
 
 ### React.PropTypes
 
-`React.PropTypes` 包含了能与 组件的`propTypes` 对象一起使用的类型，用以验证传入你的组件的 props。更多有关 `propTypes` 的信息，请见 [可重用组件](/react/docs/reusable-components-zh-CN.html)。
+`React.PropTypes` 包含了能与 组件的`propTypes` 对象一起使用的类型，用以验证传入你的组件的 props。更多有关 `propTypes` 的信息，请见[可重用组件](/react/docs/reusable-components-zh-CN.html)。
 
 
 ### React.Children
@@ -130,11 +130,11 @@ object React.Children.only(object children)
 array React.Children.toArray(object children)
 ```
 
-以赋key给每个child的平坦的数组形式,返回不透明的 `children` 数据结构.如果你想操纵你的渲染方法的子级的合集这很有用,尤其如果你想在 `this.props.children` 传下之前渲染或者切割.
+以赋key给每个child的平坦的数组形式，返回不透明的 `children` 数据结构。如果你想操纵你的渲染方法的子级的合集这很有用，尤其如果你想在 `this.props.children` 传下之前渲染或者切割。
 
 ## ReactDOM
 
-`react-dom` 包提供了 具体的DOM方法,这些方法可以在你的app的顶层作为一个你需要时脱离React模式的安全舱口 被使用.你的大多数组件不需要使用这个模块.
+`react-dom` 包提供了具体的DOM方法，这些方法可以在你的 app 的顶层作为一个你需要时脱离 React 模式的安全舱口被使用。你的大多数组件不需要使用这个模块。
 
 ### ReactDOM.render
 
@@ -146,7 +146,7 @@ ReactComponent render(
 )
 ```
 
-渲染一个 ReactElement 到 DOM 里提供的 `容器（container）`中，并返回一个对 组件(或者返回 `null` 对于 [无状态组件](/react/docs/reusable-components.html#stateless-functions)) 的[引用](/react/docs/more-about-refs.html) 
+渲染一个 ReactElement 到 DOM 里提供的 `容器（container）`中，并返回一个对组件（或者返回 `null` 对于[无状态组件](/react/docs/reusable-components.html#stateless-functions)）的[引用](/react/docs/more-about-refs.html)。
 
 如果 ReactElement 之前被渲染到了 `container` 中，这将对它执行一次更新，并仅变动需要变动的 DOM 来反映最新的 React 组件。
 
@@ -156,11 +156,10 @@ ReactComponent render(
 >
 > `ReactDOM.render()` 控制你传入的 container 节点的内容。
 >  当初次调用时，任何现存于内的 DOM 元素将被替换。
->  其后的调用使用 React的 diffing 算法来有效率的更新。
+>  其后的调用使用 React 的 diffing 算法来有效率的更新。
 >
 > `ReactDOM.render()` 不会修改 container 节点（只修改 container 的子级）。
->  将来，也许能够直接插入一个组件到已经存在的 DOM 节点而不覆盖
->  现有的子级。
+>  将来，也许能够直接插入一个组件到已经存在的 DOM 节点而不覆盖现有的子级。
 
 
 ### ReactDOM.unmountComponentAtNode
@@ -177,19 +176,19 @@ boolean unmountComponentAtNode(DOMElement container)
 ```javascript
 DOMElement findDOMNode(ReactComponent component)
 ```
-如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。**在大多数情况下,你可以连接一个ref到DOM节点上,并避免使用 `findDOMNode`** 如果 `render` 返回 `null` 或者 `false`， `findDOMNode` 返回 `null`.
+如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。**在大多数情况下,你可以连接一个ref到DOM节点上,并避免使用 `findDOMNode`。** 如果 `render` 返回 `null` 或者 `false`， `findDOMNode` 返回 `null`。
 
-> 注意:
+> 注意：
 >
-> `findDOMNode()` 是一个用来访问底层DOM节点的安全舱口.大多数情况下,使用这个安全舱口是不被鼓励的,因为它穿破了组件的抽象.
+> `findDOMNode()` 是一个用来访问底层DOM节点的安全舱口。大多数情况下，使用这个安全舱口是不被鼓励的，因为它穿破了组件的抽象。
 >
-> `findDOMNode()` 只在已挂载的组件上工作(即是,已经被放置到DOM里的组件).如果你尝试在没有被挂载的组件上调用这个方法(比如在 一个没有被创建的组件的`render()`里 调用 `findDOMNode()` )会抛出一个异常. 
+> `findDOMNode()` 只在已挂载的组件上工作（即是,已经被放置到DOM里的组件）。如果你尝试在没有被挂载的组件上调用这个方法（比如在 一个没有被创建的组件的`render()`里 调用 `findDOMNode()`）会抛出一个异常。
 >
-> `findDOMNode()` 不能用在无状态组件.
+> `findDOMNode()` 不能用在无状态组件。
 
 ## ReactDOMServer
 
-`react-dom/server` 允许你在服务器上渲染你的组件.
+`react-dom/server` 允许你在服务器上渲染你的组件。
 
 ### ReactDOMServer.renderToString
 
@@ -208,4 +207,4 @@ string renderToString(ReactElement element)
 string renderToStaticMarkup(ReactElement element)
 ```
 
-类似于 `renderToString` ，除了不创建额外的 DOM 属性，比如 `data-react-id`，这仅在 React 内部使用的属性。如果你想用 React 做一个简单的静态页面生成器，这是很有用的，因为去除额外的属性能够节省很多字节。
+类似于 `renderToString`，除了不创建额外的 DOM 属性，比如 `data-react-id`，这仅在 React 内部使用的属性。如果你想用 React 做一个简单的静态页面生成器，这是很有用的，因为去除额外的属性能够节省很多字节。

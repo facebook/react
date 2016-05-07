@@ -21,15 +21,15 @@ void setState(
 ```
 执行一个 nextState 到当前 state 的浅合并。这是你从事件处理器和服务器请求回调用来触发 UI 更新的主要手段。
 
-第一个参数可以是一个对象（包含0或者多个keys来更新）或者一个（state 和 props的）函数，它返回一个包含要更新的keys的对象。
+第一个参数可以是一个对象（包含0或者多个keys来更新）或者一个（state 和 props的）函数，它返回一个包含要更新的 keys 的对象。
 
-这里是一个简单的运用:
+这里是一个简单的运用：
 
 ```javascript
 setState({mykey: 'my new value'});
 ```
 
-也可以以 `function(state, props)` 传递一个函数。当你想要把一个在设置任何值之前参考前一次 state+props 的值的原子更新放在队列中 这会有很用。例如，假如我们想在 state 增加一个值:
+也可以以 `function(state, props)` 传递一个函数。当你想要把一个在设置任何值之前参考前一次 state+props 的值的原子更新放在队列中 这会有很用。例如，假如我们想在 state 增加一个值：
 
 ```javascript
 setState(function(previousState, currentProps) {
@@ -59,9 +59,9 @@ void replaceState(
 )
 ```
 
-类似于 `setState()`，但是删除任何 先前存在但不在 nextState 里的 state 键。
+类似于 `setState()`，但是删除任何先前存在但不在 nextState 里的 state 键。
 
-> 注意:
+> 注意：
 >
 > 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
 
@@ -78,7 +78,7 @@ void forceUpdate(
 
 调用 `forceUpdate()` 将会导致 `render()` 跳过 `shouldComponentUpdate()` 在组件上被调用，这会为子级触发正常的生命周期方法。包括每个子级的 `shouldComponentUpdate()` 方法。如果标记改变了，React 仍仅只更新 DOM。
 
-通常你应该试着避免所有对 `forceUpdate()` 的使用并且在 `render()` 里只从 `this.props` 和 `this.state` 读取。这会使你的组件 "纯粹" 并且你的组件会更简单和高效。
+通常你应该试着避免所有对 `forceUpdate()` 的使用并且在 `render()` 里只从 `this.props` 和 `this.state` 读取。这会使你的组件“纯粹”，并且你的组件会更简单和高效。
 
 
 ### getDOMNode
@@ -89,9 +89,9 @@ DOMElement getDOMNode()
 
 如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。如果 `render` 返回 `null` 或者 `false` 的时候，`this.getDOMNode()` 返回 `null`。
 
-> Note:
+> 注意：
 >
-> getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode).
+> getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换（/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode）。
 >
 > 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
 
@@ -104,9 +104,9 @@ boolean isMounted()
 
 如果组件渲染到了 DOM 中，`isMounted()` 返回 true，否则返回 `false`。可以使用该方法来控制对 `setState()` 和 `forceUpdate()` 的异步调用。
 
-> 注意:
+> 注意：
 >
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除,所以你也要移除它 [start migrating away from isMounted() now](/react/blog/2015/12/16/ismounted-antipattern.html)
+> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除，所以你也要移除它 [start migrating away from isMounted() now](/react/blog/2015/12/16/ismounted-antipattern.html)。
 
 
 ### setProps
@@ -122,11 +122,11 @@ void setProps(
 
 在根组件上调用 `setProps()` 会改变他的属性并触发一次重绘。另外，你可以提供一个可选的回调函数，一旦 `setProps` 完成并且组件被重绘它就执行。
 
-> 注意:
+> 注意：
 >
-> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用. 取代调用 `setProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
+> 这个方法被弃用了并会很快移除。这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。取代调用 `setProps`，试着以新的 props 再次调用 `ReactDOM.render()`。更多的注意事项，见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)。
 >
-> 如果可能，上述的在同一个节点上再次调用 `ReactDOM.render()` 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）
+> 如果可能，上述的在同一个节点上再次调用 `ReactDOM.render()` 的方法是优先替代的。它往往使更新更容易理解（两种方法并没有显著的性能区别）。
 >
 > 这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 `ReactDOM.render()` 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 `setProps()`，不要利用响应式更新，而是当子组件在 `render()` 中创建的时候传入新的 prop 到子组件中。
 
@@ -141,6 +141,6 @@ void replaceProps(
 
 类似于 `setProps()`，但是删除任何先前存在的 props，而不是合并这两个对象。
 
-> 注意:
+> 注意：
 >
-> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用.  取代调用 `replaceProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
+> 这个方法被弃用了并会很快移除。这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。取代调用 `replaceProps`，试着以新的 props 再次调用 `ReactDOM.render()`。更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)。

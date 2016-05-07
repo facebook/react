@@ -36,7 +36,7 @@ ReactDOM.render(
 
 ## 事件处理与合成事件（Synthetic Events）
 
-React 里只需把事件处理器（event handler）以骆峰命名（camelCased）形式当作组件的 props 传入即可，就像使用普通 HTML 那样。React 内部创建一套合成事件系统来使所有事件在 IE8 和以上浏览器表现一致。也就是说，React 知道如何冒泡和捕获事件，而且你的事件处理器接收到的 events 参数与 [W3C 规范](http://www.w3.org/TR/DOM-Level-3-Events/) 一致，无论你使用哪种浏览器。
+React 里只需把事件处理器（event handler）以骆峰命名（camelCased）形式当作组件的 props 传入即可，就像使用普通 HTML 那样。React 内部创建一套合成事件系统来使所有事件在 IE8 和以上浏览器表现一致。也就是说，React 知道如何冒泡和捕获事件，而且你的事件处理器接收到的 events 参数与 [W3C 规范](http://www.w3.org/TR/DOM-Level-3-Events/)一致，无论你使用哪种浏览器。
 
 ## 幕后原理：自动绑定（Autobinding）和事件代理（Event Delegation）
 
@@ -44,7 +44,7 @@ React 里只需把事件处理器（event handler）以骆峰命名（camelCased
 
 **Autobinding:** 在 JavaScript 里创建回调的时候，为了保证 `this` 的正确性，一般都需要显式地绑定方法到它的实例上。在 React，所有方法被自动绑定到了它的组件实例上（除非使用ES6的class符号）。React 还缓存这些绑定方法，所以 CPU 和内存都是非常高效。而且还能减少打字！
 
-**事件代理 ：** React 实际并没有把事件处理器绑定到节点本身。当 React 启动的时候，它在最外层使用唯一一个事件监听器处理所有事件。当组件被加载和卸载时，只是在内部映射里添加或删除事件处理器。当事件触发，React 根据映射来决定如何分发。当映射里处理器时，会当作空操作处理。参考 [David Walsh 很棒的文章](http://davidwalsh.name/event-delegate) 了解这样做高效的原因。
+**事件代理 ：** React 实际并没有把事件处理器绑定到节点本身。当 React 启动的时候，它在最外层使用唯一一个事件监听器处理所有事件。当组件被加载和卸载时，只是在内部映射里添加或删除事件处理器。当事件触发，React 根据映射来决定如何分发。当映射里处理器时，会当作空操作处理。参考 [David Walsh 很棒的文章](http://davidwalsh.name/event-delegate)了解这样做高效的原因。
 
 ## 组件其实是状态机（State Machines）
 

@@ -80,7 +80,7 @@ React.createClass({
 
 ### Single Child
 
-用  `React.PropTypes.element` 你可以指定仅有一个子级能被传送给组件
+用 `React.PropTypes.element` 你可以指定仅有一个子级能被传送给组件
 
 ```javascript
 var MyComponent = React.createClass({
@@ -114,11 +114,11 @@ var ComponentWithDefaultProps = React.createClass({
 });
 ```
 
-当父级没有传入 props 时，`getDefaultProps()` 可以保证  `this.props.value` 有默认值，注意 `getDefaultProps` 的结果会被 *缓存*。得益于此，你可以直接使用 props，而不必写手动编写一些重复或无意义的代码。
+当父级没有传入 props 时，`getDefaultProps()` 可以保证 `this.props.value` 有默认值，注意 `getDefaultProps` 的结果会被 *缓存*。得益于此，你可以直接使用 props，而不必写手动编写一些重复或无意义的代码。
 
 ## 传递 Props：捷径
 
-有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想 复制任何传进你的组件的HTML属性 到底层的HTML元素上。为了减少输入，你可以用 JSX _spread_  语法来完成：
+有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想复制任何传进你的组件的HTML属性到底层的HTML元素上。为了减少输入，你可以用 JSX _spread_  语法来完成：
 
 ```javascript
 var CheckLink = React.createClass({
@@ -138,9 +138,9 @@ ReactDOM.render(
 
 ## Mixins
 
-组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 [跨切面关注点](https://en.wikipedia.org/wiki/Cross-cutting_concern)。React 使用 `mixins` 来解决这类问题。
+组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为[跨切面关注点](https://en.wikipedia.org/wiki/Cross-cutting_concern)。React 使用 `mixins` 来解决这类问题。
 
-一个通用的场景是：一个组件需要定期更新。用 `setInterval()` 做很容易，但当不需要它的时候取消定时器来节省内存是非常重要的。React 提供 [生命周期方法](/react/docs/working-with-the-browser.html#component-lifecycle) 来告知组件创建或销毁的时间。下面来做一个简单的 mixin，使用 `setInterval()` 并保证在组件销毁时清理定时器。
+一个通用的场景是：一个组件需要定期更新。用 `setInterval()` 做很容易，但当不需要它的时候取消定时器来节省内存是非常重要的。React 提供[生命周期方法](/react/docs/working-with-the-browser.html#component-lifecycle)来告知组件创建或销毁的时间。下面来做一个简单的 mixin，使用 `setInterval()` 并保证在组件销毁时清理定时器。
 
 ```javascript
 var SetIntervalMixin = {
@@ -185,7 +185,7 @@ ReactDOM.render(
 
 ## ES6 Classes
 
-你也可以以一个简单的JavaScript 类来定义你的React classes。使用ES6 class的例子:
+你也可以以一个简单的 JavaScript 类来定义你的 React classes。使用 ES6 class 的例子：
 
 ```javascript
 class HelloMessage extends React.Component {
@@ -196,9 +196,9 @@ class HelloMessage extends React.Component {
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
-API近似于 `React.createClass` 除了 `getInitialState`。 你应该在构造函数里设置你的`state`，而不是提供一个单独的  `getInitialState` 方法。
+API 近似于 `React.createClass` 除了 `getInitialState`。你应该在构造函数里设置你的`state`，而不是提供一个单独的  `getInitialState` 方法。
 
-另一个不同是 `propTypes` 和 `defaultProps` 在构造函数而不是class body里被定义为属性。
+另一个不同是 `propTypes` 和 `defaultProps` 在构造函数而不是 class body 里被定义为属性。
 
 ```javascript
 export class Counter extends React.Component {
@@ -223,11 +223,11 @@ Counter.defaultProps = { initialCount: 0 };
 
 ### 无自动绑定
 
-方法遵循正式的ES6 class的语义，意味着它们不会自动绑定`this`到实例上。你必须显示的使用`.bind(this)` or [箭头函数](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`.
+方法遵循正式的 ES6 class 的语义，意味着它们不会自动绑定 `this` 到实例上。你必须显示的使用 `.bind(this)` or [箭头函数](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`.
 
 ### 没有 Mixins
 
-不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易支持这些用例不依靠mixins。
+不幸的是 ES6 的发布没有任何 mixin 的支持。因此，当你在 ES6 classes 下使用 React 时不支持 mixins。作为替代，我们正在努力使它更容易支持这些用例不依靠 mixins。
 
 ## 无状态函数
 
@@ -240,18 +240,18 @@ function HelloMessage(props) {
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
-或者使用新的ES6箭头函数:
+或者使用新的ES6箭头函数：
 
 ```javascript
 const HelloMessage = (props) => <div>Hello {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
-这个简化的组件API旨在用于那些纯函数态的组件 。这些组件必须没有保持任何内部状态，没有备份实例，也没有组件生命周期方法。他们纯粹的函数式的转化他们的输入，没有引用。
-然而，你仍然可以以设置为函数的properties的方式来指定 `.propTypes` 和 `.defaultProps`，就像你在ES6类里设置他们那样。
+这个简化的组件 API 旨在用于那些纯函数态的组件。这些组件必须没有保持任何内部状态，没有备份实例，也没有组件生命周期方法。他们纯粹的函数式的转化他们的输入，没有引用。
+然而，你仍然可以以设置为函数的 properties 的方式来指定 `.propTypes` 和 `.defaultProps`，就像你在ES6类里设置他们那样。
 
 > 注意：
 >
-> 因为无状态函数没有备份实例，你不能附加一个引用到一个无状态函数组件。 通常这不是问题，因为无状态函数不提供一个命令式的API。没有命令式的API，你就没有任何需要实例来做的事。然而，如果用户想查找无状态函数组件的DOM节点，他们必须把这个组件包装在一个有状态组件里（比如，ES6 类组件） 并且连接一个引用到有状态的包装组件。
+> 因为无状态函数没有备份实例，你不能附加一个引用到一个无状态函数组件。通常这不是问题，因为无状态函数不提供一个命令式的 API。没有命令式的 API，你就没有任何需要实例来做的事。然而，如果用户想查找无状态函数组件的 DOM 节点，他们必须把这个组件包装在一个有状态组件里（比如，ES6 类组件）并且连接一个引用到有状态的包装组件。
 
 在理想世界里，你的大多数组件都应该是无状态函数，因为将来我们可能会用避免不必要的检查和内存分配的方式来对这些组件进行优化。 如果可能，这是推荐的模式。

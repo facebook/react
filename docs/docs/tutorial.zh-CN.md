@@ -11,27 +11,27 @@ next: thinking-in-react-zh-CN.html
 
 * 一个所有评论的视图
 * 一个用于提交评论的表单
-* 为你提供制定后台的挂钩(Hooks)
+* 为你提供制定后台的挂钩（Hooks）
 
 同时也会有一些简洁的功能：
 
-* **优化的评论：** 评论在它们保存到服务器之前就显示在列表里,所以感觉很快。
+* **优化的评论：** 评论在它们保存到服务器之前就显示在列表里，所以感觉很快。
 * **实时更新：** 其他用户的评论被实时浮现到评论中。
-* **Markdown格式化：** 用户可以用Markdown格式化它们的文字。
+* **Markdown格式化：** 用户可以用 Markdown 格式化它们的文字。
 
 ### 想要跳过所有内容，只查看源代码？
 
-[全在 GitHub .](https://github.com/reactjs/react-tutorial)
+[全在 GitHub。](https://github.com/reactjs/react-tutorial)
 
 ### 运行服务器
 
-为了开始本教程，我们将要需要一个运行着的服务器。这将是我们纯粹用来获取和保存数据的伺服终端。为了让这尽可能的容易，我们已经用许多不同的语言编写了简单的服务器，它正好完成我们需要的事。    **你可以[查看源代码](https://github.com/reactjs/react-tutorial/) 或者 [下载 zip 文件](https://github.com/reactjs/react-tutorial/archive/master.zip) 包括了所有你开始学习需要的东西**
+为了开始本教程，我们将要需要一个运行着的服务器。这将是我们纯粹用来获取和保存数据的伺服终端。为了让这尽可能的容易，我们已经用许多不同的语言编写了简单的服务器，它正好完成我们需要的事。**你可以[查看源代码](https://github.com/reactjs/react-tutorial/)或者 [下载 zip 文件](https://github.com/reactjs/react-tutorial/archive/master.zip)包括了所有你开始学习需要的东西。**
 
-为了简单起见，我们将要运行的服务器使用 `JSON` 文件作为数据库。你不会在生产环境运行这个，但是它让我们更容易模拟使用一个API时你可能会做的事。一旦你启动服务器，它将会支持我们的API终端,同时也将伺服我们需要的静态页面。
+为了简单起见，我们将要运行的服务器使用 `JSON` 文件作为数据库。你不会在生产环境运行这个，但是它让我们更容易模拟使用一个 API 时你可能会做的事。一旦你启动服务器，它将会支持我们的 API 终端，同时也将伺服我们需要的静态页面。
 
 ### 开始
 
-对于此教程,我们将使它尽可能的容易。被包括在上面讨论的服务器包里的是一个我们将在其中工作的 HTML 文件。在你最喜欢的编辑器里打开 `public/index.html`。它应该看起来像这样 （可能有一些小的不同，稍后我们将添加一个额外的 `<script>` 标签）：
+对于此教程，我们将使它尽可能的容易。被包括在上面讨论的服务器包里的是一个我们将在其中工作的 HTML 文件。在你最喜欢的编辑器里打开 `public/index.html`。它应该看起来像这样（可能有一些小的不同，稍后我们将添加一个额外的 `<script>` 标签）：
 
 ```html
 <!-- index.html -->
@@ -93,11 +93,11 @@ ReactDOM.render(
 );
 ```
 
-注意原生的HTML元素以小写开头，而制定的 React 类以大写开头。
+注意原生的 HTML 元素以小写开头，而制定的 React 类以大写开头。
 
 #### JSX 语法
 
-首先你会注意到你的 JavaScript 中 XML 式的语法。我们有一个简单的预编译器，将语法糖转换成这种纯的JavaScript：
+首先你会注意到你的 JavaScript 中 XML 式的语法。我们有一个简单的预编译器，将语法糖转换成这种纯的 JavaScript：
 
 ```javascript
 // tutorial1-raw.js
@@ -116,25 +116,25 @@ ReactDOM.render(
 );
 ```
 
-它的使用是可选的，但是我们发现 JSX 语法比单纯的 JavaScript 更加容易使用。阅读更多关于[JSX 语法的文章](/react/docs/jsx-in-depth-zh-CN.html)。
+它的使用是可选的，但是我们发现 JSX 语法比单纯的 JavaScript 更加容易使用。阅读更多关于 [JSX 语法的文章](/react/docs/jsx-in-depth-zh-CN.html)。
 
 #### What's going on
 
-我们在一个 JavaScript 对象中传递一些方法到 `React.createClass()` 来创建一个新的React组件。这些方法中最重要的是 `render`，该方法返回一颗 React 组件树，这棵树最终将会渲染成 HTML。
+我们在一个 JavaScript 对象中传递一些方法到 `React.createClass()` 来创建一个新的 React 组件。这些方法中最重要的是 `render`，该方法返回一颗 React 组件树，这棵树最终将会渲染成 HTML。
 
-这个 `<div>` 标签不是真实的DOM节点；他们是 React `div` 组件的实例化。你可以把这些看做是React知道如何处理的标记或者是一些数据 。React 是**安全的**。我们不生成 HTML 字符串，因此XSS防护是默认特性。
+这个 `<div>` 标签不是真实的 DOM 节点；他们是 React `div` 组件的实例化。你可以把这些看做是 React 知道如何处理的标记或者是一些数据。React 是**安全的**。我们不生成 HTML 字符串，因此 XSS 防护是默认特性。
 
 你没有必要返回基本的 HTML。你可以返回一个你（或者其他人）创建的组件树。这就使 React **组件化**：一个可维护前端的关键原则。
 
 `ReactDOM.render()` 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。
 
-`ReactDOM` 模块暴露了 DOM 相关的方法， 而 `React` 保有被不同平台的 React 共享的核心工具 （例如 [React Native](http://facebook.github.io/react-native/)）。
+`ReactDOM` 模块暴露了 DOM 相关的方法， 而 `React` 保有被不同平台的 React 共享的核心工具（例如 [React Native](http://facebook.github.io/react-native/)）。
 
 对于本教程 `ReactDOM.render` 保持在脚本底部是很重要的。`ReactDOM.render` 应该只在复合组件被定义之后被调用。
 
 ## 组合组件
 
-让我们为 `CommentList` 和 `CommentForm` 建造骨架，它们将会，再一次的，是一些简单的 `<div>`。添加这两个组件到你的文件里，保持现存的 `CommentBox` 声明和 `ReactDOM.render` 调用:
+让我们为 `CommentList` 和 `CommentForm` 建造骨架，它们将会，再一次的，是一些简单的 `<div>`。添加这两个组件到你的文件里，保持现存的 `CommentBox` 声明和 `ReactDOM.render` 调用：
 
 ```javascript
 // tutorial2.js
@@ -218,7 +218,7 @@ var CommentList = React.createClass({
 });
 ```
 
-注意，我们已经从 `CommentList`  组件传递了一些数据到 `Comment` 组件。例如，我们传递了 *Pete Hunt* （通过属性）和 *This is one comment* (通过 XML-风格的子节点)给第一个 `Comment`。如上面提到的那样， `Comment` 组件将会通过 `this.props.author` 和 `this.props.children` 访问 这些 '属性'。
+注意，我们已经从 `CommentList`  组件传递了一些数据到 `Comment` 组件。例如，我们传递了 *Pete Hunt*（通过属性）和 *This is one comment*（通过 XML-风格的子节点）给第一个 `Comment`。如上面提到的那样， `Comment` 组件将会通过 `this.props.author` 和 `this.props.children` 访问这些 '属性'。
 
 ### 添加 Markdown
 
@@ -244,7 +244,7 @@ var Comment = React.createClass({
 
 我们在这里唯一做的就是调用 marked 库。我们需要把 从 React 的包裹文本来的 `this.props.children` 转换成 marked 能理解的原始字符串，所以我们显示地调用了`toString()`。
 
-但是这里有一个问题！我们渲染的评论在浏览器里看起来像这样： "`<p>`This is `<em>`another`</em>` comment`</p>`" 。我们想让这些标签真正地渲染为 HTML。
+但是这里有一个问题！我们渲染的评论在浏览器里看起来像这样："`<p>`This is `<em>`another`</em>` comment`</p>`" 。我们想让这些标签真正地渲染为 HTML。
 
 那是 React 在保护你免受 [XSS 攻击](https://en.wikipedia.org/wiki/Cross-site_scripting)。有一个方法解决这个问题，但是框架会警告你别使用这种方法：
 
@@ -333,7 +333,7 @@ var CommentList = React.createClass({
 
 ### 从服务器获取数据
 
-让我们用一些来自服务器的动态数据替换硬编码的数据。我们将移除数据的prop，用获取数据的URL来替换它：
+让我们用一些来自服务器的动态数据替换硬编码的数据。我们将移除数据的 prop，用获取数据的 URL 来替换它：
 
 ```javascript{3}
 // tutorial11.js
@@ -345,11 +345,11 @@ ReactDOM.render(
 
 这个组件不同于和前面的组件，因为它必须重新渲染自己。该组件将不会有任何数据，直到请求从服务器返回，此时该组件或许需要渲染一些新的评论。
 
-注意： 此代码在这个阶段不会工作。
+注意：此代码在这个阶段不会工作。
 
 ### Reactive state
 
-迄今为止,基于它自己的props，每个组件都渲染了自己一次。`props` 是不可变的：它们从父级传来并被父级“拥有”。为了实现交互，我们给组件引进了可变的 **state**。`this.state` 是组件私有的，可以通过调用 `this.setState()` 改变它。每当state更新，组件就重新渲染自己。
+迄今为止,基于它自己的 props，每个组件都渲染了自己一次。`props` 是不可变的：它们从父级传来并被父级“拥有”。为了实现交互，我们给组件引进了可变的 **state**。`this.state` 是组件私有的，可以通过调用 `this.setState()` 改变它。每当 state 更新，组件就重新渲染自己。
 
 `render()` 方法被声明为一个带有 `this.props` 和 `this.state` 的函数。框架保证了 UI 总是与输入一致。
 
@@ -376,7 +376,7 @@ var CommentBox = React.createClass({
 `getInitialState()` 在生命周期里只执行一次，并设置组件的初始状态。
 
 #### 更新状态
-当组件第一次创建时，我们想从服务器获取一些 JSON 并且更新状态以反映最新的数据。我们将用 jQuery 来发送一个异步请求到我们刚才启动的服务器以获取我们需要的数据。这些数据已经被包含在了你已启动的服务器里（基于`comments.json`文件），所以一旦被获取，`this.state.data` 会看起来像这样：
+当组件第一次创建时，我们想从服务器获取一些 JSON 并且更新状态以反映最新的数据。我们将用 jQuery 来发送一个异步请求到我们刚才启动的服务器以获取我们需要的数据。这些数据已经被包含在了你已启动的服务器里（基于 `comments.json` 文件），所以一旦被获取，`this.state.data` 会看起来像这样：
 
 ```json
 [
@@ -416,7 +416,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-这里， `componentDidMount` 是一个当组件被渲染时被Ｒeact自动调用的方法。动态更新的关键是对 `this.setState()` 的调用。我们用新的从服务器来的替换掉旧的评论组，然后UI自动更新自己。因为这种反应性，仅是一个微小的变化就添加了实时更新。我们这里将用简单的轮询，但是你可以容易的使用 WebSockets 或者其他技术。
+这里， `componentDidMount` 是一个当组件被渲染时被 React 自动调用的方法。动态更新的关键是对 `this.setState()` 的调用。我们用新的从服务器来的替换掉旧的评论组，然后 UI 自动更新自己。因为这种反应性，仅是一个微小的变化就添加了实时更新。我们这里将用简单的轮询，但是你可以容易的使用 WebSockets 或者其他技术。
 
 ```javascript{3,15,20-21,35}
 // tutorial14.js
@@ -459,11 +459,11 @@ ReactDOM.render(
 
 ```
 
-我们在这里做的全部事情是把 AJAX 调用移动到独立的方法里，然后在组件第一次加载时及其后每2秒 调用它。试着在你的浏览器里运行它并且改变 `comments.json` 文件（在你的服务器的相同目录）；2秒内，变化将会显现！
+我们在这里做的全部事情是把 AJAX 调用移动到独立的方法里，然后在组件第一次加载时及其后每 2 秒调用它。试着在你的浏览器里运行它并且改变 `comments.json` 文件（在你的服务器的相同目录）；2 秒内，变化将会显现！
 
 ### 添加新评论
 
-现在是时候建立表单了，我们的 `CommentForm` 组件应该询问用户他们的名字和评论文本然后发送一个请求到服务器来保存评论.
+现在是时候建立表单了，我们的 `CommentForm` 组件应该询问用户他们的名字和评论文本然后发送一个请求到服务器来保存评论。
 
 ```javascript{5-9}
 // tutorial15.js
@@ -482,9 +482,9 @@ var CommentForm = React.createClass({
 
 #### 受控组件
 
-对于传统的 DOM， `input` 元素被渲染并且浏览器管理它的状态（它的渲染值）。结果是，DOM的实际值会和组件不同。这是不理想的，因为视图的值会和组件的值不同。在React中，组件应该总是表示视图的值而不只是在初始化时。
+对于传统的 DOM， `input` 元素被渲染并且浏览器管理它的状态（它的渲染值）。结果是，DOM 的实际值会和组件不同。这是不理想的，因为视图的值会和组件的值不同。在 React 中，组件应该总是表示视图的值而不只是在初始化时。
 
-因此，我们将使用 `this.state` 来在用户输入时保存输入。我们定义一个初始 `state`，它带有 `author` 和 `text` 两个属性并将他们设置为空字符串。在我们的 `<input>` 元素里，我们设置 `value` prop 来反映组件的 `state` 并给他们附加 `onChange` 事件处理。这些带有设置了 `value` 的  `<input>` 元素被称为受控组件。更多关于受控组件请阅读 [Forms article](/react/docs/forms.html#controlled-components)。
+因此，我们将使用 `this.state` 来在用户输入时保存输入。我们定义一个初始 `state`，它带有 `author` 和 `text` 两个属性并将他们设置为空字符串。在我们的 `<input>` 元素里，我们设置 `value` prop 来反映组件的 `state` 并给他们附加 `onChange` 事件处理。这些带有设置了 `value` 的 `<input>` 元素被称为受控组件。更多关于受控组件请阅读 [Forms article](/react/docs/forms.html#controlled-components)。
 
 ```javascript{3-11,15-26}
 // tutorial16.js
@@ -522,7 +522,7 @@ var CommentForm = React.createClass({
 
 ##### 事件
 
-React使用小驼峰命名规范(camelCase)给组件绑定事件处理器。我们附加 `onChange` 给两个 `<input>` 元素。现在，当用户输入文本到 `<input>` 中，被附加的 `onChange` 回调函数被激发并且组件的 `state` 被修改。然后，被渲染的 `input` 元素的值将会更新以反映当前组件的 `state`。
+React 使用小驼峰命名规范（camelCase）给组件绑定事件处理器。我们附加 `onChange` 给两个 `<input>` 元素。现在，当用户输入文本到 `<input>` 中，被附加的 `onChange` 回调函数被激发并且组件的 `state` 被修改。然后，被渲染的 `input` 元素的值将会更新以反映当前组件的 `state`。
 
 #### 提交表单
 
@@ -572,15 +572,15 @@ var CommentForm = React.createClass({
 });
 ```
 
-我们给表单绑定一个`onSubmit`处理器，它在表单提交了合法的输入后清空表单字段。
+我们给表单绑定一个 `onSubmit` 处理器，它在表单提交了合法的输入后清空表单字段。
 
-在事件中调用`preventDefault()`来阻止浏览器提交表单的默认行为。
+在事件中调用 `preventDefault()` 来阻止浏览器提交表单的默认行为。
 
 ##### 回调函数作为属性
 
-当用户提交评论时，我们需要刷新评论列表来包含这条新评论。在`CommentBox`中完成所有逻辑是有道理的，因为`CommentBox` 拥有代表了评论列表的状态(state)。
+当用户提交评论时，我们需要刷新评论列表来包含这条新评论。在 `CommentBox` 中完成所有逻辑是有道理的，因为 `CommentBox` 拥有代表了评论列表的状态（state）。
 
-我们需要从子组件传回数据到它的父组件。我们在父组件的`render`方法中以传递一个新的回调函数（`handleCommentSubmit`）到子组件完成这件事，绑定它到子组件的 `onCommentSubmit` 事件上。无论事件什么时候触发，回调函数都将被调用：
+我们需要从子组件传回数据到它的父组件。我们在父组件的 `render` 方法中以传递一个新的回调函数（`handleCommentSubmit`）到子组件完成这件事，绑定它到子组件的 `onCommentSubmit` 事件上。无论事件什么时候触发，回调函数都将被调用：
 
 ```javascript{16-18,31}
 // tutorial18.js
@@ -717,7 +717,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-### 优化: 优化的更新
+### 优化：优化的更新
 
 我们的应用现在已经功能完备，但是它感觉很慢，因为在评论出现在列表前必须等待请求完成。我们可以优化添加这条评论到列表以使应用感觉更快。
 
@@ -778,6 +778,6 @@ var CommentBox = React.createClass({
 });
 ```
 
-### 祝贺!
+### 祝贺！
 
-你刚刚通过几个简单的步骤建立了一个评论框。学习更多关于[为什么使用 React](/react/docs/why-react-zh-CN.html), 或者深入 [API 参考](/react/docs/top-level-api.html) 开始钻研！祝你好运！
+你刚刚通过几个简单的步骤建立了一个评论框。学习更多关于[为什么使用 React](/react/docs/why-react-zh-CN.html)，或者深入 [API 参考](/react/docs/top-level-api.html)开始钻研！祝你好运！

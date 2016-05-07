@@ -8,7 +8,7 @@ next: forms-zh-CN.html
 
 React 里有一个非常常用的模式就是对组件做一层抽象。组件对外公开一个简单的属性（Props）来实现功能，但内部细节可能有非常复杂的实现。
 
-可以使用 [JSX 展开属性](/react/docs/jsx-spread-zh-CN.html) 来合并现有的 props 和其它值：
+可以使用 [JSX 展开属性](/react/docs/jsx-spread-zh-CN.html)来合并现有的 props 和其它值：
 
 ```javascript
 <Component {...this.props} more="values" />
@@ -20,7 +20,7 @@ React 里有一个非常常用的模式就是对组件做一层抽象。组件�
 React.createElement(Component, Object.assign({}, this.props, { more: 'values' }));
 ```
 
-下面的教程介绍一些最佳实践。使用了 JSX 和 试验性的ECMAScript 语法。
+下面的教程介绍一些最佳实践。使用了 JSX 和 试验性的 ECMAScript 语法。
 
 ## 手动传递
 
@@ -47,7 +47,7 @@ ReactDOM.render(
 
 ## 在 JSX 里使用 `...` 传递
 
-> 注意:
+> 注意：
 >
 > 在下面的例子中，`--harmony ` 标志是必须的因为这个语法是ES7的实验性语法。如果用浏览器中的JSX转换器，以 `<script type="text/jsx;harmony=true">`简单的打开你脚本就行了。详见[Rest and Spread Properties ...](/react/docs/transferring-props.html#rest-and-spread-properties-...)
 
@@ -78,7 +78,7 @@ ReactDOM.render(
 );
 ```
 
-> 注意:
+> 注意：
 >
 > 上面例子中，`checked` 属性也是一个有效的 DOM 属性。如果你没有使用解构赋值，那么可能无意中把它传下去。
 
@@ -116,7 +116,7 @@ function FancyCheckbox(props) {
 }
 ```
 
-> 注意:
+> 注意：
 >
 > 顺序很重要，把 `{...other}` 放到 JSX props 前面会使它不被覆盖。上面例子中我们可以保证 input 的 type 是 `"checkbox"`。
 
@@ -124,7 +124,7 @@ function FancyCheckbox(props) {
 
 剩余属性可以把对象剩下的属性提取到一个新的对象。会把所有在解构赋值中列出的属性剔除。
 
-这是 [ECMAScript 草案](https://github.com/sebmarkbage/ecmascript-rest-spread) 中的试验特性。
+这是 [ECMAScript 草案](https://github.com/sebmarkbage/ecmascript-rest-spread)中的试验特性。
 
 ```javascript
 var { x, y, ...z } = { x: 1, y: 2, a: 3, b: 4 };
@@ -133,9 +133,9 @@ y; // 2
 z; // { a: 3, b: 4 }
 ```
 
-> 注意:
+> 注意：
 >
-> 要用 Babel 6转换 rest 和 spread 属性，你需要安装 [`es2015`](https://babeljs.io/docs/plugins/preset-es2015/) preset，[`transform-object-rest-spread`](https://babeljs.io/docs/plugins/transform-object-rest-spread/) 插件并在 `.babelrc` 里配置他们.
+> 要用 Babel6 转换 rest 和 spread 属性，你需要安装 [`es2015`](https://babeljs.io/docs/plugins/preset-es2015/) preset、[`transform-object-rest-spread`](https://babeljs.io/docs/plugins/transform-object-rest-spread/) 插件并在 `.babelrc` 里配置他们.
 
 ## 使用 Underscore 来传递
 
