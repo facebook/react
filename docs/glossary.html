@@ -518,6 +518,8 @@
 <p>This is why you shouldn&#39;t construct your own instance. Instead, <code>ReactElement</code> is a virtual <code>ReactComponent</code> before it gets constructed. An old and new <code>ReactElement</code> can be compared to see if a new <code>ReactComponent</code> instance should be created or if the existing one should be reused.</p>
 
 <p>The <code>render</code> method of a <code>ReactComponent</code> is expected to return another <code>ReactElement</code>. This allows these components to be composed. Ultimately the render resolves into <code>ReactElement</code> with a <code>string</code> tag which instantiates a DOM <code>Element</code> instance and inserts it into the document.</p>
+
+<p>React 0.14 introduced <a href="/react/blog/2015/10/07/react-v0.14.html#stateless-functional-components">stateless functional components</a> as an alternative way of defining components. Instead of being a class, it is a simple function that accepts props and is expected to return a <code>ReactElement</code>.</p>
 <h2><a class="anchor" name="formal-type-definitions"></a>Formal Type Definitions <a class="hash-link" href="#formal-type-definitions">#</a></h2><h3><a class="anchor" name="entry-point"></a>Entry Point <a class="hash-link" href="#entry-point">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">ReactDOM.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
 </code></pre></div><h3><a class="anchor" name="nodes-and-elements"></a>Nodes and Elements <a class="hash-link" href="#nodes-and-elements">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">type ReactNode = ReactElement | ReactFragment | ReactText;
 
@@ -535,7 +537,7 @@ type ReactDOMElement = {
 };
 
 type ReactComponentElement&lt;TProps&gt; = {
-  type : ReactClass&lt;TProps&gt;,
+  type : ReactClass&lt;TProps&gt; | ReactFunctionalComponent&lt;TProps&gt;,
   props : TProps,
   key : string | boolean | number | null,
   ref : string | null
@@ -554,6 +556,8 @@ type ReactComponent&lt;TProps&gt; = {
   props : TProps,
   render : () =&gt; ReactElement
 };
+
+type ReactFunctionalComponent&lt;TProps&gt; = (TProps) =&gt; ReactElement;
 </code></pre></div>
 
     <div class="docs-prevnext">

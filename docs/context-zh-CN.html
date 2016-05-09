@@ -432,22 +432,22 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>React最大的优势之一是很容易从你的React组件里跟踪数据流动。当你看着一个组件，你可以很容易准确看出哪个props被传入，这让你的APP很容易推断。</p>
+    <p>React优势之一是你可以很容易地从React组件里跟踪数据流动。当你查看一个组件时，你可以很容易地判断出传入了哪些props，而这也有利于你的App进行逻辑推断。</p>
 
-<p>偶尔，你想通过组件树传递数据，而不在每一级上手工下传prop，React的 &quot;context&quot; 让你做到这点。</p>
-
-<p>＞　注意：
-＞　
-＞　Context是一个先进的实验性特性．这个 API 很可能在未来版本变化.</p>
+<p>有时，你想不通过在每一级组件设置prop的方式来向组件树内传递数据。那么，React的&quot;context&quot;特性可以让你做到这点。</p>
 
 <blockquote>
-<p>大多数应用将不会需要用到 context. 尤其是如果你刚开始用React,你很可能不会想用 context.使用 context 将会使你的代码很难理解因为它让数据流不清晰.它类似于在你的应用里使用全局变量传递state.</p>
+<p>注意：</p>
 
-<p><strong>如果你必须使用 context ,保守的使用它</strong></p>
+<p>Context是一个先进的实验性特性，这个API很可能在未来版本变化。</p>
 
-<p>不论你正在创建一个应用或者是库,试着分离你对 context 的使用到一个小区域,并尽可能避免直接使用 context API,以便在API变动时容易升级.</p>
+<p>大多数应用将不会需要用到context。尤其是如果你刚开始用React，你很可能不会想用它。使用context将会使你的代码难以理解，因为它让数据流变得不清晰。它类似于在你的应用里用以传递state的全局变量。</p>
+
+<p><strong>如果你必须使用context，请保守地使用它。</strong></p>
+
+<p>不论你正在创建一个应用或者是库，试着缩小context的使用范围，并尽可能避免直接使用context相关API，以便在API变动时容易升级。</p>
 </blockquote>
-<h2><a class="anchor" name="info"></a>从树里自动传递info <a class="hash-link" href="#info">#</a></h2>
+<h2><a class="anchor" name="info"></a>在组件树内自动传递info <a class="hash-link" href="#info">#</a></h2>
 <p>假设你有一个这样的结构:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -479,7 +479,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>在这里例子里,我们手工穿透一个 <code>color</code> prop 以便于恰当格式化 <code>Button</code> 和 <code>Message</code> 组件.主题是一个很好的例子,当你可能想整个子树都可以访问一部分信息时(比如color). 使用 context 我们可以自动传过这个树:</p>
+<p>在这个例子里，我们手工传递一个叫<code>color</code>的prop，以便于给<code>Button</code>和<code>Message</code>组件添加合适的样式。当你想所有子组件可以访问一部分信息时(比如color)，上面的设置主题是一个很好的例子。通过使用context，我们能自动在组件树中传递信息：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">contextTypes</span><span class="o">:</span> <span class="p">{</span>
 </span><span class="hll">    <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
@@ -518,25 +518,25 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>通过添加 <code>childContextTypes</code> 和 <code>getChildContext</code> 到 <code>MessageList</code> ( context 提供),React下传信息到子树中的任何组件(在这个例子中, <code>Button</code>可以由定义 <code>contextTypes</code>来访问它).</p>
+<p>通过添加<code>childContextTypes</code>和<code>getChildContext</code>到 <code>MessageList</code>(context提供者)，React会自动下传信息，并且通过定义<code>contextTypes</code>，子树中的任何组件(在这个例子中，子组件是<code>Button</code>)可以访问<code>context</code>。</p>
 
-<p>如果 <code>contextTypes</code> 没有定义,那么 <code>this.context</code> 将是一个空对象.</p>
+<p>如果<code>contextTypes</code>没有定义，那么<code>this.context</code>将是一个空对象。</p>
 <h2><a class="anchor" name=""></a>父子耦合 <a class="hash-link" href="#">#</a></h2>
-<p>Context 同样可以使你构建这样的 APT:</p>
+<p>Context同样可以使你构建这样的API:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Menu</span><span class="o">&gt;</span>
   <span class="o">&lt;</span><span class="nx">MenuItem</span><span class="o">&gt;</span><span class="nx">aubergine</span><span class="o">&lt;</span><span class="err">/MenuItem&gt;</span>
   <span class="o">&lt;</span><span class="nx">MenuItem</span><span class="o">&gt;</span><span class="nx">butternut</span> <span class="nx">squash</span><span class="o">&lt;</span><span class="err">/MenuItem&gt;</span>
   <span class="o">&lt;</span><span class="nx">MenuItem</span><span class="o">&gt;</span><span class="nx">clementine</span><span class="o">&lt;</span><span class="err">/MenuItem&gt;</span>
 <span class="o">&lt;</span><span class="err">/Menu&gt;</span>
 </code></pre></div>
-<p>通过在 <code>Menu</code> 组件下传相关的信息,每个 <code>MenuItem</code> 可以与包含他们的 <code>Menu</code> 组件沟通.</p>
+<p>通过在<code>Menu</code>组件内下传相关的信息，每个<code>MenuItem</code> 可以与包含他们的<code>Menu</code>组件沟通。</p>
 
-<p><strong>在你用这个API构建组件以前,考虑一下是否有清晰的替代方案</strong> 我们 喜欢像这样简单的用数组传递items:</p>
+<p><strong>在你用这个API构建组件以前，考虑一下是否有清晰的替代方案</strong> 我们喜欢用数组传递items，就像下面这样：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Menu</span> <span class="nx">items</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;aubergine&#39;</span><span class="p">,</span> <span class="s1">&#39;butternut squash&#39;</span><span class="p">,</span> <span class="s1">&#39;clementine&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span>
 </code></pre></div>
-<p>记住你同样可以在props里传递整个React组件,如果你想.</p>
-<h2><a class="anchor" name="-context"></a>在生命周期方法里引用 context <a class="hash-link" href="#-context">#</a></h2>
-<p>如果 <code>contextTypes</code> 在一个组件中定义,接下来的生命周期方法会收到一个额外的参数, <code>context</code> 对象:</p>
+<p>记住，如果你愿意，你同样可以在props里传递整个React组件。</p>
+<h2><a class="anchor" name="context"></a>在生命周期方法里引用context <a class="hash-link" href="#context">#</a></h2>
+<p>如果<code>contextTypes</code>是定义在一个组件中，接下来的生命周期方法会收到一个额外的参数，<code>context</code>对象：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillReceiveProps</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
 <span class="p">)</span>
@@ -553,7 +553,7 @@
   <span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevContext</span>
 <span class="p">)</span>
 </code></pre></div><h2><a class="anchor" name="-context"></a>在无状态函数组件里引用 context <a class="hash-link" href="#-context">#</a></h2>
-<p>无状态函数同样能够引用 <code>context</code> 如果 <code>contextTypes</code> 被定义为函数的属性.下面的代码展示了被写为无状态函数组件的 <code>Button</code> 组件.</p>
+<p>如果 <code>contextTypes</code> 被定义为函数的属性，无状态函数同样能够引用<code>context</code>。下面的代码展示了被写为无状态函数组件的<code>Button</code>组件：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Button</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
     <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
@@ -562,8 +562,8 @@
   <span class="p">);</span>
 <span class="p">}</span>
 <span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
-</code></pre></div><h2><a class="anchor" name="updating-context"></a>Updating context <a class="hash-link" href="#updating-context">#</a></h2>
-<p>当 state 或者 props 变化时 <code>getChildContext</code> 函数会被调用。为了更新context里的数据，用 <code>this.setState</code> 触发一个本地的state更新。这将会触发一个新的 context 并且子级将收到变化。</p>
+</code></pre></div><h2><a class="anchor" name="context"></a>更新context <a class="hash-link" href="#context">#</a></h2>
+<p>当state或props改变时，会调用<code>getChildContext</code>方法。为了能更新context内的数据，需要使用<code>this.setState</code>来触发组件state更新。这将会触发一个新的context，并且子组件也能接收变化。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MediaQuery</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span><span class="s1">&#39;desktop&#39;</span><span class="p">};</span>
@@ -578,7 +578,7 @@
     <span class="kd">var</span> <span class="nx">checkMediaQuery</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
       <span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">matchMedia</span><span class="p">(</span><span class="s2">&quot;(min-width: 1025px)&quot;</span><span class="p">).</span><span class="nx">matches</span> <span class="o">?</span> <span class="s1">&#39;desktop&#39;</span> <span class="o">:</span> <span class="s1">&#39;mobile&#39;</span><span class="p">;</span>
       <span class="k">if</span> <span class="p">(</span><span class="nx">type</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">){</span>
-        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">type</span><span class="o">:</span><span class="nx">type</span><span class="p">});</span> 
+        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">type</span><span class="o">:</span><span class="nx">type</span><span class="p">});</span>
       <span class="p">}</span>
     <span class="p">};</span>
 
@@ -590,13 +590,13 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="-context"></a>什么时候不用 context <a class="hash-link" href="#-context">#</a></h2>
-<p>正像全局变量是在写清晰代码时最好要避免的,你应该在大多数情况下避免使用context. 特别是,在用它来&quot;节省输入&quot;和代替显示传入props时要三思.</p>
+<p>正如在写清晰代码时最好要避免使用全局变量一样，在大多数情况下，你应该避免使用context。特别是，在用它来&quot;节省输入&quot;和代替显式传入props时要三思。</p>
 
-<p>context最好的使用场景是隐式的传入登录的用户,当前的语言,或者主题信息.要不然所有这些可能就是全局变量,但是context让你限定他们到一个单独的React树里.</p>
+<p>隐式传入登录的用户，当前的语言，或者主题信息，是context最好的使用场景。要不然所有这些可能就是全局变量，但是context让你限定他们到一个单独的React树里。</p>
 
-<p>不要用context在组件里传递你的模型数据.通过树显示的传递你的数据更容易理解.使用context使你的组件更耦合和不可复用,因为  依赖于他们在哪里渲染,他们会表现不同的行为.</p>
+<p>在组件里传递你的模型数据时，不要依赖context。在组件树内显式传递数据，会更容易令人理解。之所以使用context会增加组件耦合度以及降低复用性，是因为组件在不同的地方渲染时，他们会表现出不同的行为。</p>
 <h2><a class="anchor" name=""></a>已知的限制 <a class="hash-link" href="#">#</a></h2>
-<p>如果一个由组件提供的context值变动,使用那个值的子级不会更新,如果一个直接的父级从 <code>shouldComponentUpdate</code> 返回 <code>false</code> .详见 issue <a href="https://github.com/facebook/react/issues/2517">#2517</a> . </p>
+<p>假设由父组件提供的context值发生变动，但中间父级组件的<code>shouldComponentUpdate</code>返回了<code>false</code>，那么后代子级不会更新context。详见 issue <a href="https://github.com/facebook/react/issues/2517">#2517</a> 。</p>
 
 
     <div class="docs-prevnext">

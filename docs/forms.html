@@ -554,6 +554,9 @@
 
 <p>You can pass an array into the <code>value</code> attribute, allowing you to select multiple options in a <code>select</code> tag: <code>&lt;select multiple={true} value={[&#39;B&#39;, &#39;C&#39;]}&gt;</code>.</p>
 </blockquote>
+<h3><a class="anchor" name="imperative-operations"></a>Imperative operations <a class="hash-link" href="#imperative-operations">#</a></h3>
+<p>If you need to imperatively perform an operation, you have to obtain a <a href="/react/docs/more-about-refs.html#the-ref-callback-attribute">reference to the DOM node</a>.
+For instance, if you want to imperatively submit a form, one approach would be to attach a <code>ref</code> to the <code>form</code> element and manually call <code>form.submit()</code>.</p>
 
 
     <div class="docs-prevnext">

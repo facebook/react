@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Language Tooling | React</title>
+  <title>Почему именно React? | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Language Tooling | React">
+  <meta property="og:title" content="Почему именно React? | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/language-tooling.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/why-react-ru-RU.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -124,7 +124,7 @@
       <ul>
         
           <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
+            <a href="/react/docs/why-react.html" class="active">Why React?</a>
             
           </li>
         
@@ -193,7 +193,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/language-tooling.html" class="active">Language Tooling</a>
+                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
                   </li>
                 
                   <li>
@@ -426,73 +426,31 @@
 
 
   <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.1-language-tooling.md" target="_blank">Edit on GitHub</a>
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/01-why-react.ru-RU.md" target="_blank">Edit on GitHub</a>
     <h1>
-      Language Tooling
+      Почему именно React?
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="es2015-with-jsx"></a>ES2015 with JSX <a class="hash-link" href="#es2015-with-jsx">#</a></h2><h3><a class="anchor" name="in-browser-jsx-transform"></a>In-browser JSX Transform <a class="hash-link" href="#in-browser-jsx-transform">#</a></h3>
-<p>If you like using JSX, Babel 5 provided an in-browser ES2015 and JSX transformer for development called browser.js that can be included from <a href="https://cdnjs.com/libraries/babel-core/5.8.34">CDNJS</a>. Include a <code>&lt;script type=&quot;text/babel&quot;&gt;</code> tag to engage the JSX transformer.</p>
+    <p>React — библиотека JavaScript для создания интерфейсов от команд Facebook и Instagram. Многие ассоциируют React с понятием <strong>View</strong> в паттерне <strong><a href="https://ru.wikipedia.org/wiki/Model-View-Controller">MVC</a></strong>.</p>
 
-<blockquote>
-<p>Note:</p>
-
-<p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
-</blockquote>
-<h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
-<p>If you have <a href="https://www.npmjs.com/">npm</a>, you can run <code>npm install -g babel-cli</code>. Babel has built-in support for React v0.12+. Tags are automatically transformed to their equivalent <code>React.createElement(...)</code>, <code>displayName</code> is automatically inferred and added to all <code>React.createClass</code> calls.</p>
-
-<p>This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>babel --watch src/ --out-dir lib/</code>.</p>
-
-<p>Beginning with Babel 6, there are no transforms included by default. This means that options must be specified when running the <code>babel</code> command, or a <code>.babelrc</code> must specify options. Additional packages must also be installed which bundle together a number of transforms, called presets. The most common use when working with React will be to include the <code>es2015</code> and <code>react</code> presets. More information about the changes to Babel can be found in <a href="http://babeljs.io/blog/2015/10/29/6.0.0">their blog post announcing Babel 6</a>.</p>
-
-<p>Here is an example of what you will do if using ES2015 syntax and React:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install babel-preset-es2015 babel-preset-react
-babel --presets es2015,react --watch src/ --out-dir lib/
-</code></pre></div>
-<p>By default JSX files with a <code>.js</code> extension are transformed. Run <code>babel --help</code> for more information on how to use Babel.</p>
-
-<p>Example output:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$ cat test.js
-var HelloMessage = React.createClass({
-  render: function() {
-    return &lt;div&gt;Hello {this.props.name}&lt;/div&gt;;
-  }
-});
-
-ReactDOM.render(&lt;HelloMessage name=&quot;John&quot; /&gt;, mountNode);
-$ babel test.js
-&quot;use strict&quot;;
-
-var HelloMessage = React.createClass({
-  displayName: &quot;HelloMessage&quot;,
-
-  render: function render() {
-    return React.createElement(
-      &quot;div&quot;,
-      null,
-      &quot;Hello &quot;,
-      this.props.name
-    );
-  }
-});
-
-ReactDOM.render(React.createElement(HelloMessage, { name: &quot;John&quot; }), mountNode);
-</code></pre></div><h3><a class="anchor" name="helpful-open-source-projects"></a>Helpful Open-Source Projects <a class="hash-link" href="#helpful-open-source-projects">#</a></h3>
-<p>The open-source community has built tools that integrate JSX with several editors and build systems. See <a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSX integrations</a> for the full list.</p>
-<h2><a class="anchor" name="flow"></a>Flow <a class="hash-link" href="#flow">#</a></h2>
-<p>Flow is a JavaScript type checker released by Facebook, and it supports JSX. For more info, checkout the <a href="http://flowtype.org/">Flow homepage</a>.</p>
-<h2><a class="anchor" name="typescript"></a>TypeScript <a class="hash-link" href="#typescript">#</a></h2>
-<p>Microsoft TypeScript now supports JSX. For more info, check out the <a href="http://www.typescriptlang.org/docs/handbook/jsx.html">TypeScript JSX Documentation</a> or their guide on <a href="https://github.com/Microsoft/TypeScript-Handbook/blob/master/pages/tutorials/React%20%26%20Webpack.md">getting started with react+webpack</a>.</p>
+<p>Мы делали React, чтобы решить одну важную задачу: <strong>создавать действительно большие приложения с постоянно меняющимися данными</strong>.</p>
+<h2><a class="anchor" name=""></a>Простота <a class="hash-link" href="#">#</a></h2>
+<p>С React вы всегда точно знаете как будет выглядеть ваше приложение, ведь как только изменятся данные, он мгновенно отобразит эти изменения в интерфейсе.</p>
+<h2><a class="anchor" name=""></a>Декларативность <a class="hash-link" href="#">#</a></h2>
+<p>Как только состояние приложения изменится, React будто нажимает кнопку &quot;обновить&quot; и точно знает, какие части интерфейса надо поменять, а какие нет. Никаких дополнительных инструкций и команд, React сам отслеживает изменения данных и реагирует на них.</p>
+<h2><a class="anchor" name="-----"></a>Создание компонентов, как строительных блоков приложения <a class="hash-link" href="#-----">#</a></h2>
+<p>По сути, разработка на React целиком состоит в создании таких компонентов. С React вы <em>только</em> тем и занимаетесь, что пишете новые компоненты, те самые строительные блоки, из которых будет строиться приложение. А поскольку они хорошо инскапсулированы, их удобно использовать повторно даже в других проектах, плюс такой код проще тестировать.</p>
+<h2><a class="anchor" name="--5-"></a>Уделите этому 5 минут <a class="hash-link" href="#--5-">#</a></h2>
+<p>React бросает вызов многим устоявшимся идеям и правилам, и на первый взгляд, некоторые из его идей выглядят по меньшей мере странными. <a href="https://signalvnoise.com/posts/3124-give-it-five-minutes">Уделите этому 5 минут</a> пока читаете эту статью; эти безумные идеи нашли свое применение при создании тысяч компонентов не только для Facebook и Instagram, но и в других крупных проектах.</p>
+<h2><a class="anchor" name="-"></a>Узнай больше <a class="hash-link" href="#-">#</a></h2>
+<p>Вы можете больше узнать о причинах создания React <a href="/react/blog/2013/06/05/why-react.html">отсюда</a>.</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/tooling-integration.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/docs/package-management.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/displaying-data-ru-RU.html">Next &rarr;</a>
       
     </div>
   </div>
