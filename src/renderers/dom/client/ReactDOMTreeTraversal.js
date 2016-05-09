@@ -12,6 +12,7 @@
 'use strict';
 
 var invariant = require('invariant');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 /**
  * Return the lowest common ancestor of A and B, or null if they are in
@@ -22,34 +23,71 @@ function getLowestCommonAncestor(instA, instB) {
   invariant('_nativeNode' in instB, 'getNodeFromInstance: Invalid argument.');
 
   var depthA = 0;
+  var rootA = instA;
   for (var tempA = instA; tempA; tempA = tempA._nativeParent) {
     depthA++;
+    rootA = tempA;
   }
   var depthB = 0;
+  var rootB = instB;
   for (var tempB = instB; tempB; tempB = tempB._nativeParent) {
     depthB++;
+    rootB = tempB;
   }
-
-  // If A is deeper, crawl up.
-  while (depthA - depthB > 0) {
-    instA = instA._nativeParent;
-    depthA--;
-  }
-
-  // If B is deeper, crawl up.
-  while (depthB - depthA > 0) {
-    instB = instB._nativeParent;
-    depthB--;
-  }
-
-  // Walk in lockstep until we find a match.
-  var depth = depthA;
-  while (depth--) {
-    if (instA === instB) {
-      return instA;
+  if (rootA === rootB) {
+    // If A is deeper, crawl up.
+    while (depthA - depthB > 0) {
+      instA = instA._nativeParent;
+      depthA--;
     }
-    instA = instA._nativeParent;
-    instB = instB._nativeParent;
+
+    // If B is deeper, crawl up.
+    while (depthB - depthA > 0) {
+      instB = instB._nativeParent;
+      depthB--;
+    }
+
+    // Walk in lockstep until we find a match.
+    var depth = depthA;
+    while (depth--) {
+      if (instA === instB) {
+        return instA;
+      }
+      instA = instA._nativeParent;
+      instB = instB._nativeParent;
+    }
+  } else {
+    var nodeA = ReactDOMComponentTree.getNodeFromInstance(instA);
+    var nodeB = ReactDOMComponentTree.getNodeFromInstance(instB);
+    depthA = 0;
+    for (tempA = nodeA; tempA; tempA = tempA.parentNode) {
+      depthA++;
+    }
+    depthB = 0;
+    for (tempB = nodeB; tempB; tempB = tempB.parentNode) {
+      depthB++;
+    }
+    // If A is deeper, crawl up.
+    while (depthA - depthB > 0) {
+      nodeA = nodeA.parentNode;
+      depthA--;
+    }
+
+    // If B is deeper, crawl up.
+    while (depthB - depthA > 0) {
+      nodeB = nodeB.parentNode;
+      depthB--;
+    }
+
+    // Walk in lockstep until we find a match.
+    depth = depthA;
+    while (depth--) {
+      if (nodeA === nodeB) {
+        return ReactDOMComponentTree.getInstanceFromNode(nodeA);
+      }
+      nodeA = nodeA.parentNode;
+      nodeB = nodeB.parentNode;
+    }
   }
   return null;
 }
