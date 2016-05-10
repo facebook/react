@@ -80,6 +80,12 @@ describe('ReactPropTypes', function() {
         'Invalid prop `testProp` of type `object` supplied to ' +
         '`testComponent`, expected `string`.'
       );
+      typeCheckFail(
+        PropTypes.string,
+        Symbol(),
+        'Invalid prop `testProp` of type `symbol` supplied to ' +
+        '`testComponent`, expected `string`.'
+      );
     });
 
     it('should fail date and regexp correctly', function() {
@@ -106,6 +112,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.object, {});
       typeCheckPass(PropTypes.object, new Date());
       typeCheckPass(PropTypes.object, /please/);
+      typeCheckPass(PropTypes.symbol, Symbol());
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -124,6 +131,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.any, 0);
       typeCheckPass(PropTypes.any, 'str');
       typeCheckPass(PropTypes.any, []);
+      typeCheckPass(PropTypes.any, Symbol());
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -150,6 +158,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.arrayOf(PropTypes.number), [1, 2, 3]);
       typeCheckPass(PropTypes.arrayOf(PropTypes.string), ['a', 'b', 'c']);
       typeCheckPass(PropTypes.arrayOf(PropTypes.oneOf(['a', 'b'])), ['a', 'b']);
+      typeCheckPass(PropTypes.arrayOf(PropTypes.symbol), [Symbol(), Symbol()]);
     });
 
     it('should support arrayOf with complex types', function() {
@@ -490,6 +499,10 @@ describe('ReactPropTypes', function() {
         PropTypes.objectOf(PropTypes.oneOf(['a', 'b'])),
         {a: 'a', b: 'b'}
       );
+      typeCheckPass(
+        PropTypes.objectOf(PropTypes.symbol),
+        {a: Symbol(), b: Symbol(), c: Symbol()}
+      );
     });
 
     it('should support objectOf with complex types', function() {
@@ -543,6 +556,12 @@ describe('ReactPropTypes', function() {
         PropTypes.objectOf(PropTypes.number),
         'string',
         'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected an object.'
+      );
+      typeCheckFail(
+        PropTypes.objectOf(PropTypes.symbol),
+        Symbol(),
+        'Invalid prop `testProp` of type `symbol` supplied to ' +
         '`testComponent`, expected an object.'
       );
     });
@@ -779,6 +798,36 @@ describe('ReactPropTypes', function() {
         undefined,
         requiredMessage
       );
+    });
+  });
+
+  describe('Symbol Type', function() {
+    it('should warn for non-symbol', function() {
+      typeCheckFail(
+        PropTypes.symbol,
+        'hello',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+      typeCheckFail(
+        PropTypes.symbol,
+        function() { },
+        'Invalid prop `testProp` of type `function` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+      typeCheckFail(
+        PropTypes.symbol,
+        {
+          '@@toStringTag': 'Katana',
+        },
+        'Invalid prop `testProp` of type `object` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+    });
+
+    it('should not warn for a polyfilled Symbol', function() {
+      var CoreSymbol = require('core-js/library/es6/symbol');
+      typeCheckPass(PropTypes.symbol, CoreSymbol('core-js'));
     });
   });
 
