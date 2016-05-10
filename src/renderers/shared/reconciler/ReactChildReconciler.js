@@ -75,11 +75,13 @@ var ReactChildReconciler = {
     removedNodes,
     transaction,
     context) {
-    // We currently don't have a way to track moves here but if we use iterators
-    // instead of for..in we can zip the iterators and check if an item has
-    // moved.
-    // TODO: If nothing has changed, return the prevChildren object so that we
-    // can quickly bailout if nothing has changed.
+    /** 
+     * We currently don't have a way to track moves here but if we use iterators
+     * instead of for..in we can zip the iterators and check if an item has
+     * moved.
+     * TODO: If nothing has changed, return the prevChildren object so that we
+     * can quickly bailout if nothing has changed.
+     */
     if (!nextChildren && !prevChildren) {
       return;
     }
