@@ -61,13 +61,7 @@ function isAncestor(instA, instB) {
   invariant('_nativeNode' in instA, 'isAncestor: Invalid argument.');
   invariant('_nativeNode' in instB, 'isAncestor: Invalid argument.');
 
-  while (instB) {
-    if (instB === instA) {
-      return true;
-    }
-    instB = instB._nativeParent;
-  }
-  return false;
+  return instA._nativeNode.contains(instB._nativeNode);
 }
 
 /**
