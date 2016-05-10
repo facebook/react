@@ -59,6 +59,8 @@ var topLevelTypes = keyMirror({
   topLoadedMetadata: null,
   topLoadStart: null,
   topMouseDown: null,
+  topMouseEnter: null,
+  topMouseLeave: null,
   topMouseMove: null,
   topMouseOut: null,
   topMouseOver: null,

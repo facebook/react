@@ -121,6 +121,8 @@ var topEventMapping = {
   topLoadedMetadata: 'loadedmetadata',
   topLoadStart: 'loadstart',
   topMouseDown: 'mousedown',
+  topMouseEnter: 'mousenter',
+  topMouseLeave: 'mouseleave',
   topMouseMove: 'mousemove',
   topMouseOut: 'mouseout',
   topMouseOver: 'mouseover',
@@ -285,6 +287,24 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
               ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
             );
           }
+        } else if (dependency === topLevelTypes.topMouseEnter ||
+            dependency === topLevelTypes.topMouseLeave) {
+
+          if (isEventSupported('mouseenter', true)) {
+            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+              topLevelTypes.topMouseEnter,
+              'mouseenter',
+              mountAt
+            );
+            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+              topLevelTypes.topMouseLeave,
+              'mouseleave',
+              mountAt
+            );
+          }
+
+          isListening[topLevelTypes.topMouseEnter] = true;
+          isListening[topLevelTypes.topMouseLeave] = true;
         } else if (dependency === topLevelTypes.topFocus ||
             dependency === topLevelTypes.topBlur) {
 
