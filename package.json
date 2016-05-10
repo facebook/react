@@ -31,6 +31,7 @@
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
+    "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
