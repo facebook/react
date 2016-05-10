@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Интерактивные и динамические интерфейсы | React</title>
+  <title>Interactivity and Dynamic UIs | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Интерактивные и динамические интерфейсы | React">
+  <meta property="og:title" content="Interactivity and Dynamic UIs | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/interactivity-and-dynamic-uis.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -426,14 +426,14 @@
 
 
   <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/03-interactivity-and-dynamic-uis.ru-RU.md" target="_blank">Edit on GitHub</a>
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/03-interactivity-and-dynamic-uis.md" target="_blank">Edit on GitHub</a>
     <h1>
-      Интерактивные и динамические интерфейсы
+      Interactivity and Dynamic UIs
     </h1>
     <div class="subHeader"></div>
 
-    <p>Вы уже знаете <a href="/react/docs/displaying-data.html">как показывать данные</a> с React. Теперь давайте добавим в наши интферфейсы немного интерактивности.</p>
-<h2><a class="anchor" name="-"></a>Простой пример <a class="hash-link" href="#-">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LikeButton</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+    <p>You&#39;ve already <a href="/react/docs/displaying-data.html">learned how to display data</a> with React. Now let&#39;s look at how to make our UIs interactive.</p>
+<h2><a class="anchor" name="a-simple-example"></a>A Simple Example <a class="hash-link" href="#a-simple-example">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LikeButton</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">liked</span><span class="o">:</span> <span class="kc">false</span><span class="p">};</span>
   <span class="p">},</span>
@@ -454,36 +454,35 @@
   <span class="o">&lt;</span><span class="nx">LikeButton</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="----"></a>Обработка событий и синтетические события <a class="hash-link" href="#----">#</a></h2>
-<p>С React вы просто передаете функцию-обработчик нужного события как аргумент, почти так же, как делали это в HTML. Благодаря механизму синтетических событий React гарантирует, что все события будут вести себя одинаково во всех браузерах. Другими словами, React знает, как работает всплытие и перехват событий по спецификации. События, которые он передает в ваши обработчики, будут соответствовать <a href="http://www.w3.org/TR/DOM-Level-3-Events/">спецификации W3C</a>, несмотря на то, каким браузером вы пользуетесь.</p>
-<h2><a class="anchor" name="-------"></a>Как это работает: автоматическое связывание и делегирование событий <a class="hash-link" href="#-------">#</a></h2>
-<p>Чтобы ваш код был не только понятным, но и быстрым, React делает следующее:</p>
+</code></pre></div><h2><a class="anchor" name="event-handling-and-synthetic-events"></a>Event Handling and Synthetic Events <a class="hash-link" href="#event-handling-and-synthetic-events">#</a></h2>
+<p>With React you simply pass your event handler as a camelCased prop similar to how you&#39;d do it in normal HTML. React ensures that all events behave similarly in all browsers by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with <a href="http://www.w3.org/TR/DOM-Level-3-Events/">the W3C spec</a>, regardless of which browser you&#39;re using.</p>
+<h2><a class="anchor" name="under-the-hood-autobinding-and-event-delegation"></a>Under the Hood: Autobinding and Event Delegation <a class="hash-link" href="#under-the-hood-autobinding-and-event-delegation">#</a></h2>
+<p>Under the hood, React does a few things to keep your code performant and easy to understand.</p>
 
-<p><strong>Автоматическое связывание:</strong> Когда в JavaScript создаются функции обратного вызова, вам надо привязать метод к тому объекту, на котором он будет вызываться, чтобы значение <code>this</code> было корректным. С React привязка метода к компоненту происходит автоматически (<a href="/react/docs/reusable-components.html#no-autobinding">кроме тех случаев, когда вы используете классы ES6</a>). И делается это с минимальной нагрузкой на процессор и память.</p>
+<p><strong>Autobinding:</strong> When creating callbacks in JavaScript, you usually need to explicitly bind a method to its instance such that the value of <code>this</code> is correct. With React, every method is automatically bound to its component instance (<a href="/react/docs/reusable-components.html#no-autobinding">except when using ES6 class syntax</a>). React caches the bound method such that it&#39;s extremely CPU and memory efficient. It&#39;s also less typing!</p>
 
-<p><strong>Делегирование событий:</strong> На самом же деле, React добавляет обработчики событий не к узлам дерева. Сразу после запуска, React начинает прослушивать все события с самого верхнего уровня, используя единый слушатель. Когда добавляется новый компонент или удаляется старый, обработчики событий просто добавляются или удаляются из памяти React. И когда событие наступает, React уже заранее знает какому из обработчиков его передать. Когда в памяти больше не остается обработчиков, React перестает обрабатывать события. Если хотите узнать о том, почему эта механика так быстро работает, почитайте <a href="http://davidwalsh.name/event-delegate">отличный пост в блоге David Walsh</a>.</p>
-<h2><a class="anchor" name="---"></a>Компоненты как конечные автоматы <a class="hash-link" href="#---">#</a></h2>
-<p>React считает интерфейсы обыкновенными конечными автоматами. Работать с интерфейсом становится проще, если представлять его как конечный автомат, который меняет состояния и отрисовывает их.</p>
+<p><strong>Event delegation:</strong> React doesn&#39;t actually attach event handlers to the nodes themselves. When React starts up, it starts listening for all events at the top level using a single event listener. When a component is mounted or unmounted, the event handlers are simply added or removed from an internal mapping. When an event occurs, React knows how to dispatch it using this mapping. When there are no event handlers left in the mapping, React&#39;s event handlers are simple no-ops. To learn more about why this is fast, see <a href="http://davidwalsh.name/event-delegate">David Walsh&#39;s excellent blog post</a>.</p>
+<h2><a class="anchor" name="components-are-just-state-machines"></a>Components are Just State Machines <a class="hash-link" href="#components-are-just-state-machines">#</a></h2>
+<p>React thinks of UIs as simple state machines. By thinking of a UI as being in various states and rendering those states, it&#39;s easy to keep your UI consistent.</p>
 
-<p>В React вы просто обновляете состояние компонента, а потом выводите новый интерфейс уже с новыми данными. Все изменения в DOM-дереве React сделает сам, причем наиболее эффективным способом.</p>
-<h2><a class="anchor" name="--"></a>Как работает состояние <a class="hash-link" href="#--">#</a></h2>
-<p>Чтобы сообщить React о том, что данные изменились, вы вызываете метод <code>setState(data, callback)</code>. В этом методе происходит обновление состояния <code>this.state</code> новыми данными из <code>data</code>, и компонент отрисуется заново. После этого вызывается функция <code>callback</code>. Но вы редко будете ей пользоваться, ведь React сам обновляет интерфейс.</p>
-<h2><a class="anchor" name="----"></a>В каких компонентах хранить состояние? <a class="hash-link" href="#----">#</a></h2>
-<p>Большинство компонентов должны просто брать данные из <code>props</code> и отрисовывать их. Но иногда вам надо реагировать на действия пользователя, делать запросы на сервер или просто сделать что-то по таймеру. В таких случаях используйте состояние.</p>
+<p>In React, you simply update a component&#39;s state, and then render a new UI based on this new state. React takes care of updating the DOM for you in the most efficient way.</p>
+<h2><a class="anchor" name="how-state-works"></a>How State Works <a class="hash-link" href="#how-state-works">#</a></h2>
+<p>A common way to inform React of a data change is by calling <code>setState(data, callback)</code>. This method merges <code>data</code> into <code>this.state</code> and re-renders the component. When the component finishes re-rendering, the optional <code>callback</code> is called. Most of the time you&#39;ll never need to provide a <code>callback</code> since React will take care of keeping your UI up-to-date for you.</p>
+<h2><a class="anchor" name="what-components-should-have-state"></a>What Components Should Have State? <a class="hash-link" href="#what-components-should-have-state">#</a></h2>
+<p>Most of your components should simply take some data from <code>props</code> and render it. However, sometimes you need to respond to user input, a server request or the passage of time. For this you use state.</p>
 
-<p><strong>Старайтесь делать компоненты без состояния.</strong> Следуя этому правилу, вы будете выносить работу с состоянием с уровня представления в другие, более подходящие места. Тем самым, вы снизите сложность приложения, упрощая его понимание.</p>
+<p><strong>Try to keep as many of your components as possible stateless.</strong> By doing this you&#39;ll isolate the state to its most logical place and minimize redundancy, making it easier to reason about your application.</p>
 
-<p>Основной принцип такой: создаются несколько компонентов без состояния, которые формируют дерево. Они будут заниматься только отрисовкой данных. А все данные для них будут у родительского компонента, который будет на вершине этого дерева компонентов. Он и будет передавать данные дочерним узлам через <code>props</code>. Этот компонент с общим состоянием содержит в себе всю логику взаимодействия, а дочерние компоненты будут только отрисовывать данные, которые будут у них в <code>props</code>.</p>
-<h2><a class="anchor" name="-----"></a>Какие данные <em>надо</em> помещать в состояние? <a class="hash-link" href="#-----">#</a></h2>
-<p><strong>Состояние должно содержать данные, которые нужны для обновления интерфейса.</strong> В реальных приложениях такие данные, как правило, незначительны по объему, и могут быть сериализованы в JSON. Когда вы создаете компонент с состоянием, старайтесь поместить в него минимум данных. А уже внутри метода <code>render()</code> вычисляйте остальные данные, используя значения из состояния. 
-Со временем вы увидите, что такой подход позволяет создавать более стройные и устойчивые к изменениям приложения. Добавление в состояние лишних данных требует от вас дополнительных затрат на их синхронизацию. Но этого можно избежать, если позволить React делать все эти вычисления за вас.</p>
-<h2><a class="anchor" name="------"></a>Какие данные <em>не надо</em> помещать в состояние? <a class="hash-link" href="#------">#</a></h2>
-<p>Состояние <code>this.state</code> должно содержать минимум данных, необходимых  для отображения интерфейса. Поэтому не стоит хранить в нем:</p>
+<p>A common pattern is to create several stateless components that just render data, and have a stateful component above them in the hierarchy that passes its state to its children via <code>props</code>. The stateful component encapsulates all of the interaction logic, while the stateless components take care of rendering data in a declarative way.</p>
+<h2><a class="anchor" name="what-should-go-in-state"></a>What <em>Should</em> Go in State? <a class="hash-link" href="#what-should-go-in-state">#</a></h2>
+<p><strong>State should contain data that a component&#39;s event handlers may change to trigger a UI update.</strong> In real apps this data tends to be very small and JSON-serializable. When building a stateful component, think about the minimal possible representation of its state, and only store those properties in <code>this.state</code>. Inside of <code>render()</code> simply compute any other information you need based on this state. You&#39;ll find that thinking about and writing applications in this way tends to lead to the most correct application, since adding redundant or computed values to state means that you need to explicitly keep them in sync rather than rely on React computing them for you.</p>
+<h2><a class="anchor" name="what-shouldnt-go-in-state"></a>What <em>Shouldn&#39;t</em> Go in State? <a class="hash-link" href="#what-shouldnt-go-in-state">#</a></h2>
+<p><code>this.state</code> should only contain the minimal amount of data needed to represent your UI&#39;s state. As such, it should not contain:</p>
 
 <ul>
-<li><strong>Вычисляемые данные:</strong> Не волнуйтесь о данных, которые можно вычислить из состояния. Согласованность данных проще обеспечить, если производить все вычисления в методе <code>render()</code>. Например, если в состоянии хранится список элементов, и вам надо вывести его размер в виде строки, напишите <code>this.state.listItems.length + &#39; элементов&#39;</code> в методе <code>render()</code>. Это будет правильнее, чем хранить размер списка в состоянии.</li>
-<li><strong>Компоненты React:</strong> Создавайте их в методе <code>render()</code>, опираясь на данные из <code>props</code> и <code>state</code>.</li>
-<li><strong>Значения, повторяющие <code>props</code>:</strong> Старайтесь по мере возможности использовать <code>props</code> как единственный источник данных. Хранить значения <code>props</code> в состоянии допускается, только если вам надо где-то хранить их прошлые значения, ведь <code>props</code> могут измениться после отрисовки родительского компонента.</li>
+<li><strong>Computed data:</strong> Don&#39;t worry about precomputing values based on state — it&#39;s easier to ensure that your UI is consistent if you do all computation within <code>render()</code>. For example, if you have an array of list items in state and you want to render the count as a string, simply render <code>this.state.listItems.length + &#39; list items&#39;</code> in your <code>render()</code> method rather than storing it on state.</li>
+<li><strong>React components:</strong> Build them in <code>render()</code> based on underlying props and state.</li>
+<li><strong>Duplicated data from props:</strong> Try to use props as the source of truth where possible. One valid use to store props in state is to be able to know its previous values, because props may change as the result of a parent component re-rendering.</li>
 </ul>
 
 
