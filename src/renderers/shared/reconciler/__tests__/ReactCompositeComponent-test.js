@@ -1151,6 +1151,59 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
+  it('should not throw for complex update sequences', function() {
+    var callbacks = [];
+    function emitChange() {
+      callbacks.forEach(c => c());
+    }
+
+    class App extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { showChild: true };
+      }
+      componentDidMount() {
+        console.log('about to remove child via set state');
+        this.setState({ showChild: false });
+      }
+      render() {
+        return (
+          <div>
+            <ForceUpdatesOnChange />
+            {this.state.showChild && <EmitsChangeOnUnmount />}
+          </div>
+        );
+      }
+    }
+
+    class EmitsChangeOnUnmount extends React.Component {
+      componentWillUnmount() {
+        emitChange();
+      }
+      render() {
+        return null;
+      }
+    }
+
+    class ForceUpdatesOnChange extends React.Component {
+      componentDidMount() {
+        this.onChange = () => this.forceUpdate();
+        this.onChange()
+        callbacks.push(this.onChange);
+      }
+      componentWillUnmount() {
+        callbacks = callbacks.filter(c => c !== this.onChange)
+      }
+      render() {
+        return (
+          <div key={Math.random()} onClick={function(){}} />
+        )
+      }
+    }
+
+    ReactDOM.render(<App />, document.createElement('div'));
+  });
+
   it('context should be passed down from the parent', function() {
     var Parent = React.createClass({
       childContextTypes: {
