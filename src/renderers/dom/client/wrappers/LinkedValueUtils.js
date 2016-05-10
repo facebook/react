@@ -83,7 +83,7 @@ var propTypes = {
       'set either `onChange` or `readOnly`.'
     );
   },
-  onChange: ReactPropTypes.func,
+  onChange: ReactPropTypes.function,
 };
 
 var loggedTypeFailures = {};

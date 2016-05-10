@@ -105,8 +105,8 @@ describe('ReactPropTypes', function() {
 
     it('should not warn for valid values', function() {
       typeCheckPass(PropTypes.array, []);
-      typeCheckPass(PropTypes.bool, false);
-      typeCheckPass(PropTypes.func, function() {});
+      typeCheckPass(PropTypes.boolean, false);
+      typeCheckPass(PropTypes.function, function() {});
       typeCheckPass(PropTypes.number, 0);
       typeCheckPass(PropTypes.string, '');
       typeCheckPass(PropTypes.object, {});

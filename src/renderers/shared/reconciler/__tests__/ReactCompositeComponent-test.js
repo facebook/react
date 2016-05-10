@@ -618,7 +618,7 @@ describe('ReactCompositeComponent', function() {
     var Parent = React.createClass({
       childContextTypes: {
         foo: ReactPropTypes.string,
-        flag: ReactPropTypes.bool,
+        flag: ReactPropTypes.boolean,
       },
 
       getChildContext: function() {
@@ -648,7 +648,7 @@ describe('ReactCompositeComponent', function() {
     var Child = React.createClass({
       contextTypes: {
         foo: ReactPropTypes.string,
-        flag: ReactPropTypes.bool,
+        flag: ReactPropTypes.boolean,
       },
 
       render: function() {
@@ -673,7 +673,7 @@ describe('ReactCompositeComponent', function() {
   it('should pass context when re-rendered for static child within a composite component', function() {
     var Parent = React.createClass({
       childContextTypes: {
-        flag: ReactPropTypes.bool,
+        flag: ReactPropTypes.boolean,
       },
 
       getChildContext() {
@@ -696,7 +696,7 @@ describe('ReactCompositeComponent', function() {
 
     var Child = React.createClass({
       contextTypes: {
-        flag: ReactPropTypes.bool,
+        flag: ReactPropTypes.boolean,
       },
 
       render: function() {

@@ -19,8 +19,8 @@ React.createClass({
     // Puoi dichiarare che una proprietà è uno specifico tipo primitivo JS. In
     // maniera predefinita, questi sono tutti opzionali.
     optionalArray: React.PropTypes.array,
-    optionalBool: React.PropTypes.bool,
-    optionalFunc: React.PropTypes.func,
+    optionalBoolean: React.PropTypes.boolean,
+    optionalFunction: React.PropTypes.function,
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
@@ -61,7 +61,7 @@ React.createClass({
 
     // Puoi concatenare ciascuna delle precedenti con `isRequired` per assicurarti
     // che venga mostrato un avvertimento se la proprietà non viene impostata.
-    requiredFunc: React.PropTypes.func.isRequired,
+    requiredFunc: React.PropTypes.function.isRequired,
 
     // Un valore di un tipo qualsiasi
     requiredAny: React.PropTypes.any.isRequired,

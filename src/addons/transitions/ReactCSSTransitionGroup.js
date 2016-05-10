@@ -52,9 +52,9 @@ var ReactCSSTransitionGroup = React.createClass({
   propTypes: {
     transitionName: ReactCSSTransitionGroupChild.propTypes.name,
 
-    transitionAppear: React.PropTypes.bool,
-    transitionEnter: React.PropTypes.bool,
-    transitionLeave: React.PropTypes.bool,
+    transitionAppear: React.PropTypes.boolean,
+    transitionEnter: React.PropTypes.boolean,
+    transitionLeave: React.PropTypes.boolean,
     transitionAppearTimeout: createTransitionTimeoutPropValidator('Appear'),
     transitionEnterTimeout: createTransitionTimeoutPropValidator('Enter'),
     transitionLeaveTimeout: createTransitionTimeoutPropValidator('Leave'),

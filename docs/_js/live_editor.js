@@ -10,8 +10,8 @@ var IS_MOBILE = (
 
 var CodeMirrorEditor = React.createClass({
   propTypes: {
-    lineNumbers: React.PropTypes.bool,
-    onChange: React.PropTypes.func,
+    lineNumbers: React.PropTypes.boolean,
+    onChange: React.PropTypes.function,
   },
   getDefaultProps: function() {
     return {
@@ -81,10 +81,10 @@ var ReactPlayground = React.createClass({
 
   propTypes: {
     codeText: React.PropTypes.string.isRequired,
-    transformer: React.PropTypes.func,
-    renderCode: React.PropTypes.bool,
-    showCompiledJSTab: React.PropTypes.bool,
-    showLineNumbers: React.PropTypes.bool,
+    transformer: React.PropTypes.function,
+    renderCode: React.PropTypes.boolean,
+    showCompiledJSTab: React.PropTypes.boolean,
+    showLineNumbers: React.PropTypes.boolean,
     editorTabTitle: React.PropTypes.string,
   },
 

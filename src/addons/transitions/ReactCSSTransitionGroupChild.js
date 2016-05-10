@@ -45,9 +45,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
     // Once we require timeouts to be specified, we can remove the
     // boolean flags (appear etc.) and just accept a number
     // or a bool for the timeout flags (appearTimeout etc.)
-    appear: React.PropTypes.bool,
-    enter: React.PropTypes.bool,
-    leave: React.PropTypes.bool,
+    appear: React.PropTypes.boolean,
+    enter: React.PropTypes.boolean,
+    leave: React.PropTypes.boolean,
     appearTimeout: React.PropTypes.number,
     enterTimeout: React.PropTypes.number,
     leaveTimeout: React.PropTypes.number,
