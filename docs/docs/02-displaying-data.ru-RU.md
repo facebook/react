@@ -1,8 +1,8 @@
 ---
-id: displaying-data
+id: displaying-data-ru-RU
 title: Отображение данных
-permalink: displaying-data.html
-prev: why-react.html
+permalink: displaying-data-ru-RU.html
+prev: why-react-ru-RU.html
 next: jsx-in-depth.html
 ---
 
