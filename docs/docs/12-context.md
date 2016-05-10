@@ -145,6 +145,14 @@ void componentDidUpdate(
 )
 ```
 
+Additionally, a new lifecycle method named `componentWillReceiveContext` is included, which is called after `componentWillReceiveProps`, but before the update occurs. This method will *always* be called if contexts are enabled, unlike `componentWillReceiveProps`, which is only called if props change.
+
+```javascript
+void componentWillReceiveContext(
+  object nextContext
+)
+```
+
 ## Referencing context in stateless functional components
 
 Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows the `Button` component above written as a stateless functional component.

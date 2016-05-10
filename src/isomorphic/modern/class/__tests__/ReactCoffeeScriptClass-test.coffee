@@ -267,6 +267,44 @@ describe 'ReactCoffeeScriptClass', ->
     ReactDOM.unmountComponentAtNode container
     expect(lifeCycles).toEqual ['will-unmount']
 
+  it 'will call context life cycle methods', ->
+      lifeCycles = []
+
+      class Child extends React.Component
+        @contextTypes:
+          foo: React.PropTypes.string
+
+        componentWillReceiveProps: (nextProps, nextContext) ->
+          lifeCycles.push 'receive-props', nextProps, nextContext
+
+        componentWillReceiveContext: (nextContext) ->
+          lifeCycles.push 'receive-context', nextContext
+
+        render: ->
+          span
+            className: @props.value
+
+      class Parent extends React.Component
+        @childContextTypes:
+          foo: React.PropTypes.string
+
+        getChildContext: ->
+          { foo: 'foo' }
+
+        render: ->
+          React.createElement('div', {}, React.createElement(Child, { value: @props.value }))
+
+      test React.createElement(Parent, value: 'bar'), 'DIV', ''
+      expect(lifeCycles).toEqual []
+
+      test React.createElement(Parent, value: 'baz'), 'DIV', ''
+      expect(lifeCycles).toEqual [
+        'receive-props', { value: 'baz' }, { foo: 'foo' },
+        'receive-context', { foo: 'foo' }
+      ]
+
+      ReactDOM.unmountComponentAtNode container
+
   it 'warns when classic properties are defined on the instance,
       but does not invoke them.', ->
     spyOn console, 'error'
@@ -339,6 +377,23 @@ describe 'ReactCoffeeScriptClass', ->
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: NamedComponent has a method called componentWillRecieveProps().
        Did you mean componentWillReceiveProps()?'
+    )
+
+  it 'should warn when misspelling componentWillReceiveContext', ->
+    spyOn console, 'error'
+    class NamedComponent extends React.Component
+      componentWillRecieveContext: ->
+        false
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(NamedComponent), 'SPAN', 'foo'
+    expect(console.error.calls.length).toBe 1
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: NamedComponent has a method called componentWillRecieveContext().
+       Did you mean componentWillReceiveContext()?'
     )
 
   it 'should throw AND warn when trying to access classic APIs', ->

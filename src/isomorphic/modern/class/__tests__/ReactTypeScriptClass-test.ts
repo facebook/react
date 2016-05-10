@@ -233,6 +233,34 @@ class NormalLifeCycles extends React.Component {
   }
 }
 
+// will call context life cycle methods
+class ContextChildLifeCycles extends React.Component {
+  props : any;
+  state = {};
+  static contextTypes = { foo: React.PropTypes.string };
+  componentWillReceiveProps(nextProps, nextContext) {
+    lifeCycles.push('receive-props', nextProps, nextContext);
+  }
+  componentWillReceiveContext(nextContext) {
+    lifeCycles.push('receive-context', nextContext);
+  }
+  render() {
+    return React.createElement('span', {className: this.props.value});
+  }
+}
+
+class ContextParentLifeCycles extends React.Component {
+  static childContextTypes = { foo: React.PropTypes.string };
+  getChildContext() {
+    return {
+      foo: 'foo'
+    };
+  }
+  render() {
+    return React.createElement('div', {}, React.createElement(ContextChildLifeCycles, { value: this.props.value }));
+  }
+}
+
 // warns when classic properties are defined on the instance,
 // but does not invoke them.
 var getInitialStateWasCalled = false;
@@ -266,6 +294,16 @@ class MisspelledComponent1 extends React.Component {
 // it should warn when misspelling componentWillReceiveProps
 class MisspelledComponent2 extends React.Component {
   componentWillRecieveProps() {
+    return false;
+  }
+  render() {
+    return React.createElement('span', {className: 'foo'});
+  }
+}
+
+// it should warn when misspelling componentWillReceiveContext
+class MisspelledComponent3 extends React.Component {
+  componentWillRecieveContext() {
     return false;
   }
   render() {
@@ -426,6 +464,20 @@ describe('ReactTypeScriptClass', function() {
     ]);
   });
 
+  it('will call context life cycle methods', function() {
+    lifeCycles = [];
+    test(React.createElement(ContextParentLifeCycles, {value: 'bar'}), 'DIV', '');
+    expect(lifeCycles).toEqual([]);
+
+    test(React.createElement(ContextParentLifeCycles, {value: 'baz'}), 'DIV', '');
+    expect(lifeCycles).toEqual([
+      'receive-props', {value: 'baz'}, {foo: 'foo'},
+      'receive-context', {foo: 'foo'}
+    ]);
+
+    ReactDOM.unmountComponentAtNode(container);
+  });
+
   it('warns when classic properties are defined on the instance, ' +
      'but does not invoke them.', function() {
     spyOn(console, 'error');
@@ -475,6 +527,19 @@ describe('ReactTypeScriptClass', function() {
       'Warning: ' +
       'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
       'Did you mean componentWillReceiveProps()?'
+    );
+  });
+
+  it('should warn when misspelling componentWillReceiveContext', function() {
+    spyOn(console, 'error');
+
+    test(React.createElement(MisspelledComponent3), 'SPAN', 'foo');
+
+    expect((<any>console.error).argsForCall.length).toBe(1);
+    expect((<any>console.error).argsForCall[0][0]).toBe(
+        'Warning: ' +
+        'MisspelledComponent3 has a method called componentWillRecieveContext(). ' +
+        'Did you mean componentWillReceiveContext()?'
     );
   });
 

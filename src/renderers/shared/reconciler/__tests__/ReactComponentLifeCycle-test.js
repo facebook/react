@@ -524,30 +524,40 @@ describe('ReactComponentLifeCycle', function() {
       };
     };
     var Outer = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string,
+      },
+      getChildContext() {
+        return { foo: 'bar' };
+      },
       render: function() {
         return <div><Inner x={this.props.x} /></div>;
       },
       componentWillMount: logger('outer componentWillMount'),
       componentDidMount: logger('outer componentDidMount'),
       componentWillReceiveProps: logger('outer componentWillReceiveProps'),
+      componentWillReceiveContext: logger('outer componentWillReceiveContext'),
       shouldComponentUpdate: logger('outer shouldComponentUpdate'),
       componentWillUpdate: logger('outer componentWillUpdate'),
       componentDidUpdate: logger('outer componentDidUpdate'),
       componentWillUnmount: logger('outer componentWillUnmount'),
     });
     var Inner = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string,
+      },
       render: function() {
         return <span>{this.props.x}</span>;
       },
       componentWillMount: logger('inner componentWillMount'),
       componentDidMount: logger('inner componentDidMount'),
       componentWillReceiveProps: logger('inner componentWillReceiveProps'),
+      componentWillReceiveContext: logger('inner componentWillReceiveContext'),
       shouldComponentUpdate: logger('inner shouldComponentUpdate'),
       componentWillUpdate: logger('inner componentWillUpdate'),
       componentDidUpdate: logger('inner componentDidUpdate'),
       componentWillUnmount: logger('inner componentWillUnmount'),
     });
-
 
     var container = document.createElement('div');
     log = [];
@@ -566,6 +576,7 @@ describe('ReactComponentLifeCycle', function() {
       'outer shouldComponentUpdate',
       'outer componentWillUpdate',
       'inner componentWillReceiveProps',
+      'inner componentWillReceiveContext',
       'inner shouldComponentUpdate',
       'inner componentWillUpdate',
       'inner componentDidUpdate',

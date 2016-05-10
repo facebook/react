@@ -110,6 +110,7 @@ function shouldConstruct(Component) {
  *
  *       Update Phases:
  *       - componentWillReceiveProps (only called if parent updated)
+ *       - componentWillReceiveContext (only if there is a context)
  *       - shouldComponentUpdate
  *         - componentWillUpdate
  *           - render
@@ -309,6 +310,12 @@ var ReactCompositeComponentMixin = {
         '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         (this.getName() || 'A component')
+      );
+      warning(
+          typeof inst.componentWillRecieveContext !== 'function',
+          '%s has a method called ' +
+          'componentWillRecieveContext(). Did you mean componentWillReceiveContext()?',
+          (this.getName() || 'A component')
       );
     }
 
@@ -783,10 +790,10 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Perform an update to a mounted component. The componentWillReceiveProps and
-   * shouldComponentUpdate methods are called, then (assuming the update isn't
-   * skipped) the remaining update lifecycle methods are called and the DOM
-   * representation is updated.
+   * Perform an update to a mounted component. The `componentWillReceiveProps`,
+   * `componentWillReceiveContext`, and `shouldComponentUpdate` methods are called,
+   * then (assuming the update isn't skipped) the remaining update lifecycle methods
+   * are called and the DOM representation is updated.
    *
    * By default, this implements React's rendering and reconciliation algorithm.
    * Sophisticated clients may wish to override this.
@@ -848,6 +855,11 @@ var ReactCompositeComponentMixin = {
           );
         }
       }
+    }
+
+    // Only trigger if the context is not an empty object
+    if (nextContext !== emptyObject && inst.componentWillReceiveContext) {
+      inst.componentWillReceiveContext(nextContext);
     }
 
     var nextState = this._processPendingState(nextProps, nextContext);

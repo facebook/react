@@ -858,6 +858,10 @@ describe('ReactCompositeComponent', function() {
         expect('foo' in nextContext).toBe(true);
       },
 
+      componentWillReceiveContext: function(nextContext) {
+        expect('foo' in nextContext).toBe(true);
+      },
+
       componentDidUpdate: function(prevProps, prevState, prevContext) {
         expect('foo' in prevContext).toBe(true);
       },
@@ -875,6 +879,10 @@ describe('ReactCompositeComponent', function() {
     var Intermediary = React.createClass({
 
       componentWillReceiveProps: function(nextProps, nextContext) {
+        expect('foo' in nextContext).toBe(false);
+      },
+
+      componentWillReceiveContext: function(nextContext) {
         expect('foo' in nextContext).toBe(false);
       },
 
@@ -1062,6 +1070,68 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should not call componentWillReceiveContext for the defining component', function() {
+    var notTriggered = true;
+
+    var Child = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string,
+      },
+      render() {
+        return <div />;
+      },
+    });
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string,
+      },
+      getChildContext() {
+        return { foo: 'bar' };
+      },
+      componentWillReceiveContext() {
+        notTriggered = false;
+      },
+      render() {
+        return <Child />;
+      },
+    });
+
+    ReactDOM.render(<Parent />, document.createElement('div'));
+    expect(notTriggered).toBe(true);
+  });
+
+  it('should not call componentWillReceiveContext if the context is an empty object', function() {
+    var notTriggered = true;
+
+    var Child = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string,
+      },
+      componentWillReceiveContext() {
+        notTriggered = false;
+      },
+      render() {
+        return <div />;
+      },
+    });
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string,
+      },
+      getChildContext() {
+        return { };
+      },
+      render() {
+        return <Child />;
+      },
+    });
+
+    ReactDOM.render(<Parent />, document.createElement('div'));
+    expect(notTriggered).toBe(true);
+  });
+
   it('only renders once if updated in componentWillReceiveProps', function() {
     var renders = 0;
     var Component = React.createClass({
@@ -1085,6 +1155,49 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Component update={1} />, container);
     expect(renders).toBe(2);
     expect(instance.state.updated).toBe(true);
+  });
+
+  it('only renders once if updated in componentWillReceiveContext', function() {
+    var renders = 0;
+    var Child = React.createClass({
+      contextTypes: {
+        update: React.PropTypes.number,
+      },
+      getInitialState: function() {
+        return {updated: false};
+      },
+      componentWillReceiveContext: function(context) {
+        expect(context.update).toBe(1);
+        this.setState({updated: Boolean(context.update) });
+      },
+      render: function() {
+        renders++;
+        return <div />;
+      },
+    });
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        update: React.PropTypes.number,
+      },
+      getDefaultProps() {
+        return { update: 0 };
+      },
+      getChildContext() {
+        return { update: this.props.update };
+      },
+      render() {
+        return <Child ref="child" />;
+      },
+    });
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<Parent update={0} />, container);
+    expect(renders).toBe(1);
+    expect(instance.refs.child.state.updated).toBe(false);
+    ReactDOM.render(<Parent update={1} />, container);
+    expect(renders).toBe(2);
+    expect(instance.refs.child.state.updated).toBe(true);
   });
 
   it('should update refs if shouldComponentUpdate gives false', function() {

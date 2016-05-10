@@ -219,6 +219,18 @@ var ReactClassInterface = {
   componentWillReceiveProps: SpecPolicy.DEFINE_MANY,
 
   /**
+   * Invoked before the component receives new context.
+   *
+   * This method is analogous to `componentWillReceiveProps`,
+   * but will only receive the new and changed context. This method exists
+   * for situations where the former does not trigger, as props have not changed.
+   *
+   * @param {object} nextContext
+   * @optional
+   */
+  componentWillReceiveContext: SpecPolicy.DEFINE_MANY,
+
+  /**
    * Invoked while deciding if the component should be updated as a result of
    * receiving new props, state and/or context.
    *
@@ -839,6 +851,12 @@ var ReactClass = {
         '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         spec.displayName || 'A component'
+      );
+      warning(
+          !Constructor.prototype.componentWillRecieveContext,
+          '%s has a method called ' +
+          'componentWillRecieveContext(). Did you mean componentWillReceiveContext()?',
+          spec.displayName || 'A component'
       );
     }
 
