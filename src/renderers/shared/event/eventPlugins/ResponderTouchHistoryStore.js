@@ -116,6 +116,11 @@ var recordStartTouchData = function(touch) {
 var recordMoveTouchData = function(touch) {
   var touchBank = touchHistory.touchBank;
   var touchTrack = touchBank[touch.identifier];
+  if (touchTrack) {
+    reinitializeTouchTrack(touchTrack, touch);
+  } else {
+    touchBank[touch.identifier] = initializeTouchData(touch);
+  }
   if (__DEV__) {
     validateTouch(touch);
     invariant(touchTrack, 'Touch data should have been recorded on start');
