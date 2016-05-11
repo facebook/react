@@ -62,6 +62,7 @@ var HTMLDOMPropertyConfig = {
     data: 0, // For `<object />` acts as `src`.
     dateTime: 0,
     default: HAS_BOOLEAN_VALUE,
+    defaultValue: MUST_USE_PROPERTY,
     defer: HAS_BOOLEAN_VALUE,
     dir: 0,
     disabled: HAS_BOOLEAN_VALUE,
