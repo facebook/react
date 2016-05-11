@@ -223,15 +223,20 @@ var ReactTestUtils = {
    *
    * @param {object} module the mock function object exported from a
    *                        module that defines the component to be mocked
+   * @param {?object} mockClassSpec optional spec for the mock component
+   *                                that allows you to mock the component's
+   *                                properties and methods (so you can
+   *                                assert them in tests)
    * @param {?string} mockTagName optional dummy root tag name to return
    *                              from render method (overrides
    *                              module.mockTagName if provided)
    * @return {object} the ReactTestUtils object (for chaining)
    */
-  mockComponent: function(module, mockTagName) {
+  mockComponent: function(module, mockClassSpec, mockTagName) {
     mockTagName = mockTagName || module.mockTagName || "div";
+    mockClassSpec = mockClassSpec || {};
 
-    var ConvenienceConstructor = React.createClass({
+    var convenienceConstructorSpec = assign({
       render: function() {
         return React.createElement(
           mockTagName,
@@ -239,8 +244,9 @@ var ReactTestUtils = {
           this.props.children
         );
       }
-    });
+    }, mockClassSpec);
 
+    var ConvenienceConstructor = React.createClass(convenienceConstructorSpec);
     module.mockImplementation(ConvenienceConstructor);
 
     module.type = ConvenienceConstructor.type;
