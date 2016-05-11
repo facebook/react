@@ -163,6 +163,46 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('foo');
   });
 
+  it('should not rerender when another DOM element is updated', function() {
+    var ReactDefaultPerf = require('ReactDefaultPerf');
+    var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
+
+    var RerenderTest = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <p>{this.props.paragraphContents}</p>
+            <textarea value="foo" onChange={emptyFunction} />
+          </div>
+        );
+      },
+    });
+
+    var container = document.createElement('div');
+
+    ReactDOM.render(
+      <RerenderTest paragraphContents="giraffe" />,
+      container
+    );
+
+    ReactDefaultPerf.start();
+    ReactDOM.render(
+      <RerenderTest paragraphContents="gorilla" />,
+      container
+    );
+    ReactDefaultPerf.stop();
+
+    var measurements = ReactDefaultPerf.getLastMeasurements();
+    var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
+
+    expect(summary.length).toBe(1);
+
+    var summaryObj = summary[0];
+
+    expect(summaryObj.id).toBe('.a.0');
+    expect(summaryObj.type).toBe('set textContent');
+  });
+
   it('should properly control a value of number `0`', function() {
     var stub = <textarea value={0} onChange={emptyFunction} />;
     stub = renderTextarea(stub);

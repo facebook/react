@@ -830,7 +830,6 @@ ReactDOMComponent.Mixin = {
         nextProps = ReactDOMButton.getNativeProps(this, nextProps);
         break;
       case 'input':
-        ReactDOMInput.updateWrapper(this);
         lastProps = ReactDOMInput.getNativeProps(this, lastProps);
         nextProps = ReactDOMInput.getNativeProps(this, nextProps);
         break;
@@ -843,7 +842,9 @@ ReactDOMComponent.Mixin = {
         nextProps = ReactDOMSelect.getNativeProps(this, nextProps);
         break;
       case 'textarea':
-        ReactDOMTextarea.updateWrapper(this);
+        if (lastProps.value !== nextProps.value) {
+          ReactDOMTextarea.updateWrapper(this);
+        }
         lastProps = ReactDOMTextarea.getNativeProps(this, lastProps);
         nextProps = ReactDOMTextarea.getNativeProps(this, nextProps);
         break;
