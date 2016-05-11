@@ -80,6 +80,27 @@ describe('ReactNativeOperationHistoryDevtool', () => {
           '<!-- react-empty: 1 -->',
       }]);
     });
+
+    it('gets recorded when a native is mounted deeply instead of null', () => {
+      var element;
+      function Foo() {
+        return element;
+      }
+
+      var node = document.createElement('div');
+      element = null;
+      ReactDOM.render(<Foo />, node);
+
+      ReactNativeOperationHistoryDevtool.clearHistory();
+      element = <span />;
+      ReactDOM.render(<Foo />, node);
+      var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
+      assertHistoryMatches([{
+        instanceID: inst._debugID,
+        type: 'mount',
+        payload: 'SPAN',
+      }]);
+    });
   });
 
   describe('update styles', () => {
@@ -497,6 +518,27 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         instanceID: inst._debugID,
         type: 'replace with',
         payload: 'SPAN',
+      }]);
+    });
+
+    it('gets recorded when composite renders to null after a native', () => {
+      var element;
+      function Foo() {
+        return element;
+      }
+
+      var node = document.createElement('div');
+      element = <span />;
+      ReactDOM.render(<Foo />, node);
+      var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
+
+      ReactNativeOperationHistoryDevtool.clearHistory();
+      element = null;
+      ReactDOM.render(<Foo />, node);
+      assertHistoryMatches([{
+        instanceID: inst._debugID,
+        type: 'replace with',
+        payload: '#comment',
       }]);
     });
 

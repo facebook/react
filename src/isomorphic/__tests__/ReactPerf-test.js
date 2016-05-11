@@ -217,7 +217,7 @@ describe('ReactPerf', function() {
 
   it('should not count replacing null with a native as waste', function() {
     var element = null;
-    function Foo () {
+    function Foo() {
       return element;
     }
     var container = document.createElement('div');
@@ -230,7 +230,7 @@ describe('ReactPerf', function() {
 
   it('should not count replacing a native with null as waste', function() {
     var element = <div />;
-    function Foo () {
+    function Foo() {
       return element;
     }
     var container = document.createElement('div');

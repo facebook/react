@@ -135,11 +135,19 @@ var dangerouslyReplaceNodeWithMarkup = Danger.dangerouslyReplaceNodeWithMarkup;
 if (__DEV__) {
   dangerouslyReplaceNodeWithMarkup = function(oldChild, markup, prevInstance) {
     Danger.dangerouslyReplaceNodeWithMarkup(oldChild, markup);
-    ReactInstrumentation.debugTool.onNativeOperation(
-      prevInstance._debugID,
-      'replace with',
-      markup.toString()
-    );
+    if (prevInstance._debugID !== 0) {
+      ReactInstrumentation.debugTool.onNativeOperation(
+        prevInstance._debugID,
+        'replace with',
+        markup.toString()
+      );
+    } else {
+      ReactInstrumentation.debugTool.onNativeOperation(
+        ReactDOMComponentTree.getInstanceFromNode(markup.node)._debugID,
+        'mount',
+        markup.toString()
+      );
+    }
   };
 }
 
