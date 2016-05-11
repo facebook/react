@@ -236,11 +236,17 @@ function getWasted(flushHistory = getFlushHistory()) {
 
 function getOperations(flushHistory = getFlushHistory()) {
   var stats = [];
+
   flushHistory.forEach((flush, flushIndex) => {
     var {operations, treeSnapshot} = flush;
+
     operations.forEach(operation => {
       var {instanceID, type, payload} = operation;
-      var {displayName, ownerID} = treeSnapshot[instanceID];
+      var {displayName, ownerID} = instanceID !== 0 ?
+        treeSnapshot[instanceID] :
+        // Empty components may appear in some operation logs.
+        {displayName: '#empty', ownerID: null};
+
       var owner = treeSnapshot[ownerID];
       var key = (owner ? owner.displayName + ' > ' : '') + displayName;
 
