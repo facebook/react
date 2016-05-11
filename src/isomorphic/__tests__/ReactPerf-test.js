@@ -67,6 +67,13 @@ describe('ReactPerf', function() {
     ReactPerf.start();
     fn();
     ReactPerf.stop();
+
+    // Make sure none of the methods crash.
+    ReactPerf.getWasted();
+    ReactPerf.getInclusive();
+    ReactPerf.getExclusive();
+    ReactPerf.getOperations();
+
     return ReactPerf.getLastMeasurements();
   }
 
@@ -205,6 +212,32 @@ describe('ReactPerf', function() {
     ReactDOM.render(<Div>{'hello'}{'world'}</Div>, container);
     expectNoWaste(() => {
       ReactDOM.render(<Div>{'hello'}{'friend'}</Div>, container);
+    });
+  });
+
+  it('should not count replacing null with a native as waste', function() {
+    var element = null;
+    function Foo () {
+      return element;
+    }
+    var container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+    expectNoWaste(() => {
+      element = <div />;
+      ReactDOM.render(<Foo />, container);
+    });
+  });
+
+  it('should not count replacing a native with null as waste', function() {
+    var element = <div />;
+    function Foo () {
+      return element;
+    }
+    var container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+    expectNoWaste(() => {
+      element = null;
+      ReactDOM.render(<Foo />, container);
     });
   });
 
