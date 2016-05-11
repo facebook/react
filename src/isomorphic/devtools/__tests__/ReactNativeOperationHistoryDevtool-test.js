@@ -72,13 +72,17 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       var node = document.createElement('div');
       ReactDOM.render(<Foo />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
-      assertHistoryMatches([{
-        instanceID: inst._debugID,
-        type: 'mount',
-        payload: ReactDOMFeatureFlags.useCreateElement ?
-          '#comment' :
-          '<!-- react-empty: 1 -->',
-      }]);
+
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        // Empty DOM components should be invisible to devtools.
+        assertHistoryMatches([]);
+      } else {
+        assertHistoryMatches([{
+          instanceID: inst._debugID,
+          type: 'mount',
+          payload: '<!-- react-empty: 1 -->',
+        }]);
+      }
     });
 
     it('gets recorded when a native is mounted deeply instead of null', () => {
@@ -95,6 +99,9 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       element = <span />;
       ReactDOM.render(<Foo />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
+
+      // Since empty components should be invisible to devtools,
+      // we record a "mount" event rather than a "replace with".
       assertHistoryMatches([{
         instanceID: inst._debugID,
         type: 'mount',

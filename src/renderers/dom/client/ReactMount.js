@@ -701,11 +701,14 @@ var ReactMount = {
     }
 
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onNativeOperation(
-        ReactDOMComponentTree.getInstanceFromNode(container.firstChild)._debugID,
-        'mount',
-        markup.toString()
-      );
+      var nativeNode = ReactDOMComponentTree.getInstanceFromNode(container.firstChild);
+      if (nativeNode._debugID !== 0) {
+        ReactInstrumentation.debugTool.onNativeOperation(
+          nativeNode._debugID,
+          'mount',
+          markup.toString()
+        );
+      }
     }
   },
 };

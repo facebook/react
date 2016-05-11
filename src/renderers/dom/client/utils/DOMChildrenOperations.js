@@ -142,11 +142,14 @@ if (__DEV__) {
         markup.toString()
       );
     } else {
-      ReactInstrumentation.debugTool.onNativeOperation(
-        ReactDOMComponentTree.getInstanceFromNode(markup.node)._debugID,
-        'mount',
-        markup.toString()
-      );
+      var nextInstance = ReactDOMComponentTree.getInstanceFromNode(markup.node);
+      if (nextInstance._debugID !== 0) {
+        ReactInstrumentation.debugTool.onNativeOperation(
+          nextInstance._debugID,
+          'mount',
+          markup.toString()
+        );
+      }
     }
   };
 }

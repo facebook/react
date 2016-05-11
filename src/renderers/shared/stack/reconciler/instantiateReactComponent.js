@@ -139,11 +139,13 @@ function instantiateReactComponent(node) {
     var debugID = isEmpty ? 0 : nextDebugID++;
     instance._debugID = debugID;
 
-    var displayName = getDisplayName(instance);
-    ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
-    var owner = node && node._owner;
-    if (owner) {
-      ReactInstrumentation.debugTool.onSetOwner(debugID, owner._debugID);
+    if (debugID !== 0) {
+      var displayName = getDisplayName(instance);
+      ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
+      var owner = node && node._owner;
+      if (owner) {
+        ReactInstrumentation.debugTool.onSetOwner(debugID, owner._debugID);
+      }
     }
   }
 
