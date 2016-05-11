@@ -19,6 +19,7 @@ var es7SpreadProperty =
   require('jstransform/visitors/es7-spread-property-visitors');
 var react = require('./transforms/react');
 var reactDisplayName = require('./transforms/reactDisplayName');
+var reactJSXModule = require('./transforms/reactJSXmodule');
 var reservedWords = require('jstransform/visitors/reserved-words-visitors');
 
 /**
@@ -34,7 +35,7 @@ var transformVisitors = {
   'es6-templates': es6Templates.visitorList,
   'es6-call-spread': es6CallSpread.visitorList,
   'es7-spread-property': es7SpreadProperty.visitorList,
-  'react': react.visitorList.concat(reactDisplayName.visitorList),
+  'react': react.visitorList.concat(reactDisplayName.visitorList).concat(reactJSXModule.visitorList),
   'reserved-words': reservedWords.visitorList
 };
 
