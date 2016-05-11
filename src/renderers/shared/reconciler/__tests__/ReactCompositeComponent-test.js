@@ -457,6 +457,34 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should support module component', function() {
+    function ModuleComponent(props) {
+      return {
+        render: function() {
+          return (
+            <div>{props.test}</div>
+          );
+        },
+      };
+    }
+
+    var Component = React.createClass({
+      render: function() {
+        return <ModuleComponent {...this.props} />;
+      },
+    })
+
+    var instance = ReactTestUtils.renderIntoDocument(
+      <Component test="test" />
+    );
+
+    expect(React.findDOMNode(instance).textContent).toBe('test');
+
+    instance.setProps({test: 'mest'});
+
+    expect(React.findDOMNode(instance).textContent).toBe('mest');
+  });
+
   it('should cleanup even if render() fatals', function() {
     var BadComponent = React.createClass({
       render: function() {
