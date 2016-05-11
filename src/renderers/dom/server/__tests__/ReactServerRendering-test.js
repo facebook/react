@@ -179,6 +179,23 @@ describe('ReactServerRendering', function() {
       runTest();
     });
 
+    it('should not mount element while rendering to string', function() {
+      var instance;
+
+      var TestComponent = React.createClass({
+        render: function() {
+          instance = this;
+          return <span>TestComponent</span>;
+        },
+      });
+
+      ReactServerRendering.renderToString(
+        <TestComponent />
+      );
+
+      expect(instance.isMounted()).toEqual(false);
+    });
+
     it('should have the correct mounting behavior', function() {
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;

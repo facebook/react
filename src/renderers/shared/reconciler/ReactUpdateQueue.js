@@ -104,7 +104,8 @@ var ReactUpdateQueue = {
       // During componentWillMount and render this will still be null but after
       // that will always render to something. At least for now. So we can use
       // this hack.
-      return !!internalInstance._renderedComponent;
+      return !!internalInstance._renderedComponent &&
+        !!internalInstance._nativeContainerInfo._ownerDocument;
     } else {
       return false;
     }
