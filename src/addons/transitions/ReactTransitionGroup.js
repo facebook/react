@@ -182,7 +182,7 @@ var ReactTransitionGroup = React.createClass({
   _handleDoneLeaving: function(key) {
     var component = this.refs[key];
 
-    if (component.componentDidLeave) {
+    if (component && component.componentDidLeave) {
       component.componentDidLeave();
     }
 
