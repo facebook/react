@@ -122,10 +122,9 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       if (ReactDOMFeatureFlags.useCreateElement) {
         assertHistoryMatches([{
           instanceID: inst._debugID,
-          type: 'update styles',
+          type: 'update attribute',
           payload: {
-            color: 'red',
-            backgroundColor: 'yellow',
+            style: 'color:red;background-color:yellow;',
           },
         }, {
           instanceID: inst._debugID,
@@ -158,20 +157,20 @@ describe('ReactNativeOperationHistoryDevtool', () => {
 
       assertHistoryMatches([{
         instanceID: inst._debugID,
-        type: 'update styles',
-        payload: { color: 'red' },
+        type: 'update attribute',
+        payload: { style: 'color:red;' },
       }, {
         instanceID: inst._debugID,
-        type: 'update styles',
-        payload: { color: 'blue', backgroundColor: 'yellow' },
+        type: 'update attribute',
+        payload: { style: 'color:blue;background-color:yellow;' },
       }, {
         instanceID: inst._debugID,
-        type: 'update styles',
-        payload: { color: '', backgroundColor: 'green' },
+        type: 'update attribute',
+        payload: { style: 'background-color:green;' },
       }, {
         instanceID: inst._debugID,
-        type: 'update styles',
-        payload: { backgroundColor: '' },
+        type: 'update attribute',
+        payload: { style: null },
       }]);
     });
 
@@ -192,10 +191,9 @@ describe('ReactNativeOperationHistoryDevtool', () => {
 
       assertHistoryMatches([{
         instanceID: inst._debugID,
-        type: 'update styles',
+        type: 'update attribute',
         payload: {
-          color: 'red',
-          backgroundColor: 'yellow',
+          style: 'color:red;background-color:yellow;',
         },
       }]);
     });

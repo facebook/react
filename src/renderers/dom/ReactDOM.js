@@ -13,6 +13,7 @@
 
 'use strict';
 
+var CSSPropertyOperations = require('CSSPropertyOperations');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactMount = require('ReactMount');
@@ -32,6 +33,10 @@ var React = {
   render: ReactMount.render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   version: ReactVersion,
+
+  CSS: {
+    multi: CSSPropertyOperations.multi,
+  },
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,

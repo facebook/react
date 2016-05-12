@@ -38,6 +38,7 @@ var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
 var emptyFunction = require('emptyFunction');
+var emptyObject = require('emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -991,10 +992,14 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      CSSPropertyOperations.setValueForStyles(
+      var nextStyles = emptyObject;
+      if (nextProps != null && nextProps[STYLE] != null) {
+        nextStyles = nextProps[STYLE];
+      }
+      DOMPropertyOperations.setValueForAttribute(
         getNode(this),
-        styleUpdates,
-        this
+        'style',
+        CSSPropertyOperations.createMarkupForStyles(nextStyles, this)
       );
     }
   },

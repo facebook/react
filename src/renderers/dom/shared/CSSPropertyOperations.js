@@ -171,13 +171,26 @@ var CSSPropertyOperations = {
         continue;
       }
       var styleValue = styles[styleName];
-      if (__DEV__) {
-        warnValidStyle(styleName, styleValue, component);
-      }
+      var processedStyleName = processStyleName(styleName);
       if (styleValue != null) {
-        serialized += processStyleName(styleName) + ':';
-        serialized +=
-          dangerousStyleValue(styleName, styleValue, component) + ';';
+        if (styleValue.__isMultiCssValue) {
+          for (var i = 0; i < styleValue.length; i++) {
+            var elem = styleValue[i];
+            if (__DEV__) {
+              warnValidStyle(styleName, elem, component);
+            }
+            serialized += processedStyleName + ':';
+            serialized +=
+              dangerousStyleValue(styleName, elem, component) + ';';
+          }
+        } else {
+          if (__DEV__) {
+            warnValidStyle(styleName, styleValue, component);
+          }
+          serialized += processedStyleName + ':';
+          serialized +=
+            dangerousStyleValue(styleName, styleValue, component) + ';';
+        }
       }
     }
     return serialized || null;
@@ -235,6 +248,14 @@ var CSSPropertyOperations = {
     }
   },
 
+  multi: function() {
+    var args = new Array(arguments.length);
+    for(var i = 0; i < args.length; i++) {
+        args[i] = arguments[i];
+    }
+    args.__isMultiCssValue = true;
+    return args;
+  },
 };
 
 module.exports = CSSPropertyOperations;
