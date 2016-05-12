@@ -22,27 +22,27 @@ var ReactNativeTextComponent = function(text) {
   // This is really a ReactText (ReactNode), not a ReactElement
   this._currentElement = text;
   this._stringText = '' + text;
-  this._nativeParent = null;
+  this._hostParent = null;
   this._rootNodeID = null;
 };
 
 Object.assign(ReactNativeTextComponent.prototype, {
 
-  mountComponent: function(transaction, nativeParent, nativeContainerInfo, context) {
+  mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
     if (__DEV__) {
       ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
     }
 
-    // TODO: nativeParent should have this context already. Stop abusing context.
+    // TODO: hostParent should have this context already. Stop abusing context.
     invariant(
       context.isInAParentText,
       'RawText "%s" must be wrapped in an explicit <Text> component.',
       this._stringText
     );
-    this._nativeParent = nativeParent;
+    this._hostParent = hostParent;
     var tag = ReactNativeTagHandles.allocateTag();
     this._rootNodeID = tag;
-    var nativeTopRootTag = nativeContainerInfo._tag;
+    var nativeTopRootTag = hostContainerInfo._tag;
     UIManager.createView(
       tag,
       'RCTRawText',
@@ -55,7 +55,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
     return tag;
   },
 
-  getNativeNode: function() {
+  getHostNode: function() {
     return this._rootNodeID;
   },
 

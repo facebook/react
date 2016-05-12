@@ -21,22 +21,22 @@ var ReactSimpleEmptyComponent = function(placeholderElement, instantiate) {
 Object.assign(ReactSimpleEmptyComponent.prototype, {
   mountComponent: function(
     transaction,
-    nativeParent,
-    nativeContainerInfo,
+    hostParent,
+    hostContainerInfo,
     context
   ) {
     return ReactReconciler.mountComponent(
       this._renderedComponent,
       transaction,
-      nativeParent,
-      nativeContainerInfo,
+      hostParent,
+      hostContainerInfo,
       context
     );
   },
   receiveComponent: function() {
   },
-  getNativeNode: function() {
-    return ReactReconciler.getNativeNode(this._renderedComponent);
+  getHostNode: function() {
+    return ReactReconciler.getHostNode(this._renderedComponent);
   },
   unmountComponent: function() {
     ReactReconciler.unmountComponent(this._renderedComponent);

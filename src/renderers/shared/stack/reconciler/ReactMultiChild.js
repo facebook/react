@@ -55,7 +55,7 @@ function makeMove(child, afterNode, toIndex) {
     type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
     content: null,
     fromIndex: child._mountIndex,
-    fromNode: ReactReconciler.getNativeNode(child),
+    fromNode: ReactReconciler.getHostNode(child),
     toIndex: toIndex,
     afterNode: afterNode,
   };
@@ -236,7 +236,7 @@ var ReactMultiChild = {
             child,
             transaction,
             this,
-            this._nativeContainerInfo,
+            this._hostContainerInfo,
             context
           );
           child._mountIndex = index++;
@@ -360,7 +360,7 @@ var ReactMultiChild = {
           );
         }
         nextIndex++;
-        lastPlacedNode = ReactReconciler.getNativeNode(nextChild);
+        lastPlacedNode = ReactReconciler.getHostNode(nextChild);
       }
       // Remove children that are no longer present.
       for (name in removedNodes) {
@@ -453,7 +453,7 @@ var ReactMultiChild = {
         child,
         transaction,
         this,
-        this._nativeContainerInfo,
+        this._hostContainerInfo,
         context
       );
       child._mountIndex = index;

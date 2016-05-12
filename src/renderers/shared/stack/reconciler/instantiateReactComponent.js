@@ -13,7 +13,7 @@
 
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactNativeComponent = require('ReactNativeComponent');
+var ReactHostComponent = require('ReactHostComponent');
 var ReactInstrumentation = require('ReactInstrumentation');
 
 var invariant = require('invariant');
@@ -100,7 +100,7 @@ function instantiateReactComponent(node) {
 
     // Special case string values
     if (typeof element.type === 'string') {
-      instance = ReactNativeComponent.createInternalComponent(element);
+      instance = ReactHostComponent.createInternalComponent(element);
     } else if (isInternalComponentType(element.type)) {
       // This is temporarily available for custom components that are not string
       // representations. I.e. ART. Once those are updated to use the string
@@ -110,7 +110,7 @@ function instantiateReactComponent(node) {
       instance = new ReactCompositeComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
-    instance = ReactNativeComponent.createInstanceForText(node);
+    instance = ReactHostComponent.createInstanceForText(node);
   } else {
     invariant(
       false,
@@ -123,7 +123,7 @@ function instantiateReactComponent(node) {
     warning(
       typeof instance.mountComponent === 'function' &&
       typeof instance.receiveComponent === 'function' &&
-      typeof instance.getNativeNode === 'function' &&
+      typeof instance.getHostNode === 'function' &&
       typeof instance.unmountComponent === 'function',
       'Only React Components can be mounted.'
     );
