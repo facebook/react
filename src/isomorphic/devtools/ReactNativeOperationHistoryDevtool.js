@@ -23,6 +23,11 @@ var ReactNativeOperationHistoryDevtool = {
   },
 
   clearHistory() {
+    if (ReactNativeOperationHistoryDevtool._preventClearing) {
+      // Should only be used for tests.
+      return;
+    }
+
     history = [];
   },
 
