@@ -167,7 +167,7 @@ function getWasted(flushHistory = getFlushHistory()) {
     var {measurements, treeSnapshot, operations} = flush;
     var isDefinitelyNotWastedByID = {};
 
-    // Find native components associated with an operation in this batch.
+    // Find host components associated with an operation in this batch.
     // Mark all components in their parent tree as definitely not wasted.
     operations.forEach(operation => {
       var {instanceID} = operation;

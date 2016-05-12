@@ -31,8 +31,8 @@ var createReactNativeComponentClass = function(
   var Constructor = function(element) {
     this._currentElement = element;
     this._topLevelWrapper = null;
-    this._nativeParent = null;
-    this._nativeContainerInfo = null;
+    this._hostParent = null;
+    this._hostContainerInfo = null;
     this._rootNodeID = null;
     this._renderedChildren = null;
   };

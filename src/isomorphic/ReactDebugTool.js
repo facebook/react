@@ -50,7 +50,7 @@ var currentTimerType = null;
 
 function clearHistory() {
   ReactComponentTreeDevtool.purgeUnmountedComponents();
-  ReactNativeOperationHistoryDevtool.clearHistory();
+  ReactHostOperationHistoryDevtool.clearHistory();
 }
 
 function getTreeSnapshot(registeredIDs) {
@@ -74,7 +74,7 @@ function resetMeasurements() {
   if (__DEV__) {
     var previousStartTime = currentFlushStartTime;
     var previousMeasurements = currentFlushMeasurements || [];
-    var previousOperations = ReactNativeOperationHistoryDevtool.getHistory();
+    var previousOperations = ReactHostOperationHistoryDevtool.getHistory();
 
     if (!isProfiling || currentFlushNesting === 0) {
       currentFlushStartTime = null;
@@ -214,9 +214,9 @@ var ReactDebugTool = {
   onEndProcessingChildContext() {
     emitEvent('onEndProcessingChildContext');
   },
-  onNativeOperation(debugID, type, payload) {
+  onHostOperation(debugID, type, payload) {
     checkDebugID(debugID);
-    emitEvent('onNativeOperation', debugID, type, payload);
+    emitEvent('onHostOperation', debugID, type, payload);
   },
   onSetState() {
     emitEvent('onSetState');
@@ -260,11 +260,11 @@ var ReactDebugTool = {
 
 if (__DEV__) {
   var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
-  var ReactNativeOperationHistoryDevtool = require('ReactNativeOperationHistoryDevtool');
+  var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
   var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
   ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
   ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
-  ReactDebugTool.addDevtool(ReactNativeOperationHistoryDevtool);
+  ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
   var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
   if ((/[?&]react_perf\b/).test(url)) {
     ReactDebugTool.beginProfiling();

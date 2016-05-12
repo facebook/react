@@ -177,7 +177,7 @@ var DOMPropertyOperations = {
       ReactDOMInstrumentation.debugTool.onSetValueForProperty(node, name, value);
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'update attribute',
         payload
@@ -198,7 +198,7 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'update attribute',
         payload
@@ -239,7 +239,7 @@ var DOMPropertyOperations = {
 
     if (__DEV__) {
       ReactDOMInstrumentation.debugTool.onDeleteValueForProperty(node, name);
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'remove attribute',
         name
