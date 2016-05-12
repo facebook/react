@@ -65,19 +65,38 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       }]);
     });
 
-    it('gets recorded for composite roots that return null', () => {
+    it('gets ignored for composite roots that return null', () => {
       function Foo() {
         return null;
       }
       var node = document.createElement('div');
       ReactDOM.render(<Foo />, node);
+
+      // Empty DOM components should be invisible to devtools.
+      assertHistoryMatches([]);
+    });
+
+    it('gets recorded when a native is mounted deeply instead of null', () => {
+      var element;
+      function Foo() {
+        return element;
+      }
+
+      var node = document.createElement('div');
+      element = null;
+      ReactDOM.render(<Foo />, node);
+
+      ReactNativeOperationHistoryDevtool.clearHistory();
+      element = <span />;
+      ReactDOM.render(<Foo />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
+
+      // Since empty components should be invisible to devtools,
+      // we record a "mount" event rather than a "replace with".
       assertHistoryMatches([{
         instanceID: inst._debugID,
         type: 'mount',
-        payload: ReactDOMFeatureFlags.useCreateElement ?
-          '#comment' :
-          '<!-- react-empty: 1 -->',
+        payload: 'SPAN',
       }]);
     });
   });
@@ -497,6 +516,27 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         instanceID: inst._debugID,
         type: 'replace with',
         payload: 'SPAN',
+      }]);
+    });
+
+    it('gets recorded when composite renders to null after a native', () => {
+      var element;
+      function Foo() {
+        return element;
+      }
+
+      var node = document.createElement('div');
+      element = <span />;
+      ReactDOM.render(<Foo />, node);
+      var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
+
+      ReactNativeOperationHistoryDevtool.clearHistory();
+      element = null;
+      ReactDOM.render(<Foo />, node);
+      assertHistoryMatches([{
+        instanceID: inst._debugID,
+        type: 'replace with',
+        payload: '#comment',
       }]);
     });
 
