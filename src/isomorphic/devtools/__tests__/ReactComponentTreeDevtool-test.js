@@ -97,13 +97,20 @@ describe('ReactComponentTreeDevtool', () => {
     // Ensure the tree is correct on every step.
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
+
+      // Mount a new tree or update the existing tree.
       ReactDOM.render(<Wrapper />, node);
       expect(getActualTree()).toEqual(expectedTree);
+
+      // Purging should have no effect
+      // on the tree we expect to see.
       ReactComponentTreeDevtool.purgeUnmountedComponents();
       expect(getActualTree()).toEqual(expectedTree);
     });
+
+    // Unmounting the root node should purge
+    // the whole subtree automatically.
     ReactDOM.unmountComponentAtNode(node);
-    ReactComponentTreeDevtool.purgeUnmountedComponents();
     expect(getActualTree()).toBe(undefined);
     expect(getRootDisplayNames()).toEqual([]);
     expect(getRegisteredDisplayNames()).toEqual([]);
@@ -112,8 +119,23 @@ describe('ReactComponentTreeDevtool', () => {
     // Ensure the tree is correct on every step.
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
+
+      // Rendering to string should not produce any entries
+      // because ReactDebugTool purges it when the flush ends.
       ReactDOMServer.renderToString(<Wrapper />);
+      expect(getActualTree()).toBe(undefined);
+      expect(getRootDisplayNames()).toEqual([]);
+      expect(getRegisteredDisplayNames()).toEqual([]);
+
+      // To test it, we tell the devtool to ignore next purge
+      // so the cleanup request by ReactDebugTool is ignored.
+      // This lets us make assertions on the actual tree.
+      ReactComponentTreeDevtool._preventPurging = true;
+      ReactDOMServer.renderToString(<Wrapper />);
+      ReactComponentTreeDevtool._preventPurging = false;
       expect(getActualTree()).toEqual(expectedTree);
+
+      // Purge manually since we skipped the automatic purge.
       ReactComponentTreeDevtool.purgeUnmountedComponents();
       expect(getActualTree()).toBe(undefined);
       expect(getRootDisplayNames()).toEqual([]);
@@ -1631,7 +1653,7 @@ describe('ReactComponentTreeDevtool', () => {
     assertTreeMatches([element, tree], {includeOwnerDisplayName: true});
   });
 
-  it('preserves unmounted components until purge', () => {
+  it('purges unmounted components automatically', () => {
     var node = document.createElement('div');
     var renderBar = true;
     var fooInstance;
@@ -1666,31 +1688,15 @@ describe('ReactComponentTreeDevtool', () => {
     renderBar = false;
     ReactDOM.render(<Foo />, node);
     expect(
-      getTree(barInstance._debugID, {
-        includeParentDisplayName: true,
-        expectedParentID: fooInstance._debugID,
-      })
+      getTree(barInstance._debugID, {expectedParentID: null})
     ).toEqual({
-      displayName: 'Bar',
-      parentDisplayName: 'Foo',
+      displayName: 'Unknown',
       children: [],
     });
 
     ReactDOM.unmountComponentAtNode(node);
     expect(
-      getTree(barInstance._debugID, {
-        includeParentDisplayName: true,
-        expectedParentID: fooInstance._debugID,
-      })
-    ).toEqual({
-      displayName: 'Bar',
-      parentDisplayName: 'Foo',
-      children: [],
-    });
-
-    ReactComponentTreeDevtool.purgeUnmountedComponents();
-    expect(
-      getTree(barInstance._debugID, {includeParentDisplayName: true})
+      getTree(barInstance._debugID, {expectedParentID: null})
     ).toEqual({
       displayName: 'Unknown',
       children: [],
@@ -1719,7 +1725,7 @@ describe('ReactComponentTreeDevtool', () => {
 
     ReactDOM.unmountComponentAtNode(node);
     expect(ReactComponentTreeDevtool.getUpdateCount(divID)).toEqual(0);
-    expect(ReactComponentTreeDevtool.getUpdateCount(spanID)).toEqual(2);
+    expect(ReactComponentTreeDevtool.getUpdateCount(spanID)).toEqual(0);
   });
 
   it('does not report top-level wrapper as a root', () => {
@@ -1733,12 +1739,6 @@ describe('ReactComponentTreeDevtool', () => {
 
     ReactDOM.unmountComponentAtNode(node);
     expect(getRootDisplayNames()).toEqual([]);
-
-    ReactComponentTreeDevtool.purgeUnmountedComponents();
-    expect(getRootDisplayNames()).toEqual([]);
-
-    // This currently contains TopLevelWrapper until purge
-    // so we only check it at the very end.
     expect(getRegisteredDisplayNames()).toEqual([]);
   });
 });

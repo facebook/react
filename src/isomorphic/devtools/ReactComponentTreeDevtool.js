@@ -106,6 +106,11 @@ var ReactComponentTreeDevtool = {
   },
 
   purgeUnmountedComponents() {
+    if (ReactComponentTreeDevtool._preventPurging) {
+      // Should only be used for testing.
+      return;
+    }
+
     Object.keys(tree)
       .filter(id => !tree[id].isMounted)
       .forEach(purgeDeep);

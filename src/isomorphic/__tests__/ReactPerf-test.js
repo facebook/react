@@ -241,6 +241,21 @@ describe('ReactPerf', function() {
     });
   });
 
+  it('should include stats for components unmounted during measurement', function() {
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Div><Div key="a" /></Div>, container);
+      ReactDOM.render(<Div><Div key="b" /></Div>, container);
+    });
+    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+      key: 'Div',
+      instanceCount: 3,
+      counts: { ctor: 3, render: 4 },
+      durations: { ctor: 3, render: 4 },
+      totalDuration: 7,
+    }]);
+  });
+
   it('warns once when using getMeasurementsSummaryMap', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
