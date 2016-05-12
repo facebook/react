@@ -19,7 +19,7 @@ var ReactTypesOfWork = require('ReactTypesOfWork');
 var {
   FunctionalComponent,
   ClassComponent,
-  NativeComponent,
+  HostComponent,
 } = ReactTypesOfWork;
 
 type ReactHostElement<T, P> = {
@@ -60,7 +60,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
         return ReactFiberFunctionalComponent.performWork(unit);
       case ClassComponent:
         break;
-      case NativeComponent:
+      case HostComponent:
         break;
     }
     return null;

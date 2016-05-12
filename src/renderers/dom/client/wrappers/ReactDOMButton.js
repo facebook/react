@@ -14,11 +14,11 @@
 var DisabledInputUtils = require('DisabledInputUtils');
 
 /**
- * Implements a <button> native component that does not receive mouse events
+ * Implements a <button> host component that does not receive mouse events
  * when `disabled` is set.
  */
 var ReactDOMButton = {
-  getNativeProps: DisabledInputUtils.getNativeProps,
+  getHostProps: DisabledInputUtils.getHostProps,
 };
 
 module.exports = ReactDOMButton;

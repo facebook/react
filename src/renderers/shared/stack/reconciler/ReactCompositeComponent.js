@@ -148,8 +148,8 @@ var ReactCompositeComponentMixin = {
     this._currentElement = element;
     this._rootNodeID = null;
     this._instance = null;
-    this._nativeParent = null;
-    this._nativeContainerInfo = null;
+    this._hostParent = null;
+    this._hostContainerInfo = null;
 
     // See ReactUpdateQueue
     this._updateBatchNumber = null;
@@ -179,8 +179,8 @@ var ReactCompositeComponentMixin = {
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {?object} nativeParent
-   * @param {?object} nativeContainerInfo
+   * @param {?object} hostParent
+   * @param {?object} hostContainerInfo
    * @param {?object} context
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
@@ -188,14 +188,14 @@ var ReactCompositeComponentMixin = {
    */
   mountComponent: function(
     transaction,
-    nativeParent,
-    nativeContainerInfo,
+    hostParent,
+    hostContainerInfo,
     context
   ) {
     this._context = context;
     this._mountOrder = nextMountID++;
-    this._nativeParent = nativeParent;
-    this._nativeContainerInfo = nativeContainerInfo;
+    this._hostParent = hostParent;
+    this._hostContainerInfo = hostContainerInfo;
 
     var publicProps = this._processProps(this._currentElement.props);
     var publicContext = this._processContext(context);
@@ -330,13 +330,13 @@ var ReactCompositeComponentMixin = {
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
         renderedElement,
-        nativeParent,
-        nativeContainerInfo,
+        hostParent,
+        hostContainerInfo,
         transaction,
         context
       );
     } else {
-      markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
+      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
     }
 
     if (inst.componentDidMount) {
@@ -410,15 +410,15 @@ var ReactCompositeComponentMixin = {
 
   performInitialMountWithErrorHandling: function(
     renderedElement,
-    nativeParent,
-    nativeContainerInfo,
+    hostParent,
+    hostContainerInfo,
     transaction,
     context
   ) {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
+      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
@@ -433,12 +433,12 @@ var ReactCompositeComponentMixin = {
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, nativeParent, nativeContainerInfo, transaction, context);
+      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, nativeParent, nativeContainerInfo, transaction, context) {
+  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
     var inst = this._instance;
     if (inst.componentWillMount) {
       if (__DEV__) {
@@ -478,8 +478,8 @@ var ReactCompositeComponentMixin = {
     var markup = ReactReconciler.mountComponent(
       this._renderedComponent,
       transaction,
-      nativeParent,
-      nativeContainerInfo,
+      hostParent,
+      hostContainerInfo,
       this._processChildContext(context)
     );
 
@@ -497,8 +497,8 @@ var ReactCompositeComponentMixin = {
     return markup;
   },
 
-  getNativeNode: function() {
-    return ReactReconciler.getNativeNode(this._renderedComponent);
+  getHostNode: function() {
+    return ReactReconciler.getHostNode(this._renderedComponent);
   },
 
   /**
@@ -1027,7 +1027,7 @@ var ReactCompositeComponentMixin = {
         this._processChildContext(context)
       );
     } else {
-      var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
+      var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
       ReactReconciler.unmountComponent(prevComponentInstance, false);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
@@ -1038,8 +1038,8 @@ var ReactCompositeComponentMixin = {
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
         transaction,
-        this._nativeParent,
-        this._nativeContainerInfo,
+        this._hostParent,
+        this._hostContainerInfo,
         this._processChildContext(context)
       );
 
@@ -1055,7 +1055,7 @@ var ReactCompositeComponentMixin = {
       }
 
       this._replaceNodeWithMarkup(
-        oldNativeNode,
+        oldHostNode,
         nextMarkup,
         prevComponentInstance
       );
@@ -1067,9 +1067,9 @@ var ReactCompositeComponentMixin = {
    *
    * @protected
    */
-  _replaceNodeWithMarkup: function(oldNativeNode, nextMarkup, prevInstance) {
+  _replaceNodeWithMarkup: function(oldHostNode, nextMarkup, prevInstance) {
     ReactComponentEnvironment.replaceNodeWithMarkup(
-      oldNativeNode,
+      oldHostNode,
       nextMarkup,
       prevInstance
     );
