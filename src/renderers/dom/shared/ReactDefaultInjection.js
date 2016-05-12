@@ -65,11 +65,11 @@ function inject() {
     BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
-  ReactInjection.NativeComponent.injectGenericComponentClass(
+  ReactInjection.HostComponent.injectGenericComponentClass(
     ReactDOMComponent
   );
 
-  ReactInjection.NativeComponent.injectTextComponentClass(
+  ReactInjection.HostComponent.injectTextComponentClass(
     ReactDOMTextComponent
   );
 

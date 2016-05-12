@@ -27,7 +27,7 @@ var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
-var ReactNativeComponent = require('ReactNativeComponent');
+var ReactHostComponent = require('ReactHostComponent');
 var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
@@ -93,10 +93,10 @@ function inject() {
 
   ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
 
-  ReactNativeComponent.injection.injectTextComponentClass(
+  ReactHostComponent.injection.injectTextComponentClass(
     ReactNativeTextComponent
   );
-  ReactNativeComponent.injection.injectGenericComponentClass(function(tag) {
+  ReactHostComponent.injection.injectGenericComponentClass(function(tag) {
     // Show a nicer error message for non-function tags
     var info = '';
     if (typeof tag === 'string' && /^[a-z]/.test(tag)) {

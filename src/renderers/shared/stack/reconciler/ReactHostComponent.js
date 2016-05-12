@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeComponent
+ * @providesModule ReactHostComponent
  */
 
 'use strict';
@@ -15,11 +15,11 @@ var invariant = require('invariant');
 
 var autoGenerateWrapperClass = null;
 var genericComponentClass = null;
-// This registry keeps track of wrapper classes around native tags.
+// This registry keeps track of wrapper classes around host tags.
 var tagToComponentClass = {};
 var textComponentClass = null;
 
-var ReactNativeComponentInjection = {
+var ReactHostComponentInjection = {
   // This accepts a class that receives the tag string. This is a catch all
   // that can render any kind of tag.
   injectGenericComponentClass: function(componentClass) {
@@ -56,7 +56,7 @@ function getComponentClassForElement(element) {
 }
 
 /**
- * Get a native internal component class for a specific tag.
+ * Get a host internal component class for a specific tag.
  *
  * @param {ReactElement} element The element to create.
  * @return {function} The internal class constructor function.
@@ -86,12 +86,12 @@ function isTextComponent(component) {
   return component instanceof textComponentClass;
 }
 
-var ReactNativeComponent = {
+var ReactHostComponent = {
   getComponentClassForElement: getComponentClassForElement,
   createInternalComponent: createInternalComponent,
   createInstanceForText: createInstanceForText,
   isTextComponent: isTextComponent,
-  injection: ReactNativeComponentInjection,
+  injection: ReactHostComponentInjection,
 };
 
-module.exports = ReactNativeComponent;
+module.exports = ReactHostComponent;

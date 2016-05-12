@@ -289,7 +289,7 @@ describe('ReactComponentTreeDevtool', () => {
       assertTreeMatches([element, tree]);
     });
 
-    it('reports a native tree correctly', () => {
+    it('reports a host tree correctly', () => {
       var element = (
         <div>
           <p>
@@ -532,7 +532,7 @@ describe('ReactComponentTreeDevtool', () => {
   });
 
   describe('update', () => {
-    describe('native component', () => {
+    describe('host component', () => {
       it('updates text of a single text child', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
@@ -869,7 +869,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates native nodes when reordering with keys', () => {
+      it('updates host nodes when reordering with keys', () => {
         var elementBefore = (
           <div>
             <div key="a">Hi.</div>
@@ -922,7 +922,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates native nodes when reordering without keys', () => {
+      it('updates host nodes when reordering without keys', () => {
         var elementBefore = (
           <div>
             <div>Hi.</div>
@@ -1172,7 +1172,7 @@ describe('ReactComponentTreeDevtool', () => {
     });
 
     describe('functional component', () => {
-      it('updates with a native child', () => {
+      it('updates with a host child', () => {
         function Foo({ children }) {
           return children;
         }
@@ -1201,7 +1201,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from null to a native child', () => {
+      it('updates from null to a host child', () => {
         function Foo({ children }) {
           return children;
         }
@@ -1227,7 +1227,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from a native child to null', () => {
+      it('updates from a host child to null', () => {
         function Foo({ children }) {
           return children;
         }
@@ -1253,7 +1253,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from a native child to a composite child', () => {
+      it('updates from a host child to a composite child', () => {
         function Bar() {
           return null;
         }
@@ -1286,7 +1286,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from a composite child to a native child', () => {
+      it('updates from a composite child to a host child', () => {
         function Bar() {
           return null;
         }
@@ -1381,7 +1381,7 @@ describe('ReactComponentTreeDevtool', () => {
     });
 
     describe('class component', () => {
-      it('updates with a native child', () => {
+      it('updates with a host child', () => {
         var Foo = React.createClass({
           render() {
             return this.props.children;
@@ -1412,7 +1412,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from null to a native child', () => {
+      it('updates from null to a host child', () => {
         var Foo = React.createClass({
           render() {
             return this.props.children;
@@ -1440,7 +1440,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from a native child to null', () => {
+      it('updates from a host child to null', () => {
         var Foo = React.createClass({
           render() {
             return this.props.children;
@@ -1468,7 +1468,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from a native child to a composite child', () => {
+      it('updates from a host child to a composite child', () => {
         var Bar = React.createClass({
           render() {
             return null;
@@ -1505,7 +1505,7 @@ describe('ReactComponentTreeDevtool', () => {
         ]);
       });
 
-      it('updates from a composite child to a native child', () => {
+      it('updates from a composite child to a host child', () => {
         var Bar = React.createClass({
           render() {
             return null;

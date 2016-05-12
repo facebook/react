@@ -11,12 +11,12 @@
 
 'use strict';
 
-describe('ReactNativeOperationHistoryDevtool', () => {
+describe('ReactHostOperationHistoryDevtool', () => {
   var React;
   var ReactDOM;
   var ReactDOMComponentTree;
   var ReactDOMFeatureFlags;
-  var ReactNativeOperationHistoryDevtool;
+  var ReactHostOperationHistoryDevtool;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -25,18 +25,18 @@ describe('ReactNativeOperationHistoryDevtool', () => {
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactNativeOperationHistoryDevtool = require('ReactNativeOperationHistoryDevtool');
+    ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
   });
 
   function assertHistoryMatches(expectedHistory) {
-    var actualHistory = ReactNativeOperationHistoryDevtool.getHistory();
+    var actualHistory = ReactHostOperationHistoryDevtool.getHistory();
     expect(actualHistory).toEqual(expectedHistory);
   }
 
   describe('mount', () => {
-    it('gets recorded for native roots', () => {
+    it('gets recorded for host roots', () => {
       var node = document.createElement('div');
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<div><p>Hi.</p></div>, node);
 
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -55,7 +55,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       }
       var node = document.createElement('div');
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -75,7 +75,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       }
       var node = document.createElement('div');
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       // Empty DOM components should be invisible to devtools.
@@ -88,7 +88,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         return element;
       }
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
 
       var node = document.createElement('div');
       element = null;
@@ -112,7 +112,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
     it('gets recorded during mount', () => {
       var node = document.createElement('div');
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<div style={{
         color: 'red',
         backgroundColor: 'yellow',
@@ -147,7 +147,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       ReactDOM.render(<div />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<div style={{ color: 'red' }} />, node);
       ReactDOM.render(<div style={{
         color: 'blue',
@@ -180,7 +180,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       ReactDOM.render(<div />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<div style={{
         color: 'red',
         backgroundColor: 'yellow',
@@ -206,7 +206,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       it('gets recorded during mount', () => {
         var node = document.createElement('div');
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div className="rad" tabIndex={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -239,7 +239,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         ReactDOM.render(<div />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div className="rad" />, node);
         ReactDOM.render(<div className="mad" tabIndex={42} />, node);
         ReactDOM.render(<div tabIndex={43} />, node);
@@ -274,7 +274,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         ReactDOM.render(<div />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div disabled={true} />, node);
         ReactDOM.render(<div disabled={false} />, node);
 
@@ -294,7 +294,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       it('gets recorded during mount', () => {
         var node = document.createElement('div');
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div data-x="rad" data-y={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -327,7 +327,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         ReactDOM.render(<div />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div data-x="rad" />, node);
         ReactDOM.render(<div data-x="mad" data-y={42} />, node);
         ReactDOM.render(<div data-y={43} />, node);
@@ -360,7 +360,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       it('gets recorded during mount', () => {
         var node = document.createElement('div');
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<my-component className="rad" tabIndex={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -393,7 +393,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         ReactDOM.render(<my-component />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<my-component className="rad" />, node);
         ReactDOM.render(<my-component className="mad" tabIndex={42} />, node);
         ReactDOM.render(<my-component tabIndex={43} />, node);
@@ -430,7 +430,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         ReactDOM.render(<div>Hi.</div>, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div>Bye.</div>, node);
 
         assertHistoryMatches([{
@@ -445,7 +445,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         ReactDOM.render(<div dangerouslySetInnerHTML={{__html: 'Hi.'}} />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div>Bye.</div>, node);
 
         assertHistoryMatches([{
@@ -460,7 +460,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         ReactDOM.render(<div><span /><p /></div>, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div>Bye.</div>, node);
 
         assertHistoryMatches([{
@@ -482,7 +482,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         var node = document.createElement('div');
         ReactDOM.render(<div>Hi.</div>, node);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div>Hi.</div>, node);
 
         assertHistoryMatches([]);
@@ -496,7 +496,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         var inst1 = ReactDOMComponentTree.getInstanceFromNode(node.firstChild.childNodes[0]);
         var inst2 = ReactDOMComponentTree.getInstanceFromNode(node.firstChild.childNodes[3]);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div>{'Bye.'}{43}</div>, node);
 
         assertHistoryMatches([{
@@ -514,7 +514,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         var node = document.createElement('div');
         ReactDOM.render(<div>{'Hi.'}{42}</div>, node);
 
-        ReactNativeOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryDevtool._preventClearing = true;
         ReactDOM.render(<div>{'Hi.'}{42}</div>, node);
 
         assertHistoryMatches([]);
@@ -536,7 +536,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
 
       element = <span />;
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       assertHistoryMatches([{
@@ -559,7 +559,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
       element = null;
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       assertHistoryMatches([{
@@ -581,7 +581,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
 
       element = <div />;
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       assertHistoryMatches([]);
@@ -594,7 +594,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       ReactDOM.render(<div>Hi.</div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Bye.'}} />,
         node
@@ -615,7 +615,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       );
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Bye.'}} />,
         node
@@ -633,7 +633,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span /><p /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />,
         node
@@ -661,7 +661,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
         node
       );
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />,
         node
@@ -677,7 +677,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<div><span /><p /></div>, node);
 
       assertHistoryMatches([{
@@ -694,7 +694,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span key="a" /><p key="b" /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<div><p key="b" /><span key="a" /></div>, node);
 
       assertHistoryMatches([{
@@ -711,7 +711,7 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span key="a" /><p key="b" /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactNativeOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryDevtool._preventClearing = true;
       ReactDOM.render(<div><span key="a" /></div>, node);
 
       assertHistoryMatches([{

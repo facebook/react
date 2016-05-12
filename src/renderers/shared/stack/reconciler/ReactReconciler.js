@@ -31,8 +31,8 @@ var ReactReconciler = {
    *
    * @param {ReactComponent} internalInstance
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {?object} the containing native component instance
-   * @param {?object} info about the native container
+   * @param {?object} the containing host component instance
+   * @param {?object} info about the host container
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -40,8 +40,8 @@ var ReactReconciler = {
   mountComponent: function(
     internalInstance,
     transaction,
-    nativeParent,
-    nativeContainerInfo,
+    hostParent,
+    hostContainerInfo,
     context
   ) {
     if (__DEV__) {
@@ -54,8 +54,8 @@ var ReactReconciler = {
     }
     var markup = internalInstance.mountComponent(
       transaction,
-      nativeParent,
-      nativeContainerInfo,
+      hostParent,
+      hostContainerInfo,
       context
     );
     if (internalInstance._currentElement &&
@@ -80,8 +80,8 @@ var ReactReconciler = {
    * Returns a value that can be passed to
    * ReactComponentEnvironment.replaceNodeWithMarkup.
    */
-  getNativeNode: function(internalInstance) {
-    return internalInstance.getNativeNode();
+  getHostNode: function(internalInstance) {
+    return internalInstance.getHostNode();
   },
 
   /**

@@ -394,7 +394,7 @@ NoopInternalComponent.prototype = {
     this._currentElement = element;
   },
 
-  getNativeNode: function() {
+  getHostNode: function() {
     return undefined;
   },
 

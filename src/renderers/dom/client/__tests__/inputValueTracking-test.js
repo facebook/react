@@ -22,7 +22,7 @@ describe('inputValueTracking', function() {
     input.type = 'text';
     checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    mockComponent = { _nativeNode: input, _wrapperState: {} };
+    mockComponent = { _hostNode: input, _wrapperState: {} };
   });
 
   it('should attach tracker to wrapper state', function() {
@@ -42,7 +42,7 @@ describe('inputValueTracking', function() {
   });
 
   it('should define `checked` on the instance node', function() {
-    mockComponent._nativeNode = checkbox;
+    mockComponent._hostNode = checkbox;
     inputValueTracking.track(mockComponent);
 
     expect(checkbox.hasOwnProperty('checked')).toBe(true);
@@ -59,7 +59,7 @@ describe('inputValueTracking', function() {
   });
 
   it('should initialize with the current `checked`', function() {
-    mockComponent._nativeNode = checkbox;
+    mockComponent._hostNode = checkbox;
     checkbox.checked = true;
     inputValueTracking.track(mockComponent);
 
@@ -80,7 +80,7 @@ describe('inputValueTracking', function() {
   });
 
   it('should tracked`checked` changes', function() {
-    mockComponent._nativeNode = checkbox;
+    mockComponent._hostNode = checkbox;
     checkbox.checked = true;
     inputValueTracking.track(mockComponent);
 

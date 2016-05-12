@@ -15,7 +15,7 @@
 var TypesOfWork = {
   FunctionalComponent: 1,
   ClassComponent: 2,
-  NativeComponent: 3,
+  HostComponent: 3,
 };
 
 module.exports = TypesOfWork;
