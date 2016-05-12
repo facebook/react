@@ -65,24 +65,15 @@ describe('ReactNativeOperationHistoryDevtool', () => {
       }]);
     });
 
-    it('gets recorded for composite roots that return null', () => {
+    it('gets ignored for composite roots that return null', () => {
       function Foo() {
         return null;
       }
       var node = document.createElement('div');
       ReactDOM.render(<Foo />, node);
-      var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      if (ReactDOMFeatureFlags.useCreateElement) {
-        // Empty DOM components should be invisible to devtools.
-        assertHistoryMatches([]);
-      } else {
-        assertHistoryMatches([{
-          instanceID: inst._debugID,
-          type: 'mount',
-          payload: '<!-- react-empty: 1 -->',
-        }]);
-      }
+      // Empty DOM components should be invisible to devtools.
+      assertHistoryMatches([]);
     });
 
     it('gets recorded when a native is mounted deeply instead of null', () => {

@@ -376,7 +376,7 @@ ReactShallowRenderer.prototype.getMountedInstance = function() {
   return this._instance ? this._instance._instance : null;
 };
 
-var nextDebugID = 0;
+var nextDebugID = 1;
 
 var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
