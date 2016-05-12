@@ -119,13 +119,20 @@ describe('ReactComponentTreeDevtool', () => {
     // Ensure the tree is correct on every step.
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
+
+      // Mount a new tree or update the existing tree.
       ReactNative.render(<Wrapper />, 1);
       expect(getActualTree()).toEqual(expectedTree);
+
+      // Purging should have no effect
+      // on the tree we expect to see.
       ReactComponentTreeDevtool.purgeUnmountedComponents();
       expect(getActualTree()).toEqual(expectedTree);
     });
+
+    // Unmounting the root node should purge
+    // the whole subtree automatically.
     ReactNative.unmountComponentAtNode(1);
-    ReactComponentTreeDevtool.purgeUnmountedComponents();
     expect(getActualTree()).toBe(undefined);
     expect(getRootDisplayNames()).toEqual([]);
     expect(getRegisteredDisplayNames()).toEqual([]);
@@ -134,10 +141,13 @@ describe('ReactComponentTreeDevtool', () => {
     // Ensure the tree is correct on every step.
     pairs.forEach(([element, expectedTree]) => {
       currentElement = element;
+
+      // Mount a new tree.
       ReactNative.render(<Wrapper />, 1);
-      ReactNative.unmountComponentAtNode(1);
       expect(getActualTree()).toEqual(expectedTree);
-      ReactComponentTreeDevtool.purgeUnmountedComponents();
+
+      // Unmounting should clean it up.
+      ReactNative.unmountComponentAtNode(1);
       expect(getActualTree()).toBe(undefined);
       expect(getRootDisplayNames()).toEqual([]);
       expect(getRegisteredDisplayNames()).toEqual([]);
@@ -1620,7 +1630,7 @@ describe('ReactComponentTreeDevtool', () => {
     assertTreeMatches([element, tree], {includeOwnerDisplayName: true});
   });
 
-  it('preserves unmounted components until purge', () => {
+  it('purges unmounted components automatically', () => {
     var renderBar = true;
     var fooInstance;
     var barInstance;
@@ -1654,31 +1664,15 @@ describe('ReactComponentTreeDevtool', () => {
     renderBar = false;
     ReactNative.render(<Foo />, 1);
     expect(
-      getTree(barInstance._debugID, {
-        includeParentDisplayName: true,
-        expectedParentID: fooInstance._debugID,
-      })
+      getTree(barInstance._debugID, {expectedParentID: null})
     ).toEqual({
-      displayName: 'Bar',
-      parentDisplayName: 'Foo',
+      displayName: 'Unknown',
       children: [],
     });
 
     ReactNative.unmountComponentAtNode(1);
     expect(
-      getTree(barInstance._debugID, {
-        includeParentDisplayName: true,
-        expectedParentID: fooInstance._debugID,
-      })
-    ).toEqual({
-      displayName: 'Bar',
-      parentDisplayName: 'Foo',
-      children: [],
-    });
-
-    ReactComponentTreeDevtool.purgeUnmountedComponents();
-    expect(
-      getTree(barInstance._debugID, {includeParentDisplayName: true})
+      getTree(barInstance._debugID, {expectedParentID: null})
     ).toEqual({
       displayName: 'Unknown',
       children: [],
@@ -1705,7 +1699,7 @@ describe('ReactComponentTreeDevtool', () => {
 
     ReactNative.unmountComponentAtNode(1);
     expect(ReactComponentTreeDevtool.getUpdateCount(viewID)).toEqual(0);
-    expect(ReactComponentTreeDevtool.getUpdateCount(imageID)).toEqual(2);
+    expect(ReactComponentTreeDevtool.getUpdateCount(imageID)).toEqual(0);
   });
 
   it('does not report top-level wrapper as a root', () => {
@@ -1717,12 +1711,6 @@ describe('ReactComponentTreeDevtool', () => {
 
     ReactNative.unmountComponentAtNode(1);
     expect(getRootDisplayNames()).toEqual([]);
-
-    ReactComponentTreeDevtool.purgeUnmountedComponents();
-    expect(getRootDisplayNames()).toEqual([]);
-
-    // This currently contains TopLevelWrapper until purge
-    // so we only check it at the very end.
     expect(getRegisteredDisplayNames()).toEqual([]);
   });
 });

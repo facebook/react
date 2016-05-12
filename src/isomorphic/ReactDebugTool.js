@@ -48,17 +48,40 @@ var currentTimerDebugID = null;
 var currentTimerStartTime = null;
 var currentTimerType = null;
 
+function clearHistory() {
+  ReactComponentTreeDevtool.purgeUnmountedComponents();
+  ReactNativeOperationHistoryDevtool.clearHistory();
+}
+
+function getTreeSnapshot(registeredIDs) {
+  return registeredIDs.reduce((tree, id) => {
+    var ownerID = ReactComponentTreeDevtool.getOwnerID(id);
+    var parentID = ReactComponentTreeDevtool.getParentID(id);
+    tree[id] = {
+      displayName: ReactComponentTreeDevtool.getDisplayName(id),
+      text: ReactComponentTreeDevtool.getText(id),
+      updateCount: ReactComponentTreeDevtool.getUpdateCount(id),
+      childIDs: ReactComponentTreeDevtool.getChildIDs(id),
+      // Text nodes don't have owners but this is close enough.
+      ownerID: ownerID || ReactComponentTreeDevtool.getOwnerID(parentID),
+      parentID,
+    };
+    return tree;
+  }, {});
+}
+
 function resetMeasurements() {
   if (__DEV__) {
-    if (!isProfiling || currentFlushNesting === 0) {
-      currentFlushStartTime = null;
-      currentFlushMeasurements = null;
-      return;
-    }
-
     var previousStartTime = currentFlushStartTime;
     var previousMeasurements = currentFlushMeasurements || [];
     var previousOperations = ReactNativeOperationHistoryDevtool.getHistory();
+
+    if (!isProfiling || currentFlushNesting === 0) {
+      currentFlushStartTime = null;
+      currentFlushMeasurements = null;
+      clearHistory();
+      return;
+    }
 
     if (previousMeasurements.length || previousOperations.length) {
       var registeredIDs = ReactComponentTreeDevtool.getRegisteredIDs();
@@ -66,27 +89,13 @@ function resetMeasurements() {
         duration: performanceNow() - previousStartTime,
         measurements: previousMeasurements || [],
         operations: previousOperations || [],
-        treeSnapshot: registeredIDs.reduce((tree, id) => {
-          var ownerID = ReactComponentTreeDevtool.getOwnerID(id);
-          var parentID = ReactComponentTreeDevtool.getParentID(id);
-          tree[id] = {
-            displayName: ReactComponentTreeDevtool.getDisplayName(id),
-            text: ReactComponentTreeDevtool.getText(id),
-            updateCount: ReactComponentTreeDevtool.getUpdateCount(id),
-            childIDs: ReactComponentTreeDevtool.getChildIDs(id),
-            // Text nodes don't have owners but this is close enough.
-            ownerID: ownerID || ReactComponentTreeDevtool.getOwnerID(parentID),
-            parentID,
-          };
-          return tree;
-        }, {}),
+        treeSnapshot: getTreeSnapshot(registeredIDs),
       });
     }
 
+    clearHistory();
     currentFlushStartTime = performanceNow();
     currentFlushMeasurements = [];
-    ReactComponentTreeDevtool.purgeUnmountedComponents();
-    ReactNativeOperationHistoryDevtool.clearHistory();
   }
 }
 
