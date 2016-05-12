@@ -62,4 +62,42 @@ describe('EnterLeaveEventPlugin', function() {
     expect(enter.target).toBe(div);
     expect(enter.relatedTarget).toBe(iframe.contentWindow);
   });
+
+  it('should works across mount points', function() {
+    var Inner = React.createClass({
+      render() {
+        return (<div id="inner" />);
+      },
+    });
+    var App = React.createClass({
+      componentDidMount() {
+        ReactDOM.render(<Inner />, this.refs.container);
+      },
+      onMouseLeave() {
+      },
+      render() {
+        return (<div
+          id="outer"
+          onMouseLeave={this.onMouseLeave}
+          >
+          <div ref="container" />
+        </div>);
+      },
+    });
+    var div = document.createElement('div');
+    document.body.appendChild(div);
+    ReactDOM.render(<App />, div);
+    var target = document.getElementById('outer');
+    var relatedTarget = document.getElementById('inner');
+    var extracted = EnterLeaveEventPlugin.extractEvents(
+      topLevelTypes.topMouseOut,
+      ReactDOMComponentTree.getInstanceFromNode(target),
+      {
+        target: target,
+        relatedTarget: relatedTarget,
+      },
+      target
+    );
+    expect(!!extracted[0]._dispatchListeners).toBe(false);
+  });
 });
