@@ -115,6 +115,9 @@ var ReactDebugTool = {
       }
     }
   },
+  isProfiling() {
+    return isProfiling;
+  },
   beginProfiling() {
     if (__DEV__) {
       if (isProfiling) {
