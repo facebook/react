@@ -90,6 +90,10 @@ function resetMeasurements() {
   }
 }
 
+function checkDebugID(debugID) {
+  warning(debugID, 'ReactDebugTool: debugID may not be empty.');
+}
+
 var ReactDebugTool = {
   addDevtool(devtool) {
     eventHandlers.push(devtool);
@@ -143,6 +147,7 @@ var ReactDebugTool = {
     emitEvent('onEndFlush');
   },
   onBeginLifeCycleTimer(debugID, timerType) {
+    checkDebugID(debugID);
     emitEvent('onBeginLifeCycleTimer', debugID, timerType);
     if (__DEV__) {
       if (isProfiling && currentFlushNesting > 0) {
@@ -162,6 +167,7 @@ var ReactDebugTool = {
     }
   },
   onEndLifeCycleTimer(debugID, timerType) {
+    checkDebugID(debugID);
     if (__DEV__) {
       if (isProfiling && currentFlushNesting > 0) {
         warning(
@@ -186,9 +192,11 @@ var ReactDebugTool = {
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
   onBeginReconcilerTimer(debugID, timerType) {
+    checkDebugID(debugID);
     emitEvent('onBeginReconcilerTimer', debugID, timerType);
   },
   onEndReconcilerTimer(debugID, timerType) {
+    checkDebugID(debugID);
     emitEvent('onEndReconcilerTimer', debugID, timerType);
   },
   onBeginProcessingChildContext() {
@@ -198,33 +206,42 @@ var ReactDebugTool = {
     emitEvent('onEndProcessingChildContext');
   },
   onNativeOperation(debugID, type, payload) {
+    checkDebugID(debugID);
     emitEvent('onNativeOperation', debugID, type, payload);
   },
   onSetState() {
     emitEvent('onSetState');
   },
   onSetDisplayName(debugID, displayName) {
+    checkDebugID(debugID);
     emitEvent('onSetDisplayName', debugID, displayName);
   },
   onSetChildren(debugID, childDebugIDs) {
+    checkDebugID(debugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
   onSetOwner(debugID, ownerDebugID) {
+    checkDebugID(debugID);
     emitEvent('onSetOwner', debugID, ownerDebugID);
   },
   onSetText(debugID, text) {
+    checkDebugID(debugID);
     emitEvent('onSetText', debugID, text);
   },
   onMountRootComponent(debugID) {
+    checkDebugID(debugID);
     emitEvent('onMountRootComponent', debugID);
   },
   onMountComponent(debugID) {
+    checkDebugID(debugID);
     emitEvent('onMountComponent', debugID);
   },
   onUpdateComponent(debugID) {
+    checkDebugID(debugID);
     emitEvent('onUpdateComponent', debugID);
   },
   onUnmountComponent(debugID) {
+    checkDebugID(debugID);
     emitEvent('onUnmountComponent', debugID);
   },
   onTestEvent() {
