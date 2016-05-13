@@ -16,7 +16,6 @@ describe('ReactPerf', function() {
   var ReactDOM;
   var ReactPerf;
   var ReactTestUtils;
-  var ReactDebugTool;
 
   var App;
   var Box;
@@ -37,7 +36,6 @@ describe('ReactPerf', function() {
     ReactDOM = require('ReactDOM');
     ReactPerf = require('ReactPerf');
     ReactTestUtils = require('ReactTestUtils');
-    ReactDebugTool = require('ReactDebugTool');
 
     App = React.createClass({
       render: function() {
@@ -287,10 +285,12 @@ describe('ReactPerf', function() {
   });
 
   it('returns isRunning state', () => {
-    spyOn(ReactDebugTool, 'isProfiling');
+    expect(ReactPerf.isRunning()).toBe(false);
 
-    ReactPerf.isRunning();
-    expect(ReactDebugTool.isProfiling.calls.length).toBe(1);
-    expect(ReactPerf.isRunning()).toBe(ReactDebugTool.isProfiling());
+    ReactPerf.start();
+    expect(ReactPerf.isRunning()).toBe(true);
+
+    ReactPerf.stop();
+    expect(ReactPerf.isRunning()).toBe(false);
   });
 });
