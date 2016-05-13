@@ -13,7 +13,6 @@
 
 var invariant = require('invariant');
 
-var autoGenerateWrapperClass = null;
 var genericComponentClass = null;
 // This registry keeps track of wrapper classes around host tags.
 var tagToComponentClass = {};
@@ -36,24 +35,6 @@ var ReactHostComponentInjection = {
     Object.assign(tagToComponentClass, componentClasses);
   },
 };
-
-/**
- * Get a composite component wrapper class for a specific tag.
- *
- * @param {ReactElement} element The tag for which to get the class.
- * @return {function} The React class constructor function.
- */
-function getComponentClassForElement(element) {
-  if (typeof element.type === 'function') {
-    return element.type;
-  }
-  var tag = element.type;
-  var componentClass = tagToComponentClass[tag];
-  if (componentClass == null) {
-    tagToComponentClass[tag] = componentClass = autoGenerateWrapperClass(tag);
-  }
-  return componentClass;
-}
 
 /**
  * Get a host internal component class for a specific tag.
@@ -87,7 +68,6 @@ function isTextComponent(component) {
 }
 
 var ReactHostComponent = {
-  getComponentClassForElement: getComponentClassForElement,
   createInternalComponent: createInternalComponent,
   createInstanceForText: createInstanceForText,
   isTextComponent: isTextComponent,
