@@ -72,4 +72,14 @@ describe('ReactDebugTool', function() {
     ReactDebugTool.onTestEvent();
     expect(console.error.calls.length).toBe(1);
   });
+
+  it('returns isProfiling state', () => {
+    expect(ReactDebugTool.isProfiling()).toBe(false);
+
+    ReactDebugTool.beginProfiling();
+    expect(ReactDebugTool.isProfiling()).toBe(true);
+
+    ReactDebugTool.endProfiling();
+    expect(ReactDebugTool.isProfiling()).toBe(false);
+  });
 });
