@@ -304,6 +304,15 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.className).toEqual('');
     });
 
+    it('should properly update custom attributes on custom elements', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<some-custom-element foo="bar"/>, container);
+      ReactDOM.render(<some-custom-element bar="buzz"/>, container);
+      var node = container.firstChild;
+      expect(node.hasAttribute('foo')).toBe(false);
+      expect(node.getAttribute('bar')).toBe('buzz');
+    });
+
     it('should clear a single style prop when changing `style`', function() {
       var styles = {display: 'none', color: 'red'};
       var container = document.createElement('div');
