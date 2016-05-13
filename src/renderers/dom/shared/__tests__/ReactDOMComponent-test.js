@@ -1306,8 +1306,17 @@ describe('ReactDOMComponent', function() {
       ReactDOMServer.renderToString(<div class="paladin"/>);
       ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
       expect(console.error.argsForCall.length).toBe(2);
-      expect(console.error.argsForCall[0][0]).toMatch(/.*className.*\(.*:\d+\)/);
-      expect(console.error.argsForCall[1][0]).toMatch(/.*onClick.*\(.*:\d+\)/);
+      expect(
+        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+      );
+      expect(
+        console.error.argsForCall[1][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown event handler property onclick. Did you mean ' +
+        '`onClick`? (**:*)'
+      );
     });
 
     it('gives source code refs for unknown prop warning for update render', function() {
@@ -1319,7 +1328,11 @@ describe('ReactDOMComponent', function() {
 
       ReactDOMServer.renderToString(<div class="paladin" />, container);
       expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toMatch(/.*className.*\(.*:\d+\)/);
+      expect(
+        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+      );
     });
 
     it('gives source code refs for unknown prop warning for exact elements ', function() {
