@@ -351,6 +351,10 @@ function stop() {
   ReactDebugTool.endProfiling();
 }
 
+function isRunning() {
+  return ReactDebugTool.isProfiling();
+}
+
 var ReactPerfAnalysis = {
   getLastMeasurements: getFlushHistory,
   getExclusive,
@@ -363,6 +367,7 @@ var ReactPerfAnalysis = {
   printOperations,
   start,
   stop,
+  isRunning,
   // Deprecated:
   printDOM,
   getMeasurementsSummaryMap,
