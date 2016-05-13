@@ -293,4 +293,27 @@ describe('ReactPerf', function() {
     ReactPerf.stop();
     expect(ReactPerf.isRunning()).toBe(false);
   });
+
+  it('start has no effect when already running', () => {
+    expect(ReactPerf.isRunning()).toBe(false);
+
+    ReactPerf.start();
+    expect(ReactPerf.isRunning()).toBe(true);
+
+    ReactPerf.start();
+    expect(ReactPerf.isRunning()).toBe(true);
+
+    ReactPerf.stop();
+    expect(ReactPerf.isRunning()).toBe(false);
+  });
+
+  it('stop has no effect when already stopped', () => {
+    expect(ReactPerf.isRunning()).toBe(false);
+
+    ReactPerf.stop();
+    expect(ReactPerf.isRunning()).toBe(false);
+
+    ReactPerf.stop();
+    expect(ReactPerf.isRunning()).toBe(false);
+  });
 });
