@@ -1324,7 +1324,7 @@ describe('ReactDOMComponent', function() {
     it('should warn about incorrect casing on properties', function() {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', tabindex: '1'}));
-      expect(console.error.calls.count(0)).toBe(1);
+      expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
     });
 
@@ -1332,7 +1332,7 @@ describe('ReactDOMComponent', function() {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onclick: '1'}));
       ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onKeydown: '1'}));
-      expect(console.error.calls.count(0)).toBe(2);
+      expect(console.error.calls.count()).toBe(2);
       expect(console.error.calls.argsFor(0)[0]).toContain('onClick');
       expect(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
     });
