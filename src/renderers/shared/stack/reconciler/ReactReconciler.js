@@ -222,6 +222,10 @@ var ReactReconciler = {
           internalInstance._debugID,
           'performUpdateIfNecessary'
         );
+        ReactInstrumentation.debugTool.onBeforeUpdateComponent(
+          internalInstance._debugID,
+          internalInstance._currentElement
+        );
       }
     }
     internalInstance.performUpdateIfNecessary(transaction);

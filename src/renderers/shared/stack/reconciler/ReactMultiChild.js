@@ -139,8 +139,14 @@ function processQueue(inst, updateQueue) {
   );
 }
 
+var setParentForInstrumentation = emptyFunction;
 var setChildrenForInstrumentation = emptyFunction;
 if (__DEV__) {
+  setParentForInstrumentation = function(child) {
+    if (child._debugID !== 0) {
+      ReactInstrumentation.debugTool.onSetParent(child._debugID, this._debugID);
+    }
+  };
   setChildrenForInstrumentation = function(children) {
     ReactInstrumentation.debugTool.onSetChildren(
       this._debugID,
@@ -232,6 +238,9 @@ var ReactMultiChild = {
       for (var name in children) {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
+          if (__DEV__) {
+            setParentForInstrumentation.call(this, child);
+          }
           var mountImage = ReactReconciler.mountComponent(
             child,
             transaction,

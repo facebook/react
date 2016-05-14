@@ -195,10 +195,14 @@ describe('ReactJSXElementValidator', function() {
       }
     }
     ReactTestUtils.renderIntoDocument(<ParentComp />);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(
+      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
-      'expected `string`. Check the render method of `ParentComp`.'
+      'expected `string`.\n' +
+      '    in MyComp (at **)\n' +
+      '    in ParentComp (at **)'
     );
   });
 
@@ -242,9 +246,12 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(
+      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `RequiredPropComponent`.'
+      'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
+      '    in RequiredPropComponent (at **)'
     );
   });
 
@@ -254,9 +261,12 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(
+      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `RequiredPropComponent`.'
+      'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
+      '    in RequiredPropComponent (at **)'
     );
   });
 
@@ -267,15 +277,21 @@ describe('ReactJSXElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={42} />);
 
     expect(console.error.calls.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(
+      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `RequiredPropComponent`.'
+      'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
+      '    in RequiredPropComponent (at **)'
     );
 
-    expect(console.error.argsForCall[1][0]).toBe(
+    expect(
+      console.error.argsForCall[1][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
-      '`RequiredPropComponent`, expected `string`.'
+      '`RequiredPropComponent`, expected `string`.\n' +
+      '    in RequiredPropComponent (at **)'
     );
 
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop="string" />);

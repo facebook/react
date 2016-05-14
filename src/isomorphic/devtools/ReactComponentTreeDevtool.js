@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactCurrentOwner = require('ReactCurrentOwner');
+
 var invariant = require('invariant');
 
 var tree = {};
@@ -53,7 +55,6 @@ var ReactComponentTreeDevtool = {
 
   onSetChildren(id, nextChildIDs) {
     updateTree(id, item => {
-      var prevChildIDs = item.childIDs;
       item.childIDs = nextChildIDs;
 
       nextChildIDs.forEach(nextChildID => {
@@ -78,16 +79,30 @@ var ReactComponentTreeDevtool = {
           'Expected onMountComponent() to fire for the child ' +
           'before its parent includes it in onSetChildren().'
         );
-
-        if (prevChildIDs.indexOf(nextChildID) === -1) {
+        if (nextChild.parentID == null) {
           nextChild.parentID = id;
+          // TODO: This shouldn't be necessary but mounting a new root during in
+          // componentWillMount currently causes not-yet-mounted components to
+          // be purged from our tree data so their parent ID is missing.
         }
+        invariant(
+          nextChild.parentID === id,
+          'Expected onSetParent() and onSetChildren() to be consistent (%s ' +
+          'has parents %s and %s).',
+          nextChildID,
+          nextChild.parentID,
+          id
+        );
       });
     });
   },
 
   onSetOwner(id, ownerID) {
     updateTree(id, item => item.ownerID = ownerID);
+  },
+
+  onSetParent(id, parentID) {
+    updateTree(id, item => item.parentID = parentID);
   },
 
   onSetText(id, text) {
@@ -138,6 +153,53 @@ var ReactComponentTreeDevtool = {
     return item ? item.isMounted : false;
   },
 
+  getCurrentStackAddendum(topElement) {
+    function describeComponentFrame(name, source, ownerName) {
+      return '\n    in ' + name + (
+        source ?
+          ' (at ' + source.fileName.replace(/^.*[\\\/]/, '') + ':' +
+          source.lineNumber + ')' :
+        ownerName ?
+          ' (created by ' + ownerName + ')' :
+          ''
+      );
+    }
+
+    function describeID(id) {
+      var name = ReactComponentTreeDevtool.getDisplayName(id);
+      var element = ReactComponentTreeDevtool.getElement(id);
+      var ownerID = ReactComponentTreeDevtool.getOwnerID(id);
+      var ownerName;
+      if (ownerID) {
+        ownerName = ReactComponentTreeDevtool.getDisplayName(ownerID);
+      }
+      return describeComponentFrame(name, element._source, ownerName);
+    }
+
+    var info = '';
+    if (topElement) {
+      var type = topElement.type;
+      var name = typeof type === 'function' ?
+        type.displayName || type.name :
+        type;
+      var owner = topElement._owner;
+      info += describeComponentFrame(
+        name || 'Unknown',
+        topElement._source,
+        owner && owner.getName()
+      );
+    }
+
+    var currentOwner = ReactCurrentOwner.current;
+    var id = currentOwner && currentOwner._debugID;
+    while (id) {
+      info += describeID(id);
+      id = ReactComponentTreeDevtool.getParentID(id);
+    }
+
+    return info;
+  },
+
   getChildIDs(id) {
     var item = tree[id];
     return item ? item.childIDs : [];
@@ -146,6 +208,11 @@ var ReactComponentTreeDevtool = {
   getDisplayName(id) {
     var item = tree[id];
     return item ? item.displayName : 'Unknown';
+  },
+
+  getElement(id) {
+    var item = tree[id];
+    return item ? item.element : null;
   },
 
   getOwnerID(id) {
