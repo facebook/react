@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
@@ -142,14 +143,28 @@ function processQueue(inst, updateQueue) {
 var setParentForInstrumentation = emptyFunction;
 var setChildrenForInstrumentation = emptyFunction;
 if (__DEV__) {
+  var getDebugID = function(inst) {
+    if (!inst._debugID) {
+      // Check for ART-like instances. TODO: This is silly/gross.
+      var internal;
+      if ((internal = ReactInstanceMap.get(inst))) {
+        inst = internal;
+      }
+    }
+    return inst._debugID;
+  };
   setParentForInstrumentation = function(child) {
+    invariant(child._debugID != null, 'mooooooooooooooooooo');
     if (child._debugID !== 0) {
-      ReactInstrumentation.debugTool.onSetParent(child._debugID, this._debugID);
+      ReactInstrumentation.debugTool.onSetParent(
+        child._debugID,
+        getDebugID(this._debugID)
+      );
     }
   };
   setChildrenForInstrumentation = function(children) {
     ReactInstrumentation.debugTool.onSetChildren(
-      this._debugID,
+      getDebugID(this),
       children ? Object.keys(children).map(key => children[key]._debugID) : []
     );
   };
