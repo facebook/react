@@ -15,10 +15,12 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactElement = require('ReactElement');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 
 var flattenChildren = require('flattenChildren');
+var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
 /**
@@ -210,26 +212,38 @@ var ReactMultiChild = {
      * @internal
      */
     mountChildren: function(nestedChildren, transaction, context) {
-      var children = this._reconcilerInstantiateChildren(
-        nestedChildren, transaction, context
-      );
-      this._renderedChildren = children;
-      var mountImages = [];
-      var index = 0;
-      for (var name in children) {
-        if (children.hasOwnProperty(name)) {
-          var child = children[name];
-          var mountImage = ReactReconciler.mountComponent(
-            child,
-            transaction,
-            this,
-            this._nativeContainerInfo,
-            context
-          );
-          child._mountIndex = index++;
-          mountImages.push(mountImage);
+      var instances = [];
+
+      function process(child) {
+        if (typeof child === 'object') {
+          if (Array.isArray(child)) {
+            for (var ii = 0; ii < child.length; ii++) {
+              process(child[ii]);
+            }
+          } else if (child != null && ReactElement.isValidElement(child)) {
+            instances.push(instantiateReactComponent(child));
+          }
+        } else if (typeof child === 'string' || typeof child === 'number') {
+          instances.push(instantiateReactComponent(child));
         }
       }
+
+      process(nestedChildren);
+
+      var mountImages = [];
+      for (var ii = 0; ii < instances.length; ii++) {
+        var child = instances[ii];
+        var mountImage = ReactReconciler.mountComponent(
+          child,
+          transaction,
+          this,
+          this._nativeContainerInfo,
+          context
+        );
+        child._mountIndex = ii;
+        mountImages.push(mountImage);
+      }
+
       return mountImages;
     },
 
