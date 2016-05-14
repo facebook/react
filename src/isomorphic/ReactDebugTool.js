@@ -244,9 +244,17 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onMountRootComponent', debugID);
   },
+  onBeforeMountComponent(debugID, element) {
+    checkDebugID(debugID);
+    emitEvent('onBeforeMountComponent', debugID, element);
+  },
   onMountComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onMountComponent', debugID);
+  },
+  onBeforeUpdateComponent(debugID, element) {
+    checkDebugID(debugID);
+    emitEvent('onBeforeUpdateComponent', debugID, element);
   },
   onUpdateComponent(debugID) {
     checkDebugID(debugID);

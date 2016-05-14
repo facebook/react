@@ -19,6 +19,7 @@ var rootIDs = [];
 function updateTree(id, update) {
   if (!tree[id]) {
     tree[id] = {
+      element: null,
       parentID: null,
       ownerID: null,
       text: null,
@@ -88,6 +89,14 @@ var ReactComponentTreeDevtool = {
     updateTree(id, item => item.text = text);
   },
 
+  onBeforeMountComponent(id, element) {
+    updateTree(id, item => item.element = element);
+  },
+
+  onBeforeUpdateComponent(id, element) {
+    updateTree(id, item => item.element = element);
+  },
+
   onMountComponent(id) {
     updateTree(id, item => item.isMounted = true);
   },
@@ -139,6 +148,13 @@ var ReactComponentTreeDevtool = {
   getParentID(id) {
     var item = tree[id];
     return item ? item.parentID : null;
+  },
+
+  getSource(id) {
+    var item = tree[id];
+    var element = item ? item.element : null;
+    var source = element != null ? element._source : null;
+    return source;
   },
 
   getText(id) {
