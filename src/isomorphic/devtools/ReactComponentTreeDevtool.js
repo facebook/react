@@ -14,7 +14,8 @@
 var invariant = require('invariant');
 
 var tree = {};
-var rootIDs = [];
+var unmountedIDs = {};
+var rootIDs = {};
 
 function updateTree(id, update) {
   if (!tree[id]) {
@@ -28,6 +29,10 @@ function updateTree(id, update) {
       isMounted: false,
       updateCount: 0,
     };
+    // TODO: We need to do this awkward dance because TopLevelWrapper "never
+    // gets mounted" but its display name gets set in instantiateReactComponent
+    // before its debug ID is set to 0.
+    unmountedIDs[id] = true;
   }
   update(tree[id]);
 }
@@ -99,10 +104,11 @@ var ReactComponentTreeDevtool = {
 
   onMountComponent(id) {
     updateTree(id, item => item.isMounted = true);
+    delete unmountedIDs[id];
   },
 
   onMountRootComponent(id) {
-    rootIDs.push(id);
+    rootIDs[id] = true;
   },
 
   onUpdateComponent(id) {
@@ -111,7 +117,8 @@ var ReactComponentTreeDevtool = {
 
   onUnmountComponent(id) {
     updateTree(id, item => item.isMounted = false);
-    rootIDs = rootIDs.filter(rootID => rootID !== id);
+    unmountedIDs[id] = true;
+    delete rootIDs[id];
   },
 
   purgeUnmountedComponents() {
@@ -120,9 +127,10 @@ var ReactComponentTreeDevtool = {
       return;
     }
 
-    Object.keys(tree)
-      .filter(id => !tree[id].isMounted)
-      .forEach(purgeDeep);
+    for (var id in unmountedIDs) {
+      purgeDeep(id);
+    }
+    unmountedIDs = {};
   },
 
   isMounted(id) {
@@ -168,7 +176,7 @@ var ReactComponentTreeDevtool = {
   },
 
   getRootIDs() {
-    return rootIDs;
+    return Object.keys(rootIDs);
   },
 
   getRegisteredIDs() {
