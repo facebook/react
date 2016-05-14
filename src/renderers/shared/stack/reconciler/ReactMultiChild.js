@@ -154,11 +154,10 @@ if (__DEV__) {
     return inst._debugID;
   };
   setParentForInstrumentation = function(child) {
-    invariant(child._debugID != null, 'mooooooooooooooooooo');
     if (child._debugID !== 0) {
       ReactInstrumentation.debugTool.onSetParent(
         child._debugID,
-        getDebugID(this._debugID)
+        getDebugID(this)
       );
     }
   };

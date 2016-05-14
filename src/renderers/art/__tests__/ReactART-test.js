@@ -14,7 +14,7 @@
 'use strict';
 
 jest
-  .unmock('ReactARTFifteen');
+  .unmock('ReactART');
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
@@ -27,7 +27,7 @@ var TestComponent;
 
 var Missing = {};
 
-var ReactART = require('ReactARTFifteen');
+var ReactART = require('ReactART');
 var ARTSVGMode = require('art/modes/svg');
 var ARTCurrentMode = require('art/modes/current');
 
