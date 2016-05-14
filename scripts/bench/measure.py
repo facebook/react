@@ -76,6 +76,7 @@ def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
             var START = now();
             globalEval(reactCode);
             var END = now();
+            ReactDOMServer = React.__SECRET_DOM_SERVER_DO_NOT_USE_OR_YOU_WILL_BE_FIRED || React;
             if (typeof React !== 'object') throw new Error('React not laoded');
             report('factory_ms', END - START);
 
@@ -84,7 +85,7 @@ def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
               throw new Error('benchmark not loaded');
             }
             var START = now();
-            var html = React.renderToString(React.createElement(Benchmark));
+            var html = ReactDOMServer.renderToString(React.createElement(Benchmark));
             html.charCodeAt(0);  // flatten ropes
             var END = now();
             report('ssr_' + ENV.bench_name + '_cold_ms', END - START);
@@ -93,12 +94,12 @@ def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
             var trials = ENV.measure_warm ? 40 : 0;
 
             for (var i = 0; i < warmup; i++) {
-                React.renderToString(React.createElement(Benchmark));
+                ReactDOMServer.renderToString(React.createElement(Benchmark));
             }
 
             for (var i = 0; i < trials; i++) {
                 var START = now();
-                var html = React.renderToString(React.createElement(Benchmark));
+                var html = ReactDOMServer.renderToString(React.createElement(Benchmark));
                 html.charCodeAt(0);  // flatten ropes
                 var END = now();
                 report('ssr_' + ENV.bench_name + '_warm_ms', END - START);
