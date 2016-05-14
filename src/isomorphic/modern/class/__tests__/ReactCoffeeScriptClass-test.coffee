@@ -53,6 +53,7 @@ describe 'ReactCoffeeScriptClass', ->
     ).toThrow()
     expect(console.error.calls.count()).toBe(1)
     expect(console.error.calls.argsFor(0)[0]).toContain('No `render` method found on the returned component instance')
+    undefined
 
   it 'renders a simple stateless component with prop', ->
     class Foo extends React.Component
@@ -62,6 +63,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(Foo, bar: 'foo'), 'DIV', 'foo'
     test React.createElement(Foo, bar: 'bar'), 'DIV', 'bar'
+    undefined
 
   it 'renders based on state using initial values in this.props', ->
     class Foo extends React.Component
@@ -74,6 +76,7 @@ describe 'ReactCoffeeScriptClass', ->
           className: @state.bar
 
     test React.createElement(Foo, initialValue: 'foo'), 'SPAN', 'foo'
+    undefined
 
   it 'renders based on state using props in the constructor', ->
     class Foo extends React.Component
@@ -94,6 +97,7 @@ describe 'ReactCoffeeScriptClass', ->
     instance = test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     instance.changeState()
     test React.createElement(Foo), 'SPAN', 'bar'
+    undefined
 
   it 'renders based on context in the constructor', ->
     class Foo extends React.Component
@@ -125,6 +129,7 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement Foo
 
     test React.createElement(Outer), 'SPAN', 'foo'
+    undefined
 
   it 'renders only once when setting state in componentWillMount', ->
     renderCount = 0
@@ -141,6 +146,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(Foo, initialValue: 'foo'), 'SPAN', 'bar'
     expect(renderCount).toBe 1
+    undefined
 
   it 'should throw with non-object in the initial state property', ->
     [['an array'], 'a string', 1234].forEach (state) ->
@@ -156,6 +162,7 @@ describe 'ReactCoffeeScriptClass', ->
       ).toThrowError(
         'Foo.state: must be set to an object or null'
       )
+    undefined
 
   it 'should render with null in the initial state property', ->
     class Foo extends React.Component
@@ -166,6 +173,7 @@ describe 'ReactCoffeeScriptClass', ->
         span()
 
     test React.createElement(Foo), 'SPAN', ''
+    undefined
 
   it 'setState through an event handler', ->
     class Foo extends React.Component
@@ -183,6 +191,7 @@ describe 'ReactCoffeeScriptClass', ->
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     attachedListener()
     expect(renderedName).toBe 'bar'
+    undefined
 
   it 'should not implicitly bind event handlers', ->
     class Foo extends React.Component
@@ -199,6 +208,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     expect(attachedListener).toThrow()
+    undefined
 
   it 'renders using forceUpdate even when there is no state', ->
     class Foo extends React.Component
@@ -217,6 +227,7 @@ describe 'ReactCoffeeScriptClass', ->
     test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
     attachedListener()
     expect(renderedName).toBe 'bar'
+    undefined
 
   it 'will call all the normal life cycle methods', ->
     lifeCycles = []
@@ -266,6 +277,7 @@ describe 'ReactCoffeeScriptClass', ->
     lifeCycles = [] # reset
     ReactDOM.unmountComponentAtNode container
     expect(lifeCycles).toEqual ['will-unmount']
+    undefined
 
   it 'warns when classic properties are defined on the instance,
       but does not invoke them.', ->
@@ -305,6 +317,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(console.error.calls.argsFor(3)[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     )
+    undefined
 
   it 'should warn when misspelling shouldComponentUpdate', ->
     spyOn console, 'error'
@@ -323,6 +336,7 @@ describe 'ReactCoffeeScriptClass', ->
        Did you mean shouldComponentUpdate()? The name is phrased as a
        question because the function is expected to return a value.'
     )
+    undefined
 
   it 'should warn when misspelling componentWillReceiveProps', ->
     spyOn console, 'error'
@@ -340,6 +354,7 @@ describe 'ReactCoffeeScriptClass', ->
       'Warning: NamedComponent has a method called componentWillRecieveProps().
        Did you mean componentWillReceiveProps()?'
     )
+    undefined
 
   it 'should throw AND warn when trying to access classic APIs', ->
     spyOn console, 'error'
@@ -356,6 +371,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(console.error.calls.argsFor(1)[0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     )
+    undefined
 
   it 'supports this.context passed via getChildContext', ->
     class Bar extends React.Component
@@ -373,6 +389,7 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement Bar
 
     test React.createElement(Foo), 'DIV', 'bar-through-context'
+    undefined
 
   it 'supports classic refs', ->
     class Foo extends React.Component
@@ -383,8 +400,10 @@ describe 'ReactCoffeeScriptClass', ->
 
     instance = test(React.createElement(Foo), 'DIV', 'foo')
     expect(instance.refs.inner.getName()).toBe 'foo'
+    undefined
 
   it 'supports drilling through to the DOM using findDOMNode', ->
     instance = test Inner(name: 'foo'), 'DIV', 'foo'
     node = ReactDOM.findDOMNode(instance)
     expect(node).toBe container.firstChild
+    undefined
