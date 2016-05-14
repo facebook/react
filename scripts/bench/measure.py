@@ -9,12 +9,13 @@
 import functools
 import json
 import os
+import random
 import subprocess
 import sys
 
 
 def _run_js_in_jsc(jit, js, env):
-    return subprocess.check_call(
+    return subprocess.check_output(
         ['jsc', '-e', """
             function now() {
                 return preciseTime() * 1000;
@@ -41,7 +42,7 @@ _run_js_in_jsc_nojit = functools.partial(_run_js_in_jsc, False)
 
 
 def _run_js_in_node(js, env):
-    return subprocess.check_call(
+    return subprocess.check_output(
         ['node', '-e', """
             function now() {
                 var hrTime = process.hrtime();
@@ -70,7 +71,7 @@ def _run_js_in_node(js, env):
 
 
 def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
-    engine(
+    return engine(
         """
             var reactCode = readFile(ENV.react_path);
             var START = now();
@@ -115,36 +116,53 @@ def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
 
 
 def _main():
-    if len(sys.argv) != 2:
-        sys.stderr.write("usage: measure.py react.min.js >out.txt\n")
+    if len(sys.argv) < 2 or len(sys.argv) % 2 == 0:
+        sys.stderr.write("usage: measure.py react.min.js out.txt react2.min.js out2.txt\n")
         return 1
-    react_path = sys.argv[1]
+    # [(react_path, out_path)]
+    react_paths = sys.argv[1::2]
+    files = [open(out_path, 'w') for out_path in sys.argv[2::2]]
 
     trials = 30
     sys.stderr.write("Measuring SSR for PE benchmark (%d trials)\n" % trials)
+    sys.stderr.write("_" * trials + "\n")
     for i in range(trials):
         for engine in [
             _run_js_in_jsc_jit,
             _run_js_in_jsc_nojit,
             _run_js_in_node
         ]:
-            _measure_ssr_ms(engine, react_path, 'pe', 'bench-pe-es5.js', False)
+            engines = range(len(react_paths))
+            random.shuffle(engines)
+            for i in engines:
+                out = _measure_ssr_ms(engine, react_paths[i], 'pe', 'bench-pe-es5.js', False)
+                files[i].write(out)
         sys.stderr.write(".")
         sys.stderr.flush()
     sys.stderr.write("\n")
+    sys.stderr.flush()
 
-    trials = 3
+    trials = 0
     sys.stderr.write("Measuring SSR for PE with warm JIT (%d slow trials)\n" % trials)
+    sys.stderr.write("_" * trials + "\n")
     for i in range(trials):
         for engine in [
             _run_js_in_jsc_jit,
             _run_js_in_jsc_nojit,
             _run_js_in_node
         ]:
-            _measure_ssr_ms(engine, react_path, 'pe', 'bench-pe-es5.js', True)
+            engines = range(len(react_paths))
+            random.shuffle(engines)
+            for i in engines:
+                out = _measure_ssr_ms(engine, react_paths[i], 'pe', 'bench-pe-es5.js', True)
+                files[i].write(out)
         sys.stderr.write(".")
         sys.stderr.flush()
     sys.stderr.write("\n")
+    sys.stderr.flush()
+
+    for f in files:
+        f.close()
 
 
 if __name__ == '__main__':
