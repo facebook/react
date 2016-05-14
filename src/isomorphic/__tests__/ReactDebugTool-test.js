@@ -66,7 +66,7 @@ describe('ReactDebugTool', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
       'exception thrown by devtool while handling ' +
-      'onTestEvent: Hi.'
+      'onTestEvent: Error: Hi.'
     );
 
     ReactDebugTool.onTestEvent();

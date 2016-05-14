@@ -31,7 +31,7 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
           handlerDoesThrowForEvent[handlerFunctionName],
           'exception thrown by devtool while handling %s: %s',
           handlerFunctionName,
-          e.message
+          e + '\n' + e.stack
         );
         handlerDoesThrowForEvent[handlerFunctionName] = true;
       }
