@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
+var ReactDebugTool = require('ReactDebugTool');
 
 var warning = require('warning');
 
@@ -40,9 +41,11 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
 
 var ReactDOMDebugTool = {
   addDevtool(devtool) {
+    ReactDebugTool.addDevtool(devtool);
     eventHandlers.push(devtool);
   },
   removeDevtool(devtool) {
+    ReactDebugTool.removeDevtool(devtool);
     for (var i = 0; i < eventHandlers.length; i++) {
       if (eventHandlers[i] === devtool) {
         eventHandlers.splice(i, 1);
@@ -61,12 +64,6 @@ var ReactDOMDebugTool = {
   },
   onTestEvent() {
     emitEvent('onTestEvent');
-  },
-  onMountDOMComponent(debugID, element) {
-    emitEvent('onMountDOMComponent', debugID, element);
-  },
-  onUpdateDOMComponent(debugID, element) {
-    emitEvent('onMountDOMComponent', debugID, element);
   },
 };
 

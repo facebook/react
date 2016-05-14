@@ -29,7 +29,6 @@ var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInput = require('ReactDOMInput');
-var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
@@ -579,10 +578,6 @@ ReactDOMComponent.Mixin = {
         validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);
     }
 
-    if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onMountDOMComponent(this._debugID, this._currentElement);
-    }
-
     var mountImage;
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
@@ -857,10 +852,6 @@ ReactDOMComponent.Mixin = {
       transaction,
       context
     );
-
-    if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onUpdateDOMComponent(this._debugID, this._currentElement);
-    }
 
     if (this._tag === 'select') {
       // <select> value update needs to occur after <option> children

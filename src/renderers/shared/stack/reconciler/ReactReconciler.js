@@ -50,6 +50,10 @@ var ReactReconciler = {
           internalInstance._debugID,
           'mountComponent'
         );
+        ReactInstrumentation.debugTool.onBeforeMountComponent(
+          internalInstance._debugID,
+          internalInstance._currentElement
+        );
       }
     }
     var markup = internalInstance.mountComponent(
@@ -149,6 +153,10 @@ var ReactReconciler = {
         ReactInstrumentation.debugTool.onBeginReconcilerTimer(
           internalInstance._debugID,
           'receiveComponent'
+        );
+        ReactInstrumentation.debugTool.onBeforeUpdateComponent(
+          internalInstance._debugID,
+          internalInstance._currentElement
         );
       }
     }
