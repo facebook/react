@@ -934,7 +934,7 @@ describe('ReactDOMComponent', function() {
     it('should support custom elements which extend native elements', function() {
       if (ReactDOMFeatureFlags.useCreateElement) {
         var container = document.createElement('div');
-        spyOn(document, 'createElement').andCallThrough();
+        spyOn(document, 'createElement').and.callThrough();
         ReactDOM.render(<div is="custom-div" />, container);
         expect(document.createElement).toHaveBeenCalledWith('div', 'custom-div');
       } else {
@@ -1079,7 +1079,7 @@ describe('ReactDOMComponent', function() {
 
       ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.length).toBe(1);
+      expect(tracker.stopTracking.calls.count()).toBe(1);
     });
 
     it('should clean up input textarea tracking', function() {
@@ -1091,7 +1091,7 @@ describe('ReactDOMComponent', function() {
 
       ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.length).toBe(1);
+      expect(tracker.stopTracking.calls.count()).toBe(1);
     });
 
     it('unmounts children before unsetting DOM node info', function() {

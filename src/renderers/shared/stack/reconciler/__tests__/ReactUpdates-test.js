@@ -953,15 +953,15 @@ describe('ReactUpdates', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    expect(() => component.setState({}, 'no')).toThrow(
+    expect(() => component.setState({}, 'no')).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => component.setState({}, {})).toThrow(
+    expect(() => component.setState({}, {})).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => component.setState({}, new Foo())).toThrow(
+    expect(() => component.setState({}, new Foo())).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
@@ -982,15 +982,15 @@ describe('ReactUpdates', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    expect(() => component.replaceState({}, 'no')).toThrow(
+    expect(() => component.replaceState({}, 'no')).toThrowError(
       'replaceState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => component.replaceState({}, {})).toThrow(
+    expect(() => component.replaceState({}, {})).toThrowError(
       'replaceState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => component.replaceState({}, new Foo())).toThrow(
+    expect(() => component.replaceState({}, new Foo())).toThrowError(
       'replaceState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
@@ -1011,15 +1011,15 @@ describe('ReactUpdates', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    expect(() => component.forceUpdate('no')).toThrow(
+    expect(() => component.forceUpdate('no')).toThrowError(
       'forceUpdate(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => component.forceUpdate({})).toThrow(
+    expect(() => component.forceUpdate({})).toThrowError(
       'forceUpdate(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => component.forceUpdate(new Foo())).toThrow(
+    expect(() => component.forceUpdate(new Foo())).toThrowError(
       'forceUpdate(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );

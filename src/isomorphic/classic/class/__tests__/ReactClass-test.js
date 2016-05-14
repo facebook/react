@@ -69,8 +69,8 @@ describe('ReactClass-spec', function() {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: prop type `prop` is invalid; ' +
       'it must be a function, usually from React.PropTypes.'
     );
@@ -87,8 +87,8 @@ describe('ReactClass-spec', function() {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: context type `prop` is invalid; ' +
       'it must be a function, usually from React.PropTypes.'
     );
@@ -105,8 +105,8 @@ describe('ReactClass-spec', function() {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: child context type `prop` is invalid; ' +
       'it must be a function, usually from React.PropTypes.'
     );
