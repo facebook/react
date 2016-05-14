@@ -82,7 +82,7 @@ describe('traverseAllChildren', function() {
     );
     expect(traverseContext.length).toEqual(1);
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.ForCall(0)[0]).toContain(
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Warning: Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -328,7 +328,7 @@ describe('traverseAllChildren', function() {
     );
 
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.ForCall(0)[0]).toContain(
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Warning: Each child in an array or iterator should have a unique "key" prop.'
     );
   });

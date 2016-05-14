@@ -89,7 +89,7 @@ describe('SyntheticEvent', function() {
     // once for each property accessed
     expect(console.error.calls.count()).toBe(3);
     // assert the first warning for accessing `type`
-    expect(console.error.argsFor(0)[0]).toBe(
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: This synthetic event is reused for performance reasons. If ' +
       'you\'re seeing this, you\'re accessing the property `type` on a ' +
       'released/nullified synthetic event. This is set to null. If you must ' +
@@ -105,7 +105,7 @@ describe('SyntheticEvent', function() {
     syntheticEvent.destructor();
     expect(syntheticEvent.type = 'MouseEvent').toBe('MouseEvent');
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.argsFor(0)[0]).toBe(
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: This synthetic event is reused for performance reasons. If ' +
       'you\'re seeing this, you\'re setting the property `type` on a ' +
       'released/nullified synthetic event. This is effectively a no-op. If you must ' +
@@ -120,7 +120,7 @@ describe('SyntheticEvent', function() {
     SyntheticEvent.release(syntheticEvent);
     syntheticEvent.preventDefault();
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.argsFor(0)[0]).toBe(
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: This synthetic event is reused for performance reasons. If ' +
       'you\'re seeing this, you\'re accessing the method `preventDefault` on a ' +
       'released/nullified synthetic event. This is a no-op function. If you must ' +
@@ -135,7 +135,7 @@ describe('SyntheticEvent', function() {
     SyntheticEvent.release(syntheticEvent);
     syntheticEvent.stopPropagation();
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.argsFor(0)[0]).toBe(
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: This synthetic event is reused for performance reasons. If ' +
       'you\'re seeing this, you\'re accessing the method `stopPropagation` on a ' +
       'released/nullified synthetic event. This is a no-op function. If you must ' +
@@ -162,7 +162,7 @@ describe('SyntheticEvent', function() {
     event.nativeEvent; // eslint-disable-line no-unused-expressions
 
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.argsFor(0)[0]).toBe(
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: This synthetic event is reused for performance reasons. If ' +
       'you\'re seeing this, you\'re accessing the property `nativeEvent` on a ' +
       'released/nullified synthetic event. This is set to null. If you must ' +
@@ -179,7 +179,7 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.foo).toBe('bar');
     if (typeof Proxy === 'function') {
       expect(console.error.calls.count()).toBe(1);
-      expect(console.error.argsFor(0)[0]).toBe(
+      expect(console.error.calls.argsFor(0)[0]).toBe(
         'Warning: This synthetic event is reused for performance reasons. If ' +
         'you\'re seeing this, you\'re adding a new property in the synthetic ' +
         'event object. The property is never released. ' +

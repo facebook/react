@@ -87,7 +87,6 @@
     "scriptPreprocessor": "scripts/jest/preprocessor.js",
     "setupEnvScriptFile": "scripts/jest/environment.js",
     "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
-    "testRunner": "jasmine1",
     "testFileExtensions": [
       "coffee",
       "js",
@@ -99,7 +98,6 @@
       "<rootDir>/src",
       "node_modules/fbjs"
     ],
-    "testRunner": "node_modules/jest-cli/src/testRunners/jasmine/jasmine2.js",
     "unmockedModulePathPatterns": [
       ""
     ]

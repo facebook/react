@@ -537,7 +537,7 @@ describe('ReactTestUtils', function() {
       ReactDOM.findDOMNode(instance),
       {clientX: CLIENT_X}
     );
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('can scry with stateless components involved', function() {

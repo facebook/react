@@ -447,12 +447,12 @@ describe('ReactCompositeComponent', function() {
         return <div />;
       },
     });
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
     var instance = ReactDOM.render(<Component />, container);
     expect(renderPasses).toBe(2);
     expect(instance.state.value).toBe(1);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Cannot call setState() inside getChildContext()'
     );
   });
