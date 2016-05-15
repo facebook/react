@@ -44,7 +44,6 @@ var ReactDOMTextComponent = function(text) {
 
   // Properties
   this._domID = 0;
-  this._mountIndex = 0;
   this._closingComment = null;
   this._commentNodes = null;
 };

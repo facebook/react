@@ -71,7 +71,7 @@ ReactTestComponent.prototype.toJSON = function() {
   var {children, ...props} = this._currentElement.props;
   var childrenJSON = [];
   for (var key in this._renderedChildren) {
-    var inst = this._renderedChildren[key];
+    var inst = this._renderedChildren[key].instance;
     inst = getRenderedHostOrTextFromComponent(inst);
     var json = inst.toJSON();
     if (json !== undefined) {

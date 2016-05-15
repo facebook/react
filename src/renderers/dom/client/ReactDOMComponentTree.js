@@ -79,7 +79,7 @@ function precacheChildNodes(inst, node) {
     if (!children.hasOwnProperty(name)) {
       continue;
     }
-    var childInst = children[name];
+    var childInst = children[name].instance;
     var childID = getRenderedHostOrTextFromComponent(childInst)._domID;
     if (childID === 0) {
       // We're currently unmounting this child in ReactMultiChild; skip it.

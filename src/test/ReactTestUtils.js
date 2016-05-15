@@ -54,7 +54,7 @@ function findAllInRenderedTreeInternal(inst, test) {
       }
       ret = ret.concat(
         findAllInRenderedTreeInternal(
-          renderedChildren[key],
+          renderedChildren[key].instance,
           test
         )
       );

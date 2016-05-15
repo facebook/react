@@ -34,6 +34,20 @@ if (
   ReactComponentTreeHook = require('ReactComponentTreeHook');
 }
 
+function wrap(child) {
+  var wrapped = {
+    instance: child,
+    mountIndex: 0,
+
+    // Used by ART.
+    _mountImage: null,
+  };
+  if (__DEV__) {
+    Object.preventExtensions(wrapped);
+  }
+  return wrapped;
+}
+
 function instantiateChild(childInstances, child, name, selfDebugID) {
   // We found a component instance.
   var keyUnique = (childInstances[name] === undefined);
@@ -53,7 +67,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
     }
   }
   if (child != null && keyUnique) {
-    childInstances[name] = instantiateReactComponent(child, true);
+    childInstances[name] = wrap(instantiateReactComponent(child, true));
   }
 }
 
@@ -135,22 +149,22 @@ var ReactChildReconciler = {
         continue;
       }
       prevChild = prevChildren && prevChildren[name];
-      var prevElement = prevChild && prevChild._currentElement;
+      var prevElement = prevChild && prevChild.instance._currentElement;
       var nextElement = nextChildren[name];
       if (prevChild != null &&
           shouldUpdateReactComponent(prevElement, nextElement)) {
         ReactReconciler.receiveComponent(
-          prevChild, nextElement, transaction, context
+          prevChild.instance, nextElement, transaction, context
         );
         nextChildren[name] = prevChild;
       } else {
         if (prevChild) {
-          removedNodes[name] = ReactReconciler.getHostNode(prevChild);
-          ReactReconciler.unmountComponent(prevChild, false);
+          removedNodes[name] = ReactReconciler.getHostNode(prevChild.instance);
+          ReactReconciler.unmountComponent(prevChild.instance, false);
         }
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement, true);
-        nextChildren[name] = nextChildInstance;
+        nextChildren[name] = wrap(nextChildInstance);
         // Creating mount image now ensures refs are resolved in right order
         // (see https://github.com/facebook/react/pull/7101 for explanation).
         var nextChildMountImage = ReactReconciler.mountComponent(
@@ -169,8 +183,8 @@ var ReactChildReconciler = {
       if (prevChildren.hasOwnProperty(name) &&
           !(nextChildren && nextChildren.hasOwnProperty(name))) {
         prevChild = prevChildren[name];
-        removedNodes[name] = ReactReconciler.getHostNode(prevChild);
-        ReactReconciler.unmountComponent(prevChild, false);
+        removedNodes[name] = ReactReconciler.getHostNode(prevChild.instance);
+        ReactReconciler.unmountComponent(prevChild.instance, false);
       }
     }
   },
@@ -185,7 +199,7 @@ var ReactChildReconciler = {
   unmountChildren: function(renderedChildren, safely) {
     for (var name in renderedChildren) {
       if (renderedChildren.hasOwnProperty(name)) {
-        var renderedChild = renderedChildren[name];
+        var renderedChild = renderedChildren[name].instance;
         ReactReconciler.unmountComponent(renderedChild, safely);
       }
     }
