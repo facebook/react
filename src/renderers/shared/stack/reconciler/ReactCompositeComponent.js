@@ -471,12 +471,21 @@ var ReactCompositeComponentMixin = {
     }
 
     this._renderedNodeType = ReactNodeTypes.getType(renderedElement);
-    this._renderedComponent = this._instantiateReactComponent(
+    var child = this._instantiateReactComponent(
       renderedElement
     );
+    this._renderedComponent = child;
+    if (__DEV__) {
+      if (child._debugID !== 0 && this._debugID !== 0) {
+        ReactInstrumentation.debugTool.onSetParent(
+          child._debugID,
+          this._debugID
+        );
+      }
+    }
 
     var markup = ReactReconciler.mountComponent(
-      this._renderedComponent,
+      child,
       transaction,
       hostParent,
       hostContainerInfo,
@@ -487,9 +496,7 @@ var ReactCompositeComponentMixin = {
       if (this._debugID !== 0) {
         ReactInstrumentation.debugTool.onSetChildren(
           this._debugID,
-          this._renderedComponent._debugID !== 0 ?
-            [this._renderedComponent._debugID] :
-            []
+          child._debugID !== 0 ? [child._debugID] : []
         );
       }
     }
@@ -1031,12 +1038,21 @@ var ReactCompositeComponentMixin = {
       ReactReconciler.unmountComponent(prevComponentInstance, false);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
-      this._renderedComponent = this._instantiateReactComponent(
+      var child = this._instantiateReactComponent(
         nextRenderedElement
       );
+      this._renderedComponent = child;
+      if (__DEV__) {
+        if (child._debugID !== 0 && this._debugID !== 0) {
+          ReactInstrumentation.debugTool.onSetParent(
+            child._debugID,
+            this._debugID
+          );
+        }
+      }
 
       var nextMarkup = ReactReconciler.mountComponent(
-        this._renderedComponent,
+        child,
         transaction,
         this._hostParent,
         this._hostContainerInfo,
@@ -1047,9 +1063,7 @@ var ReactCompositeComponentMixin = {
         if (this._debugID !== 0) {
           ReactInstrumentation.debugTool.onSetChildren(
             this._debugID,
-            this._renderedComponent._debugID !== 0 ?
-              [this._renderedComponent._debugID] :
-              []
+            child._debugID !== 0 ? [child._debugID] : []
           );
         }
       }

@@ -253,6 +253,8 @@ if (__DEV__) {
     var contentDebugID = debugID + '#text';
     this._contentDebugID = contentDebugID;
     ReactInstrumentation.debugTool.onSetDisplayName(contentDebugID, '#text');
+    ReactInstrumentation.debugTool.onSetParent(contentDebugID, debugID);
+    ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID);
     ReactInstrumentation.debugTool.onSetText(contentDebugID, '' + contentToUse);
     ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
     ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);
