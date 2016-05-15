@@ -51,7 +51,7 @@ var ReactCSSTransitionGroup = React.createClass({
 
   propTypes: {
     transitionName: ReactCSSTransitionGroupChild.propTypes.name,
-
+    component: React.PropTypes.any,
     transitionAppear: React.PropTypes.bool,
     transitionEnter: React.PropTypes.bool,
     transitionLeave: React.PropTypes.bool,
@@ -62,6 +62,7 @@ var ReactCSSTransitionGroup = React.createClass({
 
   getDefaultProps: function() {
     return {
+      component: 'span',
       transitionAppear: false,
       transitionEnter: true,
       transitionLeave: true,
