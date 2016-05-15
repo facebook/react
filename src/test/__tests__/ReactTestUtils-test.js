@@ -275,6 +275,44 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div>foo</div>);
   });
 
+  it('can shallow render components with stateful children', function() {
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {
+          body: (
+            <ul className="bar">
+              <li><div>Item 1</div></li>
+              <li>Item 2</li>
+              Item 3
+            </ul>
+          ),
+        };
+      },
+
+      render: function() {
+        return (
+          <div className="foo">
+            {this.state.body}
+          </div>
+        );
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<Component />);
+    var result = shallowRenderer.getRenderOutput();
+
+    expect(result).toEqual(
+      <div className="foo">
+        <ul className="bar">
+          <li><div>Item 1</div></li>
+          <li>Item 2</li>
+          Item 3
+        </ul>
+      </div>
+    );
+  });
+
   it('can scryRenderedDOMComponentsWithClass with TextComponent', function() {
     var Wrapper = React.createClass({
       render: function() {

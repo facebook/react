@@ -379,9 +379,31 @@ ReactShallowRenderer.prototype.getMountedInstance = function() {
 var nextDebugID = 1;
 
 var NoopInternalComponent = function(element) {
-  this._renderedOutput = element;
+  if (element && element.props && element.props.children) {
+    var children = NoopInternalChildren(element.props.children);
+    var props = assign({}, element.props, { children: children });
+    this._renderedOutput = assign({}, element, { props: props });
+  } else {
+    this._renderedOutput = element;
+  }
   this._currentElement = element;
   this._debugID = nextDebugID++;
+};
+
+var NoopInternalChildren = function(children) {
+  if (Array.isArray(children)) {
+    return children.map(NoopInternalChildren);
+  } else if (children === Object(children)) {
+    return NoopInternalChild(children);
+  }
+  return children;
+};
+
+var NoopInternalChild = function(child) {
+  var props = child.props && child.props.children ? assign({}, child.props, {
+    children: NoopInternalChildren(child.props.children),
+  }) : child.props;
+  return assign({}, child, { _owner: null }, { props: props });
 };
 
 NoopInternalComponent.prototype = {
