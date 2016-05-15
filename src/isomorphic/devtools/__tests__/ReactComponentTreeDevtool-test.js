@@ -1741,4 +1741,78 @@ describe('ReactComponentTreeDevtool', () => {
     expect(getRootDisplayNames()).toEqual([]);
     expect(getRegisteredDisplayNames()).toEqual([]);
   });
+
+  it('creates stack addenda', () => {
+    function getAddendum(element) {
+      var addendum = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
+      return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
+    }
+
+    var Anon = React.createClass({displayName: null, render: () => null});
+    var Orange = React.createClass({render: () => null});
+
+    expect(getAddendum()).toBe(
+      ''
+    );
+    expect(getAddendum(<div />)).toBe(
+      '\n    in div (at **)'
+    );
+    expect(getAddendum(<Anon />)).toBe(
+      '\n    in Unknown (at **)'
+    );
+    expect(getAddendum(<Orange />)).toBe(
+      '\n    in Orange (at **)'
+    );
+    expect(getAddendum(React.createElement(Orange))).toBe(
+      '\n    in Orange'
+    );
+
+    var renders = 0;
+    var rOwnedByQ;
+
+    function Q() {
+      return (rOwnedByQ = React.createElement(R));
+    }
+    function R() {
+      return <div><S /></div>;
+    }
+    class S extends React.Component {
+      componentDidMount() {
+        // Check that the parent path is still fetched when only S itself is on
+        // the stack.
+        this.forceUpdate();
+      }
+      render() {
+        expect(getAddendum()).toBe(
+          '\n    in S (at **)' +
+          '\n    in div (at **)' +
+          '\n    in R (created by Q)' +
+          '\n    in Q (at **)'
+        );
+        expect(getAddendum(<span />)).toBe(
+          '\n    in span (at **)' +
+          '\n    in S (at **)' +
+          '\n    in div (at **)' +
+          '\n    in R (created by Q)' +
+          '\n    in Q (at **)'
+        );
+        expect(getAddendum(React.createElement('span'))).toBe(
+          '\n    in span (created by S)' +
+          '\n    in S (at **)' +
+          '\n    in div (at **)' +
+          '\n    in R (created by Q)' +
+          '\n    in Q (at **)'
+        );
+        renders++;
+        return null;
+      }
+    }
+    ReactDOM.render(<Q />, document.createElement('div'));
+    expect(renders).toBe(2);
+
+    // Make sure owner is fetched for the top element too.
+    expect(getAddendum(rOwnedByQ)).toBe(
+      '\n    in R (created by Q)'
+    );
+  });
 });

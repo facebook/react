@@ -18,10 +18,11 @@
 
 'use strict';
 
-var ReactElement = require('ReactElement');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactElement = require('ReactElement');
+var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
@@ -171,13 +172,14 @@ function validateChildKeys(node, parentType) {
 /**
  * Assert that the props are valid
  *
+ * @param {object} element
  * @param {string} componentName Name of the component for error messages.
  * @param {object} propTypes Map of prop name to a ReactPropType
- * @param {object} props
  * @param {string} location e.g. "prop", "context", "child context"
  * @private
  */
-function checkPropTypes(componentName, propTypes, props, location) {
+function checkPropTypes(element, componentName, propTypes, location) {
+  var props = element.props;
   for (var propName in propTypes) {
     if (propTypes.hasOwnProperty(propName)) {
       var error;
@@ -216,8 +218,12 @@ function checkPropTypes(componentName, propTypes, props, location) {
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var addendum = getDeclarationErrorAddendum();
-        warning(false, 'Failed propType: %s%s', error.message, addendum);
+        warning(
+          false,
+          'Failed propType: %s%s',
+          error.message,
+          ReactComponentTreeDevtool.getCurrentStackAddendum(element)
+        );
       }
     }
   }
@@ -237,9 +243,9 @@ function validatePropTypes(element) {
   var name = componentClass.displayName || componentClass.name;
   if (componentClass.propTypes) {
     checkPropTypes(
+      element,
       name,
       componentClass.propTypes,
-      element.props,
       ReactPropTypeLocations.prop
     );
   }
