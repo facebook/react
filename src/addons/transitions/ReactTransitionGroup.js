@@ -98,7 +98,9 @@ var ReactTransitionGroup = React.createClass({
 
     var keysToLeave = this.keysToLeave;
     this.keysToLeave = [];
-    keysToLeave.forEach(this.performLeave);
+    if (!this.props.transitionIsSequential) {
+      keysToLeave.forEach(this.performLeave);
+    }
   },
 
   performAppear: function(key) {
@@ -154,6 +156,10 @@ var ReactTransitionGroup = React.createClass({
     }
 
     delete this.currentlyTransitioningKeys[key];
+
+    if (this.props.transitionIsSequential) {
+      this.performLeave(this.keysToLeave);
+    }
 
     var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
       this.props.children
