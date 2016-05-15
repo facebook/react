@@ -891,8 +891,11 @@ describe('ReactPropTypes', function() {
       var instance = <Component num={6} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
       expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toBe(
-        'Warning: Failed propType: num must be 5!'
+      expect(
+        console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+      ).toBe(
+        'Warning: Failed propType: num must be 5!\n' +
+        '    in Component (at **)'
       );
     });
 

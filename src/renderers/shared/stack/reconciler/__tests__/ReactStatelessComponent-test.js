@@ -175,9 +175,12 @@ describe('ReactStatelessComponent', function() {
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(<Child />);
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(
+      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: Failed propType: Invalid prop `test` of type `number` ' +
-      'supplied to `Child`, expected `string`.'
+      'supplied to `Child`, expected `string`.\n' +
+      '    in Child (at **)'
     );
   });
 
