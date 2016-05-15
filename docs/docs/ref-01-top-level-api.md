@@ -90,7 +90,11 @@ Verifies the object is a ReactElement.
 
 ### React.Children
 
-`React.Children` provides utilities for dealing with the `this.props.children` opaque data structure.
+`React.Children` provides utilities for dealing with the `this.props.children` data structure.
+
+> **Note:**
+>
+> In most cases, you want to treat `this.props.children` as an opaque object. In reality, its structure can have a number of possibilities. We call it a "React node", which is analogous to DOM nodes which can be elements, text nodes, or fragments containing multiple other nodes. Each React node can be a React element, a string, a number, null/true/false/undefined (all ignored), or an array or iterable containing other React nodes.
 
 #### React.Children.map
 
