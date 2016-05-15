@@ -278,4 +278,22 @@ describe('ReactElementClone', function() {
     );
   });
 
+  it('overwrites undefined props when a default is available', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {fruit: 'persimmon'};
+      },
+      render: function() {
+        return React.createElement('span');
+      },
+    });
+
+    let element = React.createElement(Component);
+    element = React.cloneElement(element, {
+      fruit: undefined,
+    });
+
+    expect(element.props.fruit).toBe('persimmon');
+  });
+
 });

@@ -335,6 +335,16 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = childArray;
   }
 
+  // Resolve default props
+  if (element.type && element.type.defaultProps) {
+    var defaultProps = element.type.defaultProps;
+    for (propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+  }
+
   return ReactElement(
     element.type,
     key,
