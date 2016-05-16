@@ -70,7 +70,7 @@ function connectToServerRendering(
   return renderOnClient(
     elementToRenderOnClient,
     renderOnServer(elementToRenderOnServer, warningCount),
-    warningCount + (shouldMatch ? 0 : 1));
+    shouldMatch ? 0 : 1);
 }
 
 function expectMarkupMismatch(serverRendering, elementToRenderOnClient, warningCount = 0) {
@@ -767,9 +767,9 @@ describe('ReactServerRendering', function() {
         ]);
       });
 
-      it('can render an input with a value and no onChange/readOnly', function() {
-        const element = getSsrDom(<input value="foo"/>, 1);
-        expect(element.getAttribute('value') || element.value).toBe('foo');
+      itRenders('can render an input with a value and no onChange/readOnly', render => {
+        return render(<input value="foo"/>, 1)
+          .then(element => expect(element.getAttribute('value') || element.value).toBe('foo'));
       });
 
       itRenders('can render an input with a defaultValue', (render) => {
@@ -779,16 +779,20 @@ describe('ReactServerRendering', function() {
         });
       });
 
-      it('can render an input with both a value and defaultValue part 1', () => {
-        const element = getSsrDom(<input value="foo" defaultValue="bar" readOnly={true}/>, 1);
-        expect(element.getAttribute('value') || element.value).toBe('foo');
-        expect(element.getAttribute('defaultValue')).toBe(null);
+      itRenders('can render an input with both a value and defaultValue part 1', render => {
+        return render(<input value="foo" defaultValue="bar" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value') || element.value).toBe('foo');
+            expect(element.getAttribute('defaultValue')).toBe(null);
+          });
       });
 
-      it('can render an input with both a value and defaultValue part 2', () => {
-        const element = getSsrDom(<input defaultValue="bar" value="foo" readOnly={true}/>, 1);
-        expect(element.getAttribute('value') || element.value).toBe('foo');
-        expect(element.getAttribute('defaultValue')).toBe(null);
+      itRenders('can render an input with both a value and defaultValue part 2', render => {
+        return render(<input defaultValue="bar" value="foo" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value') || element.value).toBe('foo');
+            expect(element.getAttribute('defaultValue')).toBe(null);
+          });
       });
 
       // checkboxes
@@ -802,9 +806,9 @@ describe('ReactServerRendering', function() {
         ]);
       });
 
-      it('can render a checkbox that is checked and no onChange/readOnly', function() {
-        const element = getSsrDom(<input type="checkbox" checked={true}/>, 1);
-        expect(element.checked).toBe(true);
+      itRenders('can render a checkbox that is checked and no onChange/readOnly', render => {
+        return render(<input type="checkbox" checked={true}/>, 1)
+          .then(element => expect(element.checked).toBe(true));
       });
 
       itRenders('can render a checkbox with defaultChecked', (render) => {
@@ -814,16 +818,20 @@ describe('ReactServerRendering', function() {
         });
       });
 
-      it('can render a checkbox with both a checked and defaultChecked part 1', () => {
-        const element = getSsrDom(<input type="checkbox" checked={true} defaultChecked={false} readOnly={true}/>, 1);
-        expect(element.checked).toBe(true);
-        expect(element.getAttribute('defaultChecked')).toBe(null);
+      itRenders('can render a checkbox with both a checked and defaultChecked part 1', render => {
+        return render(<input type="checkbox" checked={true} defaultChecked={false} readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.checked).toBe(true);
+            expect(element.getAttribute('defaultChecked')).toBe(null);
+          });
       });
 
-      it('can render a checkbox with both a checked and defaultChecked part 2', () => {
-        const element = getSsrDom(<input type="checkbox" defaultChecked={false} checked={true} readOnly={true}/>, 1);
-        expect(element.checked).toBe(true);
-        expect(element.getAttribute('defaultChecked')).toBe(null);
+      itRenders('can render a checkbox with both a checked and defaultChecked part 2', render => {
+        return render(<input type="checkbox" defaultChecked={false} checked={true} readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.checked).toBe(true);
+            expect(element.getAttribute('defaultChecked')).toBe(null);
+          });
       });
 
       // textareas
@@ -841,10 +849,12 @@ describe('ReactServerRendering', function() {
         ]);
       });
 
-      it('can render a textarea with a value and no onChange/readOnly', function() {
-        const element = getSsrDom(<textarea value="foo"/>, 1);
-        expect(element.getAttribute('value')).toBe(null);
-        expect(element.value).toBe('foo');
+      itRenders('can render a textarea with a value and no onChange/readOnly', render => {
+        return render(<textarea value="foo"/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value')).toBe(null);
+            expect(element.value).toBe('foo');
+          });
       });
 
       itRenders('can render a textarea with a defaultValue', (render) => {
@@ -855,18 +865,22 @@ describe('ReactServerRendering', function() {
         });
       });
 
-      it('can render a textarea with both a value and defaultValue part 1', () => {
-        const element = getSsrDom(<textarea value="foo" defaultValue="bar" readOnly={true}/>, 1);
-        expect(element.getAttribute('value')).toBe(null);
-        expect(element.getAttribute('defaultValue')).toBe(null);
-        expect(element.value).toBe('foo');
+      itRenders('can render a textarea with both a value and defaultValue part 1', render => {
+        return render(<textarea value="foo" defaultValue="bar" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value')).toBe(null);
+            expect(element.getAttribute('defaultValue')).toBe(null);
+            expect(element.value).toBe('foo');
+          });
       });
 
-      it('can render a textarea with both a value and defaultValue part 2', () => {
-        const element = getSsrDom(<textarea defaultValue="bar" value="foo" readOnly={true}/>, 1);
-        expect(element.getAttribute('value')).toBe(null);
-        expect(element.getAttribute('defaultValue')).toBe(null);
-        expect(element.value).toBe('foo');
+      itRenders('can render a textarea with both a value and defaultValue part 2', render => {
+        return render(<textarea defaultValue="bar" value="foo" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value')).toBe(null);
+            expect(element.getAttribute('defaultValue')).toBe(null);
+            expect(element.value).toBe('foo');
+          });
       });
 
       // selects
@@ -902,9 +916,9 @@ describe('ReactServerRendering', function() {
         ]);
       });
 
-      it('can render a select with a value and no onChange/readOnly', function() {
-        const element = getSsrDom(<select value="bar">{options}</select>, 1);
-        expectSelectValue(element, ['bar']);
+      itRenders('can render a select with a value and no onChange/readOnly', render => {
+        return render(<select value="bar">{options}</select>, 1)
+          .then(element => expectSelectValue(element, ['bar']));
       });
 
       itRenders('can render a select with a defaultValue', (render) => {
@@ -912,14 +926,14 @@ describe('ReactServerRendering', function() {
           .then(e => expectSelectValue(e, ['bar']));
       });
 
-      it('can render a select with both a value and defaultValue part 1', () => {
-        const element = getSsrDom(<select value="bar" defaultValue="baz" readOnly={true}>{options}</select>, 1);
-        expectSelectValue(element, ['bar']);
+      itRenders('can render a select with both a value and defaultValue part 1', render => {
+        return render(<select value="bar" defaultValue="baz" readOnly={true}>{options}</select>, 1)
+          .then(element => expectSelectValue(element, ['bar']));
       });
 
-      it('can render a select with both a value and defaultValue part 2', () => {
-        const element = getSsrDom(<select defaultValue="baz" value="bar" readOnly={true}>{options}</select>, 1);
-        expectSelectValue(element, ['bar']);
+      itRenders('can render a select with both a value and defaultValue part 2', render => {
+        return render(<select defaultValue="baz" value="bar" readOnly={true}>{options}</select>, 1)
+          .then(element => expectSelectValue(element, ['bar']));
       });
 
       // Controlled inputs on the client
