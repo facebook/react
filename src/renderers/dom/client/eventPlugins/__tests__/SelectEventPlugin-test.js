@@ -41,14 +41,14 @@ describe('SelectEventPlugin', function() {
     topLevelTypes = EventConstants.topLevelTypes;
   });
 
-  it('should skip extraction if no listeners are present', function() {
+  pit('should skip extraction if no listeners are present', async function() {
     var WithoutSelect = React.createClass({
       render: function() {
         return <input type="text" />;
       },
     });
 
-    var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
+    var rendered = await ReactTestUtils.renderIntoDocumentAsync(<WithoutSelect />);
     var node = ReactDOM.findDOMNode(rendered);
     node.focus();
 
@@ -59,7 +59,7 @@ describe('SelectEventPlugin', function() {
     expect(mouseup).toBe(null);
   });
 
-  it('should extract if an `onSelect` listener is present', function() {
+  pit('should extract if an `onSelect` listener is present', async function() {
     var WithSelect = React.createClass({
       render: function() {
         return <input type="text" onSelect={this.props.onSelect} />;
@@ -68,7 +68,7 @@ describe('SelectEventPlugin', function() {
 
     var cb = jest.fn();
 
-    var rendered = ReactTestUtils.renderIntoDocument(
+    var rendered = await ReactTestUtils.renderIntoDocumentAsync(
       <WithSelect onSelect={cb} />
     );
     var node = ReactDOM.findDOMNode(rendered);

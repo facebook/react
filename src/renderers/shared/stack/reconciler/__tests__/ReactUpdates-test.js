@@ -24,7 +24,7 @@ describe('ReactUpdates', function() {
     ReactUpdates = require('ReactUpdates');
   });
 
-  it('should batch state when updating state twice', function() {
+  pit('should batch state when updating state twice', async function() {
     var updateCount = 0;
     var Component = React.createClass({
       getInitialState: function() {
@@ -38,7 +38,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     expect(instance.state.x).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
@@ -52,7 +52,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch state when updating two different state keys', function() {
+  pit('should batch state when updating two different state keys', async function() {
     var updateCount = 0;
     var Component = React.createClass({
       getInitialState: function() {
@@ -66,7 +66,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     expect(instance.state.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
@@ -115,7 +115,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch parent/child state updates together', function() {
+  pit('should batch parent/child state updates together', async function() {
     var parentUpdateCount = 0;
     var Parent = React.createClass({
       getInitialState: function() {
@@ -141,7 +141,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Parent />);
     var child = instance.refs.child;
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
@@ -161,7 +161,7 @@ describe('ReactUpdates', function() {
     expect(childUpdateCount).toBe(1);
   });
 
-  it('should batch child/parent state updates together', function() {
+  pit('should batch child/parent state updates together', async function() {
     var parentUpdateCount = 0;
     var Parent = React.createClass({
       getInitialState: function() {
@@ -187,7 +187,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Parent />);
     var child = instance.refs.child;
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
@@ -209,7 +209,7 @@ describe('ReactUpdates', function() {
     expect(childUpdateCount).toBe(1);
   });
 
-  it('should support chained state updates', function() {
+  pit('should support chained state updates', async function() {
     var updateCount = 0;
     var Component = React.createClass({
       getInitialState: function() {
@@ -223,7 +223,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     expect(instance.state.x).toBe(0);
 
     var innerCallbackRun = false;
@@ -247,7 +247,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(2);
   });
 
-  it('should batch forceUpdate together', function() {
+  pit('should batch forceUpdate together', async function() {
     var shouldUpdateCount = 0;
     var updateCount = 0;
     var Component = React.createClass({
@@ -265,7 +265,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     expect(instance.state.x).toBe(0);
 
     var callbacksRun = 0;
@@ -287,7 +287,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should update children even if parent blocks updates', function() {
+  pit('should update children even if parent blocks updates', async function() {
     var parentRenderCount = 0;
     var childRenderCount = 0;
 
@@ -313,7 +313,7 @@ describe('ReactUpdates', function() {
     expect(childRenderCount).toBe(0);
 
     var instance = <Parent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     expect(parentRenderCount).toBe(1);
     expect(childRenderCount).toBe(1);
@@ -366,7 +366,7 @@ describe('ReactUpdates', function() {
     expect(numBottomRenders).toBe(1);
   });
 
-  it('should flow updates correctly', function() {
+  pit('should flow updates correctly', async function() {
     var willUpdates = [];
     var didUpdates = [];
 
@@ -432,7 +432,7 @@ describe('ReactUpdates', function() {
     });
 
     var root = <App />;
-    root = ReactTestUtils.renderIntoDocument(root);
+    root = await ReactTestUtils.renderIntoDocumentAsync(root);
 
     function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
       var i;
@@ -522,7 +522,7 @@ describe('ReactUpdates', function() {
     expect(ReconcileTransaction.getPooled.calls.length).toBe(3);
   });
 
-  it('should queue mount-ready handlers across different roots', function() {
+  pit('should queue mount-ready handlers across different roots', async function() {
     // We'll define two components A and B, then update both of them. When A's
     // componentDidUpdate handlers is called, B's DOM should already have been
     // updated.
@@ -554,8 +554,8 @@ describe('ReactUpdates', function() {
       },
     });
 
-    a = ReactTestUtils.renderIntoDocument(<A />);
-    b = ReactTestUtils.renderIntoDocument(<B />);
+    a = await ReactTestUtils.renderIntoDocumentAsync(<A />);
+    b = await ReactTestUtils.renderIntoDocumentAsync(<B />);
 
     ReactUpdates.batchedUpdates(function() {
       a.setState({x: 1});
@@ -565,7 +565,7 @@ describe('ReactUpdates', function() {
     expect(aUpdated).toBe(true);
   });
 
-  it('should flush updates in the correct order', function() {
+  pit('should flush updates in the correct order', async function() {
     var updates = [];
     var Outer = React.createClass({
       getInitialState: function() {
@@ -597,7 +597,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Outer />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Outer />);
 
     updates.push('Outer-setState-1');
     instance.setState({x: 1}, function() {
@@ -638,7 +638,7 @@ describe('ReactUpdates', function() {
     /* eslint-enable indent */
   });
 
-  it('should flush updates in the correct order across roots', function() {
+  pit('should flush updates in the correct order across roots', async function() {
     var instances = [];
     var updates = [];
 
@@ -661,7 +661,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    ReactTestUtils.renderIntoDocument(<MockComponent depth={0} count={2} />);
+    await ReactTestUtils.renderIntoDocumentAsync(<MockComponent depth={0} count={2} />);
 
     expect(updates).toEqual([0, 1, 2]);
 
@@ -675,7 +675,7 @@ describe('ReactUpdates', function() {
     expect(updates).toEqual([0, 1, 2, 0, 1, 2]);
   });
 
-  it('should queue nested updates', function() {
+  pit('should queue nested updates', async function() {
     // See https://github.com/facebook/react/issues/1147
 
     var X = React.createClass({
@@ -722,8 +722,8 @@ describe('ReactUpdates', function() {
     var x;
     var y;
 
-    x = ReactTestUtils.renderIntoDocument(<X />);
-    y = ReactTestUtils.renderIntoDocument(<Y />);
+    x = await ReactTestUtils.renderIntoDocumentAsync(<X />);
+    y = await ReactTestUtils.renderIntoDocumentAsync(<Y />);
     expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();
@@ -793,7 +793,7 @@ describe('ReactUpdates', function() {
     expect(callbackCount).toBe(1);
   });
 
-  it('calls asap callbacks properly', function() {
+  pit('calls asap callbacks properly', async function() {
     var callbackCount = 0;
     var A = React.createClass({
       render: function() {
@@ -812,12 +812,12 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<A />);
     component.forceUpdate();
     expect(callbackCount).toBe(2);
   });
 
-  it('calls asap callbacks with queued updates', function() {
+  pit('calls asap callbacks with queued updates', async function() {
     var log = [];
     var A = React.createClass({
       getInitialState: () => ({updates: 0}),
@@ -845,7 +845,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<A />);
     component.setState({updates: 1});
     expect(log).toEqual([
       'render-0',
@@ -865,7 +865,7 @@ describe('ReactUpdates', function() {
     ]);
   });
 
-  it('does not call render after a component as been deleted', function() {
+  pit('does not call render after a component as been deleted', async function() {
 
     var renderCount = 0;
     var componentB = null;
@@ -892,7 +892,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<A />);
 
     ReactUpdates.batchedUpdates(function() {
       // B will have scheduled an update but the batching should ensure that its
@@ -938,7 +938,7 @@ describe('ReactUpdates', function() {
     }
   });
 
-  it('throws in setState if the update callback is not a function', function() {
+  pit('throws in setState if the update callback is not a function', async function() {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -951,7 +951,7 @@ describe('ReactUpdates', function() {
         return <div />;
       },
     });
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<A />);
 
     expect(() => component.setState({}, 'no')).toThrow(
       'setState(...): Expected the last optional `callback` argument ' +
@@ -967,7 +967,7 @@ describe('ReactUpdates', function() {
     );
   });
 
-  it('throws in replaceState if the update callback is not a function', function() {
+  pit('throws in replaceState if the update callback is not a function', async function() {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -980,7 +980,7 @@ describe('ReactUpdates', function() {
         return <div />;
       },
     });
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<A />);
 
     expect(() => component.replaceState({}, 'no')).toThrow(
       'replaceState(...): Expected the last optional `callback` argument ' +
@@ -996,7 +996,7 @@ describe('ReactUpdates', function() {
     );
   });
 
-  it('throws in forceUpdate if the update callback is not a function', function() {
+  pit('throws in forceUpdate if the update callback is not a function', async function() {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -1009,7 +1009,7 @@ describe('ReactUpdates', function() {
         return <div />;
       },
     });
-    var component = ReactTestUtils.renderIntoDocument(<A />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<A />);
 
     expect(() => component.forceUpdate('no')).toThrow(
       'forceUpdate(...): Expected the last optional `callback` argument ' +
@@ -1025,7 +1025,7 @@ describe('ReactUpdates', function() {
     );
   });
 
-  it('does not update one component twice in a batch (#2410)', function() {
+  pit('does not update one component twice in a batch (#2410)', async function() {
     var Parent = React.createClass({
       getChild: function() {
         return this.refs.child;
@@ -1063,7 +1063,7 @@ describe('ReactUpdates', function() {
       },
     });
 
-    var parent = ReactTestUtils.renderIntoDocument(<Parent />);
+    var parent = await ReactTestUtils.renderIntoDocumentAsync(<Parent />);
     var child = parent.getChild();
     ReactDOM.unstable_batchedUpdates(function() {
       parent.forceUpdate();

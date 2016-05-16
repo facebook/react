@@ -87,9 +87,9 @@ var TestRefsComponent = React.createClass({
 /**
  * Render a TestRefsComponent and ensure that the main refs are wired up.
  */
-var renderTestRefsComponent = function() {
+var renderTestRefsComponent = async function() {
   var testRefsComponent =
-      ReactTestUtils.renderIntoDocument(<TestRefsComponent />);
+      await ReactTestUtils.renderIntoDocumentAsync(<TestRefsComponent />);
 
   reactComponentExpect(testRefsComponent)
       .toBeCompositeComponentWithType(TestRefsComponent);
@@ -122,8 +122,8 @@ describe('reactiverefs', function() {
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
-  it('Should increase refs with an increase in divs', function() {
-    var testRefsComponent = renderTestRefsComponent();
+  pit('Should increase refs with an increase in divs', async function() {
+    var testRefsComponent = await renderTestRefsComponent();
     var clickIncrementer =
       ReactTestUtils.findRenderedDOMComponentWithClass(
         testRefsComponent,
@@ -195,8 +195,8 @@ describe('ref swapping', function() {
     },
   });
 
-  it('Allow refs to hop around children correctly', function() {
-    var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
+  pit('Allow refs to hop around children correctly', async function() {
+    var refHopsAround = await ReactTestUtils.renderIntoDocumentAsync(<RefHopsAround />);
 
     var firstDiv =
       ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'first');
@@ -230,14 +230,14 @@ describe('ref swapping', function() {
   });
 
 
-  it('always has a value for this.refs', function() {
+  pit('always has a value for this.refs', async function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     expect(!!instance.refs).toBe(true);
   });
 

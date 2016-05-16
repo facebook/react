@@ -183,7 +183,7 @@ describe('ReactEventListener', function() {
     });
   });
 
-  it('should not fire duplicate events for a React DOM tree', function() {
+  pit('should not fire duplicate events for a React DOM tree', async function() {
     var Wrapper = React.createClass({
 
       getInner: function() {
@@ -197,7 +197,7 @@ describe('ReactEventListener', function() {
 
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Wrapper />);
 
     var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
     callback({

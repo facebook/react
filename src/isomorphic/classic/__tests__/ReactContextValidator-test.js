@@ -36,7 +36,7 @@ describe('ReactContextValidator', function() {
   // TODO: This behavior creates a runtime dependency on propTypes. We should
   // ensure that this is not required for ES6 classes with Flow.
 
-  it('should filter out context not in contextTypes', function() {
+  pit('should filter out context not in contextTypes', async function() {
     var Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string,
@@ -65,7 +65,7 @@ describe('ReactContextValidator', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<ComponentInFooBarContext />);
     reactComponentExpect(instance).expectRenderedChild().scalarContextEqual({foo: 'abc'});
   });
 

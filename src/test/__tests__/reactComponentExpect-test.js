@@ -23,7 +23,7 @@ describe('reactComponentExpect', function() {
     reactComponentExpect = require('reactComponentExpect');
   });
 
-  it('should detect text components', function() {
+  pit('should detect text components', async function() {
     var SomeComponent = React.createClass({
       render: function() {
         return (
@@ -35,7 +35,7 @@ describe('reactComponentExpect', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<SomeComponent />);
 
     reactComponentExpect(component)
       .expectRenderedChild()

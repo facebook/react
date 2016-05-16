@@ -141,8 +141,8 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('foo');
   });
 
-  it('should return tracker from node', function() {
-    var node = ReactTestUtils.renderIntoDocument(<input type="text" defaultValue="foo" />);
+  pit('should return tracker from node', async function() {
+    var node = await ReactTestUtils.renderIntoDocumentAsync(<input type="text" defaultValue="foo" />);
     var tracker = inputValueTracking._getTrackerFromNode(node);
     expect(tracker.getValue()).toEqual('foo');
   });

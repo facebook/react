@@ -128,7 +128,7 @@ describe('ReactComponentLifeCycle', function() {
    * If a state update triggers rerendering that in turn fires an onDOMReady,
    * that second onDOMReady should not fail.
    */
-  it('it should fire onDOMReady when already in onDOMReady', function() {
+  pit('it should fire onDOMReady when already in onDOMReady', async function() {
 
     var _testJournal = [];
 
@@ -165,7 +165,7 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     var instance = <SwitcherParent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(_testJournal).toEqual([
       'SwitcherParent:getInitialState',
       'SwitcherParent:onDOMReady',
@@ -188,7 +188,7 @@ describe('ReactComponentLifeCycle', function() {
     });
     var instance = <StatefulComponent />;
     expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
@@ -205,7 +205,7 @@ describe('ReactComponentLifeCycle', function() {
     });
     var instance = <StatefulComponent />;
     expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
     }).not.toThrow();
   });
 
@@ -233,7 +233,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should correctly determine if a component is mounted', function() {
+  pit('should correctly determine if a component is mounted', async function() {
     spyOn(console, 'error');
     var Component = React.createClass({
       componentWillMount: function() {
@@ -250,7 +250,7 @@ describe('ReactComponentLifeCycle', function() {
 
     var element = <Component />;
 
-    var instance = ReactTestUtils.renderIntoDocument(element);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(element);
     expect(instance.isMounted()).toBeTruthy();
 
     expect(console.error.argsForCall.length).toBe(1);
@@ -259,7 +259,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should correctly determine if a null component is mounted', function() {
+  pit('should correctly determine if a null component is mounted', async function() {
     spyOn(console, 'error');
     var Component = React.createClass({
       componentWillMount: function() {
@@ -276,7 +276,7 @@ describe('ReactComponentLifeCycle', function() {
 
     var element = <Component />;
 
-    var instance = ReactTestUtils.renderIntoDocument(element);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(element);
     expect(instance.isMounted()).toBeTruthy();
 
     expect(console.error.argsForCall.length).toBe(1);
@@ -488,7 +488,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should allow state updates in componentDidMount', function() {
+  pit('should allow state updates in componentDidMount', async function() {
     /**
      * calls setState in an componentDidMount.
      */
@@ -510,7 +510,7 @@ describe('ReactComponentLifeCycle', function() {
         valueToUseInitially="hello"
         valueToUseInOnDOMReady="goodbye"
       />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.state.stateField).toBe('goodbye');
   });
 

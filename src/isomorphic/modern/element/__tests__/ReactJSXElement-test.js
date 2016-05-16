@@ -176,7 +176,7 @@ describe('ReactJSXElement', function() {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
-  it('should normalize props with default values', function() {
+  pit('should normalize props with default values', async function() {
     class NormalizingComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
@@ -184,11 +184,11 @@ describe('ReactJSXElement', function() {
     }
     NormalizingComponent.defaultProps = {prop: 'testKey'};
 
-    var instance = ReactTestUtils.renderIntoDocument(<NormalizingComponent />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<NormalizingComponent />);
     expect(instance.props.prop).toBe('testKey');
 
     var inst2 =
-      ReactTestUtils.renderIntoDocument(<NormalizingComponent prop={null} />);
+      await ReactTestUtils.renderIntoDocumentAsync(<NormalizingComponent prop={null} />);
     expect(inst2.props.prop).toBe(null);
   });
 

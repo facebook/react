@@ -23,7 +23,7 @@ describe('LinkedStateMixin', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should create a ReactLink for state', function() {
+  pit('should create a ReactLink for state', async function() {
     var Component = React.createClass({
       mixins: [LinkedStateMixin],
 
@@ -35,7 +35,7 @@ describe('LinkedStateMixin', function() {
         return <span>value is {this.state.value}</span>;
       },
     });
-    var component = ReactTestUtils.renderIntoDocument(<Component />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     var link = component.linkState('value');
     expect(component.state.value).toBe('initial value');
     expect(link.value).toBe('initial value');

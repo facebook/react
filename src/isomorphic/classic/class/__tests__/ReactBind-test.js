@@ -18,7 +18,7 @@ var reactComponentExpect = require('reactComponentExpect');
 // TODO: Test render and all stock methods.
 describe('autobinding', function() {
 
-  it('Holds reference to instance', function() {
+  pit('Holds reference to instance', async function() {
 
     var mouseDidEnter = jest.fn();
     var mouseDidLeave = jest.fn();
@@ -51,13 +51,13 @@ describe('autobinding', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var mountedInstance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
 
     var instance2 = <TestBindComponent />;
-    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
+    var mountedInstance2 = await ReactTestUtils.renderIntoDocumentAsync(instance2);
     var rendered2 = reactComponentExpect(mountedInstance2)
       .expectRenderedChild()
       .instance();
@@ -94,7 +94,7 @@ describe('autobinding', function() {
     expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
   });
 
-  it('works with mixins', function() {
+  pit('works with mixins', async function() {
     var mouseDidClick = jest.fn();
 
     var TestMixin = {
@@ -110,7 +110,7 @@ describe('autobinding', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var mountedInstance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();

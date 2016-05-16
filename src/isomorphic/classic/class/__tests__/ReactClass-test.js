@@ -225,7 +225,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should support statics', function() {
+  pit('should support statics', async function() {
     var Component = React.createClass({
       statics: {
         abc: 'def',
@@ -242,7 +242,7 @@ describe('ReactClass-spec', function() {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
     expect(instance.constructor.def).toBe(0);
@@ -255,7 +255,7 @@ describe('ReactClass-spec', function() {
     expect(Component.pqr()).toBe(Component);
   });
 
-  it('should work with object getInitialState() return values', function() {
+  pit('should work with object getInitialState() return values', async function() {
     var Component = React.createClass({
       getInitialState: function() {
         return {
@@ -267,7 +267,7 @@ describe('ReactClass-spec', function() {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.state.occupation).toEqual('clown');
   });
 
@@ -311,9 +311,8 @@ describe('ReactClass-spec', function() {
           return <span />;
         },
       });
-      var instance = <Component />;
       expect(function() {
-        instance = ReactTestUtils.renderIntoDocument(instance);
+        ReactTestUtils.renderIntoDocument(<Component />);
       }).toThrow(
         'Component.getInitialState(): must return an object or null'
       );

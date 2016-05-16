@@ -164,14 +164,14 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should not select other options automatically', function() {
+  pit('should not select other options automatically', async function() {
     var stub =
       <select multiple={true} value={['12']} onChange={noop}>
         <option value="1">one</option>
         <option value="2">two</option>
         <option value="12">twelve</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // one
@@ -347,7 +347,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
   });
 
-  it('should support ReactLink', function() {
+  pit('should support ReactLink', async function() {
     var link = new ReactLink('giraffe', jest.fn());
     var stub =
       <select valueLink={link}>
@@ -358,7 +358,7 @@ describe('ReactDOMSelect', function() {
 
     spyOn(console, 'error');
 
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
@@ -476,14 +476,14 @@ describe('ReactDOMSelect', function() {
     expect(console.error.argsForCall.length).toBe(1);
   });
 
-  it('should refresh state on change', function() {
+  pit('should refresh state on change', async function() {
     var stub =
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
       </select>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     ReactTestUtils.Simulate.change(node);

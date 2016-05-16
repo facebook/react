@@ -265,20 +265,20 @@ describe('ReactPropTypes', function() {
       typeCheckFail(PropTypes.element, false, message);
     });
 
-    it('should be able to define a single child as label', () => {
+    pit('should be able to define a single child as label', async () => {
       spyOn(console, 'error');
 
       var instance = <Component label={<div />} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
       expect(console.error.argsForCall.length).toBe(0);
     });
 
-    it('should warn when passing no label and isRequired is set', () => {
+    pit('should warn when passing no label and isRequired is set', async () => {
       spyOn(console, 'error');
 
       var instance = <Component />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
       expect(console.error.argsForCall.length).toBe(1);
     });
@@ -846,8 +846,7 @@ describe('ReactPropTypes', function() {
         },
       });
 
-      var instance = <Component num={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(<Component num={5} />);
 
       expect(spy.argsForCall.length).toBe(2); // temp double validation
       expect(spy.argsForCall[0][1]).toBe('num');
@@ -864,13 +863,12 @@ describe('ReactPropTypes', function() {
         },
       });
 
-      var instance = <Component bla={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(<Component bla={5} />);
 
       expect(spy.argsForCall.length).toBe(2); // temp double validation
     });
 
-    it('should have received the validator\'s return value', function() {
+    pit('should have received the validator\'s return value', async function() {
       spyOn(console, 'error');
 
       var spy = jasmine.createSpy().andCallFake(
@@ -889,7 +887,7 @@ describe('ReactPropTypes', function() {
       });
 
       var instance = <Component num={6} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
       expect(console.error.argsForCall.length).toBe(1);
       expect(
         console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
@@ -899,8 +897,8 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should not warn if the validator returned null',
-      function() {
+    pit('should not warn if the validator returned null',
+      async function() {
         spyOn(console, 'error');
 
         var spy = jasmine.createSpy().andCallFake(
@@ -917,7 +915,7 @@ describe('ReactPropTypes', function() {
         });
 
         var instance = <Component num={5} />;
-        instance = ReactTestUtils.renderIntoDocument(instance);
+        instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
         expect(console.error.argsForCall.length).toBe(0);
       }
     );

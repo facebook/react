@@ -41,11 +41,11 @@ describe('ReactComponent', function() {
   it('should throw when supplying a ref outside of render method', function() {
     var instance = <div ref="badDiv" />;
     expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
-  it('should support refs on owned components', function() {
+  pit('should support refs on owned components', async function() {
     var innerObj = {};
     var outerObj = {};
 
@@ -74,10 +74,10 @@ describe('ReactComponent', function() {
     });
 
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
   });
 
-  it('should not have refs on unmounted components', function() {
+  pit('should not have refs on unmounted components', async function() {
     var Parent = React.createClass({
       render: function() {
         return <Child><div ref="test" /></Child>;
@@ -93,10 +93,10 @@ describe('ReactComponent', function() {
     });
 
     var instance = <Parent child={<span />} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
   });
 
-  it('should support new-style refs', function() {
+  pit('should support new-style refs', async function() {
     var innerObj = {};
     var outerObj = {};
 
@@ -128,11 +128,11 @@ describe('ReactComponent', function() {
     });
 
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(mounted).toBe(true);
   });
 
-  it('should support new-style refs with mixed-up owners', function() {
+  pit('should support new-style refs with mixed-up owners', async function() {
     var Wrapper = React.createClass({
       getTitle: function() {
         return this.props.title;
@@ -167,7 +167,7 @@ describe('ReactComponent', function() {
     });
 
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocument(instance);
     expect(mounted).toBe(true);
   });
 

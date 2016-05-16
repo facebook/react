@@ -108,7 +108,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.lineHeight).toBe('');
     });
 
-    it('should warn when mutating style', function() {
+    pit('should warn when mutating style', async function() {
       spyOn(console, 'error');
 
       var style = {border: '1px solid black'};
@@ -121,7 +121,7 @@ describe('ReactDOMComponent', function() {
         },
       });
 
-      var stub = ReactTestUtils.renderIntoDocument(<App />);
+      var stub = await ReactTestUtils.renderIntoDocumentAsync(<App />);
       style.position = 'absolute';
       stub.setState({style: style});
       expect(console.error.argsForCall.length).toBe(1);
@@ -134,7 +134,7 @@ describe('ReactDOMComponent', function() {
       );
 
       style = {background: 'red'};
-      stub = ReactTestUtils.renderIntoDocument(<App />);
+      stub = await ReactTestUtils.renderIntoDocumentAsync(<App />);
       style.background = 'green';
       stub.setState({style: {background: 'green'}});
       // already warned once for the same component and owner

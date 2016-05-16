@@ -31,9 +31,8 @@ describe('DisabledInputUtils', function() {
     expect(onClick.mock.calls.length).toBe(0);
   }
 
-  function mounted(element) {
-    element = ReactTestUtils.renderIntoDocument(element);
-    return element;
+  async function mounted(element) {
+    return await ReactTestUtils.renderIntoDocumentAsync(element);
   }
 
   var onClick = jest.fn();
@@ -48,21 +47,21 @@ describe('DisabledInputUtils', function() {
         ReactTestUtils = require('ReactTestUtils');
       });
 
-      it('should forward clicks when it starts out not disabled', function() {
+      pit('should forward clicks when it starts out not disabled', async function() {
         var element = React.createElement(tagName, {
           onClick: onClick,
         });
 
-        expectClickThru(mounted(element));
+        expectClickThru(await mounted(element));
       });
 
-      it('should not forward clicks when it starts out disabled', function() {
+      pit('should not forward clicks when it starts out disabled', async function() {
         var element = React.createElement(tagName, {
           onClick: onClick,
           disabled: true,
         });
 
-        expectNoClickThru(mounted(element));
+        expectNoClickThru(await mounted(element));
       });
 
       it('should forward clicks when it becomes not disabled', function() {

@@ -23,18 +23,18 @@ describe('ReactDOMOption', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should flatten children to a string', function() {
+  pit('should flatten children to a string', async function() {
     var stub = <option>{1} {'foo'}</option>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.innerHTML).toBe('1 foo');
   });
 
-  it('should ignore and warn invalid children types', function() {
+  pit('should ignore and warn invalid children types', async function() {
     spyOn(console, 'error');
     var stub = <option>{1} <div /> {2}</option>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
     expect(node.innerHTML).toBe('1  2');
     ReactTestUtils.renderIntoDocument(<option>{1} <div /> {2}</option>);
@@ -43,10 +43,10 @@ describe('ReactDOMOption', function() {
     expect(console.error.argsForCall[0][0]).toContain('Only strings and numbers are supported as <option> children.');
   });
 
-  it('should ignore null/undefined/false children without warning', function() {
+  pit('should ignore null/undefined/false children without warning', async function() {
     var stub = <option>{1} {false}{true}{null}{undefined} {2}</option>;
     spyOn(console, 'error');
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
 
     var node = ReactDOM.findDOMNode(stub);
 
@@ -54,9 +54,9 @@ describe('ReactDOMOption', function() {
     expect(node.innerHTML).toBe('1  2');
   });
 
-  it('should be able to use dangerouslySetInnerHTML on option', function() {
+  pit('should be able to use dangerouslySetInnerHTML on option', async function() {
     var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
 
     var node = ReactDOM.findDOMNode(stub);
     expect(node.innerHTML).toBe('foobar');

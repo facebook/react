@@ -20,14 +20,14 @@ describe('findDOMNode', function() {
     expect(ReactDOM.findDOMNode(null)).toBe(null);
   });
 
-  it('findDOMNode should find dom element', function() {
+  pit('findDOMNode should find dom element', async function() {
     var MyNode = React.createClass({
       render: function() {
         return <div><span>Noise</span></div>;
       },
     });
 
-    var myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
+    var myNode = await ReactTestUtils.renderIntoDocumentAsync(<MyNode />);
     var myDiv = ReactDOM.findDOMNode(myNode);
     var mySameDiv = ReactDOM.findDOMNode(myDiv);
     expect(myDiv.tagName).toBe('DIV');
