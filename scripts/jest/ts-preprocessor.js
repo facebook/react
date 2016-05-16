@@ -3,7 +3,6 @@
 var fs = require('fs');
 var path = require('path');
 var ts = require('typescript');
-var os = require('os');
 
 var tsOptions = {
   module: ts.ModuleKind.CommonJS,
