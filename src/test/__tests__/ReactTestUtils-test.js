@@ -535,4 +535,29 @@ describe('ReactTestUtils', function() {
     expect(hrs.length).toBe(2);
   });
 
+  pit('will reject string refs in renderIntoDocumentAsync', async function() {
+    try {
+      // String refs are illegal at the top level.
+      await ReactTestUtils.renderIntoDocumentAsync(<div ref="foo" />);
+      fail('this code should not be reachable');
+    } catch (e) {
+      expect(e.message).toBe('String refs can not be used at the top-level element of a render.');
+    }
+  });
+
+  pit('will fire a callback ref in renderIntoDocumentAsync', async function() {
+    var count = 0;
+    function ref(instance) {
+      count++;
+      expect(instance.tagName).toBe('DIV');
+    }
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<div ref={ref} />);
+    expect(instance.tagName).toBe('DIV');
+    expect(count).toBe(1);
+  });
+
+  pit('will not die if no ref in renderIntoDocumentAsync', async function() {
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<div />);
+    expect(instance.tagName).toBe('DIV');
+  });
 });
