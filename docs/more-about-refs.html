@@ -477,7 +477,7 @@
 </code></pre></div>
 <p>When attaching a ref to a DOM component like <code>&lt;div /&gt;</code>, you get the DOM node back; when attaching a ref to a composite component like <code>&lt;TextInput /&gt;</code>, you&#39;ll get the React class instance. In the latter case, you can call methods on that component if any are exposed in its class definition.</p>
 
-<p>Note that when the referenced component is unmounted and whenever the ref changes, the old ref will be called with <code>null</code> as an argument. This prevents memory leaks in the case that the instance is stored, as in the first example. Also note that when writing refs with inline function expressions as in the examples here, React sees a different function object each time so on every update, ref will be called with <code>null</code> immediately before it&#39;s called with the component instance.</p>
+<p>Note that when the referenced component is unmounted and whenever the ref changes, the old ref will be called with <code>null</code> as an argument. This prevents memory leaks in the case that the instance is stored, as in the second example. Also note that when writing refs with inline function expressions as in the examples here, React sees a different function object each time so on every update, ref will be called with <code>null</code> immediately before it&#39;s called with the component instance.</p>
 <h2><a class="anchor" name="the-ref-string-attribute"></a>The ref String Attribute <a class="hash-link" href="#the-ref-string-attribute">#</a></h2>
 <p>React also supports using a string (instead of a callback) as a ref prop on any component, although this approach is mostly legacy at this point.</p>
 

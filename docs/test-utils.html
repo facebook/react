@@ -514,7 +514,8 @@
 </code></pre></div>
 <p>Traverse all components in <code>tree</code> and accumulate all components where <code>test(component)</code> is <code>true</code>. This is not that useful on its own, but it&#39;s used as a primitive for other test utils.</p>
 <h3><a class="anchor" name="scryrendereddomcomponentswithclass"></a>scryRenderedDOMComponentsWithClass <a class="hash-link" href="#scryrendereddomcomponentswithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="nx">string</span> <span class="nx">className</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> 
+  <span class="nx">string</span> <span class="nx">className</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Finds all instances of components in the rendered tree that are DOM components with the class name matching <code>className</code>.</p>
@@ -543,7 +544,8 @@
 </code></pre></div>
 <p>Finds all instances of components with type equal to <code>componentClass</code>.</p>
 <h3><a class="anchor" name="findrenderedcomponentwithtype"></a>findRenderedComponentWithType <a class="hash-link" href="#findrenderedcomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">findRenderedComponentWithType</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span>
+  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> 
+  <span class="kd">function</span> <span class="nx">componentClass</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Same as <code>scryRenderedComponentsWithType()</code> but expects there to be one result and returns that one result, or throws exception if there is any other number of matches besides one.</p>
