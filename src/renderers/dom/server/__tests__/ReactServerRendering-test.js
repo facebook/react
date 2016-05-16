@@ -91,20 +91,21 @@ function expectMarkupMatch(serverRendering, elementToRenderOnClient = serverRend
   return connectToServerRendering(serverRendering, elementToRenderOnClient, true, warningCount);
 }
 
-function promiseToJasmineTest(promiseFn) {
-  return function() {
+function itResolves(desc, testFn) {
+  it(desc, function() {
     var done = false;
     waitsFor(() => done);
-    promiseFn().then(() => done = true);
-  };
+    testFn().then(() => done = true);
+
+  });
 }
 
-function failingPromiseToJasmineTest(promiseFn) {
-  return function() {
+function itRejects(desc, testFn) {
+  it(desc, function() {
     var done = false;
     waitsFor(() => done);
-    promiseFn().catch(() => done = true);
-  };
+    testFn().catch(() => done = true);
+  });
 }
 
 const serverStringRender = (element, warningCount = 0) => {
@@ -154,8 +155,8 @@ const clientRenderOnBadMarkup = (element, warningCount = 0) => {
 // render; you should not depend on the interactivity of the returned DOM element,
 // as that will not work in the server string scenario.
 function itRenders(desc, testFn) {
-  it(`${desc} with server string render`, promiseToJasmineTest(
-    () => testFn(serverStringRender)));
+  itResolves(`${desc} with server string render`,
+    () => testFn(serverStringRender));
   itClientRenders(desc, testFn);
 }
 
@@ -170,24 +171,24 @@ function itRenders(desc, testFn) {
 // Since all of the renders in this function are on the client, you can test interactivity,
 // unlike with itRenders.
 function itClientRenders(desc, testFn) {
-  it(`${desc} with clean client render`, promiseToJasmineTest(
-    () => testFn(clientRender)));
-  it(`${desc} with client render on top of server string markup`, promiseToJasmineTest(
-    () => testFn(clientRenderOnServerString)));
-  it(`${desc} with client render on top of bad server markup`, promiseToJasmineTest(
-    () => testFn(clientRenderOnBadMarkup)));
+  itResolves(`${desc} with clean client render`,
+    () => testFn(clientRender));
+  itResolves(`${desc} with client render on top of server string markup`,
+    () => testFn(clientRenderOnServerString));
+  itResolves(`${desc} with client render on top of bad server markup`,
+    () => testFn(clientRenderOnBadMarkup));
 }
 
 function itThrowsOnRender(desc, testFn) {
-  it(`${desc} with server string render`, failingPromiseToJasmineTest(
-    () => testFn(serverStringRender)));
-  it(`${desc} with clean client render`, failingPromiseToJasmineTest(
-    () => testFn(clientRender)));
+  itRejects(`${desc} with server string render`,
+    () => testFn(serverStringRender));
+  itRejects(`${desc} with clean client render`,
+    () => testFn(clientRender));
 
   // we subtract one from the warning count here because the throw means that it won't
   // get the usual markup mismatch warning.
-  it(`${desc} with client render on top of bad server markup`, failingPromiseToJasmineTest(
-    () => testFn((element, warningCount = 0) => clientRenderOnBadMarkup(element, warningCount - 1))));
+  itRejects(`${desc} with client render on top of bad server markup`,
+    () => testFn((element, warningCount = 0) => clientRenderOnBadMarkup(element, warningCount - 1)));
 }
 
 
@@ -746,6 +747,53 @@ describe('ReactServerRendering', function() {
           expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
           expectTextNode(e.childNodes[3], '<span>Text2&quot;</span>');
         });
+      });
+
+      itRenders('renders single child hierarchies of components', render => {
+        const Component = (props) => <div>{props.children}</div>;
+        return render(
+          <Component>
+            <Component>
+              <Component>
+                <Component/>
+              </Component>
+            </Component>
+          </Component>)
+          .then(element => {
+            for (var i = 0; i < 3; i++) {
+              expect(element.tagName.toLowerCase()).toBe('div');
+              expect(element.childNodes.length).toBe(1);
+              element = element.firstChild;
+            }
+            expect(element.tagName.toLowerCase()).toBe('div');
+            expect(element.childNodes.length).toBe(0);
+          });
+      });
+      itRenders('should reconnect multi-child hierarchies of components', render => {
+        const Component = (props) => <div>{props.children}</div>;
+        return render(
+          <Component>
+            <Component>
+              <Component/><Component/>
+            </Component>
+            <Component>
+              <Component/><Component/>
+            </Component>
+          </Component>)
+          .then(element => {
+            expect(element.tagName.toLowerCase()).toBe('div');
+            expect(element.childNodes.length).toBe(2);
+            for (var i = 0; i < 2; i++) {
+              var child = element.childNodes[i];
+              expect(child.tagName.toLowerCase()).toBe('div');
+              expect(child.childNodes.length).toBe(2);
+              for (var j = 0; j < 2; j++) {
+                var grandchild = child.childNodes[j];
+                expect(grandchild.tagName.toLowerCase()).toBe('div');
+                expect(grandchild.childNodes.length).toBe(0);
+              }
+            }
+          });
       });
 
       itThrowsOnRender('throws when rendering null', render => render(null));
@@ -1326,29 +1374,6 @@ describe('ReactServerRendering', function() {
         expectMarkupMatch(bareElement, <CreateClassComponent id="foobarbaz"/>);
         expectMarkupMatch(bareElement, <PureComponent id="foobarbaz"/>);
         expectMarkupMatch(bareElement, bareElement);
-      });
-      it('should reconnect single child hierarchies of components', () => {
-        const Component = (props) => <div>{props.children}</div>;
-        expectMarkupMatch(
-          <Component>
-            <Component>
-              <Component>
-                <Component/>
-              </Component>
-            </Component>
-          </Component>);
-      });
-      it('should reconnect multi-child hierarchies of components', () => {
-        const Component = (props) => <div>{props.children}</div>;
-        expectMarkupMatch(
-          <Component>
-            <Component>
-              <Component/><Component/>
-            </Component>
-            <Component>
-              <Component/><Component/>
-            </Component>
-          </Component>);
       });
 
       // Markup Matches: text
