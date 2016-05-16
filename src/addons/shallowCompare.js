@@ -21,7 +21,7 @@ function shallowCompare(instance, nextProps, nextState, nextContext) {
   return (
     !shallowEqual(instance.props, nextProps) ||
     !shallowEqual(instance.state, nextState) ||
-    (typeof nextContext !== 'undefined' && !shallowEqual(instance.context, nextContext))
+    !shallowEqual(instance.context, nextContext)
   );
 }
 
