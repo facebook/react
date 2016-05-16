@@ -38,8 +38,8 @@ var shallowCompare = require('shallowCompare');
  * use `forceUpdate()` when you know deep data structures have changed.
  */
 var ReactComponentWithPureRenderMixin = {
-  shouldComponentUpdate: function(nextProps, nextState) {
-    return shallowCompare(this, nextProps, nextState);
+  shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+    return shallowCompare(this, nextProps, nextState, nextContext);
   },
 };
 
