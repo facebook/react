@@ -277,10 +277,8 @@ describe('ReactComponentTreeDevtool', () => {
         element,
         children: [{
           displayName: 'View',
-          element: <View><Text>Hi!</Text></View>,
           children: [{
             displayName: 'Text',
-            element: <Text>Hi!</Text>,
             children: [{
               displayName: 'RCText',
               children: [{
@@ -369,7 +367,6 @@ describe('ReactComponentTreeDevtool', () => {
               displayName: 'View',
               children: [{
                 displayName: 'Text',
-                element: <Text>Hi,</Text>,
                 children: [{
                   displayName: 'RCText',
                   children: [{

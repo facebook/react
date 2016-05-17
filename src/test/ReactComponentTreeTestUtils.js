@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
 var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 
 function getRootDisplayNames() {
@@ -22,17 +21,6 @@ function getRootDisplayNames() {
 function getRegisteredDisplayNames() {
   return ReactComponentTreeDevtool.getRegisteredIDs()
     .map(ReactComponentTreeDevtool.getDisplayName);
-}
-
-function stripElement(element) {
-  if (!element || !element.props) {
-    return element;
-  }
-  return {
-    props: element.props,
-    type: element.type,
-    children: ReactChildren.map(element.children, stripElement),
-  };
 }
 
 function expectTree(rootID, expectedTree, parentPath) {
@@ -80,10 +68,12 @@ function expectTree(rootID, expectedTree, parentPath) {
     expectEqual(text, null, 'text');
   }
   if (expectedTree.element !== undefined) {
+    // TODO: Comparing elements makes tests run out of memory on errors.
+    // For now, compare just types.
     expectEqual(
-      stripElement(element),
-      stripElement(expectedTree.element),
-      'element'
+      element && element.type,
+      expectedTree.element && expectedTree.element.type,
+      'element.type'
     );
   } else if (text == null) {
     expectEqual(typeof element, 'object', 'typeof element');

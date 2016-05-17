@@ -268,7 +268,6 @@ describe('ReactComponentTreeDevtool', () => {
           displayName: 'p',
           children: [{
             displayName: 'span',
-            element: <span>Hi!</span>,
             children: [{
               displayName: '#text',
               text: 'Hi!',
@@ -353,12 +352,10 @@ describe('ReactComponentTreeDevtool', () => {
             }],
           }, {
             displayName: 'Bar',
-            element: <Bar><span>Hi,</span>Mom</Bar>,
             children: [{
               displayName: 'h1',
               children: [{
                 displayName: 'span',
-                element: <span>Hi,</span>,
                 children: [{
                   displayName: '#text',
                   element: 'Hi,',
@@ -372,7 +369,6 @@ describe('ReactComponentTreeDevtool', () => {
             }],
           }, {
             displayName: 'a',
-            element: <a href="#">Click me.</a>,
             children: [{
               displayName: '#text',
               text: 'Click me.',
