@@ -17,6 +17,7 @@ describe('ReactComponentTreeDevtool', () => {
   var ReactDOMServer;
   var ReactInstanceMap;
   var ReactComponentTreeDevtool;
+  var ReactComponentTreeTestUtils;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -26,54 +27,10 @@ describe('ReactComponentTreeDevtool', () => {
     ReactDOMServer = require('ReactDOMServer');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+    ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
   });
 
-  function getRootDisplayNames() {
-    return ReactComponentTreeDevtool.getRootIDs()
-      .map(ReactComponentTreeDevtool.getDisplayName);
-  }
-
-  function getRegisteredDisplayNames() {
-    return ReactComponentTreeDevtool.getRegisteredIDs()
-      .map(ReactComponentTreeDevtool.getDisplayName);
-  }
-
-  function getTree(rootID, options = {}) {
-    var {
-      includeOwnerDisplayName = false,
-      includeParentDisplayName = false,
-      expectedParentID = null,
-    } = options;
-
-    var result = {
-      displayName: ReactComponentTreeDevtool.getDisplayName(rootID),
-    };
-
-    var ownerID = ReactComponentTreeDevtool.getOwnerID(rootID);
-    var parentID = ReactComponentTreeDevtool.getParentID(rootID);
-    expect(parentID).toBe(expectedParentID);
-
-    if (includeParentDisplayName && parentID) {
-      result.parentDisplayName = ReactComponentTreeDevtool.getDisplayName(parentID);
-    }
-    if (includeOwnerDisplayName && ownerID) {
-      result.ownerDisplayName = ReactComponentTreeDevtool.getDisplayName(ownerID);
-    }
-
-    var childIDs = ReactComponentTreeDevtool.getChildIDs(rootID);
-    var text = ReactComponentTreeDevtool.getText(rootID);
-    if (text != null) {
-      result.text = text;
-    } else {
-      result.children = childIDs.map(childID =>
-        getTree(childID, {...options, expectedParentID: rootID })
-      );
-    }
-
-    return result;
-  }
-
-  function assertTreeMatches(pairs, options) {
+  function assertTreeMatches(pairs) {
     if (!Array.isArray(pairs[0])) {
       pairs = [pairs];
     }
@@ -89,8 +46,15 @@ describe('ReactComponentTreeDevtool', () => {
       }
     }
 
-    function getActualTree() {
-      return getTree(rootInstance._debugID, options).children[0];
+    function expectWrapperTreeToEqual(expectedTree) {
+      ReactComponentTreeTestUtils.expectTree(rootInstance._debugID, {
+        displayName: 'Wrapper',
+        children: expectedTree ? [expectedTree] : [],
+      });
+      if (!expectedTree) {
+        expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
+        expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+      }
     }
 
     // Mount once, render updates, then unmount.
@@ -100,20 +64,18 @@ describe('ReactComponentTreeDevtool', () => {
 
       // Mount a new tree or update the existing tree.
       ReactDOM.render(<Wrapper />, node);
-      expect(getActualTree()).toEqual(expectedTree);
+      expectWrapperTreeToEqual(expectedTree);
 
       // Purging should have no effect
       // on the tree we expect to see.
       ReactComponentTreeDevtool.purgeUnmountedComponents();
-      expect(getActualTree()).toEqual(expectedTree);
+      expectWrapperTreeToEqual(expectedTree);
     });
 
     // Unmounting the root node should purge
     // the whole subtree automatically.
     ReactDOM.unmountComponentAtNode(node);
-    expect(getActualTree()).toBe(undefined);
-    expect(getRootDisplayNames()).toEqual([]);
-    expect(getRegisteredDisplayNames()).toEqual([]);
+    expectWrapperTreeToEqual(null);
 
     // Server render every pair.
     // Ensure the tree is correct on every step.
@@ -123,9 +85,7 @@ describe('ReactComponentTreeDevtool', () => {
       // Rendering to string should not produce any entries
       // because ReactDebugTool purges it when the flush ends.
       ReactDOMServer.renderToString(<Wrapper />);
-      expect(getActualTree()).toBe(undefined);
-      expect(getRootDisplayNames()).toEqual([]);
-      expect(getRegisteredDisplayNames()).toEqual([]);
+      expectWrapperTreeToEqual(null);
 
       // To test it, we tell the devtool to ignore next purge
       // so the cleanup request by ReactDebugTool is ignored.
@@ -133,13 +93,11 @@ describe('ReactComponentTreeDevtool', () => {
       ReactComponentTreeDevtool._preventPurging = true;
       ReactDOMServer.renderToString(<Wrapper />);
       ReactComponentTreeDevtool._preventPurging = false;
-      expect(getActualTree()).toEqual(expectedTree);
+      expectWrapperTreeToEqual(expectedTree);
 
       // Purge manually since we skipped the automatic purge.
       ReactComponentTreeDevtool.purgeUnmountedComponents();
-      expect(getActualTree()).toBe(undefined);
-      expect(getRootDisplayNames()).toEqual([]);
-      expect(getRegisteredDisplayNames()).toEqual([]);
+      expectWrapperTreeToEqual(null);
     });
   }
 
@@ -1650,7 +1608,7 @@ describe('ReactComponentTreeDevtool', () => {
         }],
       }],
     };
-    assertTreeMatches([element, tree], {includeOwnerDisplayName: true});
+    assertTreeMatches([element, tree]);
   });
 
   it('purges unmounted components automatically', () => {
@@ -1674,33 +1632,28 @@ describe('ReactComponentTreeDevtool', () => {
     }
 
     ReactDOM.render(<Foo />, node);
-    expect(
-      getTree(barInstance._debugID, {
-        includeParentDisplayName: true,
-        expectedParentID: fooInstance._debugID,
-      })
-    ).toEqual({
+    ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
       displayName: 'Bar',
       parentDisplayName: 'Foo',
+      parentID: fooInstance._debugID,
       children: [],
-    });
+    }, 'Foo');
 
     renderBar = false;
     ReactDOM.render(<Foo />, node);
-    expect(
-      getTree(barInstance._debugID, {expectedParentID: null})
-    ).toEqual({
+    ReactDOM.render(<Foo />, node);
+    ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
       displayName: 'Unknown',
       children: [],
-    });
+      parentID: null,
+    }, 'Foo');
 
     ReactDOM.unmountComponentAtNode(node);
-    expect(
-      getTree(barInstance._debugID, {expectedParentID: null})
-    ).toEqual({
+    ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
       displayName: 'Unknown',
       children: [],
-    });
+      parentID: null,
+    }, 'Foo');
   });
 
   it('reports update counts', () => {
@@ -1732,14 +1685,14 @@ describe('ReactComponentTreeDevtool', () => {
     var node = document.createElement('div');
 
     ReactDOM.render(<div className="a" />, node);
-    expect(getRootDisplayNames()).toEqual(['div']);
+    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
 
     ReactDOM.render(<div className="b" />, node);
-    expect(getRootDisplayNames()).toEqual(['div']);
+    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
 
     ReactDOM.unmountComponentAtNode(node);
-    expect(getRootDisplayNames()).toEqual([]);
-    expect(getRegisteredDisplayNames()).toEqual([]);
+    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
+    expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 
   it('creates stack addenda', () => {
