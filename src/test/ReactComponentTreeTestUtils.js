@@ -23,12 +23,13 @@ function getRegisteredDisplayNames() {
     .map(ReactComponentTreeDevtool.getDisplayName);
 }
 
-function expectTree(rootID, expectedTree, parentPath = '') {
+function expectTree(rootID, expectedTree, parentPath) {
   var displayName = ReactComponentTreeDevtool.getDisplayName(rootID);
   var ownerID = ReactComponentTreeDevtool.getOwnerID(rootID);
   var parentID = ReactComponentTreeDevtool.getParentID(rootID);
   var childIDs = ReactComponentTreeDevtool.getChildIDs(rootID);
   var text = ReactComponentTreeDevtool.getText(rootID);
+  var element = ReactComponentTreeDevtool.getElement(rootID);
   var path = parentPath ? `${parentPath} > ${displayName}` : displayName;
 
   function expectEqual(actual, expected, name) {
@@ -62,8 +63,20 @@ function expectTree(rootID, expectedTree, parentPath = '') {
   }
   if (expectedTree.text !== undefined) {
     expectEqual(text, expectedTree.text, 'text');
+    expectEqual('' + element, expectedTree.text, 'element.toString()');
   } else {
     expectEqual(text, null, 'text');
+  }
+  if (expectedTree.element !== undefined) {
+    // TODO: Comparing elements makes tests run out of memory on errors.
+    // For now, compare just types.
+    expectEqual(
+      element && element.type,
+      expectedTree.element && expectedTree.element.type,
+      'element.type'
+    );
+  } else if (text == null) {
+    expectEqual(typeof element, 'object', 'typeof element');
   }
   if (expectedTree.children !== undefined) {
     expectEqual(
