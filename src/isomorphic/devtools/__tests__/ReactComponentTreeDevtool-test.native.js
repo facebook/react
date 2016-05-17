@@ -137,6 +137,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <View><Foo /><Baz /><Qux /></View>;
       var tree = {
         displayName: 'View',
+        element,
         children: [{
           displayName: 'Bar',
           children: [],
@@ -273,20 +274,25 @@ describe('ReactComponentTreeDevtool', () => {
       );
       var tree = {
         displayName: 'View',
+        element,
         children: [{
           displayName: 'View',
+          element: <View><Text>Hi!</Text></View>,
           children: [{
             displayName: 'Text',
+            element: <Text>Hi!</Text>,
             children: [{
               displayName: 'RCText',
               children: [{
                 displayName: '#text',
+                element: 'Hi!',
                 text: 'Hi!',
               }],
             }],
           }],
         }, {
           displayName: 'Image',
+          element: <Image />,
           children: [],
         }],
       };
@@ -303,8 +309,10 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <Foo />;
       var tree = {
         displayName: 'Foo',
+        element,
         children: [{
           displayName: 'Image',
+          element: <Image />,
           children: [],
         }],
       };
@@ -344,12 +352,15 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <Baz />;
       var tree = {
         displayName: 'Baz',
+        element,
         children: [{
           displayName: 'View',
           children: [{
             displayName: 'Foo',
+            element: <Foo />,
             children: [{
               displayName: 'Qux',
+              element: <Qux />,
               children: [],
             }],
           }, {
@@ -358,10 +369,12 @@ describe('ReactComponentTreeDevtool', () => {
               displayName: 'View',
               children: [{
                 displayName: 'Text',
+                element: <Text>Hi,</Text>,
                 children: [{
                   displayName: 'RCText',
                   children: [{
                     displayName: '#text',
+                    element: 'Hi,',
                     text: 'Hi,',
                   }],
                 }],
@@ -369,6 +382,7 @@ describe('ReactComponentTreeDevtool', () => {
             }],
           }, {
             displayName: 'Image',
+            element: <Image />,
             children: [],
           }],
         }],
@@ -481,16 +495,21 @@ describe('ReactComponentTreeDevtool', () => {
       );
       var tree = {
         displayName: 'View',
+        element,
         children: [{
           displayName: 'Foo',
+          element: <Foo />,
           children: [{
             displayName: 'Image',
+            element: <Image />,
             children: [],
           }],
         }, {
           displayName: 'Foo',
+          element: <Foo />,
           children: [{
             displayName: 'Image',
+            element: <Image />,
             children: [],
           }],
         }],

@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactChildren = require('ReactChildren');
 var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 
 function getRootDisplayNames() {
@@ -23,12 +24,24 @@ function getRegisteredDisplayNames() {
     .map(ReactComponentTreeDevtool.getDisplayName);
 }
 
-function expectTree(rootID, expectedTree, parentPath = '') {
+function stripElement(element) {
+  if (!element || !element.props) {
+    return element;
+  }
+  return {
+    props: element.props,
+    type: element.type,
+    children: ReactChildren.map(element.children, stripElement),
+  };
+}
+
+function expectTree(rootID, expectedTree, parentPath) {
   var displayName = ReactComponentTreeDevtool.getDisplayName(rootID);
   var ownerID = ReactComponentTreeDevtool.getOwnerID(rootID);
   var parentID = ReactComponentTreeDevtool.getParentID(rootID);
   var childIDs = ReactComponentTreeDevtool.getChildIDs(rootID);
   var text = ReactComponentTreeDevtool.getText(rootID);
+  var element = ReactComponentTreeDevtool.getElement(rootID);
   var path = parentPath ? `${parentPath} > ${displayName}` : displayName;
 
   function expectEqual(actual, expected, name) {
@@ -62,8 +75,18 @@ function expectTree(rootID, expectedTree, parentPath = '') {
   }
   if (expectedTree.text !== undefined) {
     expectEqual(text, expectedTree.text, 'text');
+    expectEqual('' + element, expectedTree.text, 'element.toString()');
   } else {
     expectEqual(text, null, 'text');
+  }
+  if (expectedTree.element !== undefined) {
+    expectEqual(
+      stripElement(element),
+      stripElement(expectedTree.element),
+      'element'
+    );
+  } else if (text == null) {
+    expectEqual(typeof element, 'object', 'typeof element');
   }
   if (expectedTree.children !== undefined) {
     expectEqual(

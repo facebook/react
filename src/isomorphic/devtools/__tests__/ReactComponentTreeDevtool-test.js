@@ -160,6 +160,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: 'Bar',
           children: [],
@@ -203,6 +204,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: 'Bar',
           children: [],
@@ -233,6 +235,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: 'Bar',
           children: [],
@@ -265,6 +268,7 @@ describe('ReactComponentTreeDevtool', () => {
           displayName: 'p',
           children: [{
             displayName: 'span',
+            element: <span>Hi!</span>,
             children: [{
               displayName: '#text',
               text: 'Hi!',
@@ -275,6 +279,7 @@ describe('ReactComponentTreeDevtool', () => {
           }],
         }, {
           displayName: 'hr',
+          element: <hr />,
           children: [],
         }],
       };
@@ -291,8 +296,10 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <Foo />;
       var tree = {
         displayName: 'Foo',
+        element,
         children: [{
           displayName: 'div',
+          element: <div />,
           children: [],
         }],
       };
@@ -333,34 +340,43 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <Baz />;
       var tree = {
         displayName: 'Baz',
+        element,
         children: [{
           displayName: 'div',
           children: [{
             displayName: 'Foo',
+            element: <Foo />,
             children: [{
               displayName: 'Qux',
+              element: <Qux />,
               children: [],
             }],
           }, {
             displayName: 'Bar',
+            element: <Bar><span>Hi,</span>Mom</Bar>,
             children: [{
               displayName: 'h1',
               children: [{
                 displayName: 'span',
+                element: <span>Hi,</span>,
                 children: [{
                   displayName: '#text',
+                  element: 'Hi,',
                   text: 'Hi,',
                 }],
               }, {
                 displayName: '#text',
                 text: 'Mom',
+                element: 'Mom',
               }],
             }],
           }, {
             displayName: 'a',
+            element: <a href="#">Click me.</a>,
             children: [{
               displayName: '#text',
               text: 'Click me.',
+              element: 'Click me.',
             }],
           }],
         }],
@@ -400,6 +416,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <div>{'1'}{2}</div>;
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: '#text',
           text: '1',
@@ -415,6 +432,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <div>{'1'}</div>;
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: '#text',
           text: '1',
@@ -427,6 +445,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <div>{42}</div>;
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: '#text',
           text: '42',
@@ -439,6 +458,7 @@ describe('ReactComponentTreeDevtool', () => {
       var element = <div>{0}</div>;
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: '#text',
           text: '0',
@@ -462,16 +482,21 @@ describe('ReactComponentTreeDevtool', () => {
       );
       var tree = {
         displayName: 'div',
+        element,
         children: [{
           displayName: '#text',
           text: 'hi',
+          element: 'hi',
         }, {
           displayName: '#text',
           text: '42',
+          element: 42,
         }, {
           displayName: 'Foo',
+          element: <Foo />,
           children: [{
             displayName: 'div',
+            element: <div />,
             children: [],
           }],
         }],
