@@ -13,12 +13,10 @@
 
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 
 var warning = require('warning');
 
 if (__DEV__) {
-  var lastDebugID;
   var reactProps = {
     children: true,
     dangerouslySetInnerHTML: true,
@@ -27,7 +25,7 @@ if (__DEV__) {
   };
   var warnedProperties = {};
 
-  var warnUnknownProperty = function(name) {
+  var warnUnknownProperty = function(name, source) {
     if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
       return;
     }
@@ -35,7 +33,9 @@ if (__DEV__) {
         warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return;
     }
-
+    if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
+      return;
+    }
     warnedProperties[name] = true;
     var lowerCasedName = name.toLowerCase();
 
@@ -48,10 +48,6 @@ if (__DEV__) {
         null
     );
 
-    var source = ReactComponentTreeDevtool.getSource(lastDebugID);
-    var formattedSource = source ?
-      `(${source.fileName.replace(/^.*[\\\/]/, '')}:${source.lineNumber})` : '';
-
     // For now, only warn when we have a suggested correction. This prevents
     // logging too much when using transferPropsTo.
     warning(
@@ -59,7 +55,7 @@ if (__DEV__) {
       'Unknown DOM property %s. Did you mean %s? %s',
       name,
       standardName,
-      formattedSource
+      formatSource(source)
     );
 
     var registrationName = (
@@ -75,29 +71,31 @@ if (__DEV__) {
       'Unknown event handler property %s. Did you mean `%s`? %s',
       name,
       registrationName,
-      formattedSource
+      formatSource(source)
     );
+  };
+
+  var formatSource = function(source) {
+    return source ? `(${source.fileName.replace(/^.*[\\\/]/, '')}:${source.lineNumber})` : '';
   };
 
 }
 
+function handleElement(element) {
+  if (element == null || typeof element.type !== 'string') {
+    return;
+  }
+  for (var key in element.props) {
+    warnUnknownProperty(key, element._source);
+  }
+}
+
 var ReactDOMUnknownPropertyDevtool = {
-  onCreateMarkupForProperty(name, value) {
-    warnUnknownProperty(name);
-  },
-  onSetValueForProperty(node, name, value) {
-    warnUnknownProperty(name);
-  },
-  onDeleteValueForProperty(node, name) {
-    warnUnknownProperty(name);
-  },
   onBeforeMountComponent(debugID, element) {
-    // TODO: This currently assumes that properties are all set before recursing
-    // and mounting children, which needn't be the case in the future.
-    lastDebugID = debugID;
+    handleElement(element);
   },
   onBeforeUpdateComponent(debugID, element) {
-    lastDebugID = debugID;
+    handleElement(element);
   },
 };
 
