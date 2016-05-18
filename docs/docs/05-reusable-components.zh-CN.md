@@ -126,7 +126,7 @@ var MyComponent = React.createClass({
   render: function() {
     return (
       <div>
-        {this.props.children} // 有且仅有一个元素，否则会抛异常。
+        {this.props.children} {/*有且仅有一个元素，否则会抛异常。*/}
       </div>
     );
   }
