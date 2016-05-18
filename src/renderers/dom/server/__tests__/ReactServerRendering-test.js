@@ -629,16 +629,10 @@ describe('ReactServerRendering', function() {
         () => expectMarkupMatch(<div id="parent">  <div id="child"/>   </div>)); // eslint-disable-line no-multi-spaces
       it('should reconnect a div with children separated by whitespace',
           () => expectMarkupMatch(<div id="parent"><div id="child1"/> <div id="child2"/></div>));
-      it('should reconnect a div with blank text child', () => expectMarkupMatch(<div>{''}</div>));
-      it('should reconnect a div with blank text children', () => expectMarkupMatch(<div>{''}{''}{''}</div>));
       it('should reconnect a div with whitespace children', () => expectMarkupMatch(<div>{' '}{' '}{' '}</div>));
-      it('should reconnect a div with null children', () => expectMarkupMatch(<div>{null}{null}{null}</div>));
       // Markup Matches: misc
       it('should reconnect a div with dangerouslySetInnerHTML',
         () => expectMarkupMatch(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}></div>));
-      it('should reconnect an empty component at root', () => expectMarkupMatch(<EmptyComponent/>));
-      it('should reconnect empty components as children', () =>
-        expectMarkupMatch(<div><EmptyComponent/><EmptyComponent/></div>));
       // end TODO
 
       itRenders('renders a div with text', render =>
@@ -650,6 +644,17 @@ describe('ReactServerRendering', function() {
         render(<div>{"Text"}</div>).then(e => {
           expect(e.childNodes.length).toBe(1);
           expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders a div with blank text child', render =>
+        render(<div>{''}</div>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with blank text children', render =>
+        render(<div>{''}{''}{''}</div>).then(e => {
+          expect(e.childNodes.length).toBe(6);
+          expectTextNode(e.childNodes[0], '');
+          expectTextNode(e.childNodes[2], '');
+          expectTextNode(e.childNodes[4], '');
         }));
       itRenders('renders an svg element', render =>
         render(<svg/>).then(e => {
@@ -701,6 +706,14 @@ describe('ReactServerRendering', function() {
       itRenders('renders a null component as empty', (render) => {
         const NullComponent = () => null;
         return render(<NullComponent/>).then(e => expectEmptyNode(e));
+      });
+
+      itRenders('renders a null component children as empty', (render) => {
+        const NullComponent = () => null;
+        return render(<div><NullComponent/></div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectEmptyNode(e.firstChild);
+        });
       });
 
       itRenders('renders a false component as empty', (render) => {
