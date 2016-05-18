@@ -91,20 +91,11 @@ function expectMarkupMatch(serverRendering, elementToRenderOnClient = serverRend
   return connectToServerRendering(serverRendering, elementToRenderOnClient, true, warningCount);
 }
 
-function itResolves(desc, testFn) {
-  it(desc, function() {
-    var done = false;
-    waitsFor(() => done);
-    testFn().then(() => done = true);
-
-  });
-}
-
 function itRejects(desc, testFn) {
-  it(desc, function() {
-    var done = false;
-    waitsFor(() => done);
-    testFn().catch(() => done = true);
+  pit(desc, function() {
+    return testFn()
+      .then(() => expect(false).toBe('The promise resolved and should not have.'))
+      .catch(() => {});
   });
 }
 
@@ -155,7 +146,7 @@ const clientRenderOnBadMarkup = (element, warningCount = 0) => {
 // render; you should not depend on the interactivity of the returned DOM element,
 // as that will not work in the server string scenario.
 function itRenders(desc, testFn) {
-  itResolves(`${desc} with server string render`,
+  pit(`${desc} with server string render`,
     () => testFn(serverStringRender));
   itClientRenders(desc, testFn);
 }
@@ -171,11 +162,11 @@ function itRenders(desc, testFn) {
 // Since all of the renders in this function are on the client, you can test interactivity,
 // unlike with itRenders.
 function itClientRenders(desc, testFn) {
-  itResolves(`${desc} with clean client render`,
+  pit(`${desc} with clean client render`,
     () => testFn(clientRender));
-  itResolves(`${desc} with client render on top of server string markup`,
+  pit(`${desc} with client render on top of server string markup`,
     () => testFn(clientRenderOnServerString));
-  itResolves(`${desc} with client render on top of bad server markup`,
+  pit(`${desc} with client render on top of bad server markup`,
     () => testFn(clientRenderOnBadMarkup));
 }
 
