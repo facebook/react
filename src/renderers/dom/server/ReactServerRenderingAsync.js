@@ -28,6 +28,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginRegistry = require('EventPluginRegistry');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var ReactElement = require('ReactElement');
 var ReactInjection = require('ReactInjection');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
@@ -117,6 +118,16 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
   // and call componentWillMount/render as needed. keep doing this until tree.element
   // is a dom node.
   const {element, context} = getNativeComponent(tree.element, tree.context || {});
+
+  if (__DEV__) {
+    warning(
+      element === null || element === false || ReactElement.isValidElement(element),
+      '%s(...): A valid React element (or null) must be returned. You may have ' +
+      'returned undefined, an array or some other invalid object.',
+      'Component' // TODO: get a proper name here.
+    );
+  }
+
   tree.element = element;
   tree.context = context;
 
@@ -300,11 +311,14 @@ const canonicalizeProps = (tag, props) => {
   // convert default[Checked|Value] into [checked|value]
   if (tag === 'input' || tag === 'textarea' || tag === 'select') {
     props = Object.assign(
-      {
-        checked: props.defaultChecked,
-        value: props.defaultValue,
-      },
+      {},
       props,
+      !props.hasOwnProperty('checked') && props.hasOwnProperty('defaultChecked') ? {
+        checked: props.defaultChecked,
+      } : {},
+      !props.hasOwnProperty('value') && props.hasOwnProperty('defaultValue') ? {
+        value: props.defaultValue,
+      } : {},
       {
         defaultChecked: undefined,
         defaultValue: undefined,
@@ -426,7 +440,7 @@ const propsToAttributes = (props, tagName, selectValues) => {
     if (optionValue) {
       for (const selectValue of selectValues) {
         if (selectValue === optionValue) {
-          result += ' selected';
+          result += ' selected=""';
           break;
         }
       }
