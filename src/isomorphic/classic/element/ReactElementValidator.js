@@ -72,10 +72,11 @@ function validateExplicitKey(element, parentType) {
   warning(
     false,
     'Each child in an array or iterator should have a unique "key" prop.' +
-    '%s%s%s',
+    '%s%s%s%s',
     addenda.parentOrOwner || '',
     addenda.childOwner || '',
-    addenda.url || ''
+    addenda.url || '',
+    ReactComponentTreeDevtool.getCurrentStackAddendum(element)
   );
 }
 

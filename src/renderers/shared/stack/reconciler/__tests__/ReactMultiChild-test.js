@@ -148,5 +148,60 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(2);
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
+
+    it('should warn for duplicated keys with component stack info', function() {
+      // NOTE: We're explicitly not using JSX here. This is intended to test
+      // the current stack addendum without having source location added by babel.
+      spyOn(console, 'error');
+
+      var container = document.createElement('div');
+
+      var WrapperComponent = React.createClass({
+        render: function() {
+          // <div>{this.props.children}</div>
+          return React.createElement('div', null, this.props.children);
+        },
+      });
+
+      var Parent = React.createClass({
+        render: function() {
+          // <div><WrapperComponent>{this.props.children}</WrapperComponent></div>
+          return React.createElement(
+            'div',
+            null,
+            React.createElement(WrapperComponent, null, this.props.children)
+          );
+        },
+      });
+
+      ReactDOM.render(
+        // <Parent>{[<div key="1"/>]}</Parent>,
+        React.createElement(Parent, null, [
+          React.createElement('div', { key: '1' }),
+        ]),
+        container
+      );
+
+      ReactDOM.render(
+        // <Parent>{[<div key="1"/>, <div key="1"/>]}</Parent>,
+        React.createElement(Parent, null, [
+          React.createElement('div', { key: '1' }),
+          React.createElement('div', { key: '1' }),
+        ]),
+        container
+      );
+
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: flattenChildren(...): ' +
+        'Encountered two children with the same key, `1`. ' +
+        'Child keys must be unique; when two children share a key, ' +
+        'only the first child will be used.\n' +
+        '    in div\n' +
+        '    in WrapperComponent (created by Parent)\n' +
+        '    in div (created by Parent)\n' +
+        '    in Parent'
+      );
+    });
   });
 });

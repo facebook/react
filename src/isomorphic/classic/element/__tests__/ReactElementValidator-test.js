@@ -84,20 +84,21 @@ describe('ReactElementValidator', function() {
     var Anonymous = React.createClass({
       displayName: undefined,
       render: function() {
-        return <div />;
+        return React.createElement('div');
       },
     });
 
     var divs = [
-      <div />,
-      <div />,
+      React.createElement('div'),
+      React.createElement('div'),
     ];
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
 
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
-      '"key" prop. See https://fb.me/react-warning-keys for more information.'
+      '"key" prop. See https://fb.me/react-warning-keys for more information.\n' +
+      '    in div'
     );
   });
 
@@ -105,8 +106,8 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'error');
 
     var divs = [
-      <div />,
-      <div />,
+      React.createElement('div'),
+      React.createElement('div'),
     ];
     ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
 
@@ -114,7 +115,50 @@ describe('ReactElementValidator', function() {
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
       '"key" prop. Check the top-level render call using <div>. See ' +
-      'https://fb.me/react-warning-keys for more information.'
+      'https://fb.me/react-warning-keys for more information.\n' +
+      '    in div'
+    );
+  });
+
+  it('warns for keys with component stack info', function() {
+    spyOn(console, 'error');
+
+    var Component = React.createClass({
+      render: function() {
+        // <div>{[<div />, <div />]}</div>
+        return React.createElement('div', null, [
+          React.createElement('div'),
+          React.createElement('div'),
+        ]);
+      },
+    });
+
+    var Parent = React.createClass({
+      render: function() {
+        return React.cloneElement(this.props.child);
+      },
+    });
+
+    var GrandParent = React.createClass({
+      render: function() {
+        // <Parent child={<Component />} />
+        return React.createElement(Parent, {
+          child: React.createElement(Component),
+        });
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: Each child in an array or iterator should have a unique ' +
+      '"key" prop. Check the render method of `Component`. See ' +
+      'https://fb.me/react-warning-keys for more information.\n' +
+      '    in div (created by Component)\n' +
+      '    in Component (created by GrandParent)\n' +
+      '    in Parent (created by GrandParent)\n' +
+      '    in GrandParent'
     );
   });
 

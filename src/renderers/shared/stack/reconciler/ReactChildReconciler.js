@@ -13,6 +13,7 @@
 
 var ReactReconciler = require('ReactReconciler');
 
+var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var instantiateReactComponent = require('instantiateReactComponent');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
@@ -27,8 +28,9 @@ function instantiateChild(childInstances, child, name) {
       keyUnique,
       'flattenChildren(...): Encountered two children with the same key, ' +
       '`%s`. Child keys must be unique; when two children share a key, only ' +
-      'the first child will be used.',
-      KeyEscapeUtils.unescape(name)
+      'the first child will be used.%s',
+      KeyEscapeUtils.unescape(name),
+      ReactComponentTreeDevtool.getCurrentStackAddendum(childInstances[name])
     );
   }
   if (child != null && keyUnique) {
