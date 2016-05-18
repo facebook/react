@@ -127,7 +127,7 @@ var MyComponent = React.createClass({
   render: function() {
     return (
       <div>
-        {this.props.children} // 정확히 한 엘리먼트여야만 하며, 아니면 에러가 발생합니다.
+        {this.props.children} {/*정확히 한 엘리먼트여야만 하며, 아니면 에러가 발생합니다.*/}
       </div>
     );
   }

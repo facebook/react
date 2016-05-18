@@ -132,7 +132,7 @@ var MyComponent = React.createClass({
   render: function() {
     return (
       <div>
-        {this.props.children} // Questo deve essere esattamente un elemento oppure lancerà un'eccezione.
+        {this.props.children} {/*Questo deve essere esattamente un elemento oppure lancerà un'eccezione.*/}
       </div>
     );
   }

@@ -128,7 +128,7 @@ var MyComponent = React.createClass({
   render: function() {
     return (
       <div>
-        {this.props.children} // これは1つの要素でなくてはなりません。さもなければエラーがthrowされます。
+        {this.props.children} {/*これは1つの要素でなくてはなりません。さもなければエラーがthrowされます。*/}
       </div>
     );
   }
