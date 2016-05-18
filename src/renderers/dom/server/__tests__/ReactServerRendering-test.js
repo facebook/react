@@ -49,6 +49,13 @@ function expectWarnings(fn, count) {
     var result = fn();
   } finally {
     expect(console.error.argsForCall.length).toBe(count);
+    if (console.error.argsForCall.length !== count) {
+      console.log(`We expected ${count} warning(s), but saw ${console.error.argsForCall.length} warning(s).`);
+      if (console.error.argsForCall.length > 0) {
+        console.log(`We saw these warnings:`);
+        console.log(console.error.argsForCall.join('\n'));
+      }
+    }
     console.error = oldConsoleError;
   }
   return result;
@@ -67,10 +74,12 @@ function connectToServerRendering(
   shouldMatch = true,
   warningCount = 0
 ) {
+  const serverRenderedDiv = renderOnServer(elementToRenderOnServer, warningCount);
+  resetModules();
   return renderOnClient(
     elementToRenderOnClient,
-    renderOnServer(elementToRenderOnServer, warningCount),
-    shouldMatch ? 0 : 1);
+    serverRenderedDiv,
+    warningCount + (shouldMatch ? 0 : 1));
 }
 
 function expectMarkupMismatch(serverRendering, elementToRenderOnClient, warningCount = 0) {
@@ -182,19 +191,23 @@ function itThrowsOnRender(desc, testFn) {
     () => testFn((element, warningCount = 0) => clientRenderOnBadMarkup(element, warningCount - 1)));
 }
 
+function resetModules() {
+  jest.resetModuleRegistry();
+  React = require('React');
+  ReactDOM = require('ReactDOM');
+  ReactMarkupChecksum = require('ReactMarkupChecksum');
+  ReactTestUtils = require('ReactTestUtils');
+  ReactReconcileTransaction = require('ReactReconcileTransaction');
+
+  ExecutionEnvironment = require('ExecutionEnvironment');
+  ExecutionEnvironment.canUseDOM = false;
+  ReactServerRendering = require('ReactServerRendering');
+
+}
 
 describe('ReactServerRendering', function() {
   beforeEach(function() {
-    jest.resetModuleRegistry();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactTestUtils = require('ReactTestUtils');
-    ReactReconcileTransaction = require('ReactReconcileTransaction');
-
-    ExecutionEnvironment = require('ExecutionEnvironment');
-    ExecutionEnvironment.canUseDOM = false;
-    ReactServerRendering = require('ReactServerRendering');
+    resetModules();
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
