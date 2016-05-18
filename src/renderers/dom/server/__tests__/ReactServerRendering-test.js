@@ -577,6 +577,15 @@ describe('ReactServerRendering', function() {
     });
 
     describe('components and children', function() {
+      var EmptyComponent;
+      beforeEach(() => {
+        EmptyComponent = class extends React.Component {
+          render() {
+            return null;
+          }
+        };
+      });
+
       function expectNode(node, type, value) {
         expect(node).not.toBe(null);
         expect(node.nodeType).toBe(type);
@@ -595,6 +604,87 @@ describe('ReactServerRendering', function() {
       function expectEmptyNode(node) {
         expectNode(node, COMMENT_NODE_TYPE, ' react-empty: [0-9]+ ');
       }
+
+      // TODO: port these tests to itRenders or itClientRenders, as is appropriate
+      it('should reconnect a div with an entity', () =>
+        expectMarkupMatch(<div>This markup contains an nbsp entity: &nbsp; server text</div>));
+      it('should reconnect a div with text in two code blocks', () => expectMarkupMatch(<div>{"Text1"}{"Text2"}</div>));
+      it('should reconnect a div with text in code block and literal',
+        () => expectMarkupMatch(<div>Text1{"Text2"}</div>));
+      it('should reconnect a div with text with special characters',
+        () => expectMarkupMatch(<div>{"Text & > < Stuff"}</div>));
+      it('should reconnect a div with text with special characters in multiple children',
+        () => expectMarkupMatch(<div>{"&<>\"'"}{"Text & > <\"' Stuff"}</div>));
+      it('should reconnect a div with text with flanking whitespace',
+        () => expectMarkupMatch(<div>  Text </div>));
+      // Markup Matches: children
+      it('should reconnect a div with text sibling to a node',
+        () => expectMarkupMatch(<div>Text<span>More Text</span></div>));
+      it('should reconnect a div with a child', () => expectMarkupMatch(<div id="parent"><div id="child"/></div>));
+      it('should reconnect a div with multiple children',
+        () => expectMarkupMatch(<div id="parent"><div id="child1"/><div id="child2"/></div>));
+      it('should reconnect a div with multiple children separated by whitespace',
+        () => expectMarkupMatch(<div id="parent"><div id="child1"/> <div id="child2"/></div>));
+      it('should reconnect a div with a child surrounded by whitespace',
+        () => expectMarkupMatch(<div id="parent">  <div id="child"/>   </div>)); // eslint-disable-line no-multi-spaces
+      it('should reconnect a div with children separated by whitespace',
+          () => expectMarkupMatch(<div id="parent"><div id="child1"/> <div id="child2"/></div>));
+      it('should reconnect a div with blank text child', () => expectMarkupMatch(<div>{''}</div>));
+      it('should reconnect a div with blank text children', () => expectMarkupMatch(<div>{''}{''}{''}</div>));
+      it('should reconnect a div with whitespace children', () => expectMarkupMatch(<div>{' '}{' '}{' '}</div>));
+      it('should reconnect a div with null children', () => expectMarkupMatch(<div>{null}{null}{null}</div>));
+      // Markup Matches: misc
+      it('should reconnect a div with dangerouslySetInnerHTML',
+        () => expectMarkupMatch(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}></div>));
+      it('should reconnect an empty component at root', () => expectMarkupMatch(<EmptyComponent/>));
+      it('should reconnect empty components as children', () =>
+        expectMarkupMatch(<div><EmptyComponent/><EmptyComponent/></div>));
+      // end TODO
+
+      itRenders('renders a div with text', render =>
+        render(<div>Text</div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders a div with text', render =>
+        render(<div>{"Text"}</div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders an svg element', render =>
+        render(<svg/>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName.toLowerCase()).toBe('svg');
+          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+        }));
+      itRenders('renders svg element with an xlink', render =>
+        render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png"/></svg>).then(e => {
+          e = e.firstChild;
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName.toLowerCase()).toBe('image');
+          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+          expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
+        }));
+      itRenders('renders a math element', render =>
+        render(<math/>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName.toLowerCase()).toBe('math');
+          expect(e.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
+        }));
+      // specially wrapped components
+      // (see the big switch near the beginning ofReactDOMComponent.mountComponent)
+      itRenders('renders an img', render =>
+        render(<img/>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+          expect(e.nextSibling).toBe(null);
+          expect(e.tagName.toLowerCase()).toBe('img');
+        }));
+      itRenders('renders a button', render =>
+        render(<button/>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+          expect(e.nextSibling).toBe(null);
+          expect(e.tagName.toLowerCase()).toBe('button');
+        }));
 
       itRenders('renders a number as single child',
         render => render(<div>{3}</div>).then(e => expect(e.textContent).toBe('3')));
@@ -1377,100 +1467,13 @@ describe('ReactServerRendering', function() {
       });
 
       // Markup Matches: text
-      it('should reconnect a div with text', () => expectMarkupMatch(<div>Text</div>));
-      it('should reconnect a div with an entity', () =>
-        expectMarkupMatch(<div>This markup contains an nbsp entity: &nbsp; server text</div>));
-      it('should reconnect a div with text in code block', () => expectMarkupMatch(<div>{"Text"}</div>));
       it('should reconnect a div with text in code block & a literal',
         () => expectMarkupMatch(<div>{"Text"}</div>, <div>Text</div>));
-      it('should reconnect a div with text in two code blocks', () => expectMarkupMatch(<div>{"Text1"}{"Text2"}</div>));
       it('should reconnect a div with text in two code blocks and a literal & code block', () =>
         expectMarkupMatch(<div>{"Text1"}{"Text2"}</div>, <div>Text1{"Text2"}</div>));
-      it('should reconnect a div with text in code block and literal',
-        () => expectMarkupMatch(<div>Text1{"Text2"}</div>));
-      it('should reconnect a div with a number', () => expectMarkupMatch(<div>{2}</div>));
       it('should reconnect a div with a number and string version of number', () =>
         expectMarkupMatch(<div>{2}</div>, <div>2</div>));
-      it('should reconnect a div with text with special characters',
-        () => expectMarkupMatch(<div>{"Text & > < Stuff"}</div>));
-      it('should reconnect a div with text with special characters in multiple children',
-        () => expectMarkupMatch(<div>{"&<>\"'"}{"Text & > <\"' Stuff"}</div>));
-      it('should reconnect a div with text with flanking whitespace',
-        () => expectMarkupMatch(<div>  Text </div>));
 
-      // Markup Matches: children
-      it('should reconnect a div with text sibling to a node',
-        () => expectMarkupMatch(<div>Text<span>More Text</span></div>));
-      it('should reconnect a div with a child', () => expectMarkupMatch(<div id="parent"><div id="child"/></div>));
-      it('should reconnect a div with multiple children',
-        () => expectMarkupMatch(<div id="parent"><div id="child1"/><div id="child2"/></div>));
-      it('should reconnect a div with multiple children separated by whitespace',
-        () => expectMarkupMatch(<div id="parent"><div id="child1"/> <div id="child2"/></div>));
-      it('should reconnect a div with a child surrounded by whitespace',
-        () => expectMarkupMatch(<div id="parent">  <div id="child"/>   </div>)); // eslint-disable-line no-multi-spaces
-      it('should reconnect a div with children separated by whitespace',
-          () => expectMarkupMatch(<div id="parent"><div id="child1"/> <div id="child2"/></div>));
-      it('should reconnect a div with blank text child', () => expectMarkupMatch(<div>{''}</div>));
-      it('should reconnect a div with blank text children', () => expectMarkupMatch(<div>{''}{''}{''}</div>));
-      it('should reconnect a div with whitespace children', () => expectMarkupMatch(<div>{' '}{' '}{' '}</div>));
-      it('should reconnect a div with null children', () => expectMarkupMatch(<div>{null}{null}{null}</div>));
-      it('should reconnect empty components as children', () =>
-        expectMarkupMatch(<div><EmptyComponent/><EmptyComponent/></div>));
-
-      // Markup Matches: specially wrapped components
-      // (see the big switch near the beginning ofReactDOMComponent.mountComponent)
-      it('should reconnect an img', () => expectMarkupMatch(<img/>));
-      it('should reconnect an input', () => expectMarkupMatch(<input/>));
-      it('should reconnect an input with defaultValue', () => expectMarkupMatch(<input defaultValue="foo"/>));
-      it('should reconnect an input with defaultChecked true',
-        () => expectMarkupMatch(<input defaultChecked={true}/>));
-      it('should reconnect an input with defaultChecked false',
-        () => expectMarkupMatch(<input defaultChecked={false}/>));
-      it('should reconnect a button', () => expectMarkupMatch(<button/>));
-      it('should reconnect a text area without content', () => expectMarkupMatch(<textarea/>));
-      it('should reconnect a text area with content',
-        () => expectMarkupMatch(<textarea defaultValue="Hello"/>));
-      it('should reconnect a select',
-        () => expectMarkupMatch(
-          <select>
-            <option value="A">Option A</option>
-            <option value="B">Option B</option>
-          </select>));
-      it('should reconnect a select with a defaultValue',
-        () => {
-          expectMarkupMatch(
-            <select defaultValue="A">
-              <option value="A">Option A</option>
-              <option value="B">Option B</option>
-            </select>);
-        });
-      it('should reconnect a multiple select',
-        () => expectMarkupMatch(
-          <select multiple={true}>
-            <option value="A">Option A</option>
-            <option value="B">Option B</option>
-            <option value="C">Option C</option>
-          </select>));
-      it('should reconnect a multiple select with a defaultValue',
-        () => {
-          expectMarkupMatch(
-            <select multiple={true} defaultValue={['A', 'C']}>
-              <option value="A">Option A</option>
-              <option value="B">Option B</option>
-              <option value="C">Option C</option>
-            </select>);
-        });
-
-      // Markup Matches: namespaces
-      it('should reconnect an svg element', () => expectMarkupMatch(<svg/>));
-      it('should reconnect an svg element with an xlink',
-        () => expectMarkupMatch(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png"/></svg>));
-      it('should reconnect a math element', () => expectMarkupMatch(<math/>));
-
-      // Markup Matches: misc
-      it('should reconnect a div with dangerouslySetInnerHTML',
-        () => expectMarkupMatch(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}></div>));
-      it('should reconnect an empty component at root', () => expectMarkupMatch(<EmptyComponent/>));
       it('should reconnect if component trees differ but resulting markup is the same', () => {
         class Component1 extends React.Component {
           render() {
@@ -1541,6 +1544,9 @@ describe('ReactServerRendering', function() {
           <div dangerouslySetInnerHTML={{__html:"<span id='child1'/>"}}></div>,
           <div dangerouslySetInnerHTML={{__html:"<span id='child2'/>"}}></div>
         ));
+    });
+
+    describe('behavior after server rendering', function() {
 
       // Events after reconnecting
       itClientRenders('should have working events', render => {
@@ -1609,7 +1615,9 @@ describe('ReactServerRendering', function() {
           });
         });
       });
+    });
 
+    describe('refs', function() {
       // refs
       it('should reconnect element with ref on server but not on client', () => {
         let refCount = 0;
