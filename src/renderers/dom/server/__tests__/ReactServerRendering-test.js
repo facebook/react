@@ -74,9 +74,11 @@ function connectToServerRendering(
   shouldMatch = true,
   warningCount = 0
 ) {
+  const serverRenderedDiv = renderOnServer(elementToRenderOnServer, warningCount);
+  resetModules();
   return renderOnClient(
     elementToRenderOnClient,
-    renderOnServer(elementToRenderOnServer, warningCount),
+    serverRenderedDiv,
     warningCount + (shouldMatch ? 0 : 1));
 }
 
@@ -189,19 +191,23 @@ function itThrowsOnRender(desc, testFn) {
     () => testFn((element, warningCount = 0) => clientRenderOnBadMarkup(element, warningCount - 1)));
 }
 
+function resetModules() {
+  jest.resetModuleRegistry();
+  React = require('React');
+  ReactDOM = require('ReactDOM');
+  ReactMarkupChecksum = require('ReactMarkupChecksum');
+  ReactTestUtils = require('ReactTestUtils');
+  ReactReconcileTransaction = require('ReactReconcileTransaction');
+
+  ExecutionEnvironment = require('ExecutionEnvironment');
+  ExecutionEnvironment.canUseDOM = false;
+  ReactServerRendering = require('ReactServerRendering');
+
+}
 
 describe('ReactServerRendering', function() {
   beforeEach(function() {
-    jest.resetModuleRegistry();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactTestUtils = require('ReactTestUtils');
-    ReactReconcileTransaction = require('ReactReconcileTransaction');
-
-    ExecutionEnvironment = require('ExecutionEnvironment');
-    ExecutionEnvironment.canUseDOM = false;
-    ReactServerRendering = require('ReactServerRendering');
+    resetModules();
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
