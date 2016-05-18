@@ -256,9 +256,21 @@ var ReactTransitionGroup = React.createClass({
         ));
       }
     }
+
+    // Do not forward ReactTransitionGroup props to primitive DOM nodes
+    var props = Object.assign({}, this.props);
+    delete props.transitionLeave;
+    delete props.transitionName;
+    delete props.transitionAppear;
+    delete props.transitionEnter;
+    delete props.childFactory;
+    delete props.transitionLeaveTimeout;
+    delete props.transitionEnterTimeout;
+    delete props.component;
+
     return React.createElement(
       this.props.component,
-      this.props,
+      props,
       childrenToRender
     );
   },
