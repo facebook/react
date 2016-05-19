@@ -20,7 +20,7 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
-function instantiateChild(childInstances, child, name) {
+function instantiateChild(childInstances, child, name, selfDebugID) {
   // We found a component instance.
   var keyUnique = (childInstances[name] === undefined);
   if (__DEV__) {
@@ -30,7 +30,7 @@ function instantiateChild(childInstances, child, name) {
       '`%s`. Child keys must be unique; when two children share a key, only ' +
       'the first child will be used.%s',
       KeyEscapeUtils.unescape(name),
-      ReactComponentTreeDevtool.getCurrentStackAddendum(childInstances[name])
+      ReactComponentTreeDevtool.getStackAddendumByID(selfDebugID)
     );
   }
   if (child != null && keyUnique) {
@@ -52,12 +52,31 @@ var ReactChildReconciler = {
    * @return {?object} A set of child instances.
    * @internal
    */
-  instantiateChildren: function(nestedChildNodes, transaction, context) {
+  instantiateChildren: function(
+    nestedChildNodes,
+    transaction,
+    context,
+    selfDebugID // __DEV__ only
+  ) {
     if (nestedChildNodes == null) {
       return null;
     }
     var childInstances = {};
-    traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
+
+    if (__DEV__) {
+      traverseAllChildren(
+        nestedChildNodes,
+        (childInsts, child, name) => instantiateChild(
+          childInsts,
+          child,
+          name,
+          selfDebugID
+        ),
+        childInstances
+      );
+    } else {
+      traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
+    }
     return childInstances;
   },
 
