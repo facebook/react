@@ -136,11 +136,6 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
     return {done: true, text: makeStaticMarkup ? '' : '<!-- react-empty: ' + tree.domId.value++ + ' -->'};
   }
 
-  // TODO: maybe just check if !isReactElement instead of is undefined
-  if (element === undefined) {
-    throw new Error('A ReactElement resolved to undefined, which is not an allowed value.');
-  }
-
   // now, we should have a dom element (element.type is a string)
   let {props, type: rawTag} = element;
   if (typeof rawTag !== 'string') {
