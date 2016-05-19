@@ -154,8 +154,8 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
   props = canonicalizeProps(tag, props);
 
   const attributes = propsToAttributes(props, tag, selectValues) +
-    (tree.root ? ' data-reactroot=""' : '') +
-    (makeStaticMarkup ? '' : ' data-reactid="' + tree.domId.value++ + '"');
+    (tree.root ? ' ' + DOMPropertyOperations.createMarkupForRoot() : '') +
+    (!makeStaticMarkup ? ' ' + DOMPropertyOperations.createMarkupForID(tree.domId.value++) : '');
   if (voidTags[tag]
     && (props.children === '' || props.children === null || props.children === undefined)) {
 
@@ -465,12 +465,6 @@ const propsToAttributes = (props, tagName, selectValues) => {
       if (value === null) {
         continue;
       }
-    }
-    if (name === 'defaultValue') {
-      name = 'value';
-    }
-    if (name === 'defaultChecked') {
-      name = 'checked';
     }
 
     var markup = DOMPropertyOperations.createMarkupForProperty(name, value);
