@@ -30,6 +30,11 @@ Create a component class, given a specification. A component implements a `rende
 
 For more information about the specification object, see [Component Specs and Lifecycle](/react/docs/component-specs.html).
 
+> Note:
+>
+> `React.createClass()` is now considered legacy and has been replaced by standard javascript constructs (like ES6 classes and stateless functional components).
+> For more information, read about [migrating to standard javascript](/react/blog/2016/05/23/standards-are-the-future.html).
+
 
 ### React.createElement
 
