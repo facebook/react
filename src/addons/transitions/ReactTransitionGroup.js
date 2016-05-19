@@ -17,7 +17,7 @@ var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 var emptyFunction = require('emptyFunction');
 
 /**
- * A basis for animatins. When children are declaratively added or removed,
+ * A basis for animations. When children are declaratively added or removed,
  * special lifecycle hooks are called.
  * See https://facebook.github.io/react/docs/animation.html#low-level-api-reacttransitiongroup
  */
