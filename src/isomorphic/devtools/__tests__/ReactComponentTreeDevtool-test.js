@@ -108,17 +108,6 @@ describe('ReactComponentTreeDevtool', () => {
     expect(getRootDisplayNames()).toEqual([]);
     expect(getRegisteredDisplayNames()).toEqual([]);
 
-    // Server render every pair.
-    // Ensure the tree is correct on every step.
-    pairs.forEach(([element, expectedTree]) => {
-      currentElement = element;
-      ReactDOMServer.renderToString(<Wrapper />);
-      expect(getActualTree()).toEqual(expectedTree);
-      ReactComponentTreeDevtool.purgeUnmountedComponents();
-      expect(getActualTree()).toBe(undefined);
-      expect(getRootDisplayNames()).toEqual([]);
-      expect(getRegisteredDisplayNames()).toEqual([]);
-    });
   }
 
   describe('mount', () => {
