@@ -91,30 +91,29 @@ ReactInjection.EventPluginHub.injectEventPluginsByName({
  *  next(length): a function to get the next length characters. returns a similar
  *   {text, next} object or null if the render is done.
  */
-const render = (element, length, makeStaticMarkup) => {
+const render = (element, makeStaticMarkup) => {
   const tree = {
     element,
     root: !makeStaticMarkup,
-    domId: {value: 1},
   };
-  return renderResultToGenerator(renderImpl(tree, length, makeStaticMarkup), tree, makeStaticMarkup);
-};
-
-// TODO: make this act more like a generator iterator?
-const renderResultToGenerator = (result, tree, makeStaticMarkup) => {
+  var domId = {value: 1};
+  var done = false;
   return {
-    text: result.text,
-    next: (length) => {
-      if (result.done) {
-        return null;
+    next: length => {
+      if (done) {
+        return {done: true, value: undefined};
       }
-      return renderResultToGenerator(renderImpl(tree, length, makeStaticMarkup), tree, makeStaticMarkup);
+      var result = renderImpl(tree, length, makeStaticMarkup, domId);
+      if (result.done) {
+        done = true;
+      }
+      return {done: false, value: result.value};
     },
   };
 };
 
 // side effect: modifies tree in place.
-const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
+const renderImpl = (tree, length, makeStaticMarkup, domId, selectValues) => {
   // first, if tree.element is a component type (not a dom node type), instantiate it
   // and call componentWillMount/render as needed. keep doing this until tree.element
   // is a dom node.
@@ -141,7 +140,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
 
   // an empty (null or false) component translates to an empty comment node.
   if (element === null || element === false) {
-    return {done: true, text: makeStaticMarkup ? '' : '<!-- react-empty: ' + tree.domId.value++ + ' -->'};
+    return {done: true, value: makeStaticMarkup ? '' : '<!-- react-empty: ' + domId.value++ + ' -->'};
   }
 
   // now, we should have a dom element (element.type is a string)
@@ -155,18 +154,18 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
 
   const attributes = propsToAttributes(props, tag) +
     (tree.root ? ' ' + DOMPropertyOperations.createMarkupForRoot() : '') +
-    (!makeStaticMarkup ? ' ' + DOMPropertyOperations.createMarkupForID(tree.domId.value++) : '');
+    (!makeStaticMarkup ? ' ' + DOMPropertyOperations.createMarkupForID(domId.value++) : '');
   if (voidTags[tag]
     && (props.children === '' || props.children === null || props.children === undefined)) {
 
     // TODO: maybe we should omit the trailing slash here? shouldn't be needed in html5.
-    return {done: true, text: '<' + tag + attributes + '/>'};
+    return {done: true, value: '<' + tag + attributes + '/>'};
   }
   const prefix = '<' + tag + attributes + '>';
   const suffix = '</' + tag + '>';
 
   if (!props) {
-    return {done: true, text: prefix + suffix};
+    return {done: true, value: prefix + suffix};
   }
 
   // when we have a newline-eating tag, we have to listen to the content from
@@ -187,13 +186,13 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
   if (props.dangerouslySetInnerHTML && props.dangerouslySetInnerHTML.__html) {
     // note that we do not call escapeTextContentForBrowser; this is intentional, since
     // this is an explicit dangerous innerHTML call.
-    return {done: true, text: prefix + tree.transform(props.dangerouslySetInnerHTML.__html) + suffix};
+    return {done: true, value: prefix + tree.transform(props.dangerouslySetInnerHTML.__html) + suffix};
   }
 
   if (!props.hasOwnProperty('children')
     || props.children === undefined
     || props.children === null) {
-    return {done: true, text: prefix + suffix};
+    return {done: true, value: prefix + suffix};
   }
 
   // if there a single child that is a string or number, that's the text of the node.
@@ -201,7 +200,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
   // the rendering is different when there's a single string or number child; there
   // are no react-text comment nodes in that case.
   if (typeof props.children === 'string' || typeof props.children === 'number') {
-    return {done: true, text: prefix + escapeTextContentForBrowser(tree.transform(props.children)) + suffix};
+    return {done: true, value: prefix + escapeTextContentForBrowser(tree.transform(props.children)) + suffix};
   }
 
   // if we've gotten to this point, it means that we need to iterate through the children
@@ -217,7 +216,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
     // need to regenerate the child list when next() is called.
     const elementChildren = props.children.length ? props.children : [props.children];
     tree.children = [];
-    addChildrenToArray(elementChildren, tree.children, tree.context, tree.domId);
+    addChildrenToArray(elementChildren, tree.children, tree.context, domId);
 
     // store the index of the child we are currently working on. this needs to be
     // stored on tree so that we can restart rendering if next() is called.
@@ -226,7 +225,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
 
   for (; tree.childIndex < tree.children.length; tree.childIndex++) {
     if (text.length >= length) {
-      return {done:false, text};
+      return {done: false, value: text};
     }
 
     const child = tree.children[tree.childIndex];
@@ -234,7 +233,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
     if (typeof child === 'string' || typeof child === 'number') {
       text += tree.transform(makeStaticMarkup ?
         escapeTextContentForBrowser(child) :
-        '<!-- react-text: ' + tree.domId.value++ + ' -->' +
+        '<!-- react-text: ' + domId.value++ + ' -->' +
         escapeTextContentForBrowser(child) +
         '<!-- /react-text -->');
       continue;
@@ -244,19 +243,19 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
       selectValues = getSelectValues(tag, props);
     }
     // we have a child component, and we need to recurse into it.
-    const childResults = renderImpl(child, length - text.length, makeStaticMarkup, selectValues);
-    text += tree.transform(childResults.text);
+    const childResults = renderImpl(child, length - text.length, makeStaticMarkup, domId, selectValues);
+    text += tree.transform(childResults.value);
 
     // if rendering of one of our descendants stopped, we should stop as well and return
     // up the call stack. since we are keeping track of where we are in the children
     // list with tree.childIndex, we will come back to the correct place when next() is called.
     if (!childResults.done) {
-      return {done: false, text};
+      return {done: false, value: text};
     }
   }
   // now that we are done with this element, free up the instantiated children.
   tree.children = null;
-  return {done: true, text: text + suffix};
+  return {done: true, value: text + suffix};
 };
 
 const identityTransform = (text) => text;

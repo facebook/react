@@ -23,12 +23,13 @@ var stream = require('stream');
  */
 function renderToStringImpl(element, makeStaticMarkup) {
   var chunkLength = Infinity;
-  var chunk = ReactServerRenderingAsync.render(element, chunkLength, makeStaticMarkup);
+  var renderer = ReactServerRenderingAsync.render(element, makeStaticMarkup);
   var result = '';
 
-  while (chunk !== null) {
-    result += chunk.text;
-    chunk = chunk.next(chunkLength);
+  var chunk = renderer.next(chunkLength);
+  while (!chunk.done) {
+    result += chunk.value;
+    chunk = renderer.next(chunkLength);
   }
 
   return result;
@@ -63,36 +64,36 @@ function renderToStaticMarkup(element) {
 class RenderElementStream extends stream.Readable {
   constructor(element, makeStaticMarkup = false) {
     super();
-    this.element = element;
-    this.makeStaticMarkup = makeStaticMarkup;
+    this.renderer = ReactServerRenderingAsync.render(element, makeStaticMarkup);
   }
 
   _read(n) {
     try {
-      if (this.element) {
-        this.chunk = ReactServerRenderingAsync.render(this.element, n, this.makeStaticMarkup);
-        this.element = null;
+      var chunk = this.renderer.next(n);
+      if (chunk.done) {
+        this.push(null);
       } else {
-        this.chunk = this.chunk.next(n);
+        this.push(chunk.value);
       }
     } catch (error) {
       this.emit('error', error);
-      return;
-    }
-
-    if (this.chunk === null) {
-      this.push(null);
-    } else {
-      this.push(this.chunk.text);
     }
   }
 }
 
 function renderToStream(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToStream(): You must pass a valid ReactElement.'
+  );
   return new RenderElementStream(element, false).pipe(new Adler32Stream());
 }
 
 function renderToStaticMarkupStream(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToStaticMarkupStream(): You must pass a valid ReactElement.'
+  );
   return new RenderElementStream(element, true);
 }
 
