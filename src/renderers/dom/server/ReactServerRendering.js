@@ -10,6 +10,7 @@
  */
 'use strict';
 
+var Adler32Stream = require('Adler32Stream');
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactServerRenderingAsync = require('ReactServerRenderingAsync');
@@ -88,7 +89,7 @@ class RenderElementStream extends stream.Readable {
 }
 
 function renderToStream(element) {
-  return new RenderElementStream(element, false);
+  return new RenderElementStream(element, false).pipe(new Adler32Stream());
 }
 
 function renderToStaticMarkupStream(element) {
