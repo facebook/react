@@ -151,7 +151,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
   }
   const tag = rawTag.toLowerCase();
 
-  props = canonicalizeProps(tag, props);
+  props = canonicalizeProps(tag, props, selectValues);
 
   const attributes = propsToAttributes(props, tag, selectValues) +
     (tree.root ? ' ' + DOMPropertyOperations.createMarkupForRoot() : '') +
@@ -278,7 +278,7 @@ const getNewlineEatingTransform = () => {
 // to form inputs (input, select, textarea). this method returns the props that
 // should be used for this element. it also throws some warnings when props are
 // poorly set up.
-const canonicalizeProps = (tag, props) => {
+const canonicalizeProps = (tag, props, selectValues) => {
   // TODO: make this DRYer; there's a lot of repeated logic.
   if (tag === 'input') {
     // check to see if this is a controlled input without onChange or readOnly.
@@ -311,6 +311,21 @@ const canonicalizeProps = (tag, props) => {
       tag);
   }
   // TODO: warn about textarea having (value || defaultValue) and children
+
+  // if there are select values, check to see if this is an option tag
+  // that should be selected.
+  if (selectValues && tag === 'option') {
+    var optionValue = props.value;
+    if (optionValue) {
+      for (const selectValue of selectValues) {
+        if (selectValue === optionValue) {
+          props = Object.assign({selected: true}, props);
+          break;
+        }
+      }
+    }
+  }
+
   // convert default[Checked|Value] into [checked|value]
   if (tag === 'input' || tag === 'textarea' || tag === 'select') {
     props = Object.assign(
@@ -433,22 +448,8 @@ const filterContext = (context, types) => {
   return result;
 };
 
-const propsToAttributes = (props, tagName, selectValues) => {
+const propsToAttributes = (props, tagName) => {
   let result = '';
-
-  // if there are select values, check to see if this is an option tag
-  // that should be selected.
-  if (tagName === 'option' && selectValues) {
-    var optionValue = props.value;
-    if (optionValue) {
-      for (const selectValue of selectValues) {
-        if (selectValue === optionValue) {
-          result += ' selected=""';
-          break;
-        }
-      }
-    }
-  }
 
   for (var name in props) {
     if ((tagName === 'textarea' && (name === 'value' || name === 'defaultValue'))
