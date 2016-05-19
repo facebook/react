@@ -31,11 +31,13 @@ function compile(content, contentFilename) {
         path.join('/', '(?:React|ReactDOM)(?:\.d)?\.ts$')
       );
 
+      var jestRegex = /jest\.d\.ts/;
+
       if (filename === 'lib.d.ts') {
         source = fs.readFileSync(
           require.resolve('typescript/lib/lib.d.ts')
         ).toString();
-      } else if (filename === 'jest.d.ts') {
+      } else if (filename.match(jestRegex)) {
         source = fs.readFileSync(
           path.join(__dirname, 'jest.d.ts')
         ).toString();
