@@ -28,6 +28,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginRegistry = require('EventPluginRegistry');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var invariant = require('invariant');
 var ReactElement = require('ReactElement');
 var ReactInjection = require('ReactInjection');
 var SelectEventPlugin = require('SelectEventPlugin');
@@ -119,6 +120,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
   // is a dom node.
   const {element, context} = getNativeComponent(tree.element, tree.context || {});
 
+  // it's odd to warn and then invariant on this, but it's replicating current behavior.
   if (__DEV__) {
     warning(
       element === null || element === false || ReactElement.isValidElement(element),
@@ -127,6 +129,12 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
       'Component' // TODO: get a proper name here.
     );
   }
+  invariant(
+    element === null || element === false || ReactElement.isValidElement(element),
+    '%s(...): A valid React element (or null) must be returned. You may have ' +
+    'returned undefined, an array or some other invalid object.',
+    'Component' // TODO: get a proper name here.
+  );
 
   tree.element = element;
   tree.context = context;

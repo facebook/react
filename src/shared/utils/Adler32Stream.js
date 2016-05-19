@@ -20,6 +20,16 @@ class Adler32Stream extends stream.Transform {
   constructor(rootId, options) {
     super(options);
     this.rollingHash = rollingAdler32('');
+    const errorHandler = e => {
+      this.emit('error', e);
+    };
+
+    this.on('pipe', src => {
+      src.on('error', errorHandler);
+    });
+    this.on('unpipe', src => {
+      src.removeListener('error', errorHandler);
+    });
   }
 
   _transform(chunk, encoding, next) {
