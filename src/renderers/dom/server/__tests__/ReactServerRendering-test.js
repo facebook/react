@@ -581,15 +581,6 @@ describe('ReactServerRendering', function() {
     });
 
     describe('components and children', function() {
-      var EmptyComponent;
-      beforeEach(() => {
-        EmptyComponent = class extends React.Component {
-          render() {
-            return null;
-          }
-        };
-      });
-
       function expectNode(node, type, value) {
         expect(node).not.toBe(null);
         expect(node.nodeType).toBe(type);
@@ -609,40 +600,15 @@ describe('ReactServerRendering', function() {
         expectNode(node, COMMENT_NODE_TYPE, ' react-empty: [0-9]+ ');
       }
 
-      // TODO: port these tests to itRenders or itClientRenders, as is appropriate
-      it('should reconnect a div with an entity', () =>
-        expectMarkupMatch(<div>This markup contains an nbsp entity: &nbsp; server text</div>));
-      it('should reconnect a div with text in two code blocks', () => expectMarkupMatch(<div>{"Text1"}{"Text2"}</div>));
-      it('should reconnect a div with text in code block and literal',
-        () => expectMarkupMatch(<div>Text1{"Text2"}</div>));
-      it('should reconnect a div with text with special characters',
-        () => expectMarkupMatch(<div>{"Text & > < Stuff"}</div>));
-      it('should reconnect a div with text with special characters in multiple children',
-        () => expectMarkupMatch(<div>{"&<>\"'"}{"Text & > <\"' Stuff"}</div>));
-      it('should reconnect a div with text with flanking whitespace',
-        () => expectMarkupMatch(<div>  Text </div>));
-      // Markup Matches: children
-      it('should reconnect a div with text sibling to a node',
-        () => expectMarkupMatch(<div>Text<span>More Text</span></div>));
-      it('should reconnect a div with a child', () => expectMarkupMatch(<div id="parent"><div id="child"/></div>));
-      it('should reconnect a div with multiple children',
-        () => expectMarkupMatch(<div id="parent"><div id="child1"/><div id="child2"/></div>));
-      it('should reconnect a div with multiple children separated by whitespace',
-        () => expectMarkupMatch(<div id="parent"><div id="child1"/> <div id="child2"/></div>));
-      it('should reconnect a div with a child surrounded by whitespace',
-        () => expectMarkupMatch(<div id="parent">  <div id="child"/>   </div>)); // eslint-disable-line no-multi-spaces
-      it('should reconnect a div with children separated by whitespace',
-          () => expectMarkupMatch(<div id="parent"><div id="child1"/> <div id="child2"/></div>));
-      it('should reconnect a div with whitespace children', () => expectMarkupMatch(<div>{' '}{' '}{' '}</div>));
-      // Markup Matches: misc
-      it('should reconnect a div with dangerouslySetInnerHTML',
-        () => expectMarkupMatch(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}></div>));
-      // end TODO
-
       itRenders('renders a div with text', render =>
         render(<div>Text</div>).then(e => {
           expect(e.childNodes.length).toBe(1);
           expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders a div with text with flanking whitespace', render =>
+        render(<div>  Text </div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.childNodes[0], TEXT_NODE_TYPE, '  Text ');
         }));
       itRenders('renders a div with text', render =>
         render(<div>{"Text"}</div>).then(e => {
@@ -659,6 +625,21 @@ describe('ReactServerRendering', function() {
           expectTextNode(e.childNodes[0], '');
           expectTextNode(e.childNodes[2], '');
           expectTextNode(e.childNodes[4], '');
+        }));
+      itRenders('renders a div with whitespace children', render =>
+        render(<div>{' '}{' '}{' '}</div>).then(e => {
+          expect(e.childNodes.length).toBe(9);
+          expectTextNode(e.childNodes[0], ' ');
+          expectTextNode(e.childNodes[3], ' ');
+          expectTextNode(e.childNodes[6], ' ');
+        }));
+      itRenders('renders a div with text sibling to a node', render =>
+        render(<div>Text<span>More Text</span></div>).then(e => {
+          expect(e.childNodes.length).toBe(4);
+          expectTextNode(e.childNodes[0], 'Text');
+          expect(e.childNodes[3].tagName.toLowerCase()).toBe('span');
+          expect(e.childNodes[3].childNodes.length).toBe(1);
+          expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
         }));
       itRenders('renders an svg element', render =>
         render(<svg/>).then(e => {
@@ -707,6 +688,13 @@ describe('ReactServerRendering', function() {
       itRenders('renders undefined single child as blank',
         render => render(<div>{undefined}</div>).then(e => expect(e.childNodes.length).toBe(0)));
 
+      itRenders('renders a div with dangerouslySetInnerHTML',
+        render => render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}></div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expect(e.firstChild.tagName.toLowerCase()).toBe('span');
+          expect(e.firstChild.getAttribute('id')).toBe('child');
+          expect(e.firstChild.childNodes.length).toBe(0);
+        }));
       itRenders('renders a null component as empty', (render) => {
         const NullComponent = () => null;
         return render(<NullComponent/>).then(e => expectEmptyNode(e));
@@ -902,6 +890,42 @@ describe('ReactServerRendering', function() {
             }
           });
       });
+
+      itRenders('renders a div with a child', render =>
+        render(<div id="parent"><div id="child"/></div>).then(e => {
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(1);
+          expect(e.childNodes[0].id).toBe('child');
+          expect(e.childNodes[0].childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with multiple children', render =>
+        render(<div id="parent"><div id="child1"/><div id="child2"/></div>).then(e => {
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(2);
+          expect(e.childNodes[0].id).toBe('child1');
+          expect(e.childNodes[0].childNodes.length).toBe(0);
+          expect(e.childNodes[1].id).toBe('child2');
+          expect(e.childNodes[1].childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with multiple children separated by whitespace', render =>
+        render(<div id="parent"><div id="child1"/> <div id="child2"/></div>).then(e => {
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(5);
+          expect(e.childNodes[0].id).toBe('child1');
+          expect(e.childNodes[0].childNodes.length).toBe(0);
+          expectTextNode(e.childNodes[1], ' ');
+          expect(e.childNodes[4].id).toBe('child2');
+          expect(e.childNodes[4].childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with a child surrounded by whitespace', render =>
+        render(<div id="parent">  <div id="child"/>   </div>).then(e => { // eslint-disable-line no-multi-spaces
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(7);
+          expectTextNode(e.childNodes[0], '  ');
+          expect(e.childNodes[3].id).toBe('child');
+          expect(e.childNodes[3].childNodes.length).toBe(0);
+          expectTextNode(e.childNodes[4], '   ');
+        }));
 
       itThrowsOnRender('throws when rendering null', render => render(null));
       itThrowsOnRender('throws when rendering false', render => render(false));
