@@ -21,7 +21,7 @@ var warning = require('warning');
  * @param {?ReactComponent} child React child component.
  * @param {!string} name String name of key path to child.
  */
-function flattenSingleChildIntoContext(traverseContext, child, name) {
+function flattenSingleChildIntoContext(traverseContext, child, name, selfDebugID) {
   // We found a component instance.
   var result = traverseContext;
   var keyUnique = (result[name] === undefined);
@@ -32,7 +32,7 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
       '`%s`. Child keys must be unique; when two children share a key, only ' +
       'the first child will be used.%s',
       KeyEscapeUtils.unescape(name),
-      ReactComponentTreeDevtool.getCurrentStackAddendum(result[name])
+      ReactComponentTreeDevtool.getStackAddendumByID(selfDebugID)
     );
   }
   if (keyUnique && child != null) {
@@ -45,12 +45,26 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
  * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
-function flattenChildren(children) {
+function flattenChildren(children, selfDebugID) {
   if (children == null) {
     return children;
   }
   var result = {};
-  traverseAllChildren(children, flattenSingleChildIntoContext, result);
+
+  if (__DEV__) {
+    traverseAllChildren(
+      children,
+      (traverseContext, child, name) => flattenSingleChildIntoContext(
+        traverseContext,
+        child,
+        name,
+        selfDebugID
+      ),
+      result
+    );
+  } else {
+    traverseAllChildren(children, flattenSingleChildIntoContext, result);
+  }
   return result;
 }
 

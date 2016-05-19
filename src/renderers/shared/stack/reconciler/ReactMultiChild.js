@@ -202,7 +202,7 @@ var ReactMultiChild = {
         if (this._currentElement) {
           try {
             ReactCurrentOwner.current = this._currentElement._owner;
-            nextChildren = flattenChildren(nextNestedChildrenElements);
+            nextChildren = flattenChildren(nextNestedChildrenElements, this._debugID);
           } finally {
             ReactCurrentOwner.current = null;
           }

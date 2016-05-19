@@ -18,6 +18,10 @@ var React;
 var ReactTestUtils;
 
 describe('ReactChildReconciler', function() {
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   beforeEach(function() {
     jest.resetModuleRegistry();
 
@@ -30,11 +34,7 @@ describe('ReactChildReconciler', function() {
 
     var Component = React.createClass({
       render() {
-        // <div>{[<div key="1" />, <div key="1" />]}</div>
-        return React.createElement('div', null, [
-          React.createElement('div', { key: '1' }),
-          React.createElement('div', { key: '1' }),
-        ]);
+        return <div>{[<div key="1" />, <div key="1" />]}</div>;
       },
     });
 
@@ -51,11 +51,7 @@ describe('ReactChildReconciler', function() {
 
     var Component = React.createClass({
       render: function() {
-        // <div>{[<div key="1" />, <div key="1" />]}</div>
-        return React.createElement('div', null, [
-          React.createElement('div', { key: '1' }),
-          React.createElement('div', { key: '1' }),
-        ]);
+        return <div>{[<div key="1" />, <div key="1" />]}</div>;
       },
     });
 
@@ -67,25 +63,22 @@ describe('ReactChildReconciler', function() {
 
     var GrandParent = React.createClass({
       render: function() {
-        // <Parent child={<Component />} />
-        return React.createElement(Parent, {
-          child: React.createElement(Component),
-        });
+        return <Parent child={<Component />} />;
       },
     });
 
-    ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
+    ReactTestUtils.renderIntoDocument(<GrandParent />);
 
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
       'only the first child will be used.\n' +
-      '    in div (created by Component)\n' +
-      '    in Component (created by GrandParent)\n' +
-      '    in Parent (created by GrandParent)\n' +
-      '    in GrandParent'
+      '    in div (at **)\n' +
+      '    in Component (at **)\n' +
+      '    in Parent (at **)\n' +
+      '    in GrandParent (at **)'
     );
   });
 });

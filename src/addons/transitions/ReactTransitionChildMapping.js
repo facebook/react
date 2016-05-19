@@ -25,6 +25,9 @@ var ReactTransitionChildMapping = {
     if (!children) {
       return children;
     }
+    // TODO: `flattenChildren` now takes an extra `selfDebugID` argument
+    // for looking up the component stack in dev build.
+    // Need to figure out a way to get the `_debugID` here.
     return flattenChildren(children);
   },
 
