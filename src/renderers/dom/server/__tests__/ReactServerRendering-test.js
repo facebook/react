@@ -125,11 +125,30 @@ const serverStringRender = (element, warningCount = 0) => {
     return Promise.reject(e);
   }
 };
-const serverStreamRender = element => {
-  return streamToPromise(ReactServerRendering.renderToStream(element))
+const serverStreamRender = (element, warningCount = 0) => {
+  var oldConsoleError = console.error;
+  var newConsoleError = jasmine.createSpy();
+  console.error = newConsoleError;
+
+  return streamToPromise(ReactServerRendering.renderToStream(element), warningCount)
     .then(markup => {
+      expect(newConsoleError.argsForCall.length).toBe(warningCount);
+      if (newConsoleError.argsForCall.length !== warningCount) {
+        console.log(`We expected ${warningCount} warning(s), but saw ` +
+          `${newConsoleError.argsForCall.length} warning(s).`);
+        if (newConsoleError.argsForCall.length > 0) {
+          console.log(`We saw these warnings:`);
+          console.log(newConsoleError.argsForCall.join('\n'));
+        }
+      }
+      console.error = oldConsoleError;
+
       var div = document.createElement('div');
       div.innerHTML = markup;
+      // we need to do a little hack here because the script element doesn't run
+      // and remove itself, so we do so manually.
+      div.removeChild(div.childNodes[1]);
+
       return div.firstChild;
     });
 };
@@ -148,16 +167,31 @@ const clientRenderOnServerString = (element, warningCount = 0) => {
     return Promise.reject(e);
   }
 };
-const clientRenderOnServerStream = element => {
+const clientRenderOnServerStream = (element, warningCount = 0) => {
+  var oldConsoleError = console.error;
+  var newConsoleError = jasmine.createSpy();
+  console.error = newConsoleError;
+
   return streamToPromise(ReactServerRendering.renderToStream(element))
     .then(markup => {
+      expect(newConsoleError.argsForCall.length).toBe(warningCount);
+      if (newConsoleError.argsForCall.length !== warningCount) {
+        console.log(`We expected ${warningCount} warning(s), but saw ` +
+          `${newConsoleError.argsForCall.length} warning(s).`);
+        if (newConsoleError.argsForCall.length > 0) {
+          console.log(`We saw these warnings:`);
+          console.log(newConsoleError.argsForCall.join('\n'));
+        }
+      }
+      console.error = oldConsoleError;
+
       var div = document.createElement('div');
       div.innerHTML = markup;
 
       // when scripts are included as innerHTML, they don't run; we have to add'
       // it to the document as well.
       document.body.appendChild(div);
-      ReactDOM.render(element, div);
+      expectWarnings(() => ReactDOM.render(element, div), warningCount);
       document.body.removeChild(div);
 
       return div.firstChild;
