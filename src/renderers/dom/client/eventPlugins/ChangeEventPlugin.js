@@ -273,16 +273,20 @@ function handleEventsForInputEventIE(
   }
 }
 
-// For IE8 and IE9.
+// For <=IE11.
 function getTargetInstForInputEventIE(
   topLevelType,
   targetInst
 ) {
   if (topLevelType === topLevelTypes.topSelectionChange ||
       topLevelType === topLevelTypes.topKeyUp ||
-      topLevelType === topLevelTypes.topKeyDown) {
+      topLevelType === topLevelTypes.topKeyDown ||
+      topLevelType === topLevelTypes.topChange) {
     // On the selectionchange event, the target is just document which isn't
     // helpful for us so just check activeElement instead.
+    //
+    // The onChange event catches autocomplete changes for IE11 where
+    // onpropertychange doesn't fire.
     //
     // 99% of the time, keydown and keyup aren't necessary. IE8 fails to fire
     // propertychange on the first input event after setting `value` from a
