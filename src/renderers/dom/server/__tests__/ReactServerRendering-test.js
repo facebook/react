@@ -108,12 +108,30 @@ function itRejects(desc, testFn) {
   });
 }
 
+// converts a readable string stream to a promise of string.
+function streamToPromise(stream) {
+  return new Promise((resolve, reject) => {
+    let result = '';
+    stream.on('data', chunk => result += chunk);
+    stream.on('error', e => reject(e));
+    stream.on('end', () => resolve(result));
+  });
+}
+
 const serverStringRender = (element, warningCount = 0) => {
   try {
     return Promise.resolve(getSsrDom(element, warningCount));
   } catch (e) {
     return Promise.reject(e);
   }
+};
+const serverStreamRender = element => {
+  return streamToPromise(ReactServerRendering.renderToStream(element))
+    .then(markup => {
+      var div = document.createElement('div');
+      div.innerHTML = markup;
+      return div.firstChild;
+    });
 };
 const clientRender = (element, warningCount = 0) => {
   try {
@@ -130,6 +148,15 @@ const clientRenderOnServerString = (element, warningCount = 0) => {
     return Promise.reject(e);
   }
 };
+const clientRenderOnServerStream = element => {
+  return streamToPromise(ReactServerRendering.renderToStream(element))
+    .then(markup => {
+      var div = document.createElement('div');
+      div.innerHTML = markup;
+      ReactDOM.render(element, div);
+      return div.firstChild;
+    });
+};
 const clientRenderOnBadMarkup = (element, warningCount = 0) => {
   try {
     var domElement = document.createElement('div');
@@ -141,11 +168,13 @@ const clientRenderOnBadMarkup = (element, warningCount = 0) => {
   }
 };
 
-// runs a DOM rendering test as four different tests, with four different rendering
+// runs a DOM rendering test as six different tests, with six different rendering
 // scenarios:
 // -- render to string on server
+// -- render to stream on server
 // -- render on client without any server markup "clean client render"
 // -- render on client on top of good server-generated string markup
+// -- render on client on top of good server-generated stream markup
 // -- render on client on top of bad server-generated markup
 //
 // testFn is a test that has one arg, which is a render function. the render
@@ -157,12 +186,15 @@ const clientRenderOnBadMarkup = (element, warningCount = 0) => {
 function itRenders(desc, testFn) {
   pit(`${desc} with server string render`,
     () => testFn(serverStringRender));
+  pit(`${desc} with server stream render`,
+    () => testFn(serverStreamRender));
   itClientRenders(desc, testFn);
 }
 
 // run testFn in four different rendering scenarios:
 // -- render on client without any server markup "clean client render"
 // -- render on client on top of good server-generated string markup
+// -- render on client on top of good server-generated stream markup
 // -- render on client on top of bad server-generated markup
 //
 // testFn takes in a render function and returns a Promise that resolves or rejects
@@ -175,6 +207,8 @@ function itClientRenders(desc, testFn) {
     () => testFn(clientRender));
   pit(`${desc} with client render on top of server string markup`,
     () => testFn(clientRenderOnServerString));
+  pit(`${desc} with client render on top of server stream markup`,
+    () => testFn(clientRenderOnServerStream));
   pit(`${desc} with client render on top of bad server markup`,
     () => testFn(clientRenderOnBadMarkup));
 }
@@ -182,6 +216,8 @@ function itClientRenders(desc, testFn) {
 function itThrowsOnRender(desc, testFn) {
   itRejects(`${desc} with server string render`,
     () => testFn(serverStringRender));
+  itRejects(`${desc} with server stream render`,
+    () => testFn(serverStreamRender));
   itRejects(`${desc} with clean client render`,
     () => testFn(clientRender));
 
