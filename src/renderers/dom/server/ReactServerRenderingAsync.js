@@ -153,7 +153,7 @@ const renderImpl = (tree, length, makeStaticMarkup, selectValues) => {
 
   props = canonicalizeProps(tag, props, selectValues);
 
-  const attributes = propsToAttributes(props, tag, selectValues) +
+  const attributes = propsToAttributes(props, tag) +
     (tree.root ? ' ' + DOMPropertyOperations.createMarkupForRoot() : '') +
     (!makeStaticMarkup ? ' ' + DOMPropertyOperations.createMarkupForID(tree.domId.value++) : '');
   if (voidTags[tag]
