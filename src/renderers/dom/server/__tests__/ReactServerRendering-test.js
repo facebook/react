@@ -153,7 +153,13 @@ const clientRenderOnServerStream = element => {
     .then(markup => {
       var div = document.createElement('div');
       div.innerHTML = markup;
+
+      // when scripts are included as innerHTML, they don't run; we have to add'
+      // it to the document as well.
+      document.body.appendChild(div);
       ReactDOM.render(element, div);
+      document.body.removeChild(div);
+
       return div.firstChild;
     });
 };
