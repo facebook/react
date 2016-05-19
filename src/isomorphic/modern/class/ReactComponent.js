@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
-var ReactInstrumentation = require('ReactInstrumentation');
 
 var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('emptyObject');
@@ -66,14 +65,6 @@ ReactComponent.prototype.setState = function(partialState, callback) {
     'setState(...): takes an object of state variables to update or a ' +
     'function which returns an object of state variables.'
   );
-  if (__DEV__) {
-    ReactInstrumentation.debugTool.onSetState();
-    warning(
-      partialState != null,
-      'setState(...): You passed an undefined or null state object; ' +
-      'instead, use forceUpdate().'
-    );
-  }
   this.updater.enqueueSetState(this, partialState);
   if (callback) {
     this.updater.enqueueCallback(this, callback, 'setState');
