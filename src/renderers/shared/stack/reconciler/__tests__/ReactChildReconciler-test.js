@@ -82,7 +82,7 @@ describe('ReactChildReconciler', function() {
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
       'only the first child will be used.\n' +
-      '    in Unknown\n' + // cuz we are using `ReactTestUtils.renderIntoDocument`
+      '    in div (created by Component)\n' +
       '    in Component (created by GrandParent)\n' +
       '    in Parent (created by GrandParent)\n' +
       '    in GrandParent'
