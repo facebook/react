@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var emptyFunction = require('emptyFunction');
@@ -38,6 +39,7 @@ var ReactTransitionGroup = React.createClass({
 
   getInitialState: function() {
     return {
+      // TODO: can we get useful debug information to show at this point?
       children: ReactTransitionChildMapping.getChildMapping(this.props.children),
     };
   },
@@ -58,9 +60,17 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentWillReceiveProps: function(nextProps) {
-    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
-      nextProps.children
-    );
+    var nextChildMapping;
+    if (__DEV__) {
+      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+        nextProps.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+        nextProps.children
+      );
+    }
     var prevChildMapping = this.state.children;
 
     this.setState({
@@ -123,9 +133,17 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
       // This was removed before it had fully appeared. Remove it.
@@ -155,9 +173,17 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
       // This was removed before it had fully entered. Remove it.
@@ -188,9 +214,17 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (currentChildMapping && currentChildMapping.hasOwnProperty(key)) {
       // This entered again before it fully left. Add it again.
