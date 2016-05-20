@@ -268,6 +268,8 @@ onLoad onError
 
 ### Animation Events
 
+Introduced in React v 15.0.0
+
 Event names:
 
 ```
