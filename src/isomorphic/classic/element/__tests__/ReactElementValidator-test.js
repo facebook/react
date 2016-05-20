@@ -19,6 +19,10 @@ var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactElementValidator', function() {
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   var ComponentClass;
 
   beforeEach(function() {
@@ -95,9 +99,10 @@ describe('ReactElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
 
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
-      '"key" prop. See https://fb.me/react-warning-keys for more information.'
+      '"key" prop. See https://fb.me/react-warning-keys for more information.\n' +
+      '    in div (at **)'
     );
   });
 
@@ -111,10 +116,46 @@ describe('ReactElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
 
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
       '"key" prop. Check the top-level render call using <div>. See ' +
-      'https://fb.me/react-warning-keys for more information.'
+      'https://fb.me/react-warning-keys for more information.\n' +
+      '    in div (at **)'
+    );
+  });
+
+  it('warns for keys with component stack info', function() {
+    spyOn(console, 'error');
+
+    var Component = React.createClass({
+      render: function() {
+        return <div>{[<div />, <div />]}</div>;
+      },
+    });
+
+    var Parent = React.createClass({
+      render: function() {
+        return React.cloneElement(this.props.child);
+      },
+    });
+
+    var GrandParent = React.createClass({
+      render: function() {
+        return <Parent child={<Component />} />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<GrandParent />);
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
+      'Warning: Each child in an array or iterator should have a unique ' +
+      '"key" prop. Check the render method of `Component`. See ' +
+      'https://fb.me/react-warning-keys for more information.\n' +
+      '    in div (at **)\n' +
+      '    in Component (at **)\n' +
+      '    in Parent (at **)\n' +
+      '    in GrandParent (at **)'
     );
   });
 

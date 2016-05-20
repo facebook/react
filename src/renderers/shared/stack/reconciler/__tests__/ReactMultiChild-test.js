@@ -12,8 +12,11 @@
 'use strict';
 
 describe('ReactMultiChild', function() {
-  var React;
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
+  var React;
   var ReactDOM;
 
   beforeEach(function() {
@@ -147,6 +150,52 @@ describe('ReactMultiChild', function() {
 
       expect(mockMount.mock.calls.length).toBe(2);
       expect(mockUnmount.mock.calls.length).toBe(1);
+    });
+
+    it('should warn for duplicated keys with component stack info', function() {
+      spyOn(console, 'error');
+
+      var container = document.createElement('div');
+
+      var WrapperComponent = React.createClass({
+        render: function() {
+          return <div>{this.props.children}</div>;
+        },
+      });
+
+      var Parent = React.createClass({
+        render: function() {
+          return (
+            <div>
+              <WrapperComponent>
+                {this.props.children}
+              </WrapperComponent>
+            </div>
+          );
+        },
+      });
+
+      ReactDOM.render(
+        <Parent>{[<div key="1"/>]}</Parent>,
+        container
+      );
+
+      ReactDOM.render(
+        <Parent>{[<div key="1"/>, <div key="1"/>]}</Parent>,
+        container
+      );
+
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
+        'Warning: flattenChildren(...): ' +
+        'Encountered two children with the same key, `1`. ' +
+        'Child keys must be unique; when two children share a key, ' +
+        'only the first child will be used.\n' +
+        '    in div (at **)\n' +
+        '    in WrapperComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Parent (at **)'
+      );
     });
   });
 });
