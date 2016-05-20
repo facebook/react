@@ -11,7 +11,9 @@
 
 'use strict';
 
-var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
+var performanceNow = require('performanceNow');
 var warning = require('warning');
 
 var eventHandlers = [];
@@ -37,6 +39,70 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
   }
 }
 
+var isProfiling = false;
+var flushHistory = [];
+var currentFlushNesting = 0;
+var currentFlushMeasurements = null;
+var currentFlushStartTime = null;
+var currentTimerDebugID = null;
+var currentTimerStartTime = null;
+var currentTimerType = null;
+
+function clearHistory() {
+  ReactComponentTreeDevtool.purgeUnmountedComponents();
+  ReactNativeOperationHistoryDevtool.clearHistory();
+}
+
+function getTreeSnapshot(registeredIDs) {
+  return registeredIDs.reduce((tree, id) => {
+    var ownerID = ReactComponentTreeDevtool.getOwnerID(id);
+    var parentID = ReactComponentTreeDevtool.getParentID(id);
+    tree[id] = {
+      displayName: ReactComponentTreeDevtool.getDisplayName(id),
+      text: ReactComponentTreeDevtool.getText(id),
+      updateCount: ReactComponentTreeDevtool.getUpdateCount(id),
+      childIDs: ReactComponentTreeDevtool.getChildIDs(id),
+      // Text nodes don't have owners but this is close enough.
+      ownerID: ownerID || ReactComponentTreeDevtool.getOwnerID(parentID),
+      parentID,
+    };
+    return tree;
+  }, {});
+}
+
+function resetMeasurements() {
+  if (__DEV__) {
+    var previousStartTime = currentFlushStartTime;
+    var previousMeasurements = currentFlushMeasurements || [];
+    var previousOperations = ReactNativeOperationHistoryDevtool.getHistory();
+
+    if (!isProfiling || currentFlushNesting === 0) {
+      currentFlushStartTime = null;
+      currentFlushMeasurements = null;
+      clearHistory();
+      return;
+    }
+
+    if (previousMeasurements.length || previousOperations.length) {
+      var registeredIDs = ReactComponentTreeDevtool.getRegisteredIDs();
+      flushHistory.push({
+        duration: performanceNow() - previousStartTime,
+        measurements: previousMeasurements || [],
+        operations: previousOperations || [],
+        treeSnapshot: getTreeSnapshot(registeredIDs),
+      });
+    }
+
+    clearHistory();
+    currentFlushStartTime = performanceNow();
+    currentFlushMeasurements = [];
+  }
+}
+
+function checkDebugID(debugID) {
+  warning(debugID, 'ReactDebugTool: debugID may not be empty.');
+}
+
 var ReactDebugTool = {
   addDevtool(devtool) {
     eventHandlers.push(devtool);
@@ -49,29 +115,157 @@ var ReactDebugTool = {
       }
     }
   },
+  beginProfiling() {
+    if (__DEV__) {
+      if (isProfiling) {
+        return;
+      }
+
+      isProfiling = true;
+      flushHistory.length = 0;
+      resetMeasurements();
+    }
+  },
+  endProfiling() {
+    if (__DEV__) {
+      if (!isProfiling) {
+        return;
+      }
+
+      isProfiling = false;
+      resetMeasurements();
+    }
+  },
+  getFlushHistory() {
+    if (__DEV__) {
+      return flushHistory;
+    }
+  },
+  onBeginFlush() {
+    if (__DEV__) {
+      currentFlushNesting++;
+      resetMeasurements();
+    }
+    emitEvent('onBeginFlush');
+  },
+  onEndFlush() {
+    if (__DEV__) {
+      resetMeasurements();
+      currentFlushNesting--;
+    }
+    emitEvent('onEndFlush');
+  },
+  onBeginLifeCycleTimer(debugID, timerType) {
+    checkDebugID(debugID);
+    emitEvent('onBeginLifeCycleTimer', debugID, timerType);
+    if (__DEV__) {
+      if (isProfiling && currentFlushNesting > 0) {
+        warning(
+          !currentTimerType,
+          'There is an internal error in the React performance measurement code. ' +
+          'Did not expect %s timer to start while %s timer is still in ' +
+          'progress for %s instance.',
+          timerType,
+          currentTimerType || 'no',
+          (debugID === currentTimerDebugID) ? 'the same' : 'another'
+        );
+        currentTimerStartTime = performanceNow();
+        currentTimerDebugID = debugID;
+        currentTimerType = timerType;
+      }
+    }
+  },
+  onEndLifeCycleTimer(debugID, timerType) {
+    checkDebugID(debugID);
+    if (__DEV__) {
+      if (isProfiling && currentFlushNesting > 0) {
+        warning(
+          currentTimerType === timerType,
+          'There is an internal error in the React performance measurement code. ' +
+          'We did not expect %s timer to stop while %s timer is still in ' +
+          'progress for %s instance. Please report this as a bug in React.',
+          timerType,
+          currentTimerType || 'no',
+          (debugID === currentTimerDebugID) ? 'the same' : 'another'
+        );
+        currentFlushMeasurements.push({
+          timerType,
+          instanceID: debugID,
+          duration: performanceNow() - currentTimerStartTime,
+        });
+        currentTimerStartTime = null;
+        currentTimerDebugID = null;
+        currentTimerType = null;
+      }
+    }
+    emitEvent('onEndLifeCycleTimer', debugID, timerType);
+  },
+  onBeginReconcilerTimer(debugID, timerType) {
+    checkDebugID(debugID);
+    emitEvent('onBeginReconcilerTimer', debugID, timerType);
+  },
+  onEndReconcilerTimer(debugID, timerType) {
+    checkDebugID(debugID);
+    emitEvent('onEndReconcilerTimer', debugID, timerType);
+  },
   onBeginProcessingChildContext() {
     emitEvent('onBeginProcessingChildContext');
   },
   onEndProcessingChildContext() {
     emitEvent('onEndProcessingChildContext');
   },
+  onNativeOperation(debugID, type, payload) {
+    checkDebugID(debugID);
+    emitEvent('onNativeOperation', debugID, type, payload);
+  },
   onSetState() {
     emitEvent('onSetState');
   },
-  onMountRootComponent(internalInstance) {
-    emitEvent('onMountRootComponent', internalInstance);
+  onSetDisplayName(debugID, displayName) {
+    checkDebugID(debugID);
+    emitEvent('onSetDisplayName', debugID, displayName);
   },
-  onMountComponent(internalInstance) {
-    emitEvent('onMountComponent', internalInstance);
+  onSetChildren(debugID, childDebugIDs) {
+    checkDebugID(debugID);
+    emitEvent('onSetChildren', debugID, childDebugIDs);
   },
-  onUpdateComponent(internalInstance) {
-    emitEvent('onUpdateComponent', internalInstance);
+  onSetOwner(debugID, ownerDebugID) {
+    checkDebugID(debugID);
+    emitEvent('onSetOwner', debugID, ownerDebugID);
   },
-  onUnmountComponent(internalInstance) {
-    emitEvent('onUnmountComponent', internalInstance);
+  onSetText(debugID, text) {
+    checkDebugID(debugID);
+    emitEvent('onSetText', debugID, text);
+  },
+  onMountRootComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onMountRootComponent', debugID);
+  },
+  onMountComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onMountComponent', debugID);
+  },
+  onUpdateComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onUpdateComponent', debugID);
+  },
+  onUnmountComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onUnmountComponent', debugID);
   },
 };
 
-ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
+if (__DEV__) {
+  var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
+  var ReactNativeOperationHistoryDevtool = require('ReactNativeOperationHistoryDevtool');
+  var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+  ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
+  ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
+  ReactDebugTool.addDevtool(ReactNativeOperationHistoryDevtool);
+  var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
+  if ((/[?&]react_perf\b/).test(url)) {
+    ReactDebugTool.beginProfiling();
+  }
+}
 
 module.exports = ReactDebugTool;

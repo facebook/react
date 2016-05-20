@@ -36,7 +36,7 @@ describe('DisabledInputUtils', function() {
     return element;
   }
 
-  var onClick = jest.genMockFn();
+  var onClick = jest.fn();
 
   elements.forEach(function(tagName) {
 

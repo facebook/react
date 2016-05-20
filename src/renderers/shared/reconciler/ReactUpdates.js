@@ -14,13 +14,14 @@
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactPerf = require('ReactPerf');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
 var invariant = require('invariant');
 
 var dirtyComponents = [];
+var updateBatchNumber = 0;
 var asapCallbackQueue = CallbackQueue.getPooled();
 var asapEnqueued = false;
 
@@ -137,6 +138,13 @@ function runBatchedUpdates(transaction) {
   // them before their children by sorting the array.
   dirtyComponents.sort(mountOrderComparator);
 
+  // Any updates enqueued while reconciling must be performed after this entire
+  // batch. Otherwise, if dirtyComponents is [A, B] where A has children B and
+  // C, B could update twice in a single batch if C's render enqueues an update
+  // to B (since B would have already updated, we should skip it, and the only
+  // way we can know to do so is by checking the batch counter).
+  updateBatchNumber++;
+
   for (var i = 0; i < len; i++) {
     // If a component is unmounted before pending changes apply, it will still
     // be here, but we assume that it has cleared its _pendingCallbacks and
@@ -165,7 +173,8 @@ function runBatchedUpdates(transaction) {
 
     ReactReconciler.performUpdateIfNecessary(
       component,
-      transaction.reconcileTransaction
+      transaction.reconcileTransaction,
+      updateBatchNumber
     );
 
     if (markerName) {
@@ -184,6 +193,10 @@ function runBatchedUpdates(transaction) {
 }
 
 var flushBatchedUpdates = function() {
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onBeginFlush();
+  }
+
   // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
   // array and perform any updates enqueued by mount-ready handlers (i.e.,
   // componentDidUpdate) but we need to check here too in order to catch
@@ -203,12 +216,11 @@ var flushBatchedUpdates = function() {
       CallbackQueue.release(queue);
     }
   }
+
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onEndFlush();
+  }
 };
-flushBatchedUpdates = ReactPerf.measure(
-  'ReactUpdates',
-  'flushBatchedUpdates',
-  flushBatchedUpdates
-);
 
 /**
  * Mark a component as needing a rerender, adding an optional callback to a
@@ -229,6 +241,9 @@ function enqueueUpdate(component) {
   }
 
   dirtyComponents.push(component);
+  if (component._updateBatchNumber == null) {
+    component._updateBatchNumber = updateBatchNumber + 1;
+  }
 }
 
 /**

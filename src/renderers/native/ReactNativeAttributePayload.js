@@ -11,7 +11,6 @@
  */
 'use strict';
 
-var Platform = require('Platform');
 var ReactNativePropRegistry = require('ReactNativePropRegistry');
 
 var deepDiffer = require('deepDiffer');
@@ -46,21 +45,6 @@ type NestedNode = Array<NestedNode> | Object | number;
 // Tracks removed keys
 var removedKeys = null;
 var removedKeyCount = 0;
-
-function translateKey(propKey: string) : string {
-  if (propKey === 'transform') {
-    // We currently special case the key for `transform`. iOS uses the
-    // transformMatrix name and Android uses the decomposedMatrix name.
-    // TODO: We could unify these names and just use the name `transform`
-    // all the time. Just need to update the native side.
-    if (Platform.OS === 'android') {
-      return 'decomposedMatrix';
-    } else {
-      return 'transformMatrix';
-    }
-  }
-  return propKey;
-}
 
 function defaultDiffer(prevProp: mixed, nextProp: mixed) : boolean {
   if (typeof nextProp !== 'object' || nextProp === null) {
@@ -326,18 +310,11 @@ function diffProperties(
   var attributeConfig : ?(CustomAttributeConfiguration | AttributeConfiguration);
   var nextProp;
   var prevProp;
-  var altKey;
 
   for (var propKey in nextProps) {
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
       continue; // not a valid native prop
-    }
-
-    altKey = translateKey(propKey);
-    if (!validAttributes[altKey]) {
-      // If there is no config for the alternative, bail out. Helps ART.
-      altKey = propKey;
     }
 
     prevProp = prevProps[propKey];
@@ -367,7 +344,7 @@ function diffProperties(
       removedKeys[propKey] = false;
     }
 
-    if (updatePayload && updatePayload[altKey] !== undefined) {
+    if (updatePayload && updatePayload[propKey] !== undefined) {
       // Something else already triggered an update to this key because another
       // value diffed. Since we're now later in the nested arrays our value is
       // more important so we need to calculate it and override the existing
@@ -376,14 +353,14 @@ function diffProperties(
       // Pattern match on: attributeConfig
       if (typeof attributeConfig !== 'object') {
         // case: !Object is the default case
-        updatePayload[altKey] = nextProp;
+        updatePayload[propKey] = nextProp;
       } else if (typeof attributeConfig.diff === 'function' ||
                  typeof attributeConfig.process === 'function') {
         // case: CustomAttributeConfiguration
         var nextValue = typeof attributeConfig.process === 'function' ?
                         attributeConfig.process(nextProp) :
                         nextProp;
-        updatePayload[altKey] = nextValue;
+        updatePayload[propKey] = nextValue;
       }
       continue;
     }
@@ -397,7 +374,7 @@ function diffProperties(
       // case: !Object is the default case
       if (defaultDiffer(prevProp, nextProp)) {
         // a normal leaf has changed
-        (updatePayload || (updatePayload = {}))[altKey] = nextProp;
+        (updatePayload || (updatePayload = {}))[propKey] = nextProp;
       }
     } else if (typeof attributeConfig.diff === 'function' ||
                typeof attributeConfig.process === 'function') {
@@ -411,7 +388,7 @@ function diffProperties(
         nextValue = typeof attributeConfig.process === 'function' ?
                     attributeConfig.process(nextProp) :
                     nextProp;
-        (updatePayload || (updatePayload = {}))[altKey] = nextValue;
+        (updatePayload || (updatePayload = {}))[propKey] = nextValue;
       }
     } else {
       // default: fallthrough case when nested properties are defined
@@ -446,13 +423,7 @@ function diffProperties(
       continue; // not a valid native prop
     }
 
-    altKey = translateKey(propKey);
-    if (!attributeConfig[altKey]) {
-      // If there is no config for the alternative, bail out. Helps ART.
-      altKey = propKey;
-    }
-
-    if (updatePayload && updatePayload[altKey] !== undefined) {
+    if (updatePayload && updatePayload[propKey] !== undefined) {
       // This was already updated to a diff result earlier.
       continue;
     }
@@ -468,7 +439,7 @@ function diffProperties(
 
       // case: CustomAttributeConfiguration | !Object
       // Flag the leaf property for removal by sending a sentinel.
-      (updatePayload || (updatePayload = {}))[altKey] = null;
+      (updatePayload || (updatePayload = {}))[propKey] = null;
       if (!removedKeys) {
         removedKeys = {};
       }

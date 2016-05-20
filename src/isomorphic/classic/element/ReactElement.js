@@ -113,6 +113,10 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
   return element;
 };
 
+/**
+ * Create and return a new ReactElement of the given type.
+ * See https://facebook.github.io/react/docs/top-level-api.html#react.createelement
+ */
 ReactElement.createElement = function(type, config, children) {
   var propName;
 
@@ -126,6 +130,13 @@ ReactElement.createElement = function(type, config, children) {
 
   if (config != null) {
     if (__DEV__) {
+      warning(
+        /* eslint-disable no-proto */
+        config.__proto__ == null || config.__proto__ === Object.prototype,
+        /* eslint-enable no-proto */
+        'React.createElement(...): Expected props argument to be a plain object. ' +
+        'Properties defined in its prototype chain will be ignored.'
+      );
       ref = !config.hasOwnProperty('ref') ||
         Object.getOwnPropertyDescriptor(config, 'ref').get ? null : config.ref;
       key = !config.hasOwnProperty('key') ||
@@ -223,6 +234,10 @@ ReactElement.createElement = function(type, config, children) {
   );
 };
 
+/**
+ * Return a function that produces ReactElements of a given type.
+ * See https://facebook.github.io/react/docs/top-level-api.html#react.createfactory
+ */
 ReactElement.createFactory = function(type) {
   var factory = ReactElement.createElement.bind(null, type);
   // Expose the type on the factory and the prototype so that it can be
@@ -248,6 +263,10 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
   return newElement;
 };
 
+/**
+ * Clone and return a new ReactElement using element as the starting point.
+ * See https://facebook.github.io/react/docs/top-level-api.html#react.cloneelement
+ */
 ReactElement.cloneElement = function(element, config, children) {
   var propName;
 
@@ -268,6 +287,15 @@ ReactElement.cloneElement = function(element, config, children) {
   var owner = element._owner;
 
   if (config != null) {
+    if (__DEV__) {
+      warning(
+        /* eslint-disable no-proto */
+        config.__proto__ == null || config.__proto__ === Object.prototype,
+        /* eslint-enable no-proto */
+        'React.cloneElement(...): Expected props argument to be a plain object. ' +
+        'Properties defined in its prototype chain will be ignored.'
+      );
+    }
     if (config.ref !== undefined) {
       // Silently steal the ref from the parent.
       ref = config.ref;
@@ -319,6 +347,8 @@ ReactElement.cloneElement = function(element, config, children) {
 };
 
 /**
+ * Verifies the object is a ReactElement.
+ * See https://facebook.github.io/react/docs/top-level-api.html#react.isvalidelement
  * @param {?object} object
  * @return {boolean} True if `object` is a valid component.
  * @final

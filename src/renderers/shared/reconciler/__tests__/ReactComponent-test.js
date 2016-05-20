@@ -255,7 +255,7 @@ describe('ReactComponent', function() {
   });
 
   it('fires the callback after a component is rendered', function() {
-    var callback = jest.genMockFn();
+    var callback = jest.fn();
     var container = document.createElement('div');
     ReactDOM.render(<div />, container, callback);
     expect(callback.mock.calls.length).toBe(1);

@@ -15,39 +15,42 @@
  * Make sure essential globals are available and are patched correctly. Please don't remove this
  * line. Bundles created by react-packager `require` it before executing any application code. This
  * ensures it exists in the dependency graph and can be `require`d.
+ * TODO: require this in packager, not in React #10932517
  */
 require('InitializeJavaScriptAppEngine');
 
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
-var IOSDefaultEventPluginOrder = require('IOSDefaultEventPluginOrder');
-var IOSNativeBridgeEventPlugin = require('IOSNativeBridgeEventPlugin');
-var ReactElement = require('ReactElement');
+var RCTEventEmitter = require('RCTEventEmitter');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
+var ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
+var ReactNativeComponent = require('ReactNativeComponent');
 var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment');
+var ReactNativeComponentTree = require('ReactNativeComponentTree');
+var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
+var ReactNativeEventPluginOrder = require('ReactNativeEventPluginOrder');
 var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactNativeTreeTraversal = require('ReactNativeTreeTraversal');
-var ReactNativeComponent = require('ReactNativeComponent');
-var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 var ResponderEventPlugin = require('ResponderEventPlugin');
 
 var invariant = require('invariant');
 
-// Just to ensure this gets packaged, since its only caller is from Native.
-require('RCTEventEmitter');
-require('RCTLog');
-require('JSTimersExecution');
-
 function inject() {
+  /**
+   * Register the event emitter with the native bridge
+   */
+  RCTEventEmitter.register(ReactNativeEventEmitter);
+
   /**
    * Inject module for resolving DOM hierarchy and plugin ordering.
    */
-  EventPluginHub.injection.injectEventPluginOrder(IOSDefaultEventPluginOrder);
+  EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
   EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
   EventPluginUtils.injection.injectTreeTraversal(ReactNativeTreeTraversal);
 
@@ -61,7 +64,7 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginsByName({
     'ResponderEventPlugin': ResponderEventPlugin,
-    'IOSNativeBridgeEventPlugin': IOSNativeBridgeEventPlugin,
+    'ReactNativeBridgeEventPlugin': ReactNativeBridgeEventPlugin,
   });
 
   ReactUpdates.injection.injectReconcileTransaction(

@@ -9,13 +9,6 @@
 
 'use strict';
 
-// Mock of the Native Hooks
+// Noop
 
-var RCTUIManager = {
-  createView: jest.genMockFunction(),
-  setChildren: jest.genMockFunction(),
-  manageChildren: jest.genMockFunction(),
-  updateView: jest.genMockFunction(),
-};
-
-module.exports = RCTUIManager;
+// TODO #10932517: Move all initialization callers back into react-native

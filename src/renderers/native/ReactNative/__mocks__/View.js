@@ -9,10 +9,11 @@
 
 'use strict';
 
-// TODO: Replace all callers with spread
+var createReactNativeComponentClass = require('createReactNativeComponentClass');
 
-var merge = function(a, b) {
-  return {...a, ...b};
-};
+var View = createReactNativeComponentClass({
+  validAttributes: {},
+  uiViewClassName: 'View',
+});
 
-module.exports = merge;
+module.exports = View;

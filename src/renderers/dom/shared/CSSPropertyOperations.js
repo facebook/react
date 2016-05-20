@@ -13,7 +13,7 @@
 
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactPerf = require('ReactPerf');
+var ReactInstrumentation = require('ReactInstrumentation');
 
 var camelizeStyleName = require('camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
@@ -192,6 +192,14 @@ var CSSPropertyOperations = {
    * @param {ReactDOMComponent} component
    */
   setValueForStyles: function(node, styles, component) {
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onNativeOperation(
+        component._debugID,
+        'update styles',
+        styles
+      );
+    }
+
     var style = node.style;
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -228,9 +236,5 @@ var CSSPropertyOperations = {
   },
 
 };
-
-ReactPerf.measureMethods(CSSPropertyOperations, 'CSSPropertyOperations', {
-  setValueForStyles: 'setValueForStyles',
-});
 
 module.exports = CSSPropertyOperations;

@@ -9,6 +9,15 @@
 
 'use strict';
 
-// Noop
+// Mock of the Native Hooks
 
-// TODO: Move all initialization callers back into react-native
+var RCTUIManager = {
+  createView: jest.fn(),
+  setChildren: jest.fn(),
+  manageChildren: jest.fn(),
+  updateView: jest.fn(),
+  removeSubviewsFromContainerWithID: jest.fn(),
+  replaceExistingNonRootView: jest.fn(),
+};
+
+module.exports = RCTUIManager;

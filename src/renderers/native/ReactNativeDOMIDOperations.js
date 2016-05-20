@@ -13,7 +13,6 @@
 
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
-var ReactPerf = require('ReactPerf');
 var UIManager = require('UIManager');
 
 /**
@@ -71,12 +70,7 @@ var dangerouslyProcessChildrenUpdates = function(inst, childrenUpdates) {
  * `ReactComponent.DOMIDOperations`.
  */
 var ReactNativeDOMIDOperations = {
-  dangerouslyProcessChildrenUpdates: ReactPerf.measure(
-    // FIXME(frantic): #4441289 Hack to avoid modifying react-tools
-    'ReactDOMIDOperations',
-    'dangerouslyProcessChildrenUpdates',
-    dangerouslyProcessChildrenUpdates
-  ),
+  dangerouslyProcessChildrenUpdates,
 
   /**
    * Replaces a view that exists in the document with markup.
@@ -84,14 +78,10 @@ var ReactNativeDOMIDOperations = {
    * @param {string} id ID of child to be replaced.
    * @param {string} markup Mount image to replace child with id.
    */
-  dangerouslyReplaceNodeWithMarkupByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'dangerouslyReplaceNodeWithMarkupByID',
-    function(id, mountImage) {
-      var oldTag = id;
-      UIManager.replaceExistingNonRootView(oldTag, mountImage);
-    }
-  ),
+  dangerouslyReplaceNodeWithMarkupByID: function(id, mountImage) {
+    var oldTag = id;
+    UIManager.replaceExistingNonRootView(oldTag, mountImage);
+  },
 };
 
 module.exports = ReactNativeDOMIDOperations;

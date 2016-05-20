@@ -26,9 +26,9 @@ describe('ReactMultiChild', function() {
     it('should update children when possible', function() {
       var container = document.createElement('div');
 
-      var mockMount = jest.genMockFn();
-      var mockUpdate = jest.genMockFn();
-      var mockUnmount = jest.genMockFn();
+      var mockMount = jest.fn();
+      var mockUpdate = jest.fn();
+      var mockUnmount = jest.fn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,
@@ -59,8 +59,8 @@ describe('ReactMultiChild', function() {
     it('should replace children with different constructors', function() {
       var container = document.createElement('div');
 
-      var mockMount = jest.genMockFn();
-      var mockUnmount = jest.genMockFn();
+      var mockMount = jest.fn();
+      var mockUnmount = jest.fn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,
@@ -87,8 +87,8 @@ describe('ReactMultiChild', function() {
     it('should NOT replace children with different owners', function() {
       var container = document.createElement('div');
 
-      var mockMount = jest.genMockFn();
-      var mockUnmount = jest.genMockFn();
+      var mockMount = jest.fn();
+      var mockUnmount = jest.fn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,
@@ -124,8 +124,8 @@ describe('ReactMultiChild', function() {
     it('should replace children with different keys', function() {
       var container = document.createElement('div');
 
-      var mockMount = jest.genMockFn();
-      var mockUnmount = jest.genMockFn();
+      var mockMount = jest.fn();
+      var mockUnmount = jest.fn();
 
       var MockComponent = React.createClass({
         componentDidMount: mockMount,

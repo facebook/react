@@ -14,6 +14,7 @@
 describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
+  var ReactDOMComponentTree;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
@@ -22,6 +23,7 @@ describe('DOMPropertyOperations', function() {
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
+    ReactDOMComponentTree = require('ReactDOMComponentTree');
   });
 
   describe('createMarkupForProperty', function() {
@@ -172,9 +174,12 @@ describe('DOMPropertyOperations', function() {
 
   describe('setValueForProperty', function() {
     var stubNode;
+    var stubInstance;
 
     beforeEach(function() {
       stubNode = document.createElement('div');
+      stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
     });
 
     it('should set values as properties by default', function() {
@@ -223,6 +228,8 @@ describe('DOMPropertyOperations', function() {
 
     it('should not remove empty attributes for special properties', function() {
       stubNode = document.createElement('input');
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
       DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
       // JSDOM does not behave correctly for attributes/properties
       //expect(stubNode.getAttribute('value')).toBe('');
@@ -254,7 +261,7 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should use mutation method where applicable', function() {
-      var foobarSetter = jest.genMockFn();
+      var foobarSetter = jest.fn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
         Properties: {foobar: null},
@@ -343,9 +350,12 @@ describe('DOMPropertyOperations', function() {
 
   describe('deleteValueForProperty', function() {
     var stubNode;
+    var stubInstance;
 
     beforeEach(function() {
       stubNode = document.createElement('div');
+      stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
     });
 
     it('should remove attributes for normal properties', function() {
@@ -361,6 +371,8 @@ describe('DOMPropertyOperations', function() {
 
     it('should not remove attributes for special properties', function() {
       stubNode = document.createElement('input');
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
       stubNode.setAttribute('value', 'foo');
 
       DOMPropertyOperations.deleteValueForProperty(stubNode, 'value');
@@ -371,6 +383,8 @@ describe('DOMPropertyOperations', function() {
 
     it('should not leave all options selected when deleting multiple', function() {
       stubNode = document.createElement('select');
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
       stubNode.multiple = true;
       stubNode.appendChild(document.createElement('option'));
       stubNode.appendChild(document.createElement('option'));

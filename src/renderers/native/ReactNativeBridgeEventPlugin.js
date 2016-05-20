@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule IOSNativeBridgeEventPlugin
+ * @providesModule ReactNativeBridgeEventPlugin
  * @flow
  */
 'use strict';
@@ -15,7 +15,6 @@ var EventPropagators = require('EventPropagators');
 var SyntheticEvent = require('SyntheticEvent');
 var UIManager = require('UIManager');
 
-var merge = require('merge');
 var warning = require('warning');
 
 var customBubblingEventTypes = UIManager.customBubblingEventTypes;
@@ -36,9 +35,9 @@ for (var directTypeName in customDirectEventTypes) {
   allTypesByEventName[directTypeName] = customDirectEventTypes[directTypeName];
 }
 
-var IOSNativeBridgeEventPlugin = {
+var ReactNativeBridgeEventPlugin = {
 
-  eventTypes: merge(customBubblingEventTypes, customDirectEventTypes),
+  eventTypes: { ...customBubblingEventTypes, ...customDirectEventTypes },
 
   /**
    * @see {EventPluginHub.extractEvents}
@@ -68,4 +67,4 @@ var IOSNativeBridgeEventPlugin = {
   },
 };
 
-module.exports = IOSNativeBridgeEventPlugin;
+module.exports = ReactNativeBridgeEventPlugin;

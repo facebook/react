@@ -13,7 +13,6 @@
 
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactPerf = require('ReactPerf');
 
 /**
  * Operations used to process updates to DOM nodes.
@@ -31,9 +30,5 @@ var ReactDOMIDOperations = {
     DOMChildrenOperations.processUpdates(node, updates);
   },
 };
-
-ReactPerf.measureMethods(ReactDOMIDOperations, 'ReactDOMIDOperations', {
-  dangerouslyProcessChildrenUpdates: 'dangerouslyProcessChildrenUpdates',
-});
 
 module.exports = ReactDOMIDOperations;

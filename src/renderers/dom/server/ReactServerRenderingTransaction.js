@@ -60,6 +60,12 @@ var Mixin = {
    */
   destructor: function() {
   },
+
+  checkpoint: function() {
+  },
+
+  rollback: function() {
+  },
 };
 
 
