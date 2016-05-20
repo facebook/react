@@ -58,7 +58,7 @@
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
-    "typescript": "~1.4.0",
+    "typescript": "~1.8.10",
     "uglify-js": "^2.5.0",
     "uglifyify": "^3.0.1"
   },
