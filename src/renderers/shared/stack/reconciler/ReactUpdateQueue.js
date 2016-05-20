@@ -13,6 +13,7 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
@@ -219,6 +220,15 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueSetState: function(publicInstance, partialState) {
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onSetState();
+      warning(
+        partialState != null,
+        'setState(...): You passed an undefined or null state object; ' +
+        'instead, use forceUpdate().'
+      );
+    }
+
     var internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'setState'
