@@ -45,7 +45,7 @@ function warnIfValueIsNull(props) {
 }
 
 /**
- * Implements a <textarea> native component that allows setting `value`, and
+ * Implements a <textarea> host component that allows setting `value`, and
  * `defaultValue`. This differs from the traditional DOM API because value is
  * usually set as PCDATA children.
  *
@@ -60,7 +60,7 @@ function warnIfValueIsNull(props) {
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = {
-  getNativeProps: function(inst, props) {
+  getHostProps: function(inst, props) {
     invariant(
       props.dangerouslySetInnerHTML == null,
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
@@ -68,14 +68,14 @@ var ReactDOMTextarea = {
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.
-    var nativeProps = Object.assign({}, DisabledInputUtils.getNativeProps(inst, props), {
+    var hostProps = Object.assign({}, DisabledInputUtils.getHostProps(inst, props), {
       defaultValue: undefined,
       value: undefined,
       children: inst._wrapperState.initialValue,
       onChange: inst._wrapperState.onChange,
     });
 
-    return nativeProps;
+    return hostProps;
   },
 
   mountWrapper: function(inst, props) {

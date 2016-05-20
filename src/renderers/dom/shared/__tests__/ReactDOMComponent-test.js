@@ -304,6 +304,15 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.className).toEqual('');
     });
 
+    it('should properly update custom attributes on custom elements', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<some-custom-element foo="bar"/>, container);
+      ReactDOM.render(<some-custom-element bar="buzz"/>, container);
+      var node = container.firstChild;
+      expect(node.hasAttribute('foo')).toBe(false);
+      expect(node.getAttribute('bar')).toBe('buzz');
+    });
+
     it('should clear a single style prop when changing `style`', function() {
       var styles = {display: 'none', color: 'red'};
       var container = document.createElement('div');
@@ -1266,17 +1275,33 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn about incorrect casing on properties', function() {
+    it('should warn about incorrect casing on properties (ssr)', function() {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(React.createElement('input', {type: 'text', tabindex: '1'}));
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toContain('tabIndex');
     });
 
-    it('should warn about incorrect casing on event handlers', function() {
+    it('should warn about incorrect casing on event handlers (ssr)', function() {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onclick: '1'}));
       ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onKeydown: '1'}));
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toContain('onClick');
+      expect(console.error.argsForCall[1][0]).toContain('onKeyDown');
+    });
+
+    it('should warn about incorrect casing on properties', function() {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', tabindex: '1'}));
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
+    });
+
+    it('should warn about incorrect casing on event handlers', function() {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onclick: '1'}));
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onKeydown: '1'}));
       expect(console.error.argsForCall.length).toBe(2);
       expect(console.error.argsForCall[0][0]).toContain('onClick');
       expect(console.error.argsForCall[1][0]).toContain('onKeyDown');
@@ -1299,6 +1324,116 @@ describe('ReactDOMComponent', function() {
 
       ReactTestUtils.renderIntoDocument(<div onFocusOut={() => {}} />);
       expect(console.error.argsForCall.length).toBe(2);
+    });
+
+    it('gives source code refs for unknown prop warning', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<div class="paladin"/>);
+      ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(
+        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+      );
+      expect(
+        console.error.argsForCall[1][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown event handler property onclick. Did you mean ' +
+        '`onClick`? (**:*)'
+      );
+    });
+
+    it('gives source code refs for unknown prop warning for update render', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      ReactDOMServer.renderToString(<div className="paladin" />, container);
+      expect(console.error.argsForCall.length).toBe(0);
+
+      ReactDOMServer.renderToString(<div class="paladin" />, container);
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(
+        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+      );
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements ', function() {
+      spyOn(console, 'error');
+
+      ReactDOMServer.renderToString(
+        <div className="foo1">
+        <div class="foo2"/>
+        <div onClick="foo3"/>
+        <div onclick="foo4"/>
+        <div className="foo5"/>
+        <div className="foo6"/>
+        </div>
+      );
+
+      expect(console.error.argsForCall.length).toBe(2);
+
+      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      var previousLine = matches[1];
+
+      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements in composition ', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      var Parent = React.createClass({
+        render: function() {
+          return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
+        },
+      });
+
+      var Child1 = React.createClass({
+        render: function() {
+          return <div class="paladin">Child1</div>;
+        },
+      });
+
+      var Child2 = React.createClass({
+        render: function() {
+          return <div>Child2</div>;
+        },
+      });
+
+      var Child3 = React.createClass({
+        render: function() {
+          return <div onclick="1">Child3</div>;
+        },
+      });
+
+      var Child4 = React.createClass({
+        render: function() {
+          return <div>Child4</div>;
+        },
+      });
+
+      ReactDOMServer.renderToString(<Parent />, container);
+
+      expect(console.error.argsForCall.length).toBe(2);
+
+      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      var previousLine = matches[1];
+
+      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+
     });
   });
 });

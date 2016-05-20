@@ -179,10 +179,10 @@ var MediaQuery = React.createClass({
     var checkMediaQuery = function(){
       var type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
       if (type !== this.state.type){
-        this.setState({type:type}); 
+        this.setState({type:type});
       }
     };
-    
+
     window.addEventListener('resize', checkMediaQuery);
     checkMediaQuery();
   },

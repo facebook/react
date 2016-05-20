@@ -850,7 +850,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 * Upgrade Commoner so `require` statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn't translate well for other consumers of `bin/jsx`.
 * Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.
-* Freeze our esprima dependency.
+* Freeze our Esprima dependency.
 
 
 ## 0.3.2 (May 31, 2013)

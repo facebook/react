@@ -22,7 +22,6 @@ var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
@@ -196,23 +195,23 @@ function hasNonRootReactChild(container) {
   var rootEl = getReactRootElementInContainer(container);
   if (rootEl) {
     var inst = ReactDOMComponentTree.getInstanceFromNode(rootEl);
-    return !!(inst && inst._nativeParent);
+    return !!(inst && inst._hostParent);
   }
 }
 
-function getNativeRootInstanceInContainer(container) {
+function getHostRootInstanceInContainer(container) {
   var rootEl = getReactRootElementInContainer(container);
-  var prevNativeInstance =
+  var prevHostInstance =
     rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl);
   return (
-    prevNativeInstance && !prevNativeInstance._nativeParent ?
-    prevNativeInstance : null
+    prevHostInstance && !prevHostInstance._hostParent ?
+    prevHostInstance : null
   );
 }
 
 function getTopLevelWrapperInContainer(container) {
-  var root = getNativeRootInstanceInContainer(container);
-  return root ? root._nativeContainerInfo._topLevelWrapper : null;
+  var root = getHostRootInstanceInContainer(container);
+  return root ? root._hostContainerInfo._topLevelWrapper : null;
 }
 
 /**
@@ -702,18 +701,16 @@ var ReactMount = {
     }
 
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onNativeOperation(
-        ReactDOMComponentTree.getInstanceFromNode(container.firstChild)._debugID,
-        'mount',
-        markup.toString()
-      );
+      var hostNode = ReactDOMComponentTree.getInstanceFromNode(container.firstChild);
+      if (hostNode._debugID !== 0) {
+        ReactInstrumentation.debugTool.onHostOperation(
+          hostNode._debugID,
+          'mount',
+          markup.toString()
+        );
+      }
     }
   },
 };
-
-ReactPerf.measureMethods(ReactMount, 'ReactMount', {
-  _renderNewRootComponent: '_renderNewRootComponent',
-  _mountImageIntoNode: '_mountImageIntoNode',
-});
 
 module.exports = ReactMount;

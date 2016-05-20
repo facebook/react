@@ -25,7 +25,7 @@ if (__DEV__) {
   };
   var warnedProperties = {};
 
-  var warnUnknownProperty = function(name) {
+  var warnUnknownProperty = function(name, source) {
     if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
       return;
     }
@@ -33,7 +33,9 @@ if (__DEV__) {
         warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return;
     }
-
+    if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
+      return;
+    }
     warnedProperties[name] = true;
     var lowerCasedName = name.toLowerCase();
 
@@ -50,9 +52,10 @@ if (__DEV__) {
     // logging too much when using transferPropsTo.
     warning(
       standardName == null,
-      'Unknown DOM property %s. Did you mean %s?',
+      'Unknown DOM property %s. Did you mean %s? %s',
       name,
-      standardName
+      standardName,
+      formatSource(source)
     );
 
     var registrationName = (
@@ -65,22 +68,34 @@ if (__DEV__) {
 
     warning(
       registrationName == null,
-      'Unknown event handler property %s. Did you mean `%s`?',
+      'Unknown event handler property %s. Did you mean `%s`? %s',
       name,
-      registrationName
+      registrationName,
+      formatSource(source)
     );
   };
+
+  var formatSource = function(source) {
+    return source ? `(${source.fileName.replace(/^.*[\\\/]/, '')}:${source.lineNumber})` : '';
+  };
+
+}
+
+function handleElement(element) {
+  if (element == null || typeof element.type !== 'string') {
+    return;
+  }
+  for (var key in element.props) {
+    warnUnknownProperty(key, element._source);
+  }
 }
 
 var ReactDOMUnknownPropertyDevtool = {
-  onCreateMarkupForProperty(name, value) {
-    warnUnknownProperty(name);
+  onBeforeMountComponent(debugID, element) {
+    handleElement(element);
   },
-  onSetValueForProperty(node, name, value) {
-    warnUnknownProperty(name);
-  },
-  onDeleteValueForProperty(node, name) {
-    warnUnknownProperty(name);
+  onBeforeUpdateComponent(debugID, element) {
+    handleElement(element);
   },
 };
 
