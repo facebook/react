@@ -335,7 +335,6 @@ function trapBubbledEventsLocal() {
       break;
     case 'video':
     case 'audio':
-
       inst._wrapperState.listeners = [];
       // Create listener for each media event
       for (var event in mediaEvents) {
@@ -349,7 +348,15 @@ function trapBubbledEventsLocal() {
           );
         }
       }
-
+      break;
+    case 'source':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topError,
+          'error',
+          node
+        ),
+      ];
       break;
     case 'img':
       inst._wrapperState.listeners = [
@@ -525,6 +532,7 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'video':
       case 'audio':
+      case 'source':
         this._wrapperState = {
           listeners: null,
         };
@@ -1097,6 +1105,7 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'video':
       case 'audio':
+      case 'source':
         var listeners = this._wrapperState.listeners;
         if (listeners) {
           for (var i = 0; i < listeners.length; i++) {
