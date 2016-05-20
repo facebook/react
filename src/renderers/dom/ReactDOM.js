@@ -35,6 +35,7 @@ var React = {
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
+  unstable_asap: ReactUpdates.asap,
   unstable_renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   /* eslint-enable camelcase */
 };

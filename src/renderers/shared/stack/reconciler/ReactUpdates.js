@@ -208,13 +208,7 @@ var flushBatchedUpdates = function() {
       ReactUpdatesFlushTransaction.release(transaction);
     }
 
-    if (asapEnqueued) {
-      asapEnqueued = false;
-      var queue = asapCallbackQueue;
-      asapCallbackQueue = CallbackQueue.getPooled();
-      queue.notifyAll();
-      CallbackQueue.release(queue);
-    }
+    notifyAsapCallbacks();
   }
 
   if (__DEV__) {
@@ -260,6 +254,16 @@ function asap(callback, context) {
   asapEnqueued = true;
 }
 
+function notifyAsapCallbacks() {
+  if (asapEnqueued) {
+    asapEnqueued = false;
+    var queue = asapCallbackQueue;
+    asapCallbackQueue = CallbackQueue.getPooled();
+    queue.notifyAll();
+    CallbackQueue.release(queue);
+  }
+}
+
 var ReactUpdatesInjection = {
   injectReconcileTransaction: function(ReconcileTransaction) {
     invariant(
@@ -300,6 +304,8 @@ var ReactUpdates = {
   flushBatchedUpdates: flushBatchedUpdates,
   injection: ReactUpdatesInjection,
   asap: asap,
+
+  notifyAsapCallbacks: notifyAsapCallbacks,
 };
 
 module.exports = ReactUpdates;
