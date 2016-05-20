@@ -19,15 +19,18 @@ var ReactTransitionChildMapping = {
    * simple syntactic sugar around flattenChildren().
    *
    * @param {*} children `this.props.children`
+   * @param {number=} selfDebugID Optional debugID of the current internal instance.
    * @return {object} Mapping of key to child
    */
-  getChildMapping: function(children) {
+  getChildMapping: function(children, selfDebugID) {
     if (!children) {
       return children;
     }
-    // TODO: `flattenChildren` now takes an extra `selfDebugID` argument
-    // for looking up the component stack in dev build.
-    // Need to figure out a way to get the `_debugID` here.
+
+    if (__DEV__) {
+      return flattenChildren(children, selfDebugID);
+    }
+
     return flattenChildren(children);
   },
 
