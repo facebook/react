@@ -59,6 +59,20 @@ function onClick(event) {
 >
 > If you want to access the event properties in an asynchronous way, you should call `event.persist()` on the event, which will remove the synthetic event from the pool and allow references to the event to be retained by user code.
 
+### Attaching Events to DOM nodes
+
+Events and their event handlers can directly be attached to DOM elements as props. 
+Some examples: 
+
+```javascript
+<button onClick={handleClick}></button>
+<div class='animating-block' onAnimationIteration={handleOnAnimationIteration}></div>
+<input onBlur={handleOnBlur}></div>
+<textarea onCopy={handleOnCopy} onCut={handleOnCut} onPaste={handleOnPaste}></textarea>
+
+// ... etc
+```
+
 ## Supported Events
 
 React normalizes events so that they have consistent properties across different browsers.
