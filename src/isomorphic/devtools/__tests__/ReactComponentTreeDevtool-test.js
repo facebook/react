@@ -14,7 +14,6 @@
 describe('ReactComponentTreeDevtool', () => {
   var React;
   var ReactDOM;
-  var ReactDOMServer;
   var ReactInstanceMap;
   var ReactComponentTreeDevtool;
 
@@ -23,7 +22,6 @@ describe('ReactComponentTreeDevtool', () => {
 
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
   });

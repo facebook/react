@@ -23,7 +23,6 @@ tree node looks like:
 
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
-var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginRegistry = require('EventPluginRegistry');
