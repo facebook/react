@@ -458,16 +458,7 @@ const propsToAttributes = (props, tagName) => {
       continue;
     }
 
-    let value = props[name];
-
-    if (name === 'style') {
-      value = CSSPropertyOperations.createMarkupForStyles(value);
-      if (value === null) {
-        continue;
-      }
-    }
-
-    var markup = DOMPropertyOperations.createMarkupForProperty(name, value);
+    var markup = DOMPropertyOperations.createMarkupForProperty(tagName, props, name);
     if (markup) {
       result += ' ' + markup;
     }
