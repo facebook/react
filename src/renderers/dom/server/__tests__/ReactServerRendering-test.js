@@ -565,9 +565,17 @@ describe('ReactServerRendering', function() {
         ]);
       });
 
-      itRenders('does not render unknown attributes', (render) => {
-        return render(<div foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe(null));
-      });
+      itRenders('does not render unknown attributes', render =>
+        render(<div foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe(null)));
+
+      itRenders('does not render unknown attributes for non-standard elements', render =>
+        render(<nonstandard foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe(null)));
+
+      itRenders('does render unknown attributes for custom elements', render =>
+        render(<custom-element foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
+
+      itRenders('does render unknown attributes for custom elements using is', render =>
+        render(<div is="custom-element" foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
 
       itRenders('does not render HTML events', (render) => {
         return Promise.all([
@@ -602,6 +610,7 @@ describe('ReactServerRendering', function() {
 
       itRenders('renders a div with text', render =>
         render(<div>Text</div>).then(e => {
+          expect(e.tagName.toLowerCase()).toBe('div');
           expect(e.childNodes.length).toBe(1);
           expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
         }));
@@ -640,6 +649,18 @@ describe('ReactServerRendering', function() {
           expect(e.childNodes[3].tagName.toLowerCase()).toBe('span');
           expect(e.childNodes[3].childNodes.length).toBe(1);
           expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
+        }));
+      itRenders('renders a non-standard element with text', render =>
+        render(<nonstandard>Text</nonstandard>).then(e => {
+          expect(e.tagName.toLowerCase()).toBe('nonstandard');
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders a custom element with text', render =>
+        render(<custom-element>Text</custom-element>).then(e => {
+          expect(e.tagName.toLowerCase()).toBe('custom-element');
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
         }));
       itRenders('renders an svg element', render =>
         render(<svg/>).then(e => {
