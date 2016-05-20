@@ -18,7 +18,7 @@ describe('ReactDOMIDOperations', function() {
 
   it('should update innerHTML and preserve whitespace', function() {
     var stubNode = document.createElement('div');
-    var stubInstance = {};
+    var stubInstance = {_debugID: 1};
     ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';

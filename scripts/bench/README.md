@@ -3,8 +3,7 @@ Work-in-progress benchmarks.
 ## Running the suite
 
 ```
-$ ./measure.py react-a.min.js >a.txt
-$ ./measure.py react-b.min.js >b.txt
+$ ./measure.py react-a.min.js a.txt react-b.min.js b.txt
 $ ./analyze.py a.txt b.txt
 ```
 

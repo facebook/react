@@ -16,23 +16,20 @@
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactMount = require('ReactMount');
-var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
-var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
+var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
 ReactDefaultInjection.inject();
 
-var render = ReactPerf.measure('React', 'render', ReactMount.render);
-
 var React = {
   findDOMNode: findDOMNode,
-  render: render,
+  render: ReactMount.render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   version: ReactVersion,
 
@@ -54,7 +51,7 @@ if (
       getNodeFromInstance: function(inst) {
         // inst is an internal instance (but could be a composite)
         if (inst._renderedComponent) {
-          inst = getNativeComponentFromComposite(inst);
+          inst = getHostComponentFromComposite(inst);
         }
         if (inst) {
           return ReactDOMComponentTree.getNodeFromInstance(inst);

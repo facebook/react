@@ -13,11 +13,13 @@
 
 var React;
 var ReactDOM;
+var ReactDOMServer;
 
 describe('ReactErrorBoundaries', function() {
 
   beforeEach(function() {
     ReactDOM = require('ReactDOM');
+    ReactDOMServer = require('ReactDOMServer');
     React = require('React');
   });
 
@@ -52,6 +54,41 @@ describe('ReactErrorBoundaries', function() {
     var container = document.createElement('div');
     EventPluginHub.putListener = jest.fn();
     ReactDOM.render(<Boundary />, container);
+    expect(EventPluginHub.putListener).not.toBeCalled();
+  });
+
+  it('renders an error state (ssr)', function() {
+    class Angry extends React.Component {
+      render() {
+        throw new Error('Please, do not render me.');
+      }
+    }
+
+    class Boundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {error: false};
+      }
+      render() {
+        if (!this.state.error) {
+          return (<div><button onClick={this.onClick}>ClickMe</button><Angry /></div>);
+        } else {
+          return (<div>Happy Birthday!</div>);
+        }
+      }
+      onClick() {
+        /* do nothing */
+      }
+      unstable_handleError() {
+        this.setState({error: true});
+      }
+    }
+
+    var EventPluginHub = require('EventPluginHub');
+    var container = document.createElement('div');
+    EventPluginHub.putListener = jest.fn();
+    container.innerHTML = ReactDOMServer.renderToString(<Boundary />);
+    expect(container.firstChild.innerHTML).toBe('Happy Birthday!');
     expect(EventPluginHub.putListener).not.toBeCalled();
   });
 

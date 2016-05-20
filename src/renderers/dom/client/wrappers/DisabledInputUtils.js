@@ -26,24 +26,24 @@ var disableableMouseListenerNames = {
 };
 
 /**
- * Implements a native component that does not receive mouse events
+ * Implements a host component that does not receive mouse events
  * when `disabled` is set.
  */
 var DisabledInputUtils = {
-  getNativeProps: function(inst, props) {
+  getHostProps: function(inst, props) {
     if (!props.disabled) {
       return props;
     }
 
     // Copy the props, except the mouse listeners
-    var nativeProps = {};
+    var hostProps = {};
     for (var key in props) {
       if (!disableableMouseListenerNames[key] && props.hasOwnProperty(key)) {
-        nativeProps[key] = props[key];
+        hostProps[key] = props[key];
       }
     }
 
-    return nativeProps;
+    return hostProps;
   },
 };
 

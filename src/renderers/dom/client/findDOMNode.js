@@ -15,7 +15,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
 
-var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
+var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -52,7 +52,7 @@ function findDOMNode(componentOrElement) {
 
   var inst = ReactInstanceMap.get(componentOrElement);
   if (inst) {
-    inst = getNativeComponentFromComposite(inst);
+    inst = getHostComponentFromComposite(inst);
     return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
   }
 
