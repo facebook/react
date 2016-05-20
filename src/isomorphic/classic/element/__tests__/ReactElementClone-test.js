@@ -271,7 +271,10 @@ describe('ReactElementClone', function() {
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
-      'expected `string`. Check the render method of `Parent`.'
+      'expected `string`.\n' +
+      '    in Component (created by GrandParent)\n' +
+      '    in Parent (created by GrandParent)\n' +
+      '    in GrandParent'
     );
   });
 

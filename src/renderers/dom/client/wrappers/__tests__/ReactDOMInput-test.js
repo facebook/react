@@ -499,7 +499,7 @@ describe('ReactDOMInput', function() {
     ReactDOM.render(<input type="text" value="controlled" />, container);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'A component is changing a uncontrolled input of type text to be controlled. ' +
+      'A component is changing an uncontrolled input of type text to be controlled. ' +
       'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
@@ -541,7 +541,7 @@ describe('ReactDOMInput', function() {
     ReactDOM.render(<input type="checkbox" checked={true} />, container);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'A component is changing a uncontrolled input of type checkbox to be controlled. ' +
+      'A component is changing an uncontrolled input of type checkbox to be controlled. ' +
       'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
@@ -583,7 +583,7 @@ describe('ReactDOMInput', function() {
     ReactDOM.render(<input type="radio" checked={true} />, container);
     expect(console.error.argsForCall.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'A component is changing a uncontrolled input of type radio to be controlled. ' +
+      'A component is changing an uncontrolled input of type radio to be controlled. ' +
       'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
       'Decide between using a controlled or uncontrolled input ' +
       'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'

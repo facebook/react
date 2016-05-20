@@ -98,7 +98,7 @@ Verifies the object is a ReactElement.
 array React.Children.map(object children, function fn [, object thisArg])
 ```
 
-Invoke `fn` on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an array.
+Invoke `fn` on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a [keyed fragment](/react/docs/create-fragment.html) or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an array.
 
 #### React.Children.forEach
 

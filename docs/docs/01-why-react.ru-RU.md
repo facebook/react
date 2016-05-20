@@ -1,5 +1,5 @@
 ---
-id: why-react
+id: why-react-ru-RU
 title: Почему именно React?
 permalink: why-react-ru-RU.html
 next: displaying-data-ru-RU.html

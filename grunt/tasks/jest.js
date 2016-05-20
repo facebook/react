@@ -49,7 +49,6 @@ function getJestConfig(callback) {
       name: 'react',
       collectCoverage: true,
       collectCoverageOnlyFrom: data,
-      watchman: false,
     }));
   });
 }
@@ -73,7 +72,11 @@ function writeTempConfig(callback) {
 function run(done, configPath) {
   grunt.log.writeln('running jest');
 
-  var args = [path.join('node_modules', 'jest-cli', 'bin', 'jest'), '--runInBand'];
+  var args = [
+    path.join('node_modules', 'jest-cli', 'bin', 'jest'),
+    '--runInBand',
+    '--no-watchman',
+  ];
   if (configPath) {
     args.push('--config', configPath);
   }

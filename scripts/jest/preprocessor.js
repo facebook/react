@@ -54,7 +54,10 @@ module.exports = {
     ) {
       return babel.transform(
         src,
-        Object.assign({filename: filePath}, babelOptions)
+        Object.assign(
+          {filename: path.relative(process.cwd(), filePath)},
+          babelOptions
+        )
       ).code;
     }
     return src;
