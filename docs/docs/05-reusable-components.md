@@ -239,6 +239,70 @@ Counter.propTypes = { initialCount: React.PropTypes.number };
 Counter.defaultProps = { initialCount: 0 };
 ```
 
+### LifeCycle functions on ES6
+
+On ES6 classes you can override the lifecycle functions of your components:
+
+```javascript
+export class Button extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  componentWillMount() {
+    console.log('Component will mount');
+  }
+
+  componentDidMount() {
+    console.log('Mounted!');
+  }
+
+  componentWillReceiveProps(nextProps, oldProps) {
+    console.log(`New props ${nextProps} and old props ${oldProps}`);
+  }
+
+  componentWillUpdate() {
+    console.log('About to update!');
+  }
+
+  componentDidUpdate() {
+    console.log('Updated!')
+  }
+
+  componentWillUnmount() {
+    console.log('Unmounting from DOM');
+  }
+
+  render() {
+    // you can use ES6 destructuring assign
+    const { label } = this.props
+    return (
+      <button>
+        { label }
+      </button>
+    );
+  }
+}
+```
+
+### Setting PropTypes
+
+You may want to specify the props types allowed for your component:
+
+```javascript
+export class Title extends React.Component {
+  static propTypes = {
+    text: React.PropTypes.string.isRequred
+  }
+
+  render() {
+    return (
+      <h1> this.props.text </h1>
+    )
+  }
+}
+```
+
 ### No Autobinding
 
 Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`:
@@ -269,6 +333,9 @@ Now you can use `this.tick` directly as it was bound once in the constructor:
 ```
 
 This is better for performance of your application, especially if you implement [shouldComponentUpdate()](/react/docs/component-specs.html#updating-shouldcomponentupdate) with a [shallow comparison](/react/docs/shallow-compare.html) in the child components.
+
+(ES7 has introduced the `::` that's some syntactic sugar for `Function.prototype.bind()` so instead of binding
+using `myFunction.bind(this)` you can go with `::this.myFunction()`.)
 
 ### No Mixins
 
