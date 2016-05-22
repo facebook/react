@@ -25,6 +25,8 @@ module.exports = function() {
     entries: entries,
     debug: config.debug, // sourcemaps
     standalone: config.standalone, // global
+    builtins: {},
+    detectGlobals: false,
   };
 
   var bundle = browserify(options);

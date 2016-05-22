@@ -198,6 +198,8 @@ const renderImpl = (node, length, makeStaticMarkup, domId, parentDebugId, select
       // we need this to call onSetChildren and onMountComponent for our ancestors before we exit.
       node.debugIds = ancestorDebugIds.concat(thisDebugId);
     }
+  } else {
+    node.debugIds = [];
   }
 
   const tag = rawTag.toLowerCase();
