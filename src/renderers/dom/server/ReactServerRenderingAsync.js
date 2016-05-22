@@ -9,16 +9,6 @@
  * @providesModule ReactServerRenderingAsync
  */
 
-/**
-tree node looks like:
-
-{
-  element: ReactElement that is this tree node
-  root: true if at root
-  childIndex: which child this node is at
-}
-*/
-
 'use strict';
 
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
@@ -102,7 +92,7 @@ const render = (element, makeStaticMarkup) => {
   if (__DEV__) {
     ReactInstrumentation.debugTool.onBeginFlush();
   }
-  const tree = {
+  const node = {
     element,
     root: !makeStaticMarkup,
   };
@@ -114,7 +104,7 @@ const render = (element, makeStaticMarkup) => {
       if (done) {
         return {done: true, value: undefined};
       }
-      var result = renderImpl(tree, length, makeStaticMarkup, domId);
+      var result = renderImpl(node, length, makeStaticMarkup, domId);
       if (result.done) {
         done = true;
       }
@@ -123,12 +113,35 @@ const render = (element, makeStaticMarkup) => {
   };
 };
 
-// side effect: modifies tree in place.
-const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, selectValues) => {
-  // first, if tree.element is a component type (not a dom node type), instantiate it
-  // and call componentWillMount/render as needed. keep doing this until tree.element
+// side effect: modifies node in place.
+/**
+ * Recursive function that implements rendering.
+ * @param {TreeNode} node a node in the component hierarchy, looks like:
+ *    {
+ *      element: {ReactElement} that is the element for this node
+ *      root: {boolean} true if at root
+ *    }
+ *   this method modifies node in place as it renders the element, adding properties
+ *   like children, debugIds, childIndex, context.
+ * @param {Number} length the number of characters to produce, approximately
+ * @param {boolean} makeStaticMarkup true iff this should generate static markup
+ *   that is not intended to reconnect on client
+ * @param {Object} domId an object with one attribute, value, which indicates the
+ *   next domId to use
+ * @param {Number} parentDebugId if in __DEV__ mode, the debug ID for the parent of this
+ *   node. undefined if at root or not in __DEV__ mode
+ * @param {Array} selectValues if one of our ancestors is a select tag, this array includes
+ *   all the selected values. undefined or null if no selected values.
+ * @returns {Object} an object with the following properties:
+ *   value {String} the next chunk of the render
+ *   done {boolean} true if value is the last chunk of render for this node
+ *   debugId {Number} if __DEV__ the debug ID for this node. otherwise, undefined
+ */
+const renderImpl = (node, length, makeStaticMarkup, domId, parentDebugId, selectValues) => {
+  // first, if node.element is a component type (not a dom node type), instantiate it
+  // and call componentWillMount/render as needed. keep doing this until node.element
   // is a dom node.
-  const {element, context, ancestorDebugIds} = getNativeComponent(tree.element, tree.context || {}, parentDebugId);
+  const {element, context, ancestorDebugIds} = getNativeComponent(node.element, node.context || {}, parentDebugId);
 
   // it's odd to warn and then invariant on this, but it's replicating current behavior.
   if (__DEV__) {
@@ -146,13 +159,13 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
     'Component' // TODO: get a proper name here.
   );
 
-  tree.element = element;
-  tree.context = context;
+  node.element = element;
+  node.context = context;
 
   // an empty (null or false) component translates to an empty comment node.
   if (element === null || element === false) {
     if (__DEV__) {
-      instrumentAncestors(ancestorDebugIds, tree.root);
+      instrumentAncestors(ancestorDebugIds, node.root);
     }
     return {
       done: true,
@@ -170,7 +183,7 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
   );
 
   if (__DEV__) {
-    if (!tree.debugIds) {
+    if (!node.debugIds) {
       var thisDebugId = getNextDebugId();
       ReactInstrumentation.debugTool.onSetDisplayName(thisDebugId, getDisplayName(element));
       var directParentDebugId = ancestorDebugIds.length > 0 ?
@@ -183,7 +196,7 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
 
       // store all of our ancestor debug ids and our node's debug id as an array on the node.
       // we need this to call onSetChildren and onMountComponent for our ancestors before we exit.
-      tree.debugIds = ancestorDebugIds.concat(thisDebugId);
+      node.debugIds = ancestorDebugIds.concat(thisDebugId);
     }
   }
 
@@ -195,7 +208,7 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
   props = canonicalizeProps(tag, props, selectValues);
 
   const attributes = propsToAttributes(props, tag) +
-    (tree.root ? ' ' + DOMPropertyOperations.createMarkupForRoot() : '') +
+    (node.root ? ' ' + DOMPropertyOperations.createMarkupForRoot() : '') +
     (!makeStaticMarkup ? ' ' + DOMPropertyOperations.createMarkupForID(domId.value++) : '');
 
   // void tags in HTML cannot have any content, and they are the only tags in html5
@@ -204,9 +217,9 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
     && (props.children === '' || props.children === null || props.children === undefined)) {
 
     if (__DEV__) {
-      instrumentAncestors(tree.debugIds, tree.root);
+      instrumentAncestors(node.debugIds, node.root);
     }
-    return {done: true, value: '<' + tag + attributes + '/>', debugId: tree.debugIds[0]};
+    return {done: true, value: '<' + tag + attributes + '/>', debugId: node.debugIds[0]};
   }
   const prefix = '<' + tag + attributes + '>';
   const suffix = '</' + tag + '>';
@@ -214,21 +227,21 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
   // if there are no props, then all we need to do is return the open and close tag.
   if (!props) {
     if (__DEV__) {
-      instrumentAncestors(tree.debugIds, tree.root);
+      instrumentAncestors(node.debugIds, node.root);
     }
-    return {done: true, value: prefix + suffix, debugId: tree.debugIds[0]};
+    return {done: true, value: prefix + suffix, debugId: node.debugIds[0]};
   }
 
   // when we have a newline-eating tag, we have to listen to the content from
   // our children and add a leading '\n' if the content from the children starts
-  // with a '\n'. we store this as a function on tree.transform, which acts like a
+  // with a '\n'. we store this as a function on node.transform, which acts like a
   // Transform stream on the content from children.
-  // if this is NOT a newline-eating tag, then tree.transform is just the identity
+  // if this is NOT a newline-eating tag, then node.transform is just the identity
   // function (i.e. a straight passthrough).
-  if (!tree.transform) {
-    tree.transform = identityTransform;
+  if (!node.transform) {
+    node.transform = identityTransform;
     if (newlineEatingTags[tag]) {
-      tree.transform = getNewlineEatingTransform();
+      node.transform = getNewlineEatingTransform();
     }
   }
 
@@ -238,12 +251,12 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
     // note that we do not call escapeTextContentForBrowser; this is intentional, since
     // this is an explicit dangerous innerHTML call.
     if (__DEV__) {
-      instrumentAncestors(tree.debugIds, tree.root);
+      instrumentAncestors(node.debugIds, node.root);
     }
     return {
       done: true,
-      value: prefix + tree.transform(props.dangerouslySetInnerHTML.__html) + suffix,
-      debugId: tree.debugIds[0],
+      value: prefix + node.transform(props.dangerouslySetInnerHTML.__html) + suffix,
+      debugId: node.debugIds[0],
     };
   }
 
@@ -253,9 +266,9 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
     || props.children === null) {
 
     if (__DEV__) {
-      instrumentAncestors(tree.debugIds, tree.root);
+      instrumentAncestors(node.debugIds, node.root);
     }
-    return {done: true, value: prefix + suffix, debugId: tree.debugIds[0]};
+    return {done: true, value: prefix + suffix, debugId: node.debugIds[0]};
   }
 
   // if there a single child that is a string or number, that's the text of the node.
@@ -263,60 +276,60 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
   // the rendering is different when there's a single string or number child; there
   // are no react-text comment nodes in that case.
   if (typeof props.children === 'string' || typeof props.children === 'number') {
-    const childText = escapeTextContentForBrowser(tree.transform(props.children));
+    const childText = escapeTextContentForBrowser(node.transform(props.children));
     if (__DEV__) {
-      thisDebugId = tree.debugIds[tree.debugIds.length - 1];
+      thisDebugId = node.debugIds[node.debugIds.length - 1];
       ReactInstrumentation.debugTool.onSetChildren(thisDebugId,
         [instrumentTextChild(thisDebugId, thisDebugId + '#text', childText)]);
-      instrumentAncestors(tree.debugIds, tree.root);
+      instrumentAncestors(node.debugIds, node.root);
     }
-    return {done: true, value: prefix + childText + suffix, debugId: tree.debugIds[0]};
+    return {done: true, value: prefix + childText + suffix, debugId: node.debugIds[0]};
   }
 
   // if we've gotten to this point, it means that we need to iterate through the children
   // and render each of them.
   let text = '';
-  if (!tree.hasOwnProperty('childIndex')) {
+  if (!node.hasOwnProperty('childIndex')) {
     // this means this is the first time we've tried to render this element's children.
     // we need to do a few things before we loop over the children. first add the
     // open tag to the text we are going to return.
     text = prefix;
 
-    // flatten the element's children into an array, and store it at tree.children.
+    // flatten the element's children into an array, and store it at node.children.
     // storing it means that if we have to restart rendering midway through this loop, we won't
     // need to regenerate the child list when next() is called.
     const elementChildren = props.children.length ? props.children : [props.children];
-    tree.children = [];
-    addChildrenToArray(elementChildren, tree.children, tree.context, domId);
+    node.children = [];
+    addChildrenToArray(elementChildren, node.children, node.context, domId);
 
     // store the index of the child we are currently working on. this needs to be
-    // stored on tree so that we can restart rendering if next() is called.
-    tree.childIndex = 0;
+    // stored on node so that we can restart rendering if next() is called.
+    node.childIndex = 0;
 
     if (__DEV__) {
       // we also need to keep track of the debug IDs of the children that are returned.
-      tree.childrenDebugIds = [];
+      node.childrenDebugIds = [];
     }
   }
 
   // loop through all the children of this node.
-  for (; tree.childIndex < tree.children.length; tree.childIndex++) {
+  for (; node.childIndex < node.children.length; node.childIndex++) {
     if (text.length >= length) {
-      return {done: false, value: text, debugId: tree.debugIds[0]};
+      return {done: false, value: text, debugId: node.debugIds[0]};
     }
 
-    const child = tree.children[tree.childIndex];
+    const child = node.children[node.childIndex];
 
     if (typeof child === 'string' || typeof child === 'number') {
       var childText = escapeTextContentForBrowser(child);
-      text += tree.transform(makeStaticMarkup ?
+      text += node.transform(makeStaticMarkup ?
         childText :
         '<!-- react-text: ' + domId.value++ + ' -->' +
         childText +
         '<!-- /react-text -->');
       if (__DEV__) {
-        thisDebugId = tree.debugIds[tree.debugIds.length - 1];
-        tree.childrenDebugIds.push(instrumentTextChild(thisDebugId, getNextDebugId(), childText));
+        thisDebugId = node.debugIds[node.debugIds.length - 1];
+        node.childrenDebugIds.push(instrumentTextChild(thisDebugId, getNextDebugId(), childText));
       }
       continue;
     }
@@ -328,30 +341,30 @@ const renderImpl = (tree, length, makeStaticMarkup, domId, parentDebugId, select
     }
     // we have a child component, and we need to recurse into it.
     const childResults = renderImpl(child, length - text.length, makeStaticMarkup, domId,
-      tree.debugIds ? tree.debugIds[tree.debugIds.length - 1] : null, selectValues);
-    text += tree.transform(childResults.value);
+      node.debugIds ? node.debugIds[node.debugIds.length - 1] : null, selectValues);
+    text += node.transform(childResults.value);
 
     // if rendering of one of our descendants stopped, we should stop as well and return
     // up the call stack. since we are keeping track of where we are in the children
-    // list with tree.childIndex, we will come back to the correct place when next() is called.
+    // list with node.childIndex, we will come back to the correct place when next() is called.
     if (!childResults.done) {
-      return {done: false, value: text, debugId: tree.debugIds[0]};
+      return {done: false, value: text, debugId: node.debugIds[0]};
     }
     if (__DEV__) {
       if (childResults.debugId) {
-        tree.childrenDebugIds.push(childResults.debugId);
+        node.childrenDebugIds.push(childResults.debugId);
       }
     }
   }
   // now that we are done with this element and its children, free up the instantiated
   // children.
-  tree.children = null;
+  node.children = null;
   if (__DEV__) {
-    thisDebugId = tree.debugIds[tree.debugIds.length - 1];
-    ReactInstrumentation.debugTool.onSetChildren(thisDebugId, tree.childrenDebugIds);
-    instrumentAncestors(tree.debugIds, tree.root);
+    thisDebugId = node.debugIds[node.debugIds.length - 1];
+    ReactInstrumentation.debugTool.onSetChildren(thisDebugId, node.childrenDebugIds);
+    instrumentAncestors(node.debugIds, node.root);
   }
-  return {done: true, value: text + suffix, debugId: tree.debugIds[0]};
+  return {done: true, value: text + suffix, debugId: node.debugIds[0]};
 };
 
 const identityTransform = (text) => text;
@@ -588,6 +601,9 @@ const filterContext = (context, types) => {
   return result;
 };
 
+// returns the markup for attributes based on these props. in order for checksums
+// to validate, this method must concatenate properties in the same order as
+// ReactDOMComponent._createOpenTagMarkupAndPutListeners
 const propsToAttributes = (props, tagName) => {
   let result = '';
 
