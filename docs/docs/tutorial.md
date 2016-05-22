@@ -78,15 +78,14 @@ Let's build the `CommentBox` component, which is just a simple `<div>`:
 
 ```javascript
 // tutorial1.js
-var CommentBox = React.createClass({
-  render: function() {
+const CommentBox = () => {
     return (
       <div className="commentBox">
         Hello, world! I am a CommentBox.
       </div>
     );
-  }
-});
+  };
+
 ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
@@ -94,22 +93,22 @@ ReactDOM.render(
 ```
 
 Note that native HTML element names start with a lowercase letter, while custom React class names begin with an uppercase letter.
-
+The above component is a stateless functional component. Another way to define a component is an ES6 class, this is explained [on this page](/react/docs/reusable-components.html#es6-classes)
 #### JSX Syntax
 
 The first thing you'll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:
 
 ```javascript
 // tutorial1-raw.js
-var CommentBox = React.createClass({displayName: 'CommentBox',
-  render: function() {
-    return (
-      React.createElement('div', {className: "commentBox"},
-        "Hello, world! I am a CommentBox."
-      )
-    );
-  }
-});
+var CommentBox = function CommentBox() {
+  return React.createElement(
+    "div",
+    { className: "commentBox" },
+    "Hello, world! I am a CommentBox."
+  );
+};
+
+
 ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
