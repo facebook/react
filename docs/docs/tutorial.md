@@ -331,7 +331,7 @@ Note: the code will not be working at this step.
 
 ### Reactive state
 
-So far, based on its props, each component has rendered itself once. `props` are immutable: they are passed from the parent and are "owned" by the parent. To implement interactions, we introduce mutable **state** to the component. `this.state` is private to the component and can be changed by calling `this.setState()`. When the state updates, the component re-renders itself.
+So far, based on its props, each component has rendered itself once. `props` are immutable: they are passed from the parent and are "owned" by the parent. To implement interactions, we introduce mutable **state** to the component. `this.state` is private to the component and can be changed by calling `this.setState()`. When the state updates, the component re-renders itself. At this stage, we cannot use stateless functional components. Here we introduce ES6 class based components that extend from React.Component. These classes always have a `render` method which returns the JSX to render. 
 
 `render()` methods are written declaratively as functions of `this.props` and `this.state`. The framework guarantees the UI is always consistent with the inputs.
 
@@ -339,10 +339,12 @@ When the server fetches data, we will be changing the comment data we have. Let'
 
 ```javascript{3-5,10}
 // tutorial12.js
-var CommentBox = React.createClass({
-  getInitialState: function() {
-    return {data: []};
-  },
+export class CommentBox extends React.Component {
+  constructor() {
+    this.state = {
+      data: []
+    }
+  }
   render: function() {
     return (
       <div className="commentBox">
