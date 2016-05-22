@@ -93,7 +93,7 @@ ReactDOM.render(
 ```
 
 Note that native HTML element names start with a lowercase letter, while custom React class names begin with an uppercase letter.
-The above component is a stateless functional component. Another way to define a component is an ES6 class, this is explained [on this page](/react/docs/reusable-components.html#es6-classes)
+The above component is a stateless functional component. Another way to define a component is an ES6 class, this is explained [on this page](/docs/docs/05-reusable-components.md#es6-classes)
 #### JSX Syntax
 
 The first thing you'll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:
