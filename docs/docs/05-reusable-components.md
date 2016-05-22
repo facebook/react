@@ -130,7 +130,7 @@ ComponentWithDefaultProps.defaultProps = {
 };
 ```
 
-`ComponentWithDefaultProps.defaultProps` will be cached and used to ensure that `props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+In this example, `ComponentWithDefaultProps.defaultProps` will be cached and used to ensure that `props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
 
 ## Transferring Props: A Shortcut
 
@@ -259,7 +259,7 @@ In an ideal world, most of your components would be stateless functions because 
 
 ## Mixins
 
-If you're still using `React.createClass` to create your components (ES6 Classes or Stateless components don't support Mixins), sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
+If you're still using `React.createClass` to create your components (ES6 Classes and Stateless components don't support Mixins), sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
 
 One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
