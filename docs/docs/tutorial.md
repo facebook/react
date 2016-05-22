@@ -216,26 +216,24 @@ In this tutorial we use a third-party library **marked** which takes Markdown te
 
 ```javascript{9}
 // tutorial6.js
-var Comment = React.createClass({
-  render: function() {
-    return (
-      <div className="comment">
-        <h2 className="commentAuthor">
-          {this.props.author}
-        </h2>
-        {marked(this.props.children.toString())}
-      </div>
-    );
-  }
-});
+const Comment = (props) => {
+  return (
+    <div className="comment">
+      <h2 className="commentAuthor">
+        {props.author}
+      </h2>
+      {marked(props.children.toString())}
+    </div>
+  );
+}
 ```
 
-All we're doing here is calling the marked library. We need to convert `this.props.children` from React's wrapped text to a raw string that marked will understand so we explicitly call `toString()`.
+All we're doing here is calling the marked library. We need to convert `props.children` from React's wrapped text to a raw string that marked will understand so we explicitly call `toString()`.
 
 But there's a problem! Our rendered comments look like this in the browser: "`<p>`This is `<em>`another`</em>` comment`</p>`". We want those tags to actually render as HTML.
 
 That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/Cross-site_scripting). There's a way to get around it but the framework warns you not to use it:
-
+TODO
 ```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
@@ -277,17 +275,15 @@ We need to get this data into `CommentList` in a modular way. Modify `CommentBox
 
 ```javascript{7,15}
 // tutorial9.js
-var CommentBox = React.createClass({
-  render: function() {
-    return (
-      <div className="commentBox">
-        <h1>Comments</h1>
-        <CommentList data={this.props.data} />
-        <CommentForm />
-      </div>
-    );
-  }
-});
+const CommentBox = (props) => {
+  return (
+    <div className="commentBox">
+      <h1>Comments</h1>
+      <CommentList data={props.data} />
+      <CommentForm />
+    </div>
+  );
+}
 
 ReactDOM.render(
   <CommentBox data={data} />,
@@ -299,22 +295,20 @@ Now that the data is available in the `CommentList`, let's render the comments d
 
 ```javascript{4-10,13}
 // tutorial10.js
-var CommentList = React.createClass({
-  render: function() {
-    var commentNodes = this.props.data.map(function(comment) {
-      return (
-        <Comment author={comment.author} key={comment.id}>
-          {comment.text}
-        </Comment>
-      );
-    });
+const CommentList = (props) => {
+  var commentNodes = props.data.map((comment) => {
     return (
-      <div className="commentList">
-        {commentNodes}
-      </div>
+      <Comment author={comment.author} key={comment.id}>
+        {comment.text}
+      </Comment>
     );
-  }
-});
+  });
+  return (
+    <div className="commentList">
+      {commentNodes}
+    </div>
+  );
+}
 ```
 
 That's it!
