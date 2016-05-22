@@ -94,6 +94,7 @@ ReactDOM.render(
 
 Note that native HTML element names start with a lowercase letter, while custom React class names begin with an uppercase letter.
 The above component is a stateless functional component. Another way to define a component is an ES6 class, this is explained [on this page](/docs/docs/05-reusable-components.md#es6-classes)
+Which of the format to choose is not a hard choice. If your compnents have state or require lifecycle methods (they will be introduced soon), then only use ES6 style class components else use the above mentioned stateless functional react components. 
 #### JSX Syntax
 
 The first thing you'll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:
@@ -119,8 +120,6 @@ Its use is optional but we've found JSX syntax easier to use than plain JavaScri
 
 #### What's going on
 
-We pass some methods in a JavaScript object to `React.createClass()` to create a new React component. The most important of these methods is called `render` which returns a tree of React components that will eventually render to HTML.
-
 The `<div>` tags are not actual DOM nodes; they are instantiations of React `div` components. You can think of these as markers or pieces of data that React knows how to handle. React is **safe**. We are not generating HTML strings so XSS protection is the default.
 
 You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React **composable**: a key tenet of maintainable frontends.
@@ -137,42 +136,36 @@ Let's build skeletons for `CommentList` and `CommentForm` which will, again, be 
 
 ```javascript
 // tutorial2.js
-var CommentList = React.createClass({
-  render: function() {
-    return (
-      <div className="commentList">
-        Hello, world! I am a CommentList.
-      </div>
-    );
-  }
-});
+const CommentList = () => {
+  return (
+    <div className="commentList">
+      Hello, world! I am a CommentList.
+    </div>
+  );
+}
 
-var CommentForm = React.createClass({
-  render: function() {
-    return (
-      <div className="commentForm">
-        Hello, world! I am a CommentForm.
-      </div>
-    );
-  }
-});
+const CommentForm = () => {
+  return (
+    <div className="commentForm">
+      Hello, world! I am a CommentForm.
+    </div>
+  );
+}
 ```
 
 Next, update the `CommentBox` component to use these new components:
 
 ```javascript{6-8}
 // tutorial3.js
-var CommentBox = React.createClass({
-  render: function() {
-    return (
-      <div className="commentBox">
-        <h1>Comments</h1>
-        <CommentList />
-        <CommentForm />
-      </div>
-    );
-  }
-});
+const CommentBox = () => {
+  return (
+    <div className="commentBox">
+      <h1>Comments</h1>
+      <CommentList />
+      <CommentForm />
+    </div>
+  );
+}
 ```
 
 Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to `React.createElement(tagName)` expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
@@ -183,21 +176,19 @@ Let's create the `Comment` component, which will depend on data passed in from i
 
 ```javascript
 // tutorial4.js
-var Comment = React.createClass({
-  render: function() {
-    return (
-      <div className="comment">
-        <h2 className="commentAuthor">
-          {this.props.author}
-        </h2>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+const Comment = (props) => {
+  return (
+    <div className="comment">
+      <h2 className="commentAuthor">
+        {props.author}
+      </h2>
+      {props.children}
+    </div>
+  );
+}
 ```
 
-By surrounding a JavaScript expression in braces inside JSX (as either an attribute or child), you can drop text or React components into the tree. We access named attributes passed to the component as keys on `this.props` and any nested elements as `this.props.children`.
+By surrounding a JavaScript expression in braces inside JSX (as either an attribute or child), you can drop text or React components into the tree. We access named attributes passed to the component as `props` argument to the function.
 
 ### Component Properties
 
@@ -205,19 +196,17 @@ Now that we have defined the `Comment` component, we will want to pass it the au
 
 ```javascript{6-7}
 // tutorial5.js
-var CommentList = React.createClass({
-  render: function() {
-    return (
-      <div className="commentList">
-        <Comment author="Pete Hunt">This is one comment</Comment>
-        <Comment author="Jordan Walke">This is *another* comment</Comment>
-      </div>
-    );
-  }
-});
+const CommentList = () => {
+  return (
+    <div className="commentList">
+      <Comment author="Pete Hunt">This is one comment</Comment>
+      <Comment author="Jordan Walke">This is *another* comment</Comment>
+    </div>
+  );
+}
 ```
 
-Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
+Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `props.author`, and `props.children` after passing `props` as the argument to the component definition.
 
 ### Adding Markdown
 
