@@ -41,7 +41,7 @@ August 25-26 in Salt Lake City, UT
 ### ReactNext 2016
 September 15 in Tel Aviv, Israel
 
-[Website](https://react-next.com/) - [Schedule](http://react-next.com/#schedule)
+[Website](http://react-next.com/) - [Schedule](http://react-next.com/#schedule)
 
 ### Reactive 2016
 October 26-28 in Bratislava, Slovakia
