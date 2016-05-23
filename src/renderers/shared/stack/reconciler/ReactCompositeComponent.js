@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
@@ -27,17 +28,6 @@ var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
-
-function getDeclarationErrorAddendum(component) {
-  var owner = component._currentElement._owner || null;
-  if (owner) {
-    var name = owner.getName();
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
-  }
-  return '';
-}
 
 function StatelessComponent(Component) {
 }
@@ -698,12 +688,11 @@ var ReactCompositeComponentMixin = {
           // We may want to extend this logic for similar errors in
           // top-level render calls, so I'm abstracting it away into
           // a function to minimize refactoring in the future
-          var addendum = getDeclarationErrorAddendum(this);
           warning(
             false,
             'Failed Context Types: %s%s',
             error.message,
-            addendum
+            ReactComponentTreeDevtool.getStackAddendumByID(this._debugID)
           );
         }
       }
