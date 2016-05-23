@@ -24,82 +24,85 @@ Occasionally, you want to pass data through the component tree without having to
 Suppose you have a structure like:
 
 ```javascript
-var Button = React.createClass({
-  render: function() {
+class Button extends React.Component {
+  render() {
     return (
       <button style={{'{{'}}background: this.props.color}}>
         {this.props.children}
       </button>
     );
   }
-});
+}
 
-var Message = React.createClass({
-  render: function() {
+class Message extends React.Component {
+  render() {
     return (
       <div>
         {this.props.text} <Button color={this.props.color}>Delete</Button>
       </div>
     );
   }
-});
+}
 
-var MessageList = React.createClass({
-  render: function() {
-    var color = "purple";
-    var children = this.props.messages.map(function(message) {
-      return <Message text={message.text} color={color} />;
-    });
-    return <div>{children}</div>;
+class MessageList extends React.Component {
+  render() {
+    const color = "purple";
+    const children = this.props.messages.map((message) =>
+      <Message text={message.text} color={color} />
+    );
+    return <div>{this.props.children}</div>;
   }
-});
+}
 ```
 
 In this example, we manually thread through a `color` prop in order to style the `Button` and `Message` components appropriately. Theming is a good example of when you might want an entire subtree to have access to some piece of information (a color). Using context, we can pass this through the tree automatically:
 
-```javascript{2-4,7,18,25-30,33}
-var Button = React.createClass({
-  contextTypes: {
-    color: React.PropTypes.string
-  },
-  render: function() {
+```javascript{4,11-13,19,26-28,38-40}
+class Button extends React.Component {
+  render() {
     return (
       <button style={{'{{'}}background: this.context.color}}>
         {this.props.children}
       </button>
     );
   }
-});
+}
 
-var Message = React.createClass({
-  render: function() {
+Button.contextTypes = {
+  color: React.PropTypes.string
+};
+
+class Message extends React.Component {
+  render() {
     return (
       <div>
         {this.props.text} <Button>Delete</Button>
       </div>
     );
   }
-});
+}
 
-var MessageList = React.createClass({
-  childContextTypes: {
-    color: React.PropTypes.string
-  },
-  getChildContext: function() {
+class MessageList extends React.Component {
+  getChildContext() {
     return {color: "purple"};
-  },
-  render: function() {
-    var children = this.props.messages.map(function(message) {
-      return <Message text={message.text} />;
-    });
+  }
+
+  render() {
+    const children = this.props.messages.map((message) =>
+      <Message text={message.text} />
+    );
     return <div>{children}</div>;
   }
-});
+}
+
+MessageList.childContextTypes = {
+  color: React.PropTypes.string
+};
 ```
 
 By adding `childContextTypes` and `getChildContext` to `MessageList` (the context provider), React passes the information down automatically and any component in the subtree (in this case, `Button`) can access it by defining `contextTypes`.
 
-If `contextTypes` is not defined, then `this.context` will be an empty object.
+If `contextTypes` is not defined, then `context` will be an empty object.
 
 ## Parent-child coupling
 
@@ -150,13 +153,11 @@ void componentDidUpdate(
 Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows the `Button` component above written as a stateless functional component.
 
 ```javascript
-function Button(props, context) {
-  return (
-    <button style={{'{{'}}background: context.color}}>
-      {props.children}
-    </button>
-  );
-}
+const Button = ({children}, context) =>
+  <button style={{'{{'}}background: context.color}}>
+    {children}
+  </button>;
+
 Button.contextTypes = {color: React.PropTypes.string};
 ```
 
@@ -165,31 +166,36 @@ Button.contextTypes = {color: React.PropTypes.string};
 The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
 
 ```javascript
-var MediaQuery = React.createClass({
-  getInitialState: function(){
-    return {type:'desktop'};
-  },
-  childContextTypes: {
-    type: React.PropTypes.string
-  },
-  getChildContext: function() {
+class MediaQuery extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {type:'desktop'};
+  }
+
+  getChildContext() {
     return {type: this.state.type};
-  },
-  componentDidMount: function(){
-    var checkMediaQuery = function(){
-      var type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
-      if (type !== this.state.type){
-        this.setState({type:type});
+  }
+
+  componentDidMount() {
+    const checkMediaQuery = () => {
+      const type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
+      if (type !== this.state.type) {
+        this.setState({type});
       }
     };
 
     window.addEventListener('resize', checkMediaQuery);
     checkMediaQuery();
-  },
-  render: function(){
+  }
+
+  render() {
     return this.props.children;
   }
-});
+}
+
+MediaQuery.childContextTypes = {
+  type: React.PropTypes.string
+};
 ```
 
 ## When not to use context
