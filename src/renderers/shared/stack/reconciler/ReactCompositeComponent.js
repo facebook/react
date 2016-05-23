@@ -667,9 +667,9 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Assert that the props are valid
+   * Assert that the context types are valid
    *
-   * @param {object} propTypes Map of prop name to a ReactPropType
+   * @param {object} propTypes Map of context field to a ReactPropType
    * @param {object} props
    * @param {string} location e.g. "prop", "context", "child context"
    * @private
@@ -788,13 +788,10 @@ var ReactCompositeComponentMixin = {
       willReceive = true;
     }
 
-    // Distinguish between a props update versus a simple state update
-    if (prevParentElement === nextParentElement) {
-      // Skip checking prop types again -- we don't read inst.props to avoid
-      // warning for DOM component props in this upgrade
-      nextProps = nextParentElement.props;
-    } else {
-      nextProps = nextParentElement.props;
+    nextProps = nextParentElement.props;
+
+    // Not a simple state update but a props update
+    if (prevParentElement !== nextParentElement) {
       willReceive = true;
     }
 
