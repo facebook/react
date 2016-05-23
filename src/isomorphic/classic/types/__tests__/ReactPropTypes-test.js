@@ -849,9 +849,8 @@ describe('ReactPropTypes', function() {
       var instance = <Component num={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(spy.argsForCall.length).toBe(2); // temp double validation
+      expect(spy.argsForCall.length).toBe(1);
       expect(spy.argsForCall[0][1]).toBe('num');
-      expect(spy.argsForCall[0][2]).toBe('Component');
     });
 
     it('should have been called even if the prop is not present', function() {
@@ -867,7 +866,8 @@ describe('ReactPropTypes', function() {
       var instance = <Component bla={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(spy.argsForCall.length).toBe(2); // temp double validation
+      expect(spy.argsForCall.length).toBe(1);
+      expect(spy.argsForCall[0][1]).toBe('num');      
     });
 
     it('should have received the validator\'s return value', function() {

@@ -197,7 +197,7 @@ var ReactCompositeComponentMixin = {
     this._hostParent = hostParent;
     this._hostContainerInfo = hostContainerInfo;
 
-    var publicProps = this._processProps(this._currentElement.props);
+    var publicProps = this._currentElement.props;
     var publicContext = this._processContext(context);
 
     var Component = this._currentElement.type;
@@ -614,7 +614,7 @@ var ReactCompositeComponentMixin = {
     if (__DEV__) {
       var Component = this._currentElement.type;
       if (Component.contextTypes) {
-        this._checkPropTypes(
+        this._checkContextTypes(
           Component.contextTypes,
           maskedContext,
           ReactPropTypeLocations.context
@@ -647,7 +647,7 @@ var ReactCompositeComponentMixin = {
         this.getName() || 'ReactCompositeComponent'
       );
       if (__DEV__) {
-        this._checkPropTypes(
+        this._checkContextTypes(
           Component.childContextTypes,
           childContext,
           ReactPropTypeLocations.childContext
@@ -667,39 +667,14 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Processes props by setting default values for unspecified props and
-   * asserting that the props are valid. Does not mutate its argument; returns
-   * a new props object with defaults merged in.
+   * Assert that the context types are valid
    *
-   * @param {object} newProps
-   * @return {object}
-   * @private
-   */
-  _processProps: function(newProps) {
-    if (__DEV__) {
-      var Component = this._currentElement.type;
-      if (Component.propTypes) {
-        this._checkPropTypes(
-          Component.propTypes,
-          newProps,
-          ReactPropTypeLocations.prop
-        );
-      }
-    }
-    return newProps;
-  },
-
-  /**
-   * Assert that the props are valid
-   *
-   * @param {object} propTypes Map of prop name to a ReactPropType
+   * @param {object} propTypes Map of context field to a ReactPropType
    * @param {object} props
    * @param {string} location e.g. "prop", "context", "child context"
    * @private
    */
-  _checkPropTypes: function(propTypes, props, location) {
-    // TODO: Stop validating prop types here and only use the element
-    // validation.
+  _checkContextTypes: function(propTypes, props, location) {
     var componentName = this.getName();
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
@@ -724,23 +699,12 @@ var ReactCompositeComponentMixin = {
           // top-level render calls, so I'm abstracting it away into
           // a function to minimize refactoring in the future
           var addendum = getDeclarationErrorAddendum(this);
-
-          if (location === ReactPropTypeLocations.prop) {
-            // Preface gives us something to blacklist in warning module
-            warning(
-              false,
-              'Failed Composite propType: %s%s',
-              error.message,
-              addendum
-            );
-          } else {
-            warning(
-              false,
-              'Failed Context Types: %s%s',
-              error.message,
-              addendum
-            );
-          }
+          warning(
+            false,
+            'Failed Context Types: %s%s',
+            error.message,
+            addendum
+          );
         }
       }
     }
@@ -824,13 +788,10 @@ var ReactCompositeComponentMixin = {
       willReceive = true;
     }
 
-    // Distinguish between a props update versus a simple state update
-    if (prevParentElement === nextParentElement) {
-      // Skip checking prop types again -- we don't read inst.props to avoid
-      // warning for DOM component props in this upgrade
-      nextProps = nextParentElement.props;
-    } else {
-      nextProps = this._processProps(nextParentElement.props);
+    nextProps = nextParentElement.props;
+
+    // Not a simple state update but a props update
+    if (prevParentElement !== nextParentElement) {
       willReceive = true;
     }
 
