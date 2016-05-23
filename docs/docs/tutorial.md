@@ -233,16 +233,16 @@ All we're doing here is calling the marked library. We need to convert `props.ch
 But there's a problem! Our rendered comments look like this in the browser: "`<p>`This is `<em>`another`</em>` comment`</p>`". We want those tags to actually render as HTML.
 
 That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/Cross-site_scripting). There's a way to get around it but the framework warns you not to use it:
-TODO
+
 ```javascript{3-6,14}
 // tutorial7.js
-var Comment = React.createClass({
-  rawMarkup: function() {
+export class Comment extends React.Component {
+  rawMarkup = () => {
     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
     return { __html: rawMarkup };
   },
 
-  render: function() {
+  render() {
     return (
       <div className="comment">
         <h2 className="commentAuthor">
@@ -341,6 +341,7 @@ When the server fetches data, we will be changing the comment data we have. Let'
 // tutorial12.js
 export class CommentBox extends React.Component {
   constructor() {
+    super();
     this.state = {
       data: []
     }
@@ -373,6 +374,7 @@ When the component is first created, we want to GET some JSON from the server an
 // tutorial13.js
 export class CommentBox extends React.Component {
   constructor() {
+    super();
     this.state = {
       data: []
     }
@@ -408,6 +410,7 @@ Here, `componentDidMount` is a method called automatically by React after a comp
 // tutorial14.js
 export class CommentBox extends React.Component {
   constructor() {
+    super();
     this.state = {
       data: []
     }
@@ -477,6 +480,7 @@ Hence, we will be using `this.state` to save the user's input as it is entered. 
 // tutorial16.js
 export class CommentBox extends React.Component {
   constructor() {
+    super();
     this.state = {
       author: '', 
       text: ''
@@ -520,17 +524,22 @@ Let's make the form interactive. When the user submits the form, we should clear
 
 ```javascript{12-21,24}
 // tutorial17.js
-var CommentForm = React.createClass({
-  getInitialState: function() {
-    return {author: '', text: ''};
-  },
-  handleAuthorChange: function(e) {
+export class CommentForm extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      author: '', 
+      text: ''
+    }
+  }
+
+  handleAuthorChange = (e) => {
     this.setState({author: e.target.value});
   },
-  handleTextChange: function(e) {
+  handleTextChange = (e) => {
     this.setState({text: e.target.value});
   },
-  handleSubmit: function(e) {
+  handleSubmit = (e) => {
     e.preventDefault();
     var author = this.state.author.trim();
     var text = this.state.text.trim();
@@ -540,7 +549,7 @@ var CommentForm = React.createClass({
     // TODO: send request to the server
     this.setState({author: '', text: ''});
   },
-  render: function() {
+  render() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
         <input
@@ -574,8 +583,14 @@ We need to pass data from the child component back up to its parent. We do this 
 
 ```javascript{16-18,31}
 // tutorial18.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      data : []
+    }
+  }
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -588,17 +603,14 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: function(comment) {
+  handleCommentSubmit = (e) => {
     // TODO: submit to the server and refresh the list
   },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
+  componentDidMount() {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
-  render: function() {
+  render() {
     return (
       <div className="commentBox">
         <h1>Comments</h1>
@@ -614,17 +626,22 @@ Now that `CommentBox` has made the callback available to `CommentForm` via the `
 
 ```javascript{19}
 // tutorial19.js
-var CommentForm = React.createClass({
-  getInitialState: function() {
-    return {author: '', text: ''};
-  },
-  handleAuthorChange: function(e) {
+export class CommentForm extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      author: '', 
+      text: ''
+    }
+  }
+
+  handleAuthorChange = (e) => {
     this.setState({author: e.target.value});
   },
-  handleTextChange: function(e) {
+  handleTextChange = (e) => {
     this.setState({text: e.target.value});
   },
-  handleSubmit: function(e) {
+  handleSubmit: = (e) => {
     e.preventDefault();
     var author = this.state.author.trim();
     var text = this.state.text.trim();
@@ -634,7 +651,7 @@ var CommentForm = React.createClass({
     this.props.onCommentSubmit({author: author, text: text});
     this.setState({author: '', text: ''});
   },
-  render: function() {
+  render() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
         <input
@@ -660,8 +677,15 @@ Now that the callbacks are in place, all we have to do is submit to the server a
 
 ```javascript{17-28}
 // tutorial20.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      data: []
+    }
+  }
+
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -674,7 +698,7 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: function(comment) {
+  handleCommentSubmit = (comment) => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -688,10 +712,8 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
+
+  componentDidMount = (comment) => {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
@@ -713,8 +735,14 @@ Our application is now feature complete but it feels slow to have to wait for th
 
 ```javascript{17-23,33}
 // tutorial21.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    this.state = {
+      data: []
+    }
+  }
+
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -727,7 +755,7 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: function(comment) {
+  handleCommentSubmit = (comment) => {
     var comments = this.state.data;
     // Optimistically set an id on the new comment. It will be replaced by an
     // id generated by the server. In a production application you would likely
@@ -749,14 +777,12 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
+
+  componentDidMount = () => {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
-  render: function() {
+  render() {
     return (
       <div className="commentBox">
         <h1>Comments</h1>
@@ -764,7 +790,7 @@ var CommentBox = React.createClass({
         <CommentForm onCommentSubmit={this.handleCommentSubmit} />
       </div>
     );
-  }
+  }T
 });
 ```
 
