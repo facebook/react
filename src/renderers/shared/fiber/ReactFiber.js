@@ -12,6 +12,13 @@
 
 'use strict';
 
+var ReactTypesOfWork = require('ReactTypesOfWork');
+var {
+  IndeterminateComponent,
+  ClassComponent,
+  HostComponent,
+} = ReactTypesOfWork;
+
 type StateNode = {};
 type EffectHandler = () => void;
 type EffectTag = number;
@@ -27,16 +34,13 @@ export type Fiber = {
   input: ?Object,
   output: ?Object,
 
-  handler: EffectHandler,
-  handlerTag: EffectTag,
-
   hasPendingChanges: bool,
 
   stateNode: StateNode,
 
 };
 
-module.exports = function(tag : number) : Fiber {
+var createFiber = function(tag : number, handlerTag : number) : Fiber {
   return {
 
     tag: tag,
@@ -48,12 +52,29 @@ module.exports = function(tag : number) : Fiber {
     input: null,
     output: null,
 
-    handler: function() {},
-    handlerTag: 0,
-
     hasPendingChanges: true,
 
     stateNode: {},
 
   };
+};
+
+function shouldConstruct(Component) {
+  return !!(Component.prototype && Component.prototype.isReactComponent);
+}
+
+exports.createFiberFromElement = function(element : ReactElement) {
+  let fiber;
+  if (typeof element.type === 'function') {
+    fiber = shouldConstruct(element.type) ?
+      createFiber(ClassComponent, 0) :
+      createFiber(IndeterminateComponent, 0);
+  } else if (typeof element.type === 'string') {
+    fiber = createFiber(HostComponent, 1);
+  } else {
+    throw new Error('Unknown component type: ' + typeof element.type);
+  }
+
+  fiber.input = element;
+  return fiber;
 };

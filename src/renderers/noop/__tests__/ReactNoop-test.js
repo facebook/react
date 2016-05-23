@@ -20,7 +20,7 @@ describe('ReactComponent', function() {
     ReactNoop = require('ReactNoop');
   });
 
-  it('should render a simple component', function() {
+  /*it('should render a simple component', function() {
 
     function Bar() {
       return <div>Hello World</div>;
@@ -33,24 +33,27 @@ describe('ReactComponent', function() {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
-  });
+  });*/
 
   it('should render a simple component, in steps if needed', function() {
 
     function Bar() {
-      return <div>Hello World</div>;
+      return <span><div>Hello World</div></span>;
     }
 
     function Foo() {
-      return <Bar isBar={true} />;
+      return [
+        <Bar isBar={true} />,
+        <Bar isBar={true} />,
+      ];
     }
 
     ReactNoop.render(<Foo />);
-    // console.log('Nothing done');
+    console.log('Nothing done');
     ReactNoop.flushLowPri(7);
-    // console.log('Yield');
+    console.log('Yield');
     ReactNoop.flushLowPri(50);
-    // console.log('Done');
+    console.log('Done');
   });
 
 
