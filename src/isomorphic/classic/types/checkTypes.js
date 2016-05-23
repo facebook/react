@@ -23,14 +23,15 @@ var loggedTypeFailures = {};
  * Assert that the values match with the type specs.
  * Error messages are memorized and will only be shown once.
  *
- * @param {object} elementOrInstance An React Element or an internal component instance
- * @param {string} componentName Name of the component for error messages.
- * @param {object} values Runtime values that need to be type-checked
  * @param {object} typeSpecs Map of name to a ReactPropType
+ * @param {object} values Runtime values that need to be type-checked
  * @param {string} location e.g. "prop", "context", "child context"
+ * @param {string} componentName Name of the component for error messages.
+ * @param {?object} element The React element that is being type-checked
+ * @param {?number} debugID The React component instance that is being type-checked
  * @private
  */
-function checkTypes(elementOrInstance, componentName, values, typeSpecs, location) {
+function checkTypes(typeSpecs, values, location, componentName, element, debugID) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
       var error;
@@ -69,14 +70,20 @@ function checkTypes(elementOrInstance, componentName, values, typeSpecs, locatio
         // same error.
         loggedTypeFailures[error.message] = true;
 
+        var componentStackInfo = '';
+
+        if (debugID !== null) {
+          componentStackInfo = ReactComponentTreeDevtool.getStackAddendumByID(debugID);
+        } else if (element !== null) {
+          componentStackInfo = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
+        }
+
         warning(
           false,
           'Failed %s type: %s%s',
           location,
           error.message,
-          elementOrInstance._debugID ?
-            ReactComponentTreeDevtool.getStackAddendumByID(elementOrInstance._debugID) : // instance
-            ReactComponentTreeDevtool.getCurrentStackAddendum(elementOrInstance) // element
+          componentStackInfo
         );
       }
     }

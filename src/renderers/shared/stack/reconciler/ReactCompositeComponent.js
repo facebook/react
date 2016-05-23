@@ -659,13 +659,20 @@ var ReactCompositeComponentMixin = {
   /**
    * Assert that the context types are valid
    *
-   * @param {object} propTypes Map of context field to a ReactPropType
-   * @param {object} props
+   * @param {object} typeSpecs Map of context field to a ReactPropType
+   * @param {object} values Runtime values that need to be type-checked
    * @param {string} location e.g. "prop", "context", "child context"
    * @private
    */
-  _checkContextTypes: function(propTypes, props, location) {
-    checkTypes(this, this.getName(), props, propTypes, location);
+  _checkContextTypes: function(typeSpecs, values, location) {
+    checkTypes(
+      typeSpecs,
+      values,
+      location,
+      this.getName(),
+      null,
+      this._debugID
+    );
   },
 
   receiveComponent: function(nextElement, transaction, nextContext) {

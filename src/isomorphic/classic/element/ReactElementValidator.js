@@ -164,11 +164,12 @@ function validatePropTypes(element) {
   var name = componentClass.displayName || componentClass.name;
   if (componentClass.propTypes) {
     checkTypes(
-      element,
-      name,
-      element.props,
       componentClass.propTypes,
-      ReactPropTypeLocations.prop
+      element.props,
+      ReactPropTypeLocations.prop,
+      name,
+      element,
+      null
     );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
