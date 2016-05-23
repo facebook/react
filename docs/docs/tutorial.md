@@ -357,7 +357,7 @@ export class CommentBox extends React.Component {
 });
 ```
 
-`getInitialState()` executes exactly once during the lifecycle of the component and sets up the initial state of the component.
+Initial state is set up by `this.state()` in class constructor.
 
 #### Updating state
 When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. We're going to use jQuery to make an asynchronous request to the server we started earlier to fetch the data we need. The data is already included in the server you started (based on the `comments.json` file), so once it's fetched, `this.state.data` will look something like this:
@@ -371,10 +371,12 @@ When the component is first created, we want to GET some JSON from the server an
 
 ```javascript{6-18}
 // tutorial13.js
-var CommentBox = React.createClass({
-  getInitialState: function() {
-    return {data: []};
-  },
+export class CommentBox extends React.Component {
+  constructor() {
+    this.state = {
+      data: []
+    }
+  }
   componentDidMount: function() {
     $.ajax({
       url: this.props.url,
@@ -404,8 +406,14 @@ Here, `componentDidMount` is a method called automatically by React after a comp
 
 ```javascript{3,15,20-21,35}
 // tutorial14.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    this.state = {
+      data: []
+    }
+  }
+  
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -417,9 +425,6 @@ var CommentBox = React.createClass({
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
-  },
-  getInitialState: function() {
-    return {data: []};
   },
   componentDidMount: function() {
     this.loadCommentsFromServer();
@@ -444,24 +449,22 @@ ReactDOM.render(
 ```
 
 All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the `comments.json` file (in the same directory as your server); within 2 seconds, the changes will show!
-
+One thing to note here is the arrow syntax of defining methods, this follows the ES6 style of not binding 'this' automatically. So either you use arrow (=>) syntax or you can manually bind this while calling the methods. 
 ### Adding new comments
 
 Now it's time to build the form. Our `CommentForm` component should ask the user for their name and comment text and send a request to the server to save the comment.
 
 ```javascript{5-9}
 // tutorial15.js
-var CommentForm = React.createClass({
-  render: function() {
-    return (
-      <form className="commentForm">
-        <input type="text" placeholder="Your name" />
-        <input type="text" placeholder="Say something..." />
-        <input type="submit" value="Post" />
-      </form>
-    );
-  }
-});
+const CommentForm = () => {
+  return (
+    <form className="commentForm">
+      <input type="text" placeholder="Your name" />
+      <input type="text" placeholder="Say something..." />
+      <input type="submit" value="Post" />
+    </form>
+  );
+}
 ```
 
 #### Controlled components
@@ -472,17 +475,20 @@ Hence, we will be using `this.state` to save the user's input as it is entered. 
 
 ```javascript{3-11,15-26}
 // tutorial16.js
-var CommentForm = React.createClass({
-  getInitialState: function() {
-    return {author: '', text: ''};
-  },
-  handleAuthorChange: function(e) {
+export class CommentBox extends React.Component {
+  constructor() {
+    this.state = {
+      author: '', 
+      text: ''
+    }
+  }
+  handleAuthorChange = (e) => {
     this.setState({author: e.target.value});
   },
-  handleTextChange: function(e) {
+  handleTextChange = (e) => {
     this.setState({text: e.target.value});
   },
-  render: function() {
+  render() {
     return (
       <form className="commentForm">
         <input
