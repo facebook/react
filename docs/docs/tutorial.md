@@ -27,11 +27,11 @@ It'll also have a few neat features:
 
 In order to start this tutorial, we're going to require a running server. This will serve purely as an API endpoint which we'll use for getting and saving data. In order to make this as easy as possible, we've created a simple server in a number of scripting languages that does exactly what we need it to do. **You can [view the source](https://github.com/reactjs/react-tutorial/) or [download a zip file](https://github.com/reactjs/react-tutorial/archive/master.zip) containing everything needed to get started.**
 
-For sake of simplicity, the server we will run uses a `JSON` file as a database. You would not run this in production but it makes it easy to simulate what you might do when consuming an API. Once you start the server, it will support our API endpoint and it will also serve the static pages we need.
+For sake of simplicity, the server we will run uses a `JSON` file as a database. You would not run this in production but it makes it easy to simulate what you might do when consuming an API. Once you [start the server](https://github.com/reactjs/react-tutorial/#to-use), it will support our API endpoint and it will also serve the static pages we need.
 
 ### Getting started
 
-For this tutorial, we're going to make it as easy as possible. Included in the server package discussed above is an HTML file which we'll work in. Open up `public/index.html` in your favorite editor. It should look something like this (with perhaps some minor differences, we'll add an additional `<script>` tag later):
+For this tutorial, we're going to make it as easy as possible. Included in the server package discussed above is an HTML file which we'll work in. Open up `public/index.html` in your favorite editor. It should look something like this:
 
 ```html
 <!-- index.html -->
@@ -43,7 +43,8 @@ For this tutorial, we're going to make it as easy as possible. Included in the s
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -128,6 +129,8 @@ You do not have to return basic HTML. You can return a tree of components that y
 `ReactDOM.render()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
 
 The `ReactDOM` module exposes DOM-specific methods, while `React` has the core tools shared by React on different platforms (e.g., [React Native](http://facebook.github.io/react-native/)).
+
+It is important that `ReactDOM.render` remain at the bottom of the script for this tutorial. `ReactDOM.render` should only be called after the composite components have been defined.
 
 ## Composing components
 
@@ -221,22 +224,7 @@ Note that we have passed some data from the parent `CommentList` component to th
 
 Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.
 
-First, add the third-party library **marked** to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):
-
-```html{9}
-<!-- index.html -->
-<head>
-  <meta charset="utf-8" />
-  <title>React Tutorial</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
-</head>
-```
-
-Next, let's convert the comment text to Markdown and output it:
+In this tutorial we use a third-party library **marked** which takes Markdown text and converts it to raw HTML. We already included this library with the original markup for the page, so we can just start using it. Let's convert the comment text to Markdown and output it:
 
 ```javascript{9}
 // tutorial6.js
@@ -260,7 +248,7 @@ But there's a problem! Our rendered comments look like this in the browser: "`<p
 
 That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/Cross-site_scripting). There's a way to get around it but the framework warns you not to use it:
 
-```javascript{4,14}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
@@ -292,8 +280,8 @@ So far we've been inserting the comments directly in the source code. Instead, l
 ```javascript
 // tutorial8.js
 var data = [
-  {author: "Pete Hunt", text: "This is one comment"},
-  {author: "Jordan Walke", text: "This is *another* comment"}
+  {id: 1, author: "Pete Hunt", text: "This is one comment"},
+  {id: 2, author: "Jordan Walke", text: "This is *another* comment"}
 ];
 ```
 
@@ -325,9 +313,9 @@ Now that the data is available in the `CommentList`, let's render the comments d
 // tutorial10.js
 var CommentList = React.createClass({
   render: function() {
-    var commentNodes = this.props.data.map(function (comment) {
+    var commentNodes = this.props.data.map(function(comment) {
       return (
-        <Comment author={comment.author}>
+        <Comment author={comment.author} key={comment.id}>
           {comment.text}
         </Comment>
       );
@@ -388,12 +376,12 @@ var CommentBox = React.createClass({
 `getInitialState()` executes exactly once during the lifecycle of the component and sets up the initial state of the component.
 
 #### Updating state
-When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. We're going to use jQuery to make an asynchronous request to the server we started earlier to fetch the data we need. It will look something like this:
+When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. We're going to use jQuery to make an asynchronous request to the server we started earlier to fetch the data we need. The data is already included in the server you started (based on the `comments.json` file), so once it's fetched, `this.state.data` will look something like this:
 
 ```json
 [
-  {"author": "Pete Hunt", "text": "This is one comment"},
-  {"author": "Jordan Walke", "text": "This is *another* comment"}
+  {"id": "1", "author": "Pete Hunt", "text": "This is one comment"},
+  {"id": "2", "author": "Jordan Walke", "text": "This is *another* comment"}
 ]
 ```
 
@@ -428,7 +416,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-Here, `componentDidMount` is a method called automatically by React when a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
+Here, `componentDidMount` is a method called automatically by React after a component is rendered for the first time. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
 ```javascript{3,15,20-21,35}
 // tutorial14.js
@@ -492,28 +480,39 @@ var CommentForm = React.createClass({
 });
 ```
 
-Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
+#### Controlled components
 
-```javascript{3-14,16-19}
+With the traditional DOM, `input` elements are rendered and the browser manages the state (its rendered value). As a result, the state of the actual DOM will differ from that of the component. This is not ideal as the state of the view will differ from that of the component. In React, components should always represent the state of the view and not only at the point of initialization.
+
+Hence, we will be using `this.state` to save the user's input as it is entered. We define an initial `state` with two properties `author` and `text` and set them to be empty strings. In our `<input>` elements, we set the `value` prop to reflect the `state` of the component and attach `onChange` handlers to them. These `<input>` elements with a `value` set are called controlled components. Read more about controlled components on the [Forms article](/react/docs/forms.html#controlled-components).
+
+```javascript{3-11,15-26}
 // tutorial16.js
 var CommentForm = React.createClass({
-  handleSubmit: function(e) {
-    e.preventDefault();
-    var author = this.refs.author.value.trim();
-    var text = this.refs.text.value.trim();
-    if (!text || !author) {
-      return;
-    }
-    // TODO: send request to the server
-    this.refs.author.value = '';
-    this.refs.text.value = '';
-    return;
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
   },
   render: function() {
     return (
-      <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="Your name" ref="author" />
-        <input type="text" placeholder="Say something..." ref="text" />
+      <form className="commentForm">
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
         <input type="submit" value="Post" />
       </form>
     );
@@ -521,24 +520,70 @@ var CommentForm = React.createClass({
 });
 ```
 
-##### Events
+#### Events
 
-React attaches event handlers to components using a camelCase naming convention. We attach an `onSubmit` handler to the form that clears the form fields when the form is submitted with valid input.
+React attaches event handlers to components using a camelCase naming convention. We attach `onChange` handlers to the two `<input>` elements. Now, as the user enters text into the `<input>` fields, the attached `onChange` callbacks are fired and the `state` of the component is modified. Subsequently, the rendered value of the `input` element will be updated to reflect the current component `state`.
+
+#### Submitting the form
+
+Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
+
+```javascript{12-21,24}
+// tutorial17.js
+var CommentForm = React.createClass({
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
+  },
+  handleSubmit: function(e) {
+    e.preventDefault();
+    var author = this.state.author.trim();
+    var text = this.state.text.trim();
+    if (!text || !author) {
+      return;
+    }
+    // TODO: send request to the server
+    this.setState({author: '', text: ''});
+  },
+  render: function() {
+    return (
+      <form className="commentForm" onSubmit={this.handleSubmit}>
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
+        <input type="submit" value="Post" />
+      </form>
+    );
+  }
+});
+```
+
+We attach an `onSubmit` handler to the form that clears the form fields when the form is submitted with valid input.
 
 Call `preventDefault()` on the event to prevent the browser's default action of submitting the form.
 
-##### Refs
-
-We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the DOM node.
-
-##### Callbacks as props
+#### Callbacks as props
 
 When a user submits a comment, we will need to refresh the list of comments to include the new one. It makes sense to do all of this logic in `CommentBox` since `CommentBox` owns the state that represents the list of comments.
 
 We need to pass data from the child component back up to its parent. We do this in our parent's `render` method by passing a new callback (`handleCommentSubmit`) into the child, binding it to the child's `onCommentSubmit` event. Whenever the event is triggered, the callback will be invoked:
 
 ```javascript{16-18,31}
-// tutorial17.js
+// tutorial18.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -575,28 +620,45 @@ var CommentBox = React.createClass({
 });
 ```
 
-Let's call the callback from the `CommentForm` when the user submits the form:
+Now that `CommentBox` has made the callback available to `CommentForm` via the `onCommentSubmit` prop, the `CommentForm` can call the callback when the user submits the form:
 
-```javascript{10}
-// tutorial18.js
+```javascript{19}
+// tutorial19.js
 var CommentForm = React.createClass({
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
+  },
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = this.refs.author.value.trim();
-    var text = this.refs.text.value.trim();
+    var author = this.state.author.trim();
+    var text = this.state.text.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    this.refs.author.value = '';
-    this.refs.text.value = '';
-    return;
+    this.setState({author: '', text: ''});
   },
   render: function() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="Your name" ref="author" />
-        <input type="text" placeholder="Say something..." ref="text" />
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
         <input type="submit" value="Post" />
       </form>
     );
@@ -607,7 +669,7 @@ var CommentForm = React.createClass({
 Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:
 
 ```javascript{17-28}
-// tutorial19.js
+// tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -659,8 +721,8 @@ var CommentBox = React.createClass({
 
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
 
-```javascript{17-19}
-// tutorial20.js
+```javascript{17-23,33}
+// tutorial21.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -677,6 +739,10 @@ var CommentBox = React.createClass({
   },
   handleCommentSubmit: function(comment) {
     var comments = this.state.data;
+    // Optimistically set an id on the new comment. It will be replaced by an
+    // id generated by the server. In a production application you would likely
+    // not use Date.now() for this and would have a more robust system in place.
+    comment.id = Date.now();
     var newComments = comments.concat([comment]);
     this.setState({data: newComments});
     $.ajax({
@@ -688,6 +754,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
+        this.setState({data: comments});
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });

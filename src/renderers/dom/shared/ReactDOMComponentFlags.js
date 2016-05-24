@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,8 +12,7 @@
 'use strict';
 
 var ReactDOMComponentFlags = {
-  nodeHasLegacyProperties: 1 << 0,
-  hasCachedChildNodes: 1 << 1,
+  hasCachedChildNodes: 1 << 0,
 };
 
 module.exports = ReactDOMComponentFlags;

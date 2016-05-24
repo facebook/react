@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -14,6 +14,8 @@
 var adler32 = require('adler32');
 
 var TAG_END = /\/?>/;
+var COMMENT_START = /^<\!\-\-/;
+
 
 var ReactMarkupChecksum = {
   CHECKSUM_ATTR_NAME: 'data-react-checksum',
@@ -25,11 +27,15 @@ var ReactMarkupChecksum = {
   addChecksumToMarkup: function(markup) {
     var checksum = adler32(markup);
 
-    // Add checksum (handle both parent tags and self-closing tags)
-    return markup.replace(
-      TAG_END,
-      ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="' + checksum + '"$&'
-    );
+    // Add checksum (handle both parent tags, comments and self-closing tags)
+    if (COMMENT_START.test(markup)) {
+      return markup;
+    } else {
+      return markup.replace(
+        TAG_END,
+        ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="' + checksum + '"$&'
+      );
+    }
   },
 
   /**

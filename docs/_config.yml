@@ -36,4 +36,13 @@ sass:
   sass_dir: _css
 gems:
 - jekyll-redirect-from
-react_version: 0.14.2
+react_version: 15.1.0
+react_hashes:
+  dev: I9uU7ZWS2zpxPvpUfutJ7LD6Mmzk3pvvBCbfC7/imYVdtuPR9hRiLIJrVIZilwht
+  prod: 3aKuzevuBSs0FfxObUZ42KUGqneCk7kh9g7/aZ+Yzf5MhucA9KvfUSH5jcma9kdZ
+  addons_dev: 5jJyZhvy/Kkt6uTW3AY3U6bZ+0yDAS7NQDHExu76Zmoa6ABy5g42MoGj9pgeELqf
+  addons_prod: JkeMnC7xa++rlt5smrQVlrrBdYEy0WJbF78QOIpdQeg7UCUjWF3/gyNC/IVh5s4l
+  dom_dev: MWQ0uDsZsWizHa2PvAdb45Y1JXy+oLZPc0fabiueWS4rOZuKXDzqf12jjKMF8u3t
+  dom_prod: tEAvCNm5NozfOX3D8eOmg6E7CUNRQEaLq9xPqVr9ii9BW1cVXiuHKqrXUh3W7wg5
+  dom_server_dev: WTaEVUVSSkUY+GTjvLO65ZjnLMR2BBa+WkXF1F4rVIxqoMnxFcjugmyoxYwXMmF6
+  dom_server_prod: rFqq5Djim9lOAYssAJTvdJhtcGdz328JIjbcDq/5/r5DLwYyl8esZ1C0+CKeSXxo

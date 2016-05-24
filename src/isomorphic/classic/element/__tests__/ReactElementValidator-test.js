@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -19,6 +19,10 @@ var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactElementValidator', function() {
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   var ComponentClass;
 
   beforeEach(function() {
@@ -95,9 +99,10 @@ describe('ReactElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
 
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
-      '"key" prop. See https://fb.me/react-warning-keys for more information.'
+      '"key" prop. See https://fb.me/react-warning-keys for more information.\n' +
+      '    in div (at **)'
     );
   });
 
@@ -111,10 +116,46 @@ describe('ReactElementValidator', function() {
     ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
 
     expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
       '"key" prop. Check the top-level render call using <div>. See ' +
-      'https://fb.me/react-warning-keys for more information.'
+      'https://fb.me/react-warning-keys for more information.\n' +
+      '    in div (at **)'
+    );
+  });
+
+  it('warns for keys with component stack info', function() {
+    spyOn(console, 'error');
+
+    var Component = React.createClass({
+      render: function() {
+        return <div>{[<div />, <div />]}</div>;
+      },
+    });
+
+    var Parent = React.createClass({
+      render: function() {
+        return React.cloneElement(this.props.child);
+      },
+    });
+
+    var GrandParent = React.createClass({
+      render: function() {
+        return <Parent child={<Component />} />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<GrandParent />);
+
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
+      'Warning: Each child in an array or iterator should have a unique ' +
+      '"key" prop. Check the render method of `Component`. See ' +
+      'https://fb.me/react-warning-keys for more information.\n' +
+      '    in div (at **)\n' +
+      '    in Component (at **)\n' +
+      '    in Parent (at **)\n' +
+      '    in GrandParent (at **)'
     );
   });
 
@@ -240,9 +281,11 @@ describe('ReactElementValidator', function() {
     });
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed propType: ' +
+      'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
-      'expected `string`. Check the render method of `ParentComp`.'
+      'expected `string`.\n' +
+      '    in MyComp (created by ParentComp)\n' +
+      '    in ParentComp'
     );
   });
 
@@ -317,8 +360,9 @@ describe('ReactElementValidator', function() {
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `Component`.'
+      'Warning: Failed prop type: ' +
+      'Required prop `prop` was not specified in `Component`.\n' +
+      '    in Component'
     );
   });
 
@@ -341,8 +385,9 @@ describe('ReactElementValidator', function() {
 
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `Component`.'
+      'Warning: Failed prop type: ' +
+      'Required prop `prop` was not specified in `Component`.\n' +
+      '    in Component'
     );
   });
 
@@ -367,14 +412,16 @@ describe('ReactElementValidator', function() {
 
     expect(console.error.calls.length).toBe(2);
     expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed propType: ' +
-      'Required prop `prop` was not specified in `Component`.'
+      'Warning: Failed prop type: ' +
+      'Required prop `prop` was not specified in `Component`.\n' +
+      '    in Component'
     );
 
     expect(console.error.argsForCall[1][0]).toBe(
-      'Warning: Failed propType: ' +
+      'Warning: Failed prop type: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
-      '`Component`, expected `string`.'
+      '`Component`, expected `string`.\n' +
+      '    in Component'
     );
 
     ReactTestUtils.renderIntoDocument(

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,17 +11,18 @@
 
 'use strict';
 
+var DisabledInputUtils = require('DisabledInputUtils');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
 var didWarnValueLink = false;
 var didWarnValueNull = false;
+var didWarnValDefaultVal = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
@@ -44,7 +45,7 @@ function warnIfValueIsNull(props) {
 }
 
 /**
- * Implements a <textarea> native component that allows setting `value`, and
+ * Implements a <textarea> host component that allows setting `value`, and
  * `defaultValue`. This differs from the traditional DOM API because value is
  * usually set as PCDATA children.
  *
@@ -59,7 +60,7 @@ function warnIfValueIsNull(props) {
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = {
-  getNativeProps: function(inst, props) {
+  getHostProps: function(inst, props) {
     invariant(
       props.dangerouslySetInnerHTML == null,
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
@@ -67,14 +68,14 @@ var ReactDOMTextarea = {
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.
-    var nativeProps = assign({}, props, {
+    var hostProps = Object.assign({}, DisabledInputUtils.getHostProps(inst, props), {
       defaultValue: undefined,
       value: undefined,
       children: inst._wrapperState.initialValue,
       onChange: inst._wrapperState.onChange,
     });
 
-    return nativeProps;
+    return hostProps;
   },
 
   mountWrapper: function(inst, props) {
@@ -90,6 +91,21 @@ var ReactDOMTextarea = {
           '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
         );
         didWarnValueLink = true;
+      }
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnValDefaultVal
+      ) {
+        warning(
+          false,
+          'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components'
+        );
+        didWarnValDefaultVal = true;
       }
       warnIfValueIsNull(props);
     }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -16,11 +16,13 @@ var shallowEqual = require('shallowEqual');
 /**
  * Does a shallow comparison for props and state.
  * See ReactComponentWithPureRenderMixin
+ * See also https://facebook.github.io/react/docs/shallow-compare.html
  */
-function shallowCompare(instance, nextProps, nextState) {
+function shallowCompare(instance, nextProps, nextState, nextContext) {
   return (
     !shallowEqual(instance.props, nextProps) ||
-    !shallowEqual(instance.state, nextState)
+    !shallowEqual(instance.state, nextState) ||
+    !shallowEqual(instance.context, nextContext)
   );
 }
 

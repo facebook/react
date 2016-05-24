@@ -44,7 +44,7 @@ next: thinking-in-react-ja-JP.html
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -227,13 +227,13 @@ Markdown はインラインでテキストをフォーマットする簡単な�
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
 </head>
 ```
 
 次に、Markdown で書かれたコメントを変換して出力してみましょう。
 
-```javascript{2,10}
+```javascript{9}
 // tutorial6.js
 var Comment = React.createClass({
   render: function() {
@@ -249,32 +249,36 @@ var Comment = React.createClass({
 });
 ```
 
-このコードでは Showdown のライブラリを呼び出すことしかしていません。`this.props.children` は React によってラップされたテキストですが、これを Showdown が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に `toString()` を呼び出しているのです。
+このコードでは marked のライブラリを呼び出すことしかしていません。`this.props.children` は React によってラップされたテキストですが、これを marked が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に `toString()` を呼び出しているのです。
 
 しかし問題があります！ブラウザがレンダリングしたコメントは次のように表示されているはずです -- "`<p>`This is `<em>`another`</em>` comment`</p>`" このようなタグは実際に HTML としてレンダリングさせたいですね。
 
 このような現象が起きるのは React が XSS 攻撃に対する防御を行っているからです。これを回避する方法はありますが、それを使うときにはフレームワークが警告をします。
 
-```javascript{5,11}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
-  render: function() {
+  rawMarkup: function() {
     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    return { __html: rawMarkup };
+  },
+
+  render: function() {
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        <span dangerouslySetInnerHTML={{"{{"}}__html: rawMarkup}} />
+        <span dangerouslySetInnerHTML={this.rawMarkup()} />
       </div>
     );
   }
 });
 ```
 
-これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは Showdown のためにこのバックドアを利用しています。
+これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは marked のためにこのバックドアを利用しています。
 
-**注意:** この機能を使うことで、Showdown は安全なものと信頼することになります。
+**注意:** この機能を使うことで、marked は安全なものと信頼することになります。
 
 ### データモデルとの連携
 
@@ -348,6 +352,8 @@ ReactDOM.render(
 
 このコンポーネントは自身を再びレンダリングすることになるので、これまでのコンポーネントとは異なります。レスポンスがサーバから返ってくると、送られてきた新しいコメントをコンポーネントがレンダリングすることになります。ですが、その時点までコンポーネントには何もデータがないはずです。
 
+確認: 上のコードは、このステップではまだ動きません。
+
 ### Reactive state
 
 これまで、それぞれのコンポーネントは自身の props の値を用いて、一度だけレンダリングしていました。`props` はイミュータブルです。つまり、props は親から渡されますが、同時に props は親の「所有物」なのです。データが相互にやり取りされるのを実現するため、ここでミュータブルな **state**（状態）をコンポーネントに取り入れましょう。コンポーネントは `this.state` というプライベートな値を持ち、`this.setState()` を呼び出すことで state を更新することが出来ます。コンポーネントの state が更新されれば、そのコンポーネントは自身を再びレンダリングし直します。
@@ -379,8 +385,7 @@ var CommentBox = React.createClass({
 #### State の更新
 コンポーネントの作成と同時に、サーバから JSON データを GET で取得し、state を更新して最新のデータを反映させてみましょう。実際のアプリケーションでは動的なエンドポイントになるでしょうが、今回の例では話を簡単にするため、以下の静的な JSON ファイルを使います。
 
-```javascript
-// tutorial13.json
+```json
 [
   {"author": "Pete Hunt", "text": "This is one comment"},
   {"author": "Jordan Walke", "text": "This is *another* comment"}
@@ -653,7 +658,7 @@ var CommentBox = React.createClass({
 
 アプリケーションに必要な機能は一通り実装できました。しかし、フォームからコメントを送信しても、サーバからのレスポンスが来るまで自分のコメントはリストに載らないため、アプリの動作は遅く感じます。ここでは、送信したコメントをリストに先読みさせて、アプリの体感速度をアップさせましょう。
 
-```javascript{17-19}
+```javascript{17-19,29}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -682,6 +687,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
+        this.setState({data: comments});
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });

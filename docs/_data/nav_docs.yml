@@ -14,8 +14,10 @@
     title: Videos
   - id: complementary-tools
     title: Complementary Tools
+    href: https://github.com/facebook/react/wiki/Complementary-Tools
   - id: examples
     title: Examples
+    href: https://github.com/facebook/react/wiki/Examples
 - title: Guides
   items:
   - id: why-react
@@ -46,6 +48,13 @@
       title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
+    subitems:
+    - id: language-tooling
+      title: Language Tooling
+    - id: package-management
+      title: Package Management
+    - id: environments
+      title: Server-side Environments
   - id: addons
     title: Add-Ons
     subitems:
@@ -65,6 +74,8 @@
       title: PureRenderMixin
     - id: perf
       title: Performance Tools
+    - id: shallow-compare
+      title: Shallow Compare
   - id: advanced-performance
     title: Advanced Performance
   - id: context
@@ -87,6 +98,8 @@
     title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
+  - id: webcomponents
+    title: Web Components
   - id: glossary
     title: React (Virtual) DOM Terminology
 - title: Flux

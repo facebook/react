@@ -148,6 +148,8 @@ componentWillReceiveProps: function(nextProps) {
 
 > Note:
 >
+> One common mistake is for code executed during this lifecycle method to assume that props have changed.  To understand why this is invalid, read [A implies B does not imply B implies A](/react/blog/2016/01/08/A-implies-B-does-not-imply-B-implies-A.html)
+>
 > There is no analogous method `componentWillReceiveState`. An incoming prop transition may cause a state change, but the opposite is not true. If you need to perform operations in response to a state change, use `componentWillUpdate`.
 
 
@@ -161,8 +163,7 @@ boolean shouldComponentUpdate(
 
 Invoked before rendering when new props or state are being received. This method is not called for the initial render or when `forceUpdate` is used.
 
-Use this as an opportunity to `return false` when you're certain that the
-transition to the new props and state will not require a component update.
+Use this as an opportunity to `return false` when you're certain that the transition to the new props and state will not require a component update.
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {

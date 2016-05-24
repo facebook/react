@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -82,7 +82,9 @@ describe('traverseAllChildren', function() {
     );
     expect(traverseContext.length).toEqual(1);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Warning: Each child in an array or iterator should have a unique "key" prop.'
+    );
   });
 
   it('should be called for each child', function() {
@@ -326,7 +328,9 @@ describe('traverseAllChildren', function() {
     );
 
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Warning: Each child in an array or iterator should have a unique "key" prop.'
+    );
   });
 
   it('should be called for each child in an iterable with keys', function() {
@@ -474,6 +478,39 @@ describe('traverseAllChildren', function() {
     } finally {
       delete Number.prototype['@@iterator'];
     }
+  });
+
+  it('should allow extension of native prototypes', function() {
+    /*eslint-disable no-extend-native */
+    String.prototype.key = 'react';
+    Number.prototype.key = 'rocks';
+    /*eslint-enable no-extend-native */
+
+    var instance = (
+      <div>
+        {'a'}
+        {13}
+      </div>
+    );
+
+    var traverseFn = jasmine.createSpy();
+
+    traverseAllChildren(instance.props.children, traverseFn, null);
+    expect(traverseFn.calls.length).toBe(2);
+
+    expect(traverseFn).toHaveBeenCalledWith(
+      null,
+      'a',
+      '.0'
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      null,
+      13,
+      '.1'
+    );
+
+    delete String.prototype.key;
+    delete Number.prototype.key;
   });
 
   it('should throw on object', function() {

@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "0.15.0-alpha",
+  "version": "16.0.0-alpha",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -11,8 +11,9 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://github.com/facebook/react/tree/master/npm-react-dom",
+  "homepage": "https://facebook.github.io/react/",
+  "dependencies": {},
   "peerDependencies": {
-    "react": "^0.15.0-alpha"
+    "react": "^16.0.0-alpha"
   }
 }

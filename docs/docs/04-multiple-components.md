@@ -14,49 +14,49 @@ By building modular components that reuse other components with well-defined int
 
 ## Composition Example
 
-Let's create a simple Avatar component which shows a profile picture and username using the Facebook Graph API.
+Let's create a simple Avatar component which shows a Facebook page picture and name using the Facebook Graph API.
 
 ```javascript
 var Avatar = React.createClass({
   render: function() {
     return (
       <div>
-        <ProfilePic username={this.props.username} />
-        <ProfileLink username={this.props.username} />
+        <PagePic pagename={this.props.pagename} />
+        <PageLink pagename={this.props.pagename} />
       </div>
     );
   }
 });
 
-var ProfilePic = React.createClass({
+var PagePic = React.createClass({
   render: function() {
     return (
-      <img src={'https://graph.facebook.com/' + this.props.username + '/picture'} />
+      <img src={'https://graph.facebook.com/' + this.props.pagename + '/picture'} />
     );
   }
 });
 
-var ProfileLink = React.createClass({
+var PageLink = React.createClass({
   render: function() {
     return (
-      <a href={'https://www.facebook.com/' + this.props.username}>
-        {this.props.username}
+      <a href={'https://www.facebook.com/' + this.props.pagename}>
+        {this.props.pagename}
       </a>
     );
   }
 });
 
 ReactDOM.render(
-  <Avatar username="pwh" />,
+  <Avatar pagename="Engineering" />,
   document.getElementById('example')
 );
 ```
 
 ## Ownership
 
-In the above example, instances of `Avatar` *own* instances of `ProfilePic` and `ProfileLink`. In React, **an owner is the component that sets the `props` of other components**. More formally, if a component `X` is created in component `Y`'s `render()` method, it is said that `X` is *owned by* `Y`. As discussed earlier, a component cannot mutate its `props` — they are always consistent with what its owner sets them to. This fundamental invariant leads to UIs that are guaranteed to be consistent.
+In the above example, instances of `Avatar` *own* instances of `PagePic` and `PageLink`. In React, **an owner is the component that sets the `props` of other components**. More formally, if a component `X` is created in component `Y`'s `render()` method, it is said that `X` is *owned by* `Y`. As discussed earlier, a component cannot mutate its `props` — they are always consistent with what its owner sets them to. This fundamental invariant leads to UIs that are guaranteed to be consistent.
 
-It's important to draw a distinction between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, `Avatar` owns the `div`, `ProfilePic` and `ProfileLink` instances, and `div` is the **parent** (but not owner) of the `ProfilePic` and `ProfileLink` instances.
+It's important to draw a distinction between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, `Avatar` owns the `div`, `PagePic` and `PageLink` instances, and `div` is the **parent** (but not owner) of the `PagePic` and `PageLink` instances.
 
 ## Children
 

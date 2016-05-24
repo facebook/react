@@ -61,8 +61,7 @@ function onClick(event) {
 
 ## Supported Events
 
-React normalizes events so that they have consistent properties across
-different browsers.
+React normalizes events so that they have consistent properties across different browsers.
 
 The event handlers below are triggered by an event in the bubbling phase. To register an event handler for the capture phase, append `Capture` to the event name; for example, instead of using `onClick`, you would use `onClickCapture` to handle the click event in the capture phase.
 
@@ -140,6 +139,7 @@ DOMEventTarget relatedTarget
 
 These focus events work on all elements in the React DOM, not just form elements.
 
+
 ### Form Events
 
 Event names:
@@ -183,7 +183,7 @@ boolean shiftKey
 ```
 
 
-### Selection events
+### Selection Events
 
 Event names:
 
@@ -192,7 +192,7 @@ onSelect
 ```
 
 
-### Touch events
+### Touch Events
 
 Event names:
 
@@ -247,6 +247,7 @@ number deltaY
 number deltaZ
 ```
 
+
 ### Media Events
 
 Event names:
@@ -255,10 +256,45 @@ Event names:
 onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
 ```
 
+
 ### Image Events
 
 Event names:
 
 ```
 onLoad onError
+```
+
+
+### Animation Events
+
+Event names:
+
+```
+onAnimationStart onAnimationEnd onAnimationIteration
+```
+
+Properties:
+
+```javascript
+string animationName
+string pseudoElement
+float elapsedTime
+```
+
+
+### Transition Events
+
+Event names:
+
+```
+onTransitionEnd
+```
+
+Properties:
+
+```javascript
+string propertyName
+string pseudoElement
+float elapsedTime
 ```

@@ -4,12 +4,15 @@ var fs = require('fs');
 var path = require('path');
 var ts = require('typescript');
 
-var tsOptions = {module: 'commonjs'};
+var tsOptions = {
+  module: ts.ModuleKind.CommonJS,
+  jsx: ts.JsxEmit.React,
+};
 
 function formatErrorMessage(error) {
   return (
     error.file.filename + '(' +
-    error.file.getLineAndCharacterFromPosition(error.start).line +
+    error.file.getLineAndCharacterOfPosition(error.start).line +
     '): ' +
     error.messageText
   );
@@ -18,7 +21,7 @@ function formatErrorMessage(error) {
 function compile(content, contentFilename) {
   var output = null;
   var compilerHost = {
-    getSourceFile: function(filename, languageVersion) {
+    getSourceFile(filename, languageVersion) {
       var source;
 
       // `path.normalize` and `path.join` are used to turn forward slashes in
@@ -28,11 +31,13 @@ function compile(content, contentFilename) {
         path.join('/', '(?:React|ReactDOM)(?:\.d)?\.ts$')
       );
 
+      var jestRegex = /jest\.d\.ts/;
+
       if (filename === 'lib.d.ts') {
         source = fs.readFileSync(
-          require.resolve('typescript/bin/lib.d.ts')
+          require.resolve('typescript/lib/lib.d.ts')
         ).toString();
-      } else if (filename === 'jest.d.ts') {
+      } else if (filename.match(jestRegex)) {
         source = fs.readFileSync(
           path.join(__dirname, 'jest.d.ts')
         ).toString();
@@ -55,21 +60,27 @@ function compile(content, contentFilename) {
       }
       return ts.createSourceFile(filename, source, 'ES5', '0');
     },
-    writeFile: function(name, text, writeByteOrderMark) {
+    writeFile(name, text, writeByteOrderMark) {
       if (output === null) {
         output = text;
       } else {
         throw new Error('Expected only one dependency.');
       }
     },
-    getCanonicalFileName: function(filename) {
+    getCanonicalFileName(filename) {
       return filename;
     },
-    getCurrentDirectory: function() {
+    getCurrentDirectory() {
       return '';
     },
-    getNewLine: function() {
+    getNewLine() {
       return '\n';
+    },
+    fileExists(filename) {
+      return ts.sys.fileExists(filename);
+    },
+    useCaseSensitiveFileNames() {
+      return ts.sys.useCaseSensitiveFileNames;
     },
   };
   var program = ts.createProgram([
@@ -77,12 +88,8 @@ function compile(content, contentFilename) {
     'jest.d.ts',
     contentFilename,
   ], tsOptions, compilerHost);
-  var errors = program.getDiagnostics();
-  if (!errors.length) {
-    var checker = program.getTypeChecker(true);
-    errors = checker.getDiagnostics();
-    checker.emitFiles();
-  }
+  var emitResult = program.emit();
+  var errors = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
   if (errors.length) {
     throw new Error(errors.map(formatErrorMessage).join('\n'));
   }

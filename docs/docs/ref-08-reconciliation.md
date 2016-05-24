@@ -3,7 +3,7 @@ id: reconciliation
 title: Reconciliation
 permalink: reconciliation.html
 prev: special-non-dom-attributes.html
-next: glossary.html
+next: webcomponents.html
 ---
 
 React's key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but is also an incredible challenge to make it tractable. This article explains how with powerful heuristics we managed to turn a O(n<sup>3</sup>) problem into a O(n) one.
@@ -13,7 +13,7 @@ React's key design decision is to make the API seem like it re-renders the whole
 
 Generating the minimum number of operations to transform one tree into another is a complex and well-studied problem. The [state of the art algorithms](http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf) have a complexity in the order of O(n<sup>3</sup>) where n is the number of nodes in the tree.
 
-This means that displaying 1000 nodes would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instruction per second. So even with the most performant implementation, we wouldn't be able to compute that diff in less than a second.
+This means that displaying 1000 nodes would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instructions per second. So even with the most performant implementation, we wouldn't be able to compute that diff in less than a second.
 
 Since an optimal algorithm is not tractable, we implement a non-optimal O(n) algorithm using heuristics based on two assumptions:
 
@@ -76,7 +76,7 @@ After the attributes have been updated, we recurse on all the children.
 
 ### Custom Components
 
-We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and calls `component[Will/Did]ReceiveProps()` on the previous one.
+We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the previous one.
 
 The previous component is now operational. Its `render()` method is called and the diff algorithm restarts with the new result and the previous result.
 
@@ -129,5 +129,5 @@ Because we rely on two heuristics, if the assumptions behind them are not met, p
 
 1. The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
 
-2. If you don't provide stable keys (by using Math.random() for example), all the sub-trees are going to be re-rendered every single time. By giving the users the choice to choose the key, they have the ability to shoot themselves in the foot.
+2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many nodes to be unnecessarily re-created, which can cause performance degradation and lost state in child components.
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -31,26 +31,16 @@ describe('ReactDOMOption', function() {
     expect(node.innerHTML).toBe('1 foo');
   });
 
-  it('should ignore invalid children types', function() {
+  it('should ignore and warn invalid children types', function() {
     spyOn(console, 'error');
     var stub = <option>{1} <div /> {2}</option>;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
-
     expect(node.innerHTML).toBe('1  2');
+    ReactTestUtils.renderIntoDocument(<option>{1} <div /> {2}</option>);
+    // only warn once
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain('Only strings and numbers are supported as <option> children.');
-  });
-
-  it('should warn when passing invalid children', function() {
-    var stub = <option>{1} <div /></option>;
-    spyOn(console, 'error');
-    stub = ReactTestUtils.renderIntoDocument(stub);
-
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'Only strings and numbers are supported as <option> children.'
-    );
   });
 
   it('should ignore null/undefined/false children without warning', function() {
@@ -63,4 +53,45 @@ describe('ReactDOMOption', function() {
     expect(console.error.calls.length).toBe(0);
     expect(node.innerHTML).toBe('1  2');
   });
+
+  it('should be able to use dangerouslySetInnerHTML on option', function() {
+    var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+
+    var node = ReactDOM.findDOMNode(stub);
+    expect(node.innerHTML).toBe('foobar');
+  });
+
+  it('should set attribute for empty value', function() {
+    var container = document.createElement('div');
+    var option = ReactDOM.render(<option value="" />, container);
+    expect(option.hasAttribute('value')).toBe(true);
+    expect(option.getAttribute('value')).toBe('');
+
+    ReactDOM.render(<option value="lava" />, container);
+    expect(option.hasAttribute('value')).toBe(true);
+    expect(option.getAttribute('value')).toBe('lava');
+  });
+
+  it('should allow ignoring `value` on option', function() {
+    var a = 'a';
+    var stub =
+      <select value="giraffe" onChange={() => {}}>
+        <option>monkey</option>
+        <option>gir{a}ffe</option>
+        <option>gorill{a}</option>
+      </select>;
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.selectedIndex).toBe(1);
+
+    ReactDOM.render(
+      <select value="gorilla">{options}</select>,
+      container
+    );
+    expect(node.selectedIndex).toEqual(2);
+  });  
 });

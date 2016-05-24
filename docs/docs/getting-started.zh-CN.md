@@ -13,7 +13,6 @@ redirect_from: "docs/index-zh-CN.html"
  * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
  * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
-
 ## 通过 npm 使用 React
 
 我们建议在 React 中使用 CommonJS 模块系统，比如 [browserify](http://browserify.org/) 或 [webpack](https://webpack.github.io/)。使用 [`react`](https://www.npmjs.com/package/react) 和 [`react-dom`](https://www.npmjs.com/package/react-dom) npm 包.
@@ -29,23 +28,41 @@ ReactDOM.render(
 );
 ```
 
-
-在安装 browserify 之后安装 React DOM 和构建你的应用包。
+要用 browserify 安装 React DOM 和构建你的包。
 
 ```sh
-$ npm install --save react react-dom
-$ browserify -t babelify main.js -o bundle.js
+$ npm install --save react react-dom babelify babel-preset-react
+$ browserify -t [ babelify --presets [ react ] ] main.js -o bundle.js
 ```
 
-## 不使用 npm 快速开始
+要用 webpack 安装 React DOM 和构建你的包:  
 
+```sh
+$ npm install --save react react-dom babel-preset-react
+$ webpack
+```
 
-If you're not ready to use npm yet, you can download the starter kit which includes prebuilt copies of React and React DOM.
-如果你没有做好使用 npm 的准备，你可以下载包含了 React 和 ReactDOM 预生成包的入门教程包。
+> 注意:
+>
+> 如果你正在使用 ES2015, 你将要使用 `babel-preset-es2015` 包.
+
+**注意:** 默认情况下，React 将会在开发模式，很缓慢，不建议用于生产。要在生产模式下使用 React，设置环境变量 `NODE_ENV` 为 `production` （使用 envify 或者 webpack's DefinePlugin）。例如：
+
+```js
+new webpack.DefinePlugin({
+  "process.env": {
+    NODE_ENV: JSON.stringify("production")
+  }
+});
+```
+
+## 不用 npm 的快速开始
+
+如果你现在还没准备要使用npm,你可以下载这个已经包含了预构建的 React 和 React DOM 拷贝的入门套件. 
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
-    下载入门教程 {{site.react_version}}
+    下载入门套件 {{site.react_version}}
   </a>
 </div>
 
@@ -73,7 +90,7 @@ If you're not ready to use npm yet, you can download the starter kit which inclu
 </html>
 ```
 
-在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 [JSX 语法](/react/docs/jsx-in-depth.html) 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 `<script type="text/babel">` 标签，并引入 Babel 来完成在浏览器里的代码转换。
+在 JavaScript 代码里写着 XML 格式的代码称为 JSX；可以去 [JSX 语法](/react/docs/jsx-in-depth.html) 里学习更多 JSX 相关的知识。为了把 JSX 转成标准的 JavaScript，我们用 `<script type="text/babel">` 标签，并引入 Babel 来完成在浏览器里的代码转换。在浏览器里打开这个html，你应该可以看到成功的消息！
 
 ### 分离文件
 
@@ -96,21 +113,24 @@ ReactDOM.render(
 
 ### 离线转换
 
-先安装[Babel](http://babeljs.io/)命令行工具（依赖 [npm](https://www.npmjs.com/)）：
+先安装[Babel](http://babeljs.io/)命令行工具（需要 [npm](https://www.npmjs.com/)）：
 
 ```
-npm install --global babel
+npm install --global babel-cli
+npm install babel-preset-react
 ```
 
 然后把你的 `src/helloworld.js` 文件转成标准的 JavaScript:
 
 ```
-babel src --watch --out-dir build
-
+babel --presets react src --watch --out-dir build
 ```
 
-`build/helloworld.js` 会在你对文件进行修改时自动生成。 阅读 [Babel CLI 文档](http://babeljs.io/docs/usage/cli/) 了解高级用法。
+> 注意:
+>
+> 如果你正在使用 ES2015, 你将需要使用 `babel-preset-es2015` 包.
 
+`build/helloworld.js` 会在你对文件进行修改时自动生成。 阅读 [Babel CLI 文档](http://babeljs.io/docs/usage/cli/) 了解高级用法。
 
 ```javascript{2}
 ReactDOM.render(
@@ -119,16 +139,18 @@ ReactDOM.render(
 );
 ```
 
+
 对照下面更新你的 HTML 代码
 
-```html{7,11}
+```html{8,12}
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <!-- 不需要 Babel！ -->
+    <script src="build/react-dom.js"></script>
+    <!-- 不需要 Babel! -->
   </head>
   <body>
     <div id="example"></div>
@@ -136,8 +158,6 @@ ReactDOM.render(
   </body>
 </html>
 ```
-
-
 
 ## 下一步
 

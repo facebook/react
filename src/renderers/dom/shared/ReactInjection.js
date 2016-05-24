@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -18,8 +18,7 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactClass = require('ReactClass');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactNativeComponent = require('ReactNativeComponent');
-var ReactPerf = require('ReactPerf');
+var ReactHostComponent = require('ReactHostComponent');
 var ReactUpdates = require('ReactUpdates');
 
 var ReactInjection = {
@@ -30,8 +29,7 @@ var ReactInjection = {
   EventPluginHub: EventPluginHub.injection,
   EventPluginUtils: EventPluginUtils.injection,
   EventEmitter: ReactBrowserEventEmitter.injection,
-  NativeComponent: ReactNativeComponent.injection,
-  Perf: ReactPerf.injection,
+  HostComponent: ReactHostComponent.injection,
   Updates: ReactUpdates.injection,
 };
 

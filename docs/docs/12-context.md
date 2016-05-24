@@ -123,6 +123,75 @@ By passing down the relevant info in the `Menu` component, each `MenuItem` can c
 
 Recall that you can also pass entire React components in props if you'd like to.
 
+## Referencing context in lifecycle methods
+
+If `contextTypes` is defined within a component, the following lifecycle methods will receive an additional parameter, the `context` object:
+
+```javascript
+void componentWillReceiveProps(
+  object nextProps, object nextContext
+)
+
+boolean shouldComponentUpdate(
+  object nextProps, object nextState, object nextContext
+)
+
+void componentWillUpdate(
+  object nextProps, object nextState, object nextContext
+)
+
+void componentDidUpdate(
+  object prevProps, object prevState, object prevContext
+)
+```
+
+## Referencing context in stateless functional components
+
+Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows the `Button` component above written as a stateless functional component.
+
+```javascript
+function Button(props, context) {
+  return (
+    <button style={{'{{'}}background: context.color}}>
+      {props.children}
+    </button>
+  );
+}
+Button.contextTypes = {color: React.PropTypes.string};
+```
+
+## Updating context
+
+The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
+
+```javascript
+var MediaQuery = React.createClass({
+  getInitialState: function(){
+    return {type:'desktop'};
+  },
+  childContextTypes: {
+    type: React.PropTypes.string
+  },
+  getChildContext: function() {
+    return {type: this.state.type};
+  },
+  componentDidMount: function(){
+    var checkMediaQuery = function(){
+      var type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
+      if (type !== this.state.type){
+        this.setState({type:type});
+      }
+    };
+
+    window.addEventListener('resize', checkMediaQuery);
+    checkMediaQuery();
+  },
+  render: function(){
+    return this.props.children;
+  }
+});
+```
+
 ## When not to use context
 
 Just as global variables are best avoided when writing clear code, you should avoid using context in most cases. In particular, think twice before using it to "save typing" and using it instead of passing explicit props.

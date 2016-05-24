@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -16,23 +16,20 @@
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactMount = require('ReactMount');
-var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
-var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
+var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
 ReactDefaultInjection.inject();
 
-var render = ReactPerf.measure('React', 'render', ReactMount.render);
-
 var React = {
   findDOMNode: findDOMNode,
-  render: render,
+  render: ReactMount.render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   version: ReactVersion,
 
@@ -54,7 +51,7 @@ if (
       getNodeFromInstance: function(inst) {
         // inst is an internal instance (but could be a composite)
         if (inst._renderedComponent) {
-          inst = getNativeComponentFromComposite(inst);
+          inst = getHostComponentFromComposite(inst);
         }
         if (inst) {
           return ReactDOMComponentTree.getNodeFromInstance(inst);
@@ -78,8 +75,13 @@ if (__DEV__) {
       if ((navigator.userAgent.indexOf('Chrome') > -1 &&
           navigator.userAgent.indexOf('Edge') === -1) ||
           navigator.userAgent.indexOf('Firefox') > -1) {
+        // Firefox does not have the issue with devtools loaded over file://
+        var showFileUrlMessage = window.location.protocol.indexOf('http') === -1 &&
+          navigator.userAgent.indexOf('Firefox') === -1;
         console.debug(
-          'Download the React DevTools for a better development experience: ' +
+          'Download the React DevTools ' +
+          (showFileUrlMessage ? 'and use an HTTP server (instead of a file: URL) ' : '') +
+          'for a better development experience: ' +
           'https://fb.me/react-devtools'
         );
       }

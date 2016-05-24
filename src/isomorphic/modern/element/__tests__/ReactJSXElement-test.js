@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -115,6 +115,18 @@ describe('ReactJSXElement', function() {
     var element = <Component children="text">{null}</Component>;
     expect(element.props.children).toBe(null);
     expect(console.error.argsForCall.length).toBe(0);
+  });
+
+  it('overrides children if undefined is provided as an argument', function() {
+    var element = <Component children="text">{undefined}</Component>;
+    expect(element.props.children).toBe(undefined);
+
+    var element2 = React.cloneElement(
+      <Component children="text" />,
+      {},
+      undefined
+    );
+    expect(element2.props.children).toBe(undefined);
   });
 
   it('merges JSX children onto the children prop in an array', function() {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule findDOMNode
- * @typechecks static-only
  */
 
 'use strict';
@@ -16,12 +15,14 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
 
-var getNativeComponentFromComposite = require('getNativeComponentFromComposite');
+var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var invariant = require('invariant');
 var warning = require('warning');
 
 /**
  * Returns the DOM node rendered by this element.
+ *
+ * See https://facebook.github.io/react/docs/top-level-api.html#reactdom.finddomnode
  *
  * @param {ReactComponent|DOMElement} componentOrElement
  * @return {?DOMElement} The root node of this element.
@@ -32,7 +33,7 @@ function findDOMNode(componentOrElement) {
     if (owner !== null) {
       warning(
         owner._warnedAboutRefsInRender,
-        '%s is accessing getDOMNode or findDOMNode inside its render(). ' +
+        '%s is accessing findDOMNode inside its render(). ' +
         'render() should be a pure function of props and state. It should ' +
         'never access something that requires stale data from the previous ' +
         'render, such as refs. Move this logic to componentDidMount and ' +
@@ -51,7 +52,7 @@ function findDOMNode(componentOrElement) {
 
   var inst = ReactInstanceMap.get(componentOrElement);
   if (inst) {
-    inst = getNativeComponentFromComposite(inst);
+    inst = getHostComponentFromComposite(inst);
     return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
   }
 

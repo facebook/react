@@ -1,12 +1,11 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @typechecks static-only
  * @providesModule ReactServerRendering
  */
 'use strict';
@@ -14,7 +13,9 @@
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
+var ReactReconciler = require('ReactReconciler');
 var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
@@ -29,11 +30,6 @@ var invariant = require('invariant');
  * @return {string} the HTML markup
  */
 function renderToStringImpl(element, makeStaticMarkup) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.'
-  );
-
   var transaction;
   try {
     ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
@@ -41,13 +37,23 @@ function renderToStringImpl(element, makeStaticMarkup) {
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
     return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(element, null);
-      var markup = componentInstance.mountComponent(
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onBeginFlush();
+      }
+      var componentInstance = instantiateReactComponent(element);
+      var markup = ReactReconciler.mountComponent(
+        componentInstance,
         transaction,
         null,
         ReactDOMContainerInfo(),
         emptyObject
       );
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onUnmountComponent(
+          componentInstance._debugID
+        );
+        ReactInstrumentation.debugTool.onEndFlush();
+      }
       if (!makeStaticMarkup) {
         markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
       }
@@ -61,11 +67,29 @@ function renderToStringImpl(element, makeStaticMarkup) {
   }
 }
 
+/**
+ * Render a ReactElement to its initial HTML. This should only be used on the
+ * server.
+ * See https://facebook.github.io/react/docs/top-level-api.html#reactdomserver.rendertostring
+ */
 function renderToString(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToString(): You must pass a valid ReactElement.'
+  );
   return renderToStringImpl(element, false);
 }
 
+/**
+ * Similar to renderToString, except this doesn't create extra DOM attributes
+ * such as data-react-id that React uses internally.
+ * See https://facebook.github.io/react/docs/top-level-api.html#reactdomserver.rendertostaticmarkup
+ */
 function renderToStaticMarkup(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToStaticMarkup(): You must pass a valid ReactElement.'
+  );
   return renderToStringImpl(element, true);
 }
 

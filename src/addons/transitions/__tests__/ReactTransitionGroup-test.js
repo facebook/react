@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -19,6 +19,10 @@ var ReactTransitionGroup;
 // makes sure we're wired up correctly.
 describe('ReactTransitionGroup', function() {
   var container;
+
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
   beforeEach(function() {
     React = require('React');
@@ -268,5 +272,34 @@ describe('ReactTransitionGroup', function() {
       'willLeave0', 'didLeave0', 'willLeave1', 'didLeave1',
       'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2',
     ]);
+  });
+
+  it('should warn for duplicated keys with component stack info', function() {
+    spyOn(console, 'error');
+
+    var Component = React.createClass({
+      render: function() {
+        var children = [<div key="1"/>, <div key="1" />];
+        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+      },
+    });
+
+    ReactDOM.render(<Component />, container);
+
+    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: flattenChildren(...): ' +
+      'Encountered two children with the same key, `1`. ' +
+      'Child keys must be unique; when two children share a key, ' +
+      'only the first child will be used.'
+    );
+    expect(normalizeCodeLocInfo(console.error.argsForCall[1][0])).toBe(
+      'Warning: flattenChildren(...): ' +
+      'Encountered two children with the same key, `1`. ' +
+      'Child keys must be unique; when two children share a key, ' +
+      'only the first child will be used.\n' +
+      '    in ReactTransitionGroup (at **)\n' +
+      '    in Component (at **)'
+    );
   });
 });

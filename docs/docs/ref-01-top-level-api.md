@@ -66,9 +66,7 @@ factoryFunction createFactory(
 )
 ```
 
-Return a function that produces ReactElements of a given type. Like `React.createElement`,
-the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a
-`ReactClass`.
+Return a function that produces ReactElements of a given type. Like `React.createElement`, the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a `ReactClass`.
 
 
 ### React.isValidElement
@@ -100,7 +98,7 @@ Verifies the object is a ReactElement.
 array React.Children.map(object children, function fn [, object thisArg])
 ```
 
-Invoke `fn` on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an array.
+Invoke `fn` on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a [keyed fragment](/react/docs/create-fragment.html) or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an array.
 
 #### React.Children.forEach
 
@@ -141,7 +139,7 @@ The `react-dom` package provides DOM-specific methods that can be used at the to
 ### ReactDOM.render
 
 ```javascript
-ReactComponent render(
+render(
   ReactElement element,
   DOMElement container,
   [function callback]
@@ -163,6 +161,10 @@ If the optional callback is provided, it will be executed after the component is
 > `ReactDOM.render()` does not modify the container node (only modifies the children of the container). In
 > the future, it may be possible to insert a component to an existing DOM node without overwriting
 > the existing children.
+>
+> `ReactDOM.render()` currently returns a reference to the root `ReactComponent` instance. However, using this return value is legacy
+> and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
+> [callback ref](/react/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
 
 
 ### ReactDOM.unmountComponentAtNode

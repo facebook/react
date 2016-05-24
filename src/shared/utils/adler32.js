@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -25,7 +25,8 @@ function adler32(data) {
   var l = data.length;
   var m = l & ~0x3;
   while (i < m) {
-    for (; i < Math.min(i + 4096, m); i += 4) {
+    var n = Math.min(i + 4096, m);
+    for (; i < n; i += 4) {
       b += (
         (a += data.charCodeAt(i)) +
         (a += data.charCodeAt(i + 1)) +

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,11 +12,16 @@
 'use strict';
 
 var React = require('React');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
-var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 
+/**
+ * A basis for animations. When children are declaratively added or removed,
+ * special lifecycle hooks are called.
+ * See https://facebook.github.io/react/docs/animation.html#low-level-api-reacttransitiongroup
+ */
 var ReactTransitionGroup = React.createClass({
   displayName: 'ReactTransitionGroup',
 
@@ -34,6 +39,7 @@ var ReactTransitionGroup = React.createClass({
 
   getInitialState: function() {
     return {
+      // TODO: can we get useful debug information to show at this point?
       children: ReactTransitionChildMapping.getChildMapping(this.props.children),
     };
   },
@@ -54,9 +60,17 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentWillReceiveProps: function(nextProps) {
-    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
-      nextProps.children
-    );
+    var nextChildMapping;
+    if (__DEV__) {
+      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+        nextProps.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+        nextProps.children
+      );
+    }
     var prevChildMapping = this.state.children;
 
     this.setState({
@@ -119,9 +133,17 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
       // This was removed before it had fully appeared. Remove it.
@@ -151,9 +173,17 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
       // This was removed before it had fully entered. Remove it.
@@ -184,16 +214,24 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (currentChildMapping && currentChildMapping.hasOwnProperty(key)) {
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
       this.setState(function(state) {
-        var newChildren = assign({}, state.children);
+        var newChildren = Object.assign({}, state.children);
         delete newChildren[key];
         return {children: newChildren};
       });

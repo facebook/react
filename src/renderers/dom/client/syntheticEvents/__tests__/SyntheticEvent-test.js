@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,12 +12,18 @@
 'use strict';
 
 var SyntheticEvent;
+var React;
+var ReactDOM;
+var ReactTestUtils;
 
 describe('SyntheticEvent', function() {
   var createEvent;
 
   beforeEach(function() {
     SyntheticEvent = require('SyntheticEvent');
+    React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactTestUtils = require('ReactTestUtils');
 
     createEvent = function(nativeEvent) {
       var target = require('getEventTarget')(nativeEvent);
@@ -72,6 +78,42 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.isPersistent()).toBe(true);
   });
 
+  it('should be nullified if the synthetic event has called destructor and log warnings', function() {
+    spyOn(console, 'error');
+    var target = document.createElement('div');
+    var syntheticEvent = createEvent({srcElement: target});
+    syntheticEvent.destructor();
+    expect(syntheticEvent.type).toBe(null);
+    expect(syntheticEvent.nativeEvent).toBe(null);
+    expect(syntheticEvent.target).toBe(null);
+    // once for each property accessed
+    expect(console.error.calls.length).toBe(3);
+    // assert the first warning for accessing `type`
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+      'you\'re seeing this, you\'re accessing the property `type` on a ' +
+      'released/nullified synthetic event. This is set to null. If you must ' +
+      'keep the original synthetic event around, use event.persist(). ' +
+      'See https://fb.me/react-event-pooling for more information.'
+    );
+  });
+
+  it('should warn when setting properties of a destructored synthetic event', function() {
+    spyOn(console, 'error');
+    var target = document.createElement('div');
+    var syntheticEvent = createEvent({srcElement: target});
+    syntheticEvent.destructor();
+    expect(syntheticEvent.type = 'MouseEvent').toBe('MouseEvent');
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+      'you\'re seeing this, you\'re setting the property `type` on a ' +
+      'released/nullified synthetic event. This is effectively a no-op. If you must ' +
+      'keep the original synthetic event around, use event.persist(). ' +
+      'See https://fb.me/react-event-pooling for more information.'
+    );
+  });
+
   it('should warn if the synthetic event has been released when calling `preventDefault`', function() {
     spyOn(console, 'error');
     var syntheticEvent = createEvent({});
@@ -80,9 +122,10 @@ describe('SyntheticEvent', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: This synthetic event is reused for performance reasons. If ' +
-      'you\'re seeing this, you\'re calling `preventDefault` on a ' +
-      'released/nullified synthetic event. This is a no-op. See ' +
-      'https://fb.me/react-event-pooling for more information.'
+      'you\'re seeing this, you\'re accessing the method `preventDefault` on a ' +
+      'released/nullified synthetic event. This is a no-op function. If you must ' +
+      'keep the original synthetic event around, use event.persist(). ' +
+      'See https://fb.me/react-event-pooling for more information.'
     );
   });
 
@@ -94,9 +137,56 @@ describe('SyntheticEvent', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: This synthetic event is reused for performance reasons. If ' +
-      'you\'re seeing this, you\'re calling `stopPropagation` on a ' +
-      'released/nullified synthetic event. This is a no-op. See ' +
-      'https://fb.me/react-event-pooling for more information.'
+      'you\'re seeing this, you\'re accessing the method `stopPropagation` on a ' +
+      'released/nullified synthetic event. This is a no-op function. If you must ' +
+      'keep the original synthetic event around, use event.persist(). ' +
+      'See https://fb.me/react-event-pooling for more information.'
     );
+  });
+
+  // TODO: reenable this test. We are currently silencing these warnings when
+  // using TestUtils.Simulate to avoid spurious warnings that result from the
+  // way we simulate events.
+  xit('should properly log warnings when events simulated with rendered components', function() {
+    spyOn(console, 'error');
+    var event;
+    var element = document.createElement('div');
+    function assignEvent(e) {
+      event = e;
+    }
+    var instance = ReactDOM.render(<div onClick={assignEvent} />, element);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance));
+    expect(console.error.calls.length).toBe(0);
+
+    // access a property to cause the warning
+    event.nativeEvent; // eslint-disable-line no-unused-expressions
+
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+      'you\'re seeing this, you\'re accessing the property `nativeEvent` on a ' +
+      'released/nullified synthetic event. This is set to null. If you must ' +
+      'keep the original synthetic event around, use event.persist(). ' +
+      'See https://fb.me/react-event-pooling for more information.'
+    );
+  });
+
+  it('should warn if Proxy is supported and the synthetic event is added a property', function() {
+    spyOn(console, 'error');
+    var syntheticEvent = createEvent({});
+    syntheticEvent.foo = 'bar';
+    SyntheticEvent.release(syntheticEvent);
+    expect(syntheticEvent.foo).toBe('bar');
+    if (typeof Proxy === 'function') {
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
+        'Warning: This synthetic event is reused for performance reasons. If ' +
+        'you\'re seeing this, you\'re adding a new property in the synthetic ' +
+        'event object. The property is never released. ' +
+        'See https://fb.me/react-event-pooling for more information.'
+      );
+    } else {
+      expect(console.error.calls.length).toBe(0);
+    }
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,20 +11,22 @@
 
 'use strict';
 
+var DisabledInputUtils = require('DisabledInputUtils');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
-
-var instancesByReactID = {};
 
 var didWarnValueLink = false;
 var didWarnCheckedLink = false;
 var didWarnValueNull = false;
+var didWarnValueDefaultValue = false;
+var didWarnCheckedDefaultChecked = false;
+var didWarnControlledToUncontrolled = false;
+var didWarnUncontrolledToControlled = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
@@ -47,7 +49,7 @@ function warnIfValueIsNull(props) {
 }
 
 /**
- * Implements an <input> native component that allows setting these optional
+ * Implements an <input> host component that allows setting these optional
  * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
  *
  * If `checked` or `value` are not supplied (or null/undefined), user actions
@@ -63,11 +65,15 @@ function warnIfValueIsNull(props) {
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 var ReactDOMInput = {
-  getNativeProps: function(inst, props) {
+  getHostProps: function(inst, props) {
     var value = LinkedValueUtils.getValue(props);
     var checked = LinkedValueUtils.getChecked(props);
 
-    var nativeProps = assign({}, props, {
+    var hostProps = Object.assign({
+      // Make sure we set .type before any other properties (setting .value
+      // before .type means .value is lost in IE11 and below)
+      type: undefined,
+    }, DisabledInputUtils.getHostProps(inst, props), {
       defaultChecked: undefined,
       defaultValue: undefined,
       value: value != null ? value : inst._wrapperState.initialValue,
@@ -75,7 +81,7 @@ var ReactDOMInput = {
       onChange: inst._wrapperState.onChange,
     });
 
-    return nativeProps;
+    return hostProps;
   },
 
   mountWrapper: function(inst, props) {
@@ -85,6 +91,8 @@ var ReactDOMInput = {
         props,
         inst._currentElement._owner
       );
+
+      var owner = inst._currentElement._owner;
 
       if (props.valueLink !== undefined && !didWarnValueLink) {
         warning(
@@ -100,6 +108,42 @@ var ReactDOMInput = {
         );
         didWarnCheckedLink = true;
       }
+      if (
+        props.checked !== undefined &&
+        props.defaultChecked !== undefined &&
+        !didWarnCheckedDefaultChecked
+      ) {
+        warning(
+          false,
+          '%s contains an input of type %s with both checked and defaultChecked props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the checked prop, or the defaultChecked prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+          owner && owner.getName() || 'A component',
+          props.type
+        );
+        didWarnCheckedDefaultChecked = true;
+      }
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnValueDefaultValue
+      ) {
+        warning(
+          false,
+          '%s contains an input of type %s with both value and defaultValue props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+          owner && owner.getName() || 'A component',
+          props.type
+        );
+        didWarnValueDefaultValue = true;
+      }
       warnIfValueIsNull(props);
     }
 
@@ -110,15 +154,10 @@ var ReactDOMInput = {
       listeners: null,
       onChange: _handleChange.bind(inst),
     };
-  },
 
-  mountReadyWrapper: function(inst) {
-    // Can't be in mountWrapper or else server rendering leaks.
-    instancesByReactID[inst._rootNodeID] = inst;
-  },
-
-  unmountWrapper: function(inst) {
-    delete instancesByReactID[inst._rootNodeID];
+    if (__DEV__) {
+      inst._wrapperState.controlled = props.checked !== undefined || props.value !== undefined;
+    }
   },
 
   updateWrapper: function(inst) {
@@ -126,6 +165,43 @@ var ReactDOMInput = {
 
     if (__DEV__) {
       warnIfValueIsNull(props);
+
+      var initialValue = inst._wrapperState.initialChecked || inst._wrapperState.initialValue;
+      var defaultValue = props.defaultChecked || props.defaultValue;
+      var controlled = props.checked !== undefined || props.value !== undefined;
+      var owner = inst._currentElement._owner;
+
+      if (
+        (initialValue || !inst._wrapperState.controlled) &&
+        controlled && !didWarnUncontrolledToControlled
+      ) {
+        warning(
+          false,
+          '%s is changing an uncontrolled input of type %s to be controlled. ' +
+          'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+          'Decide between using a controlled or uncontrolled input ' +
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          owner && owner.getName() || 'A component',
+          props.type
+        );
+        didWarnUncontrolledToControlled = true;
+      }
+      if (
+        inst._wrapperState.controlled &&
+        (defaultValue || !controlled) &&
+        !didWarnControlledToUncontrolled
+      ) {
+        warning(
+          false,
+          '%s is changing a controlled input of type %s to be uncontrolled. ' +
+          'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+          'Decide between using a controlled or uncontrolled input ' +
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          owner && owner.getName() || 'A component',
+          props.type
+        );
+        didWarnControlledToUncontrolled = true;
+      }
     }
 
     // TODO: Shouldn't this be getChecked(props)?

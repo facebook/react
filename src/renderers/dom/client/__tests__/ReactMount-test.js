@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -54,9 +54,8 @@ describe('ReactMount', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument('div');
     }).toThrow(
-      'ReactDOM.render(): Invalid component element. Instead of passing an ' +
-      'element string, make sure to instantiate it by passing it to ' +
-      'React.createElement.'
+      'ReactDOM.render(): Invalid component element. Instead of passing a ' +
+      'string like \'div\', pass React.createElement(\'div\') or <div />.'
     );
   });
 
@@ -70,8 +69,7 @@ describe('ReactMount', function() {
       ReactTestUtils.renderIntoDocument(Component);
     }).toThrow(
       'ReactDOM.render(): Invalid component element. Instead of passing a ' +
-      'component class, make sure to instantiate it by passing it to ' +
-      'React.createElement.'
+      'class like Foo, pass React.createElement(Foo) or <Foo />.'
     );
   });
 
@@ -89,8 +87,8 @@ describe('ReactMount', function() {
   it('should unmount and remount if the key changes', function() {
     var container = document.createElement('container');
 
-    var mockMount = jest.genMockFn();
-    var mockUnmount = jest.genMockFn();
+    var mockMount = jest.fn();
+    var mockUnmount = jest.fn();
 
     var Component = React.createClass({
       componentDidMount: mockMount,
@@ -278,5 +276,36 @@ describe('ReactMount', function() {
     expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(2);
     ReactDOM.unmountComponentAtNode(container);
     expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(1);
+  });
+
+  it('marks top-level mounts', function() {
+    var ReactFeatureFlags = require('ReactFeatureFlags');
+
+    var Foo = React.createClass({
+      render: function() {
+        return <Bar />;
+      },
+    });
+
+    var Bar = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+
+    try {
+      ReactFeatureFlags.logTopLevelRenders = true;
+      spyOn(console, 'time');
+      spyOn(console, 'timeEnd');
+
+      ReactTestUtils.renderIntoDocument(<Foo />);
+
+      expect(console.time.argsForCall.length).toBe(1);
+      expect(console.time.argsForCall[0][0]).toBe('React mount: Foo');
+      expect(console.timeEnd.argsForCall.length).toBe(1);
+      expect(console.timeEnd.argsForCall[0][0]).toBe('React mount: Foo');
+    } finally {
+      ReactFeatureFlags.logTopLevelRenders = false;
+    }
   });
 });

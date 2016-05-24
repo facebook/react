@@ -4,7 +4,6 @@ title: 为什么使用 React?
 permalink: why-react-zh-CN.html
 next: displaying-data-zh-CN.html
 ---
-
 React 是一个 Facebook 和 Instagram 用来创建用户界面的 JavaScript 库。很多人选择将 React 认为是 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 中的 **V**（视图）。
 
 我们创造 React 是为了解决一个问题：**构建随着时间数据不断变化的大规模应用程序**。
@@ -28,5 +27,3 @@ React挑战了很多传统的知识，第一眼看上去可能很多想法有点
 ## 了解更多
 
 你可以从这篇[博客](/react/blog/2013/06/05/why-react.html)了解更多我们创造 React 的动机。
-
-

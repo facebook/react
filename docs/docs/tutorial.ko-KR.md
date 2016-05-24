@@ -44,7 +44,7 @@ next: thinking-in-react-ko-KR.html
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -234,7 +234,7 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
 </head>
 ```
 
@@ -262,7 +262,7 @@ var Comment = React.createClass({
 
 React는 이런 식으로 [XSS 공격](https://en.wikipedia.org/wiki/Cross-site_scripting)을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:
 
-```javascript{4,14}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
@@ -662,7 +662,7 @@ var CommentBox = React.createClass({
 
 우리의 애플리케이션은 이제 모든 기능을 갖추었습니다. 하지만 댓글이 목록에 업데이트되기 전에 완료요청을 기다리는 게 조금 느린듯한 느낌이 드네요. 우리는 낙관적 업데이트를 통해 댓글이 목록에 추가되도록 함으로써 앱이 좀 더 빨라진 것처럼 느껴지도록 할 수 있습니다.
 
-```javascript{17-19}
+```javascript{17-19,29}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -691,6 +691,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
+        this.setState({data: comments});
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });

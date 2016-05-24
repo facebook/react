@@ -54,8 +54,11 @@ script:
           -F "react-with-addons.min=@build/react-with-addons.min.js" \
           -F "react-dom=@build/react-dom.js" \
           -F "react-dom.min=@build/react-dom.min.js" \
+          -F "react-dom-server=@build/react-dom-server.js" \
+          -F "react-dom-server.min=@build/react-dom-server.min.js" \
           -F "npm-react=@build/packages/react.tgz" \
           -F "npm-react-dom=@build/packages/react-dom.tgz" \
+          -F "npm-react-native=@build/packages/react-native-renderer.tgz" \
           -F "commit=$TRAVIS_COMMIT" \
           -F "date=`git log --format='%ct' -1`" \
           -F "pull_request=$TRAVIS_PULL_REQUEST" \
@@ -63,14 +66,30 @@ script:
           -F "branch=$TRAVIS_BRANCH" \
           $SERVER
       fi
+    elif [ "$TEST_TYPE" = test ]; then
+      set -e
+      # Disabling coverage because it's broken:
+      # https://travis-ci.org/facebook/react/jobs/128163922
+      if false; then
+        ./node_modules/.bin/grunt jest:coverage
+        cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
+      else
+        ./node_modules/.bin/grunt jest:normal
+      fi
+      echo 'Testing in server-render (HTML generation) mode...'
+      printf '\nmodule.exports.useCreateElement = false;\n' \
+        >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      ./node_modules/.bin/grunt jest:normal
+      git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi
 env:
   matrix:
   - TEST_TYPE=build
-  - TEST_TYPE=jest
+  - TEST_TYPE=test
   - TEST_TYPE=lint
+  - TEST_TYPE=flow
   - TEST_TYPE=build_website
   global:
   # SERVER
@@ -79,8 +98,8 @@ env:
   - secure: dkpPW+VnoqC/okhRdV90m36NcyBFhcwEKL3bNFExAwi0dXnFao8RoFlvnwiPlA23h2faROkMIetXlti6Aju08BgUFV+f9aL6vLyU7gUent4Nd3413zf2fwDtXIWIETg6uLnOpSykGKgCAT/hY3Q2oPLqOoY0OxfgnbqwxkxljrE=
   # GITHUB_TOKEN
   - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
-matrix:
-  fast_finish: true
+  # COVERALLS_TOKEN
+  - secure: h/cUq+TrUMZOQmkFD7CvuwX0uAwmjIfKZ4qSUzY+QzUtDzOzA0L/XF84xTBq1Q5YYsEiaoF6GxxGCdrLQiBA/ZTd+88UHgeZPMRvi0xG9Q+PeePVOsZMTxy4/WWFgOfSQCk49Mj9zizGgO78i6vxq+SDXMtFHnZ+TpPJIEW6/m0=
 notifications:
   irc:
     use_notice: true

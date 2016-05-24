@@ -129,7 +129,7 @@ h1, h2, h3, h4, h5, h6 {
       margin: 0;
     }
 
-    a {
+    li > a {
       box-sizing: content-box;
       padding: 0 10px;
       line-height: $navHeight;
@@ -259,6 +259,22 @@ h1, h2, h3, h4, h5, h6 {
 
     &.active {
       color: $primary;
+    }
+
+    &.external {
+      &:after {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        padding-left: 5px;
+        @include retina-image('../img/external', 10px 10px);
+        background-position: 100% 0;
+        background-repeat: no-repeat;
+        font-size: 10px;
+        line-height: 1em;
+        opacity: 0.5;
+      }
     }
   }
 
@@ -409,6 +425,7 @@ h1, h2, h3, h4, h5, h6 {
   .playgroundPreview {
     padding: 0;
     width: 600px;
+    word-wrap: break-word;
 
     pre {
       @include code-typography;
@@ -742,6 +759,8 @@ p a code {
   margin-bottom: 0;
   background-color: transparent;
   border: 0;
+  float: left;
+  min-width: 100%;
 }
 
 .highlight pre code {
@@ -836,4 +855,73 @@ div[data-twttr-id] iframe {
 
 .three-column > ul:first-child {
   margin-left: 20px;
+}
+
+
+/* Algolia Doc Search */
+
+@media screen and (max-width: 960px) {
+  #algolia-doc-search {
+    display: none;
+  }
+}
+
+input#algolia-doc-search {
+  background: transparent url('/react/img/search.png') no-repeat 10px center;
+  background-size: 16px 16px;
+
+  position: relative;
+  vertical-align: top;
+  margin-left: 10px;
+  padding: 0 10px;
+  padding-left: 35px;
+  height: 30px;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 20px;
+  background-color: #333;
+  border-radius: 4px;
+  color: white;
+  outline: none;
+  width: 170px;
+
+  transition: width .2s ease;
+}
+
+input#algolia-doc-search:focus {
+  width: 240px;
+}
+
+.algolia-autocomplete .aa-dropdown-menu {
+  margin-left: -110px;
+  margin-top: -4px;
+}
+
+.algolia-autocomplete {
+  vertical-align: top;
+  height: 53px;
+}
+
+.algolia-docsearch-suggestion {
+  border-bottom-color: #c05b4d;
+}
+
+.algolia-docsearch-suggestion--category-header {
+  background-color: #cc7a6f;
+}
+
+.algolia-docsearch-suggestion--highlight {
+  color: #c05b4d;
+}
+
+.algolia-docsearch-suggestion--category-header .algolia-docsearch-suggestion--highlight {
+  background-color: #c05b4d;
+}
+
+.aa-cursor .algolia-docsearch-suggestion--content {
+  color: #c05b4d;
+}
+
+.aa-cursor .algolia-docsearch-suggestion {
+  background: #f1f3f5;
 }

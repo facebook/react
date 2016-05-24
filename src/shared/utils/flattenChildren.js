@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
@@ -18,8 +20,9 @@ var warning = require('warning');
  * @param {function} traverseContext Context passed through traversal.
  * @param {?ReactComponent} child React child component.
  * @param {!string} name String name of key path to child.
+ * @param {number=} selfDebugID Optional debugID of the current internal instance.
  */
-function flattenSingleChildIntoContext(traverseContext, child, name) {
+function flattenSingleChildIntoContext(traverseContext, child, name, selfDebugID) {
   // We found a component instance.
   var result = traverseContext;
   var keyUnique = (result[name] === undefined);
@@ -28,8 +31,9 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
       keyUnique,
       'flattenChildren(...): Encountered two children with the same key, ' +
       '`%s`. Child keys must be unique; when two children share a key, only ' +
-      'the first child will be used.',
-      name
+      'the first child will be used.%s',
+      KeyEscapeUtils.unescape(name),
+      ReactComponentTreeDevtool.getStackAddendumByID(selfDebugID)
     );
   }
   if (keyUnique && child != null) {
@@ -42,12 +46,26 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
  * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
-function flattenChildren(children) {
+function flattenChildren(children, selfDebugID) {
   if (children == null) {
     return children;
   }
   var result = {};
-  traverseAllChildren(children, flattenSingleChildIntoContext, result);
+
+  if (__DEV__) {
+    traverseAllChildren(
+      children,
+      (traverseContext, child, name) => flattenSingleChildIntoContext(
+        traverseContext,
+        child,
+        name,
+        selfDebugID
+      ),
+      result
+    );
+  } else {
+    traverseAllChildren(children, flattenSingleChildIntoContext, result);
+  }
   return result;
 }
 

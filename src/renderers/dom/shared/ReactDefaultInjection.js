@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -15,13 +15,12 @@ var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
 var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
@@ -66,20 +65,22 @@ function inject() {
     BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
-  ReactInjection.NativeComponent.injectGenericComponentClass(
+  ReactInjection.HostComponent.injectGenericComponentClass(
     ReactDOMComponent
   );
 
-  ReactInjection.NativeComponent.injectTextComponentClass(
+  ReactInjection.HostComponent.injectTextComponentClass(
     ReactDOMTextComponent
   );
-
-  ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
-  ReactInjection.EmptyComponent.injectEmptyComponent('noscript');
+  ReactInjection.EmptyComponent.injectEmptyComponentFactory(
+    function(instantiate) {
+      return new ReactDOMEmptyComponent(instantiate);
+    }
+  );
 
   ReactInjection.Updates.injectReconcileTransaction(
     ReactReconcileTransaction
@@ -89,14 +90,6 @@ function inject() {
   );
 
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
-
-  if (__DEV__) {
-    var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
-    if ((/[?&]react_perf\b/).test(url)) {
-      var ReactDefaultPerf = require('ReactDefaultPerf');
-      ReactDefaultPerf.start();
-    }
-  }
 }
 
 module.exports = {

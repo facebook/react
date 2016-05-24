@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,14 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule FallbackCompositionState
- * @typechecks static-only
  */
 
 'use strict';
 
 var PooledClass = require('PooledClass');
 
-var assign = require('Object.assign');
 var getTextContentAccessor = require('getTextContentAccessor');
 
 /**
@@ -34,7 +32,7 @@ function FallbackCompositionState(root) {
   this._fallbackText = null;
 }
 
-assign(FallbackCompositionState.prototype, {
+Object.assign(FallbackCompositionState.prototype, {
   destructor: function() {
     this._root = null;
     this._startText = null;

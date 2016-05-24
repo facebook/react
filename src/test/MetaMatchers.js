@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -20,7 +20,7 @@
 function getRunnerWithResults(describeFunction) {
   if (describeFunction._cachedRunner) {
     // Cached result of execution. This is a convenience way to test against
-    // the same authorative function multiple times.
+    // the same authoritative function multiple times.
     return describeFunction._cachedRunner;
   }
   // Patch the current global environment.

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,19 +11,21 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 
 describe('ReactDOMComponent', function() {
   var React;
-
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactDOMServer;
+  var inputValueTracking;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
+    inputValueTracking = require('inputValueTracking');
   });
 
   describe('updateDOM', function() {
@@ -188,7 +190,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.length).toBe(2);
     });
 
-    it('should warn semi-nicely about NaN in style', function() {
+    it('should warn nicely about NaN in style', function() {
       spyOn(console, 'error');
 
       var style = {fontSize: NaN};
@@ -198,10 +200,7 @@ describe('ReactDOMComponent', function() {
 
       expect(console.error.argsForCall.length).toBe(1);
       expect(console.error.argsForCall[0][0]).toEqual(
-        'Warning: `span` was passed a style object that has previously been ' +
-        'mutated. Mutating `style` is deprecated. Consider cloning it ' +
-        'beforehand. Check the `render` using <span>. Previous style: ' +
-        '{fontSize: NaN}. Mutated style: {fontSize: NaN}.'
+        'Warning: `NaN` is an invalid value for the `fontSize` css style property.',
       );
     });
 
@@ -239,16 +238,52 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('');
     });
 
-    it('should skip child object attribute on web components', function() {
+    it('should skip reserved props on web components', function() {
       var container = document.createElement('div');
 
-      // Test intial render to null
-      ReactDOM.render(<my-component children={['foo']} />, container);
+      ReactDOM.render(
+        <my-component
+          children={['foo']}
+          suppressContentEditableWarning={true}
+        />,
+        container
+      );
       expect(container.firstChild.hasAttribute('children')).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressContentEditableWarning')
+      ).toBe(false);
 
-      // Test updates to null
-      ReactDOM.render(<my-component children={['foo']} />, container);
+      ReactDOM.render(
+        <my-component
+          children={['bar']}
+          suppressContentEditableWarning={false}
+        />,
+        container
+      );
       expect(container.firstChild.hasAttribute('children')).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressContentEditableWarning')
+      ).toBe(false);
+    });
+
+    it('should skip dangerouslySetInnerHTML on web components', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(
+        <my-component dangerouslySetInnerHTML={{__html: 'hi'}} />,
+        container
+      );
+      expect(
+        container.firstChild.hasAttribute('dangerouslySetInnerHTML')
+      ).toBe(false);
+
+      ReactDOM.render(
+        <my-component dangerouslySetInnerHTML={{__html: 'bye'}} />,
+        container
+      );
+      expect(
+        container.firstChild.hasAttribute('dangerouslySetInnerHTML')
+      ).toBe(false);
     });
 
     it('should remove attributes', function() {
@@ -267,6 +302,15 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.className).toEqual('monkey');
       ReactDOM.render(<div />, container);
       expect(container.firstChild.className).toEqual('');
+    });
+
+    it('should properly update custom attributes on custom elements', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<some-custom-element foo="bar"/>, container);
+      ReactDOM.render(<some-custom-element bar="buzz"/>, container);
+      var node = container.firstChild;
+      expect(node.hasAttribute('foo')).toBe(false);
+      expect(node.getAttribute('bar')).toBe('buzz');
     });
 
     it('should clear a single style prop when changing `style`', function() {
@@ -411,13 +455,51 @@ describe('ReactDOMComponent', function() {
       expect(container.textContent).toEqual('bonjour');
     });
 
-    it('should not incur unnecessary DOM mutations', function() {
+    it('should not incur unnecessary DOM mutations for attributes', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<div id="" />, container);
+
+      var node = container.firstChild;
+      var nodeSetAttribute = node.setAttribute;
+      node.setAttribute = jest.fn();
+      node.setAttribute.mockImpl(nodeSetAttribute);
+
+      var nodeRemoveAttribute = node.removeAttribute;
+      node.removeAttribute = jest.fn();
+      node.removeAttribute.mockImpl(nodeRemoveAttribute);
+
+      ReactDOM.render(<div id="" />, container);
+      expect(node.setAttribute.mock.calls.length).toBe(0);
+      expect(node.removeAttribute.mock.calls.length).toBe(0);
+
+      ReactDOM.render(<div id="foo" />, container);
+      expect(node.setAttribute.mock.calls.length).toBe(1);
+      expect(node.removeAttribute.mock.calls.length).toBe(0);
+
+      ReactDOM.render(<div id="foo" />, container);
+      expect(node.setAttribute.mock.calls.length).toBe(1);
+      expect(node.removeAttribute.mock.calls.length).toBe(0);
+
+      ReactDOM.render(<div />, container);
+      expect(node.setAttribute.mock.calls.length).toBe(1);
+      expect(node.removeAttribute.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div id="" />, container);
+      expect(node.setAttribute.mock.calls.length).toBe(2);
+      expect(node.removeAttribute.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div />, container);
+      expect(node.setAttribute.mock.calls.length).toBe(2);
+      expect(node.removeAttribute.mock.calls.length).toBe(2);
+    });
+
+    it('should not incur unnecessary DOM mutations for string properties', function() {
       var container = document.createElement('div');
       ReactDOM.render(<div value="" />, container);
 
       var node = container.firstChild;
       var nodeValue = ''; // node.value always returns undefined
-      var nodeValueSetter = jest.genMockFn();
+      var nodeValueSetter = jest.fn();
       Object.defineProperty(node, 'value', {
         get: function() {
           return nodeValue;
@@ -427,11 +509,48 @@ describe('ReactDOMComponent', function() {
         }),
       });
 
-      ReactDOM.render(<div value="" />, container);
+      function renderWithValueAndExpect(value, expected) {
+        ReactDOM.render(<div value={value} />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(expected);
+      }
+
+      renderWithValueAndExpect(undefined, 0);
+      renderWithValueAndExpect('', 0);
+      renderWithValueAndExpect('foo', 1);
+      renderWithValueAndExpect('foo', 1);
+      renderWithValueAndExpect(undefined, 2);
+      renderWithValueAndExpect(null, 2);
+      renderWithValueAndExpect('', 2);
+      renderWithValueAndExpect(undefined, 2);
+    });
+
+    it('should not incur unnecessary DOM mutations for boolean properties', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<div checked={true} />, container);
+
+      var node = container.firstChild;
+      var nodeValue = true;
+      var nodeValueSetter = jest.fn();
+      Object.defineProperty(node, 'checked', {
+        get: function() {
+          return nodeValue;
+        },
+        set: nodeValueSetter.mockImplementation(function(newValue) {
+          nodeValue = newValue;
+        }),
+      });
+
+      ReactDOM.render(<div checked={true} />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(0);
 
       ReactDOM.render(<div />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div checked={false} />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(2);
+
+      ReactDOM.render(<div checked={true} />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(3);
     });
 
     it('should ignore attribute whitelist for elements with the "is: attribute', function() {
@@ -444,7 +563,7 @@ describe('ReactDOMComponent', function() {
       var container = document.createElement('div');
       var node = ReactDOM.render(<div />, container);
 
-      var setter = jest.genMockFn();
+      var setter = jest.fn();
       node.setAttribute = setter;
 
       ReactDOM.render(<div dir={null} />, container);
@@ -453,6 +572,40 @@ describe('ReactDOMComponent', function() {
       expect(setter.mock.calls.length).toBe(0);
       ReactDOM.render(<div dir="ltr" />, container);
       expect(setter.mock.calls.length).toBe(1);
+    });
+
+    it('handles multiple child updates without interference', function() {
+      // This test might look like it's just testing ReactMultiChild but the
+      // last bug in this was actually in DOMChildrenOperations so this test
+      // needs to be in some DOM-specific test file.
+      var container = document.createElement('div');
+
+      // ABCD
+      ReactDOM.render(
+        <div>
+          <div key="one">
+            <div key="A">A</div><div key="B">B</div>
+          </div>
+          <div key="two">
+            <div key="C">C</div><div key="D">D</div>
+          </div>
+        </div>,
+        container
+      );
+      // BADC
+      ReactDOM.render(
+        <div>
+          <div key="one">
+            <div key="B">B</div><div key="A">A</div>
+          </div>
+          <div key="two">
+            <div key="D">D</div><div key="C">C</div>
+          </div>
+        </div>,
+        container
+      );
+
+      expect(container.textContent).toBe('BADC');
     });
   });
 
@@ -474,7 +627,7 @@ describe('ReactDOMComponent', function() {
         this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
-      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
+      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -523,7 +676,7 @@ describe('ReactDOMComponent', function() {
         this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
-      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
+      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -571,43 +724,44 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn against children for void elements', function() {
-      spyOn(console, 'error');
-
       var container = document.createElement('div');
 
-      ReactDOM.render(<input>children</input>, container);
-
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
+      expect(function() {
+        ReactDOM.render(<input>children</input>, container);
+      }).toThrow(
+        'input is a void element tag and must not have `children` or ' +
+        'use `props.dangerouslySetInnerHTML`.'
+      );
     });
 
     it('should warn against dangerouslySetInnerHTML for void elements', function() {
-      spyOn(console, 'error');
-
       var container = document.createElement('div');
 
-      ReactDOM.render(
-        <input dangerouslySetInnerHTML={{__html: 'content'}} />,
-        container
+      expect(function() {
+        ReactDOM.render(
+          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+          container
+        );
+      }).toThrow(
+        'input is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
       );
-
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it('should treat menuitem as a void element but still create the closing tag', function() {
-      spyOn(console, 'error');
-
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(<menu><menuitem /></menu>);
 
       expect(returnedValue).toContain('</menuitem>');
 
-      ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
+      expect(function() {
+        ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
+      }).toThrow(
+        'menuitem is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
+      );
 
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it('should validate against multiple children props', function() {
@@ -659,6 +813,12 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toContain('contentEditable');
     });
 
+    it('should respect suppressContentEditableWarning', function() {
+      spyOn(console, 'error');
+      mountComponent({contentEditable: true, children: '', suppressContentEditableWarning: true});
+      expect(console.error.argsForCall.length).toBe(0);
+    });
+
     it('should validate against invalid styles', function() {
       expect(function() {
         mountComponent({style: 'display: none'});
@@ -669,11 +829,29 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('should track input values', function() {
+      var container = document.createElement('div');
+      var inst = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+
+      var tracker = inputValueTracking._getTrackerFromNode(inst);
+
+      expect(tracker.getValue()).toEqual('foo');
+    });
+
+    it('should track textarea values', function() {
+      var container = document.createElement('div');
+      var inst = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+
+      var tracker = inputValueTracking._getTrackerFromNode(inst);
+
+      expect(tracker.getValue()).toEqual('foo');
+    });
+
     it('should execute custom event plugin listening behavior', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
-      SimpleEventPlugin.didPutListener = jest.genMockFn();
-      SimpleEventPlugin.willDeleteListener = jest.genMockFn();
+      SimpleEventPlugin.didPutListener = jest.fn();
+      SimpleEventPlugin.willDeleteListener = jest.fn();
 
       var container = document.createElement('div');
       ReactDOM.render(
@@ -691,8 +869,8 @@ describe('ReactDOMComponent', function() {
     it('should handle null and missing properly with event hooks', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
-      SimpleEventPlugin.didPutListener = jest.genMockFn();
-      SimpleEventPlugin.willDeleteListener = jest.genMockFn();
+      SimpleEventPlugin.didPutListener = jest.fn();
+      SimpleEventPlugin.willDeleteListener = jest.fn();
       var container = document.createElement('div');
 
       ReactDOM.render(<div onClick={false} />, container);
@@ -725,19 +903,30 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn for children on void elements', function() {
-      spyOn(console, 'error');
       var X = React.createClass({
         render: function() {
           return <input>moo</input>;
         },
       });
+
       var container = document.createElement('div');
-      ReactDOM.render(<X />, container);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toBe(
-        'Warning: input is a void element tag and must not have `children` ' +
+      expect(function() {
+        ReactDOM.render(<X />, container);
+      }).toThrow(
+        'input is a void element tag and must not have `children` ' +
         'or use `props.dangerouslySetInnerHTML`. Check the render method of X.'
       );
+    });
+
+    it('should support custom elements which extend native elements', function() {
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        var container = document.createElement('div');
+        spyOn(document, 'createElement').andCallThrough();
+        ReactDOM.render(<div is="custom-div" />, container);
+        expect(document.createElement).toHaveBeenCalledWith('div', 'custom-div');
+      } else {
+        expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
+      }
     });
   });
 
@@ -749,26 +938,28 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn against children for void elements', function() {
-      spyOn(console, 'error');
-
       ReactDOM.render(<input />, container);
-      ReactDOM.render(<input>children</input>, container);
 
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
+      expect(function() {
+        ReactDOM.render(<input>children</input>, container);
+      }).toThrow(
+        'input is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
+      );
     });
 
     it('should warn against dangerouslySetInnerHTML for void elements', function() {
-      spyOn(console, 'error');
-
       ReactDOM.render(<input />, container);
-      ReactDOM.render(
-        <input dangerouslySetInnerHTML={{__html: 'content'}} />,
-        container
-      );
 
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
+      expect(function() {
+        ReactDOM.render(
+          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+          container
+        );
+      }).toThrow(
+        'input is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
+      );
     });
 
     it('should validate against multiple children props', function() {
@@ -865,12 +1056,52 @@ describe('ReactDOMComponent', function() {
         EventPluginHub.getListener(inst, 'onClick')
       ).toBe(undefined);
     });
+
+    it('should clean up input value tracking', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+      var tracker = inputValueTracking._getTrackerFromNode(node);
+
+      spyOn(tracker, 'stopTracking');
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(tracker.stopTracking.calls.length).toBe(1);
+    });
+
+    it('should clean up input textarea tracking', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+      var tracker = inputValueTracking._getTrackerFromNode(node);
+
+      spyOn(tracker, 'stopTracking');
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(tracker.stopTracking.calls.length).toBe(1);
+    });
+
+    it('unmounts children before unsetting DOM node info', function() {
+      var Inner = React.createClass({
+        render: function() {
+          return <span />;
+        },
+        componentWillUnmount: function() {
+          // Should not throw
+          expect(ReactDOM.findDOMNode(this).nodeName).toBe('SPAN');
+        },
+      });
+
+      var container = document.createElement('div');
+      ReactDOM.render(<div><Inner /></div>, container);
+      ReactDOM.unmountComponentAtNode(container);
+    });
   });
 
   describe('onScroll warning', function() {
     it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
       // Mock this here so we can mimic IE8 support. We require isEventSupported
-      // before React so it's pre-mocked before React qould require it.
+      // before React so it's pre-mocked before React would require it.
       jest.resetModuleRegistry()
         .mock('isEventSupported');
       var isEventSupported = require('isEventSupported');
@@ -884,6 +1115,12 @@ describe('ReactDOMComponent', function() {
       expect(console.error.argsForCall[0][0]).toBe(
         'Warning: This browser doesn\'t support the `onScroll` event'
       );
+    });
+
+    it('should not warn when server-side rendering `onScroll`', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<div onScroll={() => {}}/>);
+      expect(console.error).not.toHaveBeenCalled();
     });
   });
 
@@ -960,8 +1197,8 @@ describe('ReactDOMComponent', function() {
         'match the DOM tree generated by the browser.'
       );
       expect(console.error.argsForCall[1][0]).toBe(
-        'Warning: validateDOMNesting(...): <span> cannot appear as a child ' +
-        'of <table>. See Foo > table > span.'
+        'Warning: validateDOMNesting(...): #text cannot appear as a child ' +
+        'of <table>. See Foo > table > #text.'
       );
     });
 
@@ -1037,87 +1274,166 @@ describe('ReactDOMComponent', function() {
         'See Link > a > ... > Link > a.'
       );
     });
-  });
 
-  describe('DOM nodes as refs', function() {
-    var ReactTestUtils;
-
-    beforeEach(function() {
-      ReactTestUtils = require('ReactTestUtils');
+    it('should warn about incorrect casing on properties (ssr)', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(React.createElement('input', {type: 'text', tabindex: '1'}));
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
     });
 
-    it('warns when accessing properties on DOM components', function() {
+    it('should warn about incorrect casing on event handlers (ssr)', function() {
       spyOn(console, 'error');
-      var innerDiv;
-      var Animal = React.createClass({
-        render: function() {
-          return <div ref="div">iguana</div>;
-        },
-        componentDidMount: function() {
-          innerDiv = this.refs.div;
+      ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onclick: '1'}));
+      ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onKeydown: '1'}));
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toContain('onClick');
+      expect(console.error.argsForCall[1][0]).toContain('onKeyDown');
+    });
 
-          void this.refs.div.props;
-          this.refs.div.setState();
-          expect(this.refs.div.getDOMNode()).toBe(this.refs.div);
-          expect(this.refs.div.isMounted()).toBe(true);
+    it('should warn about incorrect casing on properties', function() {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', tabindex: '1'}));
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
+    });
+
+    it('should warn about incorrect casing on event handlers', function() {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onclick: '1'}));
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onKeydown: '1'}));
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(console.error.argsForCall[0][0]).toContain('onClick');
+      expect(console.error.argsForCall[1][0]).toContain('onKeyDown');
+    });
+
+    it('should warn about class', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(React.createElement('div', {class: 'muffins'}));
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('className');
+    });
+
+    it('should warn about props that are no longer supported', function() {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div />);
+      expect(console.error.argsForCall.length).toBe(0);
+
+      ReactTestUtils.renderIntoDocument(<div onFocusIn={() => {}} />);
+      expect(console.error.argsForCall.length).toBe(1);
+
+      ReactTestUtils.renderIntoDocument(<div onFocusOut={() => {}} />);
+      expect(console.error.argsForCall.length).toBe(2);
+    });
+
+    it('gives source code refs for unknown prop warning', function() {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<div class="paladin"/>);
+      ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
+      expect(console.error.argsForCall.length).toBe(2);
+      expect(
+        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+      );
+      expect(
+        console.error.argsForCall[1][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown event handler property onclick. Did you mean ' +
+        '`onClick`? (**:*)'
+      );
+    });
+
+    it('gives source code refs for unknown prop warning for update render', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      ReactDOMServer.renderToString(<div className="paladin" />, container);
+      expect(console.error.argsForCall.length).toBe(0);
+
+      ReactDOMServer.renderToString(<div class="paladin" />, container);
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(
+        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+      ).toBe(
+        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+      );
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements ', function() {
+      spyOn(console, 'error');
+
+      ReactDOMServer.renderToString(
+        <div className="foo1">
+        <div class="foo2"/>
+        <div onClick="foo3"/>
+        <div onclick="foo4"/>
+        <div className="foo5"/>
+        <div className="foo6"/>
+        </div>
+      );
+
+      expect(console.error.argsForCall.length).toBe(2);
+
+      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      var previousLine = matches[1];
+
+      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements in composition ', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      var Parent = React.createClass({
+        render: function() {
+          return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
         },
       });
-      var container = document.createElement('div');
-      ReactDOM.render(<Animal />, container);
-      ReactDOM.unmountComponentAtNode(container);
-      expect(innerDiv.isMounted()).toBe(false);
 
-      expect(console.error.calls.length).toBe(5);
-      expect(console.error.argsForCall[0][0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .props of a DOM ' +
-        'node; instead, recreate the props as `render` did originally or ' +
-        'read the DOM properties/attributes directly from this node (e.g., ' +
-        'this.refs.box.className). This DOM node was rendered by `Animal`.'
-      );
-      expect(console.error.argsForCall[1][0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .setState(), ' +
-        '.replaceState(), or .forceUpdate() of a DOM node. This is a no-op. ' +
-        'This DOM node was rendered by `Animal`.'
-      );
-      expect(console.error.argsForCall[2][0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .getDOMNode() of a DOM ' +
-        'node; instead, use the node directly. This DOM node was ' +
-        'rendered by `Animal`.'
-      );
-      expect(console.error.argsForCall[3][0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .isMounted() of a DOM ' +
-        'node. This DOM node was rendered by `Animal`.'
-      );
-      expect(console.error.argsForCall[4][0]).toContain('isMounted');
-    });
+      var Child1 = React.createClass({
+        render: function() {
+          return <div class="paladin">Child1</div>;
+        },
+      });
 
-    it('handles legacy setProps and replaceProps', function() {
-      spyOn(console, 'error');
-      var node = ReactTestUtils.renderIntoDocument(<div>rhinoceros</div>);
+      var Child2 = React.createClass({
+        render: function() {
+          return <div>Child2</div>;
+        },
+      });
 
-      node.setProps({className: 'herbiverous'});
-      expect(node.className).toBe('herbiverous');
-      expect(node.textContent).toBe('rhinoceros');
+      var Child3 = React.createClass({
+        render: function() {
+          return <div onclick="1">Child3</div>;
+        },
+      });
 
-      node.replaceProps({className: 'invisible rhino'});
-      expect(node.className).toBe('invisible rhino');
-      expect(node.textContent).toBe('');
+      var Child4 = React.createClass({
+        render: function() {
+          return <div>Child4</div>;
+        },
+      });
 
-      expect(console.error.calls.length).toBe(2);
-      expect(console.error.argsForCall[0][0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .setProps() of a DOM node. ' +
-        'Instead, call ReactDOM.render again at the top level.'
-      );
-      expect(console.error.argsForCall[1][0]).toBe(
-        'Warning: ReactDOMComponent: Do not access .replaceProps() of a DOM ' +
-        'node. Instead, call ReactDOM.render again at the top level.'
-      );
-    });
+      ReactDOMServer.renderToString(<Parent />, container);
 
-    it('does not touch ref-less nodes', function() {
-      var node = ReactTestUtils.renderIntoDocument(<div><span /></div>);
-      expect(typeof node.getDOMNode).toBe('function');
-      expect(typeof node.firstChild.getDOMNode).toBe('undefined');
+      expect(console.error.argsForCall.length).toBe(2);
+
+      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      var previousLine = matches[1];
+
+      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+
     });
   });
 });

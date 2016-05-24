@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -66,7 +66,7 @@ describe('SelectEventPlugin', function() {
       },
     });
 
-    var cb = jest.genMockFn();
+    var cb = jest.fn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />

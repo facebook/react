@@ -1,4 +1,4 @@
-# [React](https://facebook.github.io/react/) [![Build Status](https://travis-ci.org/facebook/react.svg?branch=master)](https://travis-ci.org/facebook/react) [![npm version](https://badge.fury.io/js/react.svg)](http://badge.fury.io/js/react)
+# [React](https://facebook.github.io/react/) [![Build Status](https://img.shields.io/travis/facebook/react/master.svg?style=flat)](https://travis-ci.org/facebook/react) [![Coverage Status](https://img.shields.io/coveralls/facebook/react/master.svg?style=flat)](https://coveralls.io/github/facebook/react?branch=master) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md#pull-requests)
 
 React is a JavaScript library for building user interfaces.
 
@@ -33,21 +33,27 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://faceboo
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from the CDN (also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](http://www.jsdelivr.com/#!react)):
+The fastest way to get started is to serve JavaScript from the CDN (also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](https://www.jsdelivr.com/projects/react)):
 
 ```html
 <!-- The core React library -->
-<script src="https://fb.me/react-0.14.2.js"></script>
+<script src="https://fb.me/react-15.1.0.js"></script>
 <!-- The ReactDOM Library -->
-<script src="https://fb.me/react-dom-0.14.2.js"></script>
+<script src="https://fb.me/react-dom-15.1.0.js"></script>
 ```
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-0.14.2.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.1.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
 ```sh
 bower install --save react
+```
+
+And it's just as easy with [npm](http://npmjs.com):
+
+```sh
+npm i --save react
 ```
 
 ## Contribute
@@ -84,8 +90,6 @@ We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete lis
 ```sh
 # Build and run tests with PhantomJS
 grunt test
-# Build and run tests in your browser
-grunt test --debug
 # Lint the code with ESLint
 grunt lint
 # Wipe out build directory

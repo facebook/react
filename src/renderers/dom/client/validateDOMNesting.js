@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 var warning = require('warning');
 
@@ -76,7 +75,7 @@ if (__DEV__) {
   };
 
   var updatedAncestorInfo = function(oldInfo, tag, instance) {
-    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfo);
+    var ancestorInfo = Object.assign({}, oldInfo || emptyAncestorInfo);
     var info = {tag: tag, instance: instance};
 
     if (inScopeTags.indexOf(tag) !== -1) {
@@ -186,6 +185,8 @@ if (__DEV__) {
       // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
       case 'html':
         return tag === 'head' || tag === 'body';
+      case '#document':
+        return tag === 'html';
     }
 
     // Probably in the "in body" parsing mode, so we outlaw only tag combos
@@ -207,11 +208,13 @@ if (__DEV__) {
       case 'rt':
         return impliedEndTags.indexOf(parentTag) === -1;
 
+      case 'body':
       case 'caption':
       case 'col':
       case 'colgroup':
       case 'frame':
       case 'head':
+      case 'html':
       case 'tbody':
       case 'td':
       case 'tfoot':
@@ -381,6 +384,11 @@ if (__DEV__) {
       }
       didWarn[warnKey] = true;
 
+      var tagDisplayName = childTag;
+      if (childTag !== '#text') {
+        tagDisplayName = '<' + childTag + '>';
+      }
+
       if (invalidParent) {
         var info = '';
         if (ancestorTag === 'table' && childTag === 'tr') {
@@ -390,9 +398,9 @@ if (__DEV__) {
         }
         warning(
           false,
-          'validateDOMNesting(...): <%s> cannot appear as a child of <%s>. ' +
+          'validateDOMNesting(...): %s cannot appear as a child of <%s>. ' +
           'See %s.%s',
-          childTag,
+          tagDisplayName,
           ancestorTag,
           ownerInfo,
           info
@@ -400,9 +408,9 @@ if (__DEV__) {
       } else {
         warning(
           false,
-          'validateDOMNesting(...): <%s> cannot appear as a descendant of ' +
+          'validateDOMNesting(...): %s cannot appear as a descendant of ' +
           '<%s>. See %s.',
-          childTag,
+          tagDisplayName,
           ancestorTag,
           ownerInfo
         );

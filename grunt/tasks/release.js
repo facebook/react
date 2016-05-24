@@ -11,10 +11,12 @@ var BOWER_FILES = [
   'react-with-addons.min.js',
   'react-dom.js',
   'react-dom.min.js',
+  'react-dom-server.js',
+  'react-dom-server.min.js',
 ];
 
 var EXAMPLES_PATH = 'examples/';
-var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*'];
+var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*', EXAMPLES_PATH + '**/.babelrc'];
 
 var STARTER_PATH = 'starter/';
 var STARTER_GLOB = [STARTER_PATH + '/**/*.*'];

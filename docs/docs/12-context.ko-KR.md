@@ -124,6 +124,43 @@ var MessageList = React.createClass({
 
 원한다면 전체 React 컴포넌트를 프로퍼티로 전달할 수도 있습니다. 
 
+## Referencing context in lifecycle methods
+
+If `contextTypes` is defined within a component, the following lifecycle methods will receive an additional parameter, the `context` object:
+
+```javascript
+void componentWillReceiveProps(
+  object nextProps, object nextContext
+)
+
+boolean shouldComponentUpdate(
+  object nextProps, object nextState, object nextContext
+)
+
+void componentWillUpdate(
+  object nextProps, object nextState, object nextContext
+)
+
+void componentDidUpdate(
+  object prevProps, object prevState, object prevContext
+)
+```
+
+## Referencing context in stateless functional components
+
+Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows the `Button` component above written as a stateless functional component.
+
+```javascript
+function Button(props, context) {
+  return (
+    <button style={{'{{'}}background: context.color}}>
+      {props.children}
+    </button>
+  );
+}
+Button.contextTypes = {color: React.PropTypes.string};
+```
+
 ## 컨텍스트를 사용하지 말아야 하는 경우
 
 대부분의 경우, 깔끔한 코드를 위해 전역 변수를 피하는 것과 마찬가지로 컨텍스트의 사용을 피해야 합니다. 특히 "타이핑을 줄이거나" 명시적인 프로퍼티 전달 대신 이를 사용하려는 경우 다시 한번 생각해 보세요.

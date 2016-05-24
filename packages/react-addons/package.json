@@ -1,6 +1,6 @@
 {
   "name": "react-addons-template",
-  "version": "0.15.0-alpha",
+  "version": "16.0.0-alpha",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -8,7 +8,8 @@
     "react-addon"
   ],
   "license": "BSD-3-Clause",
+  "dependencies": {},
   "peerDependencies": {
-    "react": "^0.15.0-alpha"
+    "react": "^16.0.0-alpha"
   }
 }

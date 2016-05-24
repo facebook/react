@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule Danger
- * @typechecks static-only
  */
 
 'use strict';
@@ -166,7 +165,7 @@ var Danger = {
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
     invariant(
-      oldChild.tagName.toLowerCase() !== 'html',
+      oldChild.nodeName !== 'HTML',
       'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +
       '<html> node. This is because browser quirks make this unreliable ' +
       'and/or slow. If you want to render to the root you must use ' +

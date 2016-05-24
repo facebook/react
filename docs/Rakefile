@@ -1,10 +1,18 @@
 require('rubygems')
 require('json')
 require('yaml')
+require('open-uri')
+
+desc "download babel-browser"
+task :fetch_remotes do
+  IO.copy_stream(
+    open('https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js'),
+    'js/babel-browser.min.js'
+  )
+end
 
 desc "generate js from jsx"
 task :js do
-  system "cp ../node_modules/babel/node_modules/babel-core/browser.min.js ./js/babel-browser.min.js"
   system "../node_modules/.bin/babel _js --out-dir=js"
 end
 
@@ -24,6 +32,25 @@ task :update_version do
   end
 end
 
+desc "update SRI hashes"
+task :update_hashes do
+  map = {
+    'react.js' => 'dev',
+    'react.min.js' => 'prod',
+    'react-with-addons.js' => 'addons_dev',
+    'react-with-addons.min.js' => 'addons_prod',
+    'react-dom.js' => 'dom_dev',
+    'react-dom.min.js' => 'dom_prod',
+    'react-dom-server.js' => 'dom_server_dev',
+    'react-dom-server.min.js' => 'dom_server_prod'
+  }
+  site_config = YAML.load_file('_config.yml')
+  map.each do |file, key|
+    site_config['react_hashes'][key] = `openssl dgst -sha384 -binary ../../react-bower/#{file} | openssl base64 -A`
+  end
+  File.open('_config.yml', 'w+') { |f| f.write(site_config.to_yaml) }
+end
+
 desc "update acknowledgements list"
 task :update_acknowledgements do
   authors = File.readlines('../AUTHORS').map {|author| author.gsub(/ <.*\n/,'')}
@@ -35,7 +62,7 @@ task :update_acknowledgements do
 end
 
 desc "build into ../../react-gh-pages"
-task :release => [:update_version, :default] do
+task :release => [:update_version, :js, :fetch_remotes] do
   system "jekyll build -d ../../react-gh-pages"
 end
 

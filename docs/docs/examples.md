@@ -1,8 +1,5 @@
 ---
-id: examples
-title: Examples
 permalink: examples.html
-prev: complementary-tools.html
+layout: redirect
+dest_url: https://github.com/facebook/react/wiki/Examples
 ---
-
-This page has moved to the [GitHub wiki](https://github.com/facebook/react/wiki/Examples).
