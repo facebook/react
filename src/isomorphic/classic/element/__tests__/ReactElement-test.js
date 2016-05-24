@@ -223,6 +223,18 @@ describe('ReactElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  it('overrides children if undefined is provided as an argument', function() {
+    var element = React.createElement(ComponentClass, {
+      children: 'text',
+    }, undefined);
+    expect(element.props.children).toBe(undefined);
+
+    var element2 = React.cloneElement(React.createElement(ComponentClass, {
+      children: 'text',
+    }), {}, undefined);
+    expect(element2.props.children).toBe(undefined);
+  });
+
   it('merges rest arguments onto the children prop in an array', function() {
     spyOn(console, 'error');
     var a = 1;

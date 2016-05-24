@@ -117,6 +117,18 @@ describe('ReactJSXElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  it('overrides children if undefined is provided as an argument', function() {
+    var element = <Component children="text">{undefined}</Component>;
+    expect(element.props.children).toBe(undefined);
+
+    var element2 = React.cloneElement(
+      <Component children="text" />,
+      {},
+      undefined
+    );
+    expect(element2.props.children).toBe(undefined);
+  });
+
   it('merges JSX children onto the children prop in an array', function() {
     spyOn(console, 'error');
     var a = 1;
