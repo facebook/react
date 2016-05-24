@@ -139,7 +139,7 @@ describe('ReactElement', function() {
   });
 
   it('does not fail if config has no prototype', function() {
-    var config = Object.create(null, {foo: {value: 1}});
+    var config = Object.create(null, {foo: {value: 1, enumerable: true}});
     var element = React.createFactory(ComponentClass)(config);
     expect(element.props.foo).toBe(1);
   });
