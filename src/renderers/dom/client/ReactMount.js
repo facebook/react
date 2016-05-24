@@ -169,7 +169,13 @@ function batchedMountComponentIntoNode(
  * @see {ReactMount.unmountComponentAtNode}
  */
 function unmountComponentFromNode(instance, container, safely) {
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onBeginFlush();
+  }
   ReactReconciler.unmountComponent(instance, safely);
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onEndFlush();
+  }
 
   if (container.nodeType === DOC_NODE_TYPE) {
     container = container.documentElement;

@@ -16,10 +16,12 @@ describe('ReactPerf', function() {
   var ReactDOM;
   var ReactPerf;
   var ReactTestUtils;
+  var emptyFunction;
 
   var App;
   var Box;
   var Div;
+  var LifeCycle;
 
   beforeEach(function() {
     var now = 0;
@@ -36,6 +38,7 @@ describe('ReactPerf', function() {
     ReactDOM = require('ReactDOM');
     ReactPerf = require('ReactPerf');
     ReactTestUtils = require('ReactTestUtils');
+    emptyFunction = require('emptyFunction');
 
     App = React.createClass({
       render: function() {
@@ -54,6 +57,17 @@ describe('ReactPerf', function() {
       render: function() {
         return <div {...this.props} />;
       },
+    });
+
+    LifeCycle = React.createClass({
+      shouldComponentUpdate: emptyFunction.thatReturnsTrue,
+      componentWillMount: emptyFunction,
+      componentDidMount: emptyFunction,
+      componentWillReceiveProps: emptyFunction,
+      componentWillUpdate: emptyFunction,
+      componentDidUpdate: emptyFunction,
+      componentWillUnmount: emptyFunction,
+      render: emptyFunction.thatReturnsNull,
     });
   });
 
@@ -215,7 +229,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count replacing null with a native as waste', function() {
+  it('should not count replacing null with a host as waste', function() {
     var element = null;
     function Foo() {
       return element;
@@ -228,7 +242,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count replacing a native with null as waste', function() {
+  it('should not count replacing a host with null as waste', function() {
     var element = <div />;
     function Foo() {
       return element;
@@ -253,6 +267,65 @@ describe('ReactPerf', function() {
       counts: { ctor: 3, render: 4 },
       durations: { ctor: 3, render: 4 },
       totalDuration: 7,
+    }]);
+  });
+
+  it('should include lifecycle methods in measurements', function() {
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      var instance = ReactDOM.render(<LifeCycle />, container);
+      ReactDOM.render(<LifeCycle />, container);
+      instance.setState({});
+      ReactDOM.unmountComponentAtNode(container);
+    });
+    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+      key: 'LifeCycle',
+      instanceCount: 1,
+      totalDuration: 14,
+      counts: {
+        ctor: 1,
+        shouldComponentUpdate: 2,
+        componentWillMount: 1,
+        componentDidMount: 1,
+        componentWillReceiveProps: 1,
+        componentWillUpdate: 2,
+        componentDidUpdate: 2,
+        componentWillUnmount: 1,
+        render: 3,
+      },
+      durations: {
+        ctor: 1,
+        shouldComponentUpdate: 2,
+        componentWillMount: 1,
+        componentDidMount: 1,
+        componentWillReceiveProps: 1,
+        componentWillUpdate: 2,
+        componentDidUpdate: 2,
+        componentWillUnmount: 1,
+        render: 3,
+      },
+    }]);
+  });
+
+  it('should include render time of functional components', function() {
+    function Foo() {
+      return null;
+    }
+
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Foo />, container);
+    });
+    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+      key: 'Foo',
+      instanceCount: 1,
+      totalDuration: 1,
+      counts: {
+        render: 1,
+      },
+      durations: {
+        render: 1,
+      },
     }]);
   });
 
