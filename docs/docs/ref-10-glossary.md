@@ -100,7 +100,7 @@ class MyComponent extends React.Component {
 
 Or you can define it as a function (but it will be a stateless `ReactComponent`):
 ```javascript
-const MyComponent = () => {
+function MyComponent() {
   return ...
 }
 ```
