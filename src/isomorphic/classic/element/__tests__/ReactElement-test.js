@@ -138,6 +138,12 @@ describe('ReactElement', function() {
     expect(element.props.foo).toBe(1);
   });
 
+  it('does not fail if config has no prototype', function() {
+    var config = Object.create(null, {foo: {value: 1, enumerable: true}});
+    var element = React.createFactory(ComponentClass)(config);
+    expect(element.props.foo).toBe(1);
+  });
+
   it('warns if the config object inherits from any type other than Object', function() {
     spyOn(console, 'error');
     React.createElement('div', {foo: 1});
