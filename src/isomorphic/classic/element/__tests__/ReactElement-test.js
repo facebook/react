@@ -14,6 +14,7 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
+var getCssClassFromProps;
 
 describe('ReactElement', function() {
   var ComponentClass;
@@ -30,10 +31,11 @@ describe('ReactElement', function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    // NOTE: We're explicitly not using JSX here. This is intended to test
-    // classic JS without JSX.
+    getCssClassFromProps = require('getCssClassFromProps');
     ComponentClass = React.createClass({
       render: function() {
+        // NOTE: We're explicitly not using JSX here. This is intended to test
+        // classic JS without JSX.
         return React.createElement('div');
       },
     });
@@ -395,7 +397,7 @@ describe('ReactElement', function() {
         expect(function() {
           el.props.className = 'quack';
         }).toThrow();
-        expect(el.props.className).toBe('moo');
+        expect(getCssClassFromProps(el.props)).toBe('moo');
 
         return el;
       },

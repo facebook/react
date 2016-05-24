@@ -15,6 +15,7 @@ var React;
 var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
+var getCssClassFromProps;
 
 describe('ReactTestUtils', function() {
 
@@ -23,6 +24,7 @@ describe('ReactTestUtils', function() {
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
     ReactTestUtils = require('ReactTestUtils');
+    getCssClassFromProps = require('getCssClassFromProps');
   });
 
   it('should have shallow rendering', function() {
@@ -30,8 +32,8 @@ describe('ReactTestUtils', function() {
       render: function() {
         return (
           <div>
-            <span className="child1" />
-            <span className="child2" />
+            <img src="child1" />
+            <img src="child2" />
           </div>
         );
       },
@@ -42,8 +44,8 @@ describe('ReactTestUtils', function() {
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
-      <span className="child1" />,
-      <span className="child2" />,
+      <img src="child1" />,
+      <img src="child2" />,
     ]);
   });
 
@@ -155,8 +157,8 @@ describe('ReactTestUtils', function() {
         } else {
           return (
             <div>
-              <span className="child1" />
-              <span className="child2" />
+              <img src="child1" />
+              <img src="child2" />
             </div>
           );
         }
@@ -167,8 +169,8 @@ describe('ReactTestUtils', function() {
     var result = shallowRenderer.render(<SomeComponent />);
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
-      <span className="child1" />,
-      <span className="child2" />,
+      <img src="child1" />,
+      <img src="child2" />,
     ]);
 
     var updatedResult = shallowRenderer.render(<SomeComponent aNew="prop" />);
@@ -179,7 +181,7 @@ describe('ReactTestUtils', function() {
 
     var updatedResultCausedByClick = shallowRenderer.getRenderOutput();
     expect(updatedResultCausedByClick.type).toBe('a');
-    expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
+    expect(getCssClassFromProps(updatedResultCausedByClick.props)).toBe('was-clicked');
   });
 
   it('can access the mounted component instance', function() {
@@ -235,12 +237,12 @@ describe('ReactTestUtils', function() {
     shallowRenderer.render(<SimpleComponent />);
     var result = shallowRenderer.getRenderOutput();
     expect(result.type).toEqual('div');
-    expect(result.props.className).toEqual('');
+    expect(getCssClassFromProps(result.props)).toEqual('');
     result.props.onClick();
 
     result = shallowRenderer.getRenderOutput();
     expect(result.type).toEqual('div');
-    expect(result.props.className).toEqual('clicked');
+    expect(getCssClassFromProps(result.props)).toEqual('clicked');
   });
 
   it('can setState in componentWillMount when shallow rendering', function() {
