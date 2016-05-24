@@ -306,6 +306,28 @@ describe('ReactPerf', function() {
     }]);
   });
 
+  it('should include render time of functional components', function() {
+    function Foo() {
+      return null;
+    }
+
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Foo />, container);
+    });
+    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+      key: 'Foo',
+      instanceCount: 1,
+      totalDuration: 1,
+      counts: {
+        render: 1,
+      },
+      durations: {
+        render: 1,
+      },
+    }]);
+  });
+
   it('warns once when using getMeasurementsSummaryMap', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
