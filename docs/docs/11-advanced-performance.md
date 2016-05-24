@@ -8,6 +8,10 @@ next: context.html
 
 One of the first questions people ask when considering React for a project is whether their application will be as fast and responsive as an equivalent non-React version. The idea of re-rendering an entire subtree of components in response to every state change makes people wonder whether this process negatively impacts performance. React uses several clever techniques to minimize the number of costly DOM operations required to update the UI.
 
+## Use the production build
+
+If you're benchmarking or seeing performance problems in your React apps, make sure you're testing with the [minified production build](/react/downloads.html). The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+
 ## Avoiding reconciling the DOM
 
 React makes use of a *virtual DOM*, which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component's props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. Only in the case they are not equal, will React [reconcile](/react/docs/reconciliation.html) the DOM, applying as few mutations as possible.
