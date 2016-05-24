@@ -178,7 +178,7 @@ describe('ReactStatelessComponent', function() {
     expect(
       console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed propType: Invalid prop `test` of type `number` ' +
+      'Warning: Failed prop type: Invalid prop `test` of type `number` ' +
       'supplied to `Child`, expected `string`.\n' +
       '    in Child (at **)'
     );
