@@ -15,6 +15,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -137,9 +138,9 @@ ReactElement.createElement = function(type, config, children) {
         'React.createElement(...): Expected props argument to be a plain object. ' +
         'Properties defined in its prototype chain will be ignored.'
       );
-      ref = !config.hasOwnProperty('ref') ||
+      ref = !hasOwnProperty.call(config, 'ref') ||
         Object.getOwnPropertyDescriptor(config, 'ref').get ? null : config.ref;
-      key = !config.hasOwnProperty('key') ||
+      key = !hasOwnProperty.call(config, 'key') ||
         Object.getOwnPropertyDescriptor(config, 'key').get ? null : '' + config.key;
     } else {
       ref = config.ref === undefined ? null : config.ref;
@@ -149,7 +150,7 @@ ReactElement.createElement = function(type, config, children) {
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
-      if (config.hasOwnProperty(propName) &&
+      if (hasOwnProperty.call(config, propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         props[propName] = config[propName];
       }
