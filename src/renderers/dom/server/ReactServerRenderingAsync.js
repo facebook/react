@@ -211,7 +211,7 @@ const renderImpl = (node, length, makeStaticMarkup, domId, parentDebugId, select
 
   const attributes = propsToAttributes(props, tag) +
     (node.root ? ' ' + DOMPropertyOperations.createMarkupForRoot() : '') +
-    (!makeStaticMarkup ? ' ' + DOMPropertyOperations.createMarkupForID(domId.value++) : '');
+    (!makeStaticMarkup ? ' data-reactid="' + domId.value++ + '"' : '');
 
   // void tags in HTML cannot have any content, and they are the only tags in html5
   // allowed to be self-closing.
