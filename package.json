@@ -93,6 +93,7 @@
       "ts"
     ],
     "testPathDirs": [
+      "<rootDir>/scripts/babel",
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
       "<rootDir>/src",
