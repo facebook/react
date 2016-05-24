@@ -433,6 +433,8 @@
     <div class="subHeader"></div>
 
     <p>One of the first questions people ask when considering React for a project is whether their application will be as fast and responsive as an equivalent non-React version. The idea of re-rendering an entire subtree of components in response to every state change makes people wonder whether this process negatively impacts performance. React uses several clever techniques to minimize the number of costly DOM operations required to update the UI.</p>
+<h2><a class="anchor" name="use-the-production-build"></a>Use the production build <a class="hash-link" href="#use-the-production-build">#</a></h2>
+<p>If you&#39;re benchmarking or seeing performance problems in your React apps, make sure you&#39;re testing with the <a href="/react/downloads.html">minified production build</a>. The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.</p>
 <h2><a class="anchor" name="avoiding-reconciling-the-dom"></a>Avoiding reconciling the DOM <a class="hash-link" href="#avoiding-reconciling-the-dom">#</a></h2>
 <p>React makes use of a <em>virtual DOM</em>, which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component&#39;s props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. Only in the case they are not equal, will React <a href="/react/docs/reconciliation.html">reconcile</a> the DOM, applying as few mutations as possible.</p>
 

@@ -437,14 +437,12 @@
 <p>In addition to giving you an overview of your app&#39;s overall performance, ReactPerf is a profiling tool that tells you exactly where you need to put these hooks.</p>
 
 <p>See these two articles by the <a href="http://benchling.engineering">Benchling Engineering Team</a> for a in-depth introduction to performance tooling: <a href="http://benchling.engineering/performance-engineering-with-react/">&quot;Performance Engineering with React&quot;</a> and <a href="http://benchling.engineering/deep-dive-react-perf-debugging/">&quot;A Deep Dive into React Perf Debugging&quot;</a>!</p>
+<h2><a class="anchor" name="development-vs.-production-builds"></a>Development vs. Production Builds <a class="hash-link" href="#development-vs.-production-builds">#</a></h2>
+<p>If you&#39;re benchmarking or seeing performance problems in your React apps, make sure you&#39;re testing with the <a href="/react/downloads.html">minified production build</a>. The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.</p>
+
+<p>However, the perf tools described on this page only work when using the development build of React. Therefore, the profiler only serves to indicate the <em>relatively</em> expensive parts of your app.</p>
 <h2><a class="anchor" name="general-api"></a>General API <a class="hash-link" href="#general-api">#</a></h2>
 <p>The <code>Perf</code> object documented here is exposed as <code>require(&#39;react-addons-perf&#39;)</code> and can be used with React in development mode only. You should not include this bundle when building your app for production.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>The dev build of React is slower than the prod build, due to all the extra logic for providing, for example, React&#39;s friendly console warnings (stripped away in the prod build). Therefore, the profiler only serves to indicate the <em>relatively</em> expensive parts of your app.</p>
-</blockquote>
 <h3><a class="anchor" name="perf.start-and-perf.stop"></a><code>Perf.start()</code> and <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-and-perf.stop">#</a></h3>
 <p>Start/stop the measurement. The React operations in-between are recorded for analyses below. Operations that took an insignificant amount of time are ignored.</p>
 
