@@ -22,7 +22,7 @@ var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
-var checkTypes = require('checkTypes');
+var checkReactTypeSpec = require('checkReactTypeSpec');
 
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
@@ -665,7 +665,7 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _checkContextTypes: function(typeSpecs, values, location) {
-    checkTypes(
+    checkReactTypeSpec(
       typeSpecs,
       values,
       location,

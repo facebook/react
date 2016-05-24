@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule checkTypes
+ * @providesModule checkReactTypeSpec
  */
 
 'use strict';
@@ -31,7 +31,7 @@ var loggedTypeFailures = {};
  * @param {?number} debugID The React component instance that is being type-checked
  * @private
  */
-function checkTypes(typeSpecs, values, location, componentName, element, debugID) {
+function checkReactTypeSpec(typeSpecs, values, location, componentName, element, debugID) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
       var error;
@@ -90,4 +90,4 @@ function checkTypes(typeSpecs, values, location, componentName, element, debugID
   }
 }
 
-module.exports = checkTypes;
+module.exports = checkReactTypeSpec;

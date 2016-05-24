@@ -23,7 +23,7 @@ var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
-var checkTypes = require('checkTypes');
+var checkReactTypeSpec = require('checkReactTypeSpec');
 
 var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
@@ -163,7 +163,7 @@ function validatePropTypes(element) {
   }
   var name = componentClass.displayName || componentClass.name;
   if (componentClass.propTypes) {
-    checkTypes(
+    checkReactTypeSpec(
       componentClass.propTypes,
       element.props,
       ReactPropTypeLocations.prop,
