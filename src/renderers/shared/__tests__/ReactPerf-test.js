@@ -229,7 +229,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count replacing null with a native as waste', function() {
+  it('should not count replacing null with a host as waste', function() {
     var element = null;
     function Foo() {
       return element;
@@ -242,7 +242,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count replacing a native with null as waste', function() {
+  it('should not count replacing a host with null as waste', function() {
     var element = <div />;
     function Foo() {
       return element;
@@ -273,35 +273,36 @@ describe('ReactPerf', function() {
   it('should include lifecycle methods in measurements', function() {
     var container = document.createElement('div');
     var measurements = measure(() => {
+      var instance = ReactDOM.render(<LifeCycle />, container);
       ReactDOM.render(<LifeCycle />, container);
-      ReactDOM.render(<LifeCycle />, container);
+      instance.setState({});
       ReactDOM.unmountComponentAtNode(container);
     });
     expect(ReactPerf.getExclusive(measurements)).toEqual([{
       key: 'LifeCycle',
       instanceCount: 1,
-      totalDuration: 10,
+      totalDuration: 14,
       counts: {
         ctor: 1,
-        shouldComponentUpdate: 1,
+        shouldComponentUpdate: 2,
         componentWillMount: 1,
         componentDidMount: 1,
         componentWillReceiveProps: 1,
-        componentWillUpdate: 1,
-        componentDidUpdate: 1,
+        componentWillUpdate: 2,
+        componentDidUpdate: 2,
         componentWillUnmount: 1,
-        render: 2,
+        render: 3,
       },
       durations: {
         ctor: 1,
-        shouldComponentUpdate: 1,
+        shouldComponentUpdate: 2,
         componentWillMount: 1,
         componentDidMount: 1,
         componentWillReceiveProps: 1,
-        componentWillUpdate: 1,
-        componentDidUpdate: 1,
+        componentWillUpdate: 2,
+        componentDidUpdate: 2,
         componentWillUnmount: 1,
-        render: 2,
+        render: 3,
       },
     }]);
   });
