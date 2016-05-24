@@ -16,10 +16,12 @@ describe('ReactPerf', function() {
   var ReactDOM;
   var ReactPerf;
   var ReactTestUtils;
+  var emptyFunction;
 
   var App;
   var Box;
   var Div;
+  var LifeCycle;
 
   beforeEach(function() {
     var now = 0;
@@ -36,6 +38,7 @@ describe('ReactPerf', function() {
     ReactDOM = require('ReactDOM');
     ReactPerf = require('ReactPerf');
     ReactTestUtils = require('ReactTestUtils');
+    emptyFunction = require('emptyFunction');
 
     App = React.createClass({
       render: function() {
@@ -54,6 +57,17 @@ describe('ReactPerf', function() {
       render: function() {
         return <div {...this.props} />;
       },
+    });
+
+    LifeCycle = React.createClass({
+      shouldComponentUpdate: emptyFunction.thatReturnsTrue,
+      componentWillMount: emptyFunction,
+      componentDidMount: emptyFunction,
+      componentWillReceiveProps: emptyFunction,
+      componentWillUpdate: emptyFunction,
+      componentDidUpdate: emptyFunction,
+      componentWillUnmount: emptyFunction,
+      render: emptyFunction.thatReturnsNull,
     });
   });
 
@@ -253,6 +267,42 @@ describe('ReactPerf', function() {
       counts: { ctor: 3, render: 4 },
       durations: { ctor: 3, render: 4 },
       totalDuration: 7,
+    }]);
+  });
+
+  it('should include lifecycle methods in measurements', function() {
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<LifeCycle />, container);
+      ReactDOM.render(<LifeCycle />, container);
+      ReactDOM.unmountComponentAtNode(container);
+    });
+    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+      key: 'LifeCycle',
+      instanceCount: 1,
+      totalDuration: 10,
+      counts: {
+        ctor: 1,
+        shouldComponentUpdate: 1,
+        componentWillMount: 1,
+        componentDidMount: 1,
+        componentWillReceiveProps: 1,
+        componentWillUpdate: 1,
+        componentDidUpdate: 1,
+        componentWillUnmount: 1,
+        render: 2,
+      },
+      durations: {
+        ctor: 1,
+        shouldComponentUpdate: 1,
+        componentWillMount: 1,
+        componentDidMount: 1,
+        componentWillReceiveProps: 1,
+        componentWillUpdate: 1,
+        componentDidUpdate: 1,
+        componentWillUnmount: 1,
+        render: 2,
+      },
     }]);
   });
 
