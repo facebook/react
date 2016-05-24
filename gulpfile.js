@@ -23,6 +23,7 @@ var paths = {
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
+      '!src/renderers/art/**/*.js',
       '!src/shared/vendor/**/*.js',
     ],
     lib: 'build/modules',
