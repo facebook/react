@@ -30,7 +30,10 @@ var paths = {
 };
 
 var moduleMap = Object.assign(
-  {'object-assign': 'object-assign'},
+  {
+    'escape-html': 'escape-html',
+    'object-assign': 'object-assign',
+  },
   require('fbjs/module-map'),
   {
     deepDiffer: 'react-native/lib/deepDiffer',

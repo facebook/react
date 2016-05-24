@@ -11,19 +11,7 @@
 
 'use strict';
 
-var ESCAPE_LOOKUP = {
-  '&': '&amp;',
-  '>': '&gt;',
-  '<': '&lt;',
-  '"': '&quot;',
-  '\'': '&#x27;',
-};
-
-var ESCAPE_REGEX = /[&><"']/g;
-
-function escaper(match) {
-  return ESCAPE_LOOKUP[match];
-}
+var escapeHtml = require('escape-html');
 
 /**
  * Escapes text to prevent scripting attacks.
@@ -32,7 +20,16 @@ function escaper(match) {
  * @return {string} An escaped string.
  */
 function escapeTextContentForBrowser(text) {
-  return ('' + text).replace(ESCAPE_REGEX, escaper);
+  switch (typeof text) {
+    case 'boolean':
+    case 'number':
+      // this shortcircuit helps perf for types that we know will never have
+      // special characters, especially given that this function is used often
+      // for numeric dom ids.
+      return '' + text;
+    default:
+      return escapeHtml(text);
+  }
 }
 
 module.exports = escapeTextContentForBrowser;
