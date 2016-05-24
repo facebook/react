@@ -198,7 +198,7 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed propType: ' +
+      'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`.\n' +
       '    in MyComp (at **)\n' +
@@ -249,7 +249,7 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed propType: ' +
+      'Warning: Failed prop type: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
       '    in RequiredPropComponent (at **)'
     );
@@ -264,7 +264,7 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed propType: ' +
+      'Warning: Failed prop type: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
       '    in RequiredPropComponent (at **)'
     );
@@ -280,7 +280,7 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed propType: ' +
+      'Warning: Failed prop type: ' +
       'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
       '    in RequiredPropComponent (at **)'
     );
@@ -288,7 +288,7 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.argsForCall[1][0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed propType: ' +
+      'Warning: Failed prop type: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
       '`RequiredPropComponent`, expected `string`.\n' +
       '    in RequiredPropComponent (at **)'

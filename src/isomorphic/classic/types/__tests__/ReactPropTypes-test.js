@@ -867,7 +867,7 @@ describe('ReactPropTypes', function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy.argsForCall.length).toBe(1);
-      expect(spy.argsForCall[0][1]).toBe('num');      
+      expect(spy.argsForCall[0][1]).toBe('num');
     });
 
     it('should have received the validator\'s return value', function() {
@@ -894,7 +894,7 @@ describe('ReactPropTypes', function() {
       expect(
         console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
       ).toBe(
-        'Warning: Failed propType: num must be 5!\n' +
+        'Warning: Failed prop type: num must be 5!\n' +
         '    in Component (at **)'
       );
     });
