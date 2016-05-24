@@ -47,7 +47,7 @@ var ParentComponent = React.createClass({
 });
 
 function renderParentIntoDocument() {
-  return ReactTestUtils.renderIntoDocument(<ParentComponent />);
+  return ReactTestUtils.renderIntoDocumentAsync(<ParentComponent />);
 }
 
 describe('ReactDOMTreeTraversal', function() {
@@ -78,8 +78,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse two phase across component boundary', function() {
-      var parent = renderParentIntoDocument();
+    pit('should traverse two phase across component boundary', async function() {
+      var parent = await renderParentIntoDocument();
       var target = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var expectedAggregation = [
         {node: parent.refs.P, isUp: false, arg: ARG},
@@ -96,8 +96,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse two phase at shallowest node', function() {
-      var parent = renderParentIntoDocument();
+    pit('should traverse two phase at shallowest node', async function() {
+      var parent = await renderParentIntoDocument();
       var target = getInst(parent.refs.P);
       var expectedAggregation = [
         {node: parent.refs.P, isUp: false, arg: ARG},
@@ -118,8 +118,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should not traverse if enter/leave the same node', function() {
-      var parent = renderParentIntoDocument();
+    pit('should not traverse if enter/leave the same node', async function() {
+      var parent = await renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var expectedAggregation = [];
@@ -129,8 +129,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse enter/leave to sibling - avoids parent', function() {
-      var parent = renderParentIntoDocument();
+    pit('should traverse enter/leave to sibling - avoids parent', async function() {
+      var parent = await renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_2);
       var expectedAggregation = [
@@ -144,8 +144,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse enter/leave to parent - avoids parent', function() {
-      var parent = renderParentIntoDocument();
+    pit('should traverse enter/leave to parent - avoids parent', async function() {
+      var parent = await renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
@@ -157,8 +157,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should enter from the window', function() {
-      var parent = renderParentIntoDocument();
+    pit('should enter from the window', async function() {
+      var parent = await renderParentIntoDocument();
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
@@ -172,8 +172,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should enter from the window to the shallowest', function() {
-      var parent = renderParentIntoDocument();
+    pit('should enter from the window to the shallowest', async function() {
+      var parent = await renderParentIntoDocument();
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P);
       var expectedAggregation = [
@@ -185,8 +185,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should leave to the window', function() {
-      var parent = renderParentIntoDocument();
+    pit('should leave to the window', async function() {
+      var parent = await renderParentIntoDocument();
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
@@ -200,8 +200,8 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should leave to the window from the shallowest', function() {
-      var parent = renderParentIntoDocument();
+    pit('should leave to the window from the shallowest', async function() {
+      var parent = await renderParentIntoDocument();
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
@@ -217,8 +217,8 @@ describe('ReactDOMTreeTraversal', function() {
   });
 
   describe('getFirstCommonAncestor', function() {
-    it('should determine the first common ancestor correctly', function() {
-      var parent = renderParentIntoDocument();
+    pit('should determine the first common ancestor correctly', async function() {
+      var parent = await renderParentIntoDocument();
       var ancestors = [
         // Common ancestor with self is self.
         {one: parent.refs.P_P1_C1.refs.DIV_1,

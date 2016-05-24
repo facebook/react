@@ -144,12 +144,12 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
-  it('should provide a null ref', function() {
+  pit('should provide a null ref', async function() {
     function Child() {
       return <div />;
     }
 
-    var comp = ReactTestUtils.renderIntoDocument(<Child />);
+    var comp = await ReactTestUtils.renderIntoDocumentAsync(<Child />);
     expect(comp).toBe(null);
   });
 

@@ -22,10 +22,10 @@ describe('ReactDOMIframe', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should trigger load events', function() {
+  pit('should trigger load events', async function() {
     var onLoadSpy = jasmine.createSpy();
     var iframe = React.createElement('iframe', {onLoad: onLoadSpy});
-    iframe = ReactTestUtils.renderIntoDocument(iframe);
+    iframe = await ReactTestUtils.renderIntoDocumentAsync(iframe);
 
     var loadEvent = document.createEvent('Event');
     loadEvent.initEvent('load', false, false);

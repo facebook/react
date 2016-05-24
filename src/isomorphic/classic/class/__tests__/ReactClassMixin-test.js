@@ -106,10 +106,10 @@ describe('ReactClass-mixin', function() {
     });
   });
 
-  it('should support merging propTypes and statics', function() {
+  pit('should support merging propTypes and statics', async function() {
     var listener = jest.fn();
     var instance = <TestComponent listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     var instancePropTypes = instance.constructor.propTypes;
 
@@ -121,10 +121,10 @@ describe('ReactClass-mixin', function() {
     expect('staticComponent' in TestComponent).toBe(true);
   });
 
-  it('should support chaining delegate functions', function() {
+  pit('should support chaining delegate functions', async function() {
     var listener = jest.fn();
     var instance = <TestComponent listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
@@ -134,10 +134,10 @@ describe('ReactClass-mixin', function() {
     ]);
   });
 
-  it('should chain functions regardless of spec property order', function() {
+  pit('should chain functions regardless of spec property order', async function() {
     var listener = jest.fn();
     var instance = <TestComponentWithReverseSpec listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
@@ -166,7 +166,7 @@ describe('ReactClass-mixin', function() {
   });
 
 
-  it('should support mixins with getInitialState()', function() {
+  pit('should support mixins with getInitialState()', async function() {
     var Mixin = {
       getInitialState: function() {
         return {mixin: true};
@@ -182,7 +182,7 @@ describe('ReactClass-mixin', function() {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.state.component).toBe(true);
     expect(instance.state.mixin).toBe(true);
   });
@@ -202,9 +202,8 @@ describe('ReactClass-mixin', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
     expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrow(
       'mergeIntoWithNoDuplicateKeys(): Tried to merge two objects with the ' +
       'same key: `x`. This conflict may be due to a mixin; in particular, ' +
@@ -233,7 +232,7 @@ describe('ReactClass-mixin', function() {
     }).not.toThrow();
   });
 
-  it('should support statics in mixins', function() {
+  pit('should support statics in mixins', async function() {
     var Mixin = {
       statics: {
         foo: 'bar',
@@ -251,7 +250,7 @@ describe('ReactClass-mixin', function() {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.constructor.foo).toBe('bar');
     expect(Component.foo).toBe('bar');
     expect(instance.constructor.abc).toBe('def');
@@ -346,7 +345,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should have bound the mixin methods to the component', function() {
+  pit('should have bound the mixin methods to the component', async function() {
     var mixin = {
       mixinFunc: function() {
         return this;
@@ -362,11 +361,10 @@ describe('ReactClass-mixin', function() {
         return <span />;
       },
     });
-    var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    await ReactTestUtils.renderIntoDocumentAsync(<Component />);
   });
 
-  it('should include the mixin keys in even if their values are falsy', function() {
+  pit('should include the mixin keys in even if their values are falsy', async function() {
     var mixin = {
       keyWithNullValue: null,
       randomCounter: 0,
@@ -383,10 +381,10 @@ describe('ReactClass-mixin', function() {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    await ReactTestUtils.renderIntoDocumentAsync(instance);
   });
 
-  it('should work with a null getInitialState return value and a mixin', () => {
+  pit('should work with a null getInitialState return value and a mixin', async () => {
     var Component;
     var instance;
 
@@ -409,7 +407,7 @@ describe('ReactClass-mixin', function() {
     ).not.toThrow();
 
     instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.state).toEqual({foo: 'bar'});
 
     // Also the other way round should work
@@ -432,7 +430,7 @@ describe('ReactClass-mixin', function() {
     ).not.toThrow();
 
     instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.state).toEqual({foo: 'bar'});
 
     // Multiple mixins should be fine too
@@ -450,7 +448,7 @@ describe('ReactClass-mixin', function() {
     ).not.toThrow();
 
     instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expect(instance.state).toEqual({foo: 'bar', x: true});
   });
 

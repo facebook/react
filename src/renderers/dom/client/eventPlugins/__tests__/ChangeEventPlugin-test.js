@@ -40,7 +40,7 @@ function setUntrackedValue(elem, value) {
 }
 
 describe('ChangeEventPlugin', function() {
-  it('should fire change for checkbox input', function() {
+  pit('should fire change for checkbox input', async function() {
     var called = 0;
 
     function cb(e) {
@@ -48,7 +48,7 @@ describe('ChangeEventPlugin', function() {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
+    var input = await ReactTestUtils.renderIntoDocumentAsync(<input type="checkbox" onChange={cb}/>);
 
     setUntrackedValue(input, true);
     ReactTestUtils.SimulateNative.click(input);
@@ -56,8 +56,8 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(1);
   });
 
-  it('should catch setting the value programmatically', function() {
-    var input = ReactTestUtils.renderIntoDocument(
+  pit('should catch setting the value programmatically', async function() {
+    var input = await ReactTestUtils.renderIntoDocumentAsync(
       <input type="text" defaultValue="foo"/>
     );
 
@@ -65,7 +65,7 @@ describe('ChangeEventPlugin', function() {
     expect(getTrackedValue(input)).toBe('bar');
   });
 
-  it('should not fire change when setting the value programmatically', function() {
+  pit('should not fire change when setting the value programmatically', async function() {
     var called = 0;
 
     function cb(e) {
@@ -73,7 +73,7 @@ describe('ChangeEventPlugin', function() {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(
+    var input = await ReactTestUtils.renderIntoDocumentAsync(
       <input type="text" onChange={cb} defaultValue="foo"/>
     );
 
@@ -87,7 +87,7 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(1);
   });
 
-  it('should not fire change when setting checked programmatically', function() {
+  pit('should not fire change when setting checked programmatically', async function() {
     var called = 0;
 
     function cb(e) {
@@ -95,7 +95,7 @@ describe('ChangeEventPlugin', function() {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(
+    var input = await ReactTestUtils.renderIntoDocumentAsync(
       <input type="checkbox" onChange={cb} defaultChecked={true} />
     );
 
@@ -117,21 +117,21 @@ describe('ChangeEventPlugin', function() {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('should only fire change for checked radio button once', function() {
+  pit('should only fire change for checked radio button once', async function() {
     var called = 0;
 
     function cb(e) {
       called += 1;
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="radio" onChange={cb}/>);
+    var input = await ReactTestUtils.renderIntoDocumentAsync(<input type="radio" onChange={cb}/>);
     setUntrackedValue(input, true);
     ReactTestUtils.SimulateNative.click(input);
     ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
   });
 
-  it('should deduplicate input value change events', function() {
+  pit('should deduplicate input value change events', async function() {
     var input;
     var called = 0;
 
@@ -140,13 +140,9 @@ describe('ChangeEventPlugin', function() {
       expect(e.type).toBe('change');
     }
 
-    [
-      <input type="text" onChange={cb}/>,
-      <input type="number" onChange={cb}/>,
-      <input type="range" onChange={cb}/>,
-    ].forEach(function(element) {
+    async function runTest(element) {
       called = 0;
-      input = ReactTestUtils.renderIntoDocument(element);
+      input = await ReactTestUtils.renderIntoDocumentAsync(element);
 
       setUntrackedValue(input, '40');
       ReactTestUtils.SimulateNative.change(input);
@@ -154,22 +150,26 @@ describe('ChangeEventPlugin', function() {
       expect(called).toBe(1);
 
       called = 0;
-      input = ReactTestUtils.renderIntoDocument(element);
+      input = await ReactTestUtils.renderIntoDocumentAsync(element);
       setUntrackedValue(input, '40');
       ReactTestUtils.SimulateNative.input(input);
       ReactTestUtils.SimulateNative.input(input);
       expect(called).toBe(1);
 
       called = 0;
-      input = ReactTestUtils.renderIntoDocument(element);
+      input = await ReactTestUtils.renderIntoDocumentAsync(element);
       setUntrackedValue(input, '40');
       ReactTestUtils.SimulateNative.input(input);
       ReactTestUtils.SimulateNative.change(input);
       expect(called).toBe(1);
-    });
+    }
+
+    await runTest(<input type="text" onChange={cb}/>);
+    await runTest(<input type="number" onChange={cb}/>);
+    await runTest(<input type="range" onChange={cb}/>);
   });
 
-  it('should listen for both change and input events when supported', function() {
+  pit('should listen for both change and input events when supported', async function() {
     var called = 0;
 
     function cb(e) {
@@ -181,7 +181,7 @@ describe('ChangeEventPlugin', function() {
       return;
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="range" onChange={cb}/>);
+    var input = await ReactTestUtils.renderIntoDocumentAsync(<input type="range" onChange={cb}/>);
     setUntrackedValue(input, 'bar');
 
     ReactTestUtils.SimulateNative.input(input);
@@ -193,7 +193,7 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(2);
   });
 
-  it('should only fire events when the value changes for range inputs', function() {
+  pit('should only fire events when the value changes for range inputs', async function() {
     var called = 0;
 
     function cb(e) {
@@ -201,7 +201,7 @@ describe('ChangeEventPlugin', function() {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="range" onChange={cb}/>);
+    var input = await ReactTestUtils.renderIntoDocumentAsync(<input type="range" onChange={cb}/>);
     setUntrackedValue(input, '40');
     ReactTestUtils.SimulateNative.input(input);
     ReactTestUtils.SimulateNative.change(input);

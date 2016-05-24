@@ -24,9 +24,9 @@ describe('ReactEventIndependence', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('does not crash with other react inside', function() {
+  pit('does not crash with other react inside', async function() {
     var clicks = 0;
-    var div = ReactTestUtils.renderIntoDocument(
+    var div = await ReactTestUtils.renderIntoDocumentAsync(
       <div
         onClick={() => clicks++}
         dangerouslySetInnerHTML={{

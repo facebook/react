@@ -18,7 +18,7 @@ var reactComponentExpect = require('reactComponentExpect');
 // TODO: Test render and all stock methods.
 describe('autobind optout', function() {
 
-  it('should work with manual binding', function() {
+  pit('should work with manual binding', async function() {
 
     var mouseDidEnter = jest.fn();
     var mouseDidLeave = jest.fn();
@@ -45,13 +45,13 @@ describe('autobind optout', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var mountedInstance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
 
     var instance2 = <TestBindComponent />;
-    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
+    var mountedInstance2 = await ReactTestUtils.renderIntoDocumentAsync(instance2);
     var rendered2 = reactComponentExpect(mountedInstance2)
       .expectRenderedChild()
       .instance();
@@ -81,7 +81,7 @@ describe('autobind optout', function() {
     expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
   });
 
-  it('should not hold reference to instance', function() {
+  pit('should not hold reference to instance', async function() {
     var mouseDidClick = function() {
       void this.state.something;
     };
@@ -110,13 +110,13 @@ describe('autobind optout', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var mountedInstance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
 
     var instance2 = <TestBindComponent />;
-    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
+    var mountedInstance2 = await ReactTestUtils.renderIntoDocumentAsync(instance2);
     var rendered2 = reactComponentExpect(mountedInstance2)
       .expectRenderedChild()
       .instance();
@@ -137,7 +137,7 @@ describe('autobind optout', function() {
     }).toThrow();
   });
 
-  it('works with mixins that have not opted out of autobinding', function() {
+  pit('works with mixins that have not opted out of autobinding', async function() {
     var mouseDidClick = jest.fn();
 
     var TestMixin = {
@@ -153,7 +153,7 @@ describe('autobind optout', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var mountedInstance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
@@ -163,7 +163,7 @@ describe('autobind optout', function() {
     expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
   });
 
-  it('works with mixins that have opted out of autobinding', function() {
+  pit('works with mixins that have opted out of autobinding', async function() {
     var mouseDidClick = jest.fn();
 
     var TestMixin = {
@@ -180,7 +180,7 @@ describe('autobind optout', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var mountedInstance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();

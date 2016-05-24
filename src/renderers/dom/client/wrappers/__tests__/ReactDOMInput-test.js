@@ -42,31 +42,31 @@ describe('ReactDOMInput', function() {
     spyOn(console, 'error');
   });
 
-  it('should display `defaultValue` of number 0', function() {
+  pit('should display `defaultValue` of number 0', async function() {
     var stub = <input type="text" defaultValue={0} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('0');
   });
 
-  it('should display "true" for `defaultValue` of `true`', function() {
+  pit('should display "true" for `defaultValue` of `true`', async function() {
     var stub = <input type="text" defaultValue={true} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('true');
   });
 
-  it('should display "false" for `defaultValue` of `false`', function() {
+  pit('should display "false" for `defaultValue` of `false`', async function() {
     var stub = <input type="text" defaultValue={false} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('false');
   });
 
-  it('should display "foobar" for `defaultValue` of `objToString`', function() {
+  pit('should display "foobar" for `defaultValue` of `objToString`', async function() {
     var objToString = {
       toString: function() {
         return 'foobar';
@@ -74,15 +74,15 @@ describe('ReactDOMInput', function() {
     };
 
     var stub = <input type="text" defaultValue={objToString} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('foobar');
   });
 
-  it('should display `value` of number 0', function() {
+  pit('should display `value` of number 0', async function() {
     var stub = <input type="text" value={0} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     expect(node.value).toBe('0');
@@ -138,9 +138,9 @@ describe('ReactDOMInput', function() {
     expect(node.value).toEqual('foobar');
   });
 
-  it('should properly control a value of number `0`', function() {
+  pit('should properly control a value of number `0`', async function() {
     var stub = <input type="text" value={0} onChange={emptyFunction} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     node.value = 'giraffe';
@@ -172,9 +172,9 @@ describe('ReactDOMInput', function() {
     expect(handled).toBe(true);
   });
 
-  it('should not set a value for submit buttons unnecessarily', function() {
+  pit('should not set a value for submit buttons unnecessarily', async function() {
     var stub = <input type="submit" />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    stub = await ReactTestUtils.renderIntoDocumentAsync(stub);
     var node = ReactDOM.findDOMNode(stub);
 
     // The value shouldn't be '', or else the button will have no text; it
@@ -186,7 +186,7 @@ describe('ReactDOMInput', function() {
     ).toBe(true);
   });
 
-  it('should control radio buttons', function() {
+  pit('should control radio buttons', async function() {
     var RadioGroup = React.createClass({
       render: function() {
         return (
@@ -219,7 +219,7 @@ describe('ReactDOMInput', function() {
       },
     });
 
-    var stub = ReactTestUtils.renderIntoDocument(<RadioGroup />);
+    var stub = await ReactTestUtils.renderIntoDocumentAsync(<RadioGroup />);
     var aNode = ReactDOM.findDOMNode(stub.refs.a);
     var bNode = ReactDOM.findDOMNode(stub.refs.b);
     var cNode = ReactDOM.findDOMNode(stub.refs.c);
@@ -244,11 +244,11 @@ describe('ReactDOMInput', function() {
     expect(cNode.checked).toBe(true);
   });
 
-  it('should support ReactLink', function() {
+  pit('should support ReactLink', async function() {
     var link = new ReactLink('yolo', jest.fn());
     var instance = <input type="text" valueLink={link} />;
 
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     expect(ReactDOM.findDOMNode(instance).value).toBe('yolo');
     expect(link.value).toBe('yolo');
@@ -289,13 +289,13 @@ describe('ReactDOMInput', function() {
     expect(console.error.argsForCall.length).toBe(1);
   });
 
-  it('should have a this value of undefined if bind is not used', function() {
+  pit('should have a this value of undefined if bind is not used', async function() {
     var unboundInputOnChange = function() {
       expect(this).toBe(undefined);
     };
 
     var instance = <input type="text" onChange={unboundInputOnChange} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     ReactTestUtils.Simulate.change(instance);
   });
@@ -321,11 +321,11 @@ describe('ReactDOMInput', function() {
 
   });
 
-  it('should support checkedLink', function() {
+  pit('should support checkedLink', async function() {
     var link = new ReactLink(true, jest.fn());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     expect(ReactDOM.findDOMNode(instance).checked).toBe(true);
     expect(link.value).toBe(true);
@@ -621,8 +621,8 @@ describe('ReactDOMInput', function() {
     ]);
   });
 
-  it('sets value properly with type coming later in props', function() {
-    var input = ReactTestUtils.renderIntoDocument(
+  pit('sets value properly with type coming later in props', async function() {
+    var input = await ReactTestUtils.renderIntoDocumentAsync(
       <input value="hi" type="radio" />
     );
     expect(input.value).toBe('hi');

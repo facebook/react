@@ -275,13 +275,13 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div>foo</div>);
   });
 
-  it('can scryRenderedDOMComponentsWithClass with TextComponent', function() {
+  pit('can scryRenderedDOMComponentsWithClass with TextComponent', async function() {
     var Wrapper = React.createClass({
       render: function() {
         return <div>Hello <span>Jim</span></div>;
       },
     });
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    var renderedComponent = await ReactTestUtils.renderIntoDocumentAsync(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'NonExistentClass'
@@ -289,13 +289,13 @@ describe('ReactTestUtils', function() {
     expect(scryResults.length).toBe(0);
   });
 
-  it('can scryRenderedDOMComponentsWithClass with className contains \\n', function() {
+  pit('can scryRenderedDOMComponentsWithClass with className contains \\n', async function() {
     var Wrapper = React.createClass({
       render: function() {
         return <div>Hello <span className={'x\ny'}>Jim</span></div>;
       },
     });
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    var renderedComponent = await ReactTestUtils.renderIntoDocumentAsync(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'x'
@@ -303,13 +303,13 @@ describe('ReactTestUtils', function() {
     expect(scryResults.length).toBe(1);
   });
 
-  it('can scryRenderedDOMComponentsWithClass with multiple classes', function() {
+  pit('can scryRenderedDOMComponentsWithClass with multiple classes', async function() {
     var Wrapper = React.createClass({
       render: function() {
         return <div>Hello <span className={'x y z'}>Jim</span></div>;
       },
     });
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    var renderedComponent = await ReactTestUtils.renderIntoDocumentAsync(<Wrapper />);
     var scryResults1 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'x y'
@@ -378,7 +378,7 @@ describe('ReactTestUtils', function() {
     expect(log).toEqual(['orangepurple', 'orange', 'purple']);
   });
 
-  it('should support injected wrapper components as DOM components', function() {
+  pit('should support injected wrapper components as DOM components', async function() {
     var getTestDocument = require('getTestDocument');
 
     var injectedDOMComponents = [
@@ -392,13 +392,13 @@ describe('ReactTestUtils', function() {
       'textarea',
     ];
 
-    injectedDOMComponents.forEach(function(type) {
-      var testComponent = ReactTestUtils.renderIntoDocument(
+    Promise.all(injectedDOMComponents.map(async function(type) {
+      var testComponent = await ReactTestUtils.renderIntoDocumentAsync(
         React.createElement(type)
       );
       expect(testComponent.tagName).toBe(type.toUpperCase());
       expect(ReactTestUtils.isDOMComponent(testComponent)).toBe(true);
-    });
+    }));
 
     // Full-page components (html, head, body) can't be rendered into a div
     // directly...
@@ -517,7 +517,7 @@ describe('ReactTestUtils', function() {
     expect(console.error.calls.length).toBe(0);
   });
 
-  it('can scry with stateless components involved', function() {
+  pit('can scry with stateless components involved', async function() {
     var Stateless = () => <div><hr /></div>;
     var SomeComponent = React.createClass({
       render: function() {
@@ -530,7 +530,7 @@ describe('ReactTestUtils', function() {
       },
     });
 
-    var inst = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    var inst = await ReactTestUtils.renderIntoDocumentAsync(<SomeComponent />);
     var hrs = ReactTestUtils.scryRenderedDOMComponentsWithTag(inst, 'hr');
     expect(hrs.length).toBe(2);
   });

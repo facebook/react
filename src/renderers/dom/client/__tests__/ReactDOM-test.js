@@ -20,7 +20,7 @@ describe('ReactDOM', function() {
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
   /*
-  it('should bubble onSubmit', function() {
+  pit('should bubble onSubmit', async function() {
     var count = 0;
     var form;
     var Parent = React.createClass({
@@ -40,28 +40,28 @@ describe('ReactDOM', function() {
         form = ReactDOM.findDOMNode(this);
       }
     });
-    var instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    var instance = await ReactTestUtils.renderIntoDocument(<Parent />);
     form.submit();
     expect(count).toEqual(1);
   });
   */
 
-  it('allows a DOM element to be used with a string', function() {
+  pit('allows a DOM element to be used with a string', async function() {
     var element = React.createElement('div', {className: 'foo'});
-    var instance = ReactTestUtils.renderIntoDocument(element);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(element);
     expect(ReactDOM.findDOMNode(instance).tagName).toBe('DIV');
   });
 
-  it('should allow children to be passed as an argument', function() {
-    var argDiv = ReactTestUtils.renderIntoDocument(
+  pit('should allow children to be passed as an argument', async function() {
+    var argDiv = await ReactTestUtils.renderIntoDocumentAsync(
       div(null, 'child')
     );
     var argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
-  it('should overwrite props.children with children argument', function() {
-    var conflictDiv = ReactTestUtils.renderIntoDocument(
+  pit('should overwrite props.children with children argument', async function() {
+    var conflictDiv = await ReactTestUtils.renderIntoDocumentAsync(
       div({children: 'fakechild'}, 'child')
     );
     var conflictNode = ReactDOM.findDOMNode(conflictDiv);
@@ -72,35 +72,35 @@ describe('ReactDOM', function() {
    * We need to make sure that updates occur to the actual node that's in the
    * DOM, instead of a stale cache.
    */
-  it('should purge the DOM cache when removing nodes', function() {
-    var myDiv = ReactTestUtils.renderIntoDocument(
+  pit('should purge the DOM cache when removing nodes', async function() {
+    var myDiv = await ReactTestUtils.renderIntoDocumentAsync(
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />
       </div>
     );
     // Warm the cache with theDog
-    myDiv = ReactTestUtils.renderIntoDocument(
+    myDiv = await ReactTestUtils.renderIntoDocumentAsync(
       <div>
         <div key="theDog" className="dogbeforedelete" />,
         <div key="theBird" className="bird" />,
       </div>
     );
     // Remove theDog - this should purge the cache
-    myDiv = ReactTestUtils.renderIntoDocument(
+    myDiv = await ReactTestUtils.renderIntoDocumentAsync(
       <div>
         <div key="theBird" className="bird" />,
       </div>
     );
     // Now, put theDog back. It's now a different DOM node.
-    myDiv = ReactTestUtils.renderIntoDocument(
+    myDiv = await ReactTestUtils.renderIntoDocumentAsync(
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />,
       </div>
     );
     // Change the className of theDog. It will use the same element
-    myDiv = ReactTestUtils.renderIntoDocument(
+    myDiv = await ReactTestUtils.renderIntoDocumentAsync(
       <div>
         <div key="theDog" className="bigdog" />,
         <div key="theBird" className="bird" />,

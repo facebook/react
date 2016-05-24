@@ -183,7 +183,7 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('preserves the owner on the element', function() {
+  pit('preserves the owner on the element', async function() {
     var Component = React.createFactory(ComponentClass);
     var element;
 
@@ -194,7 +194,7 @@ describe('ReactElement', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(
       React.createElement(Wrapper)
     );
 
@@ -349,7 +349,7 @@ describe('ReactElement', function() {
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
-  it('should normalize props with default values', function() {
+  pit('should normalize props with default values', async function() {
     var Component = React.createClass({
       getDefaultProps: function() {
         return {prop: 'testKey'};
@@ -359,12 +359,12 @@ describe('ReactElement', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(
       React.createElement(Component)
     );
     expect(instance.props.prop).toBe('testKey');
 
-    var inst2 = ReactTestUtils.renderIntoDocument(
+    var inst2 = await ReactTestUtils.renderIntoDocumentAsync(
       React.createElement(Component, {prop: null})
     );
     expect(inst2.props.prop).toBe(null);
@@ -393,7 +393,7 @@ describe('ReactElement', function() {
     expect(cloneInstance4.props.prop).toBe('newTestKey');
   });
 
-  it('throws when changing a prop (in dev) after element creation', function() {
+  pit('throws when changing a prop (in dev) after element creation', async function() {
     var Outer = React.createClass({
       render: function() {
         var el = <div className="moo" />;
@@ -406,7 +406,7 @@ describe('ReactElement', function() {
         return el;
       },
     });
-    var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
+    var outer = await ReactTestUtils.renderIntoDocumentAsync(<Outer color="orange" />);
     expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
   });
 
@@ -431,14 +431,14 @@ describe('ReactElement', function() {
     expect(ReactDOM.findDOMNode(outer).className).toBe('');
   });
 
-  it('does not warn for NaN props', function() {
+  pit('does not warn for NaN props', async function() {
     spyOn(console, 'error');
     var Test = React.createClass({
       render: function() {
         return <div />;
       },
     });
-    var test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
+    var test = await ReactTestUtils.renderIntoDocumentAsync(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
     expect(console.error.argsForCall.length).toBe(0);
   });
@@ -503,9 +503,8 @@ describe('comparing jsx vs .createFactory() vs .createElement()', function() {
 
 
   describe('when using jsx only', function() {
-    var Parent, instance;
-    beforeEach(function() {
-      Parent = React.createClass({
+    function getParent() {
+      return React.createClass({
         render: function() {
           return (
             <div>
@@ -514,72 +513,87 @@ describe('comparing jsx vs .createFactory() vs .createElement()', function() {
           );
         },
       });
-      instance = ReactTestUtils.renderIntoDocument(<Parent/>);
-    });
+    }
 
-    it('should scry children but cannot', function() {
+    pit('should scry children but cannot', async function() {
+      var Parent = getParent();
+      var instance = await ReactTestUtils.renderIntoDocumentAsync(<Parent/>);
       var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
       expect(children.length).toBe(1);
     });
 
-    it('does not maintain refs', function() {
+    pit('does not maintain refs', async function() {
+      var Parent = getParent();
+      var instance = await ReactTestUtils.renderIntoDocumentAsync(<Parent/>);
       expect(instance.refs.child).not.toBeUndefined();
     });
 
     it('can capture Child instantiation calls', function() {
+      var Parent = getParent();
+      ReactTestUtils.renderIntoDocument(<Parent/>);
       expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
     });
   });
 
   describe('when using parent that uses .createFactory()', function() {
-    var factory, instance;
-    beforeEach(function() {
+    function getFactory() {
       var childFactory = React.createFactory(Child);
       var Parent = React.createClass({
         render: function() {
           return React.DOM.div({}, childFactory({ ref: 'child', foo: 'foo value' }, 'children value'));
         },
       });
-      factory = React.createFactory(Parent);
-      instance = ReactTestUtils.renderIntoDocument(factory());
-    });
+      var factory = React.createFactory(Parent);
+      return factory;
+    }
 
-    it('can properly scry children', function() {
+    pit('can properly scry children', async function() {
+      var factory = getFactory();
+      var instance = await ReactTestUtils.renderIntoDocumentAsync(factory());
       var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
       expect(children.length).toBe(1);
     });
 
-    it('does not maintain refs', function() {
+    pit('does not maintain refs', async function() {
+      var factory = getFactory();
+      var instance = await ReactTestUtils.renderIntoDocumentAsync(factory());
       expect(instance.refs.child).not.toBeUndefined();
     });
 
-    it('can capture Child instantiation calls', function() {
+    pit('can capture Child instantiation calls', async function() {
+      var factory = getFactory();
+      await ReactTestUtils.renderIntoDocumentAsync(factory());
       expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
     });
   });
 
   describe('when using parent that uses .createElement()', function() {
-    var factory, instance;
-    beforeEach(function() {
+    function getFactory() {
       var Parent = React.createClass({
         render: function() {
           return React.DOM.div({}, React.createElement(Child, { ref: 'child', foo: 'foo value' }, 'children value'));
         },
       });
-      factory = React.createFactory(Parent);
-      instance = ReactTestUtils.renderIntoDocument(factory());
-    });
+      var factory = React.createFactory(Parent);
+      return factory;
+    }
 
-    it('should scry children but cannot', function() {
+    pit('should scry children but cannot', async function() {
+      var factory = getFactory();
+      var instance = await ReactTestUtils.renderIntoDocumentAsync(factory());
       var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
       expect(children.length).toBe(1);
     });
 
-    it('does not maintain refs', function() {
+    pit('does not maintain refs', async function() {
+      var factory = getFactory();
+      var instance = await ReactTestUtils.renderIntoDocumentAsync(factory());
       expect(instance.refs.child).not.toBeUndefined();
     });
 
-    it('can capture Child instantiation calls', function() {
+    pit('can capture Child instantiation calls', async function() {
+      var factory = getFactory();
+      await ReactTestUtils.renderIntoDocumentAsync(factory());
       expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
     });
   });

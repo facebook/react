@@ -50,7 +50,7 @@ describe('ReactEmptyComponent', function() {
     });
   });
 
-  it('should render null and false as a noscript tag under the hood', () => {
+  pit('should render null and false as a noscript tag under the hood', async function() {
     var Component1 = React.createClass({
       render: function() {
         return null;
@@ -62,8 +62,8 @@ describe('ReactEmptyComponent', function() {
       },
     });
 
-    var instance1 = ReactTestUtils.renderIntoDocument(<Component1 />);
-    var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
+    var instance1 = await ReactTestUtils.renderIntoDocumentAsync(<Component1 />);
+    var instance2 = await ReactTestUtils.renderIntoDocumentAsync(<Component2 />);
     reactComponentExpect(instance1)
       .expectRenderedChild()
       .toBeEmptyComponent();

@@ -85,9 +85,9 @@ describe('ReactCompositeComponent', function() {
     expect(el.textContent).toBe('test');
   });
 
-  it('should support rendering to different child types over time', function() {
+  pit('should support rendering to different child types over time', async function() {
     var instance = <MorphingComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     reactComponentExpect(instance)
       .expectRenderedChild()
@@ -123,9 +123,9 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Parent />, container);
   });
 
-  it('should react to state changes from callbacks', function() {
+  pit('should react to state changes from callbacks', async function() {
     var instance = <MorphingComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     var renderedChild = reactComponentExpect(instance)
       .expectRenderedChild()
@@ -137,9 +137,9 @@ describe('ReactCompositeComponent', function() {
       .toBeDOMComponentWithTag('b');
   });
 
-  it('should rewire refs when rendering to different child types', function() {
+  pit('should rewire refs when rendering to different child types', async function() {
     var instance = <MorphingComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('A');
     instance._toggleActivatedState();
@@ -169,7 +169,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.getAnchor().className).toBe('');
   });
 
-  it('should auto bind methods and values correctly', function() {
+  pit('should auto bind methods and values correctly', async function() {
     spyOn(console, 'error');
 
     var ComponentClass = React.createClass({
@@ -190,7 +190,7 @@ describe('ReactCompositeComponent', function() {
 
     // Next, prove that once mounted, the scope is bound correctly to the actual
     // component.
-    var mountedInstance = ReactTestUtils.renderIntoDocument(instance);
+    var mountedInstance = await ReactTestUtils.renderIntoDocumentAsync(instance);
 
     expect(function() {
       mountedInstance.methodToBeExplicitlyBound.bind(instance)();
@@ -228,7 +228,7 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils.renderIntoDocument(<Component />);
   });
 
-  it('should use default values for undefined props', function() {
+  pit('should use default values for undefined props', async function() {
     var Component = React.createClass({
       getDefaultProps: function() {
         return {prop: 'testKey'};
@@ -239,19 +239,19 @@ describe('ReactCompositeComponent', function() {
     });
 
     var instance1 = <Component />;
-    instance1 = ReactTestUtils.renderIntoDocument(instance1);
+    instance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     reactComponentExpect(instance1).scalarPropsEqual({prop: 'testKey'});
 
     var instance2 = <Component prop={undefined} />;
-    instance2 = ReactTestUtils.renderIntoDocument(instance2);
+    instance2 = await ReactTestUtils.renderIntoDocumentAsync(instance2);
     reactComponentExpect(instance2).scalarPropsEqual({prop: 'testKey'});
 
     var instance3 = <Component prop={null} />;
-    instance3 = ReactTestUtils.renderIntoDocument(instance3);
+    instance3 = await ReactTestUtils.renderIntoDocumentAsync(instance3);
     reactComponentExpect(instance3).scalarPropsEqual({prop: null});
   });
 
-  it('should not mutate passed-in props object', function() {
+  pit('should not mutate passed-in props object', async function() {
     var Component = React.createClass({
       getDefaultProps: function() {
         return {prop: 'testKey'};
@@ -263,7 +263,7 @@ describe('ReactCompositeComponent', function() {
 
     var inputProps = {};
     var instance1 = <Component {...inputProps} />;
-    instance1 = ReactTestUtils.renderIntoDocument(instance1);
+    instance1 = await ReactTestUtils.renderIntoDocumentAsync(instance1);
     expect(instance1.props.prop).toBe('testKey');
 
     // We don't mutate the input, just in case the caller wants to do something
@@ -502,7 +502,7 @@ describe('ReactCompositeComponent', function() {
     expect(innerUnmounted).toBe(true);
   });
 
-  it('should warn when shouldComponentUpdate() returns undefined', function() {
+  pit('should warn when shouldComponentUpdate() returns undefined', async function() {
     spyOn(console, 'error');
 
     var Component = React.createClass({
@@ -519,7 +519,7 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     instance.setState({bogus: true});
 
     expect(console.error.argsForCall.length).toBe(1);
@@ -551,7 +551,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should pass context to children when not owner', function() {
+  pit('should pass context to children when not owner', async function() {
     var Parent = React.createClass({
       render: function() {
         return <Child><Grandchild /></Child>;
@@ -584,7 +584,7 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<Parent />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<Parent />);
     expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
   });
 
@@ -611,7 +611,7 @@ describe('ReactCompositeComponent', function() {
     expect(childRenders).toBe(1);
   });
 
-  it('should pass context when re-rendered for static child', function() {
+  pit('should pass context when re-rendered for static child', async function() {
     var parentInstance = null;
     var childInstance = null;
 
@@ -657,7 +657,7 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    parentInstance = ReactTestUtils.renderIntoDocument(
+    parentInstance = await ReactTestUtils.renderIntoDocumentAsync(
       <Parent><Middle><Child /></Middle></Parent>
     );
 
@@ -670,7 +670,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
   });
 
-  it('should pass context when re-rendered for static child within a composite component', function() {
+  pit('should pass context when re-rendered for static child within a composite component', async function() {
     var Parent = React.createClass({
       childContextTypes: {
         flag: ReactPropTypes.bool,
@@ -715,7 +715,7 @@ describe('ReactCompositeComponent', function() {
     });
 
 
-    var wrapper = ReactTestUtils.renderIntoDocument(
+    var wrapper = await ReactTestUtils.renderIntoDocumentAsync(
       <Wrapper />
     );
 
@@ -791,7 +791,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
   });
 
-  it('should pass context when re-rendered', function() {
+  pit('should pass context when re-rendered', async function() {
     var parentInstance = null;
     var childInstance = null;
 
@@ -835,7 +835,7 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    parentInstance = ReactTestUtils.renderIntoDocument(<Parent />);
+    parentInstance = await ReactTestUtils.renderIntoDocumentAsync(<Parent />);
     expect(childInstance).toBeNull();
 
     expect(parentInstance.state.flag).toBe(false);
@@ -1182,7 +1182,7 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Parent><Component /></Parent>, div);
   });
 
-  it('should replace state', function() {
+  pit('should replace state', async function() {
     var Moo = React.createClass({
       getInitialState: function() {
         return {x: 1};
@@ -1192,13 +1192,13 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var moo = ReactTestUtils.renderIntoDocument(<Moo />);
+    var moo = await ReactTestUtils.renderIntoDocumentAsync(<Moo />);
     moo.replaceState({y: 2});
     expect('x' in moo.state).toBe(false);
     expect(moo.state.y).toBe(2);
   });
 
-  it('should support objects with prototypes as state', function() {
+  pit('should support objects with prototypes as state', async function() {
     var NotActuallyImmutable = function(str) {
       this.str = str;
     };
@@ -1214,7 +1214,7 @@ describe('ReactCompositeComponent', function() {
       },
     });
 
-    var moo = ReactTestUtils.renderIntoDocument(<Moo />);
+    var moo = await ReactTestUtils.renderIntoDocumentAsync(<Moo />);
     expect(moo.state.str).toBe('first');
     expect(moo.state.amIImmutable()).toBe(true);
 

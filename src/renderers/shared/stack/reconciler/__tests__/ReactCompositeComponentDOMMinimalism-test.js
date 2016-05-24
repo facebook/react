@@ -64,27 +64,27 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
     };
   });
 
-  it('should not render extra nodes for non-interpolated text', function() {
+  pit('should not render extra nodes for non-interpolated text', async function() {
     var instance = (
       <MyCompositeComponent>
         A string child
       </MyCompositeComponent>
     );
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expectSingleChildlessDiv(instance);
   });
 
-  it('should not render extra nodes for non-interpolated text', function() {
+  pit('should not render extra nodes for non-interpolated text', async function() {
     var instance = (
       <MyCompositeComponent>
         {'Interpolated String Child'}
       </MyCompositeComponent>
     );
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     expectSingleChildlessDiv(instance);
   });
 
-  it('should not render extra nodes for non-interpolated text', function() {
+  pit('should not render extra nodes for non-interpolated text', async function() {
     var instance = (
       <MyCompositeComponent>
         <ul>
@@ -92,7 +92,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
         </ul>
       </MyCompositeComponent>
     );
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = await ReactTestUtils.renderIntoDocumentAsync(instance);
     reactComponentExpect(instance)
       .expectRenderedChild()
       .toBeCompositeComponentWithType(LowerLevelComposite)

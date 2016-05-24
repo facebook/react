@@ -24,7 +24,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('provides a default shouldComponentUpdate implementation', function() {
+  pit('provides a default shouldComponentUpdate implementation', async function() {
     var renderCalls = 0;
     class PlasticWrap extends React.Component {
       constructor(props, context) {
@@ -73,7 +73,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<PlasticWrap />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<PlasticWrap />);
     expect(renderCalls).toBe(1);
 
     // Do not re-render based on props
@@ -97,7 +97,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
     expect(renderCalls).toBe(4);
   });
 
-  it('does not do a deep comparison', function() {
+  pit('does not do a deep comparison', async function() {
     function getInitialState() {
       return {
         foo: [1, 2, 3],
@@ -121,7 +121,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = await ReactTestUtils.renderIntoDocumentAsync(<Component />);
     expect(renderCalls).toBe(1);
 
     // Do not re-render if state is equal

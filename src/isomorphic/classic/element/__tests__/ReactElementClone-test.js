@@ -23,7 +23,7 @@ describe('ReactElementClone', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should clone a DOM component with new props', function() {
+  pit('should clone a DOM component with new props', async function() {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent child={<div className="child" />} />;
@@ -38,11 +38,11 @@ describe('ReactElementClone', function() {
         );
       },
     });
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<Grandparent />);
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
-  it('should clone a composite component with new props', function() {
+  pit('should clone a composite component with new props', async function() {
     var Child = React.createClass({
       render: function() {
         return <div className={this.props.className} />;
@@ -62,7 +62,7 @@ describe('ReactElementClone', function() {
         );
       },
     });
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<Grandparent />);
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
@@ -78,7 +78,7 @@ describe('ReactElementClone', function() {
     );
   });
 
-  it('should keep the original ref if it is not overridden', function() {
+  pit('should keep the original ref if it is not overridden', async function() {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent child={<div ref="yolo" />} />;
@@ -95,7 +95,7 @@ describe('ReactElementClone', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<Grandparent />);
     expect(component.refs.yolo.tagName).toBe('DIV');
   });
 
@@ -155,7 +155,7 @@ describe('ReactElementClone', function() {
     ]);
   });
 
-  it('should support keys and refs', function() {
+  pit('should support keys and refs', async function() {
     var Parent = React.createClass({
       render: function() {
         var clone =
@@ -172,11 +172,11 @@ describe('ReactElementClone', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<Grandparent />);
     expect(component.refs.parent.refs.xyz.tagName).toBe('SPAN');
   });
 
-  it('should steal the ref if a new ref is specified', function() {
+  pit('should steal the ref if a new ref is specified', async function() {
     var Parent = React.createClass({
       render: function() {
         var clone = React.cloneElement(this.props.children, {ref: 'xyz'});
@@ -190,7 +190,7 @@ describe('ReactElementClone', function() {
       },
     });
 
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    var component = await ReactTestUtils.renderIntoDocumentAsync(<Grandparent />);
     expect(component.refs.child).toBeUndefined();
     expect(component.refs.parent.refs.xyz.tagName).toBe('SPAN');
   });
