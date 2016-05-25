@@ -23,6 +23,8 @@ var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactInstrumentation = require('ReactInstrumentation');
+var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -407,7 +409,11 @@ NoopInternalComponent.prototype = {
 };
 
 var ShallowComponentWrapper = function(element) {
+  // TODO: Consolidate with instantiateReactComponent
   this._debugID = nextDebugID++;
+  var displayName = element.type.displayName || element.type.name || 'Unknown';
+  ReactInstrumentation.debugTool.onSetDisplayName(this._debugID, displayName);
+
   this.construct(element);
 };
 Object.assign(
@@ -471,16 +477,21 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
 
 ReactShallowRenderer.prototype.unmount = function() {
   if (this._instance) {
-    this._instance.unmountComponent(false);
+    ReactReconciler.unmountComponent(this._instance, false);
   }
 };
 
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
   if (this._instance) {
-    this._instance.receiveComponent(element, transaction, context);
+    ReactReconciler.receiveComponent(
+      this._instance,
+      element,
+      transaction,
+      context
+    );
   } else {
     var instance = new ShallowComponentWrapper(element);
-    instance.mountComponent(transaction, null, null, context);
+    ReactReconciler.mountComponent(instance, transaction, null, null, context);
     this._instance = instance;
   }
 };
