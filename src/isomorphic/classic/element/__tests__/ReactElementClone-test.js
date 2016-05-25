@@ -78,6 +78,11 @@ describe('ReactElementClone', function() {
     );
   });
 
+  it('does not fail if config has no prototype', function() {
+    var config = Object.create(null, {foo: {value: 1, enumerable: true}});
+    React.cloneElement(<div />, config);
+  });
+
   it('should keep the original ref if it is not overridden', function() {
     var Grandparent = React.createClass({
       render: function() {
