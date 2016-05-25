@@ -365,7 +365,7 @@ describe('ReactPerf', function() {
         // This is how we get 4 as a number with the performanceNow() mock:
         // - we capture the time we enter componentDidMount (n = 0)
         // - we capture the time when we enter a nested flush (n = 1)
-        // - in the nested flush, we call it twice before and after <Foo /> rendering. (n = 3)
+        // - in the nested flush, we call it twice: before and after <Foo /> rendering. (n = 3)
         // - we capture the time when we exit a nested flush (n = 4)
         // - we capture the time we exit componentDidMount (n = 5)
         // Time spent in componentDidMount = (5 - 0 - (4 - 3)) = 4.
