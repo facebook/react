@@ -41,11 +41,13 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
 
 var isProfiling = false;
 var flushHistory = [];
+var lifeCycleTimerStack = [];
 var currentFlushNesting = 0;
 var currentFlushMeasurements = null;
 var currentFlushStartTime = null;
 var currentTimerDebugID = null;
 var currentTimerStartTime = null;
+var currentTimerNestedFlushDuration = null;
 var currentTimerType = null;
 
 function clearHistory() {
@@ -103,6 +105,72 @@ function checkDebugID(debugID) {
   warning(debugID, 'ReactDebugTool: debugID may not be empty.');
 }
 
+function beginLifeCycleTimer(debugID, timerType) {
+  if (!isProfiling || currentFlushNesting === 0) {
+    return;
+  }
+  warning(
+    !currentTimerType,
+    'There is an internal error in the React performance measurement code. ' +
+    'Did not expect %s timer to start while %s timer is still in ' +
+    'progress for %s instance.',
+    timerType,
+    currentTimerType || 'no',
+    (debugID === currentTimerDebugID) ? 'the same' : 'another'
+  );
+  currentTimerStartTime = performanceNow();
+  currentTimerNestedFlushDuration = 0;
+  currentTimerDebugID = debugID;
+  currentTimerType = timerType;
+}
+
+function endLifeCycleTimer(debugID, timerType) {
+  if (!isProfiling || currentFlushNesting === 0) {
+    return;
+  }
+  warning(
+    currentTimerType === timerType,
+    'There is an internal error in the React performance measurement code. ' +
+    'We did not expect %s timer to stop while %s timer is still in ' +
+    'progress for %s instance. Please report this as a bug in React.',
+    timerType,
+    currentTimerType || 'no',
+    (debugID === currentTimerDebugID) ? 'the same' : 'another'
+  );
+  currentFlushMeasurements.push({
+    timerType,
+    instanceID: debugID,
+    duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
+  });
+  currentTimerStartTime = null;
+  currentTimerNestedFlushDuration = null;
+  currentTimerDebugID = null;
+  currentTimerType = null;
+}
+
+function pauseCurrentLifeCycleTimer() {
+  var currentTimer = {
+    startTime: currentTimerStartTime,
+    nestedFlushStartTime: performanceNow(),
+    debugID: currentTimerDebugID,
+    timerType: currentTimerType,
+  };
+  lifeCycleTimerStack.push(currentTimer);
+  currentTimerStartTime = null;
+  currentTimerNestedFlushDuration = null;
+  currentTimerDebugID = null;
+  currentTimerType = null;
+}
+
+function resumeCurrentLifeCycleTimer() {
+  var {startTime, nestedFlushStartTime, debugID, timerType} = lifeCycleTimerStack.pop();
+  var nestedFlushDuration = performanceNow() - nestedFlushStartTime;
+  currentTimerStartTime = startTime;
+  currentTimerNestedFlushDuration += nestedFlushDuration;
+  currentTimerDebugID = debugID;
+  currentTimerType = timerType;
+}
+
 var ReactDebugTool = {
   addDevtool(devtool) {
     eventHandlers.push(devtool);
@@ -148,6 +216,7 @@ var ReactDebugTool = {
     if (__DEV__) {
       currentFlushNesting++;
       resetMeasurements();
+      pauseCurrentLifeCycleTimer();
     }
     emitEvent('onBeginFlush');
   },
@@ -155,6 +224,7 @@ var ReactDebugTool = {
     if (__DEV__) {
       resetMeasurements();
       currentFlushNesting--;
+      resumeCurrentLifeCycleTimer();
     }
     emitEvent('onEndFlush');
   },
@@ -162,44 +232,13 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onBeginLifeCycleTimer', debugID, timerType);
     if (__DEV__) {
-      if (isProfiling && currentFlushNesting > 0) {
-        warning(
-          !currentTimerType,
-          'There is an internal error in the React performance measurement code. ' +
-          'Did not expect %s timer to start while %s timer is still in ' +
-          'progress for %s instance.',
-          timerType,
-          currentTimerType || 'no',
-          (debugID === currentTimerDebugID) ? 'the same' : 'another'
-        );
-        currentTimerStartTime = performanceNow();
-        currentTimerDebugID = debugID;
-        currentTimerType = timerType;
-      }
+      beginLifeCycleTimer(debugID, timerType);
     }
   },
   onEndLifeCycleTimer(debugID, timerType) {
     checkDebugID(debugID);
     if (__DEV__) {
-      if (isProfiling && currentFlushNesting > 0) {
-        warning(
-          currentTimerType === timerType,
-          'There is an internal error in the React performance measurement code. ' +
-          'We did not expect %s timer to stop while %s timer is still in ' +
-          'progress for %s instance. Please report this as a bug in React.',
-          timerType,
-          currentTimerType || 'no',
-          (debugID === currentTimerDebugID) ? 'the same' : 'another'
-        );
-        currentFlushMeasurements.push({
-          timerType,
-          instanceID: debugID,
-          duration: performanceNow() - currentTimerStartTime,
-        });
-        currentTimerStartTime = null;
-        currentTimerDebugID = null;
-        currentTimerType = null;
-      }
+      endLifeCycleTimer(debugID, timerType);
     }
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
