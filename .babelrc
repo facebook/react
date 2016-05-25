@@ -2,7 +2,10 @@
   "presets": ["react"],
   "ignore": ["third_party"],
   "plugins": [
-    ["./scripts/babel/dev-expression-with-error-map", { "output": "./ErrorMap.json" }],
+    ["./scripts/babel/dev-expression-with-error-map", {
+      "output": "./ErrorMap.json",
+      "forceBuild": false
+    }],
     "syntax-trailing-function-commas",
     "babel-plugin-transform-object-rest-spread",
     "transform-es2015-template-literals",

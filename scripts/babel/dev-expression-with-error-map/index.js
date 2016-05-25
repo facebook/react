@@ -55,8 +55,20 @@ module.exports = function(babel) {
           }
 
           if (currentFileCount === 0) { // figure out what to do
-            existingErrorMap = getCurrentErrorMap(state.opts.output);
             currentReactVersion = getCurrentReactVersion();
+
+            if (state.opts.forceBuild) {
+              existingErrorMap = null;
+              console.log(
+                '`forceBuild` option specified. Will generate a new ' +
+                'error map for version ' + currentReactVersion + '.'
+              );
+
+              currentFileCount++;
+              return; // skip existing map checking
+            }
+
+            existingErrorMap = getCurrentErrorMap(state.opts.output);
             if (shouldConstructNewMap(existingErrorMap, currentReactVersion)) {
               existingErrorMap = null;
             } else {
