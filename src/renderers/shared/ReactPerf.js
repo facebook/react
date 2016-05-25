@@ -13,17 +13,31 @@
 
 var ReactDebugTool = require('ReactDebugTool');
 var warning = require('warning');
+var alreadyWarned = false;
 
 function roundFloat(val, base = 2) {
   var n = Math.pow(10, base);
   return Math.floor(val * n) / n;
 }
 
+function returnWarnIfDevFalse(returningValue = 0) {
+  if (!alreadyWarned) {
+    alreadyWarned = true;
+    warning(__DEV__,
+           'ReactPerf is not supported in the production builds of React.' +
+           'To collect measurements, please use the development build of React instead.');
+  }
+  return returningValue;
+}
+
 function getFlushHistory() {
+  returnWarnIfDevFalse([]);
   return ReactDebugTool.getFlushHistory();
 }
 
 function getExclusive(flushHistory = getFlushHistory()) {
+  returnWarnIfDevFalse([]);
+
   var aggregatedStats = {};
   var affectedIDs = {};
 
@@ -74,6 +88,8 @@ function getExclusive(flushHistory = getFlushHistory()) {
 }
 
 function getInclusive(flushHistory = getFlushHistory()) {
+  returnWarnIfDevFalse([]);
+
   var aggregatedStats = {};
   var affectedIDs = {};
 
@@ -142,6 +158,8 @@ function getInclusive(flushHistory = getFlushHistory()) {
 }
 
 function getWasted(flushHistory = getFlushHistory()) {
+  returnWarnIfDevFalse([]);
+
   var aggregatedStats = {};
   var affectedIDs = {};
 
@@ -235,6 +253,8 @@ function getWasted(flushHistory = getFlushHistory()) {
 }
 
 function getOperations(flushHistory = getFlushHistory()) {
+  returnWarnIfDevFalse([]);
+
   var stats = [];
   flushHistory.forEach((flush, flushIndex) => {
     var {operations, treeSnapshot} = flush;
@@ -258,6 +278,8 @@ function getOperations(flushHistory = getFlushHistory()) {
 }
 
 function printExclusive(flushHistory) {
+  returnWarnIfDevFalse('');
+
   var stats = getExclusive(flushHistory);
   var table = stats.map(item => {
     var {key, instanceCount, totalDuration} = item;
@@ -279,6 +301,8 @@ function printExclusive(flushHistory) {
 }
 
 function printInclusive(flushHistory) {
+  returnWarnIfDevFalse('');
+
   var stats = getInclusive(flushHistory);
   var table = stats.map(item => {
     var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
@@ -293,6 +317,8 @@ function printInclusive(flushHistory) {
 }
 
 function printWasted(flushHistory) {
+  returnWarnIfDevFalse('');
+
   var stats = getWasted(flushHistory);
   var table = stats.map(item => {
     var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
@@ -307,6 +333,8 @@ function printWasted(flushHistory) {
 }
 
 function printOperations(flushHistory) {
+  returnWarnIfDevFalse('');
+
   var stats = getOperations(flushHistory);
   var table = stats.map(stat => ({
     'Owner > Node': stat.key,
@@ -344,14 +372,18 @@ function getMeasurementsSummaryMap(measurements) {
 }
 
 function start() {
+  returnWarnIfDevFalse();
   ReactDebugTool.beginProfiling();
 }
 
 function stop() {
+  returnWarnIfDevFalse();
+  alreadyWarned = false;
   ReactDebugTool.endProfiling();
 }
 
 function isRunning() {
+  returnWarnIfDevFalse();
   return ReactDebugTool.isProfiling();
 }
 
