@@ -288,9 +288,9 @@ describe('ReactTestUtils', function() {
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SimpleComponent />);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
     expect(
-      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
       'Warning: Failed context type: Required context `name` was not ' +
       'specified in `SimpleComponent`.\n' +
