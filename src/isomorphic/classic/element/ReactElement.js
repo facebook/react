@@ -34,16 +34,20 @@ var specialPropKeyWarningShown, specialPropRefWarningShown;
 
 function hasValidRef(config) {
   if (__DEV__) {
-    return hasOwnProperty.call(config, 'ref') &&
-      !Object.getOwnPropertyDescriptor(config, 'ref').get;
+    if (hasOwnProperty.call(config, 'ref') &&
+        Object.getOwnPropertyDescriptor(config, 'ref').get) {
+      return false;
+    }
   }
   return config.ref !== undefined;
 }
 
 function hasValidKey(config) {
   if (__DEV__) {
-    return hasOwnProperty.call(config, 'key') &&
-      !Object.getOwnPropertyDescriptor(config, 'key').get;
+    if (hasOwnProperty.call(config, 'key') &&
+        Object.getOwnPropertyDescriptor(config, 'key').get) {
+      return false;
+    }
   }
   return config.key !== undefined;
 }
