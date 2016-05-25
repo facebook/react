@@ -7,11 +7,26 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+/*
+ * TODO
+ * 1. Branch on `process.env.NODE_ENV`
+ * 2. Read if JSON exists
+ * 3. Keep `%s`s
+ * 4. Concat strings (e.g., 'err' + 'msg' + 'bla')
+ * 5. Error out when the JSON is out of date
+ * 6. Figure out how to test this guy
+ * 7. Add comments back
+ */
 'use strict';
+
+var MapBuilder = require('./MapBuilder');
+
+var countFiles = require('./countFiles');
+var shouldConstructNewMap = require('./shouldConstructNewMap');
+var writeJSON = require('./writeJSON');
 
 module.exports = function(babel) {
   var t = babel.types;
-
   var SEEN_SYMBOL = Symbol();
 
   var DEV_EXPRESSION = t.binaryExpression(
@@ -28,8 +43,33 @@ module.exports = function(babel) {
     t.stringLiteral('production')
   );
 
+  var mBuilder = new MapBuilder();
+
+  var options = {};
+  var currentFileCount = 0;
+  var totalFileCount = countFiles();
+
   return {
     visitor: {
+      Program: {
+        enter: function(path, state) {
+          if (currentFileCount === 0) {
+            options.shouldConstructNewMap = shouldConstructNewMap(state.opts.output);
+          }
+
+          currentFileCount++;
+        },
+        exit: function(path, state) {
+          if (currentFileCount > totalFileCount) {
+            throw new Error('This should never happen. Write a better error msg here'); // TODO
+          }
+
+          if (currentFileCount === totalFileCount) {
+            console.log('done!');
+            writeJSON(mBuilder.generate(), state.opts.output);
+          }
+        },
+      },
       Identifier: {
         enter: function(path) {
           // Do nothing when testing
@@ -54,36 +94,23 @@ module.exports = function(babel) {
             return;
           }
           if (path.get('callee').isIdentifier({name: 'invariant'})) {
-            // Turns this code:
-            //
-            // invariant(condition, argument, argument);
-            //
-            // into this:
-            //
-            // if (!condition) {
-            //   if ("production" !== process.env.NODE_ENV) {
-            //     invariant(false, argument, argument);
-            //   } else {
-            //     invariant(false);
-            //   }
-            // }
-            //
-            // Specifically this does 2 things:
-            // 1. Checks the condition first, preventing an extra function call.
-            // 2. Adds an environment check so that verbose error messages aren't
-            //    shipped to production.
-            // The generated code is longer than the original code but will dead
-            // code removal in a minifier will strip that out.
             var condition = node.arguments[0];
+            var errorMsg = node.arguments[1].value;
+            // TODO branch on `node.arguments[1]`'s type
+            var prodErrorId = mBuilder.add(errorMsg);
+
             var devInvariant = t.callExpression(
               node.callee,
               [t.booleanLiteral(false)].concat(node.arguments.slice(1))
             );
+
             devInvariant[SEEN_SYMBOL] = true;
             var prodInvariant = t.callExpression(
               node.callee,
-              [t.booleanLiteral(false)]
+              // TODO add `%s`s
+              [t.booleanLiteral(false), t.stringLiteral(`Production Error #${prodErrorId}`)]
             );
+
             prodInvariant[SEEN_SYMBOL] = true;
             path.replaceWith(t.ifStatement(
               t.unaryExpression('!', condition),
