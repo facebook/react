@@ -275,6 +275,29 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div>foo</div>);
   });
 
+  it('can fail context when shallowly rendering', function() {
+    spyOn(console, 'error');
+    var SimpleComponent = React.createClass({
+      contextTypes: {
+        name: React.PropTypes.string.isRequired,
+      },
+      render: function() {
+        return <div>{this.context.name}</div>;
+      },
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(
+      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
+      'Warning: Failed context type: Required context `name` was not ' +
+      'specified in `SimpleComponent`.\n' +
+      '    in SimpleComponent (at **)'
+    );
+  });
+
   it('can scryRenderedDOMComponentsWithClass with TextComponent', function() {
     var Wrapper = React.createClass({
       render: function() {
