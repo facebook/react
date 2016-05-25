@@ -18,6 +18,10 @@ describe('ReactDOMComponent', function() {
   var ReactDOMFeatureFlags;
   var ReactDOMServer;
 
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   beforeEach(function() {
     jest.resetModuleRegistry();
     React = require('React');
@@ -144,6 +148,17 @@ describe('ReactDOMComponent', function() {
       style.background = 'blue';
       ReactDOM.render(<span style={style}></span>, div);
       expect(console.error.argsForCall.length).toBe(2);
+    });
+
+    it('should warn for unknown prop', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div foo="bar" />, container);
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
+        'Warning: Unknown prop `foo` on <div> tag. Remove this prop from the element. ' +
+        'For details, see https://fb.me/react-unknown-prop\n    in div (at **)'
+      );
     });
 
     it('should warn about styles with numeric string values for non-unitless properties', function() {
@@ -1290,15 +1305,15 @@ describe('ReactDOMComponent', function() {
       ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
       expect(console.error.argsForCall.length).toBe(2);
       expect(
-        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+        normalizeCodeLocInfo(console.error.argsForCall[0][0])
       ).toBe(
-        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)'
       );
       expect(
-        console.error.argsForCall[1][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+        normalizeCodeLocInfo(console.error.argsForCall[1][0])
       ).toBe(
         'Warning: Unknown event handler property onclick. Did you mean ' +
-        '`onClick`? (**:*)'
+        '`onClick`?\n    in input (at **)'
       );
     });
 
@@ -1312,10 +1327,11 @@ describe('ReactDOMComponent', function() {
       ReactDOMServer.renderToString(<div class="paladin" />, container);
       expect(console.error.argsForCall.length).toBe(1);
       expect(
-        console.error.argsForCall[0][0].replace(/\(.+?:\d+\)/g, '(**:*)')
+        normalizeCodeLocInfo(console.error.argsForCall[0][0])
       ).toBe(
-        'Warning: Unknown DOM property class. Did you mean className? (**:*)'
+        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)'
       );
+
     });
 
     it('gives source code refs for unknown prop warning for exact elements ', function() {
@@ -1333,10 +1349,12 @@ describe('ReactDOMComponent', function() {
 
       expect(console.error.argsForCall.length).toBe(2);
 
-      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      expect(console.error.argsForCall[0][0]).toContain('className');
+      var matches = console.error.argsForCall[0][0].match(/.*\(.*:(\d+)\).*/);
       var previousLine = matches[1];
 
-      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      expect(console.error.argsForCall[1][0]).toContain('onClick');
+      matches = console.error.argsForCall[1][0].match(/.*\(.*:(\d+)\).*/);
       var currentLine = matches[1];
 
       //verify line number has a proper relative difference,
@@ -1382,10 +1400,12 @@ describe('ReactDOMComponent', function() {
 
       expect(console.error.argsForCall.length).toBe(2);
 
-      var matches = console.error.argsForCall[0][0].match(/.*className.*\(.*:(\d+)\)/);
+      expect(console.error.argsForCall[0][0]).toContain('className');
+      var matches = console.error.argsForCall[0][0].match(/.*\(.*:(\d+)\).*/);
       var previousLine = matches[1];
 
-      matches = console.error.argsForCall[1][0].match(/.*onClick.*\(.*:(\d+)\)/);
+      expect(console.error.argsForCall[1][0]).toContain('onClick');
+      matches = console.error.argsForCall[1][0].match(/.*\(.*:(\d+)\).*/);
       var currentLine = matches[1];
 
       //verify line number has a proper relative difference,
