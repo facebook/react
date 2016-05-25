@@ -273,7 +273,7 @@ describe('ReactMultiChildReconcile', function() {
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeTruthy();
     expect(statusDisplays.jcw.getInternalState())
-        .toNotBe(startingInternalState);
+        .not.toBe(startingInternalState);
   });
 
   it('should create unique identity', function() {

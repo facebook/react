@@ -27,31 +27,31 @@ describe('ReactDOMDebugTool', function() {
 
     ReactDOMDebugTool.addDevtool(devtool1);
     ReactDOMDebugTool.onTestEvent();
-    expect(handler1.calls.length).toBe(1);
-    expect(handler2.calls.length).toBe(0);
+    expect(handler1.calls.count()).toBe(1);
+    expect(handler2.calls.count()).toBe(0);
 
     ReactDOMDebugTool.onTestEvent();
-    expect(handler1.calls.length).toBe(2);
-    expect(handler2.calls.length).toBe(0);
+    expect(handler1.calls.count()).toBe(2);
+    expect(handler2.calls.count()).toBe(0);
 
     ReactDOMDebugTool.addDevtool(devtool2);
     ReactDOMDebugTool.onTestEvent();
-    expect(handler1.calls.length).toBe(3);
-    expect(handler2.calls.length).toBe(1);
+    expect(handler1.calls.count()).toBe(3);
+    expect(handler2.calls.count()).toBe(1);
 
     ReactDOMDebugTool.onTestEvent();
-    expect(handler1.calls.length).toBe(4);
-    expect(handler2.calls.length).toBe(2);
+    expect(handler1.calls.count()).toBe(4);
+    expect(handler2.calls.count()).toBe(2);
 
     ReactDOMDebugTool.removeDevtool(devtool1);
     ReactDOMDebugTool.onTestEvent();
-    expect(handler1.calls.length).toBe(4);
-    expect(handler2.calls.length).toBe(3);
+    expect(handler1.calls.count()).toBe(4);
+    expect(handler2.calls.count()).toBe(3);
 
     ReactDOMDebugTool.removeDevtool(devtool2);
     ReactDOMDebugTool.onTestEvent();
-    expect(handler1.calls.length).toBe(4);
-    expect(handler2.calls.length).toBe(3);
+    expect(handler1.calls.count()).toBe(4);
+    expect(handler2.calls.count()).toBe(3);
   });
 
   it('warns once when an error is thrown in devtool', () => {
@@ -63,13 +63,13 @@ describe('ReactDOMDebugTool', function() {
     });
 
     ReactDOMDebugTool.onTestEvent();
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'exception thrown by devtool while handling ' +
       'onTestEvent: Error: Hi.'
     );
 
     ReactDOMDebugTool.onTestEvent();
-    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 });

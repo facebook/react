@@ -76,10 +76,10 @@ describe('ReactElement', function() {
         );
       },
     });
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
     ReactDOM.render(<Parent />, container);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `key` is not a prop. Trying to access it will result ' +
       'in `undefined` being returned. If you need to access the same ' +
       'value within the child component, you should pass it as a different ' +
@@ -104,10 +104,10 @@ describe('ReactElement', function() {
         );
       },
     });
-    expect(console.error.calls.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
     ReactDOM.render(<Parent />, container);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `ref` is not a prop. Trying to access it will result ' +
       'in `undefined` being returned. If you need to access the same ' +
       'value within the child component, you should pass it as a different ' +
@@ -149,8 +149,8 @@ describe('ReactElement', function() {
     React.createElement('div', {foo: 1});
     expect(console.error).not.toHaveBeenCalled();
     React.createElement('div', Object.create({foo: 1}));
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'React.createElement(...): Expected props argument to be a plain object. ' +
       'Properties defined in its prototype chain will be ignored.'
     );
@@ -208,7 +208,7 @@ describe('ReactElement', function() {
       children: 'text',
     }, a);
     expect(element.props.children).toBe(a);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('does not override children if no rest args are provided', function() {
@@ -217,7 +217,7 @@ describe('ReactElement', function() {
       children: 'text',
     });
     expect(element.props.children).toBe('text');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('overrides children if null is provided as an argument', function() {
@@ -226,7 +226,7 @@ describe('ReactElement', function() {
       children: 'text',
     }, null);
     expect(element.props.children).toBe(null);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('overrides children if undefined is provided as an argument', function() {
@@ -248,7 +248,7 @@ describe('ReactElement', function() {
     var c = 3;
     var element = React.createFactory(ComponentClass)(null, a, b, c);
     expect(element.props.children).toEqual([1, 2, 3]);
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
@@ -272,7 +272,7 @@ describe('ReactElement', function() {
 
     var element = React.createElement(StaticMethodComponentClass);
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
@@ -440,7 +440,7 @@ describe('ReactElement', function() {
     });
     var test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test

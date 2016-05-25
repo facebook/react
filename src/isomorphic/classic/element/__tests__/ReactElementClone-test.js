@@ -71,8 +71,8 @@ describe('ReactElementClone', function() {
     React.cloneElement('div', {foo: 1});
     expect(console.error).not.toHaveBeenCalled();
     React.cloneElement('div', Object.create({foo: 1}));
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'React.cloneElement(...): Expected props argument to be a plain object. ' +
       'Properties defined in its prototype chain will be ignored.'
     );
@@ -213,8 +213,8 @@ describe('ReactElementClone', function() {
 
     React.cloneElement(<div />, null, [<div />, <div />]);
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -224,7 +224,7 @@ describe('ReactElementClone', function() {
 
     React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the element is directly in rest args', function() {
@@ -232,7 +232,7 @@ describe('ReactElementClone', function() {
 
     React.cloneElement(<div />, null, <div />, <div />);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the array contains a non-element', function() {
@@ -240,7 +240,7 @@ describe('ReactElementClone', function() {
 
     React.cloneElement(<div />, null, [{}, {}]);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should check declared prop types after clone', function() {
@@ -267,8 +267,8 @@ describe('ReactElementClone', function() {
       },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
       'expected `string`.\n' +

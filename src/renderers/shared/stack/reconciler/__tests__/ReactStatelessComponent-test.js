@@ -106,8 +106,8 @@ describe('ReactStatelessComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrow();
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'NotAComponent(...): A valid React element (or null) must be returned. ' +
       'You may have returned undefined, an array or some other invalid object.'
     );
@@ -120,7 +120,7 @@ describe('ReactStatelessComponent', function() {
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Child test="test" />);
-    }).toThrow(
+    }).toThrowError(
       'Stateless function components cannot have refs.'
     );
   });
@@ -136,8 +136,8 @@ describe('ReactStatelessComponent', function() {
     });
     ReactTestUtils.renderIntoDocument(<Parent/>);
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Stateless function components cannot be given refs ' +
       '(See ref "stateless" in StatelessComponent created by Parent). ' +
       'Attempts to access this ref will fail.'
@@ -160,9 +160,9 @@ describe('ReactStatelessComponent', function() {
 
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(<Child />);
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('a unique "key" prop');
-    expect(console.error.argsForCall[0][0]).toContain('Child');
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain('a unique "key" prop');
+    expect(console.error.calls.argsFor(0)[0]).toContain('Child');
   });
 
   it('should support default props and prop types', function() {
@@ -174,9 +174,9 @@ describe('ReactStatelessComponent', function() {
 
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(<Child />);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
     expect(
-      console.error.argsForCall[0][0].replace(/\(at .+?:\d+\)/g, '(at **)')
+      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
       'Warning: Failed prop type: Invalid prop `test` of type `number` ' +
       'supplied to `Child`, expected `string`.\n' +
@@ -239,8 +239,8 @@ describe('ReactStatelessComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrow();  // has no method 'render'
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'NotAComponent(...): A valid React element (or null) must be returned. You may ' +
       'have returned undefined, an array or some other invalid object.'
     );

@@ -250,7 +250,7 @@ describe('ReactServerRendering', function() {
       spyOn(console, 'error');
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
-      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.calls.count()).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -266,7 +266,7 @@ describe('ReactServerRendering', function() {
           ReactServerRendering,
           'not a component'
         )
-      ).toThrow(
+      ).toThrowError(
         'renderToString(): You must pass a valid ReactElement.'
       );
     });
@@ -375,7 +375,7 @@ describe('ReactServerRendering', function() {
           ReactServerRendering,
           'not a component'
         )
-      ).toThrow(
+      ).toThrowError(
         'renderToStaticMarkup(): You must pass a valid ReactElement.'
       );
     });

@@ -17,6 +17,7 @@ declare function xit(name: string, fn: any): void;
 interface Expect {
   not: Expect
   toThrow(message?: string): void
+  toThrowError(message?: string): void
   toBe(value: any): void
   toEqual(value: any): void
   toBeFalsy(): void
