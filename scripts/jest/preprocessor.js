@@ -13,29 +13,26 @@ var tsPreprocessor = require('./ts-preprocessor');
 
 // This assumes the module map has been built. This might not be safe.
 // We should consider consuming this from a built fbjs module from npm.
-var moduleMap = require('fbjs/module-map');
-var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
+var fbjsConfigurePreset = require('babel-preset-fbjs/configure');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
 var pathToBabel = path.join(require.resolve('babel-core'), '..', 'package.json');
-var pathToModuleMap = require.resolve('fbjs/module-map');
-var pathToBabelPluginDev = require.resolve('fbjs-scripts/babel-6/dev-expression');
-var pathToBabelPluginModules = require.resolve('fbjs-scripts/babel-6/rewrite-modules');
 var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
+var pathToFBJSPreset = path.join(require.resolve('babel-preset-fbjs'), '..', 'package.json');
+var pathToModuleMap = require.resolve('fbjs/module-map');
 
 // TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
-  plugins: [
-    [babelPluginModules, {
-      map: Object.assign(
-        {},
-        moduleMap,
-        {
-          'object-assign': 'object-assign',
-        }
-      ),
-    }],
+  presets: [
+    fbjsConfigurePreset({
+      rewriteModules: {
+        map: Object.assign(
+          {'object-assign': 'object-assign'},
+          require('fbjs/module-map')
+        ),
+      },
+    }),
   ],
   retainLines: true,
 };
@@ -52,13 +49,17 @@ module.exports = {
       !filePath.match(/\/node_modules\//) &&
       !filePath.match(/\/third_party\//)
     ) {
-      return babel.transform(
+      var code =
+      babel.transform(
         src,
         Object.assign(
           {filename: path.relative(process.cwd(), filePath)},
           babelOptions
         )
       ).code;
+      if (/ReactElementValidator\-test/.test(filePath))
+        console.log(code);
+      return code;
     }
     return src;
   },
@@ -67,8 +68,7 @@ module.exports = {
     __filename,
     pathToBabel,
     pathToBabelrc,
+    pathToFBJSPreset,
     pathToModuleMap,
-    pathToBabelPluginDev,
-    pathToBabelPluginModules,
   ]),
 };
