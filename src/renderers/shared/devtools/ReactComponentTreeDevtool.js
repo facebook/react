@@ -14,6 +14,7 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var invariant = require('invariant');
+var warning = require('warning');
 
 var tree = {};
 var unmountedIDs = {};
@@ -67,7 +68,13 @@ function describeID(id) {
   if (ownerID) {
     ownerName = ReactComponentTreeDevtool.getDisplayName(ownerID);
   }
-  return describeComponentFrame(name, element._source, ownerName);
+  warning(
+    element,
+    'ReactComponentTreeDevtool: Missing React element for debugID %s when ' +
+    'building stack',
+    id
+  );
+  return describeComponentFrame(name, element && element._source, ownerName);
 }
 
 var ReactComponentTreeDevtool = {
