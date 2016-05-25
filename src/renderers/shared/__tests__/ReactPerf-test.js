@@ -389,28 +389,28 @@ describe('ReactPerf', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
     ReactPerf.getMeasurementsSummaryMap(measurements);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
       '`ReactPerf.getWasted(...)` instead.'
     );
 
     ReactPerf.getMeasurementsSummaryMap(measurements);
-    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('warns once when using printDOM', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
     ReactPerf.printDOM(measurements);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.printDOM(...)` is deprecated. Use ' +
       '`ReactPerf.printOperations(...)` instead.'
     );
 
     ReactPerf.printDOM(measurements);
-    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('returns isRunning state', () => {

@@ -495,7 +495,7 @@ describe('ReactUpdates', function() {
 
   it('should share reconcile transaction across different roots', function() {
     var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
-    spyOn(ReconcileTransaction, 'getPooled').andCallThrough();
+    spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
 
     var Component = React.createClass({
       render: function() {
@@ -511,7 +511,7 @@ describe('ReactUpdates', function() {
       ReactDOM.render(<Component text="A1" />, containerA);
       ReactDOM.render(<Component text="B1" />, containerB);
     });
-    expect(ReconcileTransaction.getPooled.calls.length).toBe(2);
+    expect(ReconcileTransaction.getPooled.calls.count()).toBe(2);
 
     // ...but updates are! Here only one more transaction is used, which means
     // we only have to initialize and close the wrappers once.
@@ -519,7 +519,7 @@ describe('ReactUpdates', function() {
       ReactDOM.render(<Component text="A2" />, containerA);
       ReactDOM.render(<Component text="B2" />, containerB);
     });
-    expect(ReconcileTransaction.getPooled.calls.length).toBe(3);
+    expect(ReconcileTransaction.getPooled.calls.count()).toBe(3);
   });
 
   it('should queue mount-ready handlers across different roots', function() {
@@ -929,10 +929,10 @@ describe('ReactUpdates', function() {
 
       ReactDOM.render(<Foo />, container);
 
-      expect(console.time.argsForCall.length).toBe(1);
-      expect(console.time.argsForCall[0][0]).toBe('React update: Foo');
-      expect(console.timeEnd.argsForCall.length).toBe(1);
-      expect(console.timeEnd.argsForCall[0][0]).toBe('React update: Foo');
+      expect(console.time.calls.count()).toBe(1);
+      expect(console.time.calls.argsFor(0)[0]).toBe('React update: Foo');
+      expect(console.timeEnd.calls.count()).toBe(1);
+      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React update: Foo');
     } finally {
       ReactFeatureFlags.logTopLevelRenders = false;
     }
@@ -953,15 +953,15 @@ describe('ReactUpdates', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    expect(() => component.setState({}, 'no')).toThrow(
+    expect(() => component.setState({}, 'no')).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => component.setState({}, {})).toThrow(
+    expect(() => component.setState({}, {})).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => component.setState({}, new Foo())).toThrow(
+    expect(() => component.setState({}, new Foo())).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
@@ -982,15 +982,15 @@ describe('ReactUpdates', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    expect(() => component.replaceState({}, 'no')).toThrow(
+    expect(() => component.replaceState({}, 'no')).toThrowError(
       'replaceState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => component.replaceState({}, {})).toThrow(
+    expect(() => component.replaceState({}, {})).toThrowError(
       'replaceState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => component.replaceState({}, new Foo())).toThrow(
+    expect(() => component.replaceState({}, new Foo())).toThrowError(
       'replaceState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
@@ -1011,15 +1011,15 @@ describe('ReactUpdates', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    expect(() => component.forceUpdate('no')).toThrow(
+    expect(() => component.forceUpdate('no')).toThrowError(
       'forceUpdate(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => component.forceUpdate({})).toThrow(
+    expect(() => component.forceUpdate({})).toThrowError(
       'forceUpdate(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => component.forceUpdate(new Foo())).toThrow(
+    expect(() => component.forceUpdate(new Foo())).toThrowError(
       'forceUpdate(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );

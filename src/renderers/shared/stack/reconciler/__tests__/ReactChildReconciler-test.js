@@ -40,8 +40,8 @@ describe('ReactChildReconciler', function() {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Child keys must be unique; when two children share a key, only the first child will be used.'
     );
   });
@@ -69,8 +69,8 @@ describe('ReactChildReconciler', function() {
 
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.argsForCall[0][0])).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
