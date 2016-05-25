@@ -78,7 +78,7 @@ describe('ReactEmptyComponent', function() {
     });
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Component />);
-    }).toThrow(
+    }).toThrowError(
       'Component.render(): A valid React element (or null) must be returned. You may ' +
       'have returned undefined, an array or some other invalid object.'
     );
@@ -99,11 +99,11 @@ describe('ReactEmptyComponent', function() {
     ReactTestUtils.renderIntoDocument(instance1);
     ReactTestUtils.renderIntoDocument(instance2);
 
-    expect(log.argsForCall.length).toBe(4);
-    expect(log.argsForCall[0][0]).toBe(null);
-    expect(log.argsForCall[1][0].tagName).toBe('DIV');
-    expect(log.argsForCall[2][0].tagName).toBe('DIV');
-    expect(log.argsForCall[3][0]).toBe(null);
+    expect(log.calls.count()).toBe(4);
+    expect(log.calls.argsFor(0)[0]).toBe(null);
+    expect(log.calls.argsFor(1)[0].tagName).toBe('DIV');
+    expect(log.calls.argsFor(2)[0].tagName).toBe('DIV');
+    expect(log.calls.argsFor(3)[0]).toBe(null);
   });
 
   it('should be able to switch in a list of children', () => {
@@ -121,13 +121,13 @@ describe('ReactEmptyComponent', function() {
       </div>
     );
 
-    expect(log.argsForCall.length).toBe(6);
-    expect(log.argsForCall[0][0]).toBe(null);
-    expect(log.argsForCall[1][0]).toBe(null);
-    expect(log.argsForCall[2][0]).toBe(null);
-    expect(log.argsForCall[3][0].tagName).toBe('DIV');
-    expect(log.argsForCall[4][0].tagName).toBe('DIV');
-    expect(log.argsForCall[5][0].tagName).toBe('DIV');
+    expect(log.calls.count()).toBe(6);
+    expect(log.calls.argsFor(0)[0]).toBe(null);
+    expect(log.calls.argsFor(1)[0]).toBe(null);
+    expect(log.calls.argsFor(2)[0]).toBe(null);
+    expect(log.calls.argsFor(3)[0].tagName).toBe('DIV');
+    expect(log.calls.argsFor(4)[0].tagName).toBe('DIV');
+    expect(log.calls.argsFor(5)[0].tagName).toBe('DIV');
   });
 
   it('should distinguish between a script placeholder and an actual script tag',
@@ -150,11 +150,11 @@ describe('ReactEmptyComponent', function() {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
-      expect(log.argsForCall.length).toBe(4);
-      expect(log.argsForCall[0][0]).toBe(null);
-      expect(log.argsForCall[1][0].tagName).toBe('SCRIPT');
-      expect(log.argsForCall[2][0].tagName).toBe('SCRIPT');
-      expect(log.argsForCall[3][0]).toBe(null);
+      expect(log.calls.count()).toBe(4);
+      expect(log.calls.argsFor(0)[0]).toBe(null);
+      expect(log.calls.argsFor(1)[0].tagName).toBe('SCRIPT');
+      expect(log.calls.argsFor(2)[0].tagName).toBe('SCRIPT');
+      expect(log.calls.argsFor(3)[0]).toBe(null);
     }
   );
 
@@ -191,11 +191,11 @@ describe('ReactEmptyComponent', function() {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
-      expect(log.argsForCall.length).toBe(4);
-      expect(log.argsForCall[0][0].tagName).toBe('DIV');
-      expect(log.argsForCall[1][0]).toBe(null);
-      expect(log.argsForCall[2][0]).toBe(null);
-      expect(log.argsForCall[3][0].tagName).toBe('DIV');
+      expect(log.calls.count()).toBe(4);
+      expect(log.calls.argsFor(0)[0].tagName).toBe('DIV');
+      expect(log.calls.argsFor(1)[0]).toBe(null);
+      expect(log.calls.argsFor(2)[0]).toBe(null);
+      expect(log.calls.argsFor(3)[0].tagName).toBe('DIV');
     }
   );
 
@@ -247,7 +247,7 @@ describe('ReactEmptyComponent', function() {
     var div = document.createElement('div');
     expect(function() {
       ReactDOM.render(null, div);
-    }).toThrow(
+    }).toThrowError(
       'ReactDOM.render(): Invalid component element.'
     );
   });

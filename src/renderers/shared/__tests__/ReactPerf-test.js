@@ -329,32 +329,88 @@ describe('ReactPerf', function() {
     }]);
   });
 
+  it('should not count time in a portal towards lifecycle method', function() {
+    function Foo() {
+      return null;
+    }
+
+    var portalContainer = document.createElement('div');
+    class Portal extends React.Component {
+      componentDidMount() {
+        ReactDOM.render(<Foo />, portalContainer);
+      }
+      render() {
+        return null;
+      }
+    }
+
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Portal />, container);
+    });
+
+    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+      key: 'Portal',
+      instanceCount: 1,
+      totalDuration: 6,
+      counts: {
+        ctor: 1,
+        componentDidMount: 1,
+        render: 1,
+      },
+      durations: {
+        ctor: 1,
+        // We want to exclude nested imperative ReactDOM.render() from lifecycle hook's own time.
+        // Otherwise it would artificially float to the top even though its exclusive time is small.
+        // This is how we get 4 as a number with the performanceNow() mock:
+        // - we capture the time we enter componentDidMount (n = 0)
+        // - we capture the time when we enter a nested flush (n = 1)
+        // - in the nested flush, we call it twice: before and after <Foo /> rendering. (n = 3)
+        // - we capture the time when we exit a nested flush (n = 4)
+        // - we capture the time we exit componentDidMount (n = 5)
+        // Time spent in componentDidMount = (5 - 0 - (4 - 3)) = 4.
+        componentDidMount: 4,
+        render: 1,
+      },
+    }, {
+      key: 'Foo',
+      instanceCount: 1,
+      totalDuration: 1,
+      counts: {
+        render: 1,
+      },
+      durations: {
+        render: 1,
+      },
+    }]);
+  });
+
   it('warns once when using getMeasurementsSummaryMap', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
     ReactPerf.getMeasurementsSummaryMap(measurements);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
       '`ReactPerf.getWasted(...)` instead.'
     );
 
     ReactPerf.getMeasurementsSummaryMap(measurements);
-    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('warns once when using printDOM', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
     ReactPerf.printDOM(measurements);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.printDOM(...)` is deprecated. Use ' +
       '`ReactPerf.printOperations(...)` instead.'
     );
 
     ReactPerf.printDOM(measurements);
-    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('returns isRunning state', () => {
