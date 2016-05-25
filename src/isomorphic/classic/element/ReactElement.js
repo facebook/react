@@ -311,7 +311,7 @@ ReactElement.cloneElement = function(element, config, children) {
       defaultProps = element.type.defaultProps;
     }
     for (propName in config) {
-      if (config.hasOwnProperty(propName) &&
+      if (hasOwnProperty.call(config, propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props
