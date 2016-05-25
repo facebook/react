@@ -257,7 +257,7 @@ describe('ReactDOMTextarea', function() {
     var stub = <textarea>giraffe</textarea>;
     var node = renderTextarea(stub, container);
 
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
     expect(node.value).toBe('giraffe');
 
     // Changing children should do nothing, it functions like `defaultValue`.
@@ -296,14 +296,14 @@ describe('ReactDOMTextarea', function() {
   it('should allow numbers as children', function() {
     spyOn(console, 'error');
     var node = renderTextarea(<textarea>{17}</textarea>);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
     expect(node.value).toBe('17');
   });
 
   it('should allow booleans as children', function() {
     spyOn(console, 'error');
     var node = renderTextarea(<textarea>{false}</textarea>);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
     expect(node.value).toBe('false');
   });
 
@@ -315,7 +315,7 @@ describe('ReactDOMTextarea', function() {
       },
     };
     var node = renderTextarea(<textarea>{obj}</textarea>);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
     expect(node.value).toBe('sharkswithlasers');
   });
 
@@ -328,7 +328,7 @@ describe('ReactDOMTextarea', function() {
       );
     }).toThrow();
 
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
 
     var node;
     expect(function() {
@@ -337,7 +337,7 @@ describe('ReactDOMTextarea', function() {
 
     expect(node.value).toBe('[object Object]');
 
-    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.calls.count()).toBe(2);
   });
 
   it('should support ReactLink', function() {
@@ -346,8 +346,8 @@ describe('ReactDOMTextarea', function() {
 
     spyOn(console, 'error');
     instance = renderTextarea(instance);
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
     );
 
@@ -373,14 +373,14 @@ describe('ReactDOMTextarea', function() {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       '`value` prop on `textarea` should not be null. ' +
       'Consider using the empty string to clear the component or `undefined` ' +
       'for uncontrolled components.'
     );
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('should warn if value and defaultValue are specified', function() {
@@ -388,7 +388,7 @@ describe('ReactDOMTextarea', function() {
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />
     );
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Textarea elements must be either controlled or uncontrolled ' +
       '(specify either the value prop, or the defaultValue prop, but not ' +
       'both). Decide between using a controlled or uncontrolled textarea ' +
@@ -399,7 +399,7 @@ describe('ReactDOMTextarea', function() {
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />
     );
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
 });

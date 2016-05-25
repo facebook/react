@@ -286,14 +286,14 @@ describe('ReactTransitionGroup', function() {
 
     ReactDOM.render(<Component />, container);
 
-    expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
       'only the first child will be used.'
     );
-    expect(normalizeCodeLocInfo(console.error.argsForCall[1][0])).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +

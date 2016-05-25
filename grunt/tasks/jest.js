@@ -73,7 +73,7 @@ function run(done, configPath) {
   grunt.log.writeln('running jest');
 
   var args = [
-    path.join('node_modules', 'jest-cli', 'bin', 'jest'),
+    path.join('node_modules', 'jest', 'bin', 'jest'),
     '--runInBand',
     '--no-watchman',
   ];
@@ -83,7 +83,12 @@ function run(done, configPath) {
   grunt.util.spawn({
     cmd: 'node',
     args: args,
-    opts: { stdio: 'inherit', env: { NODE_ENV: 'test' } },
+    opts: {
+      stdio: 'inherit',
+      env: Object.assign({}, process.env, {
+        NODE_ENV: 'test',
+      }),
+    },
   }, function(spawnErr, result, code) {
     if (spawnErr) {
       onError(spawnErr);
