@@ -234,12 +234,10 @@ const Surface = React.createClass({
     const Tag = Mode.Surface.tagName;
     return (
       <Tag
-        accesskey={props.accesskey}
         className={props.className}
         draggable={props.draggable}
         role={props.role}
         style={props.style}
-        tabindex={props.tabindex}
         title={props.title}
       />
     );
