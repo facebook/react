@@ -73,7 +73,7 @@ function run(done, configPath) {
   grunt.log.writeln('running jest');
 
   var args = [
-    path.join('node_modules', 'jest-cli', 'bin', 'jest'),
+    path.join('node_modules', 'jest', 'bin', 'jest'),
     '--runInBand',
     '--no-watchman',
   ];
