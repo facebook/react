@@ -170,7 +170,7 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('extracts null key and ref values when creating an element', function() {
+  it('extracts null key and ref', function() {
     var element = React.createFactory(ComponentClass)({
       key: null,
       ref: null,
@@ -184,7 +184,7 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('ignores undefined key and ref when creating an element', function() {
+  it('ignores undefined key and ref', function() {
     var props = {
       foo: '56',
       key: undefined,
@@ -199,7 +199,7 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('ignores key and ref getters when creating an element', function() {
+  it('ignores key and ref getters', function() {
     var props = {
       foo: '56',
     };
@@ -220,74 +220,6 @@ describe('ReactElement', function() {
     var expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
-  });
-
-  it('ignores key and ref getters when cloning an element', function() {
-    var element = React.createFactory(ComponentClass)({
-      key: '12',
-      ref: '34',
-      foo: '56',
-    });
-    var props = {
-      foo: 'ef',
-    };
-    Object.defineProperty(props, 'key', {
-      get: function() {
-        return 'ab';
-      },
-    });
-    Object.defineProperty(props, 'ref', {
-      get: function() {
-        return 'cd';
-      },
-    });
-    var clone = React.cloneElement(element, props);
-    expect(clone.type).toBe(ComponentClass);
-    expect(clone.key).toBe('12');
-    expect(clone.ref).toBe('34');
-    var expectation = {foo: 'ef'};
-    Object.freeze(expectation);
-    expect(clone.props).toEqual(expectation);
-  });
-
-  it('ignores undefined key and ref values when cloning an element', function() {
-    var element = React.createFactory(ComponentClass)({
-      key: '12',
-      ref: '34',
-      foo: '56',
-    });
-    var props = {
-      key: undefined,
-      ref: undefined,
-      foo: 'ef',
-    };
-    var clone = React.cloneElement(element, props);
-    expect(clone.type).toBe(ComponentClass);
-    expect(clone.key).toBe('12');
-    expect(clone.ref).toBe('34');
-    var expectation = {foo: 'ef'};
-    Object.freeze(expectation);
-    expect(clone.props).toEqual(expectation);
-  });
-
-  it('extracts null key and ref values when cloning an element', function() {
-    var element = React.createFactory(ComponentClass)({
-      key: '12',
-      ref: '34',
-      foo: '56',
-    });
-    var props = {
-      key: null,
-      ref: null,
-      foo: 'ef',
-    };
-    var clone = React.cloneElement(element, props);
-    expect(clone.type).toBe(ComponentClass);
-    expect(clone.key).toBe('null');
-    expect(clone.ref).toBe(null);
-    var expectation = {foo: 'ef'};
-    Object.freeze(expectation);
-    expect(clone.props).toEqual(expectation);
   });
 
   it('coerces the key to a string', function() {
@@ -347,18 +279,6 @@ describe('ReactElement', function() {
     }, null);
     expect(element.props.children).toBe(null);
     expect(console.error.calls.count()).toBe(0);
-  });
-
-  it('overrides children if undefined is provided as an argument', function() {
-    var element = React.createElement(ComponentClass, {
-      children: 'text',
-    }, undefined);
-    expect(element.props.children).toBe(undefined);
-
-    var element2 = React.cloneElement(React.createElement(ComponentClass, {
-      children: 'text',
-    }), {}, undefined);
-    expect(element2.props.children).toBe(undefined);
   });
 
   it('merges rest arguments onto the children prop in an array', function() {
@@ -488,29 +408,6 @@ describe('ReactElement', function() {
       React.createElement(Component, {prop: null})
     );
     expect(inst2.props.prop).toBe(null);
-  });
-
-  it('should normalize props with default values in cloning', function() {
-    var Component = React.createClass({
-      getDefaultProps: function() {
-        return {prop: 'testKey'};
-      },
-      render: function() {
-        return <span />;
-      },
-    });
-
-    var instance = React.createElement(Component);
-    var clonedInstance = React.cloneElement(instance, {prop: undefined});
-    expect(clonedInstance.props.prop).toBe('testKey');
-    var clonedInstance2 = React.cloneElement(instance, {prop: null});
-    expect(clonedInstance2.props.prop).toBe(null);
-
-    var instance2 = React.createElement(Component, {prop: 'newTestKey'});
-    var cloneInstance3 = React.cloneElement(instance2, {prop: undefined});
-    expect(cloneInstance3.props.prop).toBe('testKey');
-    var cloneInstance4 = React.cloneElement(instance2, {});
-    expect(cloneInstance4.props.prop).toBe('newTestKey');
   });
 
   it('throws when changing a prop (in dev) after element creation', function() {
@@ -703,4 +600,5 @@ describe('comparing jsx vs .createFactory() vs .createElement()', function() {
       expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
     });
   });
+
 });
