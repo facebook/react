@@ -32,17 +32,20 @@ var RESERVED_PROPS = {
 
 var specialPropKeyWarningShown, specialPropRefWarningShown;
 
-function isValidConfigRefOrKey(config, name) {
+function hasValidRef(config) {
   if (__DEV__) {
-    return hasOwnProperty.call(config, name) &&
-      !Object.getOwnPropertyDescriptor(config, name).get;
+    return hasOwnProperty.call(config, 'ref') &&
+      !Object.getOwnPropertyDescriptor(config, 'ref').get;
   }
-
-  return config[name] !== undefined;
+  return config.ref !== undefined;
 }
 
-function getConfigKey(config) {
-  return '' + config.key;
+function hasValidKey(config) {
+  if (__DEV__) {
+    return hasOwnProperty.call(config, 'key') &&
+      !Object.getOwnPropertyDescriptor(config, 'key').get;
+  }
+  return config.key !== undefined;
 }
 
 /**
@@ -153,12 +156,11 @@ ReactElement.createElement = function(type, config, children) {
       );
     }
 
-    if (isValidConfigRefOrKey(config, 'ref')) {
+    if (hasValidRef(config)) {
       ref = config.ref;
     }
-
-    if (isValidConfigRefOrKey(config, 'key')) {
-      key = getConfigKey(config);
+    if (hasValidKey(config)) {
+      key = '' + config.key;
     }
 
     self = config.__self === undefined ? null : config.__self;
@@ -313,14 +315,13 @@ ReactElement.cloneElement = function(element, config, children) {
       );
     }
 
-    if (isValidConfigRefOrKey(config, 'ref')) {
+    if (hasValidRef(config)) {
       // Silently steal the ref from the parent.
       ref = config.ref;
       owner = ReactCurrentOwner.current;
     }
-
-    if (isValidConfigRefOrKey(config, 'key')) {
-      key = getConfigKey(config);
+    if (hasValidKey(config)) {
+      key = '' + config.key;
     }
 
     // Remaining properties override existing props
