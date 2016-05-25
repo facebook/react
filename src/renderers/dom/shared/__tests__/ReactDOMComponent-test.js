@@ -498,30 +498,32 @@ describe('ReactDOMComponent', function() {
       ReactDOM.render(<div value="" />, container);
 
       var node = container.firstChild;
-      var nodeValue = ''; // node.value always returns undefined
-      var nodeValueSetter = jest.fn();
-      Object.defineProperty(node, 'value', {
-        get: function() {
-          return nodeValue;
-        },
-        set: nodeValueSetter.mockImplementation(function(newValue) {
-          nodeValue = newValue;
-        }),
-      });
 
-      function renderWithValueAndExpect(value, expected) {
-        ReactDOM.render(<div value={value} />, container);
-        expect(nodeValueSetter.mock.calls.length).toBe(expected);
-      }
+      var nodeValueSetter = jest.genMockFn();
 
-      renderWithValueAndExpect(undefined, 0);
-      renderWithValueAndExpect('', 0);
-      renderWithValueAndExpect('foo', 1);
-      renderWithValueAndExpect('foo', 1);
-      renderWithValueAndExpect(undefined, 2);
-      renderWithValueAndExpect(null, 2);
-      renderWithValueAndExpect('', 2);
-      renderWithValueAndExpect(undefined, 2);
+      var oldSetAttribute = node.setAttribute.bind(node);
+      node.setAttribute = function(key, value) {
+        oldSetAttribute(key, value);
+        nodeValueSetter(key, value);
+      };
+
+      ReactDOM.render(<div value="foo" />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div value="foo" />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div value={null} />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div value="" />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(2);
+
+      ReactDOM.render(<div />, container);
+      expect(nodeValueSetter.mock.calls.length).toBe(2);
     });
 
     it('should not incur unnecessary DOM mutations for boolean properties', function() {

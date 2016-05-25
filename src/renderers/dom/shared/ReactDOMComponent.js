@@ -241,6 +241,16 @@ function putListener() {
   );
 }
 
+function inputPostMount() {
+  var inst = this;
+  ReactDOMInput.postMountWrapper(inst);
+}
+
+function textareaPostMount() {
+  var inst = this;
+  ReactDOMTextarea.postMountWrapper(inst);
+}
+
 function optionPostMount() {
   var inst = this;
   ReactDOMOption.postMountWrapper(inst);
@@ -642,7 +652,17 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'input':
+        transaction.getReactMountReady().enqueue(
+          inputPostMount,
+          this
+        );
+        break;
       case 'textarea':
+        transaction.getReactMountReady().enqueue(
+          textareaPostMount,
+          this
+        );
+        break;
       case 'select':
       case 'button':
         if (props.autoFocus) {
@@ -657,6 +677,7 @@ ReactDOMComponent.Mixin = {
           optionPostMount,
           this
         );
+        break;
     }
 
     return mountImage;

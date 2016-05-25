@@ -108,7 +108,7 @@ describe('ReactStatelessComponent', function() {
     }).toThrow();
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toContain(
-      'NotAComponent(...): A valid React element (or null) must be returned. '+
+      'NotAComponent(...): A valid React element (or null) must be returned. ' +
       'You may have returned undefined, an array or some other invalid object.'
     );
   });
