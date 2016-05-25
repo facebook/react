@@ -165,7 +165,7 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    var expectation = {foo:'56'};
+    var expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
@@ -191,7 +191,7 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    var expectation = {foo:'56'};
+    var expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
@@ -223,7 +223,7 @@ describe('ReactElement', function() {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
     expect(clone.ref).toBe('34');
-    var expectation = {foo:'ef'};
+    var expectation = {foo: 'ef'};
     Object.freeze(expectation);
     expect(clone.props).toEqual(expectation);
   });
@@ -245,7 +245,7 @@ describe('ReactElement', function() {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
     expect(clone.ref).toBe(null);
-    var expectation = {foo:'ef'};
+    var expectation = {foo: 'ef'};
     Object.freeze(expectation);
     expect(clone.props).toEqual(expectation);
   });
@@ -258,7 +258,7 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    var expectation = {foo:'56'};
+    var expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
