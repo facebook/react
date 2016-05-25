@@ -10,11 +10,9 @@
  */
 'use strict';
 
+/*:: import type { ErrorMap, MapBuilderInterface } from './Types' */
+
 var invertObject = require('./invertObject');
-
-/*:: type ErrorMap = {  [id: string]: string; }; */
-
-/*:: interface MapBuilderInterface { map: ErrorMap; counter: number }; */
 
 function MapBuilder(
   map/* : ?ErrorMap */,

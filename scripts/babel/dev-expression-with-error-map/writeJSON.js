@@ -10,10 +10,10 @@
  */
 'use strict';
 
+/*:: import type { ErrorMap } from './Types' */
+
 var path = require('path');
 var fs = require('fs');
-
-/*:: type ErrorMap = {  [id: string]: string; }; */
 
 function writeJSON(
   errorObj/* : ErrorMap */,

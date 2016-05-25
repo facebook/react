@@ -8,13 +8,13 @@
  */
 'use strict';
 
-var path = require('path');
+/*:: import type { ErrorMap } from './Types' */
 
-/*:: type ErrorMap = {  [id: string]: string; }; */
+var path = require('path');
 
 function getCurrentErrorMap(targetFile/* : string */)/* : ?ErrorMap */ {
   var targetFilePath = path.join(__dirname, '../../../', targetFile);
-  
+
   try {
     // flow doesn't support this dynamic `require()`
     var targetVersion = require(targetFilePath);

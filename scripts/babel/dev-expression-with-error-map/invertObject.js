@@ -10,7 +10,7 @@
  */
 'use strict';
 
-/*:: type ErrorMap = {  [id: string]: string; }; */
+/*:: import type { ErrorMap } from './Types' */
 
 /**
  * turns

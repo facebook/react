@@ -10,17 +10,5 @@
  */
 'use strict';
 
-/*:: import type { ErrorMap } from './Types' */
-
-function shouldConstructNewMap(
-  currentErrorMap/* : ErrorMap */,
-  currentReactVersion/* : string */
-)/* : boolean */ {
-  if (currentErrorMap) {
-    return currentReactVersion !== currentErrorMap.version;
-  }
-
-  return true;
-}
-
-module.exports = shouldConstructNewMap;
+/*:: export type ErrorMap = {  [id: string]: string; }; */
+/*:: export interface MapBuilderInterface { map: ErrorMap; counter: number }; */
