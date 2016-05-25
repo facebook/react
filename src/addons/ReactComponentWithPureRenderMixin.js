@@ -40,8 +40,8 @@ var shallowCompare = require('shallowCompare');
  * See https://facebook.github.io/react/docs/pure-render-mixin.html
  */
 var ReactComponentWithPureRenderMixin = {
-  shouldComponentUpdate: function(nextProps, nextState, nextContext) {
-    return shallowCompare(this, nextProps, nextState, nextContext);
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
   },
 };
 
