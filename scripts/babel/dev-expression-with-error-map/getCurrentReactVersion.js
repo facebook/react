@@ -10,17 +10,8 @@
  */
 'use strict';
 
-/*:: type ErrorMap = {  [id: string]: string; }; */
-
-function shouldConstructNewMap(
-  currentErrorMap/* : ErrorMap */,
-  currentReactVersion/* : string */
-)/* : boolean */ {
-  if (currentErrorMap) {
-    return currentReactVersion !== currentErrorMap.version;
-  }
-
-  return true;
+function getCurrentReactVersion()/* : string */ {
+  return require('../../../package.json').version; // Ugh
 }
 
-module.exports = shouldConstructNewMap;
+module.exports = getCurrentReactVersion;

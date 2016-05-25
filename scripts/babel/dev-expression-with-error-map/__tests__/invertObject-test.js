@@ -19,8 +19,8 @@ describe('invertObject', () => {
 
   it('should invert key-values', () => {
     expect(invertObject({
-      a: 3,
-      b: 4,
+      a: '3',
+      b: '4',
     })).toEqual({
       3: 'a',
       4: 'b',
@@ -29,9 +29,9 @@ describe('invertObject', () => {
 
   it('should take the last value when there\'re duplications in vals', () => {
     expect(invertObject({
-      a: 3,
-      b: 4,
-      c: 3,
+      a: '3',
+      b: '4',
+      c: '3',
     })).toEqual({
       4: 'b',
       3: 'c',
@@ -40,15 +40,15 @@ describe('invertObject', () => {
 
   it('should perserve the original order', () => {
     expect(Object.keys(invertObject({
-      a: 3,
-      b: 4,
-      c: 3,
+      a: '3',
+      b: '4',
+      c: '3',
     }))).toEqual(['3', '4']);
 
     expect(objectValues(invertObject({
-      a: 3,
-      b: 4,
-      c: 3,
+      a: '3',
+      b: '4',
+      c: '3',
     }))).toEqual(['c', 'b']);
   });
 });

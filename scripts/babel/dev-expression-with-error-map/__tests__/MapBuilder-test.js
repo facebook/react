@@ -12,24 +12,24 @@ var MapBuilder = require('../MapBuilder');
 
 describe('MapBuilder', () => {
   it('should generate an empty map if nothing has happened', () => {
-    var mb = new MapBuilder();
-    expect(mb.generate()).toEqual({});
+    var mBuilder = new MapBuilder();
+    expect(mBuilder.generate()).toEqual({});
   });
 
   it('should reset correctly', () => {
-    var mb = new MapBuilder();
-    mb.add('foo');
-    mb.add('bar');
-    mb.reset();
-    mb.add('so wrong');
+    var mBuilder = new MapBuilder();
+    mBuilder.add('foo');
+    mBuilder.add('bar');
+    mBuilder.reset();
+    mBuilder.add('so wrong');
 
-    expect(mb.generate()).toEqual({
+    expect(mBuilder.generate()).toEqual({
       0: 'so wrong',
     });
   });
 
   it('should generate maps correctly', () => {
-    var mb = new MapBuilder();
+    var mBuilder = new MapBuilder();
     var testCases = [
       'foo is wrong',
       'bar is also wrong',
@@ -37,10 +37,10 @@ describe('MapBuilder', () => {
     ];
 
     testCases.forEach((errorMsg) => {
-      mb.add(errorMsg);
+      mBuilder.add(errorMsg);
     });
 
-    expect(mb.generate()).toEqual({
+    expect(mBuilder.generate()).toEqual({
       0: 'foo is wrong',
       1: 'bar is also wrong',
       2: 'everything is wrong',
@@ -48,7 +48,7 @@ describe('MapBuilder', () => {
   });
 
   it('should establish an one-to-one mapping', () => {
-    var mb = new MapBuilder();
+    var mBuilder = new MapBuilder();
     var testCases = [
       'foo is wrong',
       'foo is wrong',
@@ -67,10 +67,10 @@ describe('MapBuilder', () => {
     ];
 
     testCases.forEach((errorMsg) => {
-      mb.add(errorMsg);
+      mBuilder.add(errorMsg);
     });
 
-    expect(mb.generate()).toEqual({
+    expect(mBuilder.generate()).toEqual({
       0: 'foo is wrong',
       1: 'bar is also wrong',
       2: 'everything is wrong',
@@ -78,7 +78,7 @@ describe('MapBuilder', () => {
   });
 
   it('should return correct ids while adding items', () => {
-    var mb = new MapBuilder();
+    var mBuilder = new MapBuilder();
     var testCases = [
       'foo is wrong',
       'foo is wrong',
@@ -103,7 +103,7 @@ describe('MapBuilder', () => {
     };
 
     testCases.forEach((errorMsg) => {
-      expect(mb.add(errorMsg)).toBe(expectedStrToIdMapping[errorMsg]);
+      expect(mBuilder.add(errorMsg)).toBe(expectedStrToIdMapping[errorMsg]);
     });
   });
 });

@@ -6,22 +6,15 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
-/*
- * TODO
- * 1. Branch on `process.env.NODE_ENV`
- * 2. Read if JSON exists
- * 3. Keep `%s`s
- * 4. Concat strings (e.g., 'err' + 'msg' + 'bla')
- * 5. Error out when the JSON is out of date
- * 6. Figure out how to test this guy
- * 7. Add comments back
- */
 'use strict';
 
 var MapBuilder = require('./MapBuilder');
 
-var countFiles = require('./countFiles');
+var evalToString = require('./evalToString');
+var getCurrentErrorMap = require('./getCurrentErrorMap');
+var getCurrentReactVersion = require('./getCurrentReactVersion');
+var getFileCount = require('./getFileCount');
+var invertObject = require('./invertObject');
 var shouldConstructNewMap = require('./shouldConstructNewMap');
 var writeJSON = require('./writeJSON');
 
@@ -45,70 +38,129 @@ module.exports = function(babel) {
 
   var mBuilder = new MapBuilder();
 
-  var options = {};
   var currentFileCount = 0;
-  var totalFileCount = countFiles();
+  var existingErrorMap = null;
+  var totalFileCount = getFileCount();
+  var currentReactVersion = null;
 
   return {
     visitor: {
+      /*
+       * We use the `Program` visitor to generate the error map (tricky, I know).
+       */
       Program: {
         enter: function(path, state) {
-          if (currentFileCount === 0) {
-            options.shouldConstructNewMap = shouldConstructNewMap(state.opts.output);
+          if (process.env.NODE_ENV === 'test' || existingErrorMap) {
+            return;
+          }
+
+          if (currentFileCount === 0) { // figure out what to do
+            existingErrorMap = getCurrentErrorMap(state.opts.output);
+            currentReactVersion = getCurrentReactVersion();
+            if (shouldConstructNewMap(existingErrorMap, currentReactVersion)) {
+              existingErrorMap = null;
+            } else {
+              // here we invert the data object in memory for faster error code lookup
+              existingErrorMap.data = invertObject(existingErrorMap.data);
+            }
+
+            if (existingErrorMap) {
+              console.log(
+                'Found a valid error map (version ' + existingErrorMap.version + ').'
+              );
+            } else {
+              console.log(
+                'Existing error map cannot be found or is out of date. ' +
+                'Will generate a new one for version ' + currentReactVersion + '.'
+              );
+            }
           }
 
           currentFileCount++;
         },
+
         exit: function(path, state) {
+          if (process.env.NODE_ENV === 'test' || existingErrorMap) {
+            return;
+          }
+
           if (currentFileCount > totalFileCount) {
-            throw new Error('This should never happen. Write a better error msg here'); // TODO
+            throw new Error(
+              'Fatal: incorrect file count. ' +
+              'Please update the glob patterns in `ReactGlobPatterns.js`.'
+            );
           }
 
           if (currentFileCount === totalFileCount) {
-            console.log('done!');
-            writeJSON(mBuilder.generate(), state.opts.output);
+            console.log('Writing error map file to `' + state.opts.output + '`...');
+            var newMapData = mBuilder.generate();
+            writeJSON(newMapData, state.opts.output, currentReactVersion);
+            console.log(
+              'Successfully generated error map for version ' + currentReactVersion + '.'
+            );
           }
         },
       },
+
       Identifier: {
         enter: function(path) {
           // Do nothing when testing
           if (process.env.NODE_ENV === 'test') {
             return;
           }
+
           // replace __DEV__ with process.env.NODE_ENV !== 'production'
-          if (path.isIdentifier({name: '__DEV__'})) {
+          if (path.isIdentifier({ name: '__DEV__' })) {
             path.replaceWith(DEV_EXPRESSION);
           }
         },
       },
+
       CallExpression: {
         exit: function(path) {
-          var node = path.node;
           // Do nothing when testing
           if (process.env.NODE_ENV === 'test') {
             return;
           }
+
+          var node = path.node;
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
             return;
           }
           if (path.get('callee').isIdentifier({name: 'invariant'})) {
             var condition = node.arguments[0];
-            var errorMsg = node.arguments[1].value;
-            // TODO branch on `node.arguments[1]`'s type
-            var prodErrorId = mBuilder.add(errorMsg);
+
+            // error messages can be concatenated (`+`), so here's a
+            // trivial partial evaluator that interprets the literal value
+            var errorMsgLiteral = evalToString(node.arguments[1]);
+
+            var prodErrorId;
+            if (existingErrorMap) {
+              prodErrorId = existingErrorMap.data[errorMsgLiteral];
+              if (typeof prodErrorId === 'undefined') {
+                // TODO: add a "forceBuild" option to the plugin?
+                throw new Error(
+                  'Fatal: error message "' + errorMsgLiteral +
+                  '" cannot be found. The current React version ' +
+                  'and the error map are probably out of sync. ' +
+                  'Did you forget to bump the version number?'
+                );
+              }
+            } else {
+              prodErrorId = mBuilder.add(errorMsgLiteral);
+            }
 
             var devInvariant = t.callExpression(
               node.callee,
-              [t.booleanLiteral(false)].concat(node.arguments.slice(1))
+              [t.booleanLiteral(false), t.stringLiteral(errorMsgLiteral)].concat(node.arguments.slice(2))
             );
 
             devInvariant[SEEN_SYMBOL] = true;
             var prodInvariant = t.callExpression(
               node.callee,
-              // TODO add `%s`s
-              [t.booleanLiteral(false), t.stringLiteral(`Production Error #${prodErrorId}`)]
+              // TODO should we do arguments and `%s`s here?
+              [t.booleanLiteral(false), t.stringLiteral('Production Error #' + prodErrorId)]
             );
 
             prodInvariant[SEEN_SYMBOL] = true;

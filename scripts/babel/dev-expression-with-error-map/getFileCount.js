@@ -11,19 +11,12 @@
 'use strict';
 
 var glob = require('glob');
+var ReactGlobPatterns = require('./ReactGlobPatterns');
 
-var includePattern = 'src/**/*.js';
-var ignorePatterns = [
-  'src/**/__benchmarks__/**/*.js',
-  'src/**/__tests__/**/*.js',
-  'src/**/__mocks__/**/*.js',
-  'src/shared/vendor/**/*.js',
-];
-
-function countFiles()/* : number */ {
-  return glob.sync(includePattern, {
-    ignore: ignorePatterns,
+function getFileCount()/* : number */ {
+  return glob.sync(ReactGlobPatterns.includePattern, {
+    ignore: ReactGlobPatterns.ignorePatterns,
   }).length;
 }
 
-module.exports = countFiles;
+module.exports = getFileCount;

@@ -10,17 +10,12 @@
  */
 'use strict';
 
-/*:: type ErrorMap = {  [id: string]: string; }; */
-
-function shouldConstructNewMap(
-  currentErrorMap/* : ErrorMap */,
-  currentReactVersion/* : string */
-)/* : boolean */ {
-  if (currentErrorMap) {
-    return currentReactVersion !== currentErrorMap.version;
-  }
-
-  return true;
-}
-
-module.exports = shouldConstructNewMap;
+module.exports = {
+  includePattern: 'src/**/*.js',
+  ignorePatterns: [
+    'src/**/__benchmarks__/**/*.js',
+    'src/**/__tests__/**/*.js',
+    'src/**/__mocks__/**/*.js',
+    'src/shared/vendor/**/*.js',
+  ],
+};

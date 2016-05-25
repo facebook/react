@@ -10,14 +10,15 @@
  */
 'use strict';
 
+/*:: type ErrorMap = {  [id: string]: string; }; */
+
 /**
  * turns
- *   { a: 1, b: 2 }
+ *   { 'MUCH ERROR': '0', 'SUCH WRONG': '1' }
  * into
- *   { 1: a, 2: b }
+ *   { 0: 'MUCH ERROR', 1: 'SUCH WRONG' }
  */
-// TODO dont use `Object` here
-function invertObject(targetObj/* : Object */)/* : Object */ {
+function invertObject(targetObj/* : ErrorMap */)/* : ErrorMap */ {
   var result = {};
   var mapKeys = Object.keys(targetObj);
 

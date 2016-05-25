@@ -14,12 +14,18 @@ var invertObject = require('./invertObject');
 
 /*:: type ErrorMap = {  [id: string]: string; }; */
 
-function MapBuilder(map/* : ErrorMap */, counter/* : number */) {
+/*:: interface MapBuilderInterface { map: ErrorMap; counter: number }; */
+
+function MapBuilder(
+  map/* : ?ErrorMap */,
+  counter/* : ?number */
+)/* : MapBuilderInterface */ {
   this.map = map || {};
   this.counter = counter || 0;
+  return this; // for flow
 }
 
-MapBuilder.prototype.reset = function(map/* : ErrorMap */, counter/* : number */) {
+MapBuilder.prototype.reset = function(map/* : ?ErrorMap */, counter/* : ?number */) {
   this.map = map || {};
   this.counter = counter || 0;
 };
@@ -28,7 +34,7 @@ MapBuilder.prototype.reset = function(map/* : ErrorMap */, counter/* : number */
  * Here we return the error code of the just-added error message.
  * Kinda like what `Array.prototype.push(...)` does.
  */
-MapBuilder.prototype.add = function(errorMsg/* : string */) /* : string */ {
+MapBuilder.prototype.add = function(errorMsg/* : string */)/* : string */ {
   if (this.map.hasOwnProperty(errorMsg)) {
     return this.map[errorMsg];
   }
@@ -38,7 +44,7 @@ MapBuilder.prototype.add = function(errorMsg/* : string */) /* : string */ {
 };
 
 /**
- * Inverts the map object and returns an error code map like
+ * Inverts the map object and returns an error map like
  * { 0: 'MUCH ERROR', 1: 'SUCH WRONG' }
  */
 MapBuilder.prototype.generate = function()/* : ErrorMap */ {
