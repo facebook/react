@@ -622,7 +622,8 @@ ReactDOMComponent.Mixin = {
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
         } else {
-          el = ownerDocument.createElement(this._currentElement.type, props.is || null);
+          el = props.is ? ownerDocument.createElement(this._currentElement.type, props.is) :
+            ownerDocument.createElement(this._currentElement.type);
         }
       } else {
         el = ownerDocument.createElementNS(
