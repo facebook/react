@@ -21,8 +21,9 @@ function roundFloat(val, base = 2) {
 
 function warnInProduction() {
   if (typeof console !== 'undefined') {
-    console.error('ReactPerf is not supported in the production builds of React.' +
-              'To collect measurements, please use the development build of React instead.');
+    console.error(
+      'ReactPerf is not supported in the production builds of React.' +
+      'To collect measurements, please use the development build of React instead.');
   }
 }
 
@@ -292,7 +293,7 @@ function getOperations(flushHistory = getFlushHistory()) {
 function printExclusive(flushHistory) {
   if (!__DEV__) {
     warnInProduction();
-    return '';
+    return;
   }
 
   var stats = getExclusive(flushHistory);
@@ -318,7 +319,7 @@ function printExclusive(flushHistory) {
 function printInclusive(flushHistory) {
   if (!__DEV__) {
     warnInProduction();
-    return '';
+    return;
   }
 
   var stats = getInclusive(flushHistory);
@@ -337,7 +338,7 @@ function printInclusive(flushHistory) {
 function printWasted(flushHistory) {
   if (!__DEV__) {
     warnInProduction();
-    return '';
+    return;
   }
 
   var stats = getWasted(flushHistory);
@@ -356,7 +357,7 @@ function printWasted(flushHistory) {
 function printOperations(flushHistory) {
   if (!__DEV__) {
     warnInProduction();
-    return '';
+    return;
   }
 
   var stats = getOperations(flushHistory);
