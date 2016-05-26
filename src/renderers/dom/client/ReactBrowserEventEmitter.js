@@ -191,6 +191,13 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
       );
       ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
     },
+
+    /**
+     * @param {boolean} hasEventPageXY
+     */
+    injectHasEventPageXY: function(val) {
+      hasEventPageXY = val;
+    },
   },
 
   /**
@@ -359,8 +366,12 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
    */
   ensureScrollValueMonitoring: function() {
     if (hasEventPageXY === undefined) {
-      hasEventPageXY =
-        document.createEvent && 'pageX' in document.createEvent('MouseEvent');
+      if (document.createEvent) {
+        var evt = document.createEvent('MouseEvent');
+        hasEventPageXY = evt !== null && 'pageX' in evt;
+      } else {
+        hasEventPageXY = false;
+      }
     }
     if (!hasEventPageXY && !isMonitoringScrollValue) {
       var refresh = ViewportMetrics.refreshScrollValues;
