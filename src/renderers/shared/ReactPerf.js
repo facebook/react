@@ -21,7 +21,11 @@ function roundFloat(val, base = 2) {
 }
 
 function warnInProduction() {
-  if (typeof console !== 'undefined' && !alreadyWarned) {
+  if (!alreadyWarned) {
+    return;
+  }
+
+  if (typeof console !== 'undefined') {
     alreadyWarned = true;
     console.error(
       'ReactPerf is not supported in the production builds of React.' +
