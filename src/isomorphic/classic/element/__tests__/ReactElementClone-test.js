@@ -345,7 +345,8 @@ describe('ReactElementClone', function() {
     expect(clone.key).toBe('12');
     expect(clone.ref).toBe('34');
     var expectation = {foo: 'ef'};
-    Object.freeze(expectation);
+    expect(Object.isFrozen(element)).toBe(true);
+    expect(Object.isFrozen(element.props)).toBe(true);
     expect(clone.props).toEqual(expectation);
   });
 
@@ -365,7 +366,8 @@ describe('ReactElementClone', function() {
     expect(clone.key).toBe('null');
     expect(clone.ref).toBe(null);
     var expectation = {foo: 'ef'};
-    Object.freeze(expectation);
+    expect(Object.isFrozen(element)).toBe(true);
+    expect(Object.isFrozen(element.props)).toBe(true);
     expect(clone.props).toEqual(expectation);
   });
 
