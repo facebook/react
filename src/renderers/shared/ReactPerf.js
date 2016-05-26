@@ -13,6 +13,7 @@
 
 var ReactDebugTool = require('ReactDebugTool');
 var warning = require('warning');
+var alreadyWarned = false;
 
 function roundFloat(val, base = 2) {
   var n = Math.pow(10, base);
@@ -20,7 +21,8 @@ function roundFloat(val, base = 2) {
 }
 
 function warnInProduction() {
-  if (typeof console !== 'undefined') {
+  if (typeof console !== 'undefined' && !alreadyWarned) {
+    alreadyWarned = true;
     console.error(
       'ReactPerf is not supported in the production builds of React.' +
       'To collect measurements, please use the development build of React instead.');
