@@ -52,10 +52,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    var expectation = {};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(element.props).toEqual(expectation);
+    expect(element.props).toEqual({});
   });
 
   it('should warn when `key` is being accessed on createClass element', function() {
@@ -165,10 +164,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    var expectation = {};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(element.props).toEqual(expectation);
+    expect(element.props).toEqual({});
   });
 
   it('returns an immutable element', function() {
@@ -211,10 +209,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    var expectation = {foo: '56'};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(element.props).toEqual(expectation);
+    expect(element.props).toEqual({foo: '56'});
   });
 
   it('extracts null key and ref', function() {
@@ -226,10 +223,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('null');
     expect(element.ref).toBe(null);
-    var expectation = {foo: '12'};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(element.props).toEqual(expectation);
+    expect(element.props).toEqual({foo: '12'});
   });
 
   it('ignores undefined key and ref', function() {
@@ -242,10 +238,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    var expectation = {foo: '56'};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(element.props).toEqual(expectation);
+    expect(element.props).toEqual({foo: '56'});
   });
 
   it('ignores key and ref warning getters', function() {
@@ -263,10 +258,9 @@ describe('ReactElement', function() {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    var expectation = {foo: '56'};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(element.props).toEqual(expectation);
+    expect(element.props).toEqual({foo: '56'});
   });
 
   it('preserves the owner on the element', function() {

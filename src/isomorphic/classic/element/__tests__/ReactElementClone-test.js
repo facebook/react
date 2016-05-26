@@ -344,10 +344,9 @@ describe('ReactElementClone', function() {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
     expect(clone.ref).toBe('34');
-    var expectation = {foo: 'ef'};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(clone.props).toEqual(expectation);
+    expect(clone.props).toEqual({foo: 'ef'});
   });
 
   it('should extract null key and ref', function() {
@@ -365,10 +364,9 @@ describe('ReactElementClone', function() {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
     expect(clone.ref).toBe(null);
-    var expectation = {foo: 'ef'};
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
-    expect(clone.props).toEqual(expectation);
+    expect(clone.props).toEqual({foo: 'ef'});
   });
 
 });
