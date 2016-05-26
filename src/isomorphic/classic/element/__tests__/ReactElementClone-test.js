@@ -322,32 +322,11 @@ describe('ReactElementClone', function() {
     );
   });
 
-  it('should ignore key and ref getters', function() {
-    var element = React.createFactory(ComponentClass)({
-      key: '12',
-      ref: '34',
-      foo: '56',
-    });
-    var props = {
-      foo: 'ef',
-    };
-    Object.defineProperty(props, 'key', {
-      get: function() {
-        return 'ab';
-      },
-    });
-    Object.defineProperty(props, 'ref', {
-      get: function() {
-        return 'cd';
-      },
-    });
-    var clone = React.cloneElement(element, props);
-    expect(clone.type).toBe(ComponentClass);
-    expect(clone.key).toBe('12');
-    expect(clone.ref).toBe('34');
-    var expectation = {foo: 'ef'};
-    Object.freeze(expectation);
-    expect(clone.props).toEqual(expectation);
+  it('should ignore key and ref warning getters', function() {
+    var elementA = React.createElement('div');
+    var elementB = React.cloneElement(elementA, elementA.props);
+    expect(elementB.key).toBe(null);
+    expect(elementB.ref).toBe(null);
   });
 
   it('should ignore undefined key and ref', function() {

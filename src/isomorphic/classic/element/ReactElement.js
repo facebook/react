@@ -34,9 +34,11 @@ var specialPropKeyWarningShown, specialPropRefWarningShown;
 
 function hasValidRef(config) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref') &&
-        Object.getOwnPropertyDescriptor(config, 'ref').get) {
-      return false;
+    if (hasOwnProperty.call(config, 'ref')) {
+      var getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+      if (getter && getter.isReactWarning) {
+        return false;
+      }
     }
   }
   return config.ref !== undefined;
@@ -44,9 +46,11 @@ function hasValidRef(config) {
 
 function hasValidKey(config) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'key') &&
-        Object.getOwnPropertyDescriptor(config, 'key').get) {
-      return false;
+    if (hasOwnProperty.call(config, 'key')) {
+      var getter = Object.getOwnPropertyDescriptor(config, 'key').get;
+      if (getter && getter.isReactWarning) {
+        return false;
+      }
     }
   }
   return config.key !== undefined;
@@ -201,45 +205,50 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
   if (__DEV__) {
-    // Create dummy `key` and `ref` property to `props` to warn users
-    // against its use
+    // Create dummy `key` and `ref` property to `props` to warn users against its use
+    function warnAboutAccessingKey() {
+      if (!specialPropKeyWarningShown) {
+        specialPropKeyWarningShown = true;
+        warning(
+          false,
+          '%s: `key` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+          typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
+        );
+      }
+      return undefined;
+    }
+    warnAboutAccessingKey.isReactWarning = true;
+
+    function warnAboutAccessingRef() {
+      if (!specialPropRefWarningShown) {
+        specialPropRefWarningShown = true;
+        warning(
+          false,
+          '%s: `ref` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+          typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
+        );
+      }
+      return undefined;
+    }
+    warnAboutAccessingRef.isReactWarning = true;
+
     if (typeof props.$$typeof === 'undefined' ||
         props.$$typeof !== REACT_ELEMENT_TYPE) {
       if (!props.hasOwnProperty('key')) {
         Object.defineProperty(props, 'key', {
-          get: function() {
-            if (!specialPropKeyWarningShown) {
-              specialPropKeyWarningShown = true;
-              warning(
-                false,
-                '%s: `key` is not a prop. Trying to access it will result ' +
-                  'in `undefined` being returned. If you need to access the same ' +
-                  'value within the child component, you should pass it as a different ' +
-                  'prop. (https://fb.me/react-special-props)',
-                typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
-              );
-            }
-            return undefined;
-          },
+          get: warnAboutAccessingKey,
           configurable: true,
         });
       }
       if (!props.hasOwnProperty('ref')) {
         Object.defineProperty(props, 'ref', {
-          get: function() {
-            if (!specialPropRefWarningShown) {
-              specialPropRefWarningShown = true;
-              warning(
-                false,
-                '%s: `ref` is not a prop. Trying to access it will result ' +
-                  'in `undefined` being returned. If you need to access the same ' +
-                  'value within the child component, you should pass it as a different ' +
-                  'prop. (https://fb.me/react-special-props)',
-                typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
-              );
-            }
-            return undefined;
-          },
+          get: warnAboutAccessingRef,
           configurable: true,
         });
       }

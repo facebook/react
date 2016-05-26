@@ -199,27 +199,11 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('ignores key and ref getters', function() {
-    var props = {
-      foo: '56',
-    };
-    Object.defineProperty(props, 'key', {
-      get: function() {
-        return '12';
-      },
-    });
-    Object.defineProperty(props, 'ref', {
-      get: function() {
-        return '34';
-      },
-    });
-    var element = React.createFactory(ComponentClass)(props);
-    expect(element.type).toBe(ComponentClass);
-    expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
-    var expectation = {foo: '56'};
-    Object.freeze(expectation);
-    expect(element.props).toEqual(expectation);
+  it('ignores key and ref warning getters', function() {
+    var elementA = React.createElement('div');
+    var elementB = React.createElement('div', elementA.props);
+    expect(elementB.key).toBe(null);
+    expect(elementB.ref).toBe(null);
   });
 
   it('coerces the key to a string', function() {
