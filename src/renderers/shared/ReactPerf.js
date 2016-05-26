@@ -25,7 +25,8 @@ function warnInProduction() {
     alreadyWarned = true;
     console.error(
       'ReactPerf is not supported in the production builds of React.' +
-      'To collect measurements, please use the development build of React instead.');
+      'To collect measurements, please use the development build of React instead.'
+    );
   }
 }
 
