@@ -20,23 +20,27 @@ function roundFloat(val, base = 2) {
   return Math.floor(val * n) / n;
 }
 
-function returnWarnIfDevFalse(returningValue = 0) {
-  if (!alreadyWarned) {
-    alreadyWarned = true;
-    warning(__DEV__,
-           'ReactPerf is not supported in the production builds of React.' +
-           'To collect measurements, please use the development build of React instead.');
-  }
-  return returningValue;
+function warnInProduction() {
+  if (typeof console !== 'undefined') {
+        console.error('ReactPerf is not supported in the production builds of React.' +
+                      'To collect measurements, please use the development build of React instead.');
+     }
 }
 
 function getFlushHistory() {
-  returnWarnIfDevFalse([]);
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
+
   return ReactDebugTool.getFlushHistory();
 }
 
 function getExclusive(flushHistory = getFlushHistory()) {
-  returnWarnIfDevFalse([]);
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
 
   var aggregatedStats = {};
   var affectedIDs = {};
@@ -88,7 +92,10 @@ function getExclusive(flushHistory = getFlushHistory()) {
 }
 
 function getInclusive(flushHistory = getFlushHistory()) {
-  returnWarnIfDevFalse([]);
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
 
   var aggregatedStats = {};
   var affectedIDs = {};
@@ -158,7 +165,10 @@ function getInclusive(flushHistory = getFlushHistory()) {
 }
 
 function getWasted(flushHistory = getFlushHistory()) {
-  returnWarnIfDevFalse([]);
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
 
   var aggregatedStats = {};
   var affectedIDs = {};
@@ -253,7 +263,10 @@ function getWasted(flushHistory = getFlushHistory()) {
 }
 
 function getOperations(flushHistory = getFlushHistory()) {
-  returnWarnIfDevFalse([]);
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
 
   var stats = [];
   flushHistory.forEach((flush, flushIndex) => {
@@ -278,7 +291,10 @@ function getOperations(flushHistory = getFlushHistory()) {
 }
 
 function printExclusive(flushHistory) {
-  returnWarnIfDevFalse('');
+  if (!__DEV__) {
+    warnInProduction();
+    return '';
+  }
 
   var stats = getExclusive(flushHistory);
   var table = stats.map(item => {
@@ -317,7 +333,10 @@ function printInclusive(flushHistory) {
 }
 
 function printWasted(flushHistory) {
-  returnWarnIfDevFalse('');
+  if (!__DEV__) {
+    warnInProduction();
+    return '';
+  }
 
   var stats = getWasted(flushHistory);
   var table = stats.map(item => {
@@ -333,7 +352,10 @@ function printWasted(flushHistory) {
 }
 
 function printOperations(flushHistory) {
-  returnWarnIfDevFalse('');
+  if (!__DEV__) {
+    warnInProduction();
+    return '';
+  }
 
   var stats = getOperations(flushHistory);
   var table = stats.map(stat => ({
@@ -372,18 +394,28 @@ function getMeasurementsSummaryMap(measurements) {
 }
 
 function start() {
-  returnWarnIfDevFalse();
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
   ReactDebugTool.beginProfiling();
 }
 
 function stop() {
-  returnWarnIfDevFalse();
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
+
   alreadyWarned = false;
   ReactDebugTool.endProfiling();
 }
 
 function isRunning() {
-  returnWarnIfDevFalse();
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
   return ReactDebugTool.isProfiling();
 }
 
