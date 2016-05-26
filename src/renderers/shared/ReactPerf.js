@@ -13,7 +13,6 @@
 
 var ReactDebugTool = require('ReactDebugTool');
 var warning = require('warning');
-var alreadyWarned = false;
 
 function roundFloat(val, base = 2) {
   var n = Math.pow(10, base);
@@ -22,9 +21,9 @@ function roundFloat(val, base = 2) {
 
 function warnInProduction() {
   if (typeof console !== 'undefined') {
-        console.error('ReactPerf is not supported in the production builds of React.' +
-                      'To collect measurements, please use the development build of React instead.');
-     }
+    console.error('ReactPerf is not supported in the production builds of React.' +
+              'To collect measurements, please use the development build of React instead.');
+  }
 }
 
 function getFlushHistory() {
@@ -317,7 +316,10 @@ function printExclusive(flushHistory) {
 }
 
 function printInclusive(flushHistory) {
-  returnWarnIfDevFalse('');
+  if (!__DEV__) {
+    warnInProduction();
+    return '';
+  }
 
   var stats = getInclusive(flushHistory);
   var table = stats.map(item => {
@@ -407,14 +409,13 @@ function stop() {
     return;
   }
 
-  alreadyWarned = false;
   ReactDebugTool.endProfiling();
 }
 
 function isRunning() {
   if (!__DEV__) {
     warnInProduction();
-    return;
+    return false;
   }
   return ReactDebugTool.isProfiling();
 }
