@@ -205,6 +205,10 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
   if (__DEV__) {
+    var displayName = typeof type === 'function' ?
+      (type.displayName || type.name || 'Unknown') :
+      type;
+
     // Create dummy `key` and `ref` property to `props` to warn users against its use
     function warnAboutAccessingKey() {
       if (!specialPropKeyWarningShown) {
@@ -215,7 +219,7 @@ ReactElement.createElement = function(type, config, children) {
           'in `undefined` being returned. If you need to access the same ' +
           'value within the child component, you should pass it as a different ' +
           'prop. (https://fb.me/react-special-props)',
-          typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
+          displayName
         );
       }
       return undefined;
@@ -231,7 +235,7 @@ ReactElement.createElement = function(type, config, children) {
           'in `undefined` being returned. If you need to access the same ' +
           'value within the child component, you should pass it as a different ' +
           'prop. (https://fb.me/react-special-props)',
-          typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
+          displayName
         );
       }
       return undefined;

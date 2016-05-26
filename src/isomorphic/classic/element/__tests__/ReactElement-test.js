@@ -58,7 +58,7 @@ describe('ReactElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('should warn when `key` is being accessed', function() {
+  it('should warn when `key` is being accessed on createClass element', function() {
     spyOn(console, 'error');
     var container = document.createElement('div');
     var Child = React.createClass({
@@ -82,6 +82,50 @@ describe('ReactElement', function() {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `key` is not a prop. Trying to access it will result ' +
+      'in `undefined` being returned. If you need to access the same ' +
+      'value within the child component, you should pass it as a different ' +
+      'prop. (https://fb.me/react-special-props)'
+    );
+  });
+
+  it('should warn when `key` is being accessed on ES class element', function() {
+    spyOn(console, 'error');
+    var container = document.createElement('div');
+    class Child extends React.Component {
+      render() {
+        return <div> {this.props.key} </div>;
+      }
+    }
+    var Parent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Child key="0" />
+            <Child key="1" />
+            <Child key="2" />
+          </div>
+        );
+      },
+    });
+    expect(console.error.calls.count()).toBe(0);
+    ReactDOM.render(<Parent />, container);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'Child: `key` is not a prop. Trying to access it will result ' +
+      'in `undefined` being returned. If you need to access the same ' +
+      'value within the child component, you should pass it as a different ' +
+      'prop. (https://fb.me/react-special-props)'
+    );
+  });
+
+  it('should warn when `key` is being accessed on a host element', function() {
+    spyOn(console, 'error');
+    var element = <div key="3" />;
+    expect(console.error.calls.count()).toBe(0);
+    void element.props.key;
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'div: `key` is not a prop. Trying to access it will result ' +
       'in `undefined` being returned. If you need to access the same ' +
       'value within the child component, you should pass it as a different ' +
       'prop. (https://fb.me/react-special-props)'
