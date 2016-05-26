@@ -16,7 +16,7 @@ January 28 & 29 in Facebook HQ, CA
 ### ReactEurope 2015
 July 2 & 3 in Paris, France
 
-[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule) - [Videos](https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A/playlists)
 
 ### Reactive 2015
 November 2-4 in Bratislava, Slovakia
