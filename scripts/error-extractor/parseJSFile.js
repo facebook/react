@@ -17,9 +17,14 @@ function parseJSFile(filePath/* : string */)/* : Object */ {
   var source = fs.readFileSync(filePath, 'utf8');
   return babylon.parse(source, {
     sourceType: 'module',
+    // As a parser, babylon has its own options and we can't directly
+    // import/require a babel preset. It should be kept **the same** as
+    // the `babel-plugin-syntax-*` ones specified in
+    // https://github.com/facebook/fbjs/blob/master/babel-preset/configure.js
     plugins: [
-      'jsx',
+      'classProperties',
       'flow',
+      'jsx',
       'trailingFunctionCommas',
       'objectRestSpread',
     ],
