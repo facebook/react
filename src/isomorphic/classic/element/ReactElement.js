@@ -398,4 +398,6 @@ ReactElement.isValidElement = function(object) {
   );
 };
 
+ReactElement.REACT_ELEMENT_TYPE = REACT_ELEMENT_TYPE;
+
 module.exports = ReactElement;
