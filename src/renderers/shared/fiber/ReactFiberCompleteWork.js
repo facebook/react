@@ -94,15 +94,15 @@ function handleCoroutine(unitOfWork : Fiber) {
 exports.completeWork = function(unitOfWork : Fiber) : ?Fiber {
   switch (unitOfWork.tag) {
     case FunctionalComponent:
-      console.log('/functional component', unitOfWork.input.type.name);
+      console.log('/functional component', unitOfWork.type.name);
       transferOutput(unitOfWork.child, unitOfWork);
       break;
     case ClassComponent:
-      console.log('/class component', unitOfWork.input.type.name);
+      console.log('/class component', unitOfWork.type.name);
       transferOutput(unitOfWork.child, unitOfWork);
       break;
     case HostComponent:
-      console.log('/host component', unitOfWork.input.type);
+      console.log('/host component', unitOfWork.type);
       break;
     case CoroutineComponent:
       console.log('/coroutine component', unitOfWork.input.handler.name);
