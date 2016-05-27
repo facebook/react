@@ -22,7 +22,7 @@ var CodeMirrorEditor = React.createClass({
     if (IS_MOBILE) return;
 
     this.editor = CodeMirror.fromTextArea(ReactDOM.findDOMNode(this.refs.editor), {
-      mode: 'javascript',
+      mode: 'jsx',
       lineNumbers: this.props.lineNumbers,
       lineWrapping: true,
       smartIndent: false,  // javascript mode does bad things with jsx indents
