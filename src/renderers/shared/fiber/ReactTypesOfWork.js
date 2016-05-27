@@ -13,9 +13,12 @@
 'use strict';
 
 var TypesOfWork = {
+  IndeterminateComponent: 0, // Before we know whether it is functional or class
   FunctionalComponent: 1,
   ClassComponent: 2,
   HostComponent: 3,
+  CoroutineComponent: 4,
+  YieldComponent: 5,
 };
 
 module.exports = TypesOfWork;
