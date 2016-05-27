@@ -225,7 +225,7 @@ describe('ReactDOMComponent', function() {
       });
 
       ReactTestUtils.renderIntoDocument(<Component />);
-      expect(console.error.calls.length).toBe(0);
+      expect(console.error.calls.count()).toBe(0);
     });
 
     it('should warn nicely about NaN in style', function() {
