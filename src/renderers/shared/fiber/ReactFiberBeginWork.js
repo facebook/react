@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 
 var ReactChildFiber = require('ReactChildFiber');
@@ -21,6 +22,8 @@ var {
   FunctionalComponent,
   ClassComponent,
   HostComponent,
+  CoroutineComponent,
+  YieldComponent,
 } = ReactTypesOfWork;
 
 function getElement(unitOfWork) : ReactElement {
@@ -38,19 +41,21 @@ function updateFunctionalComponent(unitOfWork) {
   console.log('perform work on:', fn.name);
   var nextChildren = fn(props);
 
-  ReactChildFiber.reconcileChildFibers(
+  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
     unitOfWork,
+    unitOfWork.child,
     nextChildren
   );
 }
 
 function updateHostComponent(unitOfWork) {
   var element = getElement(unitOfWork);
-  console.log('host component', element.type);
+  console.log('host component', element.type, typeof element.props.children === 'string' ? element.props.children : '');
 
   var nextChildren = element.props.children;
-  ReactChildFiber.reconcileChildFibers(
+  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
     unitOfWork,
+    unitOfWork.child,
     nextChildren
   );
 }
@@ -69,13 +74,27 @@ function mountIndeterminateComponent(unitOfWork) {
     // Proceed under the assumption that this is a functional component
     unitOfWork.tag = FunctionalComponent;
   }
-  ReactChildFiber.reconcileChildFibers(
+  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
     unitOfWork,
+    unitOfWork.child,
     value
   );
 }
 
-exports.beginWork = function(unitOfWork : Fiber) : ?Fiber {
+function updateCoroutineComponent(unitOfWork) {
+  var coroutine = (unitOfWork.input : ?ReactCoroutine);
+  if (!coroutine) {
+    throw new Error('Should be resolved by now');
+  }
+  console.log('begin coroutine', coroutine.handler.name);
+  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
+    unitOfWork,
+    unitOfWork.child,
+    coroutine.children
+  );
+}
+
+function beginWork(unitOfWork : Fiber) : ?Fiber {
   switch (unitOfWork.tag) {
     case IndeterminateComponent:
       mountIndeterminateComponent(unitOfWork);
@@ -84,14 +103,32 @@ exports.beginWork = function(unitOfWork : Fiber) : ?Fiber {
       updateFunctionalComponent(unitOfWork);
       break;
     case ClassComponent:
-      // $FlowFixMe
       console.log('class component', unitOfWork.input.type.name);
       break;
     case HostComponent:
       updateHostComponent(unitOfWork);
       break;
+    case CoroutineComponent:
+      // Reset the stage to zero.
+      unitOfWork.stage = 0;
+      updateCoroutineComponent(unitOfWork);
+      // This doesn't take arbitrary time so we could synchronously just begin
+      // eagerly do the work of unitOfWork.child as an optimization.
+      if (unitOfWork.child) {
+        return beginWork(unitOfWork.child);
+      }
+      break;
+    case YieldComponent:
+      // A yield component is just a placeholder, we can just run through the
+      // next one immediately.
+      if (unitOfWork.sibling) {
+        return beginWork(unitOfWork.sibling);
+      }
+      return null;
     default:
       throw new Error('Unknown unit of work tag');
   }
   return unitOfWork.child;
-};
+}
+
+exports.beginWork = beginWork;
