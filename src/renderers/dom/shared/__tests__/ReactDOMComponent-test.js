@@ -163,6 +163,17 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('should warn for onDblClick prop', function() {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div onDblClick={() => {}} />, container);
+      expect(console.error.calls.count(0)).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Unknown event handler property onDblClick. Did you mean `onDoubleClick`?\n    in div (at **)'
+      );
+    });
+
+
     it('should warn about styles with numeric string values for non-unitless properties', function() {
       spyOn(console, 'error');
 
