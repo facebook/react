@@ -25,8 +25,9 @@ function warnInProduction() {
     return;
   }
 
-  if (typeof console !== 'undefined') {
-    alreadyWarned = true;
+  alreadyWarned = true;
+
+  if (typeof console !== 'undefined') {  
     console.error(
       'ReactPerf is not supported in the production builds of React.' +
       'To collect measurements, please use the development build of React instead.'
