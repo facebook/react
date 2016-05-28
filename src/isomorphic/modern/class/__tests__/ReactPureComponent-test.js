@@ -75,4 +75,113 @@ describe('ReactPureComponent', function() {
     expect(renders).toBe(2);
   });
 
+  it('does not update functional components inside pure components', function() {
+    // Multiple levels of host components and functional components; make sure
+    // purity propagates down. So we render:
+    //
+    // <Impure>
+    //   <Functional>
+    //     <Functional>
+    //       <Pure>
+    //         <Functional>
+    //           <Functional>
+    //
+    // with some host wrappers in between. The render code is a little
+    // convoluted because we want to make the props scalar-equal as long as
+    // `text` (threaded through the whole tree) is. The outer two Functional
+    // components should always rerender; the inner Functional components should
+    // only rerender if `text` changes to a different object.
+
+    var impureRenders = 0;
+    var pureRenders = 0;
+    var functionalRenders = 0;
+
+    var pureComponent;
+    class Impure extends React.Component {
+      render() {
+        impureRenders++;
+        return (
+          <div>
+            {/* These props will always be shallow-equal. */}
+            <Functional
+              depth={2}
+              thenRender="pureComponent"
+              text={this.props.text}
+            />
+          </div>
+        );
+      }
+    }
+    class Pure extends React.PureComponent {
+      render() {
+        pureComponent = this;
+        pureRenders++;
+        return (
+          <div>
+            <Functional
+              depth={2}
+              thenRender="text"
+              text={this.props.text}
+            />
+          </div>
+        );
+      }
+    }
+    function Functional(props) {
+      functionalRenders++;
+      if (props.depth <= 1) {
+        return (
+          <div>
+            {props.prefix}
+            {props.thenRender === 'pureComponent' ?
+              [props.text[0] + '/', <Pure key="pure" text={props.text} />] :
+              props.text[0]}
+          </div>
+        );
+      } else {
+        return (
+          <div>
+            <Functional
+              {...props}
+              depth={props.depth - 1}
+            />
+          </div>
+        );
+      }
+    }
+
+    var container = document.createElement('div');
+    var text;
+
+    text = ['porcini'];
+    ReactDOM.render(<Impure text={text} />, container);
+    expect(container.textContent).toBe('porcini/porcini');
+    expect(impureRenders).toBe(1);
+    expect(pureRenders).toBe(1);
+    expect(functionalRenders).toBe(4);
+
+    text = ['morel'];
+    ReactDOM.render(<Impure text={text} />, container);
+    expect(container.textContent).toBe('morel/morel');
+    expect(impureRenders).toBe(2);
+    expect(pureRenders).toBe(2);
+    expect(functionalRenders).toBe(8);
+
+    text[0] = 'portobello';
+    ReactDOM.render(<Impure text={text} />, container);
+    // Updates happen down and stop at the pure component
+    expect(container.textContent).toBe('portobello/morel');
+    expect(impureRenders).toBe(3);
+    expect(pureRenders).toBe(2);
+    expect(functionalRenders).toBe(10);
+
+    // Forcing the pure component to update makes it rerender, but its
+    // functional children still don't.
+    pureComponent.forceUpdate();
+    expect(container.textContent).toBe('portobello/morel');
+    expect(impureRenders).toBe(3);
+    expect(pureRenders).toBe(3);
+    expect(functionalRenders).toBe(10);
+  });
+
 });

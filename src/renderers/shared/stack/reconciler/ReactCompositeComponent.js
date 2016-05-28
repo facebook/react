@@ -694,7 +694,12 @@ var ReactCompositeComponentMixin = {
     );
   },
 
-  receiveComponent: function(nextElement, transaction, nextContext) {
+  receiveComponent: function(
+    nextElement,
+    transaction,
+    nextContext,
+    isParentPure
+  ) {
     var prevElement = this._currentElement;
     var prevContext = this._context;
 
@@ -705,7 +710,8 @@ var ReactCompositeComponentMixin = {
       prevElement,
       nextElement,
       prevContext,
-      nextContext
+      nextContext,
+      isParentPure
     );
   },
 
@@ -722,7 +728,10 @@ var ReactCompositeComponentMixin = {
         this,
         this._pendingElement,
         transaction,
-        this._context
+        this._context,
+        // Element updates are enqueued only at the top level, which we consider
+        // impure
+        false
       );
     } else if (this._pendingStateQueue !== null || this._pendingForceUpdate) {
       this.updateComponent(
@@ -730,7 +739,10 @@ var ReactCompositeComponentMixin = {
         this._currentElement,
         this._currentElement,
         this._context,
-        this._context
+        this._context,
+        // isParentPure here doesn't matter because state updates don't happen to
+        // functional components.
+        true
       );
     } else {
       this._updateBatchNumber = null;
@@ -757,7 +769,8 @@ var ReactCompositeComponentMixin = {
     prevParentElement,
     nextParentElement,
     prevUnmaskedContext,
-    nextUnmaskedContext
+    nextUnmaskedContext,
+    isParentPure
   ) {
     var inst = this._instance;
     var willReceive = false;
@@ -805,6 +818,9 @@ var ReactCompositeComponentMixin = {
     var nextState = this._processPendingState(nextProps, nextContext);
     var shouldUpdate = true;
 
+    var pureSelf =
+      this._compositeType === CompositeTypes.PureClass ||
+      isParentPure && this._compositeType === CompositeTypes.StatelessFunctional;
     if (!this._pendingForceUpdate) {
       if (inst.shouldComponentUpdate) {
         if (__DEV__) {
@@ -825,7 +841,7 @@ var ReactCompositeComponentMixin = {
           }
         }
       } else {
-        if (this._compositeType === CompositeTypes.PureClass) {
+        if (pureSelf) {
           shouldUpdate =
             inst.state !== nextState || !shallowEqual(prevProps, nextProps);
         }
@@ -851,7 +867,8 @@ var ReactCompositeComponentMixin = {
         nextState,
         nextContext,
         transaction,
-        nextUnmaskedContext
+        nextUnmaskedContext,
+        pureSelf
       );
     } else {
       // If it's determined that a component should not update, we still want
@@ -911,7 +928,8 @@ var ReactCompositeComponentMixin = {
     nextState,
     nextContext,
     transaction,
-    unmaskedContext
+    unmaskedContext,
+    pureSelf
   ) {
     var inst = this._instance;
 
@@ -951,7 +969,7 @@ var ReactCompositeComponentMixin = {
     inst.state = nextState;
     inst.context = nextContext;
 
-    this._updateRenderedComponent(transaction, unmaskedContext);
+    this._updateRenderedComponent(transaction, unmaskedContext, pureSelf);
 
     if (hasComponentDidUpdate) {
       if (__DEV__) {
@@ -974,7 +992,7 @@ var ReactCompositeComponentMixin = {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  _updateRenderedComponent: function(transaction, context) {
+  _updateRenderedComponent: function(transaction, context, pureSelf) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
     var nextRenderedElement = this._renderValidatedComponent();
@@ -983,7 +1001,8 @@ var ReactCompositeComponentMixin = {
         prevComponentInstance,
         nextRenderedElement,
         transaction,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        pureSelf
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);

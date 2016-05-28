@@ -33,7 +33,7 @@ Object.assign(ReactSimpleEmptyComponent.prototype, {
       context
     );
   },
-  receiveComponent: function() {
+  receiveComponent: function(nextElement, transaction, context, isParentPure) {
   },
   getHostNode: function() {
     return ReactReconciler.getHostNode(this._renderedComponent);

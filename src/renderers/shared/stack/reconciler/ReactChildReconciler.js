@@ -95,7 +95,8 @@ var ReactChildReconciler = {
     nextChildren,
     removedNodes,
     transaction,
-    context) {
+    context,
+    isParentPure) {
     // We currently don't have a way to track moves here but if we use iterators
     // instead of for..in we can zip the iterators and check if an item has
     // moved.
@@ -116,7 +117,7 @@ var ReactChildReconciler = {
       if (prevChild != null &&
           shouldUpdateReactComponent(prevElement, nextElement)) {
         ReactReconciler.receiveComponent(
-          prevChild, nextElement, transaction, context
+          prevChild, nextElement, transaction, context, isParentPure
         );
         nextChildren[name] = prevChild;
       } else {

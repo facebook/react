@@ -97,7 +97,7 @@ ReactNativeBaseComponent.Mixin = {
    * @param {object} context
    * @internal
    */
-  receiveComponent: function(nextElement, transaction, context) {
+  receiveComponent: function(nextElement, transaction, context, isParentPure) {
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
 
@@ -127,7 +127,12 @@ ReactNativeBaseComponent.Mixin = {
       prevElement.props,
       nextElement.props
     );
-    this.updateChildren(nextElement.props.children, transaction, context);
+    this.updateChildren(
+      nextElement.props.children,
+      transaction,
+      context,
+      isParentPure
+    );
   },
 
   /**
