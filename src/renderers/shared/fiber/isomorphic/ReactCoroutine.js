@@ -43,8 +43,10 @@ export type ReactYield = {
 };
 
 exports.createCoroutine = function<T>(
-    children : mixed, handler : CoroutineHandler<T>,
-    props : T, key : ?string = null) : ReactCoroutine {
+  children : mixed, handler : CoroutineHandler<T>,
+  props : T,
+  key : ?string = null
+) : ReactCoroutine {
   var coroutine = {
     // This tag allow us to uniquely identify this as a React Coroutine
     $$typeof: REACT_COROUTINE_TYPE,
