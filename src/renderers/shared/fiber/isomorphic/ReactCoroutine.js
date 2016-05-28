@@ -43,7 +43,8 @@ export type ReactYield = {
 };
 
 exports.createCoroutine = function<T>(
-  children : mixed, handler : CoroutineHandler<T>,
+  children : mixed,
+  handler : CoroutineHandler<T>,
   props : T,
   key : ?string = null
 ) : ReactCoroutine {
