@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 
@@ -91,5 +92,62 @@ describe('renderSubtreeIntoContainer', function() {
         }).toThrowError('parentComponentmust be a valid React Component');
       },
     });
+  });
+
+  it('should pass updated context if context changes', function() {
+
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    var portal = document.createElement('div');
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string.isRequired,
+        getFoo: React.PropTypes.func.isRequired,
+      },
+
+      render: function() {
+        return <div>{this.context.foo + '-' + this.context.getFoo()}</div>;
+      },
+    });
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string.isRequired,
+        getFoo: React.PropTypes.func.isRequired,
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.state.bar,
+          getFoo: function() {
+            return this.state.bar;
+          }.bind(this),
+        };
+      },
+
+      getInitialState: function() {
+        return {
+          bar: 'initial',
+        };
+      },
+
+      render: function() {
+        return null;
+      },
+
+      componentDidMount: function() {
+        renderSubtreeIntoContainer(this, <Component />, portal);
+      },
+
+      componentDidUpdate() {
+        renderSubtreeIntoContainer(this, <Component />, portal);
+      },
+    });
+
+    var instance = ReactDOM.render(<Parent/>, container);
+    expect(portal.firstChild.innerHTML).toBe('initial-initial');
+    instance.setState({bar: 'changed'});
+    expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 });
