@@ -132,8 +132,8 @@ describe('autobinding', function() {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: bind(): You are binding a component method to the component. ' +
       'React does this for you automatically in a high-performance ' +
       'way, so you can safely remove this call. See TestBindComponent'
@@ -160,7 +160,7 @@ describe('autobinding', function() {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
 });

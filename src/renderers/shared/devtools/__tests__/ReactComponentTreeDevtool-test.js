@@ -1716,7 +1716,7 @@ describe('ReactComponentTreeDevtool', () => {
     expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 
-  it('creates stack addenda', () => {
+  it('creates current stack addenda', () => {
     function getAddendum(element) {
       var addendum = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
       return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -1787,6 +1787,32 @@ describe('ReactComponentTreeDevtool', () => {
     // Make sure owner is fetched for the top element too.
     expect(getAddendum(rOwnedByQ)).toBe(
       '\n    in R (created by Q)'
+    );
+  });
+
+  it('creates stack addenda by ID', () => {
+    function getAddendum(id) {
+      var addendum = ReactComponentTreeDevtool.getStackAddendumByID(id);
+      return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
+    }
+
+    class Q extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
+    var q = ReactDOM.render(<Q />, document.createElement('div'));
+    expect(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
+      '\n    in Q (at **)'
+    );
+
+    spyOn(console, 'error');
+    getAddendum(-17);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: ReactComponentTreeDevtool: Missing React element for debugID ' +
+      '-17 when building stack'
     );
   });
 });

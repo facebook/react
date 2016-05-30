@@ -157,6 +157,10 @@ var EventPluginHub = {
    */
   deleteAllListeners: function(inst) {
     for (var registrationName in listenerBank) {
+      if (!listenerBank.hasOwnProperty(registrationName)) {
+        continue;
+      }
+      
       if (!listenerBank[registrationName][inst._rootNodeID]) {
         continue;
       }
