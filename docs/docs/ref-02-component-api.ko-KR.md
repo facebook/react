@@ -15,7 +15,7 @@ React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 
 
 ```javascript
 void setState(
-  function|object nextState, 
+  function|object nextState,
   [function callback]
 )
 ```
@@ -55,7 +55,7 @@ setState(function(previousState, currentProps) {
 
 ```javascript
 void replaceState(
-  object nextState, 
+  object nextState,
   [function callback]
 )
 ```
@@ -82,21 +82,6 @@ void forceUpdate(
 특별한 경우가 아니면 `forceUpdate()`는 되도록 피하시고 `render()`에서는 `this.props`와 `this.state`에서만 읽어오세요. 그렇게 하는 것이 컴포넌트를 "순수"하게 하고 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. `render`가 `null`이나 `false`를 리턴하였다면 `this.getDOMNode()`는 `null`을 리턴합니다.
-
-> 주의:
->
-> getDOMNode는 [ReactDOM.findDOMNode()](/react/docs/top-level-api.html#reactdom.finddomnode)로 교체되었습니다.
->
-> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
-
-
 ### isMounted
 
 ```javascript
@@ -114,7 +99,7 @@ boolean isMounted()
 
 ```javascript
 void setProps(
-  object nextProps, 
+  object nextProps,
   [function callback]
 )
 ```
@@ -136,7 +121,7 @@ void setProps(
 
 ```javascript
 void replaceProps(
-  object nextProps, 
+  object nextProps,
   function callback]
 )
 ```
