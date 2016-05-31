@@ -58,10 +58,28 @@ var inputValueTracking = {
 
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var valueField = isCheckable(node) ? 'checked' : 'value';
-    var descriptor = Object.getOwnPropertyDescriptor(
-      node.constructor.prototype,
-      valueField
-    );
+    var descriptor;
+    try {
+      // Accessing quick-stubbed properties of prototypes in older versions of
+      // Firefox will throw a NS_ERROR_XPC_BAD_OP_ON_WN_PROTO exception
+      descriptor = Object.getOwnPropertyDescriptor(
+        node.constructor.prototype,
+        valueField
+      );
+    } catch (e) {
+      var proto = node.constructor.prototype;
+      // Attempt to fall back to Firefox's deprecated setters / getters
+      if (
+        typeof proto.__lookupSetter__ === 'function' &&
+        typeof proto.__lookupGetter__ === 'function'
+      ) {
+        descriptor = {
+          enumerable: true,
+          get: proto.__lookupGetter__(valueField),
+          set: proto.__lookupSetter__(valueField),
+        };
+      }
+    }
 
     var currentValue = '' + node[valueField];
 
