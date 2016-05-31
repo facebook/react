@@ -20,9 +20,10 @@ var ReactFiber = require('ReactFiber');
 export type ReifiedYield = { continuation: Fiber, props: Object };
 
 exports.createReifiedYield = function(yieldNode : ReactYield) : ReifiedYield {
-  var fiber = ReactFiber.createFiberFromElementType(yieldNode.continuation);
-  // Hacky way to store the continuation
-  fiber.input = yieldNode.continuation;
+  var fiber = ReactFiber.createFiberFromElementType(
+    yieldNode.continuation,
+    yieldNode.key
+  );
   return {
     continuation: fiber,
     props: yieldNode.props,

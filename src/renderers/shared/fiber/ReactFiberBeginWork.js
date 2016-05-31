@@ -23,21 +23,13 @@ var {
   ClassComponent,
   HostComponent,
   CoroutineComponent,
+  CoroutineHandlerPhase,
   YieldComponent,
 } = ReactTypesOfWork;
 
-function getElement(unitOfWork) : ReactElement {
-  var element = unitOfWork.input;
-  if (!element) {
-    throw new Error('Should be resolved by now');
-  }
-  return (element : ReactElement);
-}
-
 function updateFunctionalComponent(unitOfWork) {
-  var element = getElement(unitOfWork);
-  var fn = element.type;
-  var props = element.props;
+  var fn = unitOfWork.type;
+  var props = unitOfWork.input;
   console.log('perform work on:', fn.name);
   var nextChildren = fn(props);
 
@@ -49,10 +41,9 @@ function updateFunctionalComponent(unitOfWork) {
 }
 
 function updateHostComponent(unitOfWork) {
-  var element = getElement(unitOfWork);
-  console.log('host component', element.type, typeof element.props.children === 'string' ? element.props.children : '');
+  console.log('host component', unitOfWork.type, typeof unitOfWork.input.children === 'string' ? unitOfWork.input.children : '');
 
-  var nextChildren = element.props.children;
+  var nextChildren = unitOfWork.input.children;
   unitOfWork.child = ReactChildFiber.reconcileChildFibers(
     unitOfWork,
     unitOfWork.child,
@@ -61,9 +52,8 @@ function updateHostComponent(unitOfWork) {
 }
 
 function mountIndeterminateComponent(unitOfWork) {
-  var element = getElement(unitOfWork);
-  var fn = element.type;
-  var props = element.props;
+  var fn = unitOfWork.type;
+  var props = unitOfWork.input;
   var value = fn(props);
   if (typeof value === 'object' && value && typeof value.render === 'function') {
     console.log('performed work on class:', fn.name);
@@ -86,7 +76,7 @@ function updateCoroutineComponent(unitOfWork) {
   if (!coroutine) {
     throw new Error('Should be resolved by now');
   }
-  console.log('begin coroutine', coroutine.handler.name);
+  console.log('begin coroutine', unitOfWork.type.name);
   unitOfWork.child = ReactChildFiber.reconcileChildFibers(
     unitOfWork,
     unitOfWork.child,
@@ -108,9 +98,11 @@ function beginWork(unitOfWork : Fiber) : ?Fiber {
     case HostComponent:
       updateHostComponent(unitOfWork);
       break;
+    case CoroutineHandlerPhase:
+      // This is a restart. Reset the tag to the initial phase.
+      unitOfWork.tag = CoroutineComponent;
+      // Intentionally fall through since this is now the same.
     case CoroutineComponent:
-      // Reset the stage to zero.
-      unitOfWork.stage = 0;
       updateCoroutineComponent(unitOfWork);
       // This doesn't take arbitrary time so we could synchronously just begin
       // eagerly do the work of unitOfWork.child as an optimization.

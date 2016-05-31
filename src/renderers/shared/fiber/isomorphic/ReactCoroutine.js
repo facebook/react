@@ -29,7 +29,7 @@ type CoroutineHandler<T> = (props: T, yields: Array<ReifiedYield>) => ReactNodeL
 
 export type ReactCoroutine = {
   $$typeof: Symbol | number,
-  key: ?string,
+  key: null | string,
   children: any,
   // This should be a more specific CoroutineHandler
   handler: (props: any, yields: Array<ReifiedYield>) => ReactNodeList,
@@ -37,7 +37,7 @@ export type ReactCoroutine = {
 };
 export type ReactYield = {
   $$typeof: Symbol | number,
-  key: ?string,
+  key: null | string,
   props: Object,
   continuation: mixed
 };
