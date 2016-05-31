@@ -23,6 +23,7 @@ var isUnitlessNumber = {
   boxFlexGroup: true,
   boxOrdinalGroup: true,
   columnCount: true,
+  content: true,
   flex: true,
   flexGrow: true,
   flexPositive: true,
