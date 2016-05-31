@@ -102,6 +102,8 @@
     title: Web Components
   - id: glossary
     title: React (Virtual) DOM Terminology
+  - id: error-code
+    title: React Error Code
 - title: Flux
   items:
   - id: flux-overview

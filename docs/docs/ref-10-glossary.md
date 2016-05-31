@@ -3,6 +3,7 @@ id: glossary
 title: React (Virtual) DOM Terminology
 permalink: glossary.html
 prev: webcomponents.html
+next: error-code.html
 ---
 
 In React's terminology, there are five core types that are important to distinguish:
@@ -193,4 +194,3 @@ type ReactComponent<TProps> = {
 
 type ReactFunctionalComponent<TProps> = (TProps) => ReactElement;
 ```
-
