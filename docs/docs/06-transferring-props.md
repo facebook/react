@@ -27,16 +27,14 @@ The rest of this tutorial explains best practices. It uses JSX and experimental 
 Most of the time you should explicitly pass the properties down. This ensures that you only expose a subset of the inner API, one that you know will work.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      <div className={fancyClass} onClick={this.props.onClick}>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    <div className={fancyClass} onClick={props.onClick}>
+      {props.children}
+    </div>
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
@@ -58,22 +56,20 @@ Sometimes it's fragile and tedious to pass every property along. In that case yo
 List out all the properties that you would like to consume, followed by `...other`.
 
 ```javascript
-var { checked, ...other } = this.props;
+var { checked, ...other } = props;
 ```
 
 This ensures that you pass down all the props EXCEPT the ones you're consuming yourself.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    // `other` contains { onClick: console.log } but not the checked property
-    return (
-      <div {...other} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  // `other` contains { onClick: console.log } but not the checked property
+  return (
+    <div {...other} className={fancyClass} />
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
@@ -89,39 +85,35 @@ ReactDOM.render(
 Always use the destructuring pattern when transferring unknown `other` props.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    // ANTI-PATTERN: `checked` would be passed down to the inner component
-    return (
-      <div {...this.props} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  // ANTI-PATTERN: `checked` would be passed down to the inner component
+  return (
+    <div {...props} className={fancyClass} />
+  );
+}
 ```
 
 ## Consuming and Transferring the Same Prop
 
-If your component wants to consume a property but also wants to pass it along, you can repass it explicitly with `checked={checked}`. This is preferable to passing the full `this.props` object since it's easier to refactor and lint.
+If your component wants to consume a property but also wants to pass it along, you can repass it explicitly with `checked={checked}`. This is preferable to passing the full `props` object since it's easier to refactor and lint.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, title, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    var fancyTitle = checked ? 'X ' + title : 'O ' + title;
-    return (
-      <label>
-        <input {...other}
-          checked={checked}
-          className={fancyClass}
-          type="checkbox"
-        />
-        {fancyTitle}
-      </label>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, title, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  var fancyTitle = checked ? 'X ' + title : 'O ' + title;
+  return (
+    <label>
+      <input {...other}
+        checked={checked}
+        className={fancyClass}
+        type="checkbox"
+      />
+      {fancyTitle}
+    </label>
+  );
+}
 ```
 
 > NOTE:
@@ -150,14 +142,12 @@ z; // { a: 3, b: 4 }
 If you don't use JSX, you can use a library to achieve the same pattern. Underscore supports `_.omit` to filter out properties and `_.extend` to copy properties onto a new object.
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var checked = this.props.checked;
-    var other = _.omit(this.props, 'checked');
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      React.DOM.div(_.extend({}, other, { className: fancyClass }))
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var checked = props.checked;
+  var other = _.omit(props, 'checked');
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    React.DOM.div(_.extend({}, other, { className: fancyClass }))
+  );
+}
 ```

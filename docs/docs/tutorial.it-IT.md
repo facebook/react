@@ -43,7 +43,7 @@ Per questo tutorial renderemo il tutto il più semplice possibile. Incluso nel p
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -230,7 +230,7 @@ Per prima cosa, aggiungiamo la libreria di terze parti **marked** alla tua appli
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
 </head>
 ```
 
@@ -258,7 +258,7 @@ Ma c'è un problema! I nostri commenti visualizzati appaiono come segue nel brow
 
 Questo è il risultato della protezione di React da parte di un [attacco XSS](https://en.wikipedia.org/wiki/Cross-site_scripting). C'è una maniera di aggirare questo comportamento, ma il framework ti avvisa di non farlo:
 
-```javascript{4,10}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {

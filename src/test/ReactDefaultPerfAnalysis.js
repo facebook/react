@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 
 // Don't try to save users less than 1.2ms (a number I made up)
 var DONT_CARE_THRESHOLD = 1.2;
@@ -27,7 +26,7 @@ var DOM_OPERATION_TYPES = {
   'deleteValueForProperty': 'remove attribute',
   'setValueForStyles': 'update styles',
   'replaceNodeWithMarkup': 'replace',
-  'updateTextContent': 'set textContent',
+  'replaceDelimitedText': 'replace',
 };
 
 function getTotalTime(measurements) {
@@ -65,7 +64,7 @@ function getExclusiveSummary(measurements) {
 
   for (var i = 0; i < measurements.length; i++) {
     var measurement = measurements[i];
-    var allIDs = assign(
+    var allIDs = Object.assign(
       {},
       measurement.exclusive,
       measurement.inclusive
@@ -117,7 +116,7 @@ function getInclusiveSummary(measurements, onlyClean) {
 
   for (var i = 0; i < measurements.length; i++) {
     var measurement = measurements[i];
-    var allIDs = assign(
+    var allIDs = Object.assign(
       {},
       measurement.exclusive,
       measurement.inclusive
@@ -185,7 +184,7 @@ function getUnchangedComponents(measurement) {
       }
     });
   });
-  var allIDs = assign({}, measurement.exclusive, measurement.inclusive);
+  var allIDs = Object.assign({}, measurement.exclusive, measurement.inclusive);
 
   for (var id in allIDs) {
     var isDirty = false;

@@ -243,7 +243,7 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 或者使用新的ES6箭头函数:
 
 ```javascript
-var HelloMessage = (props) => <div>Hello {props.name}</div>;
+const HelloMessage = (props) => <div>Hello {props.name}</div>;
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
@@ -254,4 +254,4 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 >
 > 因为无状态函数没有备份实例，你不能附加一个引用到一个无状态函数组件。 通常这不是问题，因为无状态函数不提供一个命令式的API。没有命令式的API，你就没有任何需要实例来做的事。然而，如果用户想查找无状态函数组件的DOM节点，他们必须把这个组件包装在一个有状态组件里（比如，ES6 类组件） 并且连接一个引用到有状态的包装组件。
 
-在理想世界里，你的大多数组件都应该是无状态函数式的，因为这些无状态组件可以在React核心里经过一个快速的代码路径。 如果可能，这是推荐的模式。
+在理想世界里，你的大多数组件都应该是无状态函数，因为将来我们可能会用避免不必要的检查和内存分配的方式来对这些组件进行优化。 如果可能，这是推荐的模式。

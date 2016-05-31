@@ -5,7 +5,7 @@ permalink: context-zh-CN.html
 prev: advanced-performance-zh-CN.html
 ---
 
-React最大的优势之一是他很容易从你的React组件里跟踪数据流动。当你看着一个组件，你可以很容易准确看出哪个props被传入，这让你的APP很容易推断。
+React最大的优势之一是很容易从你的React组件里跟踪数据流动。当你看着一个组件，你可以很容易准确看出哪个props被传入，这让你的APP很容易推断。
 
 偶尔，你想通过组件树传递数据，而不在每一级上手工下传prop，React的 "context" 让你做到这点。
 
@@ -158,6 +158,38 @@ function Button(props, context) {
   );
 }
 Button.contextTypes = {color: React.PropTypes.string};
+```
+
+## Updating context
+
+当 state 或者 props 变化时 `getChildContext` 函数会被调用。为了更新context里的数据，用 `this.setState` 触发一个本地的state更新。这将会触发一个新的 context 并且子级将收到变化。
+
+```javascript
+var MediaQuery = React.createClass({
+  getInitialState: function(){
+    return {type:'desktop'};
+  },
+  childContextTypes: {
+    type: React.PropTypes.string
+  },
+  getChildContext: function() {
+    return {type: this.state.type};
+  },
+  componentDidMount: function(){
+    var checkMediaQuery = function(){
+      var type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
+      if (type !== this.state.type){
+        this.setState({type:type}); 
+      }
+    };
+    
+    window.addEventListener('resize', checkMediaQuery);
+    checkMediaQuery();
+  },
+  render: function(){
+    return this.props.children;
+  }
+});
 ```
 
 ## 什么时候不用 context

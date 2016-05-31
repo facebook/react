@@ -15,13 +15,14 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
 // To avoid a cyclic dependency, we create the final class in this module
-var ReactCompositeComponentWrapper = function() { };
-assign(
+var ReactCompositeComponentWrapper = function(element) {
+  this.construct(element);
+};
+Object.assign(
   ReactCompositeComponentWrapper.prototype,
   ReactCompositeComponent.Mixin,
   {
@@ -87,7 +88,7 @@ function instantiateReactComponent(node) {
       // representation, we can drop this code path.
       instance = new element.type(element);
     } else {
-      instance = new ReactCompositeComponentWrapper();
+      instance = new ReactCompositeComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
     instance = ReactNativeComponent.createInstanceForText(node);
@@ -101,7 +102,6 @@ function instantiateReactComponent(node) {
 
   if (__DEV__) {
     warning(
-      typeof instance.construct === 'function' &&
       typeof instance.mountComponent === 'function' &&
       typeof instance.receiveComponent === 'function' &&
       typeof instance.getNativeNode === 'function' &&
@@ -109,9 +109,6 @@ function instantiateReactComponent(node) {
       'Only React Components can be mounted.'
     );
   }
-
-  // Sets up the instance. This can probably just move into the constructor now.
-  instance.construct(node);
 
   // These two fields are used by the DOM and ART diffing algorithms
   // respectively. Instead of using expandos on components, we should be

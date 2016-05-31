@@ -29,7 +29,7 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 * * *
 
-### Going big with React ###
+### Going big with React
 
 "On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale."
 <figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>

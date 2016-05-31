@@ -9,14 +9,14 @@
  * @providesModule setInnerHTML
  */
 
-/* globals MSApp */
-
 'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var WHITESPACE_TEST = /^[ \r\n\t\f]/;
 var NONVISIBLE_TEST = /<(!--|link|noscript|meta|script|style)[ \r\n\t\f\/>]/;
+
+var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 
 /**
  * Set the innerHTML property of a node, ensuring that whitespace is preserved
@@ -26,18 +26,11 @@ var NONVISIBLE_TEST = /<(!--|link|noscript|meta|script|style)[ \r\n\t\f\/>]/;
  * @param {string} html
  * @internal
  */
-var setInnerHTML = function(node, html) {
-  node.innerHTML = html;
-};
-
-// Win8 apps: Allow all html to be inserted
-if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
-  setInnerHTML = function(node, html) {
-    MSApp.execUnsafeLocalFunction(function() {
-      node.innerHTML = html;
-    });
-  };
-}
+var setInnerHTML = createMicrosoftUnsafeLocalFunction(
+  function(node, html) {
+    node.innerHTML = html;
+  }
+);
 
 if (ExecutionEnvironment.canUseDOM) {
   // IE8: When updating a just created node with innerHTML only leading
@@ -86,6 +79,7 @@ if (ExecutionEnvironment.canUseDOM) {
       }
     };
   }
+  testElement = null;
 }
 
 module.exports = setInnerHTML;

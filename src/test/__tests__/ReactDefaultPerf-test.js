@@ -14,6 +14,7 @@
 describe('ReactDefaultPerf', function() {
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactDefaultPerf;
   var ReactTestUtils;
   var ReactDefaultPerfAnalysis;
@@ -24,12 +25,18 @@ describe('ReactDefaultPerf', function() {
 
   beforeEach(function() {
     var now = 0;
-    jest.setMock('performanceNow', function() {
+    jest.setMock('fbjs/lib/performanceNow', function() {
       return now++;
     });
 
+    if (typeof console.table !== 'function') {
+      console.table = () => {};
+      console.table.isFake = true;
+    }
+
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDefaultPerf = require('ReactDefaultPerf');
     ReactTestUtils = require('ReactTestUtils');
     ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
@@ -54,11 +61,17 @@ describe('ReactDefaultPerf', function() {
     });
   });
 
+  afterEach(function() {
+    if (console.table.isFake) {
+      delete console.table;
+    }
+  });
+
   function measure(fn) {
     ReactDefaultPerf.start();
     fn();
     ReactDefaultPerf.stop();
-    return ReactDefaultPerf.getLastMeasurements();
+    return ReactDefaultPerf.getLastMeasurements().__unstable_this_format_will_change;
   }
 
   it('should count no-op update as waste', function() {
@@ -68,7 +81,7 @@ describe('ReactDefaultPerf', function() {
       ReactDOM.render(<App />, container);
     });
 
-    var summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    var summary = ReactDefaultPerf.getWasted(measurements);
     expect(summary.length).toBe(2);
 
     /*eslint-disable dot-notation */
@@ -94,7 +107,7 @@ describe('ReactDefaultPerf', function() {
       ReactDOM.render(<App flipSecond={true} />, container);
     });
 
-    var summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    var summary = ReactDefaultPerf.getWasted(measurements);
     expect(summary.length).toBe(1);
 
     /*eslint-disable dot-notation */
@@ -108,7 +121,7 @@ describe('ReactDefaultPerf', function() {
 
   function expectNoWaste(fn) {
     var measurements = measure(fn);
-    var summary = ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    var summary = ReactDefaultPerf.getWasted(measurements);
     expect(summary).toEqual([]);
   }
 
@@ -224,6 +237,51 @@ describe('ReactDefaultPerf', function() {
 
     var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     expect(summary).toEqual([]);
+  });
+
+  it('should print a table after calling printOperations', function() {
+    var container = document.createElement('div');
+    var measurements = measure(() => {
+      ReactDOM.render(<Div>hey</Div>, container);
+    });
+    spyOn(console, 'table');
+    ReactDefaultPerf.printOperations(measurements);
+    expect(console.table.calls.length).toBe(1);
+    expect(console.table.argsForCall[0][0]).toEqual([{
+      'data-reactid': '',
+      type: 'set innerHTML',
+      args: ReactDOMFeatureFlags.useCreateElement ?
+        '{"node":"<not serializable>","children":[],"html":null,"text":null}' :
+        '"<div data-reactroot=\\"\\" data-reactid=\\"1\\">hey</div>"',
+    }]);
+  });
+
+  it('warns once when using getMeasurementsSummaryMap', function() {
+    var measurements = measure(() => {});
+    spyOn(console, 'error');
+    ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
+      '`ReactPerf.getWasted(...)` instead.'
+    );
+
+    ReactDefaultPerf.getMeasurementsSummaryMap(measurements);
+    expect(console.error.calls.length).toBe(1);
+  });
+
+  it('warns once when using printDOM', function() {
+    var measurements = measure(() => {});
+    spyOn(console, 'error');
+    ReactDefaultPerf.printDOM(measurements);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      '`ReactPerf.printDOM(...)` is deprecated. Use ' +
+      '`ReactPerf.printOperations(...)` instead.'
+    );
+
+    ReactDefaultPerf.printDOM(measurements);
+    expect(console.error.calls.length).toBe(1);
   });
 
 });

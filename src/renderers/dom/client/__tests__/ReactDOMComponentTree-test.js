@@ -100,7 +100,9 @@ describe('ReactDOMComponentTree', function() {
     expect(renderAndGetInstance('main')._currentElement.type).toBe('main');
 
     // This one's a text component!
-    expect(renderAndGetInstance('span')._stringText).toBe('goodbye.');
+    var root = renderAndQuery(null);
+    var inst = ReactDOMComponentTree.getInstanceFromNode(root.children[0].childNodes[2]);
+    expect(inst._stringText).toBe('goodbye.');
 
     expect(renderAndGetClosest('b')._currentElement.type).toBe('main');
     expect(renderAndGetClosest('img')._currentElement.type).toBe('main');

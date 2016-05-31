@@ -43,7 +43,8 @@ next: thinking-in-react-zh-CN.html
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -86,7 +87,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -96,7 +97,7 @@ React.render(
 
 #### JSX 语法
 
-首先你会注意到你的 JavaScript 中 XML 式的语法。我们有一个简单的预编译器，将这种语法糖转换成单纯的 JavaScript ：
+首先你会注意到你的 JavaScript 中 XML 式的语法。我们有一个简单的预编译器，将语法糖转换成这种纯的JavaScript：
 
 ```javascript
 // tutorial1-raw.js
@@ -109,7 +110,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -125,11 +126,15 @@ React.render(
 
 你没有必要返回基本的 HTML。你可以返回一个你（或者其他人）创建的组件树。这就使 React **组件化**：一个可维护前端的关键原则。
 
-`React.render()` 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。
+`ReactDOM.render()` 实例化根组件，启动框架，注入标记到原始的 DOM 元素中，作为第二个参数提供。
+
+`ReactDOM` 模块暴露了 DOM 相关的方法， 而 `React` 保有被不同平台的 React 共享的核心工具 （例如 [React Native](http://facebook.github.io/react-native/)）。
+
+对于本教程 `ReactDOM.render` 保持在脚本底部是很重要的。`ReactDOM.render` 应该只在复合组件被定义之后被调用。
 
 ## 组合组件
 
-让我们为 `CommentList` 和 `CommentForm` 建造骨架，它们将会，再一次的，是一些简单的 `<div>`。添加这两个组件到你的文件里，保持现存的 `CommentBox` 声明和 `React.render` 调用:
+让我们为 `CommentList` 和 `CommentForm` 建造骨架，它们将会，再一次的，是一些简单的 `<div>`。添加这两个组件到你的文件里，保持现存的 `CommentBox` 声明和 `ReactDOM.render` 调用:
 
 ```javascript
 // tutorial2.js
@@ -219,22 +224,7 @@ var CommentList = React.createClass({
 
 Markdown 是一种简单的内联格式化你的文字的方法。例如，用星号包围文本将会使其强调突出。
 
-首先，添加第三方库 **marked** 到你的应用。这是一个JavaScript库，接受 Markdown 文本并且转换为原始的 HTML。这需要在你的头部有一个 script 标签（那个我们已经在 React 操场上包含了的标签）：
-
-```html{9}
-<!-- index.html -->
-<head>
-  <meta charset="utf-8" />
-  <title>React Tutorial</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
-</head>
-```
-
-然后，让我们转换评论文本为 Markdown 并输出它：
+在本教程中我们使用第三方库 **marked**，它接受 Markdown 文本并且转换为原始的 HTML。我们已经在初始的页面标记里包含了这个库，所以我们可以直接开始使用它，让我们转换评论文本为 Markdown 并输出它：
 
 ```javascript{9}
 // tutorial6.js
@@ -258,7 +248,7 @@ var Comment = React.createClass({
 
 那是 React 在保护你免受 [XSS 攻击](https://en.wikipedia.org/wiki/Cross-site_scripting)。有一个方法解决这个问题，但是框架会警告你别使用这种方法：
 
-```javascript{4,10}
+```javascript{3-6,14}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
@@ -290,12 +280,12 @@ var Comment = React.createClass({
 ```javascript
 // tutorial8.js
 var data = [
-  {author: "Pete Hunt", text: "This is one comment"},
-  {author: "Jordan Walke", text: "This is *another* comment"}
+  {id: 1, author: "Pete Hunt", text: "This is one comment"},
+  {id: 2, author: "Jordan Walke", text: "This is *another* comment"}
 ];
 ```
 
-我们需要以一种模块化的方式将这个数据传入到 `CommentList`。修改 `CommentBox` 和 `React.render()` 方法，以通过 props 传入数据到 `CommentList`：
+我们需要以一种模块化的方式将这个数据传入到 `CommentList`。修改 `CommentBox` 和 `ReactDOM.render()` 方法，以便于通过 props 传入数据到 `CommentList`：
 
 ```javascript{7,15}
 // tutorial9.js
@@ -311,7 +301,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -323,9 +313,9 @@ React.render(
 // tutorial10.js
 var CommentList = React.createClass({
   render: function() {
-    var commentNodes = this.props.data.map(function (comment) {
+    var commentNodes = this.props.data.map(function(comment) {
       return (
-        <Comment author={comment.author}>
+        <Comment author={comment.author} key={comment.id}>
           {comment.text}
         </Comment>
       );
@@ -347,7 +337,7 @@ var CommentList = React.createClass({
 
 ```javascript{3}
 // tutorial11.js
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" />,
   document.getElementById('content')
 );
@@ -386,7 +376,7 @@ var CommentBox = React.createClass({
 `getInitialState()` 在生命周期里只执行一次，并设置组件的初始状态。
 
 #### 更新状态
-当组件第一次创建时，我们想从服务器获取一些 JSON 并且更新状态以反映最新的数据。我们将用 jQuery 来发送一个异步请求到我们刚才启动的服务器以获取我们需要的数据。看起来像这样：
+当组件第一次创建时，我们想从服务器获取一些 JSON 并且更新状态以反映最新的数据。我们将用 jQuery 来发送一个异步请求到我们刚才启动的服务器以获取我们需要的数据。这些数据已经被包含在了你已启动的服务器里（基于`comments.json`文件），所以一旦被获取，`this.state.data` 会看起来像这样：
 
 ```json
 [
@@ -462,7 +452,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <CommentBox url="/api/comments" pollInterval={2000} />,
   document.getElementById('content')
 );
@@ -490,28 +480,39 @@ var CommentForm = React.createClass({
 });
 ```
 
-让我们做一个交互式的表单。当用户提交表单时，我们应该清空它，提交一个请求给服务器，和刷新评论列表。要开始，让我们监听表单的提交事件并清空它。
+#### 受控组件
 
-```javascript{3-14,16-19}
+对于传统的 DOM， `input` 元素被渲染并且浏览器管理它的状态（它的渲染值）。结果是，DOM的实际值会和组件不同。这是不理想的，因为视图的值会和组件的值不同。在React中，组件应该总是表示视图的值而不只是在初始化时。
+
+因此，我们将使用 `this.state` 来在用户输入时保存输入。我们定义一个初始 `state`，它带有 `author` 和 `text` 两个属性并将他们设置为空字符串。在我们的 `<input>` 元素里，我们设置 `value` prop 来反映组件的 `state` 并给他们附加 `onChange` 事件处理。这些带有设置了 `value` 的  `<input>` 元素被称为受控组件。更多关于受控组件请阅读 [Forms article](/react/docs/forms.html#controlled-components)。
+
+```javascript{3-11,15-26}
 // tutorial16.js
 var CommentForm = React.createClass({
-  handleSubmit: function(e) {
-    e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
-    if (!text || !author) {
-      return;
-    }
-    // TODO: send request to the server
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
-    return;
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
   },
   render: function() {
     return (
-      <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="Your name" ref="author" />
-        <input type="text" placeholder="Say something..." ref="text" />
+      <form className="commentForm">
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
         <input type="submit" value="Post" />
       </form>
     );
@@ -521,13 +522,59 @@ var CommentForm = React.createClass({
 
 ##### 事件
 
-React使用驼峰命名规范(camelCase)给组件绑定事件处理器。我们给表单绑定一个`onSubmit`处理器，它在表单提交了合法的输入后清空表单字段。
+React使用小驼峰命名规范(camelCase)给组件绑定事件处理器。我们附加 `onChange` 给两个 `<input>` 元素。现在，当用户输入文本到 `<input>` 中，被附加的 `onChange` 回调函数被激发并且组件的 `state` 被修改。然后，被渲染的 `input` 元素的值将会更新以反映当前组件的 `state`。
+
+#### 提交表单
+
+让我们使表单具有交互性。当用户提交表单时，我们应该清除它，提交一个请求到服务器，并刷新评论列表。让我们监听表单的提交事件并清除它。
+
+```javascript{12-21,24}
+// tutorial17.js
+var CommentForm = React.createClass({
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
+  },
+  handleSubmit: function(e) {
+    e.preventDefault();
+    var author = this.state.author.trim();
+    var text = this.state.text.trim();
+    if (!text || !author) {
+      return;
+    }
+    // TODO: send request to the server
+    this.setState({author: '', text: ''});
+  },
+  render: function() {
+    return (
+      <form className="commentForm" onSubmit={this.handleSubmit}>
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
+        <input type="submit" value="Post" />
+      </form>
+    );
+  }
+});
+```
+
+我们给表单绑定一个`onSubmit`处理器，它在表单提交了合法的输入后清空表单字段。
 
 在事件中调用`preventDefault()`来阻止浏览器提交表单的默认行为。
-
-##### Refs
-
-我们利用`ref`属性给子组件赋予名字，`this.refs`-引用组件。我们可以在组件上调用 `React.findDOMNode(component)` 获取原生的浏览器DOM元素。
 
 ##### 回调函数作为属性
 
@@ -536,7 +583,7 @@ React使用驼峰命名规范(camelCase)给组件绑定事件处理器。我们�
 我们需要从子组件传回数据到它的父组件。我们在父组件的`render`方法中以传递一个新的回调函数（`handleCommentSubmit`）到子组件完成这件事，绑定它到子组件的 `onCommentSubmit` 事件上。无论事件什么时候触发，回调函数都将被调用：
 
 ```javascript{16-18,31}
-// tutorial17.js
+// tutorial18.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -573,28 +620,45 @@ var CommentBox = React.createClass({
 });
 ```
 
-当用户提交表单时，让我们从 `CommentForm` 调用这个回调函数：
+既然 `CommentBox` 已经通过 `onCommentSubmit` prop 使回调函数对于 `CommentForm` 可用，`CommentForm` 就可以在用户提交表单时调用回调函数：
 
-```javascript{10}
-// tutorial18.js
+```javascript{19}
+// tutorial19.js
 var CommentForm = React.createClass({
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
+  },
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var author = this.state.author.trim();
+    var text = this.state.text.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
-    return;
+    this.setState({author: '', text: ''});
   },
   render: function() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="Your name" ref="author" />
-        <input type="text" placeholder="Say something..." ref="text" />
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
         <input type="submit" value="Post" />
       </form>
     );
@@ -605,7 +669,7 @@ var CommentForm = React.createClass({
 既然现在回调函数已经就绪，我们所需要做的就是提交到服务器然后刷新列表：
 
 ```javascript{17-28}
-// tutorial19.js
+// tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -657,8 +721,8 @@ var CommentBox = React.createClass({
 
 我们的应用现在已经功能完备，但是它感觉很慢，因为在评论出现在列表前必须等待请求完成。我们可以优化添加这条评论到列表以使应用感觉更快。
 
-```javascript{17-19,29}
-// tutorial20.js
+```javascript{17-23,33}
+// tutorial21.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -675,6 +739,10 @@ var CommentBox = React.createClass({
   },
   handleCommentSubmit: function(comment) {
     var comments = this.state.data;
+    // Optimistically set an id on the new comment. It will be replaced by an
+    // id generated by the server. In a production application you would likely
+    // not use Date.now() for this and would have a more robust system in place.
+    comment.id = Date.now();
     var newComments = comments.concat([comment]);
     this.setState({data: newComments});
     $.ajax({

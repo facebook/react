@@ -1,8 +1,6 @@
 'use strict';
 
-var assign = require('object-assign');
 var path = require('path');
-var process = require('process');
 
 var GULP_EXE = 'gulp';
 if (process.platform === 'win32') {
@@ -35,7 +33,7 @@ module.exports = function(grunt) {
       // but if it breaks we'll fix it then.
       cmd: path.join('node_modules', '.bin', GULP_EXE),
       args: args,
-      opts: assign({stdio: 'inherit'}, opts),
+      opts: Object.assign({stdio: 'inherit'}, opts),
     }, function(err, result, code) {
       if (err) {
         grunt.fail.fatal('Something went wrong running gulp: ', result);
@@ -139,7 +137,12 @@ module.exports = function(grunt) {
   ]);
 
   // Automate the release!
-  grunt.registerMultiTask('release', require('./grunt/tasks/release'));
+  var releaseTasks = require('./grunt/tasks/release');
+  grunt.registerTask('release:setup', releaseTasks.setup);
+  grunt.registerTask('release:bower', releaseTasks.bower);
+  grunt.registerTask('release:docs', releaseTasks.docs);
+  grunt.registerTask('release:msg', releaseTasks.msg);
+  grunt.registerTask('release:starter', releaseTasks.starter);
 
   grunt.registerTask('release', [
     'release:setup',

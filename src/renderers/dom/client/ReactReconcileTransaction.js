@@ -17,7 +17,6 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
 var Transaction = require('Transaction');
 
-var assign = require('Object.assign');
 
 /**
  * Ensures that, when possible, the selection range (currently selected text
@@ -160,7 +159,7 @@ var Mixin = {
 };
 
 
-assign(ReactReconcileTransaction.prototype, Transaction.Mixin, Mixin);
+Object.assign(ReactReconcileTransaction.prototype, Transaction.Mixin, Mixin);
 
 PooledClass.addPoolingTo(ReactReconcileTransaction);
 

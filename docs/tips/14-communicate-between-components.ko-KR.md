@@ -13,23 +13,21 @@ next: expose-component-functions-ko-KR.html
 `GroceryList` 컴포넌트가 배열로 생성된 아이템 목록을 가지고 있다고 해봅시다. 목록의 아이템이 클릭되면 아이템의 이름이 보이길 원할 겁니다:
 
 ```js
-var GroceryList = React.createClass({
-  handleClick: function(i) {
-    console.log('클릭한 아이템: ' + this.props.items[i]);
-  },
+var handleClick = function(i, props) {
+  console.log('클릭한 아이템: ' + props.items[i]);
+}
 
-  render: function() {
-    return (
-      <div>
-        {this.props.items.map(function(item, i) {
-          return (
-            <div onClick={this.handleClick.bind(this, i)} key={i}>{item}</div>
-          );
-        }, this)}
-      </div>
-    );
-  }
-});
+function GroceryList(props) {  
+  return (
+    <div>
+      {props.items.map(function(item, i) {
+        return (
+          <div onClick={handleClick.bind(this, i, props)} key={i}>{item}</div>
+        );
+      })}
+    </div>
+  );
+}
 
 ReactDOM.render(
   <GroceryList items={['사과', '바나나', '크랜베리']} />, mountNode

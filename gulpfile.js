@@ -14,8 +14,7 @@ var babel = require('gulp-babel');
 var flatten = require('gulp-flatten');
 var del = require('del');
 
-var babelPluginDEV = require('fbjs-scripts/babel/dev-expression');
-var babelPluginModules = require('fbjs-scripts/babel/rewrite-modules');
+var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
 
 var paths = {
   react: {
@@ -30,16 +29,17 @@ var paths = {
 };
 
 var babelOpts = {
-  nonStandard: true,
-  blacklist: [
-    'spec.functionName',
+  plugins: [
+    [babelPluginModules, {
+      map: Object.assign(
+        {},
+        require('fbjs/module-map'),
+        {
+          'object-assign': 'object-assign',
+        }
+      ),
+    }],
   ],
-  optional: [
-    'es7.trailingFunctionCommas',
-  ],
-  plugins: [babelPluginDEV, babelPluginModules],
-  ignore: ['third_party'],
-  _moduleMap: require('fbjs/module-map'),
 };
 
 gulp.task('react:clean', function() {

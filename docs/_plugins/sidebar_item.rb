@@ -4,7 +4,14 @@ module Jekyll
       pageID = @context.registers[:page]["id"]
       itemID = item["id"]
       href = item["href"] || "/react/docs/#{itemID}.html"
-      className = pageID == itemID ? ' class="active"' : ''
+      classes = []
+      if pageID == itemID
+        classes.push("active")
+      end
+      if item["href"]
+        classes.push("external")
+      end
+      className = classes.size > 0  ? " class=\"#{classes.join(' ')}\"" : ""
 
       return "<a href=\"#{href}\"#{className}>#{item["title"]}</a>"
     end

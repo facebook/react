@@ -517,4 +517,24 @@ describe('ReactDOMSelect', function() {
     );
     expect(console.error.argsForCall.length).toBe(1);
   });
+
+  it('should be able to safely remove select onChange', function() {
+    function changeView() {
+      ReactDOM.unmountComponentAtNode(container);
+    }
+
+    var container = document.createElement('div');
+    var stub =
+      <select value="giraffe" onChange={changeView}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(() => ReactTestUtils.Simulate.change(node)).not.toThrow(
+      "Cannot set property 'pendingUpdate' of null"
+    );
+  });
 });

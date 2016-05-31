@@ -18,6 +18,7 @@ var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
 var performanceNow = require('performanceNow');
+var warning = require('warning');
 
 function roundFloat(val) {
   return Math.floor(val * 100) / 100;
@@ -27,7 +28,7 @@ function addValue(obj, key, val) {
   obj[key] = (obj[key] || 0) + val;
 }
 
-// Composites don't have any built-in ID: we have to make our own
+// Composite/text components don't have any built-in ID: we have to make our own
 var compositeIDMap;
 var compositeIDCounter = 17000;
 function getIDOfComposite(inst) {
@@ -42,6 +43,39 @@ function getIDOfComposite(inst) {
     return id;
   }
 }
+
+function getID(inst) {
+  if (inst.hasOwnProperty('_rootNodeID')) {
+    return inst._rootNodeID;
+  } else {
+    return getIDOfComposite(inst);
+  }
+}
+
+function stripComplexValues(key, value) {
+  if (typeof value !== 'object' || Array.isArray(value) || value == null) {
+    return value;
+  }
+  var prototype = Object.getPrototypeOf(value);
+  if (!prototype || prototype === Object.prototype) {
+    return value;
+  }
+  return '<not serializable>';
+}
+
+// This implementation of ReactPerf is going away some time mid 15.x.
+// While we plan to keep most of the API, the actual format of measurements
+// will change dramatically. To signal this, we wrap them into an opaque-ish
+// object to discourage reaching into it until the API stabilizes.
+function wrapLegacyMeasurements(measurements) {
+  return { __unstable_this_format_will_change: measurements };
+}
+function unwrapLegacyMeasurements(measurements) {
+  return measurements && measurements.__unstable_this_format_will_change || measurements;
+}
+
+var warnedAboutPrintDOM = false;
+var warnedAboutGetMeasurementsSummaryMap = false;
 
 var ReactDefaultPerf = {
   _allMeasurements: [], // last item in the list is the current one
@@ -63,11 +97,11 @@ var ReactDefaultPerf = {
   },
 
   getLastMeasurements: function() {
-    return ReactDefaultPerf._allMeasurements;
+    return wrapLegacyMeasurements(ReactDefaultPerf._allMeasurements);
   },
 
   printExclusive: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     var summary = ReactDefaultPerfAnalysis.getExclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
@@ -85,7 +119,7 @@ var ReactDefaultPerf = {
   },
 
   printInclusive: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
@@ -101,6 +135,17 @@ var ReactDefaultPerf = {
   },
 
   getMeasurementsSummaryMap: function(measurements) {
+    warning(
+      warnedAboutGetMeasurementsSummaryMap,
+      '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
+      '`ReactPerf.getWasted(...)` instead.'
+    );
+    warnedAboutGetMeasurementsSummaryMap = true;
+    return ReactDefaultPerf.getWasted(measurements);
+  },
+
+  getWasted: function(measurements) {
+    measurements = unwrapLegacyMeasurements(measurements);
     var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
       measurements,
       true
@@ -115,8 +160,8 @@ var ReactDefaultPerf = {
   },
 
   printWasted: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
-    console.table(ReactDefaultPerf.getMeasurementsSummaryMap(measurements));
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
+    console.table(ReactDefaultPerf.getWasted(measurements));
     console.log(
       'Total time:',
       ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
@@ -124,13 +169,23 @@ var ReactDefaultPerf = {
   },
 
   printDOM: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    warning(
+      warnedAboutPrintDOM,
+      '`ReactPerf.printDOM(...)` is deprecated. Use ' +
+      '`ReactPerf.printOperations(...)` instead.'
+    );
+    warnedAboutPrintDOM = true;
+    return ReactDefaultPerf.printOperations(measurements);
+  },
+
+  printOperations: function(measurements) {
+    measurements = unwrapLegacyMeasurements(measurements || ReactDefaultPerf._allMeasurements);
     var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
     console.table(summary.map(function(item) {
       var result = {};
       result[DOMProperty.ID_ATTRIBUTE_NAME] = item.id;
       result.type = item.type;
-      result.args = JSON.stringify(item.args);
+      result.args = JSON.stringify(item.args, stripComplexValues);
       return result;
     }));
     console.log(
@@ -224,8 +279,10 @@ var ReactDefaultPerf = {
           } else if (fnName === 'replaceNodeWithMarkup') {
             // Old node is already unmounted; can't get its instance
             id = ReactDOMComponentTree.getInstanceFromNode(args[1].node)._rootNodeID;
+          } else if (fnName === 'replaceDelimitedText') {
+            id = getID(ReactDOMComponentTree.getInstanceFromNode(args[0]));
           } else if (typeof id === 'object') {
-            id = ReactDOMComponentTree.getInstanceFromNode(args[0])._rootNodeID;
+            id = getID(ReactDOMComponentTree.getInstanceFromNode(args[0]));
           }
           ReactDefaultPerf._recordWrite(
             id,
@@ -291,7 +348,7 @@ var ReactDefaultPerf = {
          fnName === 'receiveComponent')) {
 
         rv = func.apply(this, args);
-        entry.hierarchy[this._rootNodeID] =
+        entry.hierarchy[getID(this)] =
           ReactDefaultPerf._compositeStack.slice();
         return rv;
       } else {

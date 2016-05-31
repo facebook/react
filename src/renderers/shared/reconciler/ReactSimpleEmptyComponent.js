@@ -13,15 +13,12 @@
 
 var ReactReconciler = require('ReactReconciler');
 
-var assign = require('Object.assign');
 
 var ReactSimpleEmptyComponent = function(placeholderElement, instantiate) {
   this._currentElement = null;
   this._renderedComponent = instantiate(placeholderElement);
 };
-assign(ReactSimpleEmptyComponent.prototype, {
-  construct: function(element) {
-  },
+Object.assign(ReactSimpleEmptyComponent.prototype, {
   mountComponent: function(
     transaction,
     nativeParent,

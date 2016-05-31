@@ -27,16 +27,14 @@ React.createElement(Component, Object.assign({}, this.props, { more: 'values' })
 大部分情况下你应该显式地向下传递 props。这样可以确保只公开你认为是安全的内部 API 的子集。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      <div className={fancyClass} onClick={this.props.onClick}>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    <div className={fancyClass} onClick={props.onClick}>
+      {props.children}
+    </div>
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
@@ -58,22 +56,20 @@ ReactDOM.render(
 列出所有要当前使用的属性，后面跟着 `...other`。
 
 ```javascript
-var { checked, ...other } = this.props;
+var { checked, ...other } = props;
 ```
 
 这样能确保把所有 props 传下去，*除了* 那些已经被使用了的。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    // `other` 包含 { onClick: console.log } 但 checked 属性除外
-    return (
-      <div {...other} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  // `other` 包含 { onClick: console.log } 但 checked 属性除外
+  return (
+    <div {...other} className={fancyClass} />
+  );
+}
 ReactDOM.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
@@ -89,39 +85,35 @@ ReactDOM.render(
 在传递这些未知的 `other` 属性时，要经常使用解构赋值模式。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var fancyClass = this.props.checked ? 'FancyChecked' : 'FancyUnchecked';
-    // 反模式：`checked` 会被传到里面的组件里
-    return (
-      <div {...this.props} className={fancyClass} />
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var fancyClass = props.checked ? 'FancyChecked' : 'FancyUnchecked';
+  // 反模式：`checked` 会被传到里面的组件里
+  return (
+    <div {...props} className={fancyClass} />
+  );
+}
 ```
 
 ## 使用和传递同一个 Prop
 
-如果组件需要使用一个属性又要往下传递，可以直接使用 `checked={checked}` 再传一次。这样做比传整个 `this.props` 对象要好，因为更利于重构和语法检查。
+如果组件需要使用一个属性又要往下传递，可以直接使用 `checked={checked}` 再传一次。这样做比传整个 `props` 对象要好，因为更利于重构和语法检查。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var { checked, title, ...other } = this.props;
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    var fancyTitle = checked ? 'X ' + title : 'O ' + title;
-    return (
-      <label>
-        <input {...other}
-          checked={checked}
-          className={fancyClass}
-          type="checkbox"
-        />
-        {fancyTitle}
-      </label>
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var { checked, title, ...other } = props;
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  var fancyTitle = checked ? 'X ' + title : 'O ' + title;
+  return (
+    <label>
+      <input {...other}
+        checked={checked}
+        className={fancyClass}
+        type="checkbox"
+      />
+      {fancyTitle}
+    </label>
+  );
+}
 ```
 
 > 注意:
@@ -150,14 +142,12 @@ z; // { a: 3, b: 4 }
 如果不使用 JSX，可以使用一些库来实现相同效果。Underscore 提供 `_.omit` 来过滤属性，`_.extend` 复制属性到新的对象。
 
 ```javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var checked = this.props.checked;
-    var other = _.omit(this.props, 'checked');
-    var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
-    return (
-      React.DOM.div(_.extend({}, other, { className: fancyClass }))
-    );
-  }
-});
+function FancyCheckbox(props) {
+  var checked = props.checked;
+  var other = _.omit(props, 'checked');
+  var fancyClass = checked ? 'FancyChecked' : 'FancyUnchecked';
+  return (
+    React.DOM.div(_.extend({}, other, { className: fancyClass }))
+  );
+}
 ```

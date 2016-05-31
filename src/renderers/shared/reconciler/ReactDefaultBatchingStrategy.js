@@ -14,7 +14,6 @@
 var ReactUpdates = require('ReactUpdates');
 var Transaction = require('Transaction');
 
-var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 
 var RESET_BATCHED_UPDATES = {
@@ -35,7 +34,7 @@ function ReactDefaultBatchingStrategyTransaction() {
   this.reinitializeTransaction();
 }
 
-assign(
+Object.assign(
   ReactDefaultBatchingStrategyTransaction.prototype,
   Transaction.Mixin,
   {

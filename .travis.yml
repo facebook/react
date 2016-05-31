@@ -66,13 +66,13 @@ script:
           $SERVER
       fi
     elif [ "$TEST_TYPE" = test ]; then
-      if [ "$TRAVIS_PULL_REQUEST" = false ]; then
-        set -e
-        ./node_modules/.bin/grunt jest:coverage
-        cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
-      else
-        ./node_modules/.bin/grunt jest:normal
-      fi
+      set -e
+      ./node_modules/.bin/grunt jest:normal
+      echo 'Testing in server-render (HTML generation) mode...'
+      printf '\nmodule.exports.useCreateElement = false;\n' \
+        >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      ./node_modules/.bin/grunt jest:normal
+      git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi

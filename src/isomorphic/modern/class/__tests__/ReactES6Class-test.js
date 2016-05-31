@@ -64,9 +64,7 @@ describe('ReactES6Class', function() {
     expect(console.error.calls.length).toBe(1);
     expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Foo(...): No `render` method found on the returned component ' +
-      'instance: you may have forgotten to define `render`, returned ' +
-      'null/false from a stateless component, or tried to render an element ' +
-      'whose type is a function that isn\'t a React component.'
+      'instance: you may have forgotten to define `render`.'
     );
   });
 

@@ -22,7 +22,7 @@ We have instructions for building from `master` [in our GitHub repository](https
 
 ### In-browser JSX Transform
 
-If you like using JSX, Babel provides an [in-browser ES6 and JSX transformer for development](http://babeljs.io/docs/usage/browser/) called browser.js that can be included from a `babel-core` npm release or from [CDNJS](http://cdnjs.com/libraries/babel-core). Include a `<script type="text/babel">` tag to engage the JSX transformer.
+If you like using JSX, Babel 5 provided an in-browser ES6 and JSX transformer for development called browser.js that can be included from [CDNJS](http://cdnjs.com/libraries/babel-core/5.8.34). Include a `<script type="text/babel">` tag to engage the JSX transformer.
 
 > Note:
 >

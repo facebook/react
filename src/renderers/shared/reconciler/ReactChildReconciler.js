@@ -100,7 +100,7 @@ var ReactChildReconciler = {
       } else {
         if (prevChild) {
           removedNodes[name] = ReactReconciler.getNativeNode(prevChild);
-          ReactReconciler.unmountComponent(prevChild);
+          ReactReconciler.unmountComponent(prevChild, false);
         }
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement);
@@ -113,7 +113,7 @@ var ReactChildReconciler = {
           !(nextChildren && nextChildren.hasOwnProperty(name))) {
         prevChild = prevChildren[name];
         removedNodes[name] = ReactReconciler.getNativeNode(prevChild);
-        ReactReconciler.unmountComponent(prevChild);
+        ReactReconciler.unmountComponent(prevChild, false);
       }
     }
   },
@@ -125,11 +125,11 @@ var ReactChildReconciler = {
    * @param {?object} renderedChildren Previously initialized set of children.
    * @internal
    */
-  unmountChildren: function(renderedChildren) {
+  unmountChildren: function(renderedChildren, safely) {
     for (var name in renderedChildren) {
       if (renderedChildren.hasOwnProperty(name)) {
         var renderedChild = renderedChildren[name];
-        ReactReconciler.unmountComponent(renderedChild);
+        ReactReconciler.unmountComponent(renderedChild, safely);
       }
     }
   },

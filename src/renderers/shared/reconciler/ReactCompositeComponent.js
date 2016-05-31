@@ -14,7 +14,9 @@
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
+var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
@@ -22,7 +24,6 @@ var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
-var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
@@ -43,8 +44,21 @@ function StatelessComponent(Component) {
 }
 StatelessComponent.prototype.render = function() {
   var Component = ReactInstanceMap.get(this)._currentElement.type;
-  return Component(this.props, this.context, this.updater);
+  var element = Component(this.props, this.context, this.updater);
+  warnIfInvalidElement(Component, element);
+  return element;
 };
+
+function warnIfInvalidElement(Component, element) {
+  if (__DEV__) {
+    warning(
+      element === null || element === false || ReactElement.isValidElement(element),
+      '%s(...): A valid React element (or null) must be returned. You may have ' +
+      'returned undefined, an array or some other invalid object.',
+      Component.displayName || Component.name || 'Component'
+    );
+  }
+}
 
 /**
  * ------------------ The Life-Cycle of a Composite Component ------------------
@@ -147,13 +161,7 @@ var ReactCompositeComponentMixin = {
     var inst;
     var renderedElement;
 
-    // This is a way to detect if Component is a stateless arrow function
-    // component, which is not newable. It might not be 100% reliable but is
-    // something we can do until we start detecting that Component extends
-    // React.Component. We already assume that typeof Component === 'function'.
-    var canInstantiate = 'prototype' in Component;
-
-    if (canInstantiate) {
+    if (Component.prototype && Component.prototype.isReactComponent) {
       if (__DEV__) {
         ReactCurrentOwner.current = this;
         try {
@@ -164,11 +172,30 @@ var ReactCompositeComponentMixin = {
       } else {
         inst = new Component(publicProps, publicContext, ReactUpdateQueue);
       }
-    }
-
-    if (!canInstantiate || inst === null || inst === false || ReactElement.isValidElement(inst)) {
-      renderedElement = inst;
-      inst = new StatelessComponent(Component);
+    } else {
+      if (__DEV__) {
+        ReactCurrentOwner.current = this;
+        try {
+          inst = Component(publicProps, publicContext, ReactUpdateQueue);
+        } finally {
+          ReactCurrentOwner.current = null;
+        }
+      } else {
+        inst = Component(publicProps, publicContext, ReactUpdateQueue);
+      }
+      if (inst == null || inst.render == null) {
+        renderedElement = inst;
+        warnIfInvalidElement(Component, renderedElement);
+        invariant(
+          inst === null ||
+          inst === false ||
+          ReactElement.isValidElement(inst),
+          '%s(...): A valid React element (or null) must be returned. You may have ' +
+          'returned undefined, an array or some other invalid object.',
+          Component.displayName || Component.name || 'Component'
+        );
+        inst = new StatelessComponent(Component);
+      }
     }
 
     if (__DEV__) {
@@ -178,19 +205,7 @@ var ReactCompositeComponentMixin = {
         warning(
           false,
           '%s(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`, returned ' +
-          'null/false from a stateless component, or tried to render an ' +
-          'element whose type is a function that isn\'t a React component.',
-          Component.displayName || Component.name || 'Component'
-        );
-      } else {
-        // We support ES6 inheriting from React.Component, the module pattern,
-        // and stateless components, but not ES6 classes that don't extend
-        warning(
-          (Component.prototype && Component.prototype.isReactComponent) ||
-            !canInstantiate ||
-            !(inst instanceof Component),
-          '%s(...): React component classes must extend React.Component.',
+          'instance: you may have forgotten to define `render`.',
           Component.displayName || Component.name || 'Component'
         );
       }
@@ -200,7 +215,7 @@ var ReactCompositeComponentMixin = {
         Component.displayName || Component.name || 'Component';
 
       warning(
-        typeof inst.props === 'undefined' || !propsMutated,
+        inst.props === undefined || !propsMutated,
         '%s(...): When calling super() in `%s`, make sure to pass ' +
         'up the same props that your component\'s constructor was passed.',
         componentName, componentName
@@ -328,7 +343,7 @@ var ReactCompositeComponentMixin = {
       }
       checkpoint = transaction.checkpoint();
 
-      this._renderedComponent.unmountComponent();
+      this._renderedComponent.unmountComponent(true);
       transaction.rollback(checkpoint);
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
@@ -380,15 +395,23 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
-  unmountComponent: function() {
+  unmountComponent: function(safely) {
+    if (!this._renderedComponent) {
+      return;
+    }
     var inst = this._instance;
 
     if (inst.componentWillUnmount) {
-      inst.componentWillUnmount();
+      if (safely) {
+        var name = this.getName() + '.componentWillUnmount()';
+        ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+      } else {
+        inst.componentWillUnmount();
+      }
     }
 
     if (this._renderedComponent) {
-      ReactReconciler.unmountComponent(this._renderedComponent);
+      ReactReconciler.unmountComponent(this._renderedComponent, safely);
       this._renderedNodeType = null;
       this._renderedComponent = null;
       this._instance = null;
@@ -473,7 +496,13 @@ var ReactCompositeComponentMixin = {
   _processChildContext: function(currentContext) {
     var Component = this._currentElement.type;
     var inst = this._instance;
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onBeginProcessingChildContext();
+    }
     var childContext = inst.getChildContext && inst.getChildContext();
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onEndProcessingChildContext();
+    }
     if (childContext) {
       invariant(
         typeof Component.childContextTypes === 'object',
@@ -496,7 +525,7 @@ var ReactCompositeComponentMixin = {
           name
         );
       }
-      return assign({}, currentContext, childContext);
+      return Object.assign({}, currentContext, childContext);
     }
     return currentContext;
   },
@@ -607,7 +636,7 @@ var ReactCompositeComponentMixin = {
     if (this._pendingElement != null) {
       ReactReconciler.receiveComponent(
         this,
-        this._pendingElement || this._currentElement,
+        this._pendingElement,
         transaction,
         this._context
       );
@@ -685,7 +714,7 @@ var ReactCompositeComponentMixin = {
 
     if (__DEV__) {
       warning(
-        typeof shouldUpdate !== 'undefined',
+        shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
         this.getName() || 'ReactCompositeComponent'
@@ -729,10 +758,10 @@ var ReactCompositeComponentMixin = {
       return queue[0];
     }
 
-    var nextState = assign({}, replace ? queue[0] : inst.state);
+    var nextState = Object.assign({}, replace ? queue[0] : inst.state);
     for (var i = replace ? 1 : 0; i < queue.length; i++) {
       var partial = queue[i];
-      assign(
+      Object.assign(
         nextState,
         typeof partial === 'function' ?
           partial.call(inst, nextState, props, context) :
@@ -814,7 +843,7 @@ var ReactCompositeComponentMixin = {
       );
     } else {
       var oldNativeNode = ReactReconciler.getNativeNode(prevComponentInstance);
-      ReactReconciler.unmountComponent(prevComponentInstance);
+      ReactReconciler.unmountComponent(prevComponentInstance, false);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedComponent = this._instantiateReactComponent(
@@ -851,7 +880,7 @@ var ReactCompositeComponentMixin = {
     var renderedComponent = inst.render();
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
-      if (typeof renderedComponent === 'undefined' &&
+      if (renderedComponent === undefined &&
           inst.render._isMockFunction) {
         // This is probably bad practice. Consider warning here and
         // deprecating this convenience.
@@ -878,7 +907,7 @@ var ReactCompositeComponentMixin = {
       // TODO: An `isValidNode` function would probably be more appropriate
       renderedComponent === null || renderedComponent === false ||
       ReactElement.isValidElement(renderedComponent),
-      '%s.render(): A valid ReactComponent must be returned. You may have ' +
+      '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'
     );

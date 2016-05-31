@@ -139,6 +139,7 @@ DOMEventTarget relatedTarget
 
 These focus events work on all elements in the React DOM, not just form elements.
 
+
 ### Form Events
 
 Event names:
@@ -246,6 +247,7 @@ number deltaY
 number deltaZ
 ```
 
+
 ### Media Events
 
 Event names:
@@ -254,10 +256,45 @@ Event names:
 onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
 ```
 
+
 ### Image Events
 
 Event names:
 
 ```
 onLoad onError
+```
+
+
+### Animation Events
+
+Event names:
+
+```
+onAnimationStart onAnimationEnd onAnimationIteration
+```
+
+Properties:
+
+```javascript
+string animationName
+string pseudoElement
+float elapsedTime
+```
+
+
+### Transition Events
+
+Event names:
+
+```
+onTransitionEnd
+```
+
+Properties:
+
+```javascript
+string propertyName
+string pseudoElement
+float elapsedTime
 ```

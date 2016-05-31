@@ -114,7 +114,7 @@ var ReactInputSelection = {
   setSelection: function(input, offsets) {
     var start = offsets.start;
     var end = offsets.end;
-    if (typeof end === 'undefined') {
+    if (end === undefined) {
       end = start;
     }
 

@@ -6,23 +6,20 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule React
+ * @providesModule ReactWithAddonsUMDEntry
  */
 
 'use strict';
 
 var ReactDOM = require('ReactDOM');
 var ReactDOMServer = require('ReactDOMServer');
-var ReactIsomorphic = require('ReactIsomorphic');
+var ReactWithAddons = require('ReactWithAddons');
 
-var assign = require('Object.assign');
 
 // `version` will be added here by ReactIsomorphic.
-var React = {};
+var ReactWithAddonsUMDEntry = Object.assign({
+  __SECRET_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactDOM,
+  __SECRET_DOM_SERVER_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactDOMServer,
+}, ReactWithAddons);
 
-assign(React, ReactIsomorphic);
-
-React.__SECRET_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactDOM;
-React.__SECRET_DOM_SERVER_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactDOMServer;
-
-module.exports = React;
+module.exports = ReactWithAddonsUMDEntry;

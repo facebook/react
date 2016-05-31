@@ -1,9 +1,5 @@
 ---
-id: complementary-tools-it-IT
-title: Strumenti Complementari
 permalink: complementary-tools-it-IT.html
-prev: videos-it-IT.html
-next: examples-it-IT.html
+layout: redirect
+dest_url: https://github.com/facebook/react/wiki/Complementary-Tools
 ---
-
-Questa pagina è stata spostata sul [wiki di GitHub](https://github.com/facebook/react/wiki/Complementary-Tools).

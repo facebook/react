@@ -11,6 +11,7 @@
 
 'use strict';
 
+var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 var setTextContent = require('setTextContent');
 
 /**
@@ -50,10 +51,21 @@ function insertTreeChildren(tree) {
   }
 }
 
-function insertTreeBefore(parentNode, tree, referenceNode) {
-  parentNode.insertBefore(tree.node, referenceNode);
-  insertTreeChildren(tree);
-}
+var insertTreeBefore = createMicrosoftUnsafeLocalFunction(
+  function(parentNode, tree, referenceNode) {
+    // DocumentFragments aren't actually part of the DOM after insertion so
+    // appending children won't update the DOM. We need to ensure the fragment
+    // is properly populated first, breaking out of our lazy approach for just
+    // this level.
+    if (tree.node.nodeType === 11) {
+      insertTreeChildren(tree);
+      parentNode.insertBefore(tree.node, referenceNode);
+    } else {
+      parentNode.insertBefore(tree.node, referenceNode);
+      insertTreeChildren(tree);
+    }
+  }
+);
 
 function replaceChildWithTree(oldNode, newTree) {
   oldNode.parentNode.replaceChild(newTree.node, oldNode);

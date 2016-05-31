@@ -30,6 +30,8 @@ Just make sure to run the whole test suite before submitting a pull request!
 
 ### Pull Requests
 
+**Working on your first Pull Request?** You can learn how from this *free* series [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)
+
 The core team will be monitoring for pull requests. When we get one, we'll run some Facebook-specific integration tests on it first. From here, we'll need to get another person to sign off on the changes and then merge the pull request. For API changes we may need to fix internal uses, which could cause some delay. We'll do our best to provide updates and feedback throughout the process.
 
 *Before* submitting a pull request, please make sure the following is done…
@@ -65,6 +67,11 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 
 * IRC - [#reactjs on freenode](https://webchat.freenode.net/?channels=reactjs)
 * Discussion forum - [discuss.reactjs.org](https://discuss.reactjs.org/)
+
+## Meeting Notes
+
+React team meets once a week to discuss the development of React, future plans, and priorities.  
+You can find the meeting notes in a [dedicated repository](https://github.com/reactjs/core-notes/).
 
 ## Style Guide
 

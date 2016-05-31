@@ -160,6 +160,38 @@ function Button(props, context) {
 Button.contextTypes = {color: React.PropTypes.string};
 ```
 
+## Updating context
+
+The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
+
+```javascript
+var MediaQuery = React.createClass({
+  getInitialState: function(){
+    return {type:'desktop'};
+  },
+  childContextTypes: {
+    type: React.PropTypes.string
+  },
+  getChildContext: function() {
+    return {type: this.state.type};
+  },
+  componentDidMount: function(){
+    var checkMediaQuery = function(){
+      var type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
+      if (type !== this.state.type){
+        this.setState({type:type}); 
+      }
+    };
+    
+    window.addEventListener('resize', checkMediaQuery);
+    checkMediaQuery();
+  },
+  render: function(){
+    return this.props.children;
+  }
+});
+```
+
 ## When not to use context
 
 Just as global variables are best avoided when writing clear code, you should avoid using context in most cases. In particular, think twice before using it to "save typing" and using it instead of passing explicit props.

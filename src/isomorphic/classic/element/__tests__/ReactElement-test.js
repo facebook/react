@@ -11,9 +11,6 @@
 
 'use strict';
 
-// NOTE: We're explicitly not using JSX in this file. This is intended to test
-// classic JS without JSX.
-
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -33,6 +30,8 @@ describe('ReactElement', function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    // NOTE: We're explicitly not using JSX here. This is intended to test
+    // classic JS without JSX.
     ComponentClass = React.createClass({
       render: function() {
         return React.createElement('div');
@@ -56,6 +55,64 @@ describe('ReactElement', function() {
     var expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
+  });
+
+  it('should warn when `key` is being accessed', function() {
+    spyOn(console, 'error');
+    var container = document.createElement('div');
+    var Child = React.createClass({
+      render: function() {
+        return <div> {this.props.key} </div>;
+      },
+    });
+    var Parent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Child key="0" />
+            <Child key="1" />
+            <Child key="2" />
+          </div>
+        );
+      },
+    });
+    expect(console.error.calls.length).toBe(0);
+    ReactDOM.render(<Parent />, container);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Child: `key` is not a prop. Trying to access it will result ' +
+      'in `undefined` being returned. If you need to access the same ' +
+      'value within the child component, you should pass it as a different ' +
+      'prop. (https://fb.me/react-special-props)'
+    );
+  });
+
+  it('should warn when `ref` is being accessed', function() {
+    spyOn(console, 'error');
+    var container = document.createElement('div');
+    var Child = React.createClass({
+      render: function() {
+        return <div> {this.props.ref} </div>;
+      },
+    });
+    var Parent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Child ref="childElement" />
+          </div>
+        );
+      },
+    });
+    expect(console.error.calls.length).toBe(0);
+    ReactDOM.render(<Parent />, container);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Child: `ref` is not a prop. Trying to access it will result ' +
+      'in `undefined` being returned. If you need to access the same ' +
+      'value within the child component, you should pass it as a different ' +
+      'prop. (https://fb.me/react-special-props)'
+    );
   });
 
   it('allows a string to be passed as the type', function() {
@@ -164,6 +221,8 @@ describe('ReactElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('allows static methods to be called using the type property', function() {
     spyOn(console, 'error');
 
@@ -186,6 +245,8 @@ describe('ReactElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('identifies valid elements', function() {
     var Component = React.createClass({
       render: function() {
@@ -225,12 +286,16 @@ describe('ReactElement', function() {
     expect(typeof Component.specialType.isRequired).toBe('function');
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('is indistinguishable from a plain object', function() {
     var element = React.createElement('div', {className: 'foo'});
     var object = {};
     expect(element.constructor).toBe(object.constructor);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('should use default prop value when removing a prop', function() {
     var Component = React.createClass({
       getDefaultProps: function() {
@@ -252,6 +317,8 @@ describe('ReactElement', function() {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('should normalize props with default values', function() {
     var Component = React.createClass({
       getDefaultProps: function() {
@@ -271,6 +338,29 @@ describe('ReactElement', function() {
       React.createElement(Component, {prop: null})
     );
     expect(inst2.props.prop).toBe(null);
+  });
+
+  it('should normalize props with default values in cloning', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {prop: 'testKey'};
+      },
+      render: function() {
+        return <span />;
+      },
+    });
+
+    var instance = React.createElement(Component);
+    var clonedInstance = React.cloneElement(instance, {prop: undefined});
+    expect(clonedInstance.props.prop).toBe('testKey');
+    var clonedInstance2 = React.cloneElement(instance, {prop: null});
+    expect(clonedInstance2.props.prop).toBe(null);
+
+    var instance2 = React.createElement(Component, {prop: 'newTestKey'});
+    var cloneInstance3 = React.cloneElement(instance2, {prop: undefined});
+    expect(cloneInstance3.props.prop).toBe('testKey');
+    var cloneInstance4 = React.cloneElement(instance2, {});
+    expect(cloneInstance4.props.prop).toBe('newTestKey');
   });
 
   it('throws when changing a prop (in dev) after element creation', function() {
@@ -323,6 +413,8 @@ describe('ReactElement', function() {
     expect(console.error.argsForCall.length).toBe(0);
   });
 
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('identifies elements, but not JSON, if Symbols are supported', function() {
     // Rudimentary polyfill
     // Once all jest engines support Symbols natively we can swap this to test

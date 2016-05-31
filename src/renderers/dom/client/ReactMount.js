@@ -20,6 +20,7 @@ var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
@@ -168,8 +169,8 @@ function batchedMountComponentIntoNode(
  * @internal
  * @see {ReactMount.unmountComponentAtNode}
  */
-function unmountComponentFromNode(instance, container) {
-  ReactReconciler.unmountComponent(instance);
+function unmountComponentFromNode(instance, container, safely) {
+  ReactReconciler.unmountComponent(instance, safely);
 
   if (container.nodeType === DOC_NODE_TYPE) {
     container = container.documentElement;
@@ -347,6 +348,10 @@ var ReactMount = {
     var wrapperID = componentInstance._instance.rootID;
     instancesByReactRootID[wrapperID] = componentInstance;
 
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onMountRootComponent(componentInstance);
+    }
+
     return componentInstance;
   },
 
@@ -377,16 +382,17 @@ var ReactMount = {
   },
 
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
+    ReactUpdateQueue.validateCallback(callback, 'ReactDOM.render');
     invariant(
       ReactElement.isValidElement(nextElement),
       'ReactDOM.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
-          ' Instead of passing an element string, make sure to instantiate ' +
-          'it by passing it to React.createElement.' :
+          ' Instead of passing a string like \'div\', pass ' +
+          'React.createElement(\'div\') or <div />.' :
         typeof nextElement === 'function' ?
-          ' Instead of passing a component class, make sure to instantiate ' +
-          'it by passing it to React.createElement.' :
+          ' Instead of passing a class like Foo, pass ' +
+          'React.createElement(Foo) or <Foo />.' :
         // Check if it quacks like an element
         nextElement != null && nextElement.props !== undefined ?
           ' This may be caused by unintentionally loading two independent ' +
@@ -405,7 +411,7 @@ var ReactMount = {
       'for your app.'
     );
 
-    var nextWrappedElement = new ReactElement(
+    var nextWrappedElement = ReactElement(
       TopLevelWrapper,
       null,
       null,
@@ -567,7 +573,8 @@ var ReactMount = {
     ReactUpdates.batchedUpdates(
       unmountComponentFromNode,
       prevComponent,
-      container
+      container,
+      false
     );
     return true;
   },

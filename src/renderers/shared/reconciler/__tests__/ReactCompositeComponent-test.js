@@ -68,8 +68,21 @@ describe('ReactCompositeComponent', function() {
           <b></b>;
       },
     });
+  });
 
-    spyOn(console, 'error');
+  it('should support module pattern components', function() {
+    function Child({test}) {
+      return {
+        render() {
+          return <div>{test}</div>;
+        },
+      };
+    }
+
+    var el = document.createElement('div');
+    ReactDOM.render(<Child test="test" />, el);
+
+    expect(el.textContent).toBe('test');
   });
 
   it('should support rendering to different child types over time', function() {
@@ -108,7 +121,6 @@ describe('ReactCompositeComponent', function() {
     container.innerHTML = markup;
 
     ReactDOM.render(<Parent />, container);
-    expect(console.error).not.toHaveBeenCalled();
   });
 
   it('should react to state changes from callbacks', function() {
@@ -158,6 +170,8 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should auto bind methods and values correctly', function() {
+    spyOn(console, 'error');
+
     var ComponentClass = React.createClass({
       getInitialState: function() {
         return {valueToReturn: 'hi'};
@@ -258,6 +272,8 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should warn about `forceUpdate` on unmounted components', function() {
+    spyOn(console, 'error');
+
     var container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -288,6 +304,8 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should warn about `setState` on unmounted components', function() {
+    spyOn(console, 'error');
+
     var container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -352,17 +370,16 @@ describe('ReactCompositeComponent', function() {
     });
 
     var instance = ReactDOM.render(<Component />, container);
-
     instance.setState({value: 1});
-    expect(console.error.calls.length).toBe(0);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(console.error.calls.length).toBe(0);
     expect(cbCalled).toBe(false);
   });
 
 
   it('should warn about `setState` in render', function() {
+    spyOn(console, 'error');
+
     var container = document.createElement('div');
 
     var renderedState = -1;
@@ -407,6 +424,37 @@ describe('ReactCompositeComponent', function() {
     expect(instance).toBe(instance2);
     expect(renderedState).toBe(1);
     expect(instance2.state.value).toBe(1);
+  });
+
+  it('should warn about `setState` in getChildContext', function() {
+    spyOn(console, 'error');
+
+    var container = document.createElement('div');
+
+    var renderPasses = 0;
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {value: 0};
+      },
+      getChildContext: function() {
+        if (this.state.value === 0) {
+          this.setState({ value: 1 });
+        }
+      },
+      render: function() {
+        renderPasses++;
+        return <div />;
+      },
+    });
+    expect(console.error.calls.length).toBe(0);
+    var instance = ReactDOM.render(<Component />, container);
+    expect(renderPasses).toBe(2);
+    expect(instance.state.value).toBe(1);
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
+      'Warning: setState(...): Cannot call setState() inside getChildContext()'
+    );
   });
 
   it('should cleanup even if render() fatals', function() {
@@ -455,6 +503,8 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
+    spyOn(console, 'error');
+
     var Component = React.createClass({
       getInitialState: function() {
         return {bogus: false};
@@ -480,6 +530,8 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should warn when componentDidUnmount method is defined', function() {
+    spyOn(console, 'error');
+
     var Component = React.createClass({
       componentDidUnmount: function() {
       },
@@ -615,8 +667,6 @@ describe('ReactCompositeComponent', function() {
     parentInstance.setState({flag: true});
     expect(parentInstance.state.flag).toBe(true);
 
-    expect(console.error.argsForCall.length).toBe(0);
-
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
   });
 
@@ -674,8 +724,6 @@ describe('ReactCompositeComponent', function() {
 
     // We update <Parent /> while <Child /> is still a static prop relative to this update
     wrapper.refs.parent.setState({flag: false});
-
-    expect(console.error.argsForCall.length).toBe(0);
 
     expect(wrapper.refs.parent.state.flag).toEqual(false);
     reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: false});
@@ -795,8 +843,6 @@ describe('ReactCompositeComponent', function() {
       parentInstance.setState({flag: true});
     });
     expect(parentInstance.state.flag).toBe(true);
-
-    expect(console.error.argsForCall.length).toBe(0);
 
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
   });
@@ -992,6 +1038,8 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should disallow nested render calls', function() {
+    spyOn(console, 'error');
+
     var Inner = React.createClass({
       render: function() {
         return <div />;
@@ -1103,19 +1151,6 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
-  it('should warn when using non-React functions in JSX', function() {
-    function NotAComponent() {
-      return [<div />, <div />];
-    }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();  // has no method 'render'
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'NotAComponent(...): No `render` method found'
-    );
-  });
-
   it('context should be passed down from the parent', function() {
     var Parent = React.createClass({
       childContextTypes: {
@@ -1145,8 +1180,6 @@ describe('ReactCompositeComponent', function() {
 
     var div = document.createElement('div');
     ReactDOM.render(<Parent><Component /></Parent>, div);
-
-    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('should replace state', function() {
@@ -1239,46 +1272,11 @@ describe('ReactCompositeComponent', function() {
     });
 
     ReactDOM.render(<Outer><Component /></Outer>, container);
-
-    expect(console.error.calls.length).toBe(0);
-
     ReactDOM.render(<Outer />, container);
-
-    expect(console.error.calls.length).toBe(0);
-  });
-
-  it('should warn when a class does not extend React.Component', function() {
-
-    var container = document.createElement('div');
-
-    class Foo {
-      render() {
-        return <span />;
-      }
-    }
-
-    function Bar() { }
-    Bar.prototype = Object.create(React.Component.prototype);
-    Bar.prototype.render = function() {
-      return <span />;
-    };
-
-    expect(console.error.calls.length).toBe(0);
-
-    ReactDOM.render(<Bar />, container);
-
-    expect(console.error.calls.length).toBe(0);
-
-    ReactDOM.render(<Foo />, container);
-
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
-      'React component classes must extend React.Component'
-    );
-
   });
 
   it('should warn when mutated props are passed', function() {
+    spyOn(console, 'error');
 
     var container = document.createElement('div');
 

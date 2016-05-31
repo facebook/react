@@ -22,7 +22,7 @@ next: addons-zh-CN.html
 
 ### 浏览器中的JSX转化
 
-如果你喜欢使用JSX，Babel提供了一个被称为browser.js的[开发用的浏览器中的 ES6 和 JSX 转换器](http://babeljs.io/docs/usage/browser/) ，它可以从`babel-core` npm release 或者[CDNJS](http://cdnjs.com/libraries/babel-core) 中 include。Include `<script type="text/babel">` 标记来使用 JSX 转换器.
+如果你喜欢使用JSX，Babel5 提供了被称为browser.js 用于开发的一个浏览器内的 ES6 和 JSX 转换器，它可以从 [CDNJS](http://cdnjs.com/libraries/babel-core/5.8.34) 引用。Include `<script type="text/babel">` 标记来使用 JSX 转换器.
 
 > 注意:
 >

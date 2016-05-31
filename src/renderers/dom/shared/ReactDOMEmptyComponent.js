@@ -14,7 +14,6 @@
 var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var assign = require('Object.assign');
 
 var ReactDOMEmptyComponent = function(instantiate) {
   // ReactCompositeComponent uses this:
@@ -25,9 +24,7 @@ var ReactDOMEmptyComponent = function(instantiate) {
   this._nativeContainerInfo = null;
   this._domID = null;
 };
-assign(ReactDOMEmptyComponent.prototype, {
-  construct: function(element) {
-  },
+Object.assign(ReactDOMEmptyComponent.prototype, {
   mountComponent: function(
     transaction,
     nativeParent,

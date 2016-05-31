@@ -17,7 +17,6 @@ var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
-var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
@@ -331,7 +330,7 @@ var RESERVED_SPEC_KEYS = {
         ReactPropTypeLocations.childContext
       );
     }
-    Constructor.childContextTypes = assign(
+    Constructor.childContextTypes = Object.assign(
       {},
       Constructor.childContextTypes,
       childContextTypes
@@ -345,7 +344,7 @@ var RESERVED_SPEC_KEYS = {
         ReactPropTypeLocations.context
       );
     }
-    Constructor.contextTypes = assign(
+    Constructor.contextTypes = Object.assign(
       {},
       Constructor.contextTypes,
       contextTypes
@@ -373,7 +372,7 @@ var RESERVED_SPEC_KEYS = {
         ReactPropTypeLocations.prop
       );
     }
-    Constructor.propTypes = assign(
+    Constructor.propTypes = Object.assign(
       {},
       Constructor.propTypes,
       propTypes
@@ -710,7 +709,7 @@ var ReactClassMixin = {
   replaceState: function(newState, callback) {
     this.updater.enqueueReplaceState(this, newState);
     if (callback) {
-      this.updater.enqueueCallback(this, callback);
+      this.updater.enqueueCallback(this, callback, 'replaceState');
     }
   },
 
@@ -726,7 +725,7 @@ var ReactClassMixin = {
 };
 
 var ReactClassComponent = function() {};
-assign(
+Object.assign(
   ReactClassComponent.prototype,
   ReactComponent.prototype,
   ReactClassMixin
@@ -777,7 +776,7 @@ var ReactClass = {
       var initialState = this.getInitialState ? this.getInitialState() : null;
       if (__DEV__) {
         // We allow auto-mocks to proceed as if they're returning null.
-        if (typeof initialState === 'undefined' &&
+        if (initialState === undefined &&
             this.getInitialState._isMockFunction) {
           // This is probably bad practice. Consider warning here and
           // deprecating this convenience.

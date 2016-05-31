@@ -29,7 +29,7 @@ next: complementary-tools-zh-CN.html
 
 * * *
 
-### Going big with React ###
+### Going big with React
 
 "理论上，所有的JS框架都大有可为：干净的实现,快速的代码设计,完美的执行。但是当你压力测试时Javascript会怎样？当你丢进6MB的代码时会怎样？在这次演讲中，我们会探究React在高压环境下如何表现，以及它如何帮助我们的团队在大规模时构建安全代码。 "
 <figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>

@@ -98,19 +98,19 @@ describe('ReactStatelessComponent', function() {
     expect(el.textContent).toBe('mest');
   });
 
-  it('should support module pattern components', function() {
-    function Child({test}) {
-      return {
-        render() {
-          return <div>{test}</div>;
-        },
-      };
+  it('should warn when stateless component returns array', function() {
+    spyOn(console, 'error');
+    function NotAComponent() {
+      return [<div />, <div />];
     }
-
-    var el = document.createElement('div');
-    ReactDOM.render(<Child test="test" />, el);
-
-    expect(el.textContent).toBe('test');
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+    }).toThrow();
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'NotAComponent(...): A valid React element (or null) must be returned. '+
+      'You may have returned undefined, an array or some other invalid object.'
+    );
   });
 
   it('should throw on string refs in pure functions', function() {
@@ -204,10 +204,6 @@ describe('ReactStatelessComponent', function() {
   });
 
   it('should work with arrow functions', function() {
-    // TODO: actually use arrow functions, probably need node v4 and maybe
-    // a separate file that we blacklist from the arrow function transform.
-    // We can't actually test this without native arrow functions since the
-    // issues (non-newable) don't apply to any other functions.
     var Child = function() {
       return <div />;
     };
@@ -216,5 +212,34 @@ describe('ReactStatelessComponent', function() {
     Child = Child.bind(this);
 
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
+  });
+
+  it('should allow simple functions to return null', function() {
+    var Child = function() {
+      return null;
+    };
+    expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
+  });
+
+  it('should allow simple functions to return false', function() {
+    function Child() {
+      return false;
+    }
+    expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
+  });
+
+  it('should warn when using non-React functions in JSX', function() {
+    spyOn(console, 'error');
+    function NotAComponent() {
+      return [<div />, <div />];
+    }
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+    }).toThrow();  // has no method 'render'
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
+      'NotAComponent(...): A valid React element (or null) must be returned. You may ' +
+      'have returned undefined, an array or some other invalid object.'
+    );
   });
 });

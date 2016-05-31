@@ -49,24 +49,40 @@ var expectChildren = function(d, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    expect(outerNode.childNodes.length).toBe(children.length);
+    var openingCommentNode;
+    var closingCommentNode;
+    var mountIndex = 0;
 
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
 
       if (typeof child === 'string') {
-        textNode = outerNode.childNodes[i].firstChild;
+        openingCommentNode = outerNode.childNodes[mountIndex];
+
+        expect(openingCommentNode.nodeType).toBe(8);
+        expect(openingCommentNode.nodeValue).toMatch(' react-text: [0-9]+ ');
 
         if (child === '') {
-          expect(textNode).toBe(null);
+          textNode = null;
+          closingCommentNode = openingCommentNode.nextSibling;
+          mountIndex += 2;
         } else {
-          expect(textNode).not.toBe(null);
+          textNode = openingCommentNode.nextSibling;
+          closingCommentNode = textNode.nextSibling;
+          mountIndex += 3;
+        }
+
+        if (textNode) {
           expect(textNode.nodeType).toBe(3);
           expect(textNode.data).toBe('' + child);
         }
+
+        expect(closingCommentNode.nodeType).toBe(8);
+        expect(closingCommentNode.nodeValue).toBe(' /react-text ');
       } else {
-        var elementDOMNode = outerNode.childNodes[i];
+        var elementDOMNode = outerNode.childNodes[mountIndex];
         expect(elementDOMNode.tagName).toBe('DIV');
+        mountIndex++;
       }
     }
   }
@@ -168,7 +184,9 @@ describe('ReactMultiChildText', function() {
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
     expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain('Warning: Each child in an array or iterator should have a unique "key" prop.');
+    expect(console.error.argsForCall[0][0]).toContain(
+      'Warning: Each child in an array or iterator should have a unique "key" prop.'
+    );
   });
 
   it('should throw if rendering both HTML and children', function() {
@@ -193,5 +211,39 @@ describe('ReactMultiChildText', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><h1>{['A', 'B']}</h1></div>);
     }).not.toThrow();
+  });
+
+  it('should reorder keyed text nodes', function() {
+    spyOn(console, 'error');
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <div>{new Map([['a', 'alpha'], ['b', 'beta']])}</div>,
+      container
+    );
+
+    var childNodes = container.firstChild.childNodes;
+    var alpha1 = childNodes[0];
+    var alpha2 = childNodes[1];
+    var alpha3 = childNodes[2];
+    var beta1 = childNodes[3];
+    var beta2 = childNodes[4];
+    var beta3 = childNodes[5];
+
+    ReactDOM.render(
+      <div>{new Map([['b', 'beta'], ['a', 'alpha']])}</div>,
+      container
+    );
+
+    childNodes = container.firstChild.childNodes;
+    expect(childNodes[0]).toBe(beta1);
+    expect(childNodes[1]).toBe(beta2);
+    expect(childNodes[2]).toBe(beta3);
+    expect(childNodes[3]).toBe(alpha1);
+    expect(childNodes[4]).toBe(alpha2);
+    expect(childNodes[5]).toBe(alpha3);
+
+    // Using Maps as children gives a single warning
+    expect(console.error.calls.length).toBe(1);
   });
 });

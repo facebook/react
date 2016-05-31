@@ -13,8 +13,6 @@
 
 var React = require('React');
 
-var assign = require('Object.assign');
-
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
 
@@ -87,7 +85,7 @@ var ReactCSSTransitionGroup = React.createClass({
   render: function() {
     return React.createElement(
       ReactTransitionGroup,
-      assign({}, this.props, {childFactory: this._wrapChild})
+      Object.assign({}, this.props, {childFactory: this._wrapChild})
     );
   },
 });

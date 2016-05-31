@@ -241,7 +241,6 @@ describe('ReactPropTypes', function() {
           return <div>{this.props.label}</div>;
         },
       });
-      spyOn(console, 'error');
     });
 
     it('should support components', () => {
@@ -258,6 +257,8 @@ describe('ReactPropTypes', function() {
     });
 
     it('should be able to define a single child as label', () => {
+      spyOn(console, 'error');
+
       var instance = <Component label={<div />} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -265,6 +266,8 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn when passing no label and isRequired is set', () => {
+      spyOn(console, 'error');
+
       var instance = <Component />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -576,7 +579,7 @@ describe('ReactPropTypes', function() {
       );
     });
 
-    it('should warn for invalid strings', function() {
+    it('should warn for invalid values', function() {
       typeCheckFail(
         PropTypes.oneOf(['red', 'blue']),
         true,
@@ -606,6 +609,7 @@ describe('ReactPropTypes', function() {
     it('should not warn for valid values', function() {
       typeCheckPass(PropTypes.oneOf(['red', 'blue']), 'red');
       typeCheckPass(PropTypes.oneOf(['red', 'blue']), 'blue');
+      typeCheckPass(PropTypes.oneOf(['red', 'blue', NaN]), NaN);
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -781,7 +785,6 @@ describe('ReactPropTypes', function() {
   describe('Custom validator', function() {
     beforeEach(function() {
       jest.resetModuleRegistry();
-      spyOn(console, 'error');
     });
 
     it('should have been called with the right params', function() {
@@ -819,6 +822,8 @@ describe('ReactPropTypes', function() {
     });
 
     it('should have received the validator\'s return value', function() {
+      spyOn(console, 'error');
+
       var spy = jasmine.createSpy().andCallFake(
         function(props, propName, componentName) {
           if (props[propName] !== 5) {
@@ -844,6 +849,8 @@ describe('ReactPropTypes', function() {
 
     it('should not warn if the validator returned null',
       function() {
+        spyOn(console, 'error');
+
         var spy = jasmine.createSpy().andCallFake(
           function(props, propName, componentName) {
             return null;

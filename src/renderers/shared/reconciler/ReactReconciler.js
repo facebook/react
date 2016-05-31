@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactRef = require('ReactRef');
+var ReactInstrumentation = require('ReactInstrumentation');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -51,6 +52,9 @@ var ReactReconciler = {
         internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onMountComponent(internalInstance);
+    }
     return markup;
   },
 
@@ -68,9 +72,12 @@ var ReactReconciler = {
    * @final
    * @internal
    */
-  unmountComponent: function(internalInstance) {
+  unmountComponent: function(internalInstance, safely) {
     ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
-    return internalInstance.unmountComponent();
+    internalInstance.unmountComponent(safely);
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onUnmountComponent(internalInstance);
+    }
   },
 
   /**
@@ -119,6 +126,10 @@ var ReactReconciler = {
         internalInstance._currentElement.ref != null) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
+
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onUpdateComponent(internalInstance);
+    }
   },
 
   /**
@@ -133,6 +144,9 @@ var ReactReconciler = {
     transaction
   ) {
     internalInstance.performUpdateIfNecessary(transaction);
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onUpdateComponent(internalInstance);
+    }
   },
 
 };

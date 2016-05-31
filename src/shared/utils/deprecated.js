@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 var warning = require('warning');
 
 /**
@@ -31,6 +30,7 @@ function deprecated(fnName, newModule, newPackage, ctx, fn) {
     var newFn = function() {
       warning(
         warned,
+        /* eslint-disable no-useless-concat */
         // Require examples in this string must be split to prevent React's
         // build tools from mistaking them for real requires.
         // Otherwise the build tools will attempt to build a '%s' module.
@@ -41,12 +41,13 @@ function deprecated(fnName, newModule, newPackage, ctx, fn) {
         fnName,
         newPackage
       );
+      /* eslint-enable no-useless-concat */
       warned = true;
       return fn.apply(ctx, arguments);
     };
     // We need to make sure all properties of the original fn are copied over.
     // In particular, this is needed to support PropTypes
-    return assign(newFn, fn);
+    return Object.assign(newFn, fn);
   }
 
   return fn;

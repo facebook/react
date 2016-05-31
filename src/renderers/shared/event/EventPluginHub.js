@@ -98,9 +98,9 @@ var EventPluginHub = {
   /**
    * Stores `listener` at `listenerBank[registrationName][id]`. Is idempotent.
    *
-   * @param {string} id ID of the DOM element.
+   * @param {object} inst The instance, which is the source of events.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {?function} listener The callback to store.
+   * @param {function} listener The callback to store.
    */
   putListener: function(inst, registrationName, listener) {
     invariant(
@@ -121,7 +121,7 @@ var EventPluginHub = {
   },
 
   /**
-   * @param {string} id ID of the DOM element.
+   * @param {object} inst The instance, which is the source of events.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @return {?function} The stored callback.
    */
@@ -133,7 +133,7 @@ var EventPluginHub = {
   /**
    * Deletes a listener from the registration bank.
    *
-   * @param {string} id ID of the DOM element.
+   * @param {object} inst The instance, which is the source of events.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
   deleteListener: function(inst, registrationName) {
@@ -153,7 +153,7 @@ var EventPluginHub = {
   /**
    * Deletes all listeners for the DOM element with the supplied ID.
    *
-   * @param {string} id ID of the DOM element.
+   * @param {object} inst The instance, which is the source of events.
    */
   deleteAllListeners: function(inst) {
     for (var registrationName in listenerBank) {

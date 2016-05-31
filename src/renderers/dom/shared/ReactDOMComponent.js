@@ -35,7 +35,6 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
-var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -53,9 +52,14 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
-var CHILDREN = keyOf({children: null});
 var STYLE = keyOf({style: null});
 var HTML = keyOf({__html: null});
+var RESERVED_PROPS = {
+  children: null,
+  dangerouslySetInnerHTML: null,
+  suppressContentEditableWarning: null,
+};
+
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -142,19 +146,17 @@ function assertValidProps(component, props) {
     return;
   }
   // Note the use of `==` which checks for null or undefined.
-  if (__DEV__) {
-    if (voidElementTags[component._tag]) {
-      warning(
-        props.children == null && props.dangerouslySetInnerHTML == null,
-        '%s is a void element tag and must not have `children` or ' +
-        'use `props.dangerouslySetInnerHTML`.%s',
-        component._tag,
-        component._currentElement._owner ?
-          ' Check the render method of ' +
-          component._currentElement._owner.getName() + '.' :
-          ''
-      );
-    }
+  if (voidElementTags[component._tag]) {
+    invariant(
+      props.children == null && props.dangerouslySetInnerHTML == null,
+      '%s is a void element tag and must not have `children` or ' +
+      'use `props.dangerouslySetInnerHTML`.%s',
+      component._tag,
+      component._currentElement._owner ?
+        ' Check the render method of ' +
+        component._currentElement._owner.getName() + '.' :
+        ''
+    );
   }
   if (props.dangerouslySetInnerHTML != null) {
     invariant(
@@ -176,11 +178,20 @@ function assertValidProps(component, props) {
       'For more information, lookup documentation on `dangerouslySetInnerHTML`.'
     );
     warning(
-      !props.contentEditable || props.children == null,
+      props.suppressContentEditableWarning ||
+      !props.contentEditable ||
+      props.children == null,
       'A component is `contentEditable` and contains `children` managed by ' +
       'React. It is now your responsibility to guarantee that none of ' +
       'those nodes are unexpectedly modified or duplicated. This is ' +
       'probably not intentional.'
+    );
+    warning(
+      props.onFocusIn == null &&
+      props.onFocusOut == null,
+      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
+      'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
+      'are not needed/supported by React.'
     );
   }
   invariant(
@@ -265,6 +276,7 @@ function trapBubbledEventsLocal() {
 
   switch (inst._tag) {
     case 'iframe':
+    case 'object':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
           EventConstants.topLevelTypes.topLoad,
@@ -375,7 +387,7 @@ var newlineEatingTags = {
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
-var voidElementTags = assign({
+var voidElementTags = Object.assign({
   'menuitem': true,
 }, omittedCloseTags);
 
@@ -414,8 +426,10 @@ var globalIdCounter = 1;
  * @constructor ReactDOMComponent
  * @extends ReactMultiChild
  */
-function ReactDOMComponent(tag) {
+function ReactDOMComponent(element) {
+  var tag = element.type;
   validateDangerousTag(tag);
+  this._currentElement = element;
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
   this._renderedChildren = null;
@@ -437,10 +451,6 @@ function ReactDOMComponent(tag) {
 ReactDOMComponent.displayName = 'ReactDOMComponent';
 
 ReactDOMComponent.Mixin = {
-
-  construct: function(element) {
-    this._currentElement = element;
-  },
 
   /**
    * Generates root tag markup then recurses. This method has side effects and
@@ -468,6 +478,7 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'iframe':
+      case 'object':
       case 'img':
       case 'form':
       case 'video':
@@ -637,17 +648,15 @@ ReactDOMComponent.Mixin = {
               // See `_updateDOMProperties`. style block
               this._previousStyle = propValue;
             }
-            propValue = this._previousStyleCopy = assign({}, props.style);
+            propValue = this._previousStyleCopy = Object.assign({}, props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (propKey !== CHILDREN) {
+          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
             markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
           }
-        } else if (this._namespaceURI === DOMNamespaces.svg) {
-          markup = DOMPropertyOperations.createMarkupForSVGAttribute(propKey, propValue);
         } else {
           markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
         }
@@ -859,11 +868,6 @@ ReactDOMComponent.Mixin = {
           // listener (e.g., onClick={null})
           deleteListener(this, propKey);
         }
-      } else if (this._namespaceURI === DOMNamespaces.svg) {
-        DOMPropertyOperations.deleteValueForSVGAttribute(
-          getNode(this),
-          propKey
-        );
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
@@ -890,7 +894,7 @@ ReactDOMComponent.Mixin = {
             );
             this._previousStyle = nextProp;
           }
-          nextProp = this._previousStyleCopy = assign({}, nextProp);
+          nextProp = this._previousStyleCopy = Object.assign({}, nextProp);
         } else {
           this._previousStyleCopy = null;
         }
@@ -922,20 +926,13 @@ ReactDOMComponent.Mixin = {
           deleteListener(this, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
-        if (propKey === CHILDREN) {
-          nextProp = null;
+        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          DOMPropertyOperations.setValueForAttribute(
+            getNode(this),
+            propKey,
+            nextProp
+          );
         }
-        DOMPropertyOperations.setValueForAttribute(
-          getNode(this),
-          propKey,
-          nextProp
-        );
-      } else if (this._namespaceURI === DOMNamespaces.svg) {
-        DOMPropertyOperations.setValueForSVGAttribute(
-          getNode(this),
-          propKey,
-          nextProp
-        );
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
@@ -1018,9 +1015,10 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    */
-  unmountComponent: function() {
+  unmountComponent: function(safely) {
     switch (this._tag) {
       case 'iframe':
+      case 'object':
       case 'img':
       case 'form':
       case 'video':
@@ -1054,7 +1052,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    this.unmountChildren();
+    this.unmountChildren(safely);
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
@@ -1074,7 +1072,7 @@ ReactPerf.measureMethods(ReactDOMComponent.Mixin, 'ReactDOMComponent', {
   receiveComponent: 'receiveComponent',
 });
 
-assign(
+Object.assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
   ReactMultiChild.Mixin

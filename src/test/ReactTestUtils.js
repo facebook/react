@@ -25,7 +25,6 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
-var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -393,8 +392,10 @@ NoopInternalComponent.prototype = {
   },
 };
 
-var ShallowComponentWrapper = function() { };
-assign(
+var ShallowComponentWrapper = function(element) {
+  this.construct(element);
+};
+Object.assign(
   ShallowComponentWrapper.prototype,
   ReactCompositeComponent.Mixin, {
     _instantiateReactComponent: function(element) {
@@ -448,7 +449,7 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
 
 ReactShallowRenderer.prototype.unmount = function() {
   if (this._instance) {
-    this._instance.unmountComponent();
+    this._instance.unmountComponent(false);
   }
 };
 
@@ -456,11 +457,8 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
   if (this._instance) {
     this._instance.receiveComponent(element, transaction, context);
   } else {
-    var instance = new ShallowComponentWrapper(element.type);
-    instance.construct(element);
-
+    var instance = new ShallowComponentWrapper(element);
     instance.mountComponent(transaction, null, null, context);
-
     this._instance = instance;
   }
 };
@@ -500,7 +498,7 @@ function makeSimulator(eventType) {
       fakeNativeEvent,
       node
     );
-    assign(event, eventData);
+    Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
       EventPropagators.accumulateTwoPhaseDispatches(event);
@@ -561,7 +559,7 @@ buildSimulators();
 function makeNativeSimulator(eventType) {
   return function(domComponentOrNode, nativeEventData) {
     var fakeNativeEvent = new Event(eventType);
-    assign(fakeNativeEvent, nativeEventData);
+    Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
         eventType,

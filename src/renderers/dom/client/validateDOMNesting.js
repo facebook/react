@@ -11,7 +11,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 var warning = require('warning');
 
@@ -76,7 +75,7 @@ if (__DEV__) {
   };
 
   var updatedAncestorInfo = function(oldInfo, tag, instance) {
-    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfo);
+    var ancestorInfo = Object.assign({}, oldInfo || emptyAncestorInfo);
     var info = {tag: tag, instance: instance};
 
     if (inScopeTags.indexOf(tag) !== -1) {
@@ -384,6 +383,11 @@ if (__DEV__) {
       }
       didWarn[warnKey] = true;
 
+      var tagDisplayName = childTag;
+      if (childTag !== '#text') {
+        tagDisplayName = '<' + childTag + '>';
+      }
+
       if (invalidParent) {
         var info = '';
         if (ancestorTag === 'table' && childTag === 'tr') {
@@ -393,9 +397,9 @@ if (__DEV__) {
         }
         warning(
           false,
-          'validateDOMNesting(...): <%s> cannot appear as a child of <%s>. ' +
+          'validateDOMNesting(...): %s cannot appear as a child of <%s>. ' +
           'See %s.%s',
-          childTag,
+          tagDisplayName,
           ancestorTag,
           ownerInfo,
           info
@@ -403,9 +407,9 @@ if (__DEV__) {
       } else {
         warning(
           false,
-          'validateDOMNesting(...): <%s> cannot appear as a descendant of ' +
+          'validateDOMNesting(...): %s cannot appear as a descendant of ' +
           '<%s>. See %s.',
-          childTag,
+          tagDisplayName,
           ancestorTag,
           ownerInfo
         );
