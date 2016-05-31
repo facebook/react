@@ -15,7 +15,7 @@ var React;
 var ReactNoop;
 var ReactCoroutine;
 
-describe('ReactComponent', function() {
+describe('ReactCoroutine', function() {
   beforeEach(function() {
     React = require('React');
     ReactNoop = require('ReactNoop');
@@ -23,61 +23,32 @@ describe('ReactComponent', function() {
     spyOn(console, 'log');
   });
 
-  it('should render a simple component', function() {
-
-    function Bar() {
-      return <div>Hello World</div>;
-    }
-
-    function Foo() {
-      return <Bar isBar={true} />;
-    }
-
-    ReactNoop.render(<Foo />);
-    ReactNoop.flush();
-
-  });
-
-  it('should render a simple component, in steps if needed', function() {
-
-    function Bar() {
-      return <span><div>Hello World</div></span>;
-    }
-
-    function Foo() {
-      return [
-        <Bar isBar={true} />,
-        <Bar isBar={true} />,
-      ];
-    }
-
-    ReactNoop.render(<Foo />);
-    // console.log('Nothing done');
-    ReactNoop.flushLowPri(7);
-    // console.log('Yield');
-    ReactNoop.flushLowPri(50);
-    // console.log('Done');
-  });
-
   it('should render a coroutine', function() {
 
+    var ops = [];
+
+
     function Continuation({ isSame }) {
+      ops.push(['Continuation', isSame]);
       return <span>{isSame ? 'foo==bar' : 'foo!=bar'}</span>;
     }
 
     // An alternative API could mark Continuation as something that needs
     // yielding. E.g. Continuation.yieldType = 123;
     function Child({ bar }) {
+      ops.push(['Child', bar]);
       return ReactCoroutine.createYield({
         bar: bar,
       }, Continuation, null);
     }
 
     function Indirection() {
+      ops.push('Indirection');
       return [<Child bar={true} />, <Child bar={false} />];
     }
 
     function HandleYields(props, yields) {
+      ops.push('HandleYields');
       return yields.map(y =>
         <y.continuation isSame={props.foo === y.props.bar} />
       );
@@ -86,6 +57,7 @@ describe('ReactComponent', function() {
     // An alternative API could mark Parent as something that needs
     // yielding. E.g. Parent.handler = HandleYields;
     function Parent(props) {
+      ops.push('Parent');
       return ReactCoroutine.createCoroutine(
         props.children,
         HandleYields,
@@ -99,6 +71,19 @@ describe('ReactComponent', function() {
 
     ReactNoop.render(<App />);
     ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'Parent',
+      'Indirection',
+      ['Child', true],
+      // Yield
+      ['Child', false],
+      // Yield
+      'HandleYields',
+      // Continue yields
+      ['Continuation', true],
+      ['Continuation', false],
+    ]);
 
   });
 
