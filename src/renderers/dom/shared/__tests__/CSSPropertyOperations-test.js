@@ -60,12 +60,12 @@ describe('CSSPropertyOperations', function() {
     })).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
   });
 
-  it('should trim values so `px` will be appended correctly', function() {
+  it('should trim values', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
-      margin: '16 ',
+      left: '16 ',
       opacity: 0.5,
-      padding: ' 4 ',
-    })).toBe('margin:16px;opacity:0.5;padding:4px;');
+      right: ' 4 ',
+    })).toBe('left:16;opacity:0.5;right:4;');
   });
 
   it('should not append `px` to styles that might need a number', function() {
