@@ -14,7 +14,7 @@ var babel = require('gulp-babel');
 var flatten = require('gulp-flatten');
 var del = require('del');
 
-var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
+var fbjsConfigurePreset = require('babel-preset-fbjs/configure');
 
 var paths = {
   react: {
@@ -46,9 +46,14 @@ var moduleMap = Object.assign(
   }
 );
 
-var babelOpts = {
-  plugins: [
-    [babelPluginModules, { map: moduleMap }],
+var babelOptions = {
+  presets: [
+    fbjsConfigurePreset({
+      stripDEV: true,
+      rewriteModules: {
+        map: moduleMap,
+      },
+    }),
   ],
 };
 
@@ -59,7 +64,7 @@ gulp.task('react:clean', function() {
 gulp.task('react:modules', function() {
   return gulp
     .src(paths.react.src)
-    .pipe(babel(babelOpts))
+    .pipe(babel(babelOptions))
     .pipe(flatten())
     .pipe(gulp.dest(paths.react.lib));
 });
