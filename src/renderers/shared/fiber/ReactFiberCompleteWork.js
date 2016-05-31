@@ -25,6 +25,7 @@ var {
   ClassComponent,
   HostComponent,
   CoroutineComponent,
+  CoroutineHandlerPhase,
   YieldComponent,
 } = ReactTypesOfWork;
 
@@ -52,43 +53,37 @@ function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
   }
 }
 
-function handleCoroutine(unitOfWork : Fiber) {
+function moveCoroutineToHandlerPhase(unitOfWork : Fiber) {
   var coroutine = (unitOfWork.input : ?ReactCoroutine);
   if (!coroutine) {
     throw new Error('Should be resolved by now');
   }
 
-  if (unitOfWork.stage === 0) {
-    // First step of the coroutine has completed. Now we need to do the second.
-    // TODO: It would be nice to have a multi stage coroutine represented by a
-    // single component, or at least tail call optimize nested ones.
-    // TODO: If we end up not using multi stage coroutines, we could also reuse
-    // the tag field to switch between the two stages.
-    unitOfWork.stage = 1;
+  // First step of the coroutine has completed. Now we need to do the second.
+  // TODO: It would be nice to have a multi stage coroutine represented by a
+  // single component, or at least tail call optimize nested ones. Currently
+  // that requires additional fields that we don't want to add to the fiber.
+  // So this requires nested handlers.
+  unitOfWork.tag = CoroutineHandlerPhase;
 
-    // Build up the yields.
-    // TODO: Compare this to a generator or opaque helpers like Children.
-    var yields : Array<ReifiedYield> = [];
-    var child = unitOfWork.child;
-    while (child) {
-      recursivelyFillYields(yields, child.output);
-      child = child.sibling;
-    }
-    var fn = coroutine.handler;
-    var props = coroutine.props;
-    var nextChildren = fn(props, yields);
-
-    unitOfWork.stateNode = ReactChildFiber.reconcileChildFibers(
-      unitOfWork,
-      unitOfWork.stateNode,
-      nextChildren
-    );
-    return unitOfWork.stateNode;
-  } else {
-    // The coroutine is now complete.
-    transferOutput(unitOfWork.stateNode, unitOfWork);
-    return null;
+  // Build up the yields.
+  // TODO: Compare this to a generator or opaque helpers like Children.
+  var yields : Array<ReifiedYield> = [];
+  var child = unitOfWork.child;
+  while (child) {
+    recursivelyFillYields(yields, child.output);
+    child = child.sibling;
   }
+  var fn = coroutine.handler;
+  var props = coroutine.props;
+  var nextChildren = fn(props, yields);
+
+  unitOfWork.stateNode = ReactChildFiber.reconcileChildFibers(
+    unitOfWork,
+    unitOfWork.stateNode,
+    nextChildren
+  );
+  return unitOfWork.stateNode;
 }
 
 exports.completeWork = function(unitOfWork : Fiber) : ?Fiber {
@@ -106,7 +101,12 @@ exports.completeWork = function(unitOfWork : Fiber) : ?Fiber {
       break;
     case CoroutineComponent:
       console.log('/coroutine component', unitOfWork.input.handler.name);
-      return handleCoroutine(unitOfWork);
+      return moveCoroutineToHandlerPhase(unitOfWork);
+    case CoroutineHandlerPhase:
+      transferOutput(unitOfWork.stateNode, unitOfWork);
+      // Reset the tag to now be a first phase coroutine.
+      unitOfWork.tag = CoroutineComponent;
+      break;
     case YieldComponent:
       // Does nothing.
       break;

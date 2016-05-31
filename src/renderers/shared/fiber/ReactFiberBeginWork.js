@@ -23,6 +23,7 @@ var {
   ClassComponent,
   HostComponent,
   CoroutineComponent,
+  CoroutineHandlerPhase,
   YieldComponent,
 } = ReactTypesOfWork;
 
@@ -97,9 +98,11 @@ function beginWork(unitOfWork : Fiber) : ?Fiber {
     case HostComponent:
       updateHostComponent(unitOfWork);
       break;
+    case CoroutineHandlerPhase:
+      // This is a restart. Reset the tag to the initial phase.
+      unitOfWork.tag = CoroutineComponent;
+      // Intentionally fall through since this is now the same.
     case CoroutineComponent:
-      // Reset the stage to zero.
-      unitOfWork.stage = 0;
       updateCoroutineComponent(unitOfWork);
       // This doesn't take arbitrary time so we could synchronously just begin
       // eagerly do the work of unitOfWork.child as an optimization.

@@ -51,9 +51,6 @@ export type Fiber = {
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
 
-  // Used by multi-stage coroutines.
-  stage: number, // Consider reusing the tag field instead.
-
   // This will be used to quickly determine if a subtree has no pending changes.
   hasPendingChanges: bool,
 
@@ -77,8 +74,6 @@ var createFiber = function(tag : number, key : null | string) : Fiber {
 
     input: null,
     output: null,
-
-    stage: 0,
 
     hasPendingChanges: true,
 
