@@ -12,8 +12,8 @@ var evalToString = require('../evalToString');
 var babylon = require('babylon');
 
 var parse = (source) => babylon.parse(
-  `invariant(${source});`
-).program.body[0].expression.arguments[0]; // quick way to get an exp node
+  `(${source});`
+).program.body[0].expression; // quick way to get an exp node
 
 var parseAndEval = (source) => evalToString(parse(source));
 

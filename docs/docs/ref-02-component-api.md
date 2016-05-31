@@ -81,21 +81,6 @@ Calling `forceUpdate()` will cause `render()` to be called on the component, ski
 Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your component "pure" and your application much simpler and more efficient.
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `this.getDOMNode()` returns `null`.
-
-> Note:
->
-> getDOMNode is deprecated and has been replaced with [ReactDOM.findDOMNode()](/react/docs/top-level-api.html#reactdom.finddomnode).
->
-> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
-
-
 ### isMounted
 
 ```javascript

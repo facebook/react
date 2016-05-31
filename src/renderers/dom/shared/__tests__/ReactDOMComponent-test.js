@@ -163,46 +163,26 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn about styles with numeric string values for non-unitless properties', function() {
+    it('should warn for onDblClick prop', function() {
       spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div onDblClick={() => {}} />, container);
+      expect(console.error.calls.count(0)).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Unknown event handler property onDblClick. Did you mean `onDoubleClick`?\n    in div (at **)'
+      );
+    });
 
-      var div = document.createElement('div');
-      var One = React.createClass({
+    it('should not warn for "0" as a unitless style value', function() {
+      spyOn(console, 'error');
+      var Component = React.createClass({
         render: function() {
-          return this.props.inline ?
-            <span style={{fontSize: '1'}} /> :
-            <div style={{fontSize: '1'}} />;
+          return <div style={{margin: '0'}} />;
         },
       });
-      var Two = React.createClass({
-        render: function() {
-          return <div style={{fontSize: '1'}} />;
-        },
-      });
-      ReactDOM.render(<One inline={false} />, div);
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: a `div` tag (owner: `One`) was passed a numeric string value ' +
-        'for CSS property `fontSize` (value: `1`) which will be treated ' +
-        'as a unitless number in a future version of React.'
-      );
 
-      // Don't warn again for the same component
-      ReactDOM.render(<One inline={true} />, div);
-      expect(console.error.calls.count()).toBe(1);
-
-      // Do warn for different components
-      ReactDOM.render(<Two />, div);
-      expect(console.error.calls.count()).toBe(2);
-      expect(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: a `div` tag (owner: `Two`) was passed a numeric string value ' +
-        'for CSS property `fontSize` (value: `1`) which will be treated ' +
-        'as a unitless number in a future version of React.'
-      );
-
-      // Really don't warn again for the same component
-      ReactDOM.render(<One inline={true} />, div);
-      expect(console.error.calls.count()).toBe(2);
+      ReactTestUtils.renderIntoDocument(<Component />);
+      expect(console.error.calls.count()).toBe(0);
     });
 
     it('should warn nicely about NaN in style', function() {

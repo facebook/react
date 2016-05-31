@@ -97,7 +97,7 @@
     "testPathDirs": [
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
-      "<rootDir>/scripts/error-extractor",
+      "<rootDir>/scripts",
       "<rootDir>/src",
       "node_modules/fbjs"
     ],

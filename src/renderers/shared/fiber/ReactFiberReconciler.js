@@ -13,14 +13,9 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-var ReactFiberFunctionalComponent = require('ReactFiberFunctionalComponent');
-
-var ReactTypesOfWork = require('ReactTypesOfWork');
-var {
-  FunctionalComponent,
-  ClassComponent,
-  HostComponent,
-} = ReactTypesOfWork;
+var ReactFiber = require('ReactFiber');
+var { beginWork } = require('ReactFiberBeginWork');
+var { completeWork } = require('ReactFiberCompleteWork');
 
 type ReactHostElement<T, P> = {
   type: T,
@@ -54,16 +49,34 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
 
   let nextUnitOfWork : ?Fiber = null;
 
-  function performUnitOfWork(unit : Fiber) : ?Fiber {
-    switch (unit.tag) {
-      case FunctionalComponent:
-        return ReactFiberFunctionalComponent.performWork(unit);
-      case ClassComponent:
-        break;
-      case HostComponent:
-        break;
+  function completeUnitOfWork(unitOfWork : Fiber) : ?Fiber {
+    while (true) {
+      var next = completeWork(unitOfWork);
+      if (next) {
+        // If completing this work spawned new work, do that next.
+        return next;
+      } else if (unitOfWork.sibling) {
+        // If there is more work to do in this parent, do that next.
+        return unitOfWork.sibling;
+      } else if (unitOfWork.parent) {
+        // If there's no more work in this parent. Complete the parent.
+        unitOfWork = unitOfWork.parent;
+      } else {
+        // If we're at the root, there's no more work to do.
+        return null;
+      }
     }
-    return null;
+  }
+
+  function performUnitOfWork(unitOfWork : Fiber) : ?Fiber {
+    var next = beginWork(unitOfWork);
+    if (next) {
+      // If this spawns new work, do that next.
+      return next;
+    } else {
+      // Otherwise, complete the current work.
+      return completeUnitOfWork(unitOfWork);
+    }
   }
 
   function performLowPriWork(deadline : Deadline) {
@@ -100,7 +113,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
 
       ensureLowPriIsScheduled();
 
-      nextUnitOfWork = ReactFiberFunctionalComponent.createFiber(element);
+      nextUnitOfWork = ReactFiber.createFiberFromElement(element);
 
       return {};
     },
