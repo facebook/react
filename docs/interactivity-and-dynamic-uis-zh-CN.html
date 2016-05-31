@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -471,7 +473,7 @@
 <h2><a class="anchor" name="-state"></a>哪些组件应该有 State？ <a class="hash-link" href="#-state">#</a></h2>
 <p>大部分组件的工作应该是从 <code>props</code> 里取数据并渲染出来。但是，有时需要对用户输入、服务器请求或者时间变化等作出响应，这时才需要使用 State。</p>
 
-<p>** 尝试把尽可能多的组件无状态化。** 这样做能隔离 state，把它放到最合理的地方，也能减少冗余并，同时易于解释程序运作过程。</p>
+<p><strong>尝试把尽可能多的组件无状态化。</strong> 这样做能隔离 state，把它放到最合理的地方，也能减少冗余，同时易于解释程序运作过程。</p>
 
 <p>常用的模式是创建多个只负责渲染数据的无状态（stateless）组件，在它们的上层创建一个有状态（stateful）组件并把它的状态通过 <code>props</code> 传给子级。这个有状态的组件封装了所有用户的交互逻辑，而这些无状态组件则负责声明式地渲染数据。</p>
 <h2><a class="anchor" name="---state"></a>哪些 <em>应该</em> 作为 State？ <a class="hash-link" href="#---state">#</a></h2>

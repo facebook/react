@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -485,17 +487,6 @@
 <p>调用 <code>forceUpdate()</code> 将会导致 <code>render()</code> 跳过 <code>shouldComponentUpdate()</code> 在组件上被调用，这会为子级触发正常的生命周期方法。包括每个子级的 <code>shouldComponentUpdate()</code> 方法。如果标记改变了，React 仍仅只更新 DOM。</p>
 
 <p>通常你应该试着避免所有对 <code>forceUpdate()</code> 的使用并且在 <code>render()</code> 里只从 <code>this.props</code> 和 <code>this.state</code> 读取。这会使你的组件 &quot;纯粹&quot; 并且你的组件会更简单和高效。</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。如果 <code>render</code> 返回 <code>null</code> 或者 <code>false</code> 的时候，<code>this.getDOMNode()</code> 返回 <code>null</code>。</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode).</p>
-
-<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除。</p>
-</blockquote>
 <h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p>如果组件渲染到了 DOM 中，<code>isMounted()</code> 返回 true，否则返回 <code>false</code>。可以使用该方法来控制对 <code>setState()</code> 和 <code>forceUpdate()</code> 的异步调用。</p>

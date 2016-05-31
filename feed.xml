@@ -228,7 +228,7 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.m
 &lt;/ul&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;other-improvements&quot;&gt;&lt;/a&gt; Other improvements &lt;a class=&quot;hash-link&quot; href=&quot;#other-improvements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;p&gt;React now uses &lt;code&gt;loose-envify&lt;/code&gt; instead of &lt;code&gt;envify&lt;/code&gt; so it installs less transitive dependencies.&lt;br&gt;
+&lt;li&gt;&lt;p&gt;React now uses &lt;code&gt;loose-envify&lt;/code&gt; instead of &lt;code&gt;envify&lt;/code&gt; so it installs fewer transitive dependencies.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/qerub&quot;&gt;@qerub&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6303&quot;&gt;#6303&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;li&gt;&lt;p&gt;Shallow renderer now exposes &lt;code&gt;getMountedInstance()&lt;/code&gt;.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/glenjamin&quot;&gt;@glenjamin&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/4918&quot;&gt;#4918&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;

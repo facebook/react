@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -485,17 +487,6 @@
 <p>Calling <code>forceUpdate()</code> will cause <code>render()</code> to be called on the component, skipping <code>shouldComponentUpdate()</code>. This will trigger the normal lifecycle methods for child components, including the <code>shouldComponentUpdate()</code> method of each child. React will still only update the DOM if the markup changes.</p>
 
 <p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your component &quot;pure&quot; and your application much simpler and more efficient.</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>this.getDOMNode()</code> returns <code>null</code>.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>getDOMNode is deprecated and has been replaced with <a href="/react/docs/top-level-api.html#reactdom.finddomnode">ReactDOM.findDOMNode()</a>.</p>
-
-<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It may be removed entirely in a future version of React.</p>
-</blockquote>
 <h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p><code>isMounted()</code> returns <code>true</code> if the component is rendered into the DOM, <code>false</code> otherwise. You can use this method to guard asynchronous calls to <code>setState()</code> or <code>forceUpdate()</code>.</p>

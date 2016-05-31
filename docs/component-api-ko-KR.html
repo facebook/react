@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -435,7 +437,7 @@
     <h2><a class="anchor" name="react.component"></a>React.Component <a class="hash-link" href="#react.component">#</a></h2>
 <p>React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 만듭니다. 이때 만들어진 인스턴스는 이후의 렌더링에서 다시 사용되고 컴포넌트의 메소드들에서 <code>this</code> 변수로 접근할 수 있습니다. React 외부에서 React 컴포넌트의 핸들을 얻는 방법은 <code>ReactDOM.render</code>의 리턴값을 저장하는 것이 유일합니다. 다른 컴포넌트 안에서 비슷한 결과를 얻으려면 <a href="/react/docs/more-about-refs-ko-KR.html">refs</a>를 사용해야 합니다.</p>
 <h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setState</span><span class="p">(</span>
-  <span class="kd">function</span><span class="o">|</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span> 
+  <span class="kd">function</span><span class="o">|</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -465,7 +467,7 @@
 <p><code>setState()</code>는 <code>shouldComponentUpdate()</code>에 조건부 렌더링 로직이 구현되어 있지 않다면 항상 재렌더링을 발생시킵니다. 변경 가능한 객체를 사용하고 있고 조건부 렌더링 로직을 <code>shouldComponentUpdate()</code>에 구현할 수 없는 경우라면 새로운 state가 이전 state와 달라지는 경우에만 <code>setState()</code>를 호출하여 불필요한 재렌더링을 피할 수 있습니다.</p>
 </blockquote>
 <h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceState</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span> 
+  <span class="nx">object</span> <span class="nx">nextState</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -485,17 +487,6 @@
 <p><code>forceUpdate()</code>를 호출하면 <code>shouldComponentUpdate()</code>를 생략하고 해당 컴포넌트 <code>render()</code> 함수가 호출됩니다. 각 자식 컴포넌트에 대해서는 <code>shouldComponentUpdate()</code>를 포함해 보통 라이프 사이클 메서드를 호출합니다. React는 마크업이 변경된 경우에만 DOM을 업데이트합니다.</p>
 
 <p>특별한 경우가 아니면 <code>forceUpdate()</code>는 되도록 피하시고 <code>render()</code>에서는 <code>this.props</code>와 <code>this.state</code>에서만 읽어오세요. 그렇게 하는 것이 컴포넌트를 &quot;순수&quot;하게 하고 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. <code>render</code>가 <code>null</code>이나 <code>false</code>를 리턴하였다면 <code>this.getDOMNode()</code>는 <code>null</code>을 리턴합니다.</p>
-
-<blockquote>
-<p>주의:</p>
-
-<p>getDOMNode는 <a href="/react/docs/top-level-api.html#reactdom.finddomnode">ReactDOM.findDOMNode()</a>로 교체되었습니다.</p>
-
-<p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
-</blockquote>
 <h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p><code>isMounted()</code>는 컴포넌트가 DOM에 렌더링되었으면 <code>true</code>를, 아니면 <code>false</code>를 리턴합니다. 비동기적으로 <code>setState()</code>나 <code>forceUpdate()</code>를 호출할 때 이 메소드를 사용하여 오류를 방지할 수 있습니다.</p>
@@ -506,7 +497,7 @@
 <p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
 </blockquote>
 <h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> 
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -524,7 +515,7 @@
 <p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
 </blockquote>
 <h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> 
+  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
   <span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>

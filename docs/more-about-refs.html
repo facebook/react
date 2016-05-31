@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -479,7 +481,13 @@
 
 <p>Note that when the referenced component is unmounted and whenever the ref changes, the old ref will be called with <code>null</code> as an argument. This prevents memory leaks in the case that the instance is stored, as in the second example. Also note that when writing refs with inline function expressions as in the examples here, React sees a different function object each time so on every update, ref will be called with <code>null</code> immediately before it&#39;s called with the component instance.</p>
 <h2><a class="anchor" name="the-ref-string-attribute"></a>The ref String Attribute <a class="hash-link" href="#the-ref-string-attribute">#</a></h2>
-<p>React also supports using a string (instead of a callback) as a ref prop on any component, although this approach is mostly legacy at this point.</p>
+<blockquote>
+<p>Note:</p>
+
+<p>Although string refs are not deprecated, they are considered legacy, and will likely be deprecated at some point in the future. Callback refs are preferred.</p>
+</blockquote>
+
+<p>React also supports using a string (instead of a callback) as a ref prop on any component.</p>
 
 <ol>
 <li><p>Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>

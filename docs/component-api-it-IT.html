@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -485,17 +487,6 @@
 <p>Chiamare <code>forceUpdate()</code> causerà la chiamata di <code>render()</code> sul componente, saltando l&#39;esecuzione di <code>shouldComponentUpdate()</code>. Questo scatenerà i normali metodi del ciclo di vita per i componenti figli, incluso il metodo <code>shouldComponentUpdate()</code> di ciascun figlio. React tuttavia aggiornerà il DOM soltanto se il markup effettivamente cambia.</p>
 
 <p>Normalmente dovresti cercare di evitare l&#39;uso di <code>forceUpdate()</code> e leggere soltanto <code>this.props</code> e <code>this.state</code> all&#39;interno di <code>render()</code>. Ciò rende il tuo componente &quot;puro&quot; e la tua applicazione molto più semplice ed efficiente.</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>Se questo componente è stato montato nel DOM, restituisce il corrispondente elemento DOM nativo del browser. Questo metodo è utile per leggere valori dal DOM, come valori dei campi dei moduli ed effettuare misure sul DOM. Quando <code>render</code> restituisce <code>null</code> o <code>false</code>, <code>this.getDOMNode()</code> restituisce <code>null</code>.</p>
-
-<blockquote>
-<p>Nota:</p>
-
-<p>getDOMNode è deprecato ed è stato sostituito da <a href="/react/docs/top-level-api.html#reactdom.finddomnode">ReactDOM.findDOMNode()</a>.</p>
-
-<p>Questo metodo non è disponibile il componenti <code>class</code> ES6 che estendono <code>React.Component</code>. Potrebbe essere eliminato del tutto in una versione futura di React.</p>
-</blockquote>
 <h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p><code>isMounted()</code> restituisce <code>true</code> se il rendering del componente è stato effettuato nel DOM, <code>false</code> altrimenti. Puoi usare questo metodo come guardia per chiamate asincrone a <code>setState()</code> o <code>forceUpdate()</code>.</p>

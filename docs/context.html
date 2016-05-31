@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -449,78 +451,81 @@
 </blockquote>
 <h2><a class="anchor" name="passing-info-automatically-through-a-tree"></a>Passing info automatically through a tree <a class="hash-link" href="#passing-info-automatically-through-a-tree">#</a></h2>
 <p>Suppose you have a structure like:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
         <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
       <span class="o">&lt;</span><span class="err">/button&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">Message</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="kr">class</span> <span class="nx">Message</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span> <span class="o">&lt;</span><span class="nx">Button</span> <span class="nx">color</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">color</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Delete</span><span class="o">&lt;</span><span class="err">/Button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">MessageList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">color</span> <span class="o">=</span> <span class="s2">&quot;purple&quot;</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Message</span> <span class="nx">text</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span> <span class="nx">color</span><span class="o">=</span><span class="p">{</span><span class="nx">color</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-    <span class="p">});</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="kr">class</span> <span class="nx">MessageList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">color</span> <span class="o">=</span> <span class="s2">&quot;purple&quot;</span><span class="p">;</span>
+    <span class="kr">const</span> <span class="nx">children</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">message</span><span class="p">)</span> <span class="o">=&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Message</span> <span class="nx">text</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span> <span class="nx">color</span><span class="o">=</span><span class="p">{</span><span class="nx">color</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>In this example, we manually thread through a <code>color</code> prop in order to style the <code>Button</code> and <code>Message</code> components appropriately. Theming is a good example of when you might want an entire subtree to have access to some piece of information (a color). Using context, we can pass this through the tree automatically:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">contextTypes</span><span class="o">:</span> <span class="p">{</span>
-</span><span class="hll">    <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
-</span><span class="hll">  <span class="p">},</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
 <span class="hll">      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
 </span>        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
       <span class="o">&lt;</span><span class="err">/button&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">Message</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll"><span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">  <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+</span><span class="hll"><span class="p">};</span>
+</span>
+<span class="kr">class</span> <span class="nx">Message</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
 <span class="hll">        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span> <span class="o">&lt;</span><span class="nx">Button</span><span class="o">&gt;</span><span class="nx">Delete</span><span class="o">&lt;</span><span class="err">/Button&gt;</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">MessageList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">childContextTypes</span><span class="o">:</span> <span class="p">{</span>
-</span><span class="hll">    <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
-</span><span class="hll">  <span class="p">},</span>
-</span><span class="hll">  <span class="nx">getChildContext</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="kr">class</span> <span class="nx">MessageList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<span class="hll">  <span class="nx">getChildContext</span><span class="p">()</span> <span class="p">{</span>
 </span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="s2">&quot;purple&quot;</span><span class="p">};</span>
-</span><span class="hll">  <span class="p">},</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Message</span> <span class="nx">text</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>    <span class="p">});</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">children</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">message</span><span class="p">)</span> <span class="o">=&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Message</span> <span class="nx">text</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="p">);</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
   <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
+<span class="p">}</span>
+
+<span class="hll"><span class="nx">MessageList</span><span class="p">.</span><span class="nx">childContextTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">  <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+</span><span class="hll"><span class="p">};</span>
+</span></code></pre></div>
 <p>By adding <code>childContextTypes</code> and <code>getChildContext</code> to <code>MessageList</code> (the context provider), React passes the information down automatically and any component in the subtree (in this case, <code>Button</code>) can access it by defining <code>contextTypes</code>.</p>
 
-<p>If <code>contextTypes</code> is not defined, then <code>this.context</code> will be an empty object.</p>
+<p>If <code>contextTypes</code> is not defined, then <code>context</code> will be an empty object.</p>
 <h2><a class="anchor" name="parent-child-coupling"></a>Parent-child coupling <a class="hash-link" href="#parent-child-coupling">#</a></h2>
 <p>Context can also let you build an API such as:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Menu</span><span class="o">&gt;</span>
@@ -554,41 +559,44 @@
 <span class="p">)</span>
 </code></pre></div><h2><a class="anchor" name="referencing-context-in-stateless-functional-components"></a>Referencing context in stateless functional components <a class="hash-link" href="#referencing-context-in-stateless-functional-components">#</a></h2>
 <p>Stateless functional components are also able to reference <code>context</code> if <code>contextTypes</code> is defined as a property of the function. The following code shows the <code>Button</code> component above written as a stateless functional component.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Button</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
-      <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
-    <span class="o">&lt;</span><span class="err">/button&gt;</span>
-  <span class="p">);</span>
-<span class="p">}</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">Button</span> <span class="o">=</span> <span class="p">({</span><span class="nx">children</span><span class="p">},</span> <span class="nx">context</span><span class="p">)</span> <span class="o">=&gt;</span>
+  <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="nx">children</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/button&gt;;</span>
+
 <span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
 </code></pre></div><h2><a class="anchor" name="updating-context"></a>Updating context <a class="hash-link" href="#updating-context">#</a></h2>
 <p>The <code>getChildContext</code> function will be called when the state or props changes. In order to update data in the context, trigger a local state update with <code>this.setState</code>. This will trigger a new context and changes will be received by the children.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MediaQuery</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span><span class="s1">&#39;desktop&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">childContextTypes</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">type</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
-  <span class="p">},</span>
-  <span class="nx">getChildContext</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">MediaQuery</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span><span class="s1">&#39;desktop&#39;</span><span class="p">};</span>
+  <span class="p">}</span>
+
+  <span class="nx">getChildContext</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
-    <span class="kd">var</span> <span class="nx">checkMediaQuery</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
-      <span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">matchMedia</span><span class="p">(</span><span class="s2">&quot;(min-width: 1025px)&quot;</span><span class="p">).</span><span class="nx">matches</span> <span class="o">?</span> <span class="s1">&#39;desktop&#39;</span> <span class="o">:</span> <span class="s1">&#39;mobile&#39;</span><span class="p">;</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">type</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">){</span>
-        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">type</span><span class="o">:</span><span class="nx">type</span><span class="p">});</span>
+  <span class="p">}</span>
+
+  <span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">checkMediaQuery</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kr">const</span> <span class="nx">type</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">matchMedia</span><span class="p">(</span><span class="s2">&quot;(min-width: 1025px)&quot;</span><span class="p">).</span><span class="nx">matches</span> <span class="o">?</span> <span class="s1">&#39;desktop&#39;</span> <span class="o">:</span> <span class="s1">&#39;mobile&#39;</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">type</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">type</span><span class="p">});</span>
       <span class="p">}</span>
     <span class="p">};</span>
 
     <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;resize&#39;</span><span class="p">,</span> <span class="nx">checkMediaQuery</span><span class="p">);</span>
     <span class="nx">checkMediaQuery</span><span class="p">();</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+  <span class="p">}</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">;</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">MediaQuery</span><span class="p">.</span><span class="nx">childContextTypes</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+<span class="p">};</span>
 </code></pre></div><h2><a class="anchor" name="when-not-to-use-context"></a>When not to use context <a class="hash-link" href="#when-not-to-use-context">#</a></h2>
 <p>Just as global variables are best avoided when writing clear code, you should avoid using context in most cases. In particular, think twice before using it to &quot;save typing&quot; and using it instead of passing explicit props.</p>
 
