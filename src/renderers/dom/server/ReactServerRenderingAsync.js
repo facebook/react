@@ -138,6 +138,9 @@ const render = (element, makeStaticMarkup) => {
  *   debugId {Number} if __DEV__ the debug ID for this node. otherwise, undefined
  */
 const renderImpl = (node, length, makeStaticMarkup, domId, parentDebugId, selectValues) => {
+  if (typeof node === 'undefined') {
+    return {done:true, value:'', debugId:0};
+  }
   // first, if node.element is a component type (not a dom node type), instantiate it
   // and call componentWillMount/render as needed. keep doing this until node.element
   // is a dom node.
@@ -170,7 +173,7 @@ const renderImpl = (node, length, makeStaticMarkup, domId, parentDebugId, select
     return {
       done: true,
       value: makeStaticMarkup ? '' : '<!-- react-empty: ' + domId.value++ + ' -->',
-      debugId: ancestorDebugIds.length > 0 ? ancestorDebugIds[0] : 0,
+      debugId: ancestorDebugIds && ancestorDebugIds.length > 0 ? ancestorDebugIds[0] : 0,
     };
   }
 
