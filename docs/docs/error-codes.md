@@ -1,8 +1,7 @@
 ---
-id: error-code
-title: React Error Code
-permalink: error-code.html
-prev: glossary.html
+id: error-codes
+title: React Error Codes
+permalink: error-codes.html
 ---
 
 If you're here because you found an error link in your console, read on!
@@ -11,5 +10,6 @@ React removes verbose error messages in production to optimize the number of byt
 
 ----
 
-<div class="error-code-container"></div>
-<script src="/react/js/ErrorCodeComponent.js"></script>
+<script src="/react/js/errorMap.js"></script>
+<div class="error-codes-container"></div>
+<script src="/react/js/ErrorCodesComponent.js"></script>
