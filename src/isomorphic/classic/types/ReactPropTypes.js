@@ -235,18 +235,37 @@ function createEnumTypeChecker(expectedValues) {
 
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
+    var isOneOfPropType = false;
     for (var i = 0; i < expectedValues.length; i++) {
       if (is(propValue, expectedValues[i])) {
         return null;
       }
+      if (getPropType(expectedValues[i]) === 'function' && expectedValues[i].name === "bound checkType") {
+        isOneOfPropType = true;
+      }
     }
 
     var locationName = ReactPropTypeLocationNames[location];
-    var valuesString = JSON.stringify(expectedValues);
+    if (isOneOfPropType) {
+      return new Error(
+        `Invalid ${locationName} \`${propFullName}\` of value \`${propValue}\` supplied to \`${componentName}\`.\n` +
+        `Possibly expected to use \`oneOfType\` instead of \`oneOf\`.`
+      );
+    }
+    var valuesString = JSON.stringify(expectedValues, functionPrettifier);
     return new Error(
       `Invalid ${locationName} \`${propFullName}\` of value \`${propValue}\` ` +
       `supplied to \`${componentName}\`, expected one of ${valuesString}.`
     );
+  }
+
+  function functionPrettifier(name, values) {
+    for (var i = 0; i< values.length; i++) {
+      if (getPropType(values[i]) === 'function') {
+        values[i] = values[i].toString();
+      }
+    }
+    return values;
   }
   return createChainableTypeChecker(validate);
 }
