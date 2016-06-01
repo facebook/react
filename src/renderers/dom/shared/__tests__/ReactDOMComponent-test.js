@@ -723,6 +723,26 @@ describe('ReactDOMComponent', function() {
       };
     });
 
+    it('should work error event on <source> element', function() {
+      spyOn(console, 'error');  
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <video>
+          <source src="http://example.org/video" type="video/mp4" onError={(e) => console.error('onError called')} />
+        </video>,
+        container
+      );
+
+      var errorEvent = document.createEvent('Event');
+      errorEvent.initEvent('error', false, false);
+      container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
+
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'onError called'
+      );
+    });
+
     it('should not duplicate uppercased selfclosing tags', function() {
       var Container = React.createClass({
         render: function() {
