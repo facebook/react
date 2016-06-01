@@ -280,14 +280,8 @@ describe('ReactComponent', function() {
       'or a class/function (for composite components) but got: null.'
     );
 
-    var Z = {};
-    expect(() => ReactTestUtils.renderIntoDocument(<Z />)).toThrowError(
-      'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: object.'
-    );
-
     // One warning for each element creation
-    expect(console.error.calls.count()).toBe(3);
+    expect(console.error.calls.count()).toBe(2);
   });
 
 });
