@@ -35,6 +35,8 @@ if (
 
 var loggedTypeFailures = {};
 
+// function checkReactTypeSpec(typeSpecs, values, location, componentName, element, debugID) {
+
 /**
  * Assert that the values match with the type specs.
  * Error messages are memorized and will only be shown once.
@@ -57,6 +59,10 @@ function checkReactTypeSpec(
   // only during reconciliation (begin and complete phase).
   workInProgressOrDebugID,
 ) {
+  const mismatched = Object.keys(values).filter(x => Object.keys(typeSpecs).indexOf(x) === -1)
+    .map(i => i.toLowerCase());
+  const mismatched = Object.keys(values).filter(x => Object.keys(typeSpecs).indexOf(x) === -1);
+  const lowercase = mismatched.map(i => i.toLowerCase());
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
       var error;
@@ -124,6 +130,15 @@ function checkReactTypeSpec(
           location,
           error.message,
           componentStackInfo
+        );
+      }
+      if (lowercase.indexOf(typeSpecName.toLowerCase()) !== -1) {
+        const mismatch = mismatched[lowercase.indexOf(typeSpecName.toLowerCase())];
+        warning(
+          false,
+          'Provided prop %s is not defined in propTypes, did you mean %s?',
+          mismatch,
+          typeSpecName,
         );
       }
     }

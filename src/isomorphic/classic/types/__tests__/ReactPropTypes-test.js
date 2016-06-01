@@ -153,6 +153,26 @@ describe('ReactPropTypes', () => {
     it('should warn for missing required values', () => {
       typeCheckFailRequiredValues(PropTypes.string.isRequired);
     });
+
+    it('should warn for mismatched case of passed values to types', function() {
+      spyOn(console, 'error');
+      Component = React.createClass({
+        propTypes: {
+          onAction: PropTypes.func,
+          label: PropTypes.string,
+        },
+
+        render: function() {
+          return <div>{this.props.label}</div>;
+        },
+      });
+      var instance = <Component onaction={() => alert('hello')} label="HelloWorld" />;
+      instance = ReactTestUtils.renderIntoDocument(instance);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Provided prop onaction is not defined in propTypes, did you mean onAction?',
+      );
+      expect(console.error.calls.count()).toBe(1);
+    });
   });
 
   describe('Any type', () => {
