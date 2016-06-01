@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
@@ -142,14 +143,27 @@ function processQueue(inst, updateQueue) {
 var setParentForInstrumentation = emptyFunction;
 var setChildrenForInstrumentation = emptyFunction;
 if (__DEV__) {
+  var getDebugID = function(inst) {
+    if (!inst._debugID) {
+      // Check for ART-like instances. TODO: This is silly/gross.
+      var internal;
+      if ((internal = ReactInstanceMap.get(inst))) {
+        inst = internal;
+      }
+    }
+    return inst._debugID;
+  };
   setParentForInstrumentation = function(child) {
     if (child._debugID !== 0) {
-      ReactInstrumentation.debugTool.onSetParent(child._debugID, this._debugID);
+      ReactInstrumentation.debugTool.onSetParent(
+        child._debugID,
+        getDebugID(this)
+      );
     }
   };
   setChildrenForInstrumentation = function(children) {
     ReactInstrumentation.debugTool.onSetChildren(
-      this._debugID,
+      getDebugID(this),
       children ? Object.keys(children).map(key => children[key]._debugID) : []
     );
   };
@@ -178,7 +192,7 @@ var ReactMultiChild = {
           try {
             ReactCurrentOwner.current = this._currentElement._owner;
             return ReactChildReconciler.instantiateChildren(
-              nestedChildren, transaction, context
+              nestedChildren, transaction, context, this._debugID
             );
           } finally {
             ReactCurrentOwner.current = null;
@@ -202,7 +216,7 @@ var ReactMultiChild = {
         if (this._currentElement) {
           try {
             ReactCurrentOwner.current = this._currentElement._owner;
-            nextChildren = flattenChildren(nextNestedChildrenElements);
+            nextChildren = flattenChildren(nextNestedChildrenElements, this._debugID);
           } finally {
             ReactCurrentOwner.current = null;
           }

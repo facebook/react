@@ -224,8 +224,8 @@ describe('ReactComponentLifeCycle', function() {
       },
     });
     ReactTestUtils.renderIntoDocument(<StatefulComponent />);
-    expect(console.error.calls.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
       'unmounted component. This is a no-op. Please check the code for the ' +
@@ -253,8 +253,8 @@ describe('ReactComponentLifeCycle', function() {
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Component is accessing isMounted inside its render()'
     );
   });
@@ -279,8 +279,8 @@ describe('ReactComponentLifeCycle', function() {
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Component is accessing isMounted inside its render()'
     );
   });
@@ -320,8 +320,8 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Component />);
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Component is accessing findDOMNode inside its render()'
     );
   });

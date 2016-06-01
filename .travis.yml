@@ -81,6 +81,7 @@ script:
         >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
       ./node_modules/.bin/grunt jest:normal
       git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      ./node_modules/.bin/gulp react:extract-errors
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi

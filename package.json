@@ -3,6 +3,7 @@
   "private": true,
   "version": "16.0.0-alpha",
   "devDependencies": {
+    "art": "^0.10.1",
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
@@ -28,6 +29,8 @@
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-plugin-transform-react-jsx-source": "^6.8.0",
     "babel-preset-react": "^6.5.0",
+    "babel-traverse": "^6.9.0",
+    "babylon": "^6.8.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
@@ -50,8 +53,9 @@
     "gulp": "^3.9.0",
     "gulp-babel": "^6.0.0",
     "gulp-flatten": "^0.2.0",
+    "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest-cli": "^12.0.2",
+    "jest": "^12.1.1",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
     "platform": "^1.1.0",
@@ -86,7 +90,6 @@
     "scriptPreprocessor": "scripts/jest/preprocessor.js",
     "setupEnvScriptFile": "scripts/jest/environment.js",
     "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
-    "testRunner": "jasmine1",
     "testFileExtensions": [
       "coffee",
       "js",
@@ -95,6 +98,7 @@
     "testPathDirs": [
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
+      "<rootDir>/scripts",
       "<rootDir>/src",
       "node_modules/fbjs"
     ],

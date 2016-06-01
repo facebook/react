@@ -14,6 +14,7 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var invariant = require('invariant');
+var warning = require('warning');
 
 var tree = {};
 var unmountedIDs = {};
@@ -46,6 +47,34 @@ function purgeDeep(id) {
     delete tree[id];
     childIDs.forEach(purgeDeep);
   }
+}
+
+function describeComponentFrame(name, source, ownerName) {
+  return '\n    in ' + name + (
+    source ?
+      ' (at ' + source.fileName.replace(/^.*[\\\/]/, '') + ':' +
+      source.lineNumber + ')' :
+    ownerName ?
+      ' (created by ' + ownerName + ')' :
+      ''
+  );
+}
+
+function describeID(id) {
+  var name = ReactComponentTreeDevtool.getDisplayName(id);
+  var element = ReactComponentTreeDevtool.getElement(id);
+  var ownerID = ReactComponentTreeDevtool.getOwnerID(id);
+  var ownerName;
+  if (ownerID) {
+    ownerName = ReactComponentTreeDevtool.getDisplayName(ownerID);
+  }
+  warning(
+    element,
+    'ReactComponentTreeDevtool: Missing React element for debugID %s when ' +
+    'building stack',
+    id
+  );
+  return describeComponentFrame(name, element && element._source, ownerName);
 }
 
 var ReactComponentTreeDevtool = {
@@ -154,28 +183,6 @@ var ReactComponentTreeDevtool = {
   },
 
   getCurrentStackAddendum(topElement) {
-    function describeComponentFrame(name, source, ownerName) {
-      return '\n    in ' + name + (
-        source ?
-          ' (at ' + source.fileName.replace(/^.*[\\\/]/, '') + ':' +
-          source.lineNumber + ')' :
-        ownerName ?
-          ' (created by ' + ownerName + ')' :
-          ''
-      );
-    }
-
-    function describeID(id) {
-      var name = ReactComponentTreeDevtool.getDisplayName(id);
-      var element = ReactComponentTreeDevtool.getElement(id);
-      var ownerID = ReactComponentTreeDevtool.getOwnerID(id);
-      var ownerName;
-      if (ownerID) {
-        ownerName = ReactComponentTreeDevtool.getDisplayName(ownerID);
-      }
-      return describeComponentFrame(name, element._source, ownerName);
-    }
-
     var info = '';
     if (topElement) {
       var type = topElement.type;
@@ -192,11 +199,17 @@ var ReactComponentTreeDevtool = {
 
     var currentOwner = ReactCurrentOwner.current;
     var id = currentOwner && currentOwner._debugID;
+
+    info += ReactComponentTreeDevtool.getStackAddendumByID(id);
+    return info;
+  },
+
+  getStackAddendumByID(id) {
+    var info = '';
     while (id) {
       info += describeID(id);
       id = ReactComponentTreeDevtool.getParentID(id);
     }
-
     return info;
   },
 

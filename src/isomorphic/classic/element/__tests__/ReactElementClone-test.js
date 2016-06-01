@@ -16,11 +16,20 @@ var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactElementClone', function() {
+  var ComponentClass;
 
   beforeEach(function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+
+    // NOTE: We're explicitly not using JSX here. This is intended to test
+    // classic JS without JSX.
+    ComponentClass = React.createClass({
+      render: function() {
+        return React.createElement('div');
+      },
+    });
   });
 
   it('should clone a DOM component with new props', function() {
@@ -71,11 +80,16 @@ describe('ReactElementClone', function() {
     React.cloneElement('div', {foo: 1});
     expect(console.error).not.toHaveBeenCalled();
     React.cloneElement('div', Object.create({foo: 1}));
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'React.cloneElement(...): Expected props argument to be a plain object. ' +
       'Properties defined in its prototype chain will be ignored.'
     );
+  });
+
+  it('does not fail if config has no prototype', function() {
+    var config = Object.create(null, {foo: {value: 1, enumerable: true}});
+    React.cloneElement(<div />, config);
   });
 
   it('should keep the original ref if it is not overridden', function() {
@@ -155,6 +169,18 @@ describe('ReactElementClone', function() {
     ]);
   });
 
+  it('should override children if undefined is provided as an argument', function() {
+    var element = React.createElement(ComponentClass, {
+      children: 'text',
+    }, undefined);
+    expect(element.props.children).toBe(undefined);
+
+    var element2 = React.cloneElement(React.createElement(ComponentClass, {
+      children: 'text',
+    }), {}, undefined);
+    expect(element2.props.children).toBe(undefined);
+  });
+
   it('should support keys and refs', function() {
     var Parent = React.createClass({
       render: function() {
@@ -208,13 +234,36 @@ describe('ReactElementClone', function() {
     );
   });
 
+  it('should normalize props with default values', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {prop: 'testKey'};
+      },
+      render: function() {
+        return <span />;
+      },
+    });
+
+    var instance = React.createElement(Component);
+    var clonedInstance = React.cloneElement(instance, {prop: undefined});
+    expect(clonedInstance.props.prop).toBe('testKey');
+    var clonedInstance2 = React.cloneElement(instance, {prop: null});
+    expect(clonedInstance2.props.prop).toBe(null);
+
+    var instance2 = React.createElement(Component, {prop: 'newTestKey'});
+    var cloneInstance3 = React.cloneElement(instance2, {prop: undefined});
+    expect(cloneInstance3.props.prop).toBe('testKey');
+    var cloneInstance4 = React.cloneElement(instance2, {});
+    expect(cloneInstance4.props.prop).toBe('newTestKey');
+  });
+
   it('warns for keys for arrays of elements in rest args', function() {
     spyOn(console, 'error');
 
     React.cloneElement(<div />, null, [<div />, <div />]);
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toContain(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -224,7 +273,7 @@ describe('ReactElementClone', function() {
 
     React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the element is directly in rest args', function() {
@@ -232,7 +281,7 @@ describe('ReactElementClone', function() {
 
     React.cloneElement(<div />, null, <div />, <div />);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the array contains a non-element', function() {
@@ -240,7 +289,7 @@ describe('ReactElementClone', function() {
 
     React.cloneElement(<div />, null, [{}, {}]);
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should check declared prop types after clone', function() {
@@ -267,15 +316,62 @@ describe('ReactElementClone', function() {
       },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed propType: ' +
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
       'expected `string`.\n' +
       '    in Component (created by GrandParent)\n' +
       '    in Parent (created by GrandParent)\n' +
       '    in GrandParent'
     );
+  });
+
+  it('should ignore key and ref warning getters', function() {
+    var elementA = React.createElement('div');
+    var elementB = React.cloneElement(elementA, elementA.props);
+    expect(elementB.key).toBe(null);
+    expect(elementB.ref).toBe(null);
+  });
+
+  it('should ignore undefined key and ref', function() {
+    var element = React.createFactory(ComponentClass)({
+      key: '12',
+      ref: '34',
+      foo: '56',
+    });
+    var props = {
+      key: undefined,
+      ref: undefined,
+      foo: 'ef',
+    };
+    var clone = React.cloneElement(element, props);
+    expect(clone.type).toBe(ComponentClass);
+    expect(clone.key).toBe('12');
+    expect(clone.ref).toBe('34');
+    expect(Object.isFrozen(element)).toBe(true);
+    expect(Object.isFrozen(element.props)).toBe(true);
+    expect(clone.props).toEqual({foo: 'ef'});
+  });
+
+  it('should extract null key and ref', function() {
+    var element = React.createFactory(ComponentClass)({
+      key: '12',
+      ref: '34',
+      foo: '56',
+    });
+    var props = {
+      key: null,
+      ref: null,
+      foo: 'ef',
+    };
+    var clone = React.cloneElement(element, props);
+    expect(clone.type).toBe(ComponentClass);
+    expect(clone.key).toBe('null');
+    expect(clone.ref).toBe(null);
+    expect(Object.isFrozen(element)).toBe(true);
+    expect(Object.isFrozen(element.props)).toBe(true);
+    expect(clone.props).toEqual({foo: 'ef'});
   });
 
 });

@@ -81,21 +81,6 @@ void forceUpdate(
 通常你应该试着避免所有对 `forceUpdate()` 的使用并且在 `render()` 里只从 `this.props` 和 `this.state` 读取。这会使你的组件 "纯粹" 并且你的组件会更简单和高效。
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。如果 `render` 返回 `null` 或者 `false` 的时候，`this.getDOMNode()` 返回 `null`。
-
-> Note:
->
-> getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode).
->
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
-
-
 ### isMounted
 
 ```javascript

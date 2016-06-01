@@ -11,22 +11,26 @@ You've already [learned how to display data](/react/docs/displaying-data.html) w
 ## A Simple Example
 
 ```javascript
-var LikeButton = React.createClass({
-  getInitialState: function() {
-    return {liked: false};
-  },
-  handleClick: function(event) {
+class LikeButton extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      liked: false
+    }
+    this.handleClick = this.handleClick.bind(this);
+  }
+  handleClick() {
     this.setState({liked: !this.state.liked});
-  },
-  render: function() {
-    var text = this.state.liked ? 'like' : 'haven\'t liked';
+  }
+  render() {
+    const text = this.state.liked ? 'like' : 'haven\'t liked';
     return (
-      <p onClick={this.handleClick}>
+      <div onClick={this.handleClick}>
         You {text} this. Click to toggle.
-      </p>
+      </div>
     );
   }
-});
+}
 
 ReactDOM.render(
   <LikeButton />,

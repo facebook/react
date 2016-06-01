@@ -241,6 +241,16 @@ function putListener() {
   );
 }
 
+function inputPostMount() {
+  var inst = this;
+  ReactDOMInput.postMountWrapper(inst);
+}
+
+function textareaPostMount() {
+  var inst = this;
+  ReactDOMTextarea.postMountWrapper(inst);
+}
+
 function optionPostMount() {
   var inst = this;
   ReactDOMOption.postMountWrapper(inst);
@@ -519,12 +529,13 @@ ReactDOMComponent.Mixin = {
     var props = this._currentElement.props;
 
     switch (this._tag) {
-      case 'iframe':
-      case 'object':
-      case 'img':
-      case 'form':
-      case 'video':
       case 'audio':
+      case 'form':
+      case 'iframe':
+      case 'img':
+      case 'link':
+      case 'object':
+      case 'video':
         this._wrapperState = {
           listeners: null,
         };
@@ -610,8 +621,13 @@ ReactDOMComponent.Mixin = {
           var type = this._currentElement.type;
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
+        } else if (props.is) {
+          el = ownerDocument.createElement(this._currentElement.type, props.is);
         } else {
-          el = ownerDocument.createElement(this._currentElement.type, props.is || null);
+          // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
+          // See discussion in https://github.com/facebook/react/pull/6896
+          // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+          el = ownerDocument.createElement(this._currentElement.type);
         }
       } else {
         el = ownerDocument.createElementNS(
@@ -641,7 +657,17 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'input':
+        transaction.getReactMountReady().enqueue(
+          inputPostMount,
+          this
+        );
+        break;
       case 'textarea':
+        transaction.getReactMountReady().enqueue(
+          textareaPostMount,
+          this
+        );
+        break;
       case 'select':
       case 'button':
         if (props.autoFocus) {
@@ -656,6 +682,7 @@ ReactDOMComponent.Mixin = {
           optionPostMount,
           this
         );
+        break;
     }
 
     return mountImage;
@@ -1091,12 +1118,13 @@ ReactDOMComponent.Mixin = {
    */
   unmountComponent: function(safely) {
     switch (this._tag) {
-      case 'iframe':
-      case 'object':
-      case 'img':
-      case 'form':
-      case 'video':
       case 'audio':
+      case 'form':
+      case 'iframe':
+      case 'img':
+      case 'link':
+      case 'object':
+      case 'video':
         var listeners = this._wrapperState.listeners;
         if (listeners) {
           for (var i = 0; i < listeners.length; i++) {

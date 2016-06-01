@@ -45,7 +45,7 @@ describe('ReactCSSTransitionGroup', function() {
     );
 
     // Warning about the missing transitionLeaveTimeout prop
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('should not warn if timeouts is zero', function() {
@@ -61,7 +61,7 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should clean-up silently after the timeout elapses', function() {
@@ -103,7 +103,7 @@ describe('ReactCSSTransitionGroup', function() {
     }
 
     // No warnings
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     // The leaving child has been removed
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);

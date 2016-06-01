@@ -14,10 +14,11 @@
 var React;
 var ReactNoop;
 
-describe('ReactComponent', function() {
+describe('ReactIncremental', function() {
   beforeEach(function() {
     React = require('React');
     ReactNoop = require('ReactNoop');
+    spyOn(console, 'log');
   });
 
   it('should render a simple component', function() {
@@ -37,21 +38,32 @@ describe('ReactComponent', function() {
 
   it('should render a simple component, in steps if needed', function() {
 
+    var barCalled = false;
     function Bar() {
-      return <div>Hello World</div>;
+      barCalled = true;
+      return <span><div>Hello World</div></span>;
     }
 
+    var fooCalled = false;
     function Foo() {
-      return <Bar isBar={true} />;
+      fooCalled = true;
+      return [
+        <Bar isBar={true} />,
+        <Bar isBar={true} />,
+      ];
     }
 
     ReactNoop.render(<Foo />);
-    // console.log('Nothing done');
+    expect(fooCalled).toBe(false);
+    expect(barCalled).toBe(false);
+    // Do one step of work.
     ReactNoop.flushLowPri(7);
-    // console.log('Yield');
+    expect(fooCalled).toBe(true);
+    expect(barCalled).toBe(false);
+    // Do the rest of the work.
     ReactNoop.flushLowPri(50);
-    // console.log('Done');
+    expect(fooCalled).toBe(true);
+    expect(barCalled).toBe(true);
   });
-
 
 });

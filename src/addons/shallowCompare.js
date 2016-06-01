@@ -18,11 +18,10 @@ var shallowEqual = require('shallowEqual');
  * See ReactComponentWithPureRenderMixin
  * See also https://facebook.github.io/react/docs/shallow-compare.html
  */
-function shallowCompare(instance, nextProps, nextState, nextContext) {
+function shallowCompare(instance, nextProps, nextState) {
   return (
     !shallowEqual(instance.props, nextProps) ||
-    !shallowEqual(instance.state, nextState) ||
-    !shallowEqual(instance.context, nextContext)
+    !shallowEqual(instance.state, nextState)
   );
 }
 
