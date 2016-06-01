@@ -271,7 +271,7 @@ var ReactComponentTreeDevtool = {
   getState(id) {
     var item = tree[id];
     return item ? item.state : null;
-  }
+  },
 };
 
 module.exports = ReactComponentTreeDevtool;
