@@ -11,7 +11,6 @@
 var babylon = require('babylon');
 var fs = require('fs');
 var gutil = require('gulp-util');
-var os = require('os');
 var path = require('path');
 var through = require('through2');
 var traverse = require('babel-traverse').default;
@@ -105,7 +104,7 @@ module.exports = function(opts) {
   function flush(cb) {
     fs.writeFile(
       errorMapFilePath,
-      JSON.stringify(invertObject(existingErrorMap), null, 2) + os.EOL,
+      JSON.stringify(invertObject(existingErrorMap), null, 2) + '\n',
       'utf-8',
       function() {
         // avoid calling cb with fs.write callback data
