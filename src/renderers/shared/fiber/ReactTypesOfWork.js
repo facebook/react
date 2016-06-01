@@ -18,7 +18,8 @@ var TypesOfWork = {
   ClassComponent: 2,
   HostComponent: 3,
   CoroutineComponent: 4,
-  YieldComponent: 5,
+  CoroutineHandlerPhase: 5,
+  YieldComponent: 6,
 };
 
 module.exports = TypesOfWork;
