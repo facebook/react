@@ -414,7 +414,8 @@ var ReactCompositeComponentMixin = {
       transaction.rollback(checkpoint);
       this._instance.unstable_handleError(e);
       if (this._pendingStateQueue) {
-        this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+        const nextState = this._processPendingState(this._instance.props, this._instance.context);
+        this._updateState(nextState);
       }
       checkpoint = transaction.checkpoint();
 
@@ -451,7 +452,8 @@ var ReactCompositeComponentMixin = {
       // When mounting, calls to `setState` by `componentWillMount` will set
       // `this._pendingStateQueue` without triggering a re-render.
       if (this._pendingStateQueue) {
-        inst.state = this._processPendingState(inst.props, inst.context);
+        const nextState = this._processPendingState(inst.props, inst.context);
+        this._updateState(nextState);
       }
     }
 
@@ -833,8 +835,24 @@ var ReactCompositeComponentMixin = {
       this._currentElement = nextParentElement;
       this._context = nextUnmaskedContext;
       inst.props = nextProps;
-      inst.state = nextState;
+      this._updateState(nextState);
       inst.context = nextContext;
+    }
+  },
+
+  _updateState(nextState) {
+    this._instance.state = nextState;
+    this._notifyStateChanged();
+  },
+
+  // Explicitly notify about state change everytime the state changes,
+  // and don't count on _processPendingState, in case it might be called
+  // without actually changing the state later
+  _notifyStateChanged() {
+    // Only emit event when no in production, and not TopLevelWrapper (_debugID === 0)
+    if (__DEV__ && this._debugID !== 0) {
+      ReactInstrumentation.debugTool.onStateChanged(this._debugID,
+                                                    this._instance.state);
     }
   },
 
@@ -922,7 +940,7 @@ var ReactCompositeComponentMixin = {
     this._currentElement = nextElement;
     this._context = unmaskedContext;
     inst.props = nextProps;
-    inst.state = nextState;
+    this._updateState(nextState);
     inst.context = nextContext;
 
     this._updateRenderedComponent(transaction, unmaskedContext);

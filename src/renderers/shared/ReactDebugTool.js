@@ -263,6 +263,9 @@ var ReactDebugTool = {
   onSetState() {
     emitEvent('onSetState');
   },
+  onStateChanged(debugID, state) {
+    emitEvent('onStateChanged', debugID, state);
+  },
   onSetDisplayName(debugID, displayName) {
     checkDebugID(debugID);
     emitEvent('onSetDisplayName', debugID, displayName);
