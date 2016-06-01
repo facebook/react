@@ -108,16 +108,13 @@ function escapeHtml(string) {
  * @return {string} An escaped string.
  */
 function escapeTextContentForBrowser(text) {
-  switch (typeof text) {
-    case 'boolean':
-    case 'number':
-      // this shortcircuit helps perf for types that we know will never have
-      // special characters, especially given that this function is used often
-      // for numeric dom ids.
-      return '' + text;
-    default:
-      return escapeHtml(text);
+  if (typeof text === 'boolean' || typeof text === 'number') {
+    // this shortcircuit helps perf for types that we know will never have
+    // special characters, especially given that this function is used often
+    // for numeric dom ids.
+    return '' + text;
   }
+  return escapeHtml(text);
 }
 
 module.exports = escapeTextContentForBrowser;
