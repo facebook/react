@@ -32,7 +32,6 @@ var babelOptions = {
         {},
         moduleMap,
         {
-          'escape-html': 'escape-html',
           'object-assign': 'object-assign',
         }
       ),

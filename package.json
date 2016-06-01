@@ -35,7 +35,6 @@
     "coveralls": "^2.11.6",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
-    "escape-html": "1.0.3",
     "eslint": "1.10.3",
     "eslint-plugin-react": "4.1.0",
     "eslint-plugin-react-internal": "file:eslint-rules",
