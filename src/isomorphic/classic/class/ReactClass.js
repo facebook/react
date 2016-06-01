@@ -495,17 +495,6 @@ function mixSpecIntoComponent(Constructor, spec, isFromMixin) {
       if (shouldAutoBind) {
         autoBindPairs.push(name, property);
         proto[name] = property;
-        if (__DEV__) {
-          var displayName;
-          if (isFromMixin) {
-            displayName = 'mixin';
-          } else {
-            displayName = Constructor.displayName || 'anonymous';
-          }
-          if (typeof property === 'function') {
-            property.displayName = displayName + '_' + name;
-          }
-        }
       } else {
         if (isAlreadyDefined) {
           var specPolicy = ReactClassInterface[name];
@@ -529,32 +518,18 @@ function mixSpecIntoComponent(Constructor, spec, isFromMixin) {
           } else if (specPolicy === SpecPolicy.DEFINE_MANY) {
             proto[name] = createChainedFunction(proto[name], property);
           }
-
-          if (__DEV__) {
-            if (isFromMixin) {
-              displayName = 'mixin';
-            } else {
-              displayName = Constructor.displayName || 'anonymous';
-            }
-            if (typeof property === 'function') {
-              // `proto[name]` might not === `property` if the former is a
-              // chained/merged method.
-              proto[name].displayName = displayName + '_' + name;
-              property.displayName = displayName + '_' + name;
-            }
-          }
         } else {
           proto[name] = property;
-          if (__DEV__) {
-            if (isFromMixin) {
-              displayName = 'mixin';
-            } else {
-              displayName = Constructor.displayName || 'anonymous';
-            }
-            if (typeof property === 'function') {
-              property.displayName = displayName + '_' + name;
-            }
-          }
+        }
+      }
+
+      if (__DEV__) {
+        var displayName = isFromMixin ?
+          'mixin' :
+          Constructor.displayName || 'anonymous';
+        if (typeof property === 'function') {
+          proto[name].displayName = displayName + '_' + name;
+          property.displayName = displayName + '_' + name;
         }
       }
     }
