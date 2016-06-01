@@ -15,7 +15,7 @@ var flatten = require('gulp-flatten');
 var del = require('del');
 
 var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
-var extractErrors = require('./scripts/error-code/gulp-extract-errors');
+var extractErrors = require('./scripts/error-codes/gulp-extract-errors');
 
 var paths = {
   react: {
@@ -48,7 +48,7 @@ var moduleMap = Object.assign(
 );
 
 var errorCodeOpts = {
-  errorMapFilePath: 'scripts/error-code/codes.json',
+  errorMapFilePath: 'scripts/error-codes/codes.json',
 };
 
 var babelOpts = {
