@@ -26,130 +26,130 @@ describe('DOMPropertyOperations', function() {
     ReactDOMComponentTree = require('ReactDOMComponentTree');
   });
 
-  describe('createMarkupForProperty', function() {
+  describe('createMarkupForStandardAttribute', function() {
 
     it('should create markup for simple properties', function() {
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'name',
         'simple'
       )).toBe('name="simple"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'name',
         false
       )).toBe('name="false"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'name',
         null
       )).toBe('');
     });
 
     it('should work with the id attribute', function() {
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'id',
         'simple'
       )).toBe('id="simple"');
     });
 
     it('should create markup for boolean properties', function() {
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'checked',
         'simple'
       )).toBe('checked=""');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'checked',
         true
       )).toBe('checked=""');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'checked',
         false
       )).toBe('');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'scoped',
         true
       )).toBe('scoped=""');
     });
 
     it('should create markup for booleanish properties', function() {
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         'simple'
       )).toBe('download="simple"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         true
       )).toBe('download=""');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         'true'
       )).toBe('download="true"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         false
       )).toBe('');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         'false'
       )).toBe('download="false"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         undefined
       )).toBe('');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         null
       )).toBe('');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'download',
         0
       )).toBe('download="0"');
     });
 
     it('should create markup for custom attributes', function() {
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'aria-label',
         'simple'
       )).toBe('aria-label="simple"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'aria-label',
         false
       )).toBe('aria-label="false"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'aria-label',
         null
       )).toBe('');
     });
 
     it('should create markup for numeric properties', function() {
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'start',
         5
       )).toBe('start="5"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'start',
         0
       )).toBe('start="0"');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'size',
         0
       )).toBe('');
 
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'size',
         1
       )).toBe('size="1"');
@@ -157,7 +157,7 @@ describe('DOMPropertyOperations', function() {
 
   });
 
-  describe('createMarkupForProperty', function() {
+  describe('createMarkupForStandardAttribute', function() {
 
     it('should allow custom properties on web components', function() {
       expect(DOMPropertyOperations.createMarkupForCustomAttribute(
@@ -405,13 +405,13 @@ describe('DOMPropertyOperations', function() {
   describe('injectDOMPropertyConfig', function() {
     it('should support custom attributes', function() {
       // foobar does not exist yet
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'foobar',
         'simple'
       )).toBe(null);
 
       // foo-* does not exist yet
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'foo-xyz',
         'simple'
       )).toBe(null);
@@ -425,23 +425,23 @@ describe('DOMPropertyOperations', function() {
       });
 
       // Ensure old attributes still work
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'name',
         'simple'
       )).toBe('name="simple"');
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'data-name',
         'simple'
       )).toBe('data-name="simple"');
 
       // foobar should work
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'foobar',
         'simple'
       )).toBe('foobar="simple"');
 
       // foo-* should work
-      expect(DOMPropertyOperations.createMarkupForProperty(
+      expect(DOMPropertyOperations.createMarkupForStandardAttribute(
         'foo-xyz',
         'simple'
       )).toBe('foo-xyz="simple"');

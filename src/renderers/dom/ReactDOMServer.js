@@ -20,6 +20,8 @@ ReactDefaultInjection.inject();
 var ReactDOMServer = {
   renderToString: ReactServerRendering.renderToString,
   renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
+  renderToStream: ReactServerRendering.renderToStream,
+  renderToStaticMarkupStream: ReactServerRendering.renderToStaticMarkupStream,
   version: ReactVersion,
 };
 

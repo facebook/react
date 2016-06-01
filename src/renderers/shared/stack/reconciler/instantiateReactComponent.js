@@ -16,6 +16,7 @@ var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
 var ReactInstrumentation = require('ReactInstrumentation');
 
+var getNextDebugId = require('getNextDebugId');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -71,8 +72,6 @@ function isInternalComponentType(type) {
     typeof type.prototype.receiveComponent === 'function'
   );
 }
-
-var nextDebugID = 1;
 
 /**
  * Given a ReactNode, create an instance that will actually be mounted.
@@ -141,7 +140,7 @@ function instantiateReactComponent(node) {
   instance._mountImage = null;
 
   if (__DEV__) {
-    var debugID = isEmpty ? 0 : nextDebugID++;
+    var debugID = isEmpty ? 0 : getNextDebugId();
     instance._debugID = debugID;
 
     if (debugID !== 0) {

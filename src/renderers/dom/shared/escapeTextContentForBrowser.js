@@ -32,7 +32,13 @@ function escaper(match) {
  * @return {string} An escaped string.
  */
 function escapeTextContentForBrowser(text) {
-  return ('' + text).replace(ESCAPE_REGEX, escaper);
+  if (typeof text !== 'string') {
+    return '' + text;
+  }
+  if (ESCAPE_REGEX.test(text)) {
+    return text.replace(ESCAPE_REGEX, escaper);
+  }
+  return text;
 }
 
 module.exports = escapeTextContentForBrowser;

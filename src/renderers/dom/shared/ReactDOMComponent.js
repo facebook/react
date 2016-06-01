@@ -40,7 +40,6 @@ var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
-var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
@@ -54,14 +53,6 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
-
-var STYLE = keyOf({style: null});
-var HTML = keyOf({__html: null});
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-};
 
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
 var DOC_FRAGMENT_TYPE = 11;
@@ -171,7 +162,7 @@ function assertValidProps(component, props) {
     );
     invariant(
       typeof props.dangerouslySetInnerHTML === 'object' &&
-      HTML in props.dangerouslySetInnerHTML,
+      DOMPropertyOperations.HTML in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
       'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
       'for more information.'
@@ -709,32 +700,22 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       var propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
           enqueuePutListener(this, propKey, propValue, transaction);
         }
       } else {
-        if (propKey === STYLE) {
+
+        if (propKey === DOMPropertyOperations.STYLE) {
           if (propValue) {
             if (__DEV__) {
               // See `_updateDOMProperties`. style block
               this._previousStyle = propValue;
             }
-            propValue = this._previousStyleCopy = Object.assign({}, props.style);
+            this._previousStyleCopy = Object.assign({}, props.style);
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
-        var markup = null;
-        if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-            markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
-          }
-        } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
-        }
+        var markup = DOMPropertyOperations.createMarkupForProperty(this._tag, props, propKey);
         if (markup) {
           ret += ' ' + markup;
         }
@@ -933,7 +914,7 @@ ReactDOMComponent.Mixin = {
          lastProps[propKey] == null) {
         continue;
       }
-      if (propKey === STYLE) {
+      if (propKey === DOMPropertyOperations.STYLE) {
         var lastStyle = this._previousStyleCopy;
         for (styleName in lastStyle) {
           if (lastStyle.hasOwnProperty(styleName)) {
@@ -950,7 +931,7 @@ ReactDOMComponent.Mixin = {
           deleteListener(this, propKey);
         }
       } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMPropertyOperations.RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(
             getNode(this),
             propKey
@@ -965,14 +946,14 @@ ReactDOMComponent.Mixin = {
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
       var lastProp =
-        propKey === STYLE ? this._previousStyleCopy :
+        propKey === DOMPropertyOperations.STYLE ? this._previousStyleCopy :
         lastProps != null ? lastProps[propKey] : undefined;
       if (!nextProps.hasOwnProperty(propKey) ||
           nextProp === lastProp ||
           nextProp == null && lastProp == null) {
         continue;
       }
-      if (propKey === STYLE) {
+      if (propKey === DOMPropertyOperations.STYLE) {
         if (nextProp) {
           if (__DEV__) {
             checkAndWarnForMutatedStyle(
@@ -1014,7 +995,7 @@ ReactDOMComponent.Mixin = {
           deleteListener(this, propKey);
         }
       } else if (isCustomComponent(this._tag, nextProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMPropertyOperations.RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,

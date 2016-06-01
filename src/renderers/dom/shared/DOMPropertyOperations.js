@@ -11,7 +11,9 @@
 
 'use strict';
 
+var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
+var keyOf = require('keyOf');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -53,10 +55,23 @@ function shouldIgnoreValue(propertyInfo, value) {
     (propertyInfo.hasOverloadedBooleanValue && value === false);
 }
 
+// copied from ReactDOMComponent. consider factoring out into separate file.
+function isCustomComponent(tagName, props) {
+  return tagName.indexOf('-') >= 0 || props.is != null;
+}
+
 /**
  * Operations for dealing with DOM properties.
  */
 var DOMPropertyOperations = {
+
+  STYLE: keyOf({style: null}),
+  HTML: keyOf({__html: null}),
+  RESERVED_PROPS: {
+    children: null,
+    dangerouslySetInnerHTML: null,
+    suppressContentEditableWarning: null,
+  },
 
   /**
    * Creates markup for the ID property.
@@ -81,14 +96,32 @@ var DOMPropertyOperations = {
     node.setAttribute(DOMProperty.ROOT_ATTRIBUTE_NAME, '');
   },
 
+  createMarkupForProperty: function(tag, props, propKey) {
+    var propValue = props[propKey];
+    if (propValue == null) {
+      return null;
+    }
+    if (propKey === this.STYLE) {
+      propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
+    }
+    if (tag != null && isCustomComponent(tag, props)) {
+      if (!this.RESERVED_PROPS.hasOwnProperty(propKey)) {
+        return this.createMarkupForCustomAttribute(propKey, propValue);
+      }
+    } else {
+      return this.createMarkupForStandardAttribute(propKey, propValue);
+    }
+    return null;
+  },
+
   /**
-   * Creates markup for a property.
+   * Creates markup for a property on a standard html element.
    *
    * @param {string} name
    * @param {*} value
    * @return {?string} Markup string, or null if the property was invalid.
    */
-  createMarkupForProperty: function(name, value) {
+  createMarkupForStandardAttribute: function(name, value) {
     if (__DEV__) {
       ReactDOMInstrumentation.debugTool.onCreateMarkupForProperty(name, value);
     }

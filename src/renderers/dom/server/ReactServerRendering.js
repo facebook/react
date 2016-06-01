@@ -10,61 +10,29 @@
  */
 'use strict';
 
-var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+var Adler32Stream = require('Adler32Stream');
 var ReactElement = require('ReactElement');
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactReconciler = require('ReactReconciler');
-var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
-var ReactServerRenderingTransaction =
-  require('ReactServerRenderingTransaction');
-var ReactUpdates = require('ReactUpdates');
-
-var emptyObject = require('emptyObject');
-var instantiateReactComponent = require('instantiateReactComponent');
+var ReactServerRenderingAsync = require('ReactServerRenderingAsync');
 var invariant = require('invariant');
+var stream = require('stream');
 
 /**
  * @param {ReactElement} element
  * @return {string} the HTML markup
  */
 function renderToStringImpl(element, makeStaticMarkup) {
-  var transaction;
-  try {
-    ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
+  var chunkLength = Infinity;
+  var renderer = ReactServerRenderingAsync.render(element, makeStaticMarkup);
+  var result = '';
 
-    transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
-
-    return transaction.perform(function() {
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onBeginFlush();
-      }
-      var componentInstance = instantiateReactComponent(element);
-      var markup = ReactReconciler.mountComponent(
-        componentInstance,
-        transaction,
-        null,
-        ReactDOMContainerInfo(),
-        emptyObject
-      );
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onUnmountComponent(
-          componentInstance._debugID
-        );
-        ReactInstrumentation.debugTool.onEndFlush();
-      }
-      if (!makeStaticMarkup) {
-        markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
-      }
-      return markup;
-    }, null);
-  } finally {
-    ReactServerRenderingTransaction.release(transaction);
-    // Revert to the DOM batching strategy since these two renderers
-    // currently share these stateful modules.
-    ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
+  var chunk = renderer.next(chunkLength);
+  while (!chunk.done) {
+    result += chunk.value;
+    chunk = renderer.next(chunkLength);
   }
+
+  return result;
 }
 
 /**
@@ -77,7 +45,7 @@ function renderToString(element) {
     ReactElement.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.'
   );
-  return renderToStringImpl(element, false);
+  return ReactMarkupChecksum.addChecksumToMarkup(renderToStringImpl(element, false));
 }
 
 /**
@@ -93,7 +61,45 @@ function renderToStaticMarkup(element) {
   return renderToStringImpl(element, true);
 }
 
+class RenderElementStream extends stream.Readable {
+  constructor(element, makeStaticMarkup = false) {
+    super();
+    this.renderer = ReactServerRenderingAsync.render(element, makeStaticMarkup);
+  }
+
+  _read(n) {
+    try {
+      var chunk = this.renderer.next(n);
+      if (chunk.done) {
+        this.push(null);
+      } else {
+        this.push(chunk.value);
+      }
+    } catch (error) {
+      this.emit('error', error);
+    }
+  }
+}
+
+function renderToStream(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToStream(): You must pass a valid ReactElement.'
+  );
+  return new RenderElementStream(element, false).pipe(new Adler32Stream());
+}
+
+function renderToStaticMarkupStream(element) {
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToStaticMarkupStream(): You must pass a valid ReactElement.'
+  );
+  return new RenderElementStream(element, true);
+}
+
 module.exports = {
   renderToString: renderToString,
   renderToStaticMarkup: renderToStaticMarkup,
+  renderToStream: renderToStream,
+  renderToStaticMarkupStream: renderToStaticMarkupStream,
 };
