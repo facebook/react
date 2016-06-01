@@ -240,7 +240,7 @@ function createEnumTypeChecker(expectedValues) {
       if (is(propValue, expectedValues[i])) {
         return null;
       }
-      if (getPropType(expectedValues[i]) === 'function' && expectedValues[i].name === "bound checkType") {
+      if (getPropType(expectedValues[i]) === 'function' && expectedValues[i].name === 'bound checkType') {
         isOneOfPropType = true;
       }
     }
