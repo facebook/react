@@ -193,3 +193,4 @@ type ReactComponent<TProps> = {
 
 type ReactFunctionalComponent<TProps> = (TProps) => ReactElement;
 ```
+

@@ -111,9 +111,7 @@ class ErrorCodes extends React.Component {
 
   render() {
     return (
-      <div>
-        <ErrorResult code={this.state.code} msg={this.state.errorMsg} />
-      </div>
+      <ErrorResult code={this.state.code} msg={this.state.errorMsg} />
     );
   }
 }

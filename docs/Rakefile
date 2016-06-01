@@ -64,8 +64,8 @@ end
 desc "copy error codes to docs"
 task :copy_error_codes do
   codes_json = File.read('../scripts/error-codes/codes.json')
-  codes_js = "var errorMap = ".concat(codes_json)
-  File.open('js/errorMap.js', 'w') { |file| file.write(codes_js) }
+  codes_js = "var errorMap = #{codes_json.chomp};\n"
+  File.write('js/errorMap.js', codes_js)
 end
 
 desc "build into ../../react-gh-pages"
