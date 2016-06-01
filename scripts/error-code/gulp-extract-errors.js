@@ -10,15 +10,16 @@
 
 var babylon = require('babylon');
 var fs = require('fs');
-var glob = require('glob');
+var gutil = require('gulp-util');
 var os = require('os');
 var path = require('path');
+var through = require('through2');
 var traverse = require('babel-traverse').default;
-
-var reactGlobPatterns = require('./globPatterns');
 
 var evalToString = require('./evalToString');
 var invertObject = require('./invertObject');
+
+var PLUGIN_NAME = 'extract-errors';
 
 var babylonOptions = {
   sourceType: 'module',
@@ -34,10 +35,26 @@ var babylonOptions = {
     'objectRestSpread',
   ],
 };
-var outputFilePath = path.join(__dirname, 'codes.json');
 
-function extractErrors(errorMap) {
-  var allErrorIDs = Object.keys(errorMap);
+module.exports = function(opts) {
+  if (!opts || !('errorMapFilePath' in opts)) {
+    throw new gutil.PluginError(
+      PLUGIN_NAME,
+      'Missing options. Ensure you pass an object with `errorMapFilePath`.'
+    );
+  }
+
+  var errorMapFilePath = opts.errorMapFilePath;
+  var existingErrorMap;
+  try {
+    existingErrorMap = require(
+      path.join(__dirname, path.basename(errorMapFilePath))
+    );
+  } catch (e) {
+    existingErrorMap = {};
+  }
+
+  var allErrorIDs = Object.keys(existingErrorMap);
   var currentID;
 
   if (allErrorIDs.length === 0) { // Map is empty
@@ -47,17 +64,20 @@ function extractErrors(errorMap) {
   }
 
   // Here we invert the map object in memory for faster error code lookup
-  errorMap = invertObject(errorMap);
+  existingErrorMap = invertObject(existingErrorMap);
 
-  var filePaths = glob.sync(reactGlobPatterns.includePattern, {
-    ignore: reactGlobPatterns.ignorePatterns,
-  });
+  function transform(file, enc, cb) {
+    if (file.isNull()) {
+      cb(null, file);
+      return;
+    }
 
-  // Sort the files to make the result more stable
-  filePaths.sort();
+    if (file.isStream()) {
+      cb(new gutil.PluginError(PLUGIN_NAME, 'Streaming not supported'));
+      return;
+    }
 
-  filePaths.forEach(function(filePath/* : string */) {
-    var source = fs.readFileSync(filePath, 'utf8');
+    var source = file.contents.toString();
     var ast = babylon.parse(source, babylonOptions);
 
     traverse(ast, {
@@ -69,34 +89,30 @@ function extractErrors(errorMap) {
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
             var errorMsgLiteral = evalToString(node.arguments[1]);
-            if (errorMap.hasOwnProperty(errorMsgLiteral)) {
+            if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
               return;
             }
 
-            errorMap[errorMsgLiteral] = '' + (currentID++);
+            existingErrorMap[errorMsgLiteral] = '' + (currentID++);
           }
         },
       },
     });
-  });
 
-  return errorMap;
-}
-
-function main() {
-  var existingErrorMap;
-  try {
-    existingErrorMap = require(outputFilePath);
-  } catch (e) {
-    existingErrorMap = {};
+    cb();
   }
 
-  var result = extractErrors(existingErrorMap);
+  function flush(cb) {
+    fs.writeFile(
+      errorMapFilePath,
+      JSON.stringify(invertObject(existingErrorMap), null, 2) + os.EOL,
+      'utf-8',
+      function() {
+        // avoid calling cb with fs.write callback data
+        cb();
+      }
+    );
+  }
 
-  fs.writeFileSync(
-    outputFilePath,
-    JSON.stringify(invertObject(result), null, 2) + os.EOL
-  );
-}
-
-main();
+  return through.obj(transform, flush);
+};
