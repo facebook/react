@@ -18,6 +18,7 @@
  */
 function reactProdInvariant(code, a, b, c, d, e, f) {
   var argCount = arguments.length - 1;
+  var error = new Error('');
 
   var format = (
     'React: production error #' + code + '. ' +
@@ -30,14 +31,15 @@ function reactProdInvariant(code, a, b, c, d, e, f) {
     argCount--;
   }
 
+  format += '&stack=%22' + encodeURIComponent(error.stack) + '%22';
   format += ' for more details.';
-  var error;
 
   var args = [a, b, c, d, e, f];
   var argIndex = 0;
-  error = new Error(format.replace(/%s/g, function() {
+  error.message = format.replace(/%s/g, function() {
     return args[argIndex++];
-  }));
+  });
+
   error.name = 'Invariant Violation';
 
   error.framesToPop = 1; // we don't care about reactProdInvariant's own frame
