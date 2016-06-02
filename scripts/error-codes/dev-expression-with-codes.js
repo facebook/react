@@ -25,7 +25,7 @@ module.exports = function(babel) {
 
   var REQUIRE_PROD_INVARIANT = buildRequire({
     IMPORT_NAME: t.identifier(prodInvariantName),
-    SOURCE: t.stringLiteral(prodInvariantModuleName),
+    SOURCE: t.stringLiteral('./' + prodInvariantModuleName),
   });
 
   var DEV_EXPRESSION = t.binaryExpression(
@@ -74,8 +74,7 @@ module.exports = function(babel) {
           if (
             path.get('callee').isIdentifier({name: 'require'}) &&
             path.get('arguments')[0] &&
-            path.get('arguments')[0].isStringLiteral({value: 'invariant'}) &&
-            path.parentPath.parentPath.isVariableDeclaration()
+            path.get('arguments')[0].isStringLiteral({value: 'fbjs/lib/invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
             path.parentPath.parentPath.insertAfter(REQUIRE_PROD_INVARIANT);
