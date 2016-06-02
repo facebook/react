@@ -31,7 +31,7 @@ function reactProdInvariant(code, a, b, c, d, e, f) {
     argCount--;
   }
 
-  format += '&stack=%22' + encodeURIComponent(error.stack) + '%22';
+  format += '&stack=%22' + !error.stack ? '' : encodeURIComponent(error.stack) + '%22';
   format += ' for more details.';
 
   var args = [a, b, c, d, e, f];
