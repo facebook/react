@@ -87,4 +87,19 @@ describe('ReactDOMProduction', function() {
     expect(container.childNodes.length).toBe(0);
   });
 
+  it('should throw with an error code in production', function() {
+    expect(function() {
+      var Component = React.createClass({
+        render: function() {
+          return ['this is wrong'];
+        },
+      });
+      var container = document.createElement('div');
+      ReactDOM.render(<Component />, container);
+    }).toThrowError(
+      'React: production error #109. Visit ' +
+      'http://facebook.github.io/react/docs/error-codes.html?invariant=109&args=%22Component%22 ' +
+      'for more details.'
+    );
+  });
 });
