@@ -1,11 +1,11 @@
 {
   "name": "basic-webpack-example",
-  "version": "1.0.0",
   "description": "React example with webpack",
+  "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "webpack",
-    "dev-server": "webpack-dev-server"
+    "build": "webpack",
+    "start": "webpack-dev-server"
   },
   "devDependencies": {
     "babel-core": "^6.9.1",
