@@ -40,7 +40,7 @@ var NoopRenderer = ReactFiberReconciler({
 
 var ReactNoop = {
 
-  render(element : ReactElement) {
+  render(element : ReactElement<any>) {
 
     NoopRenderer.mountNewRoot(element);
 

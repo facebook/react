@@ -39,7 +39,7 @@ export type HostConfig<T, P, I> = {
 type OpaqueID = {};
 
 export type Reconciler = {
-  mountNewRoot(element : ReactElement) : OpaqueID;
+  mountNewRoot(element : ReactElement<any>) : OpaqueID;
 };
 
 module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
@@ -109,7 +109,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
 
   return {
 
-    mountNewRoot(element : ReactElement) : OpaqueID {
+    mountNewRoot(element : ReactElement<any>) : OpaqueID {
 
       ensureLowPriIsScheduled();
 

@@ -42,7 +42,7 @@ var createReactNativeComponentClass = function(
   Constructor.prototype = new ReactNativeBaseComponent(viewConfig);
   Constructor.prototype.constructor = Constructor;
 
-  return ((Constructor: any): ReactClass);
+  return ((Constructor: any): ReactClass<any>);
 };
 
 module.exports = createReactNativeComponentClass;
