@@ -101,7 +101,7 @@ var ReactNativeMount = {
     nextElement: ReactElement,
     containerTag: number,
     callback?: ?(() => void)
-  ): ?ReactComponent {
+  ): ?ReactComponent<any, any, any> {
     var nextWrappedElement = new ReactElement(
       TopLevelWrapper,
       null,
@@ -237,7 +237,7 @@ var ReactNativeMount = {
    * @see {ReactNativeMount.unmountComponentAtNode}
    */
   unmountComponentFromNode: function(
-    instance: ReactComponent,
+    instance: ReactComponent<any, any, any>,
     containerID: number
   ) {
     // Call back into native to remove all of the subviews from this container
