@@ -17,23 +17,17 @@ function replaceArgs(msg, argList) {
   });
 }
 
-function segmentify(str) {
+function urlify(str) {
   const urlRegex = /(https:\/\/fb\.me\/[a-z\-]+)/g;
-  const matchResult = str.match(urlRegex);
-  if (!matchResult) {
-    return str;
-  }
 
   const segments = str.split(urlRegex);
 
   for (let i = 0; i < segments.length; i++) {
-    const matchIdx = matchResult.indexOf(segments[i]);
-    if (matchIdx !== -1) {
-      const url = matchResult[matchIdx];
-      segments[i] = (<a key={i} target="_blank" href={url}>{url}</a>);
+    if (i % 2 === 1) {
+      segments[i] = (<a key={i} target="_blank" href={segments[i]}>{segments[i]}</a>);
     }
   }
-
+  
   return segments;
 }
 
@@ -78,7 +72,7 @@ function ErrorResult(props) {
   return (
     <div>
       <h4>Error #{code}</h4>
-      <code>{segmentify(errorMsg)}</code>
+      <code>{urlify(errorMsg)}</code>
     </div>
   );
 }
