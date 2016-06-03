@@ -78,15 +78,14 @@ Let's build the `CommentBox` component, which is just a simple `<div>`:
 
 ```javascript
 // tutorial1.js
-var CommentBox = React.createClass({
-  render: function() {
+const CommentBox = () => {
     return (
       <div className="commentBox">
         Hello, world! I am a CommentBox.
       </div>
     );
-  }
-});
+  };
+
 ReactDOM.render(
   <CommentBox />,
   document.getElementById('content')
@@ -94,22 +93,23 @@ ReactDOM.render(
 ```
 
 Note that native HTML element names start with a lowercase letter, while custom React class names begin with an uppercase letter.
-
+The above component is a stateless functional component. Another way to define a component is an ES6 class, this is explained [on this page](/docs/docs/05-reusable-components.md#es6-classes)
+Which of the format to choose is not a hard choice. If your compnents have state or require lifecycle methods (they will be introduced soon), then only use ES6 style class components else use the above mentioned stateless functional react components. 
 #### JSX Syntax
 
 The first thing you'll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:
 
 ```javascript
 // tutorial1-raw.js
-var CommentBox = React.createClass({displayName: 'CommentBox',
-  render: function() {
-    return (
-      React.createElement('div', {className: "commentBox"},
-        "Hello, world! I am a CommentBox."
-      )
-    );
-  }
-});
+var CommentBox = function CommentBox() {
+  return React.createElement(
+    "div",
+    { className: "commentBox" },
+    "Hello, world! I am a CommentBox."
+  );
+};
+
+
 ReactDOM.render(
   React.createElement(CommentBox, null),
   document.getElementById('content')
@@ -119,8 +119,6 @@ ReactDOM.render(
 Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](/react/docs/jsx-in-depth.html).
 
 #### What's going on
-
-We pass some methods in a JavaScript object to `React.createClass()` to create a new React component. The most important of these methods is called `render` which returns a tree of React components that will eventually render to HTML.
 
 The `<div>` tags are not actual DOM nodes; they are instantiations of React `div` components. You can think of these as markers or pieces of data that React knows how to handle. React is **safe**. We are not generating HTML strings so XSS protection is the default.
 
@@ -138,42 +136,36 @@ Let's build skeletons for `CommentList` and `CommentForm` which will, again, be 
 
 ```javascript
 // tutorial2.js
-var CommentList = React.createClass({
-  render: function() {
-    return (
-      <div className="commentList">
-        Hello, world! I am a CommentList.
-      </div>
-    );
-  }
-});
+const CommentList = () => {
+  return (
+    <div className="commentList">
+      Hello, world! I am a CommentList.
+    </div>
+  );
+}
 
-var CommentForm = React.createClass({
-  render: function() {
-    return (
-      <div className="commentForm">
-        Hello, world! I am a CommentForm.
-      </div>
-    );
-  }
-});
+const CommentForm = () => {
+  return (
+    <div className="commentForm">
+      Hello, world! I am a CommentForm.
+    </div>
+  );
+}
 ```
 
 Next, update the `CommentBox` component to use these new components:
 
 ```javascript{6-8}
 // tutorial3.js
-var CommentBox = React.createClass({
-  render: function() {
-    return (
-      <div className="commentBox">
-        <h1>Comments</h1>
-        <CommentList />
-        <CommentForm />
-      </div>
-    );
-  }
-});
+const CommentBox = () => {
+  return (
+    <div className="commentBox">
+      <h1>Comments</h1>
+      <CommentList />
+      <CommentForm />
+    </div>
+  );
+}
 ```
 
 Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to `React.createElement(tagName)` expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
@@ -184,21 +176,19 @@ Let's create the `Comment` component, which will depend on data passed in from i
 
 ```javascript
 // tutorial4.js
-var Comment = React.createClass({
-  render: function() {
-    return (
-      <div className="comment">
-        <h2 className="commentAuthor">
-          {this.props.author}
-        </h2>
-        {this.props.children}
-      </div>
-    );
-  }
-});
+const Comment = (props) => {
+  return (
+    <div className="comment">
+      <h2 className="commentAuthor">
+        {props.author}
+      </h2>
+      {props.children}
+    </div>
+  );
+}
 ```
 
-By surrounding a JavaScript expression in braces inside JSX (as either an attribute or child), you can drop text or React components into the tree. We access named attributes passed to the component as keys on `this.props` and any nested elements as `this.props.children`.
+By surrounding a JavaScript expression in braces inside JSX (as either an attribute or child), you can drop text or React components into the tree. We access named attributes passed to the component as `props` argument to the function.
 
 ### Component Properties
 
@@ -206,19 +196,17 @@ Now that we have defined the `Comment` component, we will want to pass it the au
 
 ```javascript{6-7}
 // tutorial5.js
-var CommentList = React.createClass({
-  render: function() {
-    return (
-      <div className="commentList">
-        <Comment author="Pete Hunt">This is one comment</Comment>
-        <Comment author="Jordan Walke">This is *another* comment</Comment>
-      </div>
-    );
-  }
-});
+const CommentList = () => {
+  return (
+    <div className="commentList">
+      <Comment author="Pete Hunt">This is one comment</Comment>
+      <Comment author="Jordan Walke">This is *another* comment</Comment>
+    </div>
+  );
+}
 ```
 
-Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
+Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `props.author`, and `props.children` after passing `props` as the argument to the component definition.
 
 ### Adding Markdown
 
@@ -228,21 +216,19 @@ In this tutorial we use a third-party library **marked** which takes Markdown te
 
 ```javascript{9}
 // tutorial6.js
-var Comment = React.createClass({
-  render: function() {
-    return (
-      <div className="comment">
-        <h2 className="commentAuthor">
-          {this.props.author}
-        </h2>
-        {marked(this.props.children.toString())}
-      </div>
-    );
-  }
-});
+const Comment = (props) => {
+  return (
+    <div className="comment">
+      <h2 className="commentAuthor">
+        {props.author}
+      </h2>
+      {marked(props.children.toString())}
+    </div>
+  );
+}
 ```
 
-All we're doing here is calling the marked library. We need to convert `this.props.children` from React's wrapped text to a raw string that marked will understand so we explicitly call `toString()`.
+All we're doing here is calling the marked library. We need to convert `props.children` from React's wrapped text to a raw string that marked will understand so we explicitly call `toString()`.
 
 But there's a problem! Our rendered comments look like this in the browser: "`<p>`This is `<em>`another`</em>` comment`</p>`". We want those tags to actually render as HTML.
 
@@ -250,13 +236,13 @@ That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/C
 
 ```javascript{3-6,14}
 // tutorial7.js
-var Comment = React.createClass({
-  rawMarkup: function() {
+export class Comment extends React.Component {
+  rawMarkup = () => {
     var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
     return { __html: rawMarkup };
   },
 
-  render: function() {
+  render() {
     return (
       <div className="comment">
         <h2 className="commentAuthor">
@@ -289,17 +275,15 @@ We need to get this data into `CommentList` in a modular way. Modify `CommentBox
 
 ```javascript{7,15}
 // tutorial9.js
-var CommentBox = React.createClass({
-  render: function() {
-    return (
-      <div className="commentBox">
-        <h1>Comments</h1>
-        <CommentList data={this.props.data} />
-        <CommentForm />
-      </div>
-    );
-  }
-});
+const CommentBox = (props) => {
+  return (
+    <div className="commentBox">
+      <h1>Comments</h1>
+      <CommentList data={props.data} />
+      <CommentForm />
+    </div>
+  );
+}
 
 ReactDOM.render(
   <CommentBox data={data} />,
@@ -311,22 +295,20 @@ Now that the data is available in the `CommentList`, let's render the comments d
 
 ```javascript{4-10,13}
 // tutorial10.js
-var CommentList = React.createClass({
-  render: function() {
-    var commentNodes = this.props.data.map(function(comment) {
-      return (
-        <Comment author={comment.author} key={comment.id}>
-          {comment.text}
-        </Comment>
-      );
-    });
+const CommentList = (props) => {
+  var commentNodes = props.data.map((comment) => {
     return (
-      <div className="commentList">
-        {commentNodes}
-      </div>
+      <Comment author={comment.author} key={comment.id}>
+        {comment.text}
+      </Comment>
     );
-  }
-});
+  });
+  return (
+    <div className="commentList">
+      {commentNodes}
+    </div>
+  );
+}
 ```
 
 That's it!
@@ -349,7 +331,7 @@ Note: the code will not be working at this step.
 
 ### Reactive state
 
-So far, based on its props, each component has rendered itself once. `props` are immutable: they are passed from the parent and are "owned" by the parent. To implement interactions, we introduce mutable **state** to the component. `this.state` is private to the component and can be changed by calling `this.setState()`. When the state updates, the component re-renders itself.
+So far, based on its props, each component has rendered itself once. `props` are immutable: they are passed from the parent and are "owned" by the parent. To implement interactions, we introduce mutable **state** to the component. `this.state` is private to the component and can be changed by calling `this.setState()`. When the state updates, the component re-renders itself. At this stage, we cannot use stateless functional components. Here we introduce ES6 class based components that extend from React.Component. These classes always have a `render` method which returns the JSX to render. 
 
 `render()` methods are written declaratively as functions of `this.props` and `this.state`. The framework guarantees the UI is always consistent with the inputs.
 
@@ -357,10 +339,13 @@ When the server fetches data, we will be changing the comment data we have. Let'
 
 ```javascript{3-5,10}
 // tutorial12.js
-var CommentBox = React.createClass({
-  getInitialState: function() {
-    return {data: []};
-  },
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      data: []
+    }
+  }
   render: function() {
     return (
       <div className="commentBox">
@@ -373,7 +358,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-`getInitialState()` executes exactly once during the lifecycle of the component and sets up the initial state of the component.
+Initial state is set up by `this.state()` in class constructor.
 
 #### Updating state
 When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. We're going to use jQuery to make an asynchronous request to the server we started earlier to fetch the data we need. The data is already included in the server you started (based on the `comments.json` file), so once it's fetched, `this.state.data` will look something like this:
@@ -387,10 +372,13 @@ When the component is first created, we want to GET some JSON from the server an
 
 ```javascript{6-18}
 // tutorial13.js
-var CommentBox = React.createClass({
-  getInitialState: function() {
-    return {data: []};
-  },
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      data: []
+    }
+  }
   componentDidMount: function() {
     $.ajax({
       url: this.props.url,
@@ -420,8 +408,15 @@ Here, `componentDidMount` is a method called automatically by React after a comp
 
 ```javascript{3,15,20-21,35}
 // tutorial14.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      data: []
+    }
+  }
+  
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -433,9 +428,6 @@ var CommentBox = React.createClass({
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
-  },
-  getInitialState: function() {
-    return {data: []};
   },
   componentDidMount: function() {
     this.loadCommentsFromServer();
@@ -460,24 +452,22 @@ ReactDOM.render(
 ```
 
 All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the `comments.json` file (in the same directory as your server); within 2 seconds, the changes will show!
-
+One thing to note here is the arrow syntax of defining methods, this follows the ES6 style of not binding 'this' automatically. So either you use arrow (=>) syntax or you can manually bind this while calling the methods. 
 ### Adding new comments
 
 Now it's time to build the form. Our `CommentForm` component should ask the user for their name and comment text and send a request to the server to save the comment.
 
 ```javascript{5-9}
 // tutorial15.js
-var CommentForm = React.createClass({
-  render: function() {
-    return (
-      <form className="commentForm">
-        <input type="text" placeholder="Your name" />
-        <input type="text" placeholder="Say something..." />
-        <input type="submit" value="Post" />
-      </form>
-    );
-  }
-});
+const CommentForm = () => {
+  return (
+    <form className="commentForm">
+      <input type="text" placeholder="Your name" />
+      <input type="text" placeholder="Say something..." />
+      <input type="submit" value="Post" />
+    </form>
+  );
+}
 ```
 
 #### Controlled components
@@ -488,17 +478,21 @@ Hence, we will be using `this.state` to save the user's input as it is entered. 
 
 ```javascript{3-11,15-26}
 // tutorial16.js
-var CommentForm = React.createClass({
-  getInitialState: function() {
-    return {author: '', text: ''};
-  },
-  handleAuthorChange: function(e) {
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      author: '', 
+      text: ''
+    }
+  }
+  handleAuthorChange = (e) => {
     this.setState({author: e.target.value});
   },
-  handleTextChange: function(e) {
+  handleTextChange = (e) => {
     this.setState({text: e.target.value});
   },
-  render: function() {
+  render() {
     return (
       <form className="commentForm">
         <input
@@ -532,17 +526,22 @@ Let's make the form interactive. When the user submits the form, we should clear
 
 ```javascript{12-21,24}
 // tutorial17.js
-var CommentForm = React.createClass({
-  getInitialState: function() {
-    return {author: '', text: ''};
-  },
-  handleAuthorChange: function(e) {
+export class CommentForm extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      author: '', 
+      text: ''
+    }
+  }
+
+  handleAuthorChange = (e) => {
     this.setState({author: e.target.value});
   },
-  handleTextChange: function(e) {
+  handleTextChange = (e) => {
     this.setState({text: e.target.value});
   },
-  handleSubmit: function(e) {
+  handleSubmit = (e) => {
     e.preventDefault();
     var author = this.state.author.trim();
     var text = this.state.text.trim();
@@ -552,7 +551,7 @@ var CommentForm = React.createClass({
     // TODO: send request to the server
     this.setState({author: '', text: ''});
   },
-  render: function() {
+  render() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
         <input
@@ -586,8 +585,14 @@ We need to pass data from the child component back up to its parent. We do this 
 
 ```javascript{16-18,31}
 // tutorial18.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      data : []
+    }
+  }
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -600,17 +605,14 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: function(comment) {
+  handleCommentSubmit = (e) => {
     // TODO: submit to the server and refresh the list
   },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
+  componentDidMount() {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
-  render: function() {
+  render() {
     return (
       <div className="commentBox">
         <h1>Comments</h1>
@@ -626,17 +628,22 @@ Now that `CommentBox` has made the callback available to `CommentForm` via the `
 
 ```javascript{19}
 // tutorial19.js
-var CommentForm = React.createClass({
-  getInitialState: function() {
-    return {author: '', text: ''};
-  },
-  handleAuthorChange: function(e) {
+export class CommentForm extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      author: '', 
+      text: ''
+    }
+  }
+
+  handleAuthorChange = (e) => {
     this.setState({author: e.target.value});
   },
-  handleTextChange: function(e) {
+  handleTextChange = (e) => {
     this.setState({text: e.target.value});
   },
-  handleSubmit: function(e) {
+  handleSubmit: = (e) => {
     e.preventDefault();
     var author = this.state.author.trim();
     var text = this.state.text.trim();
@@ -646,7 +653,7 @@ var CommentForm = React.createClass({
     this.props.onCommentSubmit({author: author, text: text});
     this.setState({author: '', text: ''});
   },
-  render: function() {
+  render() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
         <input
@@ -672,8 +679,15 @@ Now that the callbacks are in place, all we have to do is submit to the server a
 
 ```javascript{17-28}
 // tutorial20.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      data: []
+    }
+  }
+
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -686,7 +700,7 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: function(comment) {
+  handleCommentSubmit = (comment) => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -700,10 +714,8 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
+
+  componentDidMount = (comment) => {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
@@ -725,8 +737,14 @@ Our application is now feature complete but it feels slow to have to wait for th
 
 ```javascript{17-23,33}
 // tutorial21.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
+export class CommentBox extends React.Component {
+  constructor() {
+    this.state = {
+      data: []
+    }
+  }
+
+  loadCommentsFromServer = () => {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -739,7 +757,7 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: function(comment) {
+  handleCommentSubmit = (comment) => {
     var comments = this.state.data;
     // Optimistically set an id on the new comment. It will be replaced by an
     // id generated by the server. In a production application you would likely
@@ -761,14 +779,12 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentDidMount: function() {
+
+  componentDidMount = () => {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
-  render: function() {
+  render() {
     return (
       <div className="commentBox">
         <h1>Comments</h1>
@@ -776,7 +792,7 @@ var CommentBox = React.createClass({
         <CommentForm onCommentSubmit={this.handleCommentSubmit} />
       </div>
     );
-  }
+  }T
 });
 ```
 
