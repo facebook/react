@@ -11,22 +11,27 @@
 var evalToString = require('./evalToString');
 var existingErrorMap = require('./codes.json');
 var invertObject = require('./invertObject');
-var prodInvariantName = require('./constants').prodInvariantName;
 
 var errorMap = invertObject(existingErrorMap);
-var prodInvariantModuleName = 'reactProdInvariant';
 
 module.exports = function(babel) {
   var t = babel.types;
 
   var SEEN_SYMBOL = Symbol();
 
-  var buildRequire = babel.template(`var IMPORT_NAME = require(SOURCE);`);
-
-  var REQUIRE_PROD_INVARIANT = buildRequire({
-    IMPORT_NAME: t.identifier(prodInvariantName),
-    SOURCE: t.stringLiteral(prodInvariantModuleName),
-  });
+  function getProdInvariantId(path, localState) {
+    if (!localState.id) {
+      localState.id = path.scope.generateUidIdentifier('prodInvariant');
+      path.scope.getProgramParent().push({
+        id: localState.id,
+        init: t.callExpression(
+          t.identifier('require'),
+          [t.stringLiteral('reactProdInvariant')]
+        ),
+      });
+    }
+    return localState.id;
+  }
 
   var DEV_EXPRESSION = t.binaryExpression(
     '!==',
@@ -43,6 +48,10 @@ module.exports = function(babel) {
   );
 
   return {
+    pre: function() {
+      this.id = null;
+    },
+
     visitor: {
       Identifier: {
         enter: function(path) {
@@ -63,17 +72,16 @@ module.exports = function(babel) {
           if (node[SEEN_SYMBOL]) {
             return;
           }
-          // Insert require('reactProdInvariant') after all `require('invariant')`s.
-          // NOTE currently it only supports the format of
-          // `var invariant = require('invariant');` (VariableDeclaration)
-          // and NOT ES6 imports/assignments.
+          // Insert `var _hygienicVarName = require('reactProdInvariant');`
+          // before all `require('invariant')`s.
+          // NOTE it doesn't support ES6 imports yet.
           if (
             path.get('callee').isIdentifier({name: 'require'}) &&
             path.get('arguments')[0] &&
             path.get('arguments')[0].isStringLiteral({value: 'invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
-            path.parentPath.parentPath.insertAfter(REQUIRE_PROD_INVARIANT);
+            getProdInvariantId(path, this);
           } else if (path.get('callee').isIdentifier({name: 'invariant'})) {
             // Turns this code:
             //
@@ -93,7 +101,7 @@ module.exports = function(babel) {
             // - `XYZ` is an error code: an unique identifier (a number string)
             //   that references a verbose error message.
             //   The mapping is stored in `scripts/error-codes/codes.json`.
-            // - PROD_INVARIANT is the `reactProdInvariant` function that always throw with a error URL like
+            // - `PROD_INVARIANT` is the `reactProdInvariant` function that always throw with an error URL like
             //   http://facebook.github.io/react/docs/error-codes.html?invariant=XYZ&args="foo"&args="bar"
             //
             // Specifically this does 3 things:
@@ -129,7 +137,8 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var prodInvariant = t.callExpression(t.identifier(prodInvariantName), [
+            var localInvariantId = getProdInvariantId(path, this);
+            var prodInvariant = t.callExpression(localInvariantId, [
               t.stringLiteral(prodErrorId),
             ].concat(node.arguments.slice(2)));
 
