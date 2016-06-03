@@ -44,7 +44,7 @@ For this tutorial, we're going to make it as easy as possible. Included in the s
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -224,35 +224,37 @@ Note that we have passed some data from the parent `CommentList` component to th
 
 Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.
 
-In this tutorial we use a third-party library **marked** which takes Markdown text and converts it to raw HTML. We already included this library with the original markup for the page, so we can just start using it. Let's convert the comment text to Markdown and output it:
+In this tutorial we use a third-party library **remarkable** which takes Markdown text and converts it to raw HTML. We already included this library with the original markup for the page, so we can just start using it. Let's convert the comment text to Markdown and output it:
 
-```javascript{9}
+```javascript{4,10}
 // tutorial6.js
 var Comment = React.createClass({
   render: function() {
+    var md = new Remarkable();
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {marked(this.props.children.toString())}
+        {md.render(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-All we're doing here is calling the marked library. We need to convert `this.props.children` from React's wrapped text to a raw string that marked will understand so we explicitly call `toString()`.
+All we're doing here is calling the remarkable library. We need to convert `this.props.children` from React's wrapped text to a raw string that remarkable will understand so we explicitly call `toString()`.
 
 But there's a problem! Our rendered comments look like this in the browser: "`<p>`This is `<em>`another`</em>` comment`</p>`". We want those tags to actually render as HTML.
 
 That's React protecting you from an [XSS attack](https://en.wikipedia.org/wiki/Cross-site_scripting). There's a way to get around it but the framework warns you not to use it:
 
-```javascript{3-6,14}
+```javascript{3-7,15}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
-    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    var md = new Remarkable();
+    var rawMarkup = md.render(this.props.children.toString());
     return { __html: rawMarkup };
   },
 
@@ -269,9 +271,9 @@ var Comment = React.createClass({
 });
 ```
 
-This is a special API that intentionally makes it difficult to insert raw HTML, but for marked we'll take advantage of this backdoor.
+This is a special API that intentionally makes it difficult to insert raw HTML, but for remarkable we'll take advantage of this backdoor.
 
-**Remember:** by using this feature you're relying on marked to be secure. In this case, we pass `sanitize: true` which tells marked to escape any HTML markup in the source instead of passing it through unchanged.
+**Remember:** by using this feature you're relying on remarkable to be secure. In this case, remarkable automatically strips HTML markup and insecure links from the output.
 
 ### Hook up the data model
 

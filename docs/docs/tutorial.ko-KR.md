@@ -223,7 +223,7 @@ var CommentList = React.createClass({
 
 Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들어, 별표(`*`)로 텍스트를 둘러싸는 것은 강조의 의미입니다.
 
-먼저 서드파티 라이브러리인 **marked**를 애플리케이션에 추가합니다. 이 JavaScript 라이브러리는 Markdown 텍스트를 HTML 문법으로 변환해줍니다. head 태그안에 스크립트 태그를 추가해 주세요. (React playground에는 이미 포함되어 있습니다):
+먼저 서드파티 라이브러리인 **remarkable**를 애플리케이션에 추가합니다. 이 JavaScript 라이브러리는 Markdown 텍스트를 HTML 문법으로 변환해줍니다. head 태그안에 스크립트 태그를 추가해 주세요. (React playground에는 이미 포함되어 있습니다):
 
 ```html{9}
 <!-- index.html -->
@@ -234,39 +234,41 @@ Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들�
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js"></script>
 </head>
 ```
 
 다음은, 댓글 텍스트를 Markdown으로 전환하고 출력해 봅시다.
 
-```javascript{9}
+```javascript{4,10}
 // tutorial6.js
 var Comment = React.createClass({
   render: function() {
+    var md = new Remarkable();
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {marked(this.props.children.toString())}
+        {md.render(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-우리가 한 일이라고는 marked 라이브러리를 호출한 것 뿐입니다. marked가 `this.props.children`에서 텍스트를 읽어들여 처리할 수 있도록 React 형식의 텍스트(React's wrapped text)를 단순 텍스트(raw string)으로 전환하기 위해 명시적으로 `toString()`을 호출했습니다.
+우리가 한 일이라고는 remarkable 라이브러리를 호출한 것 뿐입니다. remarkable가 `this.props.children`에서 텍스트를 읽어들여 처리할 수 있도록 React 형식의 텍스트(React's wrapped text)를 단순 텍스트(raw string)으로 전환하기 위해 명시적으로 `toString()`을 호출했습니다.
 
 하지만 여기엔 문제가 있습니다! 우리는 HTML 태그들이 정상적으로 렌더되길 원하지만 브라우저에 출력된 결과물은 "`<p>``<em>`또 다른`</em>` 댓글입니다`</p>`"처럼 태그가 그대로 보일것입니다.
 
 React는 이런 식으로 [XSS 공격](https://en.wikipedia.org/wiki/Cross-site_scripting)을 예방합니다. 우회할 방법이 있긴 하지만 프레임워크는 사용하지 않도록 경고하고 있습니다:
 
-```javascript{3-6,14}
+```javascript{3-7,15}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
-    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    var md = new Remarkable();
+    var rawMarkup = md.render(this.props.children.toString());
     return { __html: rawMarkup };
   },
 
@@ -283,9 +285,9 @@ var Comment = React.createClass({
 });
 ```
 
-이는 의도적으로 생(raw) HTML을 넣기 힘들게 하려고 만든 특별한 API지만 marked를 사용하기 위해 이 백도어를 활용합시다.
+이는 의도적으로 생(raw) HTML을 넣기 힘들게 하려고 만든 특별한 API지만 remarkable를 사용하기 위해 이 백도어를 활용합시다.
 
-**잊지 마세요:** 이 기능은 marked가 안전한 것으로 믿고 사용하는 것입니다. 이 경우, 소스에 있는 그대로 넘겨 주는 대신, 모든 HTML 마크업을 이스케이프하도록 marked에게 `sanitize: true`를 넘겨 주었습니다.
+**잊지 마세요:** 이 기능은 remarkable가 안전한 것으로 믿고 사용하는 것입니다.
 
 ### 데이터 모델 연결하기
 
