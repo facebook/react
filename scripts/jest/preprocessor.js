@@ -27,6 +27,7 @@ var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
 // TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
   plugins: [
+    pathToBabelPluginDevWithCode, // this pass has to run before `rewrite-modules`
     [babelPluginModules, {
       map: Object.assign(
         {},

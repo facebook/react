@@ -16,6 +16,7 @@ var del = require('del');
 
 var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
 var extractErrors = require('./scripts/error-codes/gulp-extract-errors');
+var devExpressionWithCodes = require('./scripts/error-codes/dev-expression-with-codes');
 
 var paths = {
   react: {
@@ -53,6 +54,7 @@ var errorCodeOpts = {
 
 var babelOpts = {
   plugins: [
+    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
     [babelPluginModules, {map: moduleMap}],
   ],
 };

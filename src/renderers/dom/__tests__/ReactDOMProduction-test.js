@@ -8,7 +8,6 @@
  *
  * @emails react-core
  */
-
 'use strict';
 
 describe('ReactDOMProduction', function() {
@@ -97,9 +96,7 @@ describe('ReactDOMProduction', function() {
       var container = document.createElement('div');
       ReactDOM.render(<Component />, container);
     }).toThrowError(
-      'React: production error #109. Visit ' +
-      'http://facebook.github.io/react/docs/error-codes.html?invariant=109&args=%22Component%22 ' +
-      'for more details.'
+      /React: production error #109\. Visit http:\/\/facebook\.github\.io\/react\/docs\/error-codes\.html\?invariant=109&args=%22Component%22&stack=%22Error.*reactProdInvariant.*%22 for more details\./ // eslint-disable-line max-len
     );
   });
 });

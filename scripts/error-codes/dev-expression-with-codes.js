@@ -25,7 +25,7 @@ module.exports = function(babel) {
 
   var REQUIRE_PROD_INVARIANT = buildRequire({
     IMPORT_NAME: t.identifier(prodInvariantName),
-    SOURCE: t.stringLiteral('./' + prodInvariantModuleName),
+    SOURCE: t.stringLiteral(prodInvariantModuleName),
   });
 
   var DEV_EXPRESSION = t.binaryExpression(
@@ -59,10 +59,6 @@ module.exports = function(babel) {
       CallExpression: {
         exit: function(path) {
           var node = path.node;
-          // Do nothing when testing
-          if (process.env.NODE_ENV === 'test') {
-            return;
-          }
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
             return;
@@ -74,7 +70,7 @@ module.exports = function(babel) {
           if (
             path.get('callee').isIdentifier({name: 'require'}) &&
             path.get('arguments')[0] &&
-            path.get('arguments')[0].isStringLiteral({value: 'fbjs/lib/invariant'})
+            path.get('arguments')[0].isStringLiteral({value: 'invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
             path.parentPath.parentPath.insertAfter(REQUIRE_PROD_INVARIANT);
@@ -113,12 +109,17 @@ module.exports = function(babel) {
 
             var prodErrorId = errorMap[errorMsgLiteral];
             if (prodErrorId === undefined) {
-              throw new Error(
-                'Error message "' + errorMsgLiteral +
-                '" cannot be found. The current React version ' +
-                'and the error map are probably out of sync. ' +
-                'Please run `gulp react:extract-errors` before building React.'
-              );
+              // The error cannot be found in the map.
+              node[SEEN_SYMBOL] = true;
+              if (process.env.NODE_ENV !== 'test') {
+                console.warn(
+                  'Error message "' + errorMsgLiteral +
+                  '" cannot be found. The current React version ' +
+                  'and the error map are probably out of sync. ' +
+                  'Please run `gulp react:extract-errors` before building React.'
+                );
+              }
+              return;
             }
 
             var devInvariant = t.callExpression(node.callee, [

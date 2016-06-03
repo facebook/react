@@ -2,7 +2,6 @@
   "presets": ["react"],
   "ignore": ["third_party"],
   "plugins": [
-    "./scripts/error-codes/dev-expression-with-codes",
     "syntax-trailing-function-commas",
     "babel-plugin-transform-object-rest-spread",
     "transform-es2015-template-literals",
