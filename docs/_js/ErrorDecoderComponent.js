@@ -27,7 +27,7 @@ function urlify(str) {
       segments[i] = (<a key={i} target="_blank" href={segments[i]}>{segments[i]}</a>);
     }
   }
-  
+
   return segments;
 }
 
@@ -60,24 +60,19 @@ function ErrorResult(props) {
 
   if (!code) {
     return (
-      <p>
-        No valid query params provided in the URL. Here's an example: {' '}
-        <a href="/react/docs/error-codes.html?invariant=50&args[]=Foobar">
-          http://facebook.github.io/react/docs/error-codes.html?invariant=50&args[]=Foobar
-        </a>
-      </p>
+      <p>When you encounter an error, you'll receive a link to this page for that specific error and we'll show you the full error text.</p>
     );
   }
 
   return (
     <div>
-      <h4>Error #{code}</h4>
+      <p>The full text of the error you just encountered is:</p>
       <code>{urlify(errorMsg)}</code>
     </div>
   );
 }
 
-class ErrorCodes extends React.Component {
+class ErrorDecoder extends React.Component {
   constructor(...args) {
     super(...args);
 
@@ -111,6 +106,6 @@ class ErrorCodes extends React.Component {
 }
 
 ReactDOM.render(
-  <ErrorCodes />,
-  document.querySelector('.error-codes-container')
+  <ErrorDecoder />,
+  document.querySelector('.error-decoder-container')
 );
