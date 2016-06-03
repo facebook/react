@@ -1,5 +1,6 @@
 [ignore]
 
+.*/examples/.*
 .*/build/.*
 .*/node_modules/y18n/.*
 .*/__mocks__/.*
@@ -20,6 +21,8 @@ module.system=haste
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 
+experimental.strict_type_args=true
+
 munge_underscores=false
 
 suppress_type=$FlowIssue
@@ -31,4 +34,4 @@ suppress_comment=\\(.\\|\n\\)*\\$FlowIssue\\((\\(>=0\\.\\(2[0-4]\\|1[0-9]\\|[0-9
 suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
 
 [version]
-^0.24.0
+^0.26.0
