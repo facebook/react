@@ -291,4 +291,42 @@ describe('ReactCSSTransitionGroup', function() {
     // Testing that no exception is thrown here, as the timeout has been cleared.
     jest.runAllTimers();
   });
+
+  it('should handle unmounted elements properly', function() {
+    var Child = React.createClass({
+      render() {
+        if (!this.props.show) {
+          return null;
+        }
+        return <div />;
+      },
+    });
+
+    var Component = React.createClass({
+      getInitialState() {
+        return { showChild: true };
+      },
+
+      componentDidMount() {
+        this.setState({ showChild: false });
+      },
+
+      render() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionName="yolo"
+            transitionAppear={true}
+            transitionAppearTimeout={0}
+          >
+            <Child show={this.state.showChild} />
+          </ReactCSSTransitionGroup>
+        );
+      },
+    });
+
+    ReactDOM.render(<Component/>, container);
+
+    // Testing that no exception is thrown here, as the timeout has been cleared.
+    jest.runAllTimers();
+  });
 });
