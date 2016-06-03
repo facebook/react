@@ -452,7 +452,7 @@
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
@@ -598,22 +598,23 @@
 <h3><a class="anchor" name="adding-markdown"></a>Adding Markdown <a class="hash-link" href="#adding-markdown">#</a></h3>
 <p>Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.</p>
 
-<p>In this tutorial we use a third-party library <strong>marked</strong> which takes Markdown text and converts it to raw HTML. We already included this library with the original markup for the page, so we can just start using it. Let&#39;s convert the comment text to Markdown and output it:</p>
+<p>In this tutorial we use a third-party library <strong>remarkable</strong> which takes Markdown text and converts it to raw HTML. We already included this library with the original markup for the page, so we can just start using it. Let&#39;s convert the comment text to Markdown and output it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span>    <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h2</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentAuthor&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
         <span class="o">&lt;</span><span class="err">/h2&gt;</span>
-<span class="hll">        <span class="p">{</span><span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
+<span class="hll">        <span class="p">{</span><span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>All we&#39;re doing here is calling the marked library. We need to convert <code>this.props.children</code> from React&#39;s wrapped text to a raw string that marked will understand so we explicitly call <code>toString()</code>.</p>
+<p>All we&#39;re doing here is calling the remarkable library. We need to convert <code>this.props.children</code> from React&#39;s wrapped text to a raw string that remarkable will understand so we explicitly call <code>toString()</code>.</p>
 
 <p>But there&#39;s a problem! Our rendered comments look like this in the browser: &quot;<code>&lt;p&gt;</code>This is <code>&lt;em&gt;</code>another<code>&lt;/em&gt;</code> comment<code>&lt;/p&gt;</code>&quot;. We want those tags to actually render as HTML.</p>
 
@@ -621,7 +622,8 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">rawMarkup</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="p">{</span><span class="nx">sanitize</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
 </span><span class="hll">    <span class="k">return</span> <span class="p">{</span> <span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span> <span class="p">};</span>
 </span><span class="hll">  <span class="p">},</span>
 </span>
@@ -637,9 +639,9 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>This is a special API that intentionally makes it difficult to insert raw HTML, but for marked we&#39;ll take advantage of this backdoor.</p>
+<p>This is a special API that intentionally makes it difficult to insert raw HTML, but for remarkable we&#39;ll take advantage of this backdoor.</p>
 
-<p><strong>Remember:</strong> by using this feature you&#39;re relying on marked to be secure. In this case, we pass <code>sanitize: true</code> which tells marked to escape any HTML markup in the source instead of passing it through unchanged.</p>
+<p><strong>Remember:</strong> by using this feature you&#39;re relying on remarkable to be secure. In this case, remarkable automatically strips HTML markup and insecure links from the output.</p>
 <h3><a class="anchor" name="hook-up-the-data-model"></a>Hook up the data model <a class="hash-link" href="#hook-up-the-data-model">#</a></h3>
 <p>So far we&#39;ve been inserting the comments directly in the source code. Instead, let&#39;s render a blob of JSON data into the comment list. Eventually this will come from the server, but for now, write it in your source:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>

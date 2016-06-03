@@ -589,7 +589,7 @@
 <h3><a class="anchor" name="markdown-"></a>Markdown の追加 <a class="hash-link" href="#markdown-">#</a></h3>
 <p>Markdown はインラインでテキストをフォーマットする簡単な記法です。例えば、テキストをアスタリスクで挟むと強調されて表示されます。</p>
 
-<p>まず最初に、サードパーティ製の <strong>marked</strong> ライブラリをアプリケーションに追加します。 marked は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように marked を読み込ませます。</p>
+<p>まず最初に、サードパーティ製の <strong>remarkable</strong> ライブラリをアプリケーションに追加します。 remarkable は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように remarkable を読み込ませます。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="nt">&lt;head&gt;</span>
   <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;UTF-8&quot;</span> <span class="nt">/&gt;</span>
@@ -598,25 +598,26 @@
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>
 <p>次に、Markdown で書かれたコメントを変換して出力してみましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span>    <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h2</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentAuthor&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
         <span class="o">&lt;</span><span class="err">/h2&gt;</span>
-<span class="hll">        <span class="p">{</span><span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
+<span class="hll">        <span class="p">{</span><span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>このコードでは marked のライブラリを呼び出すことしかしていません。<code>this.props.children</code> は React によってラップされたテキストですが、これを marked が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に <code>toString()</code> を呼び出しているのです。</p>
+<p>このコードでは remarkable のライブラリを呼び出すことしかしていません。<code>this.props.children</code> は React によってラップされたテキストですが、これを remarkable が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に <code>toString()</code> を呼び出しているのです。</p>
 
 <p>しかし問題があります！ブラウザがレンダリングしたコメントは次のように表示されているはずです -- &quot;<code>&lt;p&gt;</code>This is <code>&lt;em&gt;</code>another<code>&lt;/em&gt;</code> comment<code>&lt;/p&gt;</code>&quot; このようなタグは実際に HTML としてレンダリングさせたいですね。</p>
 
@@ -624,7 +625,8 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">rawMarkup</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="p">{</span><span class="nx">sanitize</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
 </span><span class="hll">    <span class="k">return</span> <span class="p">{</span> <span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span> <span class="p">};</span>
 </span><span class="hll">  <span class="p">},</span>
 </span>
@@ -640,9 +642,9 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは marked のためにこのバックドアを利用しています。</p>
+<p>これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは remarkable のためにこのバックドアを利用しています。</p>
 
-<p><strong>注意:</strong> この機能を使うことで、marked は安全なものと信頼することになります。</p>
+<p><strong>注意:</strong> この機能を使うことで、remarkable は安全なものと信頼することになります。</p>
 <h3><a class="anchor" name=""></a>データモデルとの連携 <a class="hash-link" href="#">#</a></h3>
 <p>これまではソースコードにコメントを直に書き込んでいました。その代わりに、これからは JSON の blob データをコメントリストにレンダリングしてみましょう。サーバからデータを取得するのが最後の目標ですが、とりあえず今はソースコードの中にデータを書いておくことにします。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>

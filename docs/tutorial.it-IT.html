@@ -602,25 +602,26 @@
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>
 <p>Successivamente, convertiamo il testo del commento da Markdown e scriviamolo:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span>    <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h2</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentAuthor&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
         <span class="o">&lt;</span><span class="err">/h2&gt;</span>
-<span class="hll">        <span class="p">{</span><span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
+<span class="hll">        <span class="p">{</span><span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Tutto ciò che stiamo facendo qui è chiamare la libreria marked. Dobbiamo convertire <code>this.props.children</code> dal testo racchiuso di React a una stringa che marked è in grado di capire, quindi vi chiamiamo esplicitamente <code>toString()</code>.</p>
+<p>Tutto ciò che stiamo facendo qui è chiamare la libreria remarkable. Dobbiamo convertire <code>this.props.children</code> dal testo racchiuso di React a una stringa che remarkable è in grado di capire, quindi vi chiamiamo esplicitamente <code>toString()</code>.</p>
 
 <p>Ma c&#39;è un problema! I nostri commenti visualizzati appaiono come segue nel browser: &quot;<code>&lt;p&gt;</code>Questo è un <code>&lt;em&gt;</code>altro<code>&lt;/em&gt;</code> commento<code>&lt;/p&gt;</code>&quot;. Noi vogliamo che questi tag vengano in realtà visualizzati come HTML.</p>
 
@@ -628,7 +629,8 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">rawMarkup</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="p">{</span><span class="nx">sanitize</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
 </span><span class="hll">    <span class="k">return</span> <span class="p">{</span> <span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span> <span class="p">};</span>
 </span><span class="hll">  <span class="p">},</span>
 </span>
@@ -644,9 +646,9 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Questa è una speciale API che rende intenzionalmente difficile inserire HTML nativo, ma per marked ci avvantaggeremo di questa possibilità.</p>
+<p>Questa è una speciale API che rende intenzionalmente difficile inserire HTML nativo, ma per remarkable ci avvantaggeremo di questa possibilità.</p>
 
-<p><strong>Ricorda:</strong> usando questa funzionalità stai assumendo che marked sia sicuro. In questo caso, passiamo <code>sanitize: true</code> che istruisce marked a fare l&#39;escape di ogni markup HTML nel sorgente, anziché restituirlo inalterato.</p>
+<p><strong>Ricorda:</strong> usando questa funzionalità stai assumendo che remarkable sia sicuro.</p>
 <h3><a class="anchor" name="collega-il-modello-dei-dati"></a>Collega il modello dei dati <a class="hash-link" href="#collega-il-modello-dei-dati">#</a></h3>
 <p>Finora abbiamo inserito i commenti direttamente nel codice sorgente. Invece, visualizziamo un pacchetto di dati JSON nella lista dei commenti. In seguito questi verranno restituiti dal server, ma per adesso scriviamoli nel tuo sorgente:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>

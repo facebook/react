@@ -595,7 +595,7 @@
 <h3><a class="anchor" name="markdown-"></a>Markdown 추가하기 <a class="hash-link" href="#markdown-">#</a></h3>
 <p>Markdown은 텍스트를 포맷팅하는 간단한 방식입니다. 예를 들어, 별표(<code>*</code>)로 텍스트를 둘러싸는 것은 강조의 의미입니다.</p>
 
-<p>먼저 서드파티 라이브러리인 <strong>marked</strong>를 애플리케이션에 추가합니다. 이 JavaScript 라이브러리는 Markdown 텍스트를 HTML 문법으로 변환해줍니다. head 태그안에 스크립트 태그를 추가해 주세요. (React playground에는 이미 포함되어 있습니다):</p>
+<p>먼저 서드파티 라이브러리인 <strong>remarkable</strong>를 애플리케이션에 추가합니다. 이 JavaScript 라이브러리는 Markdown 텍스트를 HTML 문법으로 변환해줍니다. head 태그안에 스크립트 태그를 추가해 주세요. (React playground에는 이미 포함되어 있습니다):</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="nt">&lt;head&gt;</span>
   <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="nt">/&gt;</span>
@@ -604,25 +604,26 @@
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>
 <p>다음은, 댓글 텍스트를 Markdown으로 전환하고 출력해 봅시다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span>    <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h2</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentAuthor&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">author</span><span class="p">}</span>
         <span class="o">&lt;</span><span class="err">/h2&gt;</span>
-<span class="hll">        <span class="p">{</span><span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
+<span class="hll">        <span class="p">{</span><span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">())}</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>우리가 한 일이라고는 marked 라이브러리를 호출한 것 뿐입니다. marked가 <code>this.props.children</code>에서 텍스트를 읽어들여 처리할 수 있도록 React 형식의 텍스트(React&#39;s wrapped text)를 단순 텍스트(raw string)으로 전환하기 위해 명시적으로 <code>toString()</code>을 호출했습니다.</p>
+<p>우리가 한 일이라고는 remarkable 라이브러리를 호출한 것 뿐입니다. remarkable가 <code>this.props.children</code>에서 텍스트를 읽어들여 처리할 수 있도록 React 형식의 텍스트(React&#39;s wrapped text)를 단순 텍스트(raw string)으로 전환하기 위해 명시적으로 <code>toString()</code>을 호출했습니다.</p>
 
 <p>하지만 여기엔 문제가 있습니다! 우리는 HTML 태그들이 정상적으로 렌더되길 원하지만 브라우저에 출력된 결과물은 &quot;<code>&lt;p&gt;</code><code>&lt;em&gt;</code>또 다른<code>&lt;/em&gt;</code> 댓글입니다<code>&lt;/p&gt;</code>&quot;처럼 태그가 그대로 보일것입니다.</p>
 
@@ -630,7 +631,8 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">rawMarkup</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">marked</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="p">{</span><span class="nx">sanitize</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">md</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Remarkable</span><span class="p">();</span>
+</span><span class="hll">    <span class="kd">var</span> <span class="nx">rawMarkup</span> <span class="o">=</span> <span class="nx">md</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
 </span><span class="hll">    <span class="k">return</span> <span class="p">{</span> <span class="nx">__html</span><span class="o">:</span> <span class="nx">rawMarkup</span> <span class="p">};</span>
 </span><span class="hll">  <span class="p">},</span>
 </span>
@@ -646,9 +648,9 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>이는 의도적으로 생(raw) HTML을 넣기 힘들게 하려고 만든 특별한 API지만 marked를 사용하기 위해 이 백도어를 활용합시다.</p>
+<p>이는 의도적으로 생(raw) HTML을 넣기 힘들게 하려고 만든 특별한 API지만 remarkable를 사용하기 위해 이 백도어를 활용합시다.</p>
 
-<p><strong>잊지 마세요:</strong> 이 기능은 marked가 안전한 것으로 믿고 사용하는 것입니다. 이 경우, 소스에 있는 그대로 넘겨 주는 대신, 모든 HTML 마크업을 이스케이프하도록 marked에게 <code>sanitize: true</code>를 넘겨 주었습니다.</p>
+<p><strong>잊지 마세요:</strong> 이 기능은 remarkable가 안전한 것으로 믿고 사용하는 것입니다.</p>
 <h3><a class="anchor" name="--"></a>데이터 모델 연결하기 <a class="hash-link" href="#--">#</a></h3>
 <p>지금까지는 소스코드에 직접 댓글을 넣었습니다. 이제부터는 JSON 데이터 덩어리를 댓글 목록에 렌더해보겠습니다. 최종적으로는 서버에서 데이터가 내려오겠지만, 지금은 소스에 직접 데이터를 넣어봅시다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>
