@@ -8,7 +8,6 @@
  *
  * @emails react-core
  */
-/* eslint-disable max-len */
 'use strict';
 
 var reactProdInvariant;
@@ -23,19 +22,25 @@ describe('reactProdInvariant', function() {
     expect(function() {
       reactProdInvariant(124, 'foo', 'bar');
     }).toThrowError(
-      /React: production error #124\. Visit http:\/\/facebook\.github\.io\/react\/docs\/error-codes\.html\?invariant=124&args=%22foo%22&args=%22bar%22&stack=%22Error.*reactProdInvariant.*%22 for more details\./
+      'React: production error #124. Visit ' +
+      'http://facebook.github.io/react/docs/error-codes.html?invariant=124&args[]=foo&args[]=bar' +
+      ' for more details.'
     );
 
     expect(function() {
       reactProdInvariant(20);
     }).toThrowError(
-      /React: production error #20\. Visit http:\/\/facebook\.github\.io\/react\/docs\/error-codes\.html\?invariant=20&stack=%22Error.*reactProdInvariant.*%22 for more details\./
+      'React: production error #20. Visit ' +
+      'http://facebook.github.io/react/docs/error-codes.html?invariant=20' +
+      ' for more details.'
     );
 
     expect(function() {
-      reactProdInvariant(77, 'foo', 'bar', 'and', 'what', 'else');
+      reactProdInvariant(77, '<div>', '&?bar');
     }).toThrowError(
-      /React: production error #77\. Visit http:\/\/facebook\.github\.io\/react\/docs\/error-codes\.html\?invariant=77&args=%22foo%22&args=%22bar%22&args=%22and%22&args=%22what%22&args=%22else%22&stack=%22Error.*reactProdInvariant.*%22 for more details\./
+      'React: production error #77. Visit ' +
+      'http://facebook.github.io/react/docs/error-codes.html?invariant=77&args[]=%3Cdiv%3E&args[]=%26%3Fbar' +
+      ' for more details.'
     );
   });
 });
