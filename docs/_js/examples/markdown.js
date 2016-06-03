@@ -7,7 +7,8 @@ var MarkdownEditor = React.createClass({
     this.setState({value: this.refs.textarea.value});
   },
   rawMarkup: function() {
-    return { __html: marked(this.state.value, {sanitize: true}) };
+    var md = new Remarkable();
+    return { __html: md.render(this.state.value) };
   },
   render: function() {
     return (

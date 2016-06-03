@@ -45,7 +45,7 @@ next: thinking-in-react-zh-CN.html
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -225,35 +225,37 @@ var CommentList = React.createClass({
 
 Markdown 是一种简单的内联格式化你的文字的方法。例如，用星号包围文本将会使其强调突出。
 
-在本教程中我们使用第三方库 **marked**，它接受 Markdown 文本并且转换为原始的 HTML。我们已经在初始的页面标记里包含了这个库，所以我们可以直接开始使用它，让我们转换评论文本为 Markdown 并输出它：
+在本教程中我们使用第三方库 **remarkable**，它接受 Markdown 文本并且转换为原始的 HTML。我们已经在初始的页面标记里包含了这个库，所以我们可以直接开始使用它，让我们转换评论文本为 Markdown 并输出它：
 
-```javascript{9}
+```javascript{4,10}
 // tutorial6.js
 var Comment = React.createClass({
   render: function() {
+    var md = new Remarkable();
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {marked(this.props.children.toString())}
+        {md.render(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-我们在这里唯一做的就是调用 marked 库。我们需要把 从 React 的包裹文本来的 `this.props.children` 转换成 marked 能理解的原始字符串，所以我们显示地调用了`toString()`。
+我们在这里唯一做的就是调用 remarkable 库。我们需要把 从 React 的包裹文本来的 `this.props.children` 转换成 remarkable 能理解的原始字符串，所以我们显示地调用了`toString()`。
 
 但是这里有一个问题！我们渲染的评论在浏览器里看起来像这样： "`<p>`This is `<em>`another`</em>` comment`</p>`" 。我们想让这些标签真正地渲染为 HTML。
 
 那是 React 在保护你免受 [XSS 攻击](https://en.wikipedia.org/wiki/Cross-site_scripting)。有一个方法解决这个问题，但是框架会警告你别使用这种方法：
 
-```javascript{3-6,14}
+```javascript{3-7,15}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
-    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    var md = new Remarkable();
+    var rawMarkup = md.render(this.props.children.toString());
     return { __html: rawMarkup };
   },
 
@@ -270,9 +272,9 @@ var Comment = React.createClass({
 });
 ```
 
-这是一个特殊的 API，故意让插入原始的 HTML 变得困难，但是对于 marked 我们将利用这个后门。
+这是一个特殊的 API，故意让插入原始的 HTML 变得困难，但是对于 remarkable 我们将利用这个后门。
 
-**记住：** 使用这个功能你会依赖于 marked 是安全的。既然如此，我们传递 `sanitize: true` 告诉 marked escape 源码里任何的 HTML 标记，而不是直接不变的让他们通过。
+**记住：** 使用这个功能你会依赖于 remarkable 是安全的。
 
 ### 挂钩数据模型
 

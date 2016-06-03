@@ -216,7 +216,7 @@ var CommentList = React.createClass({
 
 Markdown はインラインでテキストをフォーマットする簡単な記法です。例えば、テキストをアスタリスクで挟むと強調されて表示されます。
 
-まず最初に、サードパーティ製の **marked** ライブラリをアプリケーションに追加します。 marked は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように marked を読み込ませます。
+まず最初に、サードパーティ製の **remarkable** ライブラリをアプリケーションに追加します。 remarkable は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように remarkable を読み込ませます。
 
 ```html{9}
 <!-- index.html -->
@@ -227,39 +227,41 @@ Markdown はインラインでテキストをフォーマットする簡単な�
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js"></script>
 </head>
 ```
 
 次に、Markdown で書かれたコメントを変換して出力してみましょう。
 
-```javascript{9}
+```javascript{4,10}
 // tutorial6.js
 var Comment = React.createClass({
   render: function() {
+    var md = new Remarkable();
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {marked(this.props.children.toString())}
+        {md.render(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-このコードでは marked のライブラリを呼び出すことしかしていません。`this.props.children` は React によってラップされたテキストですが、これを marked が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に `toString()` を呼び出しているのです。
+このコードでは remarkable のライブラリを呼び出すことしかしていません。`this.props.children` は React によってラップされたテキストですが、これを remarkable が理解できる生の文字列に変換する必要があります。そのため、上のコードでは明示的に `toString()` を呼び出しているのです。
 
 しかし問題があります！ブラウザがレンダリングしたコメントは次のように表示されているはずです -- "`<p>`This is `<em>`another`</em>` comment`</p>`" このようなタグは実際に HTML としてレンダリングさせたいですね。
 
 このような現象が起きるのは React が XSS 攻撃に対する防御を行っているからです。これを回避する方法はありますが、それを使うときにはフレームワークが警告をします。
 
-```javascript{3-6,14}
+```javascript{3-7,15}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
-    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    var md = new Remarkable();
+    var rawMarkup = md.render(this.props.children.toString());
     return { __html: rawMarkup };
   },
 
@@ -276,9 +278,9 @@ var Comment = React.createClass({
 });
 ```
 
-これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは marked のためにこのバックドアを利用しています。
+これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは remarkable のためにこのバックドアを利用しています。
 
-**注意:** この機能を使うことで、marked は安全なものと信頼することになります。
+**注意:** この機能を使うことで、remarkable は安全なものと信頼することになります。
 
 ### データモデルとの連携
 
