@@ -28,7 +28,7 @@ var render = function(
   element: ReactElement,
   mountInto: number,
   callback?: ?(() => void)
-): ?ReactComponent {
+): ?ReactComponent<any, any, any> {
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 

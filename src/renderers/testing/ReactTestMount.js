@@ -96,7 +96,7 @@ var ReactHostMount = {
 
   render: function(
     nextElement: ReactElement
-  ): ?ReactComponent {
+  ): ?ReactElement<any, any, any> {
     var nextWrappedElement = new ReactElement(
       TopLevelWrapper,
       null,
