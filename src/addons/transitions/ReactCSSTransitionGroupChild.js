@@ -111,9 +111,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   flushClassNameQueue: function() {
-    if (this.isMounted()) {
+    var DOMNode = ReactDOM.findDOMNode(this);
+    if (DOMNode) {
       this.classNameQueue.forEach(
-        CSSCore.addClass.bind(CSSCore, ReactDOM.findDOMNode(this))
+        CSSCore.addClass.bind(CSSCore, DOMNode)
       );
     }
     this.classNameQueue.length = 0;
