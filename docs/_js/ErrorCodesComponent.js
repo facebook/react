@@ -37,7 +37,7 @@ function segmentify(str) {
   return segments;
 }
 
-// ?invariant=123&args="foo"&args="bar"&stack="longlonginfo"
+// ?invariant=123&args[]=foo&args[]=bar
 function parseQueryString() {
   const rawQueryString = window.location.search.substring(1);
   if (!rawQueryString) {
@@ -46,39 +46,30 @@ function parseQueryString() {
 
   let code = '';
   let args = [];
-  let stack = '';
 
-  const queries = decodeURIComponent(rawQueryString).split('&');
+  const queries = rawQueryString.split('&');
   for (let i = 0; i < queries.length; i++) {
-    const query = queries[i];
+    const query = decodeURIComponent(queries[i]);
     if (query.indexOf('invariant=') === 0) {
       code = query.slice(10);
-    } else if (query.indexOf('args=') === 0) {
-      args.push(query.slice(5));
-    } else if (query.indexOf('stack=') === 0) {
-      stack = query.slice(6);
+    } else if (query.indexOf('args[]=') === 0) {
+      args.push(query.slice(7));
     }
   }
 
-  const stripQuotesRegex = /^\ *\"([\s\S]*)\"\ *$/;
-  // remove double quotes
-  args = args.map((str) => str.replace(stripQuotesRegex, '$1'));
-  stack = stack.replace(stripQuotesRegex, '$1');
-
-  return [code, args, stack];
+  return [code, args];
 }
 
 function ErrorResult(props) {
   const code = props.code;
   const errorMsg = props.msg;
-  const stack = props.stack;
 
   if (!code) {
     return (
       <p>
         No valid query params provided in the URL. Here's an example: {' '}
-        <a href="/react/docs/error-codes.html?invariant=50&args=%22Foobar%22">
-          http://facebook.github.io/react/docs/error-codes.html?invariant=50&args="Foobar"
+        <a href="/react/docs/error-codes.html?invariant=50&args[]=Foobar">
+          http://facebook.github.io/react/docs/error-codes.html?invariant=50&args[]=Foobar
         </a>
       </p>
     );
@@ -88,8 +79,6 @@ function ErrorResult(props) {
     <div>
       <h4>Error #{code}</h4>
       <code>{segmentify(errorMsg)}</code>
-      {stack ? <h4>Stack Info</h4> : <h4>Stack info not found.</h4>}
-      <pre>{stack}</pre>
     </div>
   );
 }
@@ -101,19 +90,17 @@ class ErrorCodes extends React.Component {
     this.state = {
       code: null,
       errorMsg: '',
-      stack: '',
     };
   }
 
   componentWillMount() {
     const parseResult = parseQueryString();
     if (parseResult != null) {
-      const [code, args, stack] = parseResult;
+      const [code, args] = parseResult;
       if (errorMap[code]) {
         this.setState({
           code: code,
           errorMsg: replaceArgs(errorMap[code], args),
-          stack: stack,
         });
       }
     }
@@ -124,7 +111,6 @@ class ErrorCodes extends React.Component {
       <ErrorResult
         code={this.state.code}
         msg={this.state.errorMsg}
-        stack={this.state.stack}
       />
     );
   }
