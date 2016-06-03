@@ -35,7 +35,7 @@ function createSubsequentChild(parent : Fiber, previousSibling : Fiber, newChild
 
   switch (newChildren.$$typeof) {
     case REACT_ELEMENT_TYPE: {
-      const element = (newChildren : ReactElement);
+      const element = (newChildren : ReactElement<any>);
       const child = ReactFiber.createFiberFromElement(element);
       previousSibling.sibling = child;
       child.parent = parent;
@@ -80,7 +80,7 @@ function createFirstChild(parent, newChildren) {
 
   switch (newChildren.$$typeof) {
     case REACT_ELEMENT_TYPE: {
-      const element = (newChildren : ReactElement);
+      const element = (newChildren : ReactElement<any>);
       const child = ReactFiber.createFiberFromElement(element);
       child.parent = parent;
       return child;
