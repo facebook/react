@@ -210,7 +210,7 @@ ReactElement.createElement = function(type, config, children) {
       type;
 
     // Create dummy `key` and `ref` property to `props` to warn users against its use
-    function warnAboutAccessingKey() {
+    var warnAboutAccessingKey = function() {
       if (!specialPropKeyWarningShown) {
         specialPropKeyWarningShown = true;
         warning(
@@ -223,10 +223,10 @@ ReactElement.createElement = function(type, config, children) {
         );
       }
       return undefined;
-    }
+    };
     warnAboutAccessingKey.isReactWarning = true;
 
-    function warnAboutAccessingRef() {
+    var warnAboutAccessingRef = function() {
       if (!specialPropRefWarningShown) {
         specialPropRefWarningShown = true;
         warning(
@@ -239,7 +239,7 @@ ReactElement.createElement = function(type, config, children) {
         );
       }
       return undefined;
-    }
+    };
     warnAboutAccessingRef.isReactWarning = true;
 
     if (typeof props.$$typeof === 'undefined' ||
