@@ -450,29 +450,18 @@ describe('ReactPerf', function() {
     __DEV__ = false;
 
     spyOn(console, 'error');
-    
+
     expect(ReactPerf.getLastMeasurements()).toEqual([]);
-
     expect(ReactPerf.getExclusive()).toEqual([]);
-
     expect(ReactPerf.getInclusive()).toEqual([]);
-
     expect(ReactPerf.getWasted()).toEqual([]);
-
     expect(ReactPerf.getOperations()).toEqual([]);
-
     expect(ReactPerf.printExclusive()).toEqual(undefined);
-
     expect(ReactPerf.printInclusive()).toEqual(undefined);
-
     expect(ReactPerf.printWasted()).toEqual(undefined);
-
     expect(ReactPerf.printOperations()).toEqual(undefined);
-
     expect(ReactPerf.start()).toBe(undefined);
-
     expect(ReactPerf.stop()).toBe(undefined);
-
     expect(ReactPerf.isRunning()).toBe(false);
 
     expect(console.error.calls.count()).toBe(1);
