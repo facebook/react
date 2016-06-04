@@ -112,7 +112,7 @@ function print(outerComponent) {
         var values = keys.map((childKey) => renderedChildren[childKey]);
 
         if (keys.length) {
-          function dump(children) {
+          var dump = function(children) {
             if (typeof children === 'boolean' || children == null) {
               return '' + children;
             }
@@ -130,7 +130,7 @@ function print(outerComponent) {
               debugger;
               throw new Error('hmm');
             }
-          }
+          };
 
           markup += '\n';
           var children = element.props.children;
