@@ -61,8 +61,15 @@ task :update_acknowledgements do
   File.open('_data/acknowledgements.yml', 'w+') { |f| f.write(cols.to_yaml) }
 end
 
+desc "copy error codes to docs"
+task :copy_error_codes do
+  codes_json = File.read('../scripts/error-codes/codes.json')
+  codes_js = "var errorMap = #{codes_json.chomp};\n"
+  File.write('js/errorMap.js', codes_js)
+end
+
 desc "build into ../../react-gh-pages"
-task :release => [:update_version, :js, :fetch_remotes] do
+task :release => [:update_version, :js, :fetch_remotes, :copy_error_codes] do
   system "jekyll build -d ../../react-gh-pages"
 end
 
