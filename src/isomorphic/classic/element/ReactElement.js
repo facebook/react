@@ -78,10 +78,10 @@ function hasValidKey(config) {
  */
 var ReactElement = function(type, key, ref, self, source, owner, props) {
   var element = {
-    // This tag allow us to uniquely identify this as a React Element
+    // This tag allow us to uniquely identify this as a React Element.
     $$typeof: REACT_ELEMENT_TYPE,
 
-    // Built-in properties that belong on the element
+    // Built-in properties that belong on the element.
     type: type,
     key: key,
     ref: ref,
@@ -145,7 +145,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
 ReactElement.createElement = function(type, config, children) {
   var propName;
 
-  // Reserved names are extracted
+  // Reserved names are extracted.
   var props = {};
 
   var key = null;
@@ -173,7 +173,7 @@ ReactElement.createElement = function(type, config, children) {
 
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
-    // Remaining properties are added to a new props object
+    // Remaining properties are added to a new props object.
     for (propName in config) {
       if (hasOwnProperty.call(config, propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
@@ -195,7 +195,7 @@ ReactElement.createElement = function(type, config, children) {
     props.children = childArray;
   }
 
-  // Resolve default props
+  // Resolve default props.
   if (type && type.defaultProps) {
     var defaultProps = type.defaultProps;
     for (propName in defaultProps) {
@@ -209,7 +209,7 @@ ReactElement.createElement = function(type, config, children) {
       (type.displayName || type.name || 'Unknown') :
       type;
 
-    // Create dummy `key` and `ref` property to `props` to warn users against its use
+    // Create dummy `key` and `ref` property to `props` to warn users against its use.
     var warnAboutAccessingKey = function() {
       if (!specialPropKeyWarningShown) {
         specialPropKeyWarningShown = true;
@@ -305,10 +305,10 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
 ReactElement.cloneElement = function(element, config, children) {
   var propName;
 
-  // Original props are copied
+  // Original props are copied.
   var props = Object.assign({}, element.props);
 
-  // Reserved names are extracted
+  // Reserved names are extracted.
   var key = element.key;
   var ref = element.ref;
   // Self is preserved since the owner is preserved.
@@ -318,7 +318,7 @@ ReactElement.cloneElement = function(element, config, children) {
   // true owner.
   var source = element._source;
 
-  // Owner will be preserved, unless ref is overridden
+  // Owner will be preserved, unless ref is overridden.
   var owner = element._owner;
 
   if (config != null) {
@@ -341,7 +341,7 @@ ReactElement.cloneElement = function(element, config, children) {
       key = '' + config.key;
     }
 
-    // Remaining properties override existing props
+    // Remaining properties override existing props.
     var defaultProps;
     if (element.type && element.type.defaultProps) {
       defaultProps = element.type.defaultProps;
@@ -350,7 +350,7 @@ ReactElement.cloneElement = function(element, config, children) {
       if (hasOwnProperty.call(config, propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         if (config[propName] === undefined && defaultProps !== undefined) {
-          // Resolve default props
+          // Resolve default props.
           props[propName] = defaultProps[propName];
         } else {
           props[propName] = config[propName];
