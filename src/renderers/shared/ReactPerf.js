@@ -24,18 +24,16 @@ function warnInProduction() {
   if (alreadyWarned) {
     return;
   }
-
   alreadyWarned = true;
-
   if (typeof console !== 'undefined') {
     console.error(
-      'ReactPerf is not supported in the production builds of React.' +
+      'ReactPerf is not supported in the production builds of React. ' +
       'To collect measurements, please use the development build of React instead.'
     );
   }
 }
 
-function getFlushHistory() {
+function getLastMeasurements() {
   if (!__DEV__) {
     warnInProduction();
     return [];
@@ -44,7 +42,7 @@ function getFlushHistory() {
   return ReactDebugTool.getFlushHistory();
 }
 
-function getExclusive(flushHistory = getFlushHistory()) {
+function getExclusive(flushHistory = getLastMeasurements()) {
   if (!__DEV__) {
     warnInProduction();
     return [];
@@ -99,7 +97,7 @@ function getExclusive(flushHistory = getFlushHistory()) {
     );
 }
 
-function getInclusive(flushHistory = getFlushHistory()) {
+function getInclusive(flushHistory = getLastMeasurements()) {
   if (!__DEV__) {
     warnInProduction();
     return [];
@@ -172,7 +170,7 @@ function getInclusive(flushHistory = getFlushHistory()) {
     );
 }
 
-function getWasted(flushHistory = getFlushHistory()) {
+function getWasted(flushHistory = getLastMeasurements()) {
   if (!__DEV__) {
     warnInProduction();
     return [];
@@ -270,7 +268,7 @@ function getWasted(flushHistory = getFlushHistory()) {
     );
 }
 
-function getOperations(flushHistory = getFlushHistory()) {
+function getOperations(flushHistory = getLastMeasurements()) {
   if (!__DEV__) {
     warnInProduction();
     return [];
@@ -409,6 +407,7 @@ function start() {
     warnInProduction();
     return;
   }
+
   ReactDebugTool.beginProfiling();
 }
 
@@ -426,11 +425,12 @@ function isRunning() {
     warnInProduction();
     return false;
   }
+
   return ReactDebugTool.isProfiling();
 }
 
 var ReactPerfAnalysis = {
-  getLastMeasurements: getFlushHistory,
+  getLastMeasurements,
   getExclusive,
   getInclusive,
   getWasted,
