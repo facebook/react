@@ -13,17 +13,43 @@
 
 var ReactDebugTool = require('ReactDebugTool');
 var warning = require('warning');
+var alreadyWarned = false;
 
 function roundFloat(val, base = 2) {
   var n = Math.pow(10, base);
   return Math.floor(val * n) / n;
 }
 
+function warnInProduction() {
+  if (alreadyWarned) {
+    return;
+  }
+
+  alreadyWarned = true;
+
+  if (typeof console !== 'undefined') {
+    console.error(
+      'ReactPerf is not supported in the production builds of React.' +
+      'To collect measurements, please use the development build of React instead.'
+    );
+  }
+}
+
 function getFlushHistory() {
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
+
   return ReactDebugTool.getFlushHistory();
 }
 
 function getExclusive(flushHistory = getFlushHistory()) {
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
+
   var aggregatedStats = {};
   var affectedIDs = {};
 
@@ -74,6 +100,11 @@ function getExclusive(flushHistory = getFlushHistory()) {
 }
 
 function getInclusive(flushHistory = getFlushHistory()) {
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
+
   var aggregatedStats = {};
   var affectedIDs = {};
 
@@ -142,6 +173,11 @@ function getInclusive(flushHistory = getFlushHistory()) {
 }
 
 function getWasted(flushHistory = getFlushHistory()) {
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
+
   var aggregatedStats = {};
   var affectedIDs = {};
 
@@ -235,6 +271,11 @@ function getWasted(flushHistory = getFlushHistory()) {
 }
 
 function getOperations(flushHistory = getFlushHistory()) {
+  if (!__DEV__) {
+    warnInProduction();
+    return [];
+  }
+
   var stats = [];
   flushHistory.forEach((flush, flushIndex) => {
     var {operations, treeSnapshot} = flush;
@@ -258,6 +299,11 @@ function getOperations(flushHistory = getFlushHistory()) {
 }
 
 function printExclusive(flushHistory) {
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
+
   var stats = getExclusive(flushHistory);
   var table = stats.map(item => {
     var {key, instanceCount, totalDuration} = item;
@@ -279,6 +325,11 @@ function printExclusive(flushHistory) {
 }
 
 function printInclusive(flushHistory) {
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
+
   var stats = getInclusive(flushHistory);
   var table = stats.map(item => {
     var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
@@ -293,6 +344,11 @@ function printInclusive(flushHistory) {
 }
 
 function printWasted(flushHistory) {
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
+
   var stats = getWasted(flushHistory);
   var table = stats.map(item => {
     var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
@@ -307,6 +363,11 @@ function printWasted(flushHistory) {
 }
 
 function printOperations(flushHistory) {
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
+
   var stats = getOperations(flushHistory);
   var table = stats.map(stat => ({
     'Owner > Node': stat.key,
@@ -344,14 +405,27 @@ function getMeasurementsSummaryMap(measurements) {
 }
 
 function start() {
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
   ReactDebugTool.beginProfiling();
 }
 
 function stop() {
+  if (!__DEV__) {
+    warnInProduction();
+    return;
+  }
+
   ReactDebugTool.endProfiling();
 }
 
 function isRunning() {
+  if (!__DEV__) {
+    warnInProduction();
+    return false;
+  }
   return ReactDebugTool.isProfiling();
 }
 
