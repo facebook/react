@@ -208,7 +208,9 @@ var ReactDebugTool = {
     }
   },
   getFlushHistory() {
-    return flushHistory;
+    if (__DEV__) {
+      return flushHistory;
+    }
   },
   onBeginFlush() {
     if (__DEV__) {
