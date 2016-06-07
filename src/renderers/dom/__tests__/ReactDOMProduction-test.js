@@ -96,9 +96,10 @@ describe('ReactDOMProduction', function() {
       var container = document.createElement('div');
       ReactDOM.render(<Component />, container);
     }).toThrowError(
-      'React: production error #109. Visit ' +
+      'Minified React error #109; visit ' +
       'http://facebook.github.io/react/docs/error-codes.html?invariant=109&args[]=Component' +
-      ' for more details.'
+      ' for the full message or use the non-minified dev environment' +
+      ' for full errors and additional helpful warnings.'
     );
   });
 });

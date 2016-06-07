@@ -17,20 +17,21 @@ var errorMap = invertObject(existingErrorMap);
 module.exports = function(babel) {
   var t = babel.types;
 
-  var SEEN_SYMBOL = Symbol();
+  var SEEN_SYMBOL = Symbol('dev-expression-with-codes.seen');
 
-  function getProdInvariantId(path, localState) {
-    if (!localState.id) {
-      localState.id = path.scope.generateUidIdentifier('prodInvariant');
+  // Generate a hygienic identifier
+  function getProdInvariantIdentifier(path, localState) {
+    if (!localState.prodInvariantIdentifier) {
+      localState.prodInvariantIdentifier = path.scope.generateUidIdentifier('prodInvariant');
       path.scope.getProgramParent().push({
-        id: localState.id,
+        id: localState.prodInvariantIdentifier,
         init: t.callExpression(
           t.identifier('require'),
           [t.stringLiteral('reactProdInvariant')]
         ),
       });
     }
-    return localState.id;
+    return localState.prodInvariantIdentifier;
   }
 
   var DEV_EXPRESSION = t.binaryExpression(
@@ -49,7 +50,7 @@ module.exports = function(babel) {
 
   return {
     pre: function() {
-      this.id = null;
+      this.prodInvariantIdentifier = null;
     },
 
     visitor: {
@@ -59,7 +60,7 @@ module.exports = function(babel) {
           if (process.env.NODE_ENV === 'test') {
             return;
           }
-          // replace __DEV__ with process.env.NODE_ENV !== 'production'
+          // Replace __DEV__ with process.env.NODE_ENV !== 'production'
           if (path.isIdentifier({name: '__DEV__'})) {
             path.replaceWith(DEV_EXPRESSION);
           }
@@ -72,7 +73,7 @@ module.exports = function(babel) {
           if (node[SEEN_SYMBOL]) {
             return;
           }
-          // Insert `var _hygienicVarName = require('reactProdInvariant');`
+          // Insert `var PROD_INVARIANT = require('reactProdInvariant');`
           // before all `require('invariant')`s.
           // NOTE it doesn't support ES6 imports yet.
           if (
@@ -81,7 +82,7 @@ module.exports = function(babel) {
             path.get('arguments')[0].isStringLiteral({value: 'invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
-            getProdInvariantId(path, this);
+            getProdInvariantIdentifier(path, this);
           } else if (path.get('callee').isIdentifier({name: 'invariant'})) {
             // Turns this code:
             //
@@ -98,17 +99,17 @@ module.exports = function(babel) {
             // }
             //
             // where
-            // - `XYZ` is an error code: an unique identifier (a number string)
+            // - `XYZ` is an error code: a unique identifier (a number string)
             //   that references a verbose error message.
             //   The mapping is stored in `scripts/error-codes/codes.json`.
-            // - `PROD_INVARIANT` is the `reactProdInvariant` function that always throw with an error URL like
+            // - `PROD_INVARIANT` is the `reactProdInvariant` function that always throws with an error URL like
             //   http://facebook.github.io/react/docs/error-codes.html?invariant=XYZ&args[]=foo&args[]=bar
             //
             // Specifically this does 3 things:
             // 1. Checks the condition first, preventing an extra function call.
             // 2. Adds an environment check so that verbose error messages aren't
             //    shipped to production.
-            // 3. Rewrite the call to `invariant` in production to `reactProdInvariant`
+            // 3. Rewrites the call to `invariant` in production to `reactProdInvariant`
             //   - `reactProdInvariant` is always renamed to avoid shadowing
             // The generated code is longer than the original code but will dead
             // code removal in a minifier will strip that out.
@@ -137,7 +138,7 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var localInvariantId = getProdInvariantId(path, this);
+            var localInvariantId = getProdInvariantIdentifier(path, this);
             var prodInvariant = t.callExpression(localInvariantId, [
               t.stringLiteral(prodErrorId),
             ].concat(node.arguments.slice(2)));

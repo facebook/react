@@ -14,22 +14,24 @@
  * WARNING: DO NOT manually require this module.
  * This is a replacement for `invariant(...)` used by the error code system
  * and will _only_ be required by the corresponding babel pass.
- * It always throw.
+ * It always throws.
  */
-function reactProdInvariant(code, a, b, c, d, e, f) {
+function reactProdInvariant(code) {
   var argCount = arguments.length - 1;
 
   var message = (
-    'React: production error #' + code + '. ' +
-    'Visit http://facebook.github.io/react/docs/' +
-    'error-codes.html?invariant=' + code
+    'Minified React error #' + code + '; visit ' +
+    'http://facebook.github.io/react/docs/error-codes.html?invariant=' + code
   );
 
   for (var argIdx = 0; argIdx < argCount; argIdx++) {
     message += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
   }
 
-  message += ' for more details.';
+  message += (
+    ' for the full message or use the non-minified dev environment' +
+    ' for full errors and additional helpful warnings.'
+  );
 
   var error = new Error(message);
   error.name = 'Invariant Violation';
