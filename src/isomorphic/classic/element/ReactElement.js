@@ -196,8 +196,8 @@ ReactElement.createElement = function(type, config, children) {
   }
 
   // Resolve default props
-  if (type && type.defaultProps) {
-    var defaultProps = type.defaultProps;
+  if (type && (type.defaultProps || (type.prototype && type.prototype.defaultProps))) {
+    var defaultProps = type.defaultProps || type.prototype.defaultProps;
     for (propName in defaultProps) {
       if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
