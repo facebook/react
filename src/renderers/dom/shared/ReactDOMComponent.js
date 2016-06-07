@@ -654,15 +654,34 @@ ReactDOMComponent.Mixin = {
           inputPostMount,
           this
         );
+        if (props.autoFocus) {
+          transaction.getReactMountReady().enqueue(
+            AutoFocusUtils.focusDOMComponent,
+            this
+          );
+        }
         break;
       case 'textarea':
         transaction.getReactMountReady().enqueue(
           textareaPostMount,
           this
         );
+        if (props.autoFocus) {
+          transaction.getReactMountReady().enqueue(
+            AutoFocusUtils.focusDOMComponent,
+            this
+          );
+        }
+        break;
+      case 'select':
+        if (props.autoFocus) {
+          transaction.getReactMountReady().enqueue(
+            AutoFocusUtils.focusDOMComponent,
+            this
+          );
+        }
         break;
       case 'button':
-      case 'select':
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
             AutoFocusUtils.focusDOMComponent,
