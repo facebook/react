@@ -27,114 +27,114 @@ var {
   YieldComponent,
 } = ReactTypesOfWork;
 
-function updateFunctionalComponent(unitOfWork) {
-  var fn = unitOfWork.type;
-  var props = unitOfWork.input;
+function updateFunctionalComponent(workInProgress) {
+  var fn = workInProgress.type;
+  var props = workInProgress.input;
   console.log('update fn:', fn.name);
   var nextChildren = fn(props);
 
-  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
-    unitOfWork,
-    unitOfWork.child,
+  workInProgress.child = ReactChildFiber.reconcileChildFibers(
+    workInProgress,
+    workInProgress.child,
     nextChildren
   );
 }
 
-function updateHostComponent(unitOfWork) {
-  console.log('host component', unitOfWork.type, typeof unitOfWork.input.children === 'string' ? unitOfWork.input.children : '');
+function updateHostComponent(workInProgress) {
+  console.log('host component', workInProgress.type, typeof workInProgress.input.children === 'string' ? workInProgress.input.children : '');
 
-  var nextChildren = unitOfWork.input.children;
-  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
-    unitOfWork,
-    unitOfWork.child,
+  var nextChildren = workInProgress.input.children;
+  workInProgress.child = ReactChildFiber.reconcileChildFibers(
+    workInProgress,
+    workInProgress.child,
     nextChildren
   );
 }
 
-function mountIndeterminateComponent(unitOfWork) {
-  var fn = unitOfWork.type;
-  var props = unitOfWork.input;
+function mountIndeterminateComponent(workInProgress) {
+  var fn = workInProgress.type;
+  var props = workInProgress.input;
   var value = fn(props);
   if (typeof value === 'object' && value && typeof value.render === 'function') {
     console.log('performed work on class:', fn.name);
     // Proceed under the assumption that this is a class instance
-    unitOfWork.tag = ClassComponent;
+    workInProgress.tag = ClassComponent;
   } else {
     console.log('performed work on fn:', fn.name);
     // Proceed under the assumption that this is a functional component
-    unitOfWork.tag = FunctionalComponent;
+    workInProgress.tag = FunctionalComponent;
   }
-  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
-    unitOfWork,
-    unitOfWork.child,
+  workInProgress.child = ReactChildFiber.reconcileChildFibers(
+    workInProgress,
+    workInProgress.child,
     value
   );
 }
 
-function updateCoroutineComponent(unitOfWork) {
-  var coroutine = (unitOfWork.input : ?ReactCoroutine);
+function updateCoroutineComponent(workInProgress) {
+  var coroutine = (workInProgress.input : ?ReactCoroutine);
   if (!coroutine) {
     throw new Error('Should be resolved by now');
   }
-  console.log('begin coroutine', unitOfWork.type.name);
-  unitOfWork.child = ReactChildFiber.reconcileChildFibers(
-    unitOfWork,
-    unitOfWork.child,
+  console.log('begin coroutine', workInProgress.type.name);
+  workInProgress.child = ReactChildFiber.reconcileChildFibers(
+    workInProgress,
+    workInProgress.child,
     coroutine.children
   );
 }
 
-function beginWork(unitOfWork : Fiber) : ?Fiber {
-  const alt = unitOfWork.alternate;
-  if (alt && unitOfWork.input === alt.memoizedInput) {
+function beginWork(workInProgress : Fiber) : ?Fiber {
+  const alt = workInProgress.alternate;
+  if (alt && workInProgress.input === alt.memoizedInput) {
     // The most likely scenario is that the previous copy of the tree contains
     // the same input as the new one. In that case, we can just copy the output
     // and children from that node.
-    unitOfWork.output = alt.output;
-    unitOfWork.child = alt.child;
+    workInProgress.output = alt.output;
+    workInProgress.child = alt.child;
     return null;
   }
-  if (unitOfWork.input === unitOfWork.memoizedInput) {
+  if (workInProgress.input === workInProgress.memoizedInput) {
     // In a ping-pong scenario, this version could actually contain the
     // old input. In that case, we can just bail out.
     return null;
   }
-  switch (unitOfWork.tag) {
+  switch (workInProgress.tag) {
     case IndeterminateComponent:
-      mountIndeterminateComponent(unitOfWork);
+      mountIndeterminateComponent(workInProgress);
       break;
     case FunctionalComponent:
-      updateFunctionalComponent(unitOfWork);
+      updateFunctionalComponent(workInProgress);
       break;
     case ClassComponent:
-      console.log('class component', unitOfWork.input.type.name);
+      console.log('class component', workInProgress.input.type.name);
       break;
     case HostComponent:
-      updateHostComponent(unitOfWork);
+      updateHostComponent(workInProgress);
       break;
     case CoroutineHandlerPhase:
       // This is a restart. Reset the tag to the initial phase.
-      unitOfWork.tag = CoroutineComponent;
+      workInProgress.tag = CoroutineComponent;
       // Intentionally fall through since this is now the same.
     case CoroutineComponent:
-      updateCoroutineComponent(unitOfWork);
+      updateCoroutineComponent(workInProgress);
       // This doesn't take arbitrary time so we could synchronously just begin
-      // eagerly do the work of unitOfWork.child as an optimization.
-      if (unitOfWork.child) {
-        return beginWork(unitOfWork.child);
+      // eagerly do the work of workInProgress.child as an optimization.
+      if (workInProgress.child) {
+        return beginWork(workInProgress.child);
       }
       break;
     case YieldComponent:
       // A yield component is just a placeholder, we can just run through the
       // next one immediately.
-      if (unitOfWork.sibling) {
-        return beginWork(unitOfWork.sibling);
+      if (workInProgress.sibling) {
+        return beginWork(workInProgress.sibling);
       }
       return null;
     default:
       throw new Error('Unknown unit of work tag');
   }
-  return unitOfWork.child;
+  return workInProgress.child;
 }
 
 exports.beginWork = beginWork;

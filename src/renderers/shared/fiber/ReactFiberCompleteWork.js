@@ -54,8 +54,8 @@ function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
   }
 }
 
-function moveCoroutineToHandlerPhase(unitOfWork : Fiber) {
-  var coroutine = (unitOfWork.input : ?ReactCoroutine);
+function moveCoroutineToHandlerPhase(workInProgress : Fiber) {
+  var coroutine = (workInProgress.input : ?ReactCoroutine);
   if (!coroutine) {
     throw new Error('Should be resolved by now');
   }
@@ -67,12 +67,12 @@ function moveCoroutineToHandlerPhase(unitOfWork : Fiber) {
   // So this requires nested handlers.
   // Note: This doesn't mutate the alternate node. I don't think it needs to
   // since this stage is reset for every pass.
-  unitOfWork.tag = CoroutineHandlerPhase;
+  workInProgress.tag = CoroutineHandlerPhase;
 
   // Build up the yields.
   // TODO: Compare this to a generator or opaque helpers like Children.
   var yields : Array<ReifiedYield> = [];
-  var child = unitOfWork.child;
+  var child = workInProgress.child;
   while (child) {
     recursivelyFillYields(yields, child.output);
     child = child.sibling;
@@ -81,34 +81,34 @@ function moveCoroutineToHandlerPhase(unitOfWork : Fiber) {
   var props = coroutine.props;
   var nextChildren = fn(props, yields);
 
-  unitOfWork.stateNode = ReactChildFiber.reconcileChildFibers(
-    unitOfWork,
-    unitOfWork.stateNode,
+  workInProgress.stateNode = ReactChildFiber.reconcileChildFibers(
+    workInProgress,
+    workInProgress.stateNode,
     nextChildren
   );
-  return unitOfWork.stateNode;
+  return workInProgress.stateNode;
 }
 
-exports.completeWork = function(unitOfWork : Fiber) : ?Fiber {
-  switch (unitOfWork.tag) {
+exports.completeWork = function(workInProgress : Fiber) : ?Fiber {
+  switch (workInProgress.tag) {
     case FunctionalComponent:
-      console.log('/functional component', unitOfWork.type.name);
-      transferOutput(unitOfWork.child, unitOfWork);
+      console.log('/functional component', workInProgress.type.name);
+      transferOutput(workInProgress.child, workInProgress);
       break;
     case ClassComponent:
-      console.log('/class component', unitOfWork.type.name);
-      transferOutput(unitOfWork.child, unitOfWork);
+      console.log('/class component', workInProgress.type.name);
+      transferOutput(workInProgress.child, workInProgress);
       break;
     case HostComponent:
-      console.log('/host component', unitOfWork.type);
+      console.log('/host component', workInProgress.type);
       break;
     case CoroutineComponent:
-      console.log('/coroutine component', unitOfWork.input.handler.name);
-      return moveCoroutineToHandlerPhase(unitOfWork);
+      console.log('/coroutine component', workInProgress.input.handler.name);
+      return moveCoroutineToHandlerPhase(workInProgress);
     case CoroutineHandlerPhase:
-      transferOutput(unitOfWork.stateNode, unitOfWork);
+      transferOutput(workInProgress.stateNode, workInProgress);
       // Reset the tag to now be a first phase coroutine.
-      unitOfWork.tag = CoroutineComponent;
+      workInProgress.tag = CoroutineComponent;
       break;
     case YieldComponent:
       // Does nothing.
