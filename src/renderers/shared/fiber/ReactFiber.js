@@ -25,21 +25,38 @@ var ReactElement = require('ReactElement');
 
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 
-export type Fiber = {
+// An Instance is shared between all versions of a component. We can easily
+// break this out into a separate object to avoid copying so much to the
+// alternate versions of the tree. We put this on a single object for now to
+// minimize the number of objects created during the initial render.
+type Instance = {
 
   // Tag identifying the type of fiber.
   tag: number,
 
-  // Singly Linked List Tree Structure.
-  parent: ?Fiber, // Consider a regenerated temporary parent stack instead.
-  child: ?Fiber,
-  sibling: ?Fiber,
+  // The parent Fiber used to create this one. The type is constrained to the
+  // Instance part of the Fiber since it is not safe to traverse the tree from
+  // the instance.
+  parent: ?Instance, // Consider a regenerated temporary parent stack instead.
 
   // Unique identifier of this child.
-  key: ?string,
+  key: null | string,
 
   // The function/class/module associated with this fiber.
   type: any,
+
+  // The local state associated with this fiber.
+  stateNode: ?Object,
+
+};
+
+// A Fiber is work on a Component that needs to be done or was done. There can
+// be more than one per component.
+export type Fiber = Instance & {
+
+  // Singly Linked List Tree Structure.
+  child: ?Fiber,
+  sibling: ?Fiber,
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
@@ -47,6 +64,8 @@ export type Fiber = {
 
   // Input is the data coming into process this fiber. Arguments. Props.
   input: any, // This type will be more specific once we overload the tag.
+  // TODO: I think that there is a way to merge input and memoizedInput somehow.
+  memoizedInput: any, // The input used to create the output.
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
@@ -54,30 +73,42 @@ export type Fiber = {
   // This will be used to quickly determine if a subtree has no pending changes.
   hasPendingChanges: bool,
 
-  // The local state associated with this fiber.
-  stateNode: ?Object,
+  // This is a pooled version of a Fiber. Every fiber that gets updated will
+  // eventually have a pair. There are cases when we can clean up pairs to save
+  // memory if we need to.
+  alternate: ?Fiber,
 
 };
 
 var createFiber = function(tag : number, key : null | string) : Fiber {
   return {
 
+    // Instance
+
     tag: tag,
 
     parent: null,
+
+    key: key,
+
+    type: null,
+
+    stateNode: null,
+
+    // Fiber
+
     child: null,
     sibling: null,
 
-    key: key,
-    type: null,
     ref: null,
 
     input: null,
+    memoizedInput: null,
     output: null,
 
     hasPendingChanges: true,
 
-    stateNode: null,
+    alternate: null,
 
   };
 };
@@ -85,6 +116,33 @@ var createFiber = function(tag : number, key : null | string) : Fiber {
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
+
+// This is used to create an alternate fiber to do work on.
+exports.cloneFiber = function(fiber : Fiber) : Fiber {
+  // We use a double buffering pooling technique because we know that we'll only
+  // ever need at most two versions of a tree. We pool the "other" unused node
+  // that we're free to reuse. This is lazily created to avoid allocating extra
+  // objects for things that are never updated. It also allow us to reclaim the
+  // extra memory if needed.
+  if (fiber.alternate) {
+    return fiber.alternate;
+  }
+  // This should not have an alternate already
+  var alt = createFiber(fiber.tag, fiber.key);
+
+  if (fiber.parent) {
+    // TODO: This assumes the parent's alternate is already created.
+    // Stop using the alternates of parents once we have a parent stack.
+    // $FlowFixMe: This downcast is not safe. It is intentionally an error.
+    alt.parent = fiber.parent.alternate;
+  }
+
+  alt.type = fiber.type;
+  alt.stateNode = fiber.stateNode;
+  alt.alternate = fiber;
+  fiber.alternate = alt;
+  return alt;
+};
 
 exports.createFiberFromElement = function(element : ReactElement) {
   const fiber = exports.createFiberFromElementType(element.type, element.key);

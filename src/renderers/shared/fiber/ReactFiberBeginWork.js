@@ -30,7 +30,7 @@ var {
 function updateFunctionalComponent(unitOfWork) {
   var fn = unitOfWork.type;
   var props = unitOfWork.input;
-  console.log('perform work on:', fn.name);
+  console.log('update fn:', fn.name);
   var nextChildren = fn(props);
 
   unitOfWork.child = ReactChildFiber.reconcileChildFibers(
@@ -85,6 +85,20 @@ function updateCoroutineComponent(unitOfWork) {
 }
 
 function beginWork(unitOfWork : Fiber) : ?Fiber {
+  const alt = unitOfWork.alternate;
+  if (alt && unitOfWork.input === alt.memoizedInput) {
+    // The most likely scenario is that the previous copy of the tree contains
+    // the same input as the new one. In that case, we can just copy the output
+    // and children from that node.
+    unitOfWork.output = alt.output;
+    unitOfWork.child = alt.child;
+    return null;
+  }
+  if (unitOfWork.input === unitOfWork.memoizedInput) {
+    // In a ping-pong scenario, this version could actually contain the
+    // old input. In that case, we can just bail out.
+    return null;
+  }
   switch (unitOfWork.tag) {
     case IndeterminateComponent:
       mountIndeterminateComponent(unitOfWork);

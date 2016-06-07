@@ -34,6 +34,7 @@ function transferOutput(child : ?Fiber, parent : Fiber) {
   // avoid unnecessary traversal. When we have multiple output, we just pass
   // the linked list of fibers that has the individual output values.
   parent.output = (child && !child.sibling) ? child.output : child;
+  parent.memoizedInput = parent.input;
 }
 
 function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
@@ -64,6 +65,8 @@ function moveCoroutineToHandlerPhase(unitOfWork : Fiber) {
   // single component, or at least tail call optimize nested ones. Currently
   // that requires additional fields that we don't want to add to the fiber.
   // So this requires nested handlers.
+  // Note: This doesn't mutate the alternate node. I don't think it needs to
+  // since this stage is reset for every pass.
   unitOfWork.tag = CoroutineHandlerPhase;
 
   // Build up the yields.
