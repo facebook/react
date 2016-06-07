@@ -97,7 +97,7 @@ describe('ReactDOMProduction', function() {
       ReactDOM.render(<Component />, container);
     }).toThrowError(
       'Minified React error #109; visit ' +
-      'http://facebook.github.io/react/docs/error-codes.html?invariant=109&args[]=Component' +
+      'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
       ' for the full message or use the non-minified dev environment' +
       ' for full errors and additional helpful warnings.'
     );

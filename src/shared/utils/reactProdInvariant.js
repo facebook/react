@@ -21,7 +21,7 @@ function reactProdInvariant(code) {
 
   var message = (
     'Minified React error #' + code + '; visit ' +
-    'http://facebook.github.io/react/docs/error-codes.html?invariant=' + code
+    'http://facebook.github.io/react/docs/error-decoder.html?invariant=' + code
   );
 
   for (var argIdx = 0; argIdx < argCount; argIdx++) {
