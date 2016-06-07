@@ -13,7 +13,9 @@ When designing interfaces, break down the common design elements (buttons, form 
 As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. Note that for performance reasons `propTypes` is only checked in development mode. Here is an example documenting the different validators provided:
 
 ```javascript
-const MyComponent = (props) => <div>Hello React</div>;
+function MyComponent(props) {
+  return <div>Hello React</div>;
+}
 
 MyComponent.propTypes = {
   // You can declare that a prop is a specific JS primitive. By default, these
@@ -99,7 +101,7 @@ MyComponent.propTypes = {
 With `React.PropTypes.element` you can specify that only a single child can be passed to a component as children.
 
 ```javascript
-const MyComponent = (props) => {
+function MyComponent(props) {
   return (
     <div>
       {props.children} // This must be exactly one element or it will warn.
@@ -117,7 +119,7 @@ MyComponent.propTypes = {
 React lets you define default values for your `props` in a very declarative way:
 
 ```javascript
-const ComponentWithDefaultProps = (props) => {
+function ComponentWithDefaultProps(props) {
   return (
     <div>
       {props.value} // If not specified by the parent component, will use the default value
@@ -137,7 +139,7 @@ In this example, `ComponentWithDefaultProps.defaultProps` will be cached and use
 A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
-const CheckLink = (props) => {
+function CheckLink(props) {
   // This takes any props passed to CheckLink and copies them to <a>
   return (
     <a {...props}>{'√ '}{props.children}</a>
@@ -240,7 +242,11 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 Or using the new ES6 arrow syntax:
 
 ```javascript
-const HelloMessage = (props) => <div>Hello {props.name}</div>;
+const HelloMessage = (props) => {
+  return (
+    <div>Hello {props.name}</div>
+  );
+}
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
