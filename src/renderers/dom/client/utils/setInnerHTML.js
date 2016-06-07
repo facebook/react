@@ -18,6 +18,9 @@ var NONVISIBLE_TEST = /<(!--|link|noscript|meta|script|style)[ \r\n\t\f\/>]/;
 
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 
+// SVG temp container for IE lacking innerHTML
+var reusableSVGContainer;
+
 /**
  * Set the innerHTML property of a node, ensuring that whitespace is preserved
  * even in IE8.
@@ -28,7 +31,19 @@ var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunc
  */
 var setInnerHTML = createMicrosoftUnsafeLocalFunction(
   function(node, html) {
-    node.innerHTML = html;
+    // IE does not have innerHTML for SVG nodes, so instead we inject the
+    // new markup in a temp node and then move the child nodes across into
+    // the target node
+    if (typeof SVGElement !== 'undefined' && node instanceof SVGElement) {
+      reusableSVGContainer = reusableSVGContainer || document.createElement('div');
+      reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';
+      var svg = reusableSVGContainer.firstChild;
+      while (svg.firstChild) {
+        node.appendChild(svg.firstChild);
+      }
+    } else {
+      node.innerHTML = html;
+    }
   }
 );
 
