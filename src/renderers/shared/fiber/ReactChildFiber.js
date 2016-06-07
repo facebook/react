@@ -28,7 +28,7 @@ var {
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
 
-function createSubsequentChild(parent : Fiber, previousSibling : Fiber, newChildren) : Fiber {
+function createSubsequentChild(parent : Fiber, nextReusable : ?Fiber, previousSibling : Fiber, newChildren) : Fiber {
   if (typeof newChildren !== 'object' || newChildren === null) {
     return previousSibling;
   }
@@ -36,6 +36,18 @@ function createSubsequentChild(parent : Fiber, previousSibling : Fiber, newChild
   switch (newChildren.$$typeof) {
     case REACT_ELEMENT_TYPE: {
       const element = (newChildren : ReactElement<any>);
+      if (nextReusable &&
+          element.type === nextReusable.type &&
+          element.key === nextReusable.key) {
+        // TODO: This is not sufficient since previous siblings could be new.
+        // Will fix reconciliation properly later.
+        const clone = ReactFiber.cloneFiber(nextReusable);
+        clone.input = element.props;
+        clone.child = nextReusable.child;
+        clone.sibling = null;
+        previousSibling.sibling = clone;
+        return clone;
+      }
       const child = ReactFiber.createFiberFromElement(element);
       previousSibling.sibling = child;
       child.parent = parent;
@@ -64,7 +76,11 @@ function createSubsequentChild(parent : Fiber, previousSibling : Fiber, newChild
   if (Array.isArray(newChildren)) {
     let prev : Fiber = previousSibling;
     for (var i = 0; i < newChildren.length; i++) {
-      prev = createSubsequentChild(parent, prev, newChildren[i]);
+      let reusable = null;
+      if (prev.alternate) {
+        reusable = prev.alternate.sibling;
+      }
+      prev = createSubsequentChild(parent, reusable, prev, newChildren[i]);
     }
     return prev;
   } else {
@@ -81,6 +97,17 @@ function createFirstChild(parent, newChildren) {
   switch (newChildren.$$typeof) {
     case REACT_ELEMENT_TYPE: {
       const element = (newChildren : ReactElement<any>);
+      const existingChild : ?Fiber = parent.child;
+      if (existingChild &&
+          element.type === existingChild.type &&
+          element.key === existingChild.key) {
+        // Get the clone of the existing fiber.
+        const clone = ReactFiber.cloneFiber(existingChild);
+        clone.input = element.props;
+        clone.child = existingChild.child;
+        clone.sibling = null;
+        return clone;
+      }
       const child = ReactFiber.createFiberFromElement(element);
       child.parent = parent;
       return child;
@@ -114,7 +141,11 @@ function createFirstChild(parent, newChildren) {
         prev = createFirstChild(parent, newChildren[i]);
         first = prev;
       } else {
-        prev = createSubsequentChild(parent, prev, newChildren[i]);
+        let reusable = null;
+        if (prev.alternate) {
+          reusable = prev.alternate.sibling;
+        }
+        prev = createSubsequentChild(parent, reusable, prev, newChildren[i]);
       }
     }
     return first;

@@ -49,18 +49,23 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
 
   let nextUnitOfWork : ?Fiber = null;
 
-  function completeUnitOfWork(unitOfWork : Fiber) : ?Fiber {
+  function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
-      var next = completeWork(unitOfWork);
+      var next = completeWork(workInProgress);
       if (next) {
         // If completing this work spawned new work, do that next.
         return next;
-      } else if (unitOfWork.sibling) {
+      } else if (workInProgress.sibling) {
         // If there is more work to do in this parent, do that next.
-        return unitOfWork.sibling;
-      } else if (unitOfWork.parent) {
+        return workInProgress.sibling;
+      } else if (workInProgress.parent) {
         // If there's no more work in this parent. Complete the parent.
-        unitOfWork = unitOfWork.parent;
+        // TODO: Stop using the parent for this purpose. I think this will break
+        // down in edge cases because when nodes are reused during bailouts, we
+        // don't know which of two parents was used. Instead we should maintain
+        // a temporary manual stack.
+        // $FlowFixMe: This downcast is not safe. It is intentionally an error.
+        workInProgress = workInProgress.parent;
       } else {
         // If we're at the root, there's no more work to do.
         return null;
@@ -68,14 +73,14 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
     }
   }
 
-  function performUnitOfWork(unitOfWork : Fiber) : ?Fiber {
-    var next = beginWork(unitOfWork);
+  function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
+    var next = beginWork(workInProgress);
     if (next) {
       // If this spawns new work, do that next.
       return next;
     } else {
       // Otherwise, complete the current work.
-      return completeUnitOfWork(unitOfWork);
+      return completeUnitOfWork(workInProgress);
     }
   }
 
@@ -107,13 +112,23 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
   }
   */
 
+  let rootFiber : ?Fiber = null;
+
   return {
 
     mountNewRoot(element : ReactElement<any>) : OpaqueID {
 
       ensureLowPriIsScheduled();
 
-      nextUnitOfWork = ReactFiber.createFiberFromElement(element);
+      // TODO: Unify this with ReactChildFiber. We can't now because the parent
+      // is passed. Should be doable though. Might require a wrapper don't know.
+      if (rootFiber && rootFiber.type === element.type && rootFiber.key === element.key) {
+        nextUnitOfWork = rootFiber;
+        rootFiber.input = element.props;
+        return {};
+      }
+
+      nextUnitOfWork = rootFiber = ReactFiber.createFiberFromElement(element);
 
       return {};
     },

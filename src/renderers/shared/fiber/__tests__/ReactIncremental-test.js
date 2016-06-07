@@ -66,4 +66,53 @@ describe('ReactIncremental', function() {
     expect(barCalled).toBe(true);
   });
 
+  it('updates a previous render', function() {
+
+    var ops = [];
+
+    function Header() {
+      ops.push('Header');
+      return <h1>Hi</h1>;
+    }
+
+    function Content(props) {
+      ops.push('Content');
+      return <div>{props.children}</div>;
+    }
+
+    function Footer() {
+      ops.push('Footer');
+      return <footer>Bye</footer>;
+    }
+
+    var header = <Header />;
+    var footer = <Footer />;
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          {header}
+          <Content>{props.text}</Content>
+          {footer}
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Foo', 'Header', 'Content', 'Footer']);
+
+    ops = [];
+
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flush();
+
+    // Since this is an update, it should bail out and reuse the work from
+    // Header and Content.
+    expect(ops).toEqual(['Foo', 'Content']);
+
+  });
+
 });
