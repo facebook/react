@@ -54,7 +54,7 @@ function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
   }
 }
 
-function moveCoroutineToHandlerPhase(workInProgress : Fiber) {
+function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
   var coroutine = (workInProgress.input : ?ReactCoroutine);
   if (!coroutine) {
     throw new Error('Should be resolved by now');
@@ -81,15 +81,16 @@ function moveCoroutineToHandlerPhase(workInProgress : Fiber) {
   var props = coroutine.props;
   var nextChildren = fn(props, yields);
 
+  var currentFirstChild = current ? current.stateNode : null;
   workInProgress.stateNode = ReactChildFiber.reconcileChildFibers(
     workInProgress,
-    workInProgress.stateNode,
+    currentFirstChild,
     nextChildren
   );
   return workInProgress.stateNode;
 }
 
-exports.completeWork = function(workInProgress : Fiber) : ?Fiber {
+exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
   switch (workInProgress.tag) {
     case FunctionalComponent:
       console.log('/functional component', workInProgress.type.name);
@@ -104,7 +105,7 @@ exports.completeWork = function(workInProgress : Fiber) : ?Fiber {
       break;
     case CoroutineComponent:
       console.log('/coroutine component', workInProgress.input.handler.name);
-      return moveCoroutineToHandlerPhase(workInProgress);
+      return moveCoroutineToHandlerPhase(current, workInProgress);
     case CoroutineHandlerPhase:
       transferOutput(workInProgress.stateNode, workInProgress);
       // Reset the tag to now be a first phase coroutine.
