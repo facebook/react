@@ -34,15 +34,15 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(
     // IE does not have innerHTML for SVG nodes, so instead we inject the
     // new markup in a temp node and then move the child nodes across into
     // the target node
-    if (typeof SVGElement !== 'undefined' && node instanceof SVGElement) {
+    if (node.innerHTML) {
+      node.innerHTML = html;
+    } else {
       reusableSVGContainer = reusableSVGContainer || document.createElement('div');
       reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';
       var svg = reusableSVGContainer.firstChild;
       while (svg.firstChild) {
         node.appendChild(svg.firstChild);
       }
-    } else {
-      node.innerHTML = html;
     }
   }
 );
