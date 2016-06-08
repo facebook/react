@@ -2,7 +2,6 @@
   "presets": ["react"],
   "ignore": ["third_party"],
   "plugins": [
-    "fbjs-scripts/babel-6/dev-expression",
     "syntax-trailing-function-commas",
     "babel-plugin-transform-object-rest-spread",
     "transform-es2015-template-literals",
