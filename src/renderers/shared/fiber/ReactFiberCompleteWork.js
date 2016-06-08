@@ -95,14 +95,14 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
     case FunctionalComponent:
       console.log('/functional component', workInProgress.type.name);
       transferOutput(workInProgress.child, workInProgress);
-      break;
+      return null;
     case ClassComponent:
       console.log('/class component', workInProgress.type.name);
       transferOutput(workInProgress.child, workInProgress);
-      break;
+      return null;
     case HostComponent:
       console.log('/host component', workInProgress.type);
-      break;
+      return null;
     case CoroutineComponent:
       console.log('/coroutine component', workInProgress.input.handler.name);
       return moveCoroutineToHandlerPhase(current, workInProgress);
@@ -110,10 +110,10 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
       transferOutput(workInProgress.stateNode, workInProgress);
       // Reset the tag to now be a first phase coroutine.
       workInProgress.tag = CoroutineComponent;
-      break;
+      return null;
     case YieldComponent:
       // Does nothing.
-      break;
+      return null;
 
     // Error cases
     case IndeterminateComponent:
@@ -121,5 +121,4 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
     default:
       throw new Error('Unknown unit of work tag');
   }
-  return null;
 };
