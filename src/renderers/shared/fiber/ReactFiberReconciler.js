@@ -51,7 +51,12 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
 
   function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
-      var next = completeWork(workInProgress);
+      // The current, flushed, state of this fiber is the alternate.
+      // Ideally nothing should rely on this, but relying on it here
+      // means that we don't need an additional field on the work in
+      // progress.
+      const current = workInProgress.alternate;
+      const next = completeWork(current, workInProgress);
       if (next) {
         // If completing this work spawned new work, do that next.
         return next;
@@ -74,7 +79,12 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
   }
 
   function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
-    var next = beginWork(workInProgress);
+    // The current, flushed, state of this fiber is the alternate.
+    // Ideally nothing should rely on this, but relying on it here
+    // means that we don't need an additional field on the work in
+    // progress.
+    const current = workInProgress.alternate;
+    const next = beginWork(current, workInProgress);
     if (next) {
       // If this spawns new work, do that next.
       return next;
@@ -123,8 +133,8 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
       // TODO: Unify this with ReactChildFiber. We can't now because the parent
       // is passed. Should be doable though. Might require a wrapper don't know.
       if (rootFiber && rootFiber.type === element.type && rootFiber.key === element.key) {
-        nextUnitOfWork = rootFiber;
-        rootFiber.input = element.props;
+        nextUnitOfWork = ReactFiber.cloneFiber(rootFiber);
+        nextUnitOfWork.input = element.props;
         return {};
       }
 
