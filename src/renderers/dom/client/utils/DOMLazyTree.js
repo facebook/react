@@ -12,6 +12,7 @@
 'use strict';
 
 var DOMNamespaces = require('DOMNamespaces');
+var setInnerHTML = require('setInnerHTML');
 
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 var setTextContent = require('setTextContent');
@@ -50,7 +51,7 @@ function insertTreeChildren(tree) {
       insertTreeBefore(node, children[i], null);
     }
   } else if (tree.html != null) {
-    node.innerHTML = tree.html;
+    setInnerHTML(node, tree.html);
   } else if (tree.text != null) {
     setTextContent(node, tree.text);
   }
@@ -96,7 +97,7 @@ function queueHTML(tree, html) {
   if (enableLazy) {
     tree.html = html;
   } else {
-    tree.node.innerHTML = html;
+    setInnerHTML(tree.node, html);
   }
 }
 
