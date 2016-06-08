@@ -27,10 +27,12 @@ describe('setInnerHTML', function() {
   describe('when the node does not innerHTML property', () => {
     it('sets innerHTML on it', function() {
       var node = document.createElement('svg');
-      delete node.innerHTML;
+      Object.defineProperty(node, 'innerHTML', { get: function() {} });
+
       var html = '<circle cx="0" cy="6" r="5"></circle>';
       setInnerHTML(node, html);
-      expect(node.innerHTML).toBe(html);
+
+      expect(node.outerHTML).toBe('<svg>' + html + '</svg>');
     });
   });
 });

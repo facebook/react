@@ -31,7 +31,7 @@ var reusableSVGContainer;
  */
 var setInnerHTML = createMicrosoftUnsafeLocalFunction(
   function(node, html) {
-    if ('innerHTML' in node) {
+    if (typeof node.innerHTML !== 'undefined') {
       node.innerHTML = html;
 
     // IE does not have innerHTML for SVG nodes, so instead we inject the
