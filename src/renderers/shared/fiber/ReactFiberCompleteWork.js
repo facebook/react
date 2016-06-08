@@ -18,7 +18,7 @@ import type { Fiber } from 'ReactFiber';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
 var ReactChildFiber = require('ReactChildFiber');
-var ReactTypesOfWork = require('ReactTypesOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -27,7 +27,7 @@ var {
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
-} = ReactTypesOfWork;
+} = ReactTypeOfWork;
 
 function transferOutput(child : ?Fiber, parent : Fiber) {
   // If we have a single result, we just pass that through as the output to

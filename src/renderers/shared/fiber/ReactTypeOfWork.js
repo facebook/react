@@ -6,13 +6,15 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactTypesOfWork
+ * @providesModule ReactTypeOfWork
  * @flow
  */
 
 'use strict';
 
-var TypesOfWork = {
+export type TypeOfWork = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+module.exports = {
   IndeterminateComponent: 0, // Before we know whether it is functional or class
   FunctionalComponent: 1,
   ClassComponent: 2,
@@ -21,5 +23,3 @@ var TypesOfWork = {
   CoroutineHandlerPhase: 5,
   YieldComponent: 6,
 };
-
-module.exports = TypesOfWork;
