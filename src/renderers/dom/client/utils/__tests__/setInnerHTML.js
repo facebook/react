@@ -12,6 +12,7 @@
 'use strict';
 
 var setInnerHTML = require('setInnerHTML');
+var DOMNamespaces = require('DOMNamespaces');
 
 describe('setInnerHTML', function() {
   describe('when the node has innerHTML property', () => {
@@ -23,11 +24,13 @@ describe('setInnerHTML', function() {
     });
   });
 
-  // SVGElements on IE don't have innerHTML
-  describe('when the node does not innerHTML property', () => {
+  describe('when the node does not have an innerHTML property', () => {
     it('sets innerHTML on it', function() {
-      // Create a mock node that lacks innerHTML
-      var node = { appendChild: jasmine.createSpy() };
+      // Create a mock node that looks like an SVG in IE (without innerHTML)
+      var node = {
+        namespaceURI: DOMNamespaces.svg,
+        appendChild: jasmine.createSpy(),
+      };
 
       var html = '<circle></circle><rect></rect>';
       setInnerHTML(node, html);
