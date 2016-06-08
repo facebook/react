@@ -40,12 +40,24 @@ StatelessComponent.prototype.render = function() {
 
 function warnIfInvalidElement(Component, element) {
   if (__DEV__) {
-    warning(
-      element === null || element === false || ReactElement.isValidElement(element),
-      '%s(...): A valid React element (or null) must be returned. You may have ' +
-      'returned undefined, an array or some other invalid object.',
-      Component.displayName || Component.name || 'Component'
-    );
+    var componentName = Component.displayName || Component.name || 'Component';
+    if (element === undefined && Component._isMockFunction) {
+      warning(
+        false,
+        '%s(...): Stateless functional components must return a valid React element, ' +
+        'but %s appears to be a mocked function which returned `undefined`. Consider ' +
+        'disabling mocking (jest.autoMockOff or jest.unmock) for this component or ' +
+        'writing a custom mock which returns a valid React element.',
+        componentName, componentName
+      );
+    } else {
+      warning(
+        element === null || element === false || ReactElement.isValidElement(element),
+        '%s(...): A valid React element (or null) must be returned. You may have ' +
+        'returned undefined, an array or some other invalid object.',
+        componentName
+      );
+    }
   }
 }
 

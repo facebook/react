@@ -125,6 +125,33 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
+  it('should mention if a function is a default mock', function() {
+    function MyComponent() {
+      return undefined;
+    }
+    MyComponent._isMockFunction = true;
+    spyOn(console, 'error');
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<MyComponent />);
+    }).toThrow();
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe('Warning: MyComponent(...): Stateless functional ' +
+      'components must return a valid React element, but MyComponent appears to be a mocked function ' +
+      'which returned `undefined`. Consider disabling mocking (jest.autoMockOff or jest.unmock) for ' +
+      'this component or writing a custom mock which returns a valid React element.'
+    );
+  });
+
+  it('should not warn if function is mock and value is not undefined', function() {
+    function MyComponent() {
+      return <div />;
+    }
+    MyComponent._isMockFunction = true;
+    spyOn(console, 'error');
+    ReactTestUtils.renderIntoDocument(<MyComponent />);
+    expect(console.error.calls.count()).toBe(0);
+  });
+
   it('should warn when given a ref', function() {
     spyOn(console, 'error');
 
