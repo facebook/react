@@ -359,7 +359,15 @@ function trapBubbledEventsLocal() {
           );
         }
       }
-
+      break;
+    case 'source':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topError,
+          'error',
+          node
+        ),
+      ];
       break;
     case 'img':
       inst._wrapperState.listeners = [
@@ -535,6 +543,7 @@ ReactDOMComponent.Mixin = {
       case 'img':
       case 'link':
       case 'object':
+      case 'source':
       case 'video':
         this._wrapperState = {
           listeners: null,
@@ -1143,6 +1152,7 @@ ReactDOMComponent.Mixin = {
       case 'img':
       case 'link':
       case 'object':
+      case 'source':
       case 'video':
         var listeners = this._wrapperState.listeners;
         if (listeners) {
