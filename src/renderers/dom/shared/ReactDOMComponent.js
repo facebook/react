@@ -713,6 +713,13 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = () => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
+      }
+    }
+
     return mountImage;
   },
 
@@ -932,6 +939,13 @@ ReactDOMComponent.Mixin = {
       // <select> value update needs to occur after <option> children
       // reconciliation
       transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, this);
+    }
+
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
+      }
     }
   },
 
