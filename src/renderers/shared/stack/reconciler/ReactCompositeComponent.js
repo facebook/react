@@ -46,6 +46,11 @@ function warnIfInvalidElement(Component, element) {
       'returned undefined, an array or some other invalid object.',
       Component.displayName || Component.name || 'Component'
     );
+    warning(
+      !Component.childContextTypes,
+      '%s(...): childContextTypes cannot be defined on a functional component.',
+      Component.displayName || Component.name || 'Component'
+    );
   }
 }
 
