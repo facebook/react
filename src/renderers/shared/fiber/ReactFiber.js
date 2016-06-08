@@ -12,14 +12,17 @@
 
 'use strict';
 
-var ReactTypesOfWork = require('ReactTypesOfWork');
+import type { TypeOfWork } from 'ReactTypeOfWork';
+import type { PriorityLevel } from 'ReactPriorityLevel';
+
+var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   ClassComponent,
   HostComponent,
   CoroutineComponent,
   YieldComponent,
-} = ReactTypesOfWork;
+} = ReactTypeOfWork;
 
 var ReactElement = require('ReactElement');
 
@@ -32,7 +35,7 @@ import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 type Instance = {
 
   // Tag identifying the type of fiber.
-  tag: number,
+  tag: TypeOfWork,
 
   // The parent Fiber used to create this one. The type is constrained to the
   // Instance part of the Fiber since it is not safe to traverse the tree from
@@ -71,7 +74,7 @@ export type Fiber = Instance & {
   output: any, // This type will be more specific once we overload the tag.
 
   // This will be used to quickly determine if a subtree has no pending changes.
-  hasPendingChanges: bool,
+  pendingWorkPriority: PriorityLevel,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -80,7 +83,7 @@ export type Fiber = Instance & {
 
 };
 
-var createFiber = function(tag : number, key : null | string) : Fiber {
+var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
   return {
 
     // Instance
@@ -106,7 +109,7 @@ var createFiber = function(tag : number, key : null | string) : Fiber {
     memoizedInput: null,
     output: null,
 
-    hasPendingChanges: true,
+    pendingWorkPriority: 0,
 
     alternate: null,
 

@@ -16,7 +16,7 @@ import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 
 var ReactChildFiber = require('ReactChildFiber');
-var ReactTypesOfWork = require('ReactTypesOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -25,7 +25,7 @@ var {
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
-} = ReactTypesOfWork;
+} = ReactTypeOfWork;
 
 function reconcileChildren(current, workInProgress, nextChildren) {
   workInProgress.child = ReactChildFiber.reconcileChildFibers(
