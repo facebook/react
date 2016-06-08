@@ -97,16 +97,16 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
   switch (workInProgress.tag) {
     case IndeterminateComponent:
       mountIndeterminateComponent(current, workInProgress);
-      break;
+      return workInProgress.child;
     case FunctionalComponent:
       updateFunctionalComponent(current, workInProgress);
-      break;
+      return workInProgress.child;
     case ClassComponent:
       console.log('class component', workInProgress.input.type.name);
-      break;
+      return workInProgress.child;
     case HostComponent:
       updateHostComponent(current, workInProgress);
-      break;
+      return workInProgress.child;
     case CoroutineHandlerPhase:
       // This is a restart. Reset the tag to the initial phase.
       workInProgress.tag = CoroutineComponent;
@@ -121,7 +121,7 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
           workInProgress.child
         );
       }
-      break;
+      return workInProgress.child;
     case YieldComponent:
       // A yield component is just a placeholder, we can just run through the
       // next one immediately.
@@ -135,7 +135,6 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     default:
       throw new Error('Unknown unit of work tag');
   }
-  return workInProgress.child;
 }
 
 exports.beginWork = beginWork;
