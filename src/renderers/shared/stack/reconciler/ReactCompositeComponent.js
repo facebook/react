@@ -741,6 +741,13 @@ var ReactCompositeComponentMixin = {
     nextUnmaskedContext
   ) {
     var inst = this._instance;
+    invariant(
+      inst != null,
+      'Attempted to update component `%s` that has already been unmounted ' +
+      '(or failed to mount).',
+      this.getName() || 'ReactCompositeComponent'
+    );
+
     var willReceive = false;
     var nextContext;
     var nextProps;
