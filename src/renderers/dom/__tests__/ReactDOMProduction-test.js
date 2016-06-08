@@ -8,7 +8,6 @@
  *
  * @emails react-core
  */
-
 'use strict';
 
 describe('ReactDOMProduction', function() {
@@ -87,4 +86,20 @@ describe('ReactDOMProduction', function() {
     expect(container.childNodes.length).toBe(0);
   });
 
+  it('should throw with an error code in production', function() {
+    expect(function() {
+      var Component = React.createClass({
+        render: function() {
+          return ['this is wrong'];
+        },
+      });
+      var container = document.createElement('div');
+      ReactDOM.render(<Component />, container);
+    }).toThrowError(
+      'Minified React error #109; visit ' +
+      'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
+      ' for the full message or use the non-minified dev environment' +
+      ' for full errors and additional helpful warnings.'
+    );
+  });
 });
