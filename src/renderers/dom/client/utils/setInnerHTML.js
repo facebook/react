@@ -31,7 +31,7 @@ var reusableSVGContainer;
  */
 var setInnerHTML = createMicrosoftUnsafeLocalFunction(
   function(node, html) {
-    if (typeof node.innerHTML !== 'undefined') {
+    if ('innerHTML' in node) {
       node.innerHTML = html;
 
     // IE does not have innerHTML for SVG nodes, so instead we inject the
@@ -40,9 +40,9 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(
     } else {
       reusableSVGContainer = reusableSVGContainer || document.createElement('div');
       reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';
-      var svg = reusableSVGContainer.firstChild;
-      while (svg.firstChild) {
-        node.appendChild(svg.firstChild);
+      var newNodes = reusableSVGContainer.firstChild.childNodes;
+      for (var i = 0; i < newNodes.length; i++) {
+        node.appendChild(newNodes[i]);
       }
     }
   }

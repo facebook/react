@@ -26,13 +26,14 @@ describe('setInnerHTML', function() {
   // SVGElements on IE don't have innerHTML
   describe('when the node does not innerHTML property', () => {
     it('sets innerHTML on it', function() {
-      var node = document.createElement('svg');
-      Object.defineProperty(node, 'innerHTML', { get: function() {} });
+      // Create a mock node that lacks innerHTML
+      var node = { appendChild: jasmine.createSpy() };
 
-      var html = '<circle cx="0" cy="6" r="5"></circle>';
+      var html = '<circle></circle><rect></rect>';
       setInnerHTML(node, html);
 
-      expect(node.outerHTML).toBe('<svg>' + html + '</svg>');
+      expect(node.appendChild.calls.argsFor(0)[0].outerHTML).toBe('<circle></circle>');
+      expect(node.appendChild.calls.argsFor(1)[0].outerHTML).toBe('<rect></rect>');
     });
   });
 });
