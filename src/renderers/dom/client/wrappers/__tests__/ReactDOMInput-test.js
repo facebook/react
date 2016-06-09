@@ -662,6 +662,43 @@ describe('ReactDOMInput', function() {
     );
   });
 
+  it('should not warn if radio value changes but never becomes controlled', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<input type="radio" value="value" />, container);
+    ReactDOM.render(<input type="radio" />, container);
+    ReactDOM.render(<input type="radio" value="value" defaultChecked={true} />, container);
+    ReactDOM.render(<input type="radio" value="value" onChange={() => null} />, container);
+    ReactDOM.render(<input type="radio" />, container);
+    expect(console.error.calls.count()).toBe(0);
+  });
+
+  it('should not warn if radio value changes but never becomes uncontrolled', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<input type="radio" checked={false} onChange={() => null} />, container);
+    ReactDOM.render(
+      <input
+        type="radio"
+        value="value"
+        defaultChecked={true}
+        checked={false}
+        onChange={() => null} 
+      />, container);
+    console.log(console.error.calls.argsFor(0)[0]);
+    expect(console.error.calls.count()).toBe(0);
+  });
+
+  it('should warn if radio checked false changes to become uncontrolled', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<input type="radio" value="value" checked={false} onChange={() => null} />, container);
+    ReactDOM.render(<input type="radio" value="value" />, container);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'A component is changing a controlled input of type radio to be uncontrolled. ' +
+      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+      'Decide between using a controlled or uncontrolled input ' +
+      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+    );
+  });
+
   it('sets type before value always', function() {
     if (!ReactDOMFeatureFlags.useCreateElement) {
       return;
