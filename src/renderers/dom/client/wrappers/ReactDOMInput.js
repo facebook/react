@@ -48,6 +48,11 @@ function warnIfValueIsNull(props) {
   }
 }
 
+function isControlled(props) {
+  var usesChecked = props.type === 'checkbox' || props.type === 'radio';
+  return usesChecked ? props.checked !== undefined : props.value !== undefined;
+}
+
 /**
  * Implements an <input> host component that allows setting these optional
  * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
@@ -156,7 +161,7 @@ var ReactDOMInput = {
     };
 
     if (__DEV__) {
-      inst._wrapperState.controlled = props.checked !== undefined || props.value !== undefined;
+      inst._wrapperState.controlled = isControlled(props);
     }
   },
 
@@ -166,14 +171,10 @@ var ReactDOMInput = {
     if (__DEV__) {
       warnIfValueIsNull(props);
 
-      var defaultValue = props.defaultChecked || props.defaultValue;
-      var controlled = props.checked !== undefined || props.value !== undefined;
+      var controlled = isControlled(props);
       var owner = inst._currentElement._owner;
 
-      if (
-        !inst._wrapperState.controlled &&
-        controlled && !didWarnUncontrolledToControlled
-      ) {
+      if (!inst._wrapperState.controlled && controlled && !didWarnUncontrolledToControlled) {
         warning(
           false,
           '%s is changing an uncontrolled input of type %s to be controlled. ' +
@@ -185,11 +186,7 @@ var ReactDOMInput = {
         );
         didWarnUncontrolledToControlled = true;
       }
-      if (
-        inst._wrapperState.controlled &&
-        (defaultValue || !controlled) &&
-        !didWarnControlledToUncontrolled
-      ) {
+      if (inst._wrapperState.controlled && !controlled && !didWarnControlledToUncontrolled) {
         warning(
           false,
           '%s is changing a controlled input of type %s to be uncontrolled. ' +
