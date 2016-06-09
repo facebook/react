@@ -683,7 +683,6 @@ describe('ReactDOMInput', function() {
         checked={false}
         onChange={() => null} 
       />, container);
-    console.log(console.error.calls.argsFor(0)[0]);
     expect(console.error.calls.count()).toBe(0);
   });
 
