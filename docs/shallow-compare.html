@@ -434,7 +434,7 @@
 <span class="p">}</span>
 </code></pre></div>
 <p><code>shallowCompare</code> performs a shallow equality check on the current <code>props</code> and <code>nextProps</code> objects as well as the current <code>state</code> and <code>nextState</code> objects.<br>
-It does this by iterating on the keys of the objects being compared and returning false when the value of a key in each object are not strictly equal.</p>
+It does this by iterating on the keys of the objects being compared and returning true when the values of a key in each object are not strictly equal.</p>
 
 <p><code>shallowCompare</code> returns <code>true</code> if the shallow comparison for props or state fails and therefore the component should update.<br>
 <code>shallowCompare</code> returns <code>false</code> if the shallow comparison for props and state both pass and therefore the component does not need to update.</p>
