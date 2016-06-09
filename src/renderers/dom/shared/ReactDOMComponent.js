@@ -1105,7 +1105,7 @@ ReactDOMComponent.Mixin = {
     if (lastChildren != null && nextChildren == null) {
       this.updateChildren(null, transaction, context);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
-      this.updateTextContent('');
+      this.updateTextContent('', null);
       if (__DEV__) {
         ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
       }

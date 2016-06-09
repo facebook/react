@@ -295,7 +295,7 @@ var ReactMultiChild = {
         }
       }
       // Set new text content. Set it to update if we know the lastContent is a valid text node too
-      var updates = [makeTextContent(nextContent, typeof lastContent === 'string' && lastContent)];
+      var updates = [makeTextContent(nextContent, lastContent)];
       processQueue(this, updates);
     },
 
